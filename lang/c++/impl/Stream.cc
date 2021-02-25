@@ -24,7 +24,7 @@ namespace avro {
 using std::vector;
 
 class MemoryInputStream : public InputStream {
-    const std::vector<uint8_t*>& data_;
+    const std::vector<uint8_t *> &data_;
     const size_t chunkSize_;
     const size_t size_;
     const size_t available_;
@@ -45,12 +45,12 @@ class MemoryInputStream : public InputStream {
     }
 
 public:
-    MemoryInputStream(const std::vector<uint8_t*>& b,
-        size_t chunkSize, size_t available) :
-            data_(b), chunkSize_(chunkSize), size_(b.size()),
-            available_(available), cur_(0), curLen_(0) { }
+    MemoryInputStream(const std::vector<uint8_t *> &b,
+                      size_t chunkSize, size_t available) :
+        data_(b), chunkSize_(chunkSize), size_(b.size()),
+        available_(available), cur_(0), curLen_(0) {}
 
-    bool next(const uint8_t** data, size_t* len) override {
+    bool next(const uint8_t **data, size_t *len) override {
         if (size_t n = maxLen()) {
             *data = data_[cur_] + curLen_;
             *len = n - curLen_;
@@ -84,14 +84,14 @@ public:
 };
 
 class MemoryInputStream2 : public InputStream {
-    const uint8_t* const data_;
+    const uint8_t *const data_;
     const size_t size_;
     size_t curLen_;
 public:
     MemoryInputStream2(const uint8_t *data, size_t len)
-        : data_(data), size_(len), curLen_(0) { }
+        : data_(data), size_(len), curLen_(0) {}
 
-    bool next(const uint8_t** data, size_t* len) override {
+    bool next(const uint8_t **data, size_t *len) override {
         if (curLen_ == size_) {
             return false;
         }
@@ -120,20 +120,20 @@ public:
 class MemoryOutputStream : public OutputStream {
 public:
     const size_t chunkSize_;
-    std::vector<uint8_t*> data_;
+    std::vector<uint8_t *> data_;
     size_t available_;
     size_t byteCount_;
 
     explicit MemoryOutputStream(size_t chunkSize) : chunkSize_(chunkSize),
-        available_(0), byteCount_(0) { }
+                                                    available_(0), byteCount_(0) {}
     ~MemoryOutputStream() override {
-        for (std::vector<uint8_t*>::const_iterator it = data_.begin();
-            it != data_.end(); ++it) {
+        for (std::vector<uint8_t *>::const_iterator it = data_.begin();
+             it != data_.end(); ++it) {
             delete[] *it;
         }
     }
 
-    bool next(uint8_t** data, size_t* len) override {
+    bool next(uint8_t **data, size_t *len) override {
         if (available_ == 0) {
             data_.push_back(new uint8_t[chunkSize_]);
             available_ = chunkSize_;
@@ -154,39 +154,35 @@ public:
         return byteCount_;
     }
 
-    void flush() override { }
+    void flush() override {}
 };
 
-std::unique_ptr<OutputStream> memoryOutputStream(size_t chunkSize)
-{
+std::unique_ptr<OutputStream> memoryOutputStream(size_t chunkSize) {
     return std::unique_ptr<OutputStream>(new MemoryOutputStream(chunkSize));
 }
 
-std::unique_ptr<InputStream> memoryInputStream(const uint8_t* data, size_t len)
-{
+std::unique_ptr<InputStream> memoryInputStream(const uint8_t *data, size_t len) {
     return std::unique_ptr<InputStream>(new MemoryInputStream2(data, len));
 }
 
-std::unique_ptr<InputStream> memoryInputStream(const OutputStream& source)
-{
-    const auto& mos =
-        dynamic_cast<const MemoryOutputStream&>(source);
+std::unique_ptr<InputStream> memoryInputStream(const OutputStream &source) {
+    const auto &mos =
+        dynamic_cast<const MemoryOutputStream &>(source);
     return (mos.data_.empty()) ?
-        std::unique_ptr<InputStream>(new MemoryInputStream2(nullptr, 0)) :
-        std::unique_ptr<InputStream>(new MemoryInputStream(mos.data_,
-            mos.chunkSize_,
-            (mos.chunkSize_ - mos.available_)));
+           std::unique_ptr<InputStream>(new MemoryInputStream2(nullptr, 0)) :
+           std::unique_ptr<InputStream>(new MemoryInputStream(mos.data_,
+                                                              mos.chunkSize_,
+                                                              (mos.chunkSize_ - mos.available_)));
 }
 
-std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
-{
-    const auto& mos =
-        dynamic_cast<const MemoryOutputStream&>(source);
+std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream &source) {
+    const auto &mos =
+        dynamic_cast<const MemoryOutputStream &>(source);
     std::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
     size_t c = mos.byteCount_;
     result->reserve(mos.byteCount_);
     for (auto it = mos.data_.begin();
-        it != mos.data_.end(); ++it) {
+         it != mos.data_.end(); ++it) {
         size_t n = std::min(c, mos.chunkSize_);
         std::copy(*it, *it + n, std::back_inserter(*result));
         c -= n;

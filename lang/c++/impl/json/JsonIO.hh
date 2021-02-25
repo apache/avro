@@ -37,7 +37,6 @@ inline char toHex(unsigned int n) {
     return (n < 10) ? (n + '0') : (n + 'a' - 10);
 }
 
-
 class AVRO_DECL JsonParser : boost::noncopyable {
 public:
     enum Token {
@@ -84,12 +83,12 @@ private:
     Exception unexpected(unsigned char ch);
     char next();
 
-    static std::string decodeString(const std::string& s, bool binary);
+    static std::string decodeString(const std::string &s, bool binary);
 
 public:
-    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
+    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) {}
 
-    void init(InputStream& is) {
+    void init(InputStream &is) {
         // Clear by swapping with an empty stack
         std::stack<State>().swap(stateStack);
         curState = stValue;
@@ -100,7 +99,7 @@ public:
     }
 
     Token advance() {
-        if (! peeked) {
+        if (!peeked) {
             curToken = doAdvance();
         } else {
             peeked = false;
@@ -109,7 +108,7 @@ public:
     }
 
     Token peek() {
-        if (! peeked) {
+        if (!peeked) {
             curToken = doAdvance();
             peeked = true;
         }
@@ -134,7 +133,7 @@ public:
         return lv;
     }
 
-    const std::string& rawString() const {
+    const std::string &rawString() const {
         return sv;
     }
 
@@ -157,7 +156,7 @@ public:
     /**
      * Return UTF-8 encoded string value.
      */
-    static std::string toStringValue(const std::string& sv) {
+    static std::string toStringValue(const std::string &sv) {
         return decodeString(sv, false);
     }
 
@@ -165,20 +164,20 @@ public:
      * Return byte-encoded string value. It is an error if the input
      * JSON string contained unicode characters more than "\u00ff'.
      */
-    static std::string toBytesValue(const std::string& sv) {
+    static std::string toBytesValue(const std::string &sv) {
         return decodeString(sv, true);
     }
 
-    static const char* const tokenNames[];
+    static const char *const tokenNames[];
 
-    static const char* toString(Token tk) {
+    static const char *toString(Token tk) {
         return tokenNames[tk];
     }
 };
 
 class AVRO_DECL JsonNullFormatter {
 public:
-    JsonNullFormatter(StreamWriter&) { }
+    JsonNullFormatter(StreamWriter &) {}
 
     void handleObjectStart() {}
     void handleObjectEnd() {}
@@ -187,7 +186,7 @@ public:
 };
 
 class AVRO_DECL JsonPrettyFormatter {
-    StreamWriter& out_;
+    StreamWriter &out_;
     size_t level_;
     std::vector<uint8_t> indent_;
 
@@ -201,7 +200,7 @@ class AVRO_DECL JsonPrettyFormatter {
         out_.writeBytes(indent_.data(), charsToIndent);
     }
 public:
-    JsonPrettyFormatter(StreamWriter& out) : out_(out), level_(0), indent_(10, ' ') { }
+    JsonPrettyFormatter(StreamWriter &out) : out_(out), level_(0), indent_(10, ' ') {}
 
     void handleObjectStart() {
         out_.write('\n');
@@ -225,7 +224,7 @@ public:
     }
 };
 
-template <class F>
+template<class F>
 class AVRO_DECL JsonGenerator {
     StreamWriter out_;
     F formatter_;
@@ -241,13 +240,13 @@ class AVRO_DECL JsonGenerator {
     std::stack<State> stateStack;
     State top;
 
-    void write(const char *b, const char* p) {
+    void write(const char *b, const char *p) {
         if (b != p) {
-            out_.writeBytes(reinterpret_cast<const uint8_t*>(b), p - b);
+            out_.writeBytes(reinterpret_cast<const uint8_t *>(b), p - b);
         }
     }
 
-    void escape(char c, const char* b, const char *p) {
+    void escape(char c, const char *b, const char *p) {
         write(b, p);
         out_.write('\\');
         out_.write(c);
@@ -268,10 +267,10 @@ class AVRO_DECL JsonGenerator {
         writeHex((c >> 8) & 0xff);
         writeHex(c & 0xff);
     }
-    void doEncodeString(const char* b, size_t len, bool binary) {
-        const char* e = b + len;
+    void doEncodeString(const char *b, size_t len, bool binary) {
+        const char *e = b + len;
         out_.write('"');
-        for (const char* p = b; p != e; p++) {
+        for (const char *p = b; p != e; p++) {
             if ((*p & 0x80) != 0) {
                 write(b, p);
                 if (binary) {
@@ -307,34 +306,28 @@ class AVRO_DECL JsonGenerator {
                 }
             } else {
                 switch (*p) {
-                case '\\':
-                case '"':
-                case '/':
-                    escape(*p, b, p);
-                    break;
-                case '\b':
-                    escape('b', b, p);
-                    break;
-                case '\f':
-                    escape('f', b, p);
-                    break;
-                case '\n':
-                    escape('n', b, p);
-                    break;
-                case '\r':
-                    escape('r', b, p);
-                    break;
-                case '\t':
-                    escape('t', b, p);
-                    break;
-                default:
-                    if (std::iscntrl(*p, std::locale::classic())) {
-                        write(b, p);
-                        escapeCtl(*p);
+                    case '\\':
+                    case '"':
+                    case '/':escape(*p, b, p);
                         break;
-                    } else {
-                        continue;
-                    }
+                    case '\b':escape('b', b, p);
+                        break;
+                    case '\f':escape('f', b, p);
+                        break;
+                    case '\n':escape('n', b, p);
+                        break;
+                    case '\r':escape('r', b, p);
+                        break;
+                    case '\t':escape('t', b, p);
+                        break;
+                    default:
+                        if (std::iscntrl(*p, std::locale::classic())) {
+                            write(b, p);
+                            escapeCtl(*p);
+                            break;
+                        } else {
+                            continue;
+                        }
                 }
             }
             b = p + 1;
@@ -359,9 +352,9 @@ class AVRO_DECL JsonGenerator {
     }
 
 public:
-    JsonGenerator() : formatter_(out_), top(stStart) { }
+    JsonGenerator() : formatter_(out_), top(stStart) {}
 
-    void init(OutputStream& os) {
+    void init(OutputStream &os) {
         out_.reset(os);
     }
 
@@ -375,27 +368,27 @@ public:
 
     void encodeNull() {
         sep();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>("null"), 4);
+        out_.writeBytes(reinterpret_cast<const uint8_t *>("null"), 4);
         sep2();
     }
 
     void encodeBool(bool b) {
         sep();
         if (b) {
-            out_.writeBytes(reinterpret_cast<const uint8_t*>("true"), 4);
+            out_.writeBytes(reinterpret_cast<const uint8_t *>("true"), 4);
         } else {
-            out_.writeBytes(reinterpret_cast<const uint8_t*>("false"), 5);
+            out_.writeBytes(reinterpret_cast<const uint8_t *>("false"), 5);
         }
         sep2();
     }
 
-    template <typename T>
+    template<typename T>
     void encodeNumber(T t) {
         sep();
         std::ostringstream oss;
         oss << boost::lexical_cast<std::string>(t);
         const std::string s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
 
@@ -412,12 +405,11 @@ public:
             oss << "-Infinity";
         }
         const std::string s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t *>(s.data()), s.size());
         sep2();
     }
 
-
-    void encodeString(const std::string& s) {
+    void encodeString(const std::string &s) {
         if (top == stMap0) {
             top = stKey;
         } else if (top == stMapN) {
@@ -436,7 +428,7 @@ public:
         }
     }
 
-    void encodeBinary(const uint8_t* bytes, size_t len) {
+    void encodeBinary(const uint8_t *bytes, size_t len) {
         sep();
         doEncodeString(reinterpret_cast<const char *>(bytes), len, true);
         sep2();

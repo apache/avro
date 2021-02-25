@@ -44,7 +44,6 @@
 #undef max
 #endif
 
-
 using std::unique_ptr;
 using std::map;
 using std::string;
@@ -65,9 +64,8 @@ using avro::validatingEncoder;
 using avro::binaryDecoder;
 using avro::validatingDecoder;
 
-void setRecord(testgen::RootRecord &myRecord)
-{
-    uint8_t fixed[] =  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+void setRecord(testgen::RootRecord &myRecord) {
+    uint8_t fixed[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
     myRecord.mylong = 212;
     myRecord.nestedrecord.inval1 = std::numeric_limits<double>::min();
@@ -102,9 +100,8 @@ void setRecord(testgen::RootRecord &myRecord)
     myRecord.bytes.push_back(20);
 }
 
-template <typename T1, typename T2>
-void checkRecord(const T1& r1, const T2& r2)
-{
+template<typename T1, typename T2>
+void checkRecord(const T1 &r1, const T2 &r2) {
     BOOST_CHECK_EQUAL(r1.mylong, r2.mylong);
     BOOST_CHECK_EQUAL(r1.nestedrecord.inval1, r2.nestedrecord.inval1);
     BOOST_CHECK_EQUAL(r1.nestedrecord.inval2, r2.nestedrecord.inval2);
@@ -120,11 +117,11 @@ void checkRecord(const T1& r1, const T2& r2)
     BOOST_CHECK_EQUAL(r1.anothernested.inval2, r2.anothernested.inval2);
     BOOST_CHECK_EQUAL(r1.anothernested.inval3, r2.anothernested.inval3);
     BOOST_CHECK_EQUAL_COLLECTIONS(r1.myfixed.begin(), r1.myfixed.end(),
-        r2.myfixed.begin(), r2.myfixed.end());
+                                  r2.myfixed.begin(), r2.myfixed.end());
     BOOST_CHECK_EQUAL(r1.anotherint, r2.anotherint);
     BOOST_CHECK_EQUAL(r1.bytes.size(), r2.bytes.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(r1.bytes.begin(), r1.bytes.end(),
-        r2.bytes.begin(), r2.bytes.end());
+                                  r2.bytes.begin(), r2.bytes.end());
     /**
      * Usually, comparing two different enums is not reliable. But here it fine because we
      * know the generated code and are merely checking if Avro did the right job.
@@ -134,8 +131,7 @@ void checkRecord(const T1& r1, const T2& r2)
     BOOST_CHECK_EQUAL(static_cast<unsigned int>(r1.myenum), static_cast<unsigned int>(r2.myenum));
 }
 
-void checkDefaultValues(const testgen_r::RootRecord& r)
-{
+void checkDefaultValues(const testgen_r::RootRecord &r) {
     BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\\u8352\"");
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
@@ -146,9 +142,7 @@ void checkDefaultValues(const testgen_r::RootRecord& r)
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
 
-
-void testEncoding()
-{
+void testEncoding() {
     ValidSchema s;
     ifstream ifs("jsonschemas/bigrecord");
     compileJsonSchema(ifs, s);
@@ -169,8 +163,7 @@ void testEncoding()
     checkRecord(t2, t1);
 }
 
-void testResolution()
-{
+void testResolution() {
     ValidSchema s_w;
     ifstream ifs_w("jsonschemas/bigrecord");
     compileJsonSchema(ifs_w, s_w);
@@ -223,8 +216,7 @@ void testResolution()
     BOOST_CHECK_EQUAL(oss_r.str(), oss_rs.str());
 }
 
-void testNamespace()
-{
+void testNamespace() {
     ValidSchema s;
     ifstream ifs("jsonschemas/tweet");
     // basic compilation should work
@@ -238,37 +230,35 @@ void testNamespace()
     twPoint.set_AvroPoint(point);
 }
 
-void setRecord(uau::r1& r)
-{
+void setRecord(uau::r1 &r) {
 }
 
-void check(const uau::r1& r1, const uau::r1& r2)
-{
-
-}
-
-void setRecord(umu::r1& r)
-{
-}
-
-void check(const umu::r1& r1, const umu::r1& r2)
-{
+void check(const uau::r1 &r1, const uau::r1 &r2) {
 
 }
 
-template <typename T> struct schemaFilename { };
-template <> struct schemaFilename<uau::r1> {
+void setRecord(umu::r1 &r) {
+}
+
+void check(const umu::r1 &r1, const umu::r1 &r2) {
+
+}
+
+template<typename T>
+struct schemaFilename {};
+template<>
+struct schemaFilename<uau::r1> {
     static const char value[];
 };
 const char schemaFilename<uau::r1>::value[] = "jsonschemas/union_array_union";
-template <> struct schemaFilename<umu::r1> {
+template<>
+struct schemaFilename<umu::r1> {
     static const char value[];
 };
 const char schemaFilename<umu::r1>::value[] = "jsonschemas/union_map_union";
 
 template<typename T>
-void testEncoding2()
-{
+void testEncoding2() {
     ValidSchema s;
     ifstream ifs(schemaFilename<T>::value);
     compileJsonSchema(ifs, s);
@@ -290,10 +280,9 @@ void testEncoding2()
     check(t2, t1);
 }
 
-boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
-    boost::unit_test::test_suite* ts = BOOST_TEST_SUITE("Code generator tests");
+boost::unit_test::test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
+    boost::unit_test::test_suite *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
     ts->add(BOOST_TEST_CASE(testResolution));
     ts->add(BOOST_TEST_CASE(testEncoding2<uau::r1>));

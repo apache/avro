@@ -92,28 +92,32 @@ private:
     Kind kind_;
     boost::any extra_;
 
-
-    explicit Symbol(Kind k) : kind_(k) { }
-    template <typename T> Symbol(Kind k, T t) : kind_(k), extra_(t) { }
+    explicit Symbol(Kind k) : kind_(k) {}
+    template<typename T>
+    Symbol(Kind k, T t) : kind_(k), extra_(t) {}
 public:
 
     Kind kind() const {
         return kind_;
     }
 
-    template <typename T> T extra() const {
+    template<typename T>
+    T extra() const {
         return boost::any_cast<T>(extra_);
     }
 
-    template <typename T> T* extrap() {
+    template<typename T>
+    T *extrap() {
         return boost::any_cast<T>(&extra_);
     }
 
-    template <typename T> const T* extrap() const {
+    template<typename T>
+    const T *extrap() const {
         return boost::any_cast<T>(&extra_);
     }
 
-    template <typename T> void extra(const T& t) {
+    template<typename T>
+    void extra(const T &t) {
         extra_ = t;
     }
 
@@ -125,19 +129,17 @@ public:
         return kind_ > sImplicitActionLow && kind_ < sImplicitActionHigh;
     }
 
-    static const char* stringValues[];
-    static const char* toString(Kind k) {
+    static const char *stringValues[];
+    static const char *toString(Kind k) {
         return stringValues[k];
     }
 
-    static Symbol rootSymbol(ProductionPtr& s)
-    {
+    static Symbol rootSymbol(ProductionPtr &s) {
         return Symbol(Symbol::sRoot, RootInfo(s, std::make_shared<Production>()));
     }
 
-    static Symbol rootSymbol(const ProductionPtr& main,
-                             const ProductionPtr& backup)
-    {
+    static Symbol rootSymbol(const ProductionPtr &main,
+                             const ProductionPtr &backup) {
         return Symbol(Symbol::sRoot, RootInfo(main, backup));
     }
 
@@ -201,31 +203,28 @@ public:
         return Symbol(sMapEnd);
     }
 
-    static Symbol repeater(const ProductionPtr& p,
+    static Symbol repeater(const ProductionPtr &p,
                            bool isArray) {
         return repeater(p, p, isArray);
     }
 
-    static Symbol repeater(const ProductionPtr& read,
-                           const ProductionPtr& skip,
+    static Symbol repeater(const ProductionPtr &read,
+                           const ProductionPtr &skip,
                            bool isArray) {
         std::stack<ssize_t> s;
         return Symbol(sRepeater, RepeaterInfo(s, isArray, read, skip));
     }
 
-    static Symbol defaultStartAction(std::shared_ptr<std::vector<uint8_t> > bb)
-    {
+    static Symbol defaultStartAction(std::shared_ptr<std::vector<uint8_t> > bb) {
         return Symbol(sDefaultStart, bb);
     }
 
-    static Symbol defaultEndAction()
-    {
+    static Symbol defaultEndAction() {
         return Symbol(sDefaultEnd);
     }
 
     static Symbol alternative(
-        const std::vector<ProductionPtr>& branches)
-    {
+        const std::vector<ProductionPtr> &branches) {
         return Symbol(Symbol::sAlternative, branches);
     }
 
@@ -241,7 +240,7 @@ public:
         return Symbol(sRecordEnd);
     }
 
-    static Symbol fieldSymbol(const std::string& name) {
+    static Symbol fieldSymbol(const std::string &name) {
         return Symbol(sField, name);
     }
 
@@ -250,28 +249,28 @@ public:
     }
 
     static Symbol nameListSymbol(
-        const std::vector<std::string>& v) {
+        const std::vector<std::string> &v) {
         return Symbol(sNameList, v);
     }
 
-    template <typename T>
-    static Symbol placeholder(const T& n) {
+    template<typename T>
+    static Symbol placeholder(const T &n) {
         return Symbol(sPlaceholder, n);
     }
 
-    static Symbol indirect(const ProductionPtr& p) {
+    static Symbol indirect(const ProductionPtr &p) {
         return Symbol(sIndirect, p);
     }
 
-    static Symbol symbolic(const std::weak_ptr<Production>& p) {
+    static Symbol symbolic(const std::weak_ptr<Production> &p) {
         return Symbol(sSymbolic, p);
     }
 
-    static Symbol enumAdjustSymbol(const NodePtr& writer,
-        const NodePtr& reader);
+    static Symbol enumAdjustSymbol(const NodePtr &writer,
+                                   const NodePtr &reader);
 
     static Symbol unionAdjustSymbol(size_t branch,
-                                    const ProductionPtr& p) {
+                                    const ProductionPtr &p) {
         return Symbol(sUnionAdjust, std::make_pair(branch, p));
     }
 
@@ -283,7 +282,7 @@ public:
         return Symbol(sRecord);
     }
 
-    static Symbol error(const NodePtr& writer, const NodePtr& reader);
+    static Symbol error(const NodePtr &writer, const NodePtr &reader);
 
     static Symbol resolveSymbol(Kind w, Kind r) {
         return Symbol(sResolve, std::make_pair(w, r));
@@ -300,25 +299,22 @@ public:
  * corresponding values.
  */
 template<typename T>
-void fixup(const ProductionPtr& p,
-           const std::map<T, ProductionPtr> &m)
-{
+void fixup(const ProductionPtr &p,
+           const std::map<T, ProductionPtr> &m) {
     std::set<ProductionPtr> seen;
     for (Production::iterator it = p->begin(); it != p->end(); ++it) {
         fixup(*it, m, seen);
     }
 }
 
-
 /**
  * Recursively replaces all placeholders in the symbol with the values with the
  * corresponding values.
  */
 template<typename T>
-void fixup_internal(const ProductionPtr& p,
+void fixup_internal(const ProductionPtr &p,
                     const std::map<T, ProductionPtr> &m,
-                    std::set<ProductionPtr>& seen)
-{
+                    std::set<ProductionPtr> &seen) {
     if (seen.find(p) == seen.end()) {
         seen.insert(p);
         for (Production::iterator it = p->begin(); it != p->end(); ++it) {
@@ -328,32 +324,27 @@ void fixup_internal(const ProductionPtr& p,
 }
 
 template<typename T>
-void fixup(Symbol& s, const std::map<T, ProductionPtr> &m,
-           std::set<ProductionPtr>& seen)
-{
+void fixup(Symbol &s, const std::map<T, ProductionPtr> &m,
+           std::set<ProductionPtr> &seen) {
     switch (s.kind()) {
-    case Symbol::sIndirect:
-        fixup_internal(s.extra<ProductionPtr>(), m, seen);
-        break;
-    case Symbol::sAlternative:
-        {
+        case Symbol::sIndirect:fixup_internal(s.extra<ProductionPtr>(), m, seen);
+            break;
+        case Symbol::sAlternative: {
             const std::vector<ProductionPtr> *vv =
-            s.extrap<std::vector<ProductionPtr> >();
+                s.extrap<std::vector<ProductionPtr> >();
             for (std::vector<ProductionPtr>::const_iterator it = vv->begin();
-                it != vv->end(); ++it) {
+                 it != vv->end(); ++it) {
                 fixup_internal(*it, m, seen);
             }
         }
-        break;
-    case Symbol::sRepeater:
-        {
-            const RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
+            break;
+        case Symbol::sRepeater: {
+            const RepeaterInfo &ri = *s.extrap<RepeaterInfo>();
             fixup_internal(boost::tuples::get<2>(ri), m, seen);
             fixup_internal(boost::tuples::get<3>(ri), m, seen);
         }
-        break;
-    case Symbol::sPlaceholder:
-        {
+            break;
+        case Symbol::sPlaceholder: {
             typename std::map<T, std::shared_ptr<Production> >::const_iterator it =
                 m.find(s.extra<T>());
             if (it == m.end()) {
@@ -361,24 +352,22 @@ void fixup(Symbol& s, const std::map<T, ProductionPtr> &m,
             }
             s = Symbol::symbolic(std::weak_ptr<Production>(it->second));
         }
-        break;
-    case Symbol::sUnionAdjust:
-        fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
-                       m, seen);
-        break;
-    default:
-        break;
+            break;
+        case Symbol::sUnionAdjust:
+            fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
+                           m, seen);
+            break;
+        default:break;
     }
 }
 
 template<typename Handler>
 class SimpleParser {
-    Decoder* decoder_;
-    Handler& handler_;
+    Decoder *decoder_;
+    Handler &handler_;
     std::stack<Symbol> parsingStack;
 
-    static void throwMismatch(Symbol::Kind actual, Symbol::Kind expected)
-    {
+    static void throwMismatch(Symbol::Kind actual, Symbol::Kind expected) {
         std::ostringstream oss;
         oss << "Invalid operation. Schema requires: " <<
             Symbol::toString(expected) << ", got: " <<
@@ -386,23 +375,22 @@ class SimpleParser {
         throw Exception(oss.str());
     }
 
-    static void assertMatch(Symbol::Kind actual, Symbol::Kind expected)
-    {
+    static void assertMatch(Symbol::Kind actual, Symbol::Kind expected) {
         if (expected != actual) {
             throwMismatch(actual, expected);
         }
 
     }
 
-    void append(const ProductionPtr& ss) {
+    void append(const ProductionPtr &ss) {
         for (Production::const_iterator it = ss->begin();
-            it != ss->end(); ++it) {
+             it != ss->end(); ++it) {
             parsingStack.push(*it);
         }
     }
 
     size_t popSize() {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sSizeCheck, s.kind());
         size_t result = s.extra<size_t>();
         parsingStack.pop();
@@ -419,8 +407,8 @@ class SimpleParser {
 
 public:
     Symbol::Kind advance(Symbol::Kind k) {
-        for (; ;) {
-            Symbol& s = parsingStack.top();
+        for (;;) {
+            Symbol &s = parsingStack.top();
 //            std::cout << "advance: " << Symbol::toString(s.kind())
 //                      << " looking for " << Symbol::toString(k) << '\n';
             if (s.kind() == k) {
@@ -430,29 +418,25 @@ public:
                 throwMismatch(k, s.kind());
             } else {
                 switch (s.kind()) {
-                case Symbol::sRoot:
-                    append(boost::tuples::get<0>(*s.extrap<RootInfo>()));
-                    continue;
-                case Symbol::sIndirect:
-                    {
+                    case Symbol::sRoot:append(boost::tuples::get<0>(*s.extrap<RootInfo>()));
+                        continue;
+                    case Symbol::sIndirect: {
                         ProductionPtr pp =
                             s.extra<ProductionPtr>();
                         parsingStack.pop();
                         append(pp);
                     }
-                    continue;
-                case Symbol::sSymbolic:
-                    {
+                        continue;
+                    case Symbol::sSymbolic: {
                         ProductionPtr pp(
                             s.extra<std::weak_ptr<Production> >());
                         parsingStack.pop();
                         append(pp);
                     }
-                    continue;
-                case Symbol::sRepeater:
-                    {
+                        continue;
+                    case Symbol::sRepeater: {
                         RepeaterInfo *p = s.extrap<RepeaterInfo>();
-                        std::stack<ssize_t>& ns = boost::tuples::get<0>(*p);
+                        std::stack<ssize_t> &ns = boost::tuples::get<0>(*p);
                         if (ns.empty()) {
                             throw Exception(
                                 "Empty item count stack in repeater advance");
@@ -464,77 +448,65 @@ public:
                         --ns.top();
                         append(boost::tuples::get<2>(*p));
                     }
-                    continue;
-                case Symbol::sError:
-                    throw Exception(s.extra<std::string>());
-                case Symbol::sResolve:
-                    {
-                        const std::pair<Symbol::Kind, Symbol::Kind>* p =
+                        continue;
+                    case Symbol::sError:throw Exception(s.extra<std::string>());
+                    case Symbol::sResolve: {
+                        const std::pair<Symbol::Kind, Symbol::Kind> *p =
                             s.extrap<std::pair<Symbol::Kind, Symbol::Kind> >();
                         assertMatch(p->second, k);
                         Symbol::Kind result = p->first;
                         parsingStack.pop();
                         return result;
                     }
-                case Symbol::sSkipStart:
-                    parsingStack.pop();
-                    skip(*decoder_);
-                    break;
-                default:
-                    if (s.isImplicitAction()) {
-                        size_t n = handler_.handle(s);
-                        if (s.kind() == Symbol::sWriterUnion) {
-                            parsingStack.pop();
-                            selectBranch(n);
+                    case Symbol::sSkipStart:parsingStack.pop();
+                        skip(*decoder_);
+                        break;
+                    default:
+                        if (s.isImplicitAction()) {
+                            size_t n = handler_.handle(s);
+                            if (s.kind() == Symbol::sWriterUnion) {
+                                parsingStack.pop();
+                                selectBranch(n);
+                            } else {
+                                parsingStack.pop();
+                            }
                         } else {
-                            parsingStack.pop();
+                            std::ostringstream oss;
+                            oss << "Encountered " << Symbol::toString(s.kind())
+                                << " while looking for " << Symbol::toString(k);
+                            throw Exception(oss.str());
                         }
-                    } else {
-                        std::ostringstream oss;
-                        oss << "Encountered " << Symbol::toString(s.kind())
-                            << " while looking for " << Symbol::toString(k);
-                        throw Exception(oss.str());
-                    }
                 }
             }
         }
     }
 
-    void skip(Decoder& d) {
+    void skip(Decoder &d) {
         const size_t sz = parsingStack.size();
         if (sz == 0) {
             throw Exception("Nothing to skip!");
         }
         while (parsingStack.size() >= sz) {
-            Symbol& t = parsingStack.top();
+            Symbol &t = parsingStack.top();
             // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
             switch (t.kind()) {
-            case Symbol::sNull:
-                d.decodeNull();
-                break;
-            case Symbol::sBool:
-                d.decodeBool();
-                break;
-            case Symbol::sInt:
-                d.decodeInt();
-                break;
-            case Symbol::sLong:
-                d.decodeLong();
-                break;
-            case Symbol::sFloat:
-                d.decodeFloat();
-                break;
-            case Symbol::sDouble:
-                d.decodeDouble();
-                break;
-            case Symbol::sString:
-                d.skipString();
-                break;
-            case Symbol::sBytes:
-                d.skipBytes();
-                break;
-            case Symbol::sArrayStart:
-                {
+                case Symbol::sNull:d.decodeNull();
+                    break;
+                case Symbol::sBool:d.decodeBool();
+                    break;
+                case Symbol::sInt:d.decodeInt();
+                    break;
+                case Symbol::sLong:d.decodeLong();
+                    break;
+                case Symbol::sFloat:d.decodeFloat();
+                    break;
+                case Symbol::sDouble:d.decodeDouble();
+                    break;
+                case Symbol::sString:d.skipString();
+                    break;
+                case Symbol::sBytes:d.skipBytes();
+                    break;
+                case Symbol::sArrayStart: {
                     parsingStack.pop();
                     size_t n = d.skipArray();
                     processImplicitActions();
@@ -542,15 +514,13 @@ public:
                     if (n == 0) {
                         break;
                     }
-                    Symbol& t = parsingStack.top();
+                    Symbol &t = parsingStack.top();
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-            case Symbol::sArrayEnd:
-                break;
-            case Symbol::sMapStart:
-                {
+                case Symbol::sArrayEnd:break;
+                case Symbol::sMapStart: {
                     parsingStack.pop();
                     size_t n = d.skipMap();
                     processImplicitActions();
@@ -558,40 +528,35 @@ public:
                     if (n == 0) {
                         break;
                     }
-                    Symbol& t = parsingStack.top();
+                    Symbol &t = parsingStack.top();
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-            case Symbol::sMapEnd:
-                break;
-            case Symbol::sFixed:
-                {
+                case Symbol::sMapEnd:break;
+                case Symbol::sFixed: {
                     parsingStack.pop();
-                    Symbol& t = parsingStack.top();
+                    Symbol &t = parsingStack.top();
                     d.decodeFixed(t.extra<size_t>());
                 }
-                break;
-            case Symbol::sEnum:
-                parsingStack.pop();
-                d.decodeEnum();
-                break;
-            case Symbol::sUnion:
-                {
+                    break;
+                case Symbol::sEnum:parsingStack.pop();
+                    d.decodeEnum();
+                    break;
+                case Symbol::sUnion: {
                     parsingStack.pop();
                     size_t n = d.decodeUnionIndex();
                     selectBranch(n);
                     continue;
                 }
-            case Symbol::sRepeater:
-                {
+                case Symbol::sRepeater: {
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
-                    std::stack<ssize_t>& ns = boost::tuples::get<0>(*p);
+                    std::stack<ssize_t> &ns = boost::tuples::get<0>(*p);
                     if (ns.empty()) {
                         throw Exception(
                             "Empty item count stack in repeater skip");
                     }
-                    ssize_t& n = ns.top();
+                    ssize_t &n = ns.top();
                     if (n == 0) {
                         n = boost::tuples::get<1>(*p) ? d.arrayNext()
                                                       : d.mapNext();
@@ -604,25 +569,22 @@ public:
                         ns.pop();
                     }
                 }
-                break;
-            case Symbol::sIndirect:
-                {
+                    break;
+                case Symbol::sIndirect: {
                     ProductionPtr pp =
                         t.extra<ProductionPtr>();
                     parsingStack.pop();
                     append(pp);
                 }
-                continue;
-            case Symbol::sSymbolic:
-                {
+                    continue;
+                case Symbol::sSymbolic: {
                     ProductionPtr pp(
                         t.extra<std::weak_ptr<Production> >());
                     parsingStack.pop();
                     append(pp);
                 }
-                continue;
-            default:
-                {
+                    continue;
+                default: {
                     std::ostringstream oss;
                     oss << "Don't know how to skip "
                         << Symbol::toString(t.kind());
@@ -647,9 +609,9 @@ public:
     }
 
     size_t enumAdjust(size_t n) {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sEnumAdjust, s.kind());
-        const std::pair<std::vector<int>, std::vector<std::string> >* v =
+        const std::pair<std::vector<int>, std::vector<std::string> > *v =
             s.extrap<std::pair<std::vector<int>, std::vector<std::string> > >();
         assertLessThan(n, v->first.size());
 
@@ -665,17 +627,17 @@ public:
     }
 
     size_t unionAdjust() {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sUnionAdjust, s.kind());
         std::pair<size_t, ProductionPtr> p =
-        s.extra<std::pair<size_t, ProductionPtr> >();
+            s.extra<std::pair<size_t, ProductionPtr> >();
         parsingStack.pop();
         append(p.second);
         return p.first;
     }
 
     std::string nameForIndex(size_t e) {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sNameList, s.kind());
         const std::vector<std::string> names =
             s.extra<std::vector<std::string> >();
@@ -688,7 +650,7 @@ public:
     }
 
     size_t indexForName(const std::string &name) {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sNameList, s.kind());
         const std::vector<std::string> names =
             s.extra<std::vector<std::string> >();
@@ -704,7 +666,7 @@ public:
 
     void pushRepeatCount(size_t n) {
         processImplicitActions();
-        Symbol& s = parsingStack.top();
+        Symbol &s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
         RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
@@ -713,19 +675,19 @@ public:
 
     void nextRepeatCount(size_t n) {
         processImplicitActions();
-        Symbol& s = parsingStack.top();
+        Symbol &s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
         RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
         if (nn.empty() || nn.top() != 0) {
-          throw Exception("Wrong number of items");
+            throw Exception("Wrong number of items");
         }
         nn.top() = n;
     }
 
     void popRepeater() {
         processImplicitActions();
-        Symbol& s = parsingStack.top();
+        Symbol &s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
         RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &ns = boost::tuples::get<0>(*p);
@@ -740,10 +702,10 @@ public:
     }
 
     void selectBranch(size_t n) {
-        const Symbol& s = parsingStack.top();
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sAlternative, s.kind());
         std::vector<ProductionPtr> v =
-        s.extra<std::vector<ProductionPtr> >();
+            s.extra<std::vector<ProductionPtr> >();
         if (n >= v.size()) {
             throw Exception("Not that many branches");
         }
@@ -751,8 +713,8 @@ public:
         append(v[n]);
     }
 
-    const std::vector<size_t>& sizeList() {
-        const Symbol& s = parsingStack.top();
+    const std::vector<size_t> &sizeList() {
+        const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sSizeList, s.kind());
         return *s.extrap<std::vector<size_t> >();
     }
@@ -766,8 +728,8 @@ public:
     }
 
     void processImplicitActions() {
-        for (; ;) {
-            Symbol& s = parsingStack.top();
+        for (;;) {
+            Symbol &s = parsingStack.top();
             if (s.isImplicitAction()) {
                 handler_.handle(s);
                 parsingStack.pop();
@@ -780,7 +742,7 @@ public:
         }
     }
 
-    SimpleParser(const Symbol& s, Decoder* d, Handler& h) :
+    SimpleParser(const Symbol &s, Decoder *d, Handler &h) :
         decoder_(d), handler_(h) {
         parsingStack.push(s);
     }
@@ -793,10 +755,9 @@ public:
 
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Symbol s);
+inline std::ostream &operator<<(std::ostream &os, const Symbol s);
 
-inline std::ostream& operator<<(std::ostream& os, const Production p)
-{
+inline std::ostream &operator<<(std::ostream &os, const Production p) {
     os << '(';
     for (Production::const_iterator it = p.begin(); it != p.end(); ++it) {
         os << *it << ", ";
@@ -805,49 +766,43 @@ inline std::ostream& operator<<(std::ostream& os, const Production p)
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Symbol s)
-{
-        switch (s.kind()) {
-        case Symbol::sRepeater:
-            {
-                const RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
-                os << '(' << Symbol::toString(s.kind())
-                   << ' ' << *boost::tuples::get<2>(ri)
-                   << ' ' << *boost::tuples::get<3>(ri)
-                   << ')';
-            }
-            break;
-        case Symbol::sIndirect:
-            {
-                os << '(' << Symbol::toString(s.kind()) << ' '
-                << *s.extra<std::shared_ptr<Production> >() << ')';
-            }
-            break;
-        case Symbol::sAlternative:
-            {
-                os << '(' << Symbol::toString(s.kind());
-                for (std::vector<ProductionPtr>::const_iterator it =
-                         s.extrap<std::vector<ProductionPtr> >()->begin();
-                     it != s.extrap<std::vector<ProductionPtr> >()->end();
-                     ++it) {
-                    os << ' ' << **it;
-                }
-                os << ')';
-            }
-            break;
-        case Symbol::sSymbolic:
-            {
-              os << '(' << Symbol::toString(s.kind())
-                 << ' ' << s.extra<std::weak_ptr<Production> >().lock()
-                 << ')';
-          }
-          break;
-        default:
-            os << Symbol::toString(s.kind());
-            break;
+inline std::ostream &operator<<(std::ostream &os, const Symbol s) {
+    switch (s.kind()) {
+        case Symbol::sRepeater: {
+            const RepeaterInfo &ri = *s.extrap<RepeaterInfo>();
+            os << '(' << Symbol::toString(s.kind())
+               << ' ' << *boost::tuples::get<2>(ri)
+               << ' ' << *boost::tuples::get<3>(ri)
+               << ')';
         }
-        return os;
+            break;
+        case Symbol::sIndirect: {
+            os << '(' << Symbol::toString(s.kind()) << ' '
+               << *s.extra<std::shared_ptr<Production> >() << ')';
+        }
+            break;
+        case Symbol::sAlternative: {
+            os << '(' << Symbol::toString(s.kind());
+            for (std::vector<ProductionPtr>::const_iterator it =
+                s.extrap<std::vector<ProductionPtr> >()->begin();
+                 it != s.extrap<std::vector<ProductionPtr> >()->end();
+                 ++it) {
+                os << ' ' << **it;
+            }
+            os << ')';
+        }
+            break;
+        case Symbol::sSymbolic: {
+            os << '(' << Symbol::toString(s.kind())
+               << ' ' << s.extra<std::weak_ptr<Production> >().lock()
+               << ')';
+        }
+            break;
+        default:os << Symbol::toString(s.kind());
+            break;
     }
+    return os;
+}
 }   // namespace parsing
 }   // namespace avro
 

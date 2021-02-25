@@ -39,11 +39,10 @@
 #include "ResolverSchema.hh"
 #include "buffer/BufferPrint.hh"
 
-std::string gWriter ("jsonschemas/bigrecord");
-std::string gReader ("jsonschemas/bigrecord2");
+std::string gWriter("jsonschemas/bigrecord");
+std::string gReader("jsonschemas/bigrecord2");
 
-void printRecord(testgen::RootRecord &record)
-{
+void printRecord(testgen::RootRecord &record) {
     using namespace testgen;
     std::cout << "mylong " << record.mylong << '\n';
     std::cout << "inval1 " << record.nestedrecord.inval1 << '\n';
@@ -51,35 +50,35 @@ void printRecord(testgen::RootRecord &record)
     std::cout << "inval3 " << record.nestedrecord.inval3 << '\n';
 
     Map_of_int::MapType::const_iterator mapiter = record.mymap.value.begin();
-    while(mapiter != record.mymap.value.end()){
+    while (mapiter != record.mymap.value.end()) {
         std::cout << "mymap " << mapiter->first << " " << mapiter->second << '\n';
         ++mapiter;
     }
 
     Array_of_double::ArrayType::iterator arrayiter = record.myarray.value.begin();
-    while(arrayiter != record.myarray.value.end()) {
+    while (arrayiter != record.myarray.value.end()) {
         std::cout << "myarray " << *arrayiter << '\n';
         ++arrayiter;
     }
 
     std::cout << "myeum = " << record.myenum.value << '\n';
 
-    if(record.myunion.choice == 1) {
+    if (record.myunion.choice == 1) {
         const Map_of_int &theMap = record.myunion.getValue<Map_of_int>();
         mapiter = theMap.value.begin();
-        while(mapiter != theMap.value.end()){
+        while (mapiter != theMap.value.end()) {
             std::cout << "unionmap " << mapiter->first << " " << mapiter->second << '\n';
             ++mapiter;
         }
     }
 
-    if(record.anotherunion.choice == 0) {
+    if (record.anotherunion.choice == 0) {
         std::cout << "unionbytes ";
-        const std::vector<uint8_t> &val = record.anotherunion.getValue< std::vector<uint8_t> >();
-        for(size_t i = 0; i < val.size(); ++i) {
+        const std::vector<uint8_t> &val = record.anotherunion.getValue<std::vector<uint8_t> >();
+        for (size_t i = 0; i < val.size(); ++i) {
             std::cout << i << ":" << static_cast<int>(val[i]) << " ";
         }
-        std::cout  << '\n';
+        std::cout << '\n';
     }
 
     std::cout << "mybool " << record.mybool << '\n';
@@ -88,22 +87,21 @@ void printRecord(testgen::RootRecord &record)
     std::cout << "inval3 " << record.anothernested.inval3 << '\n';
 
     std::cout << "fixed ";
-    for(size_t i = 0; i < record.myfixed.fixedSize; ++i) {
+    for (size_t i = 0; i < record.myfixed.fixedSize; ++i) {
         std::cout << i << ":" << static_cast<int>(record.myfixed.value[i]) << " ";
     }
-    std::cout  << '\n';
+    std::cout << '\n';
 
     std::cout << "anotherint " << record.anotherint << '\n';
 
     std::cout << "bytes ";
-    for(size_t i = 0; i < record.bytes.size(); ++i) {
+    for (size_t i = 0; i < record.bytes.size(); ++i) {
         std::cout << i << ":" << static_cast<int>(record.bytes[i]) << " ";
     }
-    std::cout  << '\n';
+    std::cout << '\n';
 }
 
-void printRecord(testgen2::RootRecord &record)
-{
+void printRecord(testgen2::RootRecord &record) {
     using namespace testgen2;
     std::cout << "mylong " << record.mylong << '\n';
     std::cout << "inval1 " << record.nestedrecord.inval1 << '\n';
@@ -111,23 +109,23 @@ void printRecord(testgen2::RootRecord &record)
     std::cout << "inval3 " << record.nestedrecord.inval3 << '\n';
 
     Map_of_long::MapType::const_iterator mapiter = record.mymap.value.begin();
-    while(mapiter != record.mymap.value.end()){
+    while (mapiter != record.mymap.value.end()) {
         std::cout << "mymap " << mapiter->first << " " << mapiter->second << '\n';
         ++mapiter;
     }
 
     Array_of_double::ArrayType::iterator arrayiter = record.myarray.value.begin();
-    while(arrayiter != record.myarray.value.end()) {
+    while (arrayiter != record.myarray.value.end()) {
         std::cout << "myarray " << *arrayiter << '\n';
         ++arrayiter;
     }
 
     std::cout << "myeum = " << record.myenum.value << '\n';
 
-    if(record.myunion.choice == 1) {
+    if (record.myunion.choice == 1) {
         const Map_of_float &theMap = record.myunion.getValue<Map_of_float>();
         Map_of_float::MapType::const_iterator mapiter = theMap.value.begin();
-        while(mapiter != theMap.value.end()){
+        while (mapiter != theMap.value.end()) {
             std::cout << "unionmap " << mapiter->first << " " << mapiter->second << '\n';
             ++mapiter;
         }
@@ -135,40 +133,38 @@ void printRecord(testgen2::RootRecord &record)
 
     std::cout << "unionbytes ";
     const std::vector<uint8_t> &val = record.anotherunion;
-    for(size_t i = 0; i < val.size(); ++i) {
+    for (size_t i = 0; i < val.size(); ++i) {
         std::cout << i << ":" << static_cast<int>(val[i]) << " ";
     }
-    std::cout  << '\n';
+    std::cout << '\n';
 
     std::cout << "inval1 " << record.anothernested.inval1 << '\n';
     std::cout << "inval2 " << record.anothernested.inval2 << '\n';
     std::cout << "inval3 " << record.anothernested.inval3 << '\n';
 
-    if(record.myfixed.choice == 1) {
+    if (record.myfixed.choice == 1) {
         const md5 &myfixed = record.myfixed.getValue<md5>();
         std::cout << "fixed ";
-        for(size_t i = 0; i < myfixed.fixedSize; ++i) {
+        for (size_t i = 0; i < myfixed.fixedSize; ++i) {
             std::cout << i << ":" << static_cast<int>(myfixed.value[i]) << " ";
         }
-        std::cout  << '\n';
+        std::cout << '\n';
     }
 
     std::cout << "anotherint " << record.anotherint << '\n';
 
     std::cout << "bytes ";
-    for(size_t i = 0; i < record.bytes.size(); ++i) {
+    for (size_t i = 0; i < record.bytes.size(); ++i) {
         std::cout << i << ":" << static_cast<int>(record.bytes[i]) << " ";
     }
-    std::cout  << '\n';
+    std::cout << '\n';
     std::cout << "newbool " << record.newbool << '\n';
 }
 
-
-void setRecord(testgen::RootRecord &myRecord)
-{
+void setRecord(testgen::RootRecord &myRecord) {
     using namespace testgen;
 
-    uint8_t fixed[] =  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    uint8_t fixed[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
     myRecord.mylong = 212;
     myRecord.nestedrecord.inval1 = std::numeric_limits<double>::min();
@@ -205,8 +201,7 @@ void setRecord(testgen::RootRecord &myRecord)
 
 struct TestCodeGenerator {
 
-    void serializeToScreen()
-    {
+    void serializeToScreen() {
         std::cout << "Serialize:\n";
         avro::Writer writer;
 
@@ -215,8 +210,7 @@ struct TestCodeGenerator {
         std::cout << "end Serialize\n";
     }
 
-    void serializeToScreenValid()
-    {
+    void serializeToScreenValid() {
         std::cout << "Validated Serialize:\n";
         avro::ValidatingWriter writer(schema_);
 
@@ -225,23 +219,21 @@ struct TestCodeGenerator {
         std::cout << "end Validated Serialize\n";
     }
 
-    void checkArray(const testgen::Array_of_double &a1, const testgen::Array_of_double &a2)
-    {
+    void checkArray(const testgen::Array_of_double &a1, const testgen::Array_of_double &a2) {
         BOOST_CHECK_EQUAL(a1.value.size(), 3U);
         BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
-        for(size_t i = 0; i < a1.value.size(); ++i) {
+        for (size_t i = 0; i < a1.value.size(); ++i) {
             BOOST_CHECK_EQUAL(a1.value[i], a2.value[i]);
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen::Map_of_int &map2)
-    {
+    void checkMap(const testgen::Map_of_int &map1, const testgen::Map_of_int &map2) {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
-        testgen::Map_of_int::MapType::const_iterator end   = map1.value.end();
+        testgen::Map_of_int::MapType::const_iterator end = map1.value.end();
         testgen::Map_of_int::MapType::const_iterator iter2 = map2.value.begin();
 
-        while(iter1 != end) {
+        while (iter1 != end) {
             BOOST_CHECK_EQUAL(iter1->first, iter2->first);
             BOOST_CHECK_EQUAL(iter1->second, iter2->second);
             ++iter1;
@@ -249,24 +241,21 @@ struct TestCodeGenerator {
         }
     }
 
-    void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2)
-    {
+    void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2) {
         BOOST_CHECK_EQUAL(v1.size(), 2U);
         BOOST_CHECK_EQUAL(v1.size(), v2.size());
-        for(size_t i = 0; i < v1.size(); ++i) {
+        for (size_t i = 0; i < v1.size(); ++i) {
             BOOST_CHECK_EQUAL(v1[i], v2[i]);
         }
     }
 
-    void checkNested(const testgen::Nested &rec1, const testgen::Nested &rec2)
-    {
+    void checkNested(const testgen::Nested &rec1, const testgen::Nested &rec2) {
         BOOST_CHECK_EQUAL(rec1.inval1, rec2.inval1);
         BOOST_CHECK_EQUAL(rec1.inval2, rec2.inval2);
         BOOST_CHECK_EQUAL(rec1.inval3, rec2.inval3);
     }
 
-    void checkOk(const testgen::RootRecord &rec1, const testgen::RootRecord &rec2)
-    {
+    void checkOk(const testgen::RootRecord &rec1, const testgen::RootRecord &rec2) {
         BOOST_CHECK_EQUAL(rec1.mylong, rec1.mylong);
 
         checkNested(rec1.nestedrecord, rec2.nestedrecord);
@@ -287,14 +276,15 @@ struct TestCodeGenerator {
         {
             BOOST_CHECK_EQUAL(rec1.anotherunion.choice, 0);
             using mytype = std::vector<uint8_t>;
-            checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<testgen::Union_of_bytes_null::T0>());
+            checkBytes(rec1.anotherunion.getValue<mytype>(),
+                       rec2.anotherunion.getValue<testgen::Union_of_bytes_null::T0>());
         }
 
         checkNested(rec1.anothernested, rec2.anothernested);
 
         BOOST_CHECK_EQUAL(rec1.mybool, rec2.mybool);
 
-        for(int i = 0; i < static_cast<int>(testgen::md5::fixedSize); ++i) {
+        for (int i = 0; i < static_cast<int>(testgen::md5::fixedSize); ++i) {
             BOOST_CHECK_EQUAL(rec1.myfixed.value[i], rec2.myfixed.value[i]);
         }
         BOOST_CHECK_EQUAL(rec1.anotherint, rec2.anotherint);
@@ -302,8 +292,7 @@ struct TestCodeGenerator {
         checkBytes(rec1.bytes, rec2.bytes);
     }
 
-    void testParser()
-    {
+    void testParser() {
         avro::Writer s;
 
         avro::serialize(s, myRecord_);
@@ -315,10 +304,8 @@ struct TestCodeGenerator {
         checkOk(myRecord_, inRecord);
     }
 
-
-    void testParserValid()
-    {
-        avro::ValidatingWriter s (schema_);
+    void testParserValid() {
+        avro::ValidatingWriter s(schema_);
 
         avro::serialize(s, myRecord_);
 
@@ -329,8 +316,7 @@ struct TestCodeGenerator {
         checkOk(myRecord_, inRecord);
     }
 
-    void testNameIndex()
-    {
+    void testNameIndex() {
         const avro::NodePtr &node = schema_.root();
         size_t index = 0;
         bool found = node->nameIndex("anothernested", index);
@@ -347,8 +333,7 @@ struct TestCodeGenerator {
         BOOST_CHECK_EQUAL(index, 1U);
     }
 
-    void test()
-    {
+    void test() {
         std::cout << "Running code generation tests\n";
 
         testNameIndex();
@@ -362,8 +347,7 @@ struct TestCodeGenerator {
         std::cout << "Finished code generation tests\n";
     }
 
-    TestCodeGenerator()
-    {
+    TestCodeGenerator() {
         setRecord(myRecord_);
         std::ifstream in(gWriter.c_str());
         avro::compileJsonSchema(in, schema_);
@@ -376,23 +360,21 @@ struct TestCodeGenerator {
 
 struct TestSchemaResolving {
 
-    void checkArray(const testgen::Array_of_double &a1, const testgen2::Array_of_double &a2)
-    {
+    void checkArray(const testgen::Array_of_double &a1, const testgen2::Array_of_double &a2) {
         BOOST_CHECK_EQUAL(a1.value.size(), 3U);
         BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
-        for(size_t i = 0; i < a1.value.size(); ++i) {
+        for (size_t i = 0; i < a1.value.size(); ++i) {
             BOOST_CHECK_EQUAL(a1.value[i], a2.value[i]);
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_long &map2)
-    {
+    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_long &map2) {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
-        testgen::Map_of_int::MapType::const_iterator end   = map1.value.end();
+        testgen::Map_of_int::MapType::const_iterator end = map1.value.end();
         testgen2::Map_of_long::MapType::const_iterator iter2 = map2.value.begin();
 
-        while(iter1 != end) {
+        while (iter1 != end) {
             BOOST_CHECK_EQUAL(iter1->first, iter2->first);
             BOOST_CHECK_EQUAL(static_cast<float>(iter1->second), iter2->second);
             ++iter1;
@@ -400,14 +382,13 @@ struct TestSchemaResolving {
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_float &map2)
-    {
+    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_float &map2) {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
-        testgen::Map_of_int::MapType::const_iterator end   = map1.value.end();
+        testgen::Map_of_int::MapType::const_iterator end = map1.value.end();
         testgen2::Map_of_float::MapType::const_iterator iter2 = map2.value.begin();
 
-        while(iter1 != end) {
+        while (iter1 != end) {
             BOOST_CHECK_EQUAL(iter1->first, iter2->first);
             BOOST_CHECK_EQUAL(static_cast<int64_t>(iter1->second), iter2->second);
             ++iter1;
@@ -415,24 +396,21 @@ struct TestSchemaResolving {
         }
     }
 
-    void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2)
-    {
+    void checkBytes(const std::vector<uint8_t> &v1, const std::vector<uint8_t> &v2) {
         BOOST_CHECK_EQUAL(v1.size(), 2U);
         BOOST_CHECK_EQUAL(v1.size(), v2.size());
-        for(size_t i = 0; i < v1.size(); ++i) {
+        for (size_t i = 0; i < v1.size(); ++i) {
             BOOST_CHECK_EQUAL(v1[i], v2[i]);
         }
     }
 
-    void checkNested(const testgen::Nested &rec1, const testgen2::Nested &rec2)
-    {
+    void checkNested(const testgen::Nested &rec1, const testgen2::Nested &rec2) {
         BOOST_CHECK_EQUAL(rec1.inval1, rec2.inval1);
         BOOST_CHECK_EQUAL(rec1.inval2, rec2.inval2);
         BOOST_CHECK_EQUAL(rec1.inval3, rec2.inval3);
     }
 
-    void checkOk(const testgen::RootRecord &rec1, const testgen2::RootRecord &rec2)
-    {
+    void checkOk(const testgen::RootRecord &rec1, const testgen2::RootRecord &rec2) {
         BOOST_CHECK_EQUAL(rec1.mylong, rec1.mylong);
 
         checkNested(rec1.nestedrecord, rec2.nestedrecord);
@@ -463,29 +441,26 @@ struct TestSchemaResolving {
         BOOST_CHECK_EQUAL(rec2.myfixed.choice, 1);
         {
             const testgen2::md5 &myfixed2 = rec2.myfixed.getValue<testgen2::md5>();
-            for(int i = 0; i < static_cast<int>(testgen::md5::fixedSize); ++i) {
+            for (int i = 0; i < static_cast<int>(testgen::md5::fixedSize); ++i) {
                 BOOST_CHECK_EQUAL(rec1.myfixed.value[i], myfixed2.value[i]);
             }
         }
     }
 
-    avro::InputBuffer serializeWriteRecordToBuffer()
-    {
+    avro::InputBuffer serializeWriteRecordToBuffer() {
         std::ostringstream ostring;
         avro::Writer s;
         avro::serialize(s, writeRecord_);
         return s.buffer();
     }
 
-    void parseData(const avro::InputBuffer &buf, avro::ResolverSchema &xSchema)
-    {
+    void parseData(const avro::InputBuffer &buf, avro::ResolverSchema &xSchema) {
         avro::ResolvingReader r(xSchema, buf);
 
         avro::parse(r, readRecord_);
     }
 
-    void test()
-    {
+    void test() {
         std::cout << "Running schema resolution tests\n";
         testgen2::RootRecord_Layout layout;
 
@@ -502,8 +477,7 @@ struct TestSchemaResolving {
         std::cout << "Finished schema resolution tests\n";
     }
 
-    TestSchemaResolving()
-    {
+    TestSchemaResolving() {
         setRecord(writeRecord_);
         std::ifstream win(gWriter.c_str());
         avro::compileJsonSchema(win, writerSchema_);
@@ -520,37 +494,34 @@ struct TestSchemaResolving {
 };
 
 template<typename T>
-void addTestCase(boost::unit_test::test_suite &test)
-{
-    std::shared_ptr<T> newtest( new T );
-    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
+void addTestCase(boost::unit_test::test_suite &test) {
+    std::shared_ptr<T> newtest(new T);
+    test.add(BOOST_CLASS_TEST_CASE(&T::test, newtest));
 }
 
-boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] )
-{
+boost::unit_test::test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
     using namespace boost::unit_test;
 
     const char *srcPath = getenv("top_srcdir");
 
-    if(srcPath) {
+    if (srcPath) {
         std::string srcPathStr(srcPath);
         gWriter = srcPathStr + '/' + gWriter;
         gReader = srcPathStr + '/' + gReader;
-    }
-    else {
-        if(argc > 1) {
+    } else {
+        if (argc > 1) {
             gWriter = argv[1];
         }
 
-        if(argc > 2) {
+        if (argc > 2) {
             gReader = argv[2];
         }
     }
     std::cout << "Using writer schema " << gWriter << std::endl;
     std::cout << "Using reader schema " << gReader << std::endl;
 
-    test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
+    test_suite *test = BOOST_TEST_SUITE("Avro C++ unit test suite");
 
     addTestCase<TestCodeGenerator>(*test);
     addTestCase<TestSchemaResolving>(*test);

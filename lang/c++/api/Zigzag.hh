@@ -48,7 +48,6 @@ AVRO_DECL constexpr int32_t decodeZigzag32(uint32_t input) noexcept {
 AVRO_DECL size_t encodeInt32(int32_t input, std::array<uint8_t, 5> &output) noexcept;
 AVRO_DECL size_t encodeInt64(int64_t input, std::array<uint8_t, 10> &output) noexcept;
 
-
 } // namespace avro
 
 #endif

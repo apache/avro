@@ -22,8 +22,7 @@
 #include "Compiler.hh"
 #include "ValidSchema.hh"
 
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
     int ret = 0;
     try {
         avro::ValidSchema schema;

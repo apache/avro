@@ -60,17 +60,17 @@ const std::string &toString(Type type) noexcept {
 }
 
 std::ostream &operator<<(std::ostream &os, Type type) {
-  if (isAvroTypeOrPseudoType(type)) {
-    os << strings::typeToString[type];
-  } else {
-    os << static_cast<int>(type);
-  }
-  return os;
+    if (isAvroTypeOrPseudoType(type)) {
+        os << strings::typeToString[type];
+    } else {
+        os << static_cast<int>(type);
+    }
+    return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const Null &) {
-  os << "(null value)";
-  return os;
+    os << "(null value)";
+    return os;
 }
 
 } // namespace avro

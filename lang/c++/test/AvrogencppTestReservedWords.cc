@@ -30,7 +30,6 @@
 #undef max
 #endif
 
-
 using std::unique_ptr;
 using std::map;
 using std::string;
@@ -51,17 +50,14 @@ using avro::validatingEncoder;
 using avro::binaryDecoder;
 using avro::validatingDecoder;
 
-
-void testCppReservedWords()
-{
+void testCppReservedWords() {
     // Simply including the generated header is enough to test this.
     // the header will not compile if reserved words were used
 }
 
-boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
-    boost::unit_test::test_suite* ts = BOOST_TEST_SUITE("Code generator tests");
+boost::unit_test::test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
+    boost::unit_test::test_suite *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testCppReservedWords));
     return ts;
 }
