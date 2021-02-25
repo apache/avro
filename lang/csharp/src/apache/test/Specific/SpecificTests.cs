@@ -429,9 +429,6 @@ namespace Avro.Test
 
             using (var stream = serialize(schema2, srcSpecificRecord))
             {
-                var deserializedWithSchema2 = deserialize<RootType>(stream, schema2, schema2);
-                stream.Position = 0;
-
                 Assert.Throws<AvroException>(() => _ = deserialize<RootType>(stream, schema1, schema2));
                 stream.Position = 0;
 
@@ -446,7 +443,6 @@ namespace Avro.Test
                     SchemaConfiguration.UseSoftMatch = false;
                 }
 
-                AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithSchema2);
                 AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithSchema1ToSchema2);
             }
         }
