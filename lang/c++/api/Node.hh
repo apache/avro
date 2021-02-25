@@ -41,7 +41,7 @@ using NodePtr = std::shared_ptr<Node>;
 class AVRO_DECL Name {
     std::string ns_;
     std::string simpleName_;
- public:
+public:
     Name() = default;
     explicit Name(const std::string &fullname);
     Name(std::string simpleName, std::string ns) : ns_(std::move(ns)), simpleName_(std::move(simpleName)) { check(); }
@@ -81,14 +81,14 @@ std::ostream &operator<<(std::ostream &os, const Name &n) {
 ///
 /// The Node object uses reference-counted pointers.  This is so that schemas
 /// may be reused in other schemas, without needing to worry about memory
-/// deallocation for nodes that are added to multiple schema parse trees.
+/// de-allocation for nodes that are added to multiple schema parse trees.
 ///
 /// Node has minimal implementation, serving as an abstract base class for
 /// different node types.
 ///
 
 class AVRO_DECL Node : private boost::noncopyable {
- public:
+public:
 
     explicit Node(Type type) :
         type_(type),
@@ -135,8 +135,8 @@ class AVRO_DECL Node : private boost::noncopyable {
         doAddLeaf(newLeaf);
     }
     virtual size_t leaves() const = 0;
-    virtual const NodePtr &leafAt(int index) const = 0;
-    virtual const GenericDatum &defaultValueAt(int index) {
+    virtual const NodePtr &leafAt(size_t index) const = 0;
+    virtual const GenericDatum &defaultValueAt(size_t index) {
         throw Exception(boost::format("No default value at: %1%") % index);
     }
 
@@ -146,31 +146,31 @@ class AVRO_DECL Node : private boost::noncopyable {
         doAddName(name);
     }
     virtual size_t names() const = 0;
-    virtual const std::string &nameAt(int index) const = 0;
+    virtual const std::string &nameAt(size_t index) const = 0;
     virtual bool nameIndex(const std::string &name, size_t &index) const = 0;
 
-    void setFixedSize(int size) {
+    void setFixedSize(size_t size) {
         checkLock();
         doSetFixedSize(size);
     }
-    virtual int fixedSize() const = 0;
+    virtual size_t fixedSize() const = 0;
 
     virtual bool isValid() const = 0;
 
     virtual SchemaResolution resolve(const Node &reader) const = 0;
 
-    virtual void printJson(std::ostream &os, int depth) const = 0;
+    virtual void printJson(std::ostream &os, size_t depth) const = 0;
 
     virtual void printBasicInfo(std::ostream &os) const = 0;
 
-    virtual void setLeafToSymbolic(int index, const NodePtr &node) = 0;
+    virtual void setLeafToSymbolic(size_t index, const NodePtr &node) = 0;
 
     // Serialize the default value GenericDatum g for the node contained
     // in a record node.
     virtual void printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                    int depth) const = 0;
+                                    size_t depth) const = 0;
 
- protected:
+protected:
 
     void checkLock() const {
         if (locked()) {
@@ -187,9 +187,9 @@ class AVRO_DECL Node : private boost::noncopyable {
 
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
-    virtual void doSetFixedSize(int size) = 0;
+    virtual void doSetFixedSize(size_t size) = 0;
 
- private:
+private:
 
     const Type type_;
     LogicalType logicalType_;

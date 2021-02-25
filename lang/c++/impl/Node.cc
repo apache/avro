@@ -93,7 +93,7 @@ void Node::setLogicalType(LogicalType logicalType) {
                         boost::format(
                             "DECIMAL precision %1% is too large for the "
                             "FIXED type of size %2%, precision cannot be "
-                            "larget than %3%") % logicalType.precision() %
+                            "larger than %3%") % logicalType.precision() %
                             fixedSize() % maxPrecision);
                 }
             }

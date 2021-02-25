@@ -19,7 +19,7 @@
 #ifndef avro_Config_hh
 #define avro_Config_hh
 
-// Windows DLL suport
+// Windows DLL support
 
 #ifdef _WIN32
 #pragma warning (disable: 4275 4251)

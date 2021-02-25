@@ -28,22 +28,20 @@
 
 namespace avro {
 
-class AVRO_DECL ResolvingReader : private boost::noncopyable
-{
+class AVRO_DECL ResolvingReader : private boost::noncopyable {
 
-  public:
+public:
 
     ResolvingReader(const ResolverSchema &schema, const InputBuffer &in) :
         reader_(in),
-        schema_(schema)
-    {}
+        schema_(schema) {}
 
     template<typename T>
     void parse(T &object) {
         schema_.parse(reader_, reinterpret_cast<uint8_t *>(&object));
     }
 
-  private:
+private:
 
     Reader reader_;
     ResolverSchema schema_;

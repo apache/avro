@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#include <ctype.h>
+#include <cctype>
 #ifndef _WIN32
-#include <sys/time.h>
+#include <ctime>
 #endif
 #include <iostream>
 #include <fstream>
@@ -30,8 +30,7 @@
 #include <boost/program_options.hpp>
 
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <utility>
 
 #include <boost/algorithm/string_regex.hpp>
 
@@ -66,17 +65,16 @@ struct PendingSetterGetter {
     string name;
     size_t idx;
 
-    PendingSetterGetter(const string& sn, const string& t,
-        const string& n, size_t i) :
-        structName(sn), type(t), name(n), idx(i) { }
+    PendingSetterGetter(string  sn, string  t, string  n, size_t i) :
+        structName(std::move(sn)), type(std::move(t)), name(std::move(n)), idx(i) { }
 };
 
 struct PendingConstructor {
     string structName;
     string memberName;
     bool initMember;
-    PendingConstructor(const string& sn, const string& n, bool im) :
-        structName(sn), memberName(n), initMember(im) { }
+    PendingConstructor(string  sn, string  n, bool im) :
+        structName(std::move(sn)), memberName(std::move(n)), initMember(im) { }
 };
 
 class CodeGen {
@@ -113,15 +111,15 @@ class CodeGen {
     void generateUnionTraits(const NodePtr& n);
     void emitCopyright();
 public:
-    CodeGen(std::ostream& os, const std::string& ns,
-        const std::string& schemaFile, const std::string& headerFile,
-        const std::string& guardString,
-        const std::string& includePrefix, bool noUnion) :
-        unionNumber_(0), os_(os), inNamespace_(false), ns_(ns),
-        schemaFile_(schemaFile), headerFile_(headerFile),
-        includePrefix_(includePrefix), noUnion_(noUnion),
-        guardString_(guardString),
-        random_(static_cast<uint32_t>(::time(0))) { }
+    CodeGen(std::ostream& os, std::string  ns,
+        std::string  schemaFile, std::string  headerFile,
+        std::string  guardString,
+        std::string  includePrefix, bool noUnion) :
+        unionNumber_(0), os_(os), inNamespace_(false), ns_(std::move(ns)),
+        schemaFile_(std::move(schemaFile)), headerFile_(std::move(headerFile)),
+        includePrefix_(std::move(includePrefix)), noUnion_(noUnion),
+        guardString_(std::move(guardString)),
+        random_(static_cast<uint32_t>(::time(nullptr))) { }
     void generate(const ValidSchema& schema);
 };
 
@@ -141,8 +139,8 @@ static string decorate(const std::string &name)
         "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"
     };
 
-    for (size_t i = 0; i < sizeof(cppReservedWords)/sizeof(cppReservedWords[0]); i++)
-        if (strcmp(name.c_str(), cppReservedWords[i]) == 0)
+    for (auto & cppReservedWord : cppReservedWords)
+        if (strcmp(name.c_str(), cppReservedWord) == 0)
             return name + '_';
     return name;
 }
@@ -309,13 +307,13 @@ string CodeGen::generateRecordType(const NodePtr& n)
 
 void makeCanonical(string& s, bool foldCase)
 {
-    for (string::iterator it = s.begin(); it != s.end(); ++it) {
-        if (isalpha(*it)) {
+    for (char & c : s) {
+        if (isalpha(c)) {
             if (foldCase) {
-                *it = toupper(*it);
+                c = static_cast<char>(toupper(c));
             }
-        } else if (! isdigit(*it)) {
-            *it = '_';
+        } else if (! isdigit(c)) {
+            c = '_';
         }
     }
 }
@@ -378,7 +376,7 @@ string CodeGen::generateUnionType(const NodePtr& n)
     vector<string> types;
     vector<string> names;
 
-    set<NodePtr>::const_iterator it = doing.find(n);
+    auto it = doing.find(n);
     if (it != doing.end()) {
         for (size_t i = 0; i < c; ++i) {
             const NodePtr& nn = n->leafAt(i);
@@ -398,7 +396,7 @@ string CodeGen::generateUnionType(const NodePtr& n)
         return done[n];
     }
 
-    const string result = unionName();
+    auto result = unionName();
 
     os_ << "struct " << result << " {\n"
         << "private:\n"
@@ -422,14 +420,13 @@ string CodeGen::generateUnionType(const NodePtr& n)
             const string& name = names[i];
             os_ << "    " << type << " get_" << name << "() const;\n"
                    "    void set_" << name << "(const " << type << "& v);\n";
-            pendingGettersAndSetters.push_back(
-                PendingSetterGetter(result, type, name, i));
+            pendingGettersAndSetters.emplace_back(result, type, name, i);
         }
     }
 
     os_ << "    " << result << "();\n";
-    pendingConstructors.push_back(PendingConstructor(result, types[0],
-        n->leafAt(0)->type() != avro::AVRO_NULL));
+    pendingConstructors.emplace_back(result, types[0],
+        n->leafAt(0)->type() != avro::AVRO_NULL);
     os_ << "};\n\n";
 
     return result;
@@ -499,7 +496,7 @@ string CodeGen::doGenerateType(const NodePtr& n)
     default:
         break;
     }
-    return "$Undefuned$";
+    return "$Undefined$";
 }
 
 string CodeGen::generateDeclaration(const NodePtr& n)
@@ -532,7 +529,7 @@ string CodeGen::generateDeclaration(const NodePtr& n)
     default:
         break;
     }
-    return "$Undefuned$";
+    return "$Undefined$";
 }
 
 void CodeGen::generateEnumTraits(const NodePtr& n)
@@ -549,7 +546,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
         << "        if (v > " << fn << "::" << last << ")\n"
         << "        {\n"
         << "            std::ostringstream error;\n"
-        << "            error << \"enum value \" << static_cast<unsigned>(v) << \" is out of bound for " << fn << " and cannot be encoded\";\n"
+        << R"(            error << "enum value " << static_cast<unsigned>(v) << " is out of bound for )" << fn << " and cannot be encoded\";\n"
         << "            throw avro::Exception(error.str());\n"
         << "        }\n"
         << "        e.encodeEnum(static_cast<size_t>(v));\n"
@@ -559,7 +556,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
         << "        if (index > static_cast<size_t>(" << fn << "::" << last << "))\n"
         << "        {\n"
         << "            std::ostringstream error;\n"
-        << "            error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
+        << R"(            error << "enum value " << index << " is out of bound for )" << fn << " and cannot be decoded\";\n"
         << "            throw avro::Exception(error.str());\n"
         << "        }\n"
         << "        v = static_cast<" << fn << ">(index);\n"
@@ -702,7 +699,6 @@ void CodeGen::generateTraits(const NodePtr& n)
         generateUnionTraits(n);
         break;
     case avro::AVRO_FIXED:
-        break;
     default:
         break;
     }
@@ -813,12 +809,6 @@ void CodeGen::generate(const ValidSchema& schema)
 
 namespace po = boost::program_options;
 
-static const string NS("namespace");
-static const string OUT("output");
-static const string IN("input");
-static const string INCLUDE_PREFIX("include-prefix");
-static const string NO_UNION_TYPEDEF("no-union-typedef");
-
 static string readGuard(const string& filename)
 {
     std::ifstream ifs(filename.c_str());
@@ -843,6 +833,12 @@ static string readGuard(const string& filename)
 
 int main(int argc, char** argv)
 {
+    const string NS("namespace");
+    const string OUT("output");
+    const string IN("input");
+    const string INCLUDE_PREFIX("include-prefix");
+    const string NO_UNION_TYPEDEF("no-union-typedef");
+
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")

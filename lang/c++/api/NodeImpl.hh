@@ -93,7 +93,7 @@ protected:
     }
 
     bool hasName() const override {
-        // e.g.: true for single and multiattributes, false for noattributes.
+        // e.g.: true for single and multi-attributes, false for no-attributes.
         return NameConcept::hasAttribute;
     }
 
@@ -113,7 +113,7 @@ protected:
         return docAttribute_.get();
     }
 
-    void doAddLeaf(const NodePtr &newLeaf) override {
+    void doAddLeaf(const NodePtr &newLeaf) final {
         leafAttributes_.add(newLeaf);
     }
 
@@ -121,7 +121,7 @@ protected:
         return leafAttributes_.size();
     }
 
-    const NodePtr &leafAt(int index) const override {
+    const NodePtr &leafAt(size_t index) const override {
         return leafAttributes_.get(index);
     }
 
@@ -136,7 +136,7 @@ protected:
         return leafNameAttributes_.size();
     }
 
-    const std::string &nameAt(int index) const override {
+    const std::string &nameAt(size_t index) const override {
         return leafNameAttributes_.get(index);
     }
 
@@ -144,11 +144,11 @@ protected:
         return nameIndex_.lookup(name, index);
     }
 
-    void doSetFixedSize(int size) override {
+    void doSetFixedSize(size_t size) override {
         sizeAttribute_.add(size);
     }
 
-    int fixedSize() const override {
+    size_t fixedSize() const override {
         return sizeAttribute_.get();
     }
 
@@ -156,7 +156,7 @@ protected:
 
     void printBasicInfo(std::ostream &os) const override;
 
-    void setLeafToSymbolic(int index, const NodePtr &node) override;
+    void setLeafToSymbolic(size_t index, const NodePtr &node) override;
 
     SchemaResolution furtherResolution(const Node &reader) const {
         SchemaResolution match = RESOLVE_NO_MATCH;
@@ -238,13 +238,13 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return true;
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeSymbolic : public NodeImplSymbolic {
@@ -262,13 +262,13 @@ public:
         NodeImplSymbolic(AVRO_SYMBOLIC, name, NoLeaves(), NoLeafNames(), NoSize()), actualNode_(n) {}
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return (nameAttribute_.size() == 1);
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 
     bool isSet() const {
         return (actualNode_.lock() != nullptr);
@@ -321,18 +321,18 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return ((nameAttribute_.size() == 1) &&
             (leafAttributes_.size() == leafNameAttributes_.size()));
     }
 
-    const GenericDatum &defaultValueAt(int index) override {
+    const GenericDatum &defaultValueAt(size_t index) override {
         return defaultValues[index];
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeEnum : public NodeImplEnum {
@@ -352,7 +352,7 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return (
@@ -361,7 +361,7 @@ public:
         );
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeArray : public NodeImplArray {
@@ -375,13 +375,13 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return (leafAttributes_.size() == 1);
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeMap : public NodeImplMap {
@@ -393,7 +393,6 @@ public:
         NodeImplMap(AVRO_MAP, NoName(), MultiLeaves(values), NoLeafNames(), NoSize()) {
         // need to add the key for the map too
         NodePtr key(new NodePrimitive(AVRO_STRING));
-        // FIXME: Calling virtual member function from constructor
         doAddLeaf(key);
 
         // key goes before value
@@ -402,13 +401,13 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return (leafAttributes_.size() == 2);
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeUnion : public NodeImplUnion {
@@ -422,7 +421,7 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         std::set<std::string> seen;
@@ -469,7 +468,7 @@ public:
         return false;
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 class AVRO_DECL NodeFixed : public NodeImplFixed {
@@ -483,7 +482,7 @@ public:
 
     SchemaResolution resolve(const Node &reader) const override;
 
-    void printJson(std::ostream &os, int depth) const override;
+    void printJson(std::ostream &os, size_t depth) const override;
 
     bool isValid() const override {
         return (
@@ -492,12 +491,12 @@ public:
         );
     }
 
-    void printDefaultToJson(const GenericDatum &g, std::ostream &os, int depth) const override;
+    void printDefaultToJson(const GenericDatum &g, std::ostream &os, size_t depth) const override;
 };
 
 template<class A, class B, class C, class D>
 inline void
-NodeImpl<A, B, C, D>::setLeafToSymbolic(int index, const NodePtr &node) {
+NodeImpl<A, B, C, D>::setLeafToSymbolic(size_t index, const NodePtr &node) {
     if (!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
     }

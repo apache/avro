@@ -139,7 +139,8 @@ int64_t BinaryEncoder::byteCount() const {
 }
 
 void BinaryEncoder::doEncodeLong(int64_t l) {
-    std::array<uint8_t, 10> bytes{};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+    std::array<uint8_t, 10> bytes;
     auto size = encodeInt64(l, bytes);
     out_.writeBytes(bytes.data(), size);
 }
