@@ -339,16 +339,55 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testNegativeLengthEncoding() throws IOException {
+  public void testNegativeStringLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
-    String message = "";
+
+    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, bd::readString);
+  }
+
+  @Test
+  public void testStringMaxArraySize() throws IOException {
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
+    Decoder bd = factory.binaryDecoder(bad, null);
+
+    Assert.assertThrows("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+        UnsupportedOperationException.class, bd::readString);
+  }
+
+  @Test
+  public void testNegativeBytesLength() throws IOException {
+    byte[] bad = new byte[] { (byte) 1 };
+    Decoder bd = factory.binaryDecoder(bad, null);
+
+    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, () -> bd.readBytes(null));
+  }
+
+  @Test
+  public void testBytesMaxArraySize() throws IOException {
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
+    Decoder bd = factory.binaryDecoder(bad, null);
+
+    Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+        UnsupportedOperationException.class, () -> bd.readBytes(null));
+  }
+
+  @Test
+  public void testBytesMaxLengthProperty() throws IOException {
+    int maxLength = 128;
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(maxLength + 1, bad, 0);
     try {
-      bd.readString();
-    } catch (AvroRuntimeException e) {
-      message = e.getMessage();
+      System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
+      Decoder bd = factory.binaryDecoder(bad, null);
+
+      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed", AvroRuntimeException.class,
+          () -> bd.readBytes(null));
+    } finally {
+      System.clearProperty("org.apache.avro.limits.bytes.maxLength");
     }
-    Assert.assertEquals("Malformed data. Length is negative: -1", message);
   }
 
   @Test(expected = UnsupportedOperationException.class)
