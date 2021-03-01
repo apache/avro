@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import com.github.luben.zstd.BufferPool;
+import com.github.luben.zstd.NoPool;
+import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.Zstd;
 import com.github.luben.zstd.ZstdInputStream;
 import com.github.luben.zstd.ZstdOutputStream;
@@ -30,13 +33,16 @@ import com.github.luben.zstd.ZstdOutputStream;
  * or decompress methods rather than when we instantiate it */
 final class ZstandardLoader {
 
-  static InputStream input(InputStream compressed) throws IOException {
-    return new ZstdInputStream(compressed);
+  static InputStream input(InputStream compressed, boolean useBufferPool) throws IOException {
+    BufferPool pool = useBufferPool ? RecyclingBufferPool.INSTANCE : NoPool.INSTANCE;
+    return new ZstdInputStream(compressed, pool);
   }
 
-  static OutputStream output(OutputStream compressed, int level, boolean checksum) throws IOException {
+  static OutputStream output(OutputStream compressed, int level, boolean checksum, boolean useBufferPool)
+      throws IOException {
     int bounded = Math.max(Math.min(level, Zstd.maxCompressionLevel()), Zstd.minCompressionLevel());
-    ZstdOutputStream zstdOutputStream = new ZstdOutputStream(compressed, bounded);
+    BufferPool pool = useBufferPool ? RecyclingBufferPool.INSTANCE : NoPool.INSTANCE;
+    ZstdOutputStream zstdOutputStream = new ZstdOutputStream(compressed, pool).setLevel(bounded);
     zstdOutputStream.setCloseFrameOnFlush(false);
     zstdOutputStream.setChecksum(checksum);
     return zstdOutputStream;

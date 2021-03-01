@@ -74,6 +74,8 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.zstandardCodec(0, true) });
     r.add(new Object[] { CodecFactory.zstandardCodec(5, false) });
     r.add(new Object[] { CodecFactory.zstandardCodec(18, true) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, false) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, true) });
     return r;
   }
 
