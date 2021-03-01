@@ -47,7 +47,7 @@ namespace avro {
  */
 class AVRO_DECL Decoder {
 public:
-    virtual ~Decoder() = default;;
+    virtual ~Decoder() = default;
     /// All future decoding will come from is, which should be valid
     /// until replaced by another call to init() or this Decoder is
     /// destructed.
@@ -86,7 +86,7 @@ public:
     /// Skips a string on the current stream.
     virtual void skipString() = 0;
 
-    /// Decodes arbitray binary data from the current stream.
+    /// Decodes arbitrary binary data from the current stream.
     std::vector<uint8_t> decodeBytes() {
         std::vector<uint8_t> result;
         decodeBytes(result);
@@ -116,7 +116,7 @@ public:
      * Decodes a fixed from the current stream.
      * \param[in] n The size (byte count) of the fixed being read.
      * \param[out] value The value that receives the fixed. The vector will
-     * be size-adjusted based on the fixed's size.
+     * be size-adjusted based on the fixed schema's size.
      */
     virtual void decodeFixed(size_t n, std::vector<uint8_t> &value) = 0;
 

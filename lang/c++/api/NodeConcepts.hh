@@ -62,14 +62,14 @@ struct NoAttribute {
         throw Exception("This type does not have attribute");
     }
 
-    const Attribute &get(size_t = 0) const {
+    const Attribute &get(size_t /* index */ = 0) const {
         // There must be an get function for the generic NodeImpl, but the
         // Node APIs ensure that it is never called, the throw here is
         // just in case
         throw Exception("This type does not have attribute");
     }
 
-    Attribute &get(size_t = 0) {
+    Attribute &get(size_t /* index */ = 0) {
         // There must be an get function for the generic NodeImpl, but the
         // Node APIs ensure that it is never called, the throw here is
         // just in case

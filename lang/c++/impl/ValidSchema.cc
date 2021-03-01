@@ -142,23 +142,23 @@ namespace avro {
  */
     string ValidSchema::compactSchema(const string &schema) {
         auto insideQuote = false;
-        auto newPos = 0;
-        auto data = string{schema.data()};
+        size_t newPos = 0;
+        string data = schema;
 
-        for (auto currentPos = 0; currentPos < schema.size(); currentPos++) {
-            if (!insideQuote && std::isspace(data[currentPos])) {
+        for (auto c : schema) {
+            if (!insideQuote && std::isspace(c)) {
                 // Skip the white spaces outside quotes.
                 continue;
             }
 
-            if (data[currentPos] == '\"') {
+            if (c == '\"') {
                 // It is valid for a quote to be part of the value for some fields,
                 // e.g., the "doc" field.  In that case, the quote is expected to be
                 // escaped inside the schema.  Since the escape character '\\' could
                 // be escaped itself, we need to check whether there are an even
                 // number of consecutive slashes prior to the quote.
                 auto leadingSlashes = 0;
-                for (int i = newPos - 1; i >= 0; i--) {
+                for (int i = static_cast<int>(newPos) - 1; i >= 0; i--) {
                     if (data[i] == '\\') {
                         leadingSlashes++;
                     } else {
@@ -171,7 +171,7 @@ namespace avro {
                     insideQuote = !insideQuote;
                 }
             }
-            data[newPos++] = data[currentPos];
+            data[newPos++] = c;
         }
 
         if (insideQuote) {

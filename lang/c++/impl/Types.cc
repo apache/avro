@@ -59,7 +59,7 @@ const std::string &toString(Type type) noexcept {
   }
 }
 
-std::ostream &operator<<(std::ostream &os, Type type) noexcept {
+std::ostream &operator<<(std::ostream &os, Type type) {
   if (isAvroTypeOrPseudoType(type)) {
     os << strings::typeToString[type];
   } else {
@@ -68,7 +68,7 @@ std::ostream &operator<<(std::ostream &os, Type type) noexcept {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const Null &) noexcept {
+std::ostream &operator<<(std::ostream &os, const Null &) {
   os << "(null value)";
   return os;
 }

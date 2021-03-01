@@ -31,7 +31,7 @@
 /// \file
 ///
 /// Low level support for encoding avro values.
-/// This class has two types of funtions.  One type of functions support
+/// This class has two types of functions.  One type of functions support
 /// the writing of leaf values (for example, encodeLong and
 /// encodeString).  These functions have analogs in Decoder.
 ///
@@ -46,12 +46,12 @@ namespace avro {
 
 /**
  * The abstract base class for all Avro encoders. The implementations
- * differ in the method of encoding (binary vresus JSON) or in capabilities
+ * differ in the method of encoding (binary versus JSON) or in capabilities
  * such as ability to verify the order of invocation of different functions.
  */
 class AVRO_DECL Encoder {
 public:
-    virtual ~Encoder() = default;;
+    virtual ~Encoder() = default;
     /// All future encodings will go to os, which should be valid until
     /// it is reset with another call to init() or the encoder is
     /// destructed.
@@ -86,7 +86,7 @@ public:
     virtual void encodeString(const std::string &s) = 0;
 
     /**
-     * Encodes aribtray binary data into tthe current stream as Avro "bytes"
+     * Encodes arbitrary binary data into the current stream as Avro "bytes"
      * data type.
      * \param bytes Where the data is
      * \param len Number of bytes at \p bytes.
@@ -94,7 +94,7 @@ public:
     virtual void encodeBytes(const uint8_t *bytes, size_t len) = 0;
 
     /**
-     * Encodes aribtray binary data into tthe current stream as Avro "bytes"
+     * Encodes arbitrary binary data into the current stream as Avro "bytes"
      * data type.
      * \param bytes The data.
      */
