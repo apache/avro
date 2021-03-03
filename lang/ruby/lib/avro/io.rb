@@ -582,12 +582,15 @@ module Avro
       end
 
       def write_union(writers_schema, datum, encoder)
-        index_of_schema = -1
-        found = writers_schema.schemas.
-          find{|e| index_of_schema += 1; found = Schema.validate(e, datum) }
-        unless found  # Because find_index doesn't exist in 1.8.6
+        index_of_schema = writers_schema.schemas.find_index do |schema|
+          # Optimize away expensive validation calls for the common null type
+          schema.type_sym == :null ? datum.nil? : Schema.validate(schema, datum)
+        end
+
+        unless index_of_schema
           raise AvroTypeError.new(writers_schema, datum)
         end
+
         encoder.write_long(index_of_schema)
         write_data(writers_schema.schemas[index_of_schema], datum, encoder)
       end

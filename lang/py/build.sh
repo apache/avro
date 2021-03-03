@@ -54,11 +54,11 @@ interop-data-test() {
 }
 
 lint() {
-  tox -e lint
+  python3 -m tox -e lint
 }
 
 test_() {
-  TOX_SKIP_ENV=lint tox --skip-missing-interpreters
+  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
 }
 
 main() {

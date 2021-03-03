@@ -18,11 +18,11 @@
 set -e
 
 # connect to avro ruby root directory
-cd `dirname "$0"`
+cd "$(dirname "$0")"
 
 # maintain our gems here
-export GEM_HOME=.gem/
-export PATH="$PATH:.gem/bin"
+export GEM_HOME="$PWD/.gem/"
+export PATH="$GEM_HOME/bin:$PATH"
 
 # bootstrap bundler
 gem install --no-document -v 1.17.3 bundler
@@ -32,7 +32,7 @@ for target in "$@"
 do
   case "$target" in
     lint)
-      rubocop --lint
+      bundle exec rubocop --lint
       ;;
 
     test)

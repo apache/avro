@@ -17,6 +17,7 @@
  */
 package org.apache.avro.file;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
@@ -58,7 +59,15 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     // read magic header
     byte[] magic = new byte[MAGIC.length];
     in.seek(0);
-    for (int c = 0; c < magic.length; c = in.read(magic, c, magic.length - c)) {
+    int offset = 0;
+    int length = magic.length;
+    while (length > 0) {
+      int bytesRead = in.read(magic, offset, length);
+      if (bytesRead < 0)
+        throw new EOFException("Unexpected EOF with " + length + " bytes remaining to read");
+
+      length -= bytesRead;
+      offset += bytesRead;
     }
     in.seek(0);
 

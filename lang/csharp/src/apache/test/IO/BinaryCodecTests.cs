@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Buffers;
 using NUnit.Framework;
 using System.IO;
-
+using System.Linq;
 using Avro.IO;
 
 namespace Avro.Test
@@ -208,11 +207,29 @@ namespace Avro.Test
         [TestCase("", 1)]
         [TestCase("hello", 1)]
         [TestCase("1234567890123456789012345678901234567890123456789012345678901234", 2)]
+        [TestCase("01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", 2)]
         public void TestString(string n, int overhead)
         {
             TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
             TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
         }
+
+#if NETCOREAPP3_1
+        [Test]
+        public void TestLargeString()
+        {
+            // Create a 16KB buffer in the Array Pool
+            var largeBufferToSeedPool = ArrayPool<byte>.Shared.Rent(2 << 14);
+            ArrayPool<byte>.Shared.Return(largeBufferToSeedPool);
+
+            // Create a slightly less than 16KB buffer, which will use the 16KB buffer in the pool
+            var n = string.Concat(Enumerable.Repeat("1234567890", 1600));
+            var overhead = 3;
+
+            TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
+            TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
+        }
+#endif
 
         [TestCase(0, 1)]
         [TestCase(1, 1)]

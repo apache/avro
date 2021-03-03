@@ -64,7 +64,7 @@ namespace Avro
                 this.EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
             }
 #pragma warning disable CA1307 // Specify StringComparison
-            else if (name.IndexOf('.') == -1)
+            else if (!name.Contains("."))
 #pragma warning restore CA1307 // Specify StringComparison
             {                          // unqualified name
                 this.Space = space;    // use default space

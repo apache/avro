@@ -72,10 +72,10 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
     return DECODER.decode(b);
   }
 
-   private java.lang.CharSequence name;
-   private java.lang.CharSequence nullable_name;
-   private java.lang.Object favorite_number;
-   private java.lang.Integer nullable_favorite_number;
+  private java.lang.CharSequence name;
+  private java.lang.CharSequence nullable_name;
+  private java.lang.Object favorite_number;
+  private java.lang.Integer nullable_favorite_number;
 
   /**
    * Default constructor.  Note that this does not initialize fields

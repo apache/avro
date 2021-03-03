@@ -68,7 +68,7 @@ namespace Avro.IO
             int length = ReadInt();
             Span<byte> buffer = length <= StackallocThreshold ?
                 stackalloc byte[length] :
-                (bufferArray = ArrayPool<byte>.Shared.Rent(length));
+                (bufferArray = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
 
             Read(buffer);
 

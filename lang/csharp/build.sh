@@ -42,7 +42,7 @@ do
 
     perf)
       pushd ./src/apache/perf/
-      dotnet run --configuration Release --framework netcoreapp3.1
+      dotnet run --configuration Release --framework net5.0
       ;;
 
     dist)
@@ -70,7 +70,7 @@ do
       ;;
 
     interop-data-generate)
-      dotnet run --project src/apache/test/Avro.test.csproj --framework netcoreapp3.1 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      dotnet run --project src/apache/test/Avro.test.csproj --framework net5.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
 
     interop-data-test)

@@ -22,25 +22,46 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/lang/csharp/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "maven"
     directory: "/lang/java/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    ignore:
+      # Jetty >= 10 requires JDK 11
+      - dependency-name: "org.eclipse.jetty:jetty-server"
+        versions:
+          - ">= 10.0.0"
+      - dependency-name: "org.eclipse.jetty:jetty-servlet"
+        versions:
+          - ">= 10.0.0"
+      - dependency-name: "org.eclipse.jetty:jetty-util"
+        versions:
+          - ">= 10.0.0"
+    open-pull-requests-limit: 50
 
   - package-ecosystem: "npm"
     directory: "/lang/js"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "pip"
     directory: "/lang/py/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "bundler"
     directory: "/lang/ruby/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 20
 

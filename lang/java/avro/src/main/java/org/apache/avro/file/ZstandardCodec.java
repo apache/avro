@@ -27,33 +27,39 @@ import java.nio.ByteBuffer;
 import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
+  public final static int DEFAULT_COMPRESSION = 3;
+  public final static boolean DEFAULT_USE_BUFFERPOOL = false;
 
   static class Option extends CodecFactory {
     private final int compressionLevel;
     private final boolean useChecksum;
+    private final boolean useBufferPool;
 
-    Option(int compressionLevel, boolean useChecksum) {
+    Option(int compressionLevel, boolean useChecksum, boolean useBufferPool) {
       this.compressionLevel = compressionLevel;
       this.useChecksum = useChecksum;
+      this.useBufferPool = useBufferPool;
     }
 
     @Override
     protected Codec createInstance() {
-      return new ZstandardCodec(compressionLevel, useChecksum);
+      return new ZstandardCodec(compressionLevel, useChecksum, useBufferPool);
     }
   }
 
   private final int compressionLevel;
   private final boolean useChecksum;
+  private final boolean useBufferPool;
   private ByteArrayOutputStream outputBuffer;
 
   /**
-   * Create a ZstandardCodec instance with the given compressionLevel and checksum
-   * option
+   * Create a ZstandardCodec instance with the given compressionLevel, checksum,
+   * and bufferPool option
    **/
-  public ZstandardCodec(int compressionLevel, boolean useChecksum) {
+  public ZstandardCodec(int compressionLevel, boolean useChecksum, boolean useBufferPool) {
     this.compressionLevel = compressionLevel;
     this.useChecksum = useChecksum;
+    this.useBufferPool = useBufferPool;
   }
 
   @Override
@@ -64,7 +70,7 @@ public class ZstandardCodec extends Codec {
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    try (OutputStream outputStream = ZstandardLoader.output(baos, compressionLevel, useChecksum)) {
+    try (OutputStream outputStream = ZstandardLoader.output(baos, compressionLevel, useChecksum, useBufferPool)) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
     return ByteBuffer.wrap(baos.toByteArray());
@@ -75,7 +81,7 @@ public class ZstandardCodec extends Codec {
     ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
     InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
         compressedData.remaining());
-    try (InputStream ios = ZstandardLoader.input(bytesIn)) {
+    try (InputStream ios = ZstandardLoader.input(bytesIn, useBufferPool)) {
       IOUtils.copy(ios, baos);
     }
     return ByteBuffer.wrap(baos.toByteArray());

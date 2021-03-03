@@ -73,10 +73,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   }
 
   /** The number of the player */
-   private int number;
-   private java.lang.String first_name;
-   private java.lang.String last_name;
-   private java.util.List<avro.examples.baseball.Position> position;
+  private int number;
+  private java.lang.String first_name;
+  private java.lang.String last_name;
+  private java.util.List<avro.examples.baseball.Position> position;
 
   /**
    * Default constructor.  Note that this does not initialize fields
