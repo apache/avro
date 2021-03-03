@@ -55,7 +55,7 @@ struct NoAttribute {
         return 0;
     }
 
-    void add(const Attribute &attr) {
+    void add(const Attribute &/* attr */) {
         // There must be an add function for the generic NodeImpl, but the
         // Node APIs ensure that it is never called, the throw here is
         // just in case
