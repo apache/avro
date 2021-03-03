@@ -42,7 +42,7 @@
   -->
   <PropertyGroup Label="Minimum Package Versions">
     <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
-    <SystemCodeDomMinimumVersion>4.4.0</SystemCodeDomMinimumVersion>
+    <SystemCodeDomMinimumVersion>5.0.0</SystemCodeDomMinimumVersion>
     <SystemReflectionMinimumVersion>4.3.0</SystemReflectionMinimumVersion>
     <SystemReflectionEmitILGenerationMinimumVersion>4.3.0</SystemReflectionEmitILGenerationMinimumVersion>
     <SystemReflectionEmitLightweightMinimumVersion>4.3.0</SystemReflectionEmitLightweightMinimumVersion>
