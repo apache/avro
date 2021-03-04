@@ -312,6 +312,7 @@
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/FieldTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Proto.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
