@@ -61,10 +61,10 @@ ${this.mangle($error.getFullName())}##
 #end## (requests)
 
 ## Generate nested callback API
-  @SuppressWarnings("all")
 #if ($protocol.getDoc())
   /** $protocol.getDoc() */
 #end
+  @org.apache.avro.specific.AvroGenerated
   public interface Callback extends $this.mangle($protocol.getName()) {
     public static final org.apache.avro.Protocol PROTOCOL = #if ($this.mangle($protocol.getNamespace()))$this.mangle($protocol.getNamespace()).#end${this.mangle($protocol.getName())}.PROTOCOL;
 #foreach ($e in $protocol.getMessages().entrySet())
