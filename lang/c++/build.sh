@@ -115,7 +115,7 @@ case "$target" in
 
   clean)
     (cd build && make clean)
-    rm -rf doc test.avro test?.df test_skip.df
+    rm -rf doc test.avro test?.df test??.df test_skip.df test_lastSync.df test_readRecordUsingLastSync.df
     ;;
 
   install)
