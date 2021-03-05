@@ -377,6 +377,7 @@
                 <exclude>lang/perl/inc/Module/Install.pm</exclude>
                 <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
                 <exclude>lang/py/.eggs/**</exclude>
+                <exclude>lang/py/.mypy_cache/**</exclude>
                 <exclude>lang/py/.tox/**</exclude>
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
