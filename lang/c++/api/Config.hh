@@ -33,8 +33,7 @@
 #endif  // AVRO_DYN_LINK
 
 #include <intsafe.h>
-typedef SSIZE_T ssize_t;
-
+using ssize_t = SSIZE_T;
 #endif  // _WIN32
 
 #ifndef AVRO_DECL

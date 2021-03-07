@@ -264,6 +264,10 @@ const char* compactSchemas[] = {
         "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
     "]}"};
 
+void testTypes() {
+    BOOST_CHECK_EQUAL(isAvroType(AVRO_BOOL), true);
+}
+
 static void testBasic(const char* schema)
 {
     BOOST_TEST_CHECKPOINT(schema);
@@ -469,6 +473,7 @@ init_unit_test_suite(int argc, char* argv[])
     using namespace boost::unit_test;
 
     test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
+    ts->add(BOOST_TEST_CASE(&avro::schema::testTypes));
     ADD_PARAM_TEST(ts, avro::schema::testBasic, avro::schema::basicSchemas);
     ADD_PARAM_TEST(ts, avro::schema::testBasic_fail,
         avro::schema::basicSchemaErrors);

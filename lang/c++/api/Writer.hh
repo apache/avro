@@ -33,16 +33,14 @@ namespace avro {
 /// Class for writing avro data to a stream.
 
 template<class ValidatorType>
-class WriterImpl : private boost::noncopyable
-{
+class WriterImpl : private boost::noncopyable {
 
-  public:
+public:
 
     WriterImpl() {}
 
     explicit WriterImpl(const ValidSchema &schema) :
-        validator_(schema)
-    {}
+        validator_(schema) {}
 
     void writeValue(const Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
@@ -98,13 +96,13 @@ class WriterImpl : private boost::noncopyable
         putBytes(val, size);
     }
 
-    template <size_t N>
+    template<size_t N>
     void writeFixed(const uint8_t (&val)[N]) {
         validator_.checkFixedSizeExpected(N);
         buffer_.writeTo(reinterpret_cast<const char *>(val), N);
     }
 
-    template <size_t N>
+    template<size_t N>
     void writeFixed(const std::array<uint8_t, N> &val) {
         validator_.checkFixedSizeExpected(val.size());
         buffer_.writeTo(reinterpret_cast<const char *>(val.data()), val.size());
@@ -154,7 +152,7 @@ class WriterImpl : private boost::noncopyable
         return buffer_;
     }
 
-  private:
+private:
 
     void putLong(int64_t val) {
         std::array<uint8_t, 10> bytes;
@@ -178,8 +176,8 @@ class WriterImpl : private boost::noncopyable
 
 };
 
-typedef WriterImpl<NullValidator> Writer;
-typedef WriterImpl<Validator> ValidatingWriter;
+using Writer = WriterImpl<NullValidator>;
+using ValidatingWriter = WriterImpl<Validator>;
 
 } // namespace avro
 

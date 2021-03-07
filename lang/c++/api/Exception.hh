@@ -28,17 +28,12 @@ namespace avro {
 /// Wrapper for std::runtime_error that provides convenience constructor
 /// for boost::format objects
 
-class AVRO_DECL Exception : public virtual std::runtime_error
-{
-  public:
+class AVRO_DECL Exception : public virtual std::runtime_error {
+public:
 
-    Exception(const std::string &msg) :
-        std::runtime_error(msg)
-    { }
+    explicit Exception(const std::string &msg) : std::runtime_error(msg) {}
 
-    Exception(const boost::format &msg) :
-        std::runtime_error( boost::str(msg))
-    { }
+    explicit Exception(const boost::format &msg) : std::runtime_error(boost::str(msg)) {}
 };
 
 } // namespace avro

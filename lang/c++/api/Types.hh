@@ -60,7 +60,7 @@ enum Type {
  * Primitive types are: string, bytes, int, long, float, double, boolean
  * and null
  */
-inline bool isPrimitive(Type t) {
+inline constexpr bool isPrimitive(Type t) noexcept {
     return (t >= AVRO_STRING) && (t < AVRO_RECORD);
 }
 
@@ -69,14 +69,14 @@ inline bool isPrimitive(Type t) {
  * Primitive types are: string, bytes, int, long, float, double, boolean
  * and null
  */
-inline bool isCompound(Type t) {
+inline constexpr bool isCompound(Type t) noexcept {
     return (t>= AVRO_RECORD) && (t < AVRO_NUM_TYPES);
 }
 
 /**
  * Returns true if and only if the given type is a valid avro type.
  */
-inline bool isAvroType(Type t) {
+inline constexpr bool isAvroType(Type t) noexcept {
     return (t >= AVRO_STRING) && (t < AVRO_NUM_TYPES);
 }
 
@@ -84,21 +84,21 @@ inline bool isAvroType(Type t) {
  * Returns true if and only if the given type is within the valid range
  * of enumeration.
  */
-inline bool isAvroTypeOrPseudoType(Type t) {
+inline constexpr bool isAvroTypeOrPseudoType(Type t) noexcept {
     return (t >= AVRO_STRING) && (t <= AVRO_NUM_TYPES);
 }
 
 /**
  * Converts the given type into a string. Useful for generating messages.
  */
-AVRO_DECL const std::string& toString(Type type);
+AVRO_DECL const std::string& toString(Type type) noexcept;
 
 /**
  * Writes a string form of the given type into the given ostream.
  */
 AVRO_DECL std::ostream &operator<< (std::ostream &os, avro::Type type);
 
-/// define a type to identify Null in template functions
+/// define a type to represent Avro Null in template functions
 struct AVRO_DECL Null { };
 
 /**
