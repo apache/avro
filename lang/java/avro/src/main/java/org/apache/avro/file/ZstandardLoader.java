@@ -25,8 +25,8 @@ import com.github.luben.zstd.BufferPool;
 import com.github.luben.zstd.NoPool;
 import com.github.luben.zstd.RecyclingBufferPool;
 import com.github.luben.zstd.Zstd;
-import com.github.luben.zstd.ZstdInputStream;
-import com.github.luben.zstd.ZstdOutputStream;
+import com.github.luben.zstd.ZstdInputStreamNoFinalizer;
+import com.github.luben.zstd.ZstdOutputStreamNoFinalizer;
 
 /* causes lazier classloader initialization of ZStandard libraries, so that
  * we get NoClassDefFoundError when we try and use the Codec's compress
@@ -35,14 +35,14 @@ final class ZstandardLoader {
 
   static InputStream input(InputStream compressed, boolean useBufferPool) throws IOException {
     BufferPool pool = useBufferPool ? RecyclingBufferPool.INSTANCE : NoPool.INSTANCE;
-    return new ZstdInputStream(compressed, pool);
+    return new ZstdInputStreamNoFinalizer(compressed, pool);
   }
 
   static OutputStream output(OutputStream compressed, int level, boolean checksum, boolean useBufferPool)
       throws IOException {
     int bounded = Math.max(Math.min(level, Zstd.maxCompressionLevel()), Zstd.minCompressionLevel());
     BufferPool pool = useBufferPool ? RecyclingBufferPool.INSTANCE : NoPool.INSTANCE;
-    ZstdOutputStream zstdOutputStream = new ZstdOutputStream(compressed, pool).setLevel(bounded);
+    ZstdOutputStreamNoFinalizer zstdOutputStream = new ZstdOutputStreamNoFinalizer(compressed, pool).setLevel(bounded);
     zstdOutputStream.setCloseFrameOnFlush(false);
     zstdOutputStream.setChecksum(checksum);
     return zstdOutputStream;
