@@ -177,7 +177,7 @@ namespace Avro.Specific
                             // Change the search to look for Types by both NAME and FULLNAME
                             foreach (Type t in assembly.GetTypes())
                             {
-                                if (name == t.Name || name == t.FullName)
+                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
                                 {
                                     type = t;
                                     break;
