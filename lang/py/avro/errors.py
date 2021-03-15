@@ -83,3 +83,7 @@ class UnsupportedCodec(NotImplementedError, AvroException):
 
 class UsageError(RuntimeError, AvroException):
     """An exception raised when incorrect arguments were passed."""
+
+
+class AvroRuntimeException(RuntimeError, AvroException):
+    """Raised when compatibility parsing encounters an unknown type"""
