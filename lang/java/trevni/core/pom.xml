@@ -22,7 +22,7 @@
   <parent>
     <artifactId>trevni-java</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.2</version>
+    <version>1.10.3-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
