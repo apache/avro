@@ -74,7 +74,7 @@ do
       ;;
 
     interop-data-test)
-      LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
+      LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop" --verbosity normal
       ;;
 
     clean)
