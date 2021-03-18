@@ -1,3 +1,0 @@
-The trift-generated files are checked-in so that every developer who runs tests need not have the Thrift compiler installed.
-
-For regeneration of thrift files make sure you have required version of thrift-compiler installed (0.7) and run `mvn -Pthrift-generate generate-test-sources`
