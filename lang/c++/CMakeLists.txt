@@ -83,6 +83,7 @@ if (SNAPPY_FOUND)
 else (SNAPPY_FOUND)
     set(SNAPPY_PKG "")
     set(SNAPPY_LIBRARIES "")
+    set(SNAPPY_INCLUDE_DIR "")
     message("Disabled snappy codec. libsnappy not found.")
 endif (SNAPPY_FOUND)
 
