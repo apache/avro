@@ -105,6 +105,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install python-snappy zstandard
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
