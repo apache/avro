@@ -374,7 +374,7 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
         os << "{\n";
 
         // Serialize all fields of the record with recursive calls:
-        for (auto i = 0; i < g.value<GenericRecord>().fieldCount(); i++) {
+        for (size_t i = 0; i < g.value<GenericRecord>().fieldCount(); i++) {
             if (i == 0) {
                 ++depth;
             } else {  // i > 0
@@ -418,7 +418,7 @@ void NodeMap::printDefaultToJson(const GenericDatum &g, std::ostream &os,
     } else {
         os << "{\n";
 
-        for (auto i = 0; i < g.value<GenericMap>().value().size(); i++) {
+        for (size_t i = 0; i < g.value<GenericMap>().value().size(); i++) {
             if (i == 0) {
                 ++depth;
             } else {

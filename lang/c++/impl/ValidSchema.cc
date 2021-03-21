@@ -71,7 +71,7 @@ namespace avro {
 
         node->lock();
         auto leaves = node->leaves();
-        for (auto i = 0; i < leaves; ++i) {
+        for (size_t i = 0; i < leaves; ++i) {
             const NodePtr &leaf(node->leafAt(i));
 
             if (!validate(leaf, symbolMap)) {
