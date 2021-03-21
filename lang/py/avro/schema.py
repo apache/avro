@@ -47,6 +47,7 @@ import json
 import math
 import re
 import sys
+import uuid
 import warnings
 
 import avro.constants
@@ -1069,6 +1070,33 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __eq__(self, that):
         return self.props == that.props
 
+
+#
+# uuid Type
+#
+
+
+class UUIDSchema(LogicalSchema, PrimitiveSchema):
+    def __init__(self, other_props=None):
+        LogicalSchema.__init__(self, avro.constants.UUID)
+        PrimitiveSchema.__init__(self, 'string', other_props)
+
+    def to_json(self, names=None):
+        return self.props
+
+    def validate(self, datum):
+        try:
+            val = uuid.UUID(datum, version=4)
+        except ValueError:
+            # If it's a value error, then the string 
+            # is not a valid hex code for a UUID.
+            return False
+
+        return self
+
+    def __eq__(self, that):
+        return self.props == that.props
+
 #
 # Module Methods
 #
@@ -1099,6 +1127,7 @@ def make_logical_schema(logical_type, type_, other_props):
         (avro.constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
         (avro.constants.TIME_MICROS, 'long'): TimeMicrosSchema,
         (avro.constants.TIME_MILLIS, 'int'): TimeMillisSchema,
+        (avro.constants.UUID, 'string'): UUIDSchema,
     }
     try:
         schema_type = logical_types.get((logical_type, type_), None)
