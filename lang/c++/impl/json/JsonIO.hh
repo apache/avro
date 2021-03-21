@@ -394,7 +394,7 @@ public:
         sep();
         std::ostringstream oss;
         oss << boost::lexical_cast<std::string>(t);
-        const std::string& s = oss.str();
+        const std::string s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
@@ -411,7 +411,7 @@ public:
         } else {
             oss << "-Infinity";
         }
-        const std::string& s = oss.str();
+        const std::string s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
