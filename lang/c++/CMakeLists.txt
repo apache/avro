@@ -25,7 +25,6 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 cmake_policy (SET CMP0042 NEW)
 
@@ -171,7 +170,7 @@ gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp PRIVATE avrocpp_s Boost::program_options Boost::regex)
+target_link_libraries (avrogencpp PRIVATE avrocpp_s Boost::program_options Boost::regex Boost::system)
 
 enable_testing()
 
