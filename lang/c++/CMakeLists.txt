@@ -84,9 +84,6 @@ endif (SNAPPY_FOUND)
 
 add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 
-message(STATUS "Boost_LIB_DIAGNOSTIC_DEFINITIONS=${Boost_LIB_DIAGNOSTIC_DEFINITIONS}")
-message(STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
-
 set (AVRO_SOURCE_FILES
         impl/Compiler.cc impl/Node.cc impl/LogicalType.cc
         impl/NodeImpl.cc impl/ResolverSchema.cc impl/Schema.cc
@@ -108,21 +105,22 @@ add_library(avrocpp_o OBJECT ${AVRO_SOURCE_FILES})
 set_property(TARGET avrocpp_o PROPERTY POSITION_INDEPENDENT_CODE 1)
 target_include_directories(avrocpp_o
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>)
-target_link_libraries(avrocpp_o PRIVATE Boost::boost)
-if (SNAPPY_FOUND)
-    target_link_libraries(avrocpp_o PRIVATE Snappy::Snappy)
-endif(SNAPPY_FOUND)
 
 add_library (avrocpp SHARED $<TARGET_OBJECTS:avrocpp_o>)
-
 set_property (TARGET avrocpp
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
+if (SNAPPY_FOUND)
+    target_link_libraries(avrocpp PUBLIC Snappy::Snappy)
+endif(SNAPPY_FOUND)
 
 add_library (avrocpp_s STATIC $<TARGET_OBJECTS:avrocpp_o>)
 target_include_directories(avrocpp_s
     PUBLIC $<INSTALL_INTERFACE:include>
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>)
 target_link_libraries(avrocpp_s PUBLIC Boost::boost Boost::iostreams Boost::system)
+if (SNAPPY_FOUND)
+    target_link_libraries(avrocpp_s PUBLIC Snappy::Snappy)
+endif(SNAPPY_FOUND)
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
