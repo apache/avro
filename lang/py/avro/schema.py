@@ -1088,7 +1088,7 @@ class UUIDSchema(LogicalSchema, PrimitiveSchema):
         try:
             val = uuid.UUID(datum, version=4)
         except ValueError:
-            # If it's a value error, then the string 
+            # If it's a value error, then the string
             # is not a valid hex code for a UUID.
             return False
 
