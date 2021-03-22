@@ -899,9 +899,9 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
     size_t numberOfRecords = 100;
     size_t recordToRead = 37;  // pick specific record to read efficiently
     size_t syncPointWithRecord = 0;
-    int finalSync = 0;
-    int recordsUptoLastSync = 0;
-    int firstSyncPoint = 0;
+    size_t finalSync = 0;
+    size_t recordsUptoLastSync = 0;
+    size_t firstSyncPoint = 0;
     {
         avro::DataFileWriter<TestRecord> df(filename,
             writerSchema, 1024, codec);
@@ -934,7 +934,8 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
         const uint8_t* pData = nullptr;
         size_t length = 0;
-        seekableInputStream->next(&pData, &length);
+        bool hasRead = seekableInputStream->next(&pData, &length);
+        BOOST_CHECK(hasRead);
 
         // keep it simple, assume we've got in all data we want. We have a high buffersize to ensure this above.
         BOOST_CHECK_GE(length, firstSyncPoint);
