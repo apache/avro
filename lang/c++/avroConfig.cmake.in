@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Boost 1.38 COMPONENTS iostreams system)
+
+if (@SNAPPY_FOUND@)
+    find_dependency(Snappy)
+endif(@SNAPPY_FOUND@)
+
+include("${CMAKE_CURRENT_LIST_DIR}/avroTargets.cmake")
+
+check_required_components(avrocpp)
+check_required_components(avrocpp_s)
