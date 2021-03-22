@@ -107,18 +107,24 @@ target_include_directories(avrocpp_o
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>)
 
 add_library (avrocpp SHARED $<TARGET_OBJECTS:avrocpp_o>)
-set_property (TARGET avrocpp
-    APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
+target_link_libraries(avrocpp PUBLIC Boost::boost Boost::iostreams Boost::system)
+target_include_directories(avrocpp
+    PUBLIC $<INSTALL_INTERFACE:include>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/api>)
 if (SNAPPY_FOUND)
+    target_compile_definitions(avrocpp PUBLIC SNAPPY_CODEC_AVAILABLE)
     target_link_libraries(avrocpp PUBLIC Snappy::Snappy)
 endif(SNAPPY_FOUND)
+set_property (TARGET avrocpp
+    APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
 
 add_library (avrocpp_s STATIC $<TARGET_OBJECTS:avrocpp_o>)
 target_include_directories(avrocpp_s
     PUBLIC $<INSTALL_INTERFACE:include>
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>)
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/api>)
 target_link_libraries(avrocpp_s PUBLIC Boost::boost Boost::iostreams Boost::system)
 if (SNAPPY_FOUND)
+    target_compile_definitions(avrocpp_s PUBLIC SNAPPY_CODEC_AVAILABLE)
     target_link_libraries(avrocpp_s PUBLIC Snappy::Snappy)
 endif(SNAPPY_FOUND)
 
@@ -130,11 +136,6 @@ set_target_properties (avrocpp PROPERTIES
 
 set_target_properties (avrocpp_s PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH})
-
-target_link_libraries (avrocpp PRIVATE avrocpp_o)
-target_include_directories(avrocpp
-    PUBLIC $<INSTALL_INTERFACE:include>
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/api>)
 
 add_executable (precompile test/precompile.cc)
 
@@ -168,13 +169,13 @@ gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp PRIVATE avrocpp_s Boost::program_options Boost::regex Boost::system)
+target_link_libraries (avrogencpp PRIVATE avrocpp_s Boost::program_options Boost::regex)
 
 enable_testing()
 
 macro (unittest name)
     add_executable (${name} test/${name}.cc)
-    target_link_libraries (${name} PRIVATE avrocpp Boost::boost Boost::iostreams Boost::system Boost::filesystem)
+    target_link_libraries (${name} PRIVATE avrocpp Boost::filesystem)
     target_include_directories(${name} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
     add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
