@@ -896,25 +896,25 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
     const char* filename = "test_readRecordUsingLastSync.df";
     
-    int numberOfRecords = 100;
-    int recordToRead = 37;  // pick specific record to read efficiently
-    int syncPointWithRecord = 0;
-    int finalSync = 0;
-    int recordsUptoLastSync = 0;
-    int firstSyncPoint = 0;
+    size_t numberOfRecords = 100;
+    size_t recordToRead = 37;  // pick specific record to read efficiently
+    size_t syncPointWithRecord = 0;
+    size_t finalSync = 0;
+    size_t recordsUptoLastSync = 0;
+    size_t firstSyncPoint = 0;
     {
         avro::DataFileWriter<TestRecord> df(filename,
             writerSchema, 1024, codec);
 
         firstSyncPoint = df.getCurrentBlockStart();
         syncPointWithRecord = firstSyncPoint;
-        for(int i = 0; i < numberOfRecords; i++)
+        for (size_t i = 0; i < numberOfRecords; i++)
         {
             df.write(TestRecord(largeString, (int64_t)i));
 
             // During the write, gather all the sync boundaries from the lastSync() API
-            int recordsWritten = i + 1;
-            if((recordsWritten <= recordToRead) && (df.getCurrentBlockStart() != syncPointWithRecord))
+            size_t recordsWritten = i + 1;
+            if ((recordsWritten <= recordToRead) && (df.getCurrentBlockStart() != syncPointWithRecord))
             {
                 recordsUptoLastSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
                 syncPointWithRecord = df.getCurrentBlockStart();
@@ -935,6 +935,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         const uint8_t* pData = nullptr;
         size_t length = 0;
         bool hasRead = seekableInputStream->next(&pData, &length);
+        BOOST_CHECK(hasRead);
 
         // keep it simple, assume we've got in all data we want. We have a high buffersize to ensure this above.
         BOOST_CHECK_GE(length, firstSyncPoint);
