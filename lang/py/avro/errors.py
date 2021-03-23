@@ -44,9 +44,9 @@ class IgnoredLogicalType(AvroWarning):
 
 class AvroTypeException(AvroException):
     """Raised when datum is not an example of schema."""
-    def __init__(self, expected_schema, datum):
+    def __init__(self, expected_schema, name, datum):
         pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
-        fail_msg = "The datum {} is not an example of the schema {}".format(datum, pretty_expected)
+        fail_msg = f'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}'
         super(AvroTypeException, self).__init__(fail_msg)
 
 
