@@ -164,9 +164,9 @@ AVRO_DECL InputStreamPtr memoryInputStream(const uint8_t *data, size_t len);
 
 /**
  * Returns a new InputStream with the contents written into an
- * output stream. The output stream must have been returned by
+ * OutputStream. The output stream must have been returned by
  * an earlier call to memoryOutputStream(). The contents for the new
- * input stream are the snapshot of the output stream. One can construct
+ * InputStream are the snapshot of the output stream. One can construct
  * any number of memory input stream from a single memory output stream.
  */
 AVRO_DECL InputStreamPtr memoryInputStream(const OutputStream &source);

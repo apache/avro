@@ -131,31 +131,45 @@ public:
     GenericDatum() : type_(AVRO_NULL), logicalType_(LogicalType::NONE) {}
 
     /// Makes a new AVRO_BOOL datum whose value is of type bool.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(bool v)
         : type_(AVRO_BOOL), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_INT datum whose value is of type int32_t.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(int32_t v)
         : type_(AVRO_INT), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_LONG datum whose value is of type int64_t.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(int64_t v)
         : type_(AVRO_LONG), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_FLOAT datum whose value is of type float.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(float v)
         : type_(AVRO_FLOAT), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_DOUBLE datum whose value is of type double.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(double v)
         : type_(AVRO_DOUBLE), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_STRING datum whose value is of type std::string.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(const std::string &v)
         : type_(AVRO_STRING), logicalType_(LogicalType::NONE), value_(v) {}
 
     /// Makes a new AVRO_BYTES datum whose value is of type
     /// std::vector<uint8_t>.
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(const std::vector<uint8_t> &v) :
         type_(AVRO_BYTES), logicalType_(LogicalType::NONE), value_(v) {}
 
@@ -165,6 +179,8 @@ public:
      * data type.
      * \param schema The schema that defines the avro type.
      */
+    /// We don't make this explicit constructor because we want to allow automatic conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     GenericDatum(const NodePtr &schema);
 
     /**

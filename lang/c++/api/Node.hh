@@ -81,7 +81,7 @@ std::ostream &operator<<(std::ostream &os, const Name &n) {
 ///
 /// The Node object uses reference-counted pointers.  This is so that schemas
 /// may be reused in other schemas, without needing to worry about memory
-/// de-allocation for nodes that are added to multiple schema parse trees.
+/// deallocation for nodes that are added to multiple schema parse trees.
 ///
 /// Node has minimal implementation, serving as an abstract base class for
 /// different node types.

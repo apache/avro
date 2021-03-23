@@ -248,9 +248,7 @@ boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
 DataFileSync DataFileWriterBase::makeSync()
 {
     DataFileSync sync;
-    for (unsigned char & i : sync) {
-        i = random();
-    }
+    std::generate(sync.begin(), sync.end(), random);
     return sync;
 }
 
@@ -318,7 +316,7 @@ char hex(unsigned int x)
 
 std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 {
-    for (unsigned char i : s) {
+    for (uint8_t i : s) {
         os << hex(i / 16)  << hex(i % 16) << ' ';
     }
     os << std::endl;
