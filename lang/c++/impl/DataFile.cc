@@ -125,7 +125,7 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
 
 DataFileWriterBase::~DataFileWriterBase()
 {
-    if (stream_.get()) {
+    if (stream_) {
         close();
     }
 }
@@ -233,7 +233,7 @@ void DataFileWriterBase::syncIfNeeded()
     }
 }
 
-uint64_t DataFileWriterBase::getCurrentBlockStart()
+uint64_t DataFileWriterBase::getCurrentBlockStart() const
 {
     return lastSync_;
 }
@@ -243,14 +243,12 @@ void DataFileWriterBase::flush()
     sync();
 }
 
-boost::mt19937 random(static_cast<uint32_t>(time(0)));
+boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
 
 DataFileSync DataFileWriterBase::makeSync()
 {
     DataFileSync sync;
-    for (size_t i = 0; i < sync.size(); ++i) {
-        sync[i] = random();
-    }
+    std::generate(sync.begin(), sync.end(), random);
     return sync;
 }
 
@@ -274,7 +272,7 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 }
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
-    filename_(filename), stream_(fileSeekableInputStream(filename)),
+    filename_(filename), codec_(NULL_CODEC), stream_(fileSeekableInputStream(filename)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
     blockEnd_(-1)
 {
@@ -282,7 +280,7 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
 }
 
 DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
-    filename_(""), stream_(std::move(inputStream)),
+    codec_(NULL_CODEC), stream_(std::move(inputStream)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -306,20 +304,20 @@ void DataFileReaderBase::init(const ValidSchema& readerSchema)
 
 static void drain(InputStream& in)
 {
-    const uint8_t *p = 0;
+    const uint8_t *p = nullptr;
     size_t n = 0;
     while (in.next(&p, &n));
 }
 
 char hex(unsigned int x)
 {
-    return x + (x < 10 ? '0' :  ('a' - 10));
+    return static_cast<char>(x + (x < 10 ? '0' :  ('a' - 10)));
 }
 
 std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 {
-    for (size_t i = 0; i < s.size(); ++i) {
-        os << hex(s[i] / 16)  << hex(s[i] % 16) << ' ';
+    for (uint8_t i : s) {
+        os << hex(i / 16)  << hex(i % 16) << ' ';
     }
     os << std::endl;
     return os;
@@ -351,7 +349,7 @@ class BoundedInputStream : public InputStream {
     InputStream& in_;
     size_t limit_;
 
-    bool next(const uint8_t** data, size_t* len) {
+    bool next(const uint8_t** data, size_t* len) override {
         if (limit_ != 0 && in_.next(data, len)) {
             if (*len > limit_) {
                 in_.backup(*len - limit_);
@@ -363,12 +361,12 @@ class BoundedInputStream : public InputStream {
         return false;
     }
 
-    void backup(size_t len) {
+    void backup(size_t len) override {
         in_.backup(len);
         limit_ += len;
     }
 
-    void skip(size_t len) {
+    void skip(size_t len) override {
         if (len > limit_) {
             len = limit_;
         }
@@ -376,7 +374,7 @@ class BoundedInputStream : public InputStream {
         limit_ -= len;
     }
 
-    size_t byteCount() const {
+    size_t byteCount() const override {
         return in_.byteCount();
     }
 
@@ -394,7 +392,7 @@ void DataFileReaderBase::readDataBlock()
 {
     decoder_->init(*stream_);
     blockStart_ = stream_->byteCount();
-    const uint8_t* p = 0;
+    const uint8_t* p = nullptr;
     size_t n = 0;
     if (! stream_->next(&p, &n)) {
         eof_ = true;
@@ -455,7 +453,6 @@ void DataFileReaderBase::readDataBlock()
         while (st->next(&data, &len)) {
             compressed_.insert(compressed_.end(), data, data + len);
         }
-        // boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
         os_.reset(new boost::iostreams::filtering_istream());
         os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
         os_->push(boost::iostreams::basic_array_source<char>(
@@ -529,7 +526,7 @@ void DataFileReaderBase::readHeader()
 
 void DataFileReaderBase::doSeek(int64_t position)
 {
-    if (SeekableInputStream *ss = dynamic_cast<SeekableInputStream *>(stream_.get())) {
+    if (auto *ss = dynamic_cast<SeekableInputStream *>(stream_.get())) {
         if (!eof_) {
             dataDecoder_->init(*dataStream_);
             drain(*dataStream_);
@@ -552,7 +549,7 @@ void DataFileReaderBase::sync(int64_t position)
 {
     doSeek(position);
     DataFileSync sync_buffer;
-    const uint8_t *p = 0;
+    const uint8_t *p = nullptr;
     size_t n = 0;
     size_t i = 0;
     while (i < SyncSize) {
@@ -593,7 +590,7 @@ bool DataFileReaderBase::pastSync(int64_t position) {
   return !hasMore() || blockStart_ >= position + SyncSize;
 }
 
-int64_t DataFileReaderBase::previousSync() {
+int64_t DataFileReaderBase::previousSync() const {
   return blockStart_;
 }
 

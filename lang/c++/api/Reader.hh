@@ -55,9 +55,9 @@ public:
 
     void readValue(bool &val) {
         validator_.checkTypeExpected(AVRO_BOOL);
-        uint8_t ival = 0;
-        reader_.read(ival);
-        val = (ival != 0);
+        uint8_t intVal = 0;
+        reader_.read(intVal);
+        val = (intVal != 0);
     }
 
     void readValue(int32_t &val) {
@@ -172,8 +172,8 @@ private:
         int shift = 0;
         do {
             reader_.read(val);
-            uint64_t newbits = static_cast<uint64_t>(val & 0x7f) << shift;
-            encoded |= newbits;
+            uint64_t newBits = static_cast<uint64_t>(val & 0x7f) << shift;
+            encoded |= newBits;
             shift += 7;
         } while (val & 0x80);
 

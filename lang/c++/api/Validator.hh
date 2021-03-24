@@ -20,8 +20,9 @@
 #define avro_Validating_hh__
 
 #include <boost/noncopyable.hpp>
+#include <utility>
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 #include "Config.hh"
 #include "Types.hh"
@@ -33,32 +34,32 @@ class AVRO_DECL NullValidator : private boost::noncopyable {
 public:
 
     explicit NullValidator(const ValidSchema &schema) {}
-    NullValidator() {}
+    NullValidator() = default;
 
-    void setCount(int64_t val) {}
+    void setCount(int64_t) {}
 
-    bool typeIsExpected(Type type) const {
+    static bool typeIsExpected(Type) {
         return true;
     }
 
-    Type nextTypeExpected() const {
+    static Type nextTypeExpected() {
         return AVRO_UNKNOWN;
     }
 
-    int nextSizeExpected() const {
+    static int nextSizeExpected() {
         return 0;
     }
 
-    bool getCurrentRecordName(std::string &name) const {
+    static bool getCurrentRecordName(std::string &name) {
         return true;
     }
 
-    bool getNextFieldName(std::string &name) const {
+    static bool getNextFieldName(std::string &name) {
         return true;
     }
 
-    void checkTypeExpected(Type type) {}
-    void checkFixedSizeExpected(int size) {}
+    void checkTypeExpected(Type) {}
+    void checkFixedSizeExpected(int) {}
 
 };
 
@@ -112,7 +113,7 @@ private:
 
     using flag_t = uint32_t;
 
-    flag_t typeToFlag(Type type) const {
+    static flag_t typeToFlag(Type type) {
         flag_t flag = (1L << type);
         return flag;
     }
@@ -141,8 +142,8 @@ private:
     int64_t count_;
 
     struct CompoundType {
-        explicit CompoundType(const NodePtr &n) :
-            node(n), pos(0) {}
+        explicit CompoundType(NodePtr n) :
+            node(std::move(n)), pos(0) {}
         NodePtr node;  ///< save the node
         size_t pos;   ///< track the leaf position to visit
     };

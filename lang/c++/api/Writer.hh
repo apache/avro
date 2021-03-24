@@ -37,7 +37,7 @@ class WriterImpl : private boost::noncopyable {
 
 public:
 
-    WriterImpl() {}
+    WriterImpl() = default;
 
     explicit WriterImpl(const ValidSchema &schema) :
         validator_(schema) {}
@@ -54,6 +54,7 @@ public:
 
     void writeValue(int32_t val) {
         validator_.checkTypeExpected(AVRO_INT);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         std::array<uint8_t, 5> bytes;
         size_t size = encodeInt32(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
@@ -155,6 +156,7 @@ public:
 private:
 
     void putLong(int64_t val) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         std::array<uint8_t, 10> bytes;
         size_t size = encodeInt64(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);

@@ -51,12 +51,12 @@ static_assert((sizeof(typeToString) / sizeof(std::string)) == (AVRO_NUM_TYPES + 
 static_assert(AVRO_NUM_TYPES < 32, "Too many Avro types");
 
 const std::string &toString(Type type) noexcept {
-  static std::string undefinedType = "Undefined type";
-  if (isAvroTypeOrPseudoType(type)) {
-    return strings::typeToString[type];
-  } else {
-    return undefinedType;
-  }
+    static std::string undefinedType = "Undefined type";
+    if (isAvroTypeOrPseudoType(type)) {
+        return strings::typeToString[type];
+    } else {
+        return undefinedType;
+    }
 }
 
 std::ostream &operator<<(std::ostream &os, Type type) {
