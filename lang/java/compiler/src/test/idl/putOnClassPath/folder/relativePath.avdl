@@ -17,8 +17,6 @@
  */
 
 @namespace("org.on.the.classpath")
-protocol OnTheClasspath {
-  import idl "folder/relativePath.avdl";
-  record FromAfar {
-  }
+protocol OnTheClasspathDependency {
+	import idl "../nestedtypes.avdl";
 }
