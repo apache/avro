@@ -413,5 +413,6 @@ class TestIO(unittest.TestCase):
             write_datum(datum_to_write, writers_schema)
         assert str(exc.exception) == 'The datum "5.0" provided for "foo" is not an example of the schema "long"'
 
+
 if __name__ == '__main__':
     unittest.main()
