@@ -118,18 +118,30 @@ JsonParser::Token JsonParser::doAdvance() {
     }
 
     switch (ch) {
-        case '[':stateStack.push(curState);
+        case '[': {
+            stateStack.push(curState);
             curState = stArray0;
             return tkArrayStart;
-        case '{':stateStack.push(curState);
+        }
+        case '{': {
+            stateStack.push(curState);
             curState = stObject0;
             return tkObjectStart;
-        case '"':return tryString();
-        case 't':bv = true;
+        }
+        case '"': {
+            return tryString();
+        }
+        case 't': {
+            bv = true;
             return tryLiteral("rue", 3, tkBool);
-        case 'f':bv = false;
+        }
+        case 'f': {
+            bv = false;
             return tryLiteral("alse", 4, tkBool);
-        case 'n':return tryLiteral("ull", 3, tkNull);
+        }
+        case 'n': {
+            return tryLiteral("ull", 3, tkNull);
+        }
         default:
             if (isdigit(ch) || ch == '-') {
                 return tryNumber(ch);

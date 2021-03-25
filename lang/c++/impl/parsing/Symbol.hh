@@ -327,8 +327,10 @@ template<typename T>
 void fixup(Symbol &s, const std::map<T, ProductionPtr> &m,
            std::set<ProductionPtr> &seen) {
     switch (s.kind()) {
-        case Symbol::sIndirect:fixup_internal(s.extra<ProductionPtr>(), m, seen);
+        case Symbol::sIndirect: {
+            fixup_internal(s.extra<ProductionPtr>(), m, seen);
             break;
+        }
         case Symbol::sAlternative: {
             const std::vector<ProductionPtr> *vv =
                 s.extrap<std::vector<ProductionPtr> >();
@@ -353,11 +355,14 @@ void fixup(Symbol &s, const std::map<T, ProductionPtr> &m,
             s = Symbol::symbolic(std::weak_ptr<Production>(it->second));
         }
             break;
-        case Symbol::sUnionAdjust:
+        case Symbol::sUnionAdjust: {
             fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
                            m, seen);
             break;
-        default:break;
+        }
+        default: {
+            break;
+        }
     }
 }
 
@@ -418,8 +423,10 @@ public:
                 throwMismatch(k, s.kind());
             } else {
                 switch (s.kind()) {
-                    case Symbol::sRoot:append(boost::tuples::get<0>(*s.extrap<RootInfo>()));
+                    case Symbol::sRoot: {
+                        append(boost::tuples::get<0>(*s.extrap<RootInfo>()));
                         continue;
+                    }
                     case Symbol::sIndirect: {
                         ProductionPtr pp =
                             s.extra<ProductionPtr>();
@@ -449,7 +456,9 @@ public:
                         append(boost::tuples::get<2>(*p));
                     }
                         continue;
-                    case Symbol::sError:throw Exception(s.extra<std::string>());
+                    case Symbol::sError: {
+                        throw Exception(s.extra<std::string>());
+                    }
                     case Symbol::sResolve: {
                         const std::pair<Symbol::Kind, Symbol::Kind> *p =
                             s.extrap<std::pair<Symbol::Kind, Symbol::Kind> >();
@@ -458,10 +467,12 @@ public:
                         parsingStack.pop();
                         return result;
                     }
-                    case Symbol::sSkipStart:parsingStack.pop();
+                    case Symbol::sSkipStart: {
+                        parsingStack.pop();
                         skip(*decoder_);
                         break;
-                    default:
+                    }
+                    default: {
                         if (s.isImplicitAction()) {
                             size_t n = handler_.handle(s);
                             if (s.kind() == Symbol::sWriterUnion) {
@@ -476,6 +487,7 @@ public:
                                 << " while looking for " << Symbol::toString(k);
                             throw Exception(oss.str());
                         }
+                    }
                 }
             }
         }
@@ -490,22 +502,38 @@ public:
             Symbol &t = parsingStack.top();
             // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
             switch (t.kind()) {
-                case Symbol::sNull:d.decodeNull();
+                case Symbol::sNull: {
+                    d.decodeNull();
                     break;
-                case Symbol::sBool:d.decodeBool();
+                }
+                case Symbol::sBool: {
+                    d.decodeBool();
                     break;
-                case Symbol::sInt:d.decodeInt();
+                }
+                case Symbol::sInt: {
+                    d.decodeInt();
                     break;
-                case Symbol::sLong:d.decodeLong();
+                }
+                case Symbol::sLong: {
+                    d.decodeLong();
                     break;
-                case Symbol::sFloat:d.decodeFloat();
+                }
+                case Symbol::sFloat: {
+                    d.decodeFloat();
                     break;
-                case Symbol::sDouble:d.decodeDouble();
+                }
+                case Symbol::sDouble: {
+                    d.decodeDouble();
                     break;
-                case Symbol::sString:d.skipString();
+                }
+                case Symbol::sString: {
+                    d.skipString();
                     break;
-                case Symbol::sBytes:d.skipBytes();
+                }
+                case Symbol::sBytes: {
+                    d.skipBytes();
                     break;
+                }
                 case Symbol::sArrayStart: {
                     parsingStack.pop();
                     size_t n = d.skipArray();
@@ -519,7 +547,9 @@ public:
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-                case Symbol::sArrayEnd:break;
+                case Symbol::sArrayEnd: {
+                    break;
+                }
                 case Symbol::sMapStart: {
                     parsingStack.pop();
                     size_t n = d.skipMap();
@@ -533,16 +563,20 @@ public:
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-                case Symbol::sMapEnd:break;
+                case Symbol::sMapEnd: {
+                    break;
+                }
                 case Symbol::sFixed: {
                     parsingStack.pop();
                     Symbol &t = parsingStack.top();
                     d.decodeFixed(t.extra<size_t>());
                 }
                     break;
-                case Symbol::sEnum:parsingStack.pop();
+                case Symbol::sEnum: {
+                    parsingStack.pop();
                     d.decodeEnum();
                     break;
+                }
                 case Symbol::sUnion: {
                     parsingStack.pop();
                     size_t n = d.decodeUnionIndex();
@@ -774,13 +808,13 @@ inline std::ostream &operator<<(std::ostream &os, const Symbol s) {
                << ' ' << *boost::tuples::get<2>(ri)
                << ' ' << *boost::tuples::get<3>(ri)
                << ')';
-        }
             break;
+        }
         case Symbol::sIndirect: {
             os << '(' << Symbol::toString(s.kind()) << ' '
                << *s.extra<std::shared_ptr<Production> >() << ')';
-        }
             break;
+        }
         case Symbol::sAlternative: {
             os << '(' << Symbol::toString(s.kind());
             for (std::vector<ProductionPtr>::const_iterator it =
@@ -790,16 +824,18 @@ inline std::ostream &operator<<(std::ostream &os, const Symbol s) {
                 os << ' ' << **it;
             }
             os << ')';
-        }
             break;
+        }
         case Symbol::sSymbolic: {
             os << '(' << Symbol::toString(s.kind())
                << ' ' << s.extra<std::weak_ptr<Production> >().lock()
                << ')';
+            break;
         }
+        default: {
+            os << Symbol::toString(s.kind());
             break;
-        default:os << Symbol::toString(s.kind());
-            break;
+        }
     }
     return os;
 }

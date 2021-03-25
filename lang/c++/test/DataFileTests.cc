@@ -702,9 +702,13 @@ struct codec_traits<ReaderObj> {
             for (std::vector<size_t>::const_iterator it = fo.begin();
                  it != fo.end(); ++it) {
                 switch (*it) {
-                    case 0:avro::decode(d, v.s2);
+                    case 0: {
+                        avro::decode(d, v.s2);
                         break;
-                    default:break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
             }
         } else {

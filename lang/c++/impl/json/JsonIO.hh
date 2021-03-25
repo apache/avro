@@ -308,18 +308,30 @@ class AVRO_DECL JsonGenerator {
                 switch (*p) {
                     case '\\':
                     case '"':
-                    case '/':escape(*p, b, p);
+                    case '/': {
+                        escape(*p, b, p);
                         break;
-                    case '\b':escape('b', b, p);
+                    }
+                    case '\b': {
+                        escape('b', b, p);
                         break;
-                    case '\f':escape('f', b, p);
+                    }
+                    case '\f': {
+                        escape('f', b, p);
                         break;
-                    case '\n':escape('n', b, p);
+                    }
+                    case '\n': {
+                        escape('n', b, p);
                         break;
-                    case '\r':escape('r', b, p);
+                    }
+                    case '\r': {
+                        escape('r', b, p);
                         break;
-                    case '\t':escape('t', b, p);
+                    }
+                    case '\t': {
+                        escape('t', b, p);
                         break;
+                    }
                     default:
                         if (std::iscntrl(*p, std::locale::classic())) {
                             write(b, p);

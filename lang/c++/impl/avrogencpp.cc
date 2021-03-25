@@ -165,46 +165,97 @@ string CodeGen::generateEnumType(const NodePtr &n) {
 
 string CodeGen::cppTypeOf(const NodePtr &n) {
     switch (n->type()) {
-        case avro::AVRO_STRING:return "std::string";
-        case avro::AVRO_BYTES:return "std::vector<uint8_t>";
-        case avro::AVRO_INT:return "int32_t";
-        case avro::AVRO_LONG:return "int64_t";
-        case avro::AVRO_FLOAT:return "float";
-        case avro::AVRO_DOUBLE:return "double";
-        case avro::AVRO_BOOL:return "bool";
+        case avro::AVRO_STRING: {
+            return "std::string";
+        }
+        case avro::AVRO_BYTES: {
+            return "std::vector<uint8_t>";
+        }
+        case avro::AVRO_INT: {
+            return "int32_t";
+        }
+        case avro::AVRO_LONG: {
+            return "int64_t";
+        }
+        case avro::AVRO_FLOAT: {
+            return "float";
+        }
+        case avro::AVRO_DOUBLE: {
+            return "double";
+        }
+        case avro::AVRO_BOOL: {
+            return "bool";
+        }
         case avro::AVRO_RECORD:
         case avro::AVRO_ENUM: {
             string nm = decorate(n->name());
             return inNamespace_ ? nm : fullname(nm);
         }
-        case avro::AVRO_ARRAY:return "std::vector<" + cppTypeOf(n->leafAt(0)) + " >";
-        case avro::AVRO_MAP:return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
-        case avro::AVRO_FIXED:
+        case avro::AVRO_ARRAY: {
+            return "std::vector<" + cppTypeOf(n->leafAt(0)) + " >";
+        }
+        case avro::AVRO_MAP: {
+            return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
+        }
+        case avro::AVRO_FIXED: {
             return "std::array<uint8_t, " +
                 lexical_cast<string>(n->fixedSize()) + ">";
-        case avro::AVRO_SYMBOLIC:return cppTypeOf(resolveSymbol(n));
-        case avro::AVRO_UNION:return fullname(done[n]);
-        case avro::AVRO_NULL:return "avro::null";
-        default:return "$Undefined$";
+        }
+        case avro::AVRO_SYMBOLIC: {
+            return cppTypeOf(resolveSymbol(n));
+        }
+        case avro::AVRO_UNION: {
+            return fullname(done[n]);
+        }
+        case avro::AVRO_NULL: {
+            return "avro::null";
+        }
+        default: {
+            return "$Undefined$";
+        }
     }
 }
 
 static string cppNameOf(const NodePtr &n) {
     switch (n->type()) {
-        case avro::AVRO_NULL:return "null";
-        case avro::AVRO_STRING:return "string";
-        case avro::AVRO_BYTES:return "bytes";
-        case avro::AVRO_INT:return "int";
-        case avro::AVRO_LONG:return "long";
-        case avro::AVRO_FLOAT:return "float";
-        case avro::AVRO_DOUBLE:return "double";
-        case avro::AVRO_BOOL:return "bool";
+        case avro::AVRO_NULL: {
+            return "null";
+        }
+        case avro::AVRO_STRING: {
+            return "string";
+        }
+        case avro::AVRO_BYTES: {
+            return "bytes";
+        }
+        case avro::AVRO_INT: {
+            return "int";
+        }
+        case avro::AVRO_LONG: {
+            return "long";
+        }
+        case avro::AVRO_FLOAT: {
+            return "float";
+        }
+        case avro::AVRO_DOUBLE: {
+            return "double";
+        }
+        case avro::AVRO_BOOL: {
+            return "bool";
+        }
         case avro::AVRO_RECORD:
         case avro::AVRO_ENUM:
-        case avro::AVRO_FIXED:return decorate(n->name());
-        case avro::AVRO_ARRAY:return "array";
-        case avro::AVRO_MAP:return "map";
-        case avro::AVRO_SYMBOLIC:return cppNameOf(resolveSymbol(n));
+        case avro::AVRO_FIXED: {
+            return decorate(n->name());
+        }
+        case avro::AVRO_ARRAY: {
+            return "array";
+        }
+        case avro::AVRO_MAP: {
+            return "map";
+        }
+        case avro::AVRO_SYMBOLIC: {
+            return cppNameOf(resolveSymbol(n));
+        }
         default:return "$Undefined$";
     }
 }
@@ -419,7 +470,9 @@ string CodeGen::doGenerateType(const NodePtr &n) {
         case avro::AVRO_DOUBLE:
         case avro::AVRO_BOOL:
         case avro::AVRO_NULL:
-        case avro::AVRO_FIXED:return cppTypeOf(n);
+        case avro::AVRO_FIXED: {
+            return cppTypeOf(n);
+        }
         case avro::AVRO_ARRAY: {
             const NodePtr &ln = n->leafAt(0);
             string dn;
@@ -444,9 +497,15 @@ string CodeGen::doGenerateType(const NodePtr &n) {
             }
             return "std::map<std::string, " + dn + " >";
         }
-        case avro::AVRO_RECORD:return generateRecordType(n);
-        case avro::AVRO_ENUM:return generateEnumType(n);
-        case avro::AVRO_UNION:return generateUnionType(n);
+        case avro::AVRO_RECORD: {
+            return generateRecordType(n);
+        }
+        case avro::AVRO_ENUM: {
+            return generateEnumType(n);
+        }
+        case avro::AVRO_UNION: {
+            return generateUnionType(n);
+        }
         default:break;
     }
     return "$Undefined$";
@@ -463,17 +522,27 @@ string CodeGen::generateDeclaration(const NodePtr &n) {
         case avro::AVRO_DOUBLE:
         case avro::AVRO_BOOL:
         case avro::AVRO_NULL:
-        case avro::AVRO_FIXED:return cppTypeOf(nn);
-        case avro::AVRO_ARRAY:return "std::vector<" + generateDeclaration(nn->leafAt(0)) + " >";
-        case avro::AVRO_MAP:
+        case avro::AVRO_FIXED: {
+            return cppTypeOf(nn);
+        }
+        case avro::AVRO_ARRAY: {
+            return "std::vector<" + generateDeclaration(nn->leafAt(0)) + " >";
+        }
+        case avro::AVRO_MAP: {
             return "std::map<std::string, " +
                 generateDeclaration(nn->leafAt(1)) + " >";
-        case avro::AVRO_RECORD:os_ << "struct " << cppTypeOf(nn) << ";\n";
+        }
+        case avro::AVRO_RECORD: {
+            os_ << "struct " << cppTypeOf(nn) << ";\n";
             return cppTypeOf(nn);
-        case avro::AVRO_ENUM:return generateEnumType(nn);
-        case avro::AVRO_UNION:
+        }
+        case avro::AVRO_ENUM: {
+            return generateEnumType(nn);
+        }
+        case avro::AVRO_UNION: {
             // FIXME: When can this happen?
             return generateUnionType(nn);
+        }
         default:break;
     }
     return "$Undefined$";
@@ -629,17 +698,27 @@ void CodeGen::generateTraits(const NodePtr &n) {
         case avro::AVRO_DOUBLE:
         case avro::AVRO_BOOL:
         case avro::AVRO_NULL:break;
-        case avro::AVRO_RECORD:generateRecordTraits(n);
+        case avro::AVRO_RECORD: {
+            generateRecordTraits(n);
             break;
-        case avro::AVRO_ENUM:generateEnumTraits(n);
+        }
+        case avro::AVRO_ENUM: {
+            generateEnumTraits(n);
             break;
+        }
         case avro::AVRO_ARRAY:
-        case avro::AVRO_MAP:generateTraits(n->leafAt(n->type() == avro::AVRO_ARRAY ? 0 : 1));
+        case avro::AVRO_MAP: {
+            generateTraits(n->leafAt(n->type() == avro::AVRO_ARRAY ? 0 : 1));
             break;
-        case avro::AVRO_UNION:generateUnionTraits(n);
+        }
+        case avro::AVRO_UNION: {
+            generateUnionTraits(n);
             break;
+        }
         case avro::AVRO_FIXED:
-        default:break;
+        default: {
+            break;
+        }
     }
 }
 

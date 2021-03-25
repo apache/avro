@@ -79,7 +79,9 @@ ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr &n,
         case AVRO_FIXED:
         case AVRO_ARRAY:
         case AVRO_MAP:
-        case AVRO_SYMBOLIC:return ValidatingGrammarGenerator::doGenerate(n, m);
+        case AVRO_SYMBOLIC: {
+            return ValidatingGrammarGenerator::doGenerate(n, m);
+        }
         case AVRO_RECORD: {
             ProductionPtr result = make_shared<Production>();
 
@@ -154,16 +156,24 @@ public:
     JsonDecoderHandler(JsonParser &p) : in_(p) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart:expectToken(in_, JsonParser::tkObjectStart);
+            case Symbol::sRecordStart: {
+                expectToken(in_, JsonParser::tkObjectStart);
                 break;
-            case Symbol::sRecordEnd:expectToken(in_, JsonParser::tkObjectEnd);
+            }
+            case Symbol::sRecordEnd: {
+                expectToken(in_, JsonParser::tkObjectEnd);
                 break;
-            case Symbol::sField:expectToken(in_, JsonParser::tkString);
+            }
+            case Symbol::sField: {
+                expectToken(in_, JsonParser::tkString);
                 if (s.extra<string>() != in_.stringValue()) {
                     throw Exception("Incorrect field");
                 }
                 break;
-            default:break;
+            }
+            default: {
+                break;
+            }
         }
         return 0;
     }
@@ -356,16 +366,21 @@ void JsonDecoder<P>::skipComposite() {
     for (;;) {
         switch (in_.advance()) {
             case JsonParser::tkArrayStart:
-            case JsonParser::tkObjectStart:++level;
+            case JsonParser::tkObjectStart: {
+                ++level;
                 continue;
+            }
             case JsonParser::tkArrayEnd:
-            case JsonParser::tkObjectEnd:
+            case JsonParser::tkObjectEnd: {
                 if (level == 0) {
                     return;
                 }
                 --level;
                 continue;
-            default:continue;
+            }
+            default: {
+                continue;
+            }
         }
     }
 }
@@ -440,13 +455,21 @@ public:
     JsonHandler(JsonGenerator<F> &g) : generator_(g) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart:generator_.objectStart();
+            case Symbol::sRecordStart: {
+                generator_.objectStart();
                 break;
-            case Symbol::sRecordEnd:generator_.objectEnd();
+            }
+            case Symbol::sRecordEnd: {
+                generator_.objectEnd();
                 break;
-            case Symbol::sField:generator_.encodeString(s.extra<string>());
+            }
+            case Symbol::sField: {
+                generator_.encodeString(s.extra<string>());
                 break;
-            default:break;
+            }
+            default: {
+                break;
+            }
         }
         return 0;
     }

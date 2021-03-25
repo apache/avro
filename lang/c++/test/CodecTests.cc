@@ -179,37 +179,55 @@ static vector<string> randomValues(const char *calls) {
     while (!sc.isDone()) {
         char c = sc.advance();
         switch (c) {
-            case 'B':result.push_back(to_string(rnd() % 2 == 0));
+            case 'B': {
+                result.push_back(to_string(rnd() % 2 == 0));
                 break;
-            case 'I':result.push_back(to_string(static_cast<int32_t>(rnd())));
+            }
+            case 'I': {
+                result.push_back(to_string(static_cast<int32_t>(rnd())));
                 break;
-            case 'L':result.push_back(to_string(rnd() | static_cast<int64_t>(rnd()) << 32));
+            }
+            case 'L': {
+                result.push_back(to_string(rnd() | static_cast<int64_t>(rnd()) << 32));
                 break;
-            case 'F':
+            }
+            case 'F': {
                 result.push_back(
                     to_string(static_cast<float>(rnd()) / static_cast<float>(rnd())));
                 break;
-            case 'D':
+            }
+            case 'D': {
                 result.push_back(
                     to_string(static_cast<double>(rnd()) / static_cast<double>(rnd())));
                 break;
+            }
             case 'S':
-            case 'K':result.push_back(to_string(randomString(sc.extractInt())));
+            case 'K': {
+                result.push_back(to_string(randomString(sc.extractInt())));
                 break;
+            }
             case 'b':
-            case 'f':result.push_back(to_string(randomBytes(sc.extractInt())));
+            case 'f': {
+                result.push_back(to_string(randomBytes(sc.extractInt())));
                 break;
+            }
             case 'e':
             case 'c':
-            case 'U':sc.extractInt();
+            case 'U': {
+                sc.extractInt();
                 break;
+            }
             case 'N':
             case '[':
             case ']':
             case '{':
             case '}':
-            case 's':break;
-            default:BOOST_FAIL("Unknown mnemonic: " << c);
+            case 's': {
+                break;
+            }
+            default: {
+                BOOST_FAIL("Unknown mnemonic: " << c);
+            }
         }
     }
     return result;
@@ -226,45 +244,81 @@ static unique_ptr<OutputStream> generate(Encoder &e, const char *calls,
         char c = sc.advance();
 
         switch (c) {
-            case 'N':e.encodeNull();
+            case 'N': {
+                e.encodeNull();
                 break;
-            case 'B':e.encodeBool(from_string<bool>(*it++));
+            }
+            case 'B': {
+                e.encodeBool(from_string<bool>(*it++));
                 break;
-            case 'I':e.encodeInt(from_string<int32_t>(*it++));
+            }
+            case 'I': {
+                e.encodeInt(from_string<int32_t>(*it++));
                 break;
-            case 'L':e.encodeLong(from_string<int64_t>(*it++));
+            }
+            case 'L': {
+                e.encodeLong(from_string<int64_t>(*it++));
                 break;
-            case 'F':e.encodeFloat(from_string<float>(*it++));
+            }
+            case 'F': {
+                e.encodeFloat(from_string<float>(*it++));
                 break;
-            case 'D':e.encodeDouble(from_string<double>(*it++));
+            }
+            case 'D': {
+                e.encodeDouble(from_string<double>(*it++));
                 break;
+            }
             case 'S':
-            case 'K':sc.extractInt();
+            case 'K': {
+                sc.extractInt();
                 e.encodeString(from_string<string>(*it++));
                 break;
-            case 'b':sc.extractInt();
+            }
+            case 'b': {
+                sc.extractInt();
                 e.encodeBytes(from_string<vector<uint8_t> >(*it++));
                 break;
-            case 'f':sc.extractInt();
+            }
+            case 'f': {
+                sc.extractInt();
                 e.encodeFixed(from_string<vector<uint8_t> >(*it++));
                 break;
-            case 'e':e.encodeEnum(sc.extractInt());
+            }
+            case 'e': {
+                e.encodeEnum(sc.extractInt());
                 break;
-            case '[':e.arrayStart();
+            }
+            case '[': {
+                e.arrayStart();
                 break;
-            case ']':e.arrayEnd();
+            }
+            case ']': {
+                e.arrayEnd();
                 break;
-            case '{':e.mapStart();
+            }
+            case '{': {
+                e.mapStart();
                 break;
-            case '}':e.mapEnd();
+            }
+            case '}': {
+                e.mapEnd();
                 break;
-            case 'c':e.setItemCount(sc.extractInt());
+            }
+            case 'c': {
+                e.setItemCount(sc.extractInt());
                 break;
-            case 's':e.startItem();
+            }
+            case 's': {
+                e.startItem();
                 break;
-            case 'U':e.encodeUnionIndex(sc.extractInt());
+            }
+            case 'U': {
+                e.encodeUnionIndex(sc.extractInt());
                 break;
-            default:BOOST_FAIL("Unknown mnemonic: " << c);
+            }
+            default: {
+                BOOST_FAIL("Unknown mnemonic: " << c);
+            }
         }
     }
     e.flush();

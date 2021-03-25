@@ -129,18 +129,22 @@ int ResolvingGrammarGenerator::bestBranch(const NodePtr &writer,
         const NodePtr &r = reader->leafAt(j);
         Type rt = r->type();
         switch (t) {
-            case AVRO_INT:
+            case AVRO_INT: {
                 if (rt == AVRO_LONG || rt == AVRO_DOUBLE || rt == AVRO_FLOAT) {
                     return j;
                 }
                 break;
+            }
             case AVRO_LONG:
-            case AVRO_FLOAT:
+            case AVRO_FLOAT: {
                 if (rt == AVRO_DOUBLE) {
                     return j;
                 }
                 break;
-            default:break;
+            }
+            default: {
+                break;
+            }
         }
     }
     return -1;
@@ -278,15 +282,31 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
 
     if (writerType == readerType) {
         switch (writerType) {
-            case AVRO_NULL:return make_shared<Production>(1, Symbol::nullSymbol());
-            case AVRO_BOOL:return make_shared<Production>(1, Symbol::boolSymbol());
-            case AVRO_INT:return make_shared<Production>(1, Symbol::intSymbol());
-            case AVRO_LONG:return make_shared<Production>(1, Symbol::longSymbol());
-            case AVRO_FLOAT:return make_shared<Production>(1, Symbol::floatSymbol());
-            case AVRO_DOUBLE:return make_shared<Production>(1, Symbol::doubleSymbol());
-            case AVRO_STRING:return make_shared<Production>(1, Symbol::stringSymbol());
-            case AVRO_BYTES:return make_shared<Production>(1, Symbol::bytesSymbol());
-            case AVRO_FIXED:
+            case AVRO_NULL: {
+                return make_shared<Production>(1, Symbol::nullSymbol());
+            }
+            case AVRO_BOOL: {
+                return make_shared<Production>(1, Symbol::boolSymbol());
+            }
+            case AVRO_INT: {
+                return make_shared<Production>(1, Symbol::intSymbol());
+            }
+            case AVRO_LONG: {
+                return make_shared<Production>(1, Symbol::longSymbol());
+            }
+            case AVRO_FLOAT: {
+                return make_shared<Production>(1, Symbol::floatSymbol());
+            }
+            case AVRO_DOUBLE: {
+                return make_shared<Production>(1, Symbol::doubleSymbol());
+            }
+            case AVRO_STRING: {
+                return make_shared<Production>(1, Symbol::stringSymbol());
+            }
+            case AVRO_BYTES: {
+                return make_shared<Production>(1, Symbol::bytesSymbol());
+            }
+            case AVRO_FIXED: {
                 if (writer->name() == reader->name() &&
                     writer->fixedSize() == reader->fixedSize()) {
                     ProductionPtr result = make_shared<Production>();
@@ -296,7 +316,8 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                     return result;
                 }
                 break;
-            case AVRO_RECORD:
+            }
+            case AVRO_RECORD: {
                 if (writer->name() == reader->name()) {
                     const pair<NodePtr, NodePtr> key(writer, reader);
                     map<NodePair, ProductionPtr>::const_iterator kp = m.find(key);
@@ -310,8 +331,8 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                     return make_shared<Production>(1, Symbol::indirect(result));
                 }
                 break;
-
-            case AVRO_ENUM:
+            }
+            case AVRO_ENUM: {
                 if (writer->name() == reader->name()) {
                     ProductionPtr result = make_shared<Production>();
                     result->push_back(Symbol::enumAdjustSymbol(writer, reader));
@@ -320,7 +341,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                     return result;
                 }
                 break;
-
+            }
             case AVRO_ARRAY: {
                 ProductionPtr p = getWriterProduction(writer->leafAt(0), m2);
                 ProductionPtr p2 = doGenerate2(writer->leafAt(0), reader->leafAt(0), m, m2);
@@ -347,7 +368,9 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 result->push_back(Symbol::mapStartSymbol());
                 return result;
             }
-            case AVRO_UNION:return resolveUnion(writer, reader, m, m2);
+            case AVRO_UNION: {
+                return resolveUnion(writer, reader, m, m2);
+            }
             case AVRO_SYMBOLIC: {
                 shared_ptr<NodeSymbolic> w =
                     static_pointer_cast<NodeSymbolic>(writer);
@@ -362,26 +385,30 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                     return make_shared<Production>(1, Symbol::placeholder(p));
                 }
             }
-            default:throw Exception("Unknown node type");
+            default: {
+                throw Exception("Unknown node type");
+            }
         }
     } else if (writerType == AVRO_UNION) {
         return resolveUnion(writer, reader, m, m2);
     } else {
         switch (readerType) {
-            case AVRO_LONG:
+            case AVRO_LONG: {
                 if (writerType == AVRO_INT) {
                     return make_shared<Production>(1,
                                                    Symbol::resolveSymbol(Symbol::sInt, Symbol::sLong));
                 }
                 break;
-            case AVRO_FLOAT:
+            }
+            case AVRO_FLOAT: {
                 if (writerType == AVRO_INT || writerType == AVRO_LONG) {
                     return make_shared<Production>(1,
                                                    Symbol::resolveSymbol(writerType == AVRO_INT ?
                                                                          Symbol::sInt : Symbol::sLong, Symbol::sFloat));
                 }
                 break;
-            case AVRO_DOUBLE:
+            }
+            case AVRO_DOUBLE: {
                 if (writerType == AVRO_INT || writerType == AVRO_LONG
                     || writerType == AVRO_FLOAT) {
                     return make_shared<Production>(1,
@@ -391,7 +418,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                                                                          Symbol::sDouble));
                 }
                 break;
-
+            }
             case AVRO_UNION: {
                 int j = bestBranch(writer, reader);
                 if (j >= 0) {
@@ -411,8 +438,12 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
             case AVRO_ENUM:
             case AVRO_ARRAY:
             case AVRO_MAP:
-            case AVRO_RECORD:break;
-            default:throw Exception("Unknown node type");
+            case AVRO_RECORD: {
+                break;
+            }
+            default: {
+                throw Exception("Unknown node type");
+            }
         }
     }
     return make_shared<Production>(1, Symbol::error(writer, reader));
@@ -429,17 +460,25 @@ public:
                                                 binDecoder(binaryDecoder()) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sWriterUnion:return base_->decodeUnionIndex();
-            case Symbol::sDefaultStart:defaultData_ = s.extra<shared_ptr<vector<uint8_t> > >();
+            case Symbol::sWriterUnion: {
+                return base_->decodeUnionIndex();
+            }
+            case Symbol::sDefaultStart: {
+                defaultData_ = s.extra<shared_ptr<vector<uint8_t> > >();
                 backup_ = base_;
                 inp_ = memoryInputStream(&(*defaultData_)[0], defaultData_->size());
                 base_ = binDecoder;
                 base_->init(*inp_);
                 return 0;
-            case Symbol::sDefaultEnd:base_ = backup_;
+            }
+            case Symbol::sDefaultEnd: {
+                base_ = backup_;
                 backup_.reset();
                 return 0;
-            default:return 0;
+            }
+            default: {
+                return 0;
+            }
         }
     }
 

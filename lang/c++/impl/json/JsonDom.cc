@@ -32,29 +32,55 @@ namespace avro {
 namespace json {
 const char *typeToString(EntityType t) {
     switch (t) {
-        case etNull: return "null";
-        case etBool: return "bool";
-        case etLong: return "long";
-        case etDouble: return "double";
-        case etString: return "string";
-        case etArray: return "array";
-        case etObject: return "object";
-        default: return "unknown";
+        case etNull: {
+            return "null";
+        }
+        case etBool: {
+            return "bool";
+        }
+        case etLong: {
+            return "long";
+        }
+        case etDouble: {
+            return "double";
+        }
+        case etString: {
+            return "string";
+        }
+        case etArray: {
+            return "array";
+        }
+        case etObject: {
+            return "object";
+        }
+        default: {
+            return "unknown";
+        }
     }
 }
 
 Entity readEntity(JsonParser &p) {
     switch (p.peek()) {
-        case JsonParser::tkNull:p.advance();
+        case JsonParser::tkNull: {
+            p.advance();
             return Entity(p.line());
-        case JsonParser::tkBool:p.advance();
+        }
+        case JsonParser::tkBool: {
+            p.advance();
             return Entity(p.boolValue(), p.line());
-        case JsonParser::tkLong:p.advance();
+        }
+        case JsonParser::tkLong: {
+            p.advance();
             return Entity(p.longValue(), p.line());
-        case JsonParser::tkDouble:p.advance();
+        }
+        case JsonParser::tkDouble: {
+            p.advance();
             return Entity(p.doubleValue(), p.line());
-        case JsonParser::tkString:p.advance();
+        }
+        case JsonParser::tkString: {
+            p.advance();
             return Entity(std::make_shared<String>(p.rawString()), p.line());
+        }
         case JsonParser::tkArrayStart: {
             size_t l = p.line();
             p.advance();
@@ -100,16 +126,26 @@ Entity loadEntity(const uint8_t *text, size_t len) {
 
 void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
     switch (n.type()) {
-        case etNull:g.encodeNull();
+        case etNull: {
+            g.encodeNull();
             break;
-        case etBool:g.encodeBool(n.boolValue());
+        }
+        case etBool: {
+            g.encodeBool(n.boolValue());
             break;
-        case etLong:g.encodeNumber(n.longValue());
+        }
+        case etLong: {
+            g.encodeNumber(n.longValue());
             break;
-        case etDouble:g.encodeNumber(n.doubleValue());
+        }
+        case etDouble: {
+            g.encodeNumber(n.doubleValue());
             break;
-        case etString:g.encodeString(n.stringValue());
+        }
+        case etString: {
+            g.encodeString(n.stringValue());
             break;
+        }
         case etArray: {
             g.arrayStart();
             const Array &v = n.arrayValue();
@@ -118,8 +154,8 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
                 writeEntity(g, *it);
             }
             g.arrayEnd();
-        }
             break;
+        }
         case etObject: {
             g.objectStart();
             const Object &v = n.objectValue();
@@ -128,8 +164,8 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
                 writeEntity(g, it->second);
             }
             g.objectEnd();
-        }
             break;
+        }
     }
 }
 

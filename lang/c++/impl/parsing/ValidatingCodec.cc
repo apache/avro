@@ -61,14 +61,30 @@ Symbol ValidatingGrammarGenerator::generate(const ValidSchema &schema) {
 ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
                                                      map<NodePtr, ProductionPtr> &m) {
     switch (n->type()) {
-        case AVRO_NULL:return make_shared<Production>(1, Symbol::nullSymbol());
-        case AVRO_BOOL:return make_shared<Production>(1, Symbol::boolSymbol());
-        case AVRO_INT:return make_shared<Production>(1, Symbol::intSymbol());
-        case AVRO_LONG:return make_shared<Production>(1, Symbol::longSymbol());
-        case AVRO_FLOAT:return make_shared<Production>(1, Symbol::floatSymbol());
-        case AVRO_DOUBLE:return make_shared<Production>(1, Symbol::doubleSymbol());
-        case AVRO_STRING:return make_shared<Production>(1, Symbol::stringSymbol());
-        case AVRO_BYTES:return make_shared<Production>(1, Symbol::bytesSymbol());
+        case AVRO_NULL: {
+            return make_shared<Production>(1, Symbol::nullSymbol());
+        }
+        case AVRO_BOOL: {
+            return make_shared<Production>(1, Symbol::boolSymbol());
+        }
+        case AVRO_INT: {
+            return make_shared<Production>(1, Symbol::intSymbol());
+        }
+        case AVRO_LONG: {
+            return make_shared<Production>(1, Symbol::longSymbol());
+        }
+        case AVRO_FLOAT: {
+            return make_shared<Production>(1, Symbol::floatSymbol());
+        }
+        case AVRO_DOUBLE: {
+            return make_shared<Production>(1, Symbol::doubleSymbol());
+        }
+        case AVRO_STRING: {
+            return make_shared<Production>(1, Symbol::stringSymbol());
+        }
+        case AVRO_BYTES: {
+            return make_shared<Production>(1, Symbol::bytesSymbol());
+        }
         case AVRO_FIXED: {
             ProductionPtr result = make_shared<Production>();
             result->push_back(Symbol::sizeCheckSymbol(n->fixedSize()));
@@ -139,7 +155,9 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
                 return make_shared<Production>(1, Symbol::placeholder(nn));
             }
         }
-        default:throw Exception("Unknown node type");
+        default: {
+            throw Exception("Unknown node type");
+        }
     }
 }
 
