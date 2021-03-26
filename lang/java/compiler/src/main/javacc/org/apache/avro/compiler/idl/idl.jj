@@ -90,7 +90,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 
-  URI inputDir = new File(".").toURI();
+  URI inputDir;
   ClassLoader resourceLoader = null;
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
@@ -116,13 +116,12 @@ public class Idl implements Closeable {
   private static URI resourceParent(URL jar) throws IOException {
     String path = jar.toExternalForm();
     String name = path.substring(path.indexOf("!/") + 1);
-    URI uri = null;
     try {
-      uri = new URI("classpath", null, name, null);
+      URI uri = new URI("classpath", null, name, null);
+      return uri.resolve(".");
     } catch (URISyntaxException e) {
       throw new IOException("Could not handle resource import in " + jar, e);
     }
-    return uri.resolve(".");
   }
 
   private Idl(URL input, Idl parent) throws IOException {
@@ -171,7 +170,7 @@ public class Idl implements Closeable {
     File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
     if (file != null && file.exists())
-      result = file.toURL();
+      result = file.toURI().toURL();
     else if("classpath".equals(uri.getScheme()))
       result = this.resourceLoader.getResource(uri.getPath().substring(1));
     else if (this.resourceLoader != null)
@@ -1551,7 +1550,7 @@ Schema ResultType():
 String PropertyName():
 {
   Token t;
-  StringBuffer name = new StringBuffer();
+  StringBuilder name = new StringBuilder();
 }
 {
   t = <IDENTIFIER>   { name.append(t.image); }
