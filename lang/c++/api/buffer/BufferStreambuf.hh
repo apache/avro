@@ -170,8 +170,8 @@ protected:
         if ((newpos > endpos) && (newpos > static_cast<off_type>(buffer_.size()))) {
             return pos_type(-1);
         }
-            // if the new position is before our current iterator
-            // reset the iterator to the beginning
+        // if the new position is before our current iterator
+        // reset the iterator to the beginning
         else if (newpos < basePos_) {
             iter_ = buffer_.begin();
             basePos_ = 0;

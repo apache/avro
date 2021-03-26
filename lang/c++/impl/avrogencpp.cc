@@ -720,11 +720,11 @@ void CodeGen::generate(const ValidSchema &schema) {
     os_ << "#define " << h << "\n\n\n";
 
     os_ << "#include <sstream>\n"
-        #if __cplusplus >= 201703L
+#if __cplusplus >= 201703L
         << "#include <any>\n"
-        #else
+#else
         << "#include \"boost/any.hpp\"\n"
-        #endif
+#endif
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"

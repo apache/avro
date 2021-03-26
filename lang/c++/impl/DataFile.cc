@@ -408,7 +408,7 @@ void DataFileReaderBase::readDataBlock() {
         if (checksum != c) {
             throw Exception(
                 boost::format("Checksum did not match for Snappy compression: Expected: %1%, computed: %2%") % checksum
-                    % c);
+                % c);
         }
         os_.reset(new boost::iostreams::filtering_istream());
         os_->push(
