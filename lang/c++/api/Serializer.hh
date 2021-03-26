@@ -34,14 +34,11 @@ template<class Writer>
 class Serializer : private boost::noncopyable {
 
 public:
-
     /// Constructor only works with Writer
-    explicit Serializer() :
-        writer_() {}
+    explicit Serializer() : writer_() {}
 
     /// Constructor only works with ValidatingWriter
-    explicit Serializer(const ValidSchema &schema) :
-        writer_(schema) {}
+    explicit Serializer(const ValidSchema &schema) : writer_(schema) {}
 
     void writeNull() {
         writer_.writeValue(Null());
@@ -122,9 +119,7 @@ public:
     }
 
 private:
-
     Writer writer_;
-
 };
 
 } // namespace avro

@@ -35,14 +35,11 @@ template<class Reader>
 class Parser : private boost::noncopyable {
 
 public:
-
     // Constructor only works with Writer
-    explicit Parser(const InputBuffer &in) :
-        reader_(in) {}
+    explicit Parser(const InputBuffer &in) : reader_(in) {}
 
     /// Constructor only works with ValidatingWriter
-    Parser(const ValidSchema &schema, const InputBuffer &in) :
-        reader_(schema, in) {}
+    Parser(const ValidSchema &schema, const InputBuffer &in) : reader_(schema, in) {}
 
     void readNull() {
         Null null;
@@ -122,13 +119,11 @@ public:
     }
 
 private:
-
     friend Type nextType(Parser<ValidatingReader> &p);
     friend bool currentRecordName(Parser<ValidatingReader> &p, std::string &name);
     friend bool nextFieldName(Parser<ValidatingReader> &p, std::string &name);
 
     Reader reader_;
-
 };
 
 inline Type nextType(Parser<ValidatingReader> &p) {

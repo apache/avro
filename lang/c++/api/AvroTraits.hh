@@ -60,7 +60,7 @@ struct is_defined {
     typedef char no[2];
 
     template<class U>
-    static yes &test(char(*)[sizeof(U)]) { throw 0; };
+    static yes &test(char (*)[sizeof(U)]) { throw 0; };
 
     template<class U>
     static no &test(...) { throw 0; };
@@ -82,7 +82,7 @@ struct is_not_defined {
     typedef char no[2];
 
     template<class U>
-    static yes &test(char(*)[sizeof(U)]) { throw 0; };
+    static yes &test(char (*)[sizeof(U)]) { throw 0; };
 
     template<class U>
     static no &test(...) { throw 0; };
@@ -90,20 +90,20 @@ struct is_not_defined {
     static const bool value = sizeof(test<T>(0)) == sizeof(no);
 };
 
-#define DEFINE_PRIMITIVE(CTYPE, AVROTYPE) \
-template <> \
-struct is_serializable<CTYPE> : public std::true_type{}; \
-\
-template <> \
-struct type_to_avro<CTYPE> { \
-    static const Type type = AVROTYPE; \
-};
+#define DEFINE_PRIMITIVE(CTYPE, AVROTYPE)                     \
+    template<>                                                \
+    struct is_serializable<CTYPE> : public std::true_type {}; \
+                                                              \
+    template<>                                                \
+    struct type_to_avro<CTYPE> {                              \
+        static const Type type = AVROTYPE;                    \
+    };
 
-#define DEFINE_PROMOTABLE_PRIMITIVE(CTYPE, AVROTYPE) \
-template <> \
-struct is_promotable<CTYPE> : public std::true_type{}; \
-\
-DEFINE_PRIMITIVE(CTYPE, AVROTYPE)
+#define DEFINE_PROMOTABLE_PRIMITIVE(CTYPE, AVROTYPE)        \
+    template<>                                              \
+    struct is_promotable<CTYPE> : public std::true_type {}; \
+                                                            \
+    DEFINE_PRIMITIVE(CTYPE, AVROTYPE)
 
 DEFINE_PROMOTABLE_PRIMITIVE(int32_t, AVRO_INT)
 DEFINE_PROMOTABLE_PRIMITIVE(int64_t, AVRO_LONG)

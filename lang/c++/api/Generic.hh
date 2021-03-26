@@ -22,10 +22,10 @@
 #include <boost/utility.hpp>
 
 #include "Config.hh"
-#include "Types.hh"
-#include "Encoder.hh"
 #include "Decoder.hh"
+#include "Encoder.hh"
 #include "GenericDatum.hh"
+#include "Types.hh"
 
 namespace avro {
 /**
@@ -37,6 +37,7 @@ class AVRO_DECL GenericReader : boost::noncopyable {
     const DecoderPtr decoder_;
 
     static void read(GenericDatum &datum, Decoder &d, bool isResolving);
+
 public:
     /**
      * Constructs a reader for the given schema using the given decoder.
@@ -83,6 +84,7 @@ class AVRO_DECL GenericWriter : boost::noncopyable {
     const EncoderPtr encoder_;
 
     static void write(const GenericDatum &datum, Encoder &e);
+
 public:
     /**
      * Constructs a writer for the given schema using the given encoder.
@@ -117,7 +119,7 @@ struct codec_traits;
  * cleaner codec_traits<GenericDatum> instead.
  */
 template<>
-struct codec_traits<std::pair<ValidSchema, GenericDatum> > {
+struct codec_traits<std::pair<ValidSchema, GenericDatum>> {
     /** Encodes */
     static void encode(Encoder &e,
                        const std::pair<ValidSchema, GenericDatum> &p) {
@@ -146,6 +148,5 @@ struct codec_traits<GenericDatum> {
     }
 };
 
-}   // namespace avro
+} // namespace avro
 #endif
-

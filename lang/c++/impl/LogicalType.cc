@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "Exception.hh"
 #include "LogicalType.hh"
+#include "Exception.hh"
 
 namespace avro {
 
@@ -50,26 +50,34 @@ void LogicalType::setScale(int scale) {
 
 void LogicalType::printJson(std::ostream &os) const {
     switch (type_) {
-        case LogicalType::NONE:break;
-        case LogicalType::DECIMAL:os << R"("logicalType": "decimal")";
+        case LogicalType::NONE: break;
+        case LogicalType::DECIMAL:
+            os << R"("logicalType": "decimal")";
             os << ", \"precision\": " << precision_;
             os << ", \"scale\": " << scale_;
             break;
-        case DATE:os << R"("logicalType": "date")";
+        case DATE:
+            os << R"("logicalType": "date")";
             break;
-        case TIME_MILLIS:os << R"("logicalType": "time-millis")";
+        case TIME_MILLIS:
+            os << R"("logicalType": "time-millis")";
             break;
-        case TIME_MICROS:os << R"("logicalType": "time-micros")";
+        case TIME_MICROS:
+            os << R"("logicalType": "time-micros")";
             break;
-        case TIMESTAMP_MILLIS:os << R"("logicalType": "timestamp-millis")";
+        case TIMESTAMP_MILLIS:
+            os << R"("logicalType": "timestamp-millis")";
             break;
-        case TIMESTAMP_MICROS:os << R"("logicalType": "timestamp-micros")";
+        case TIMESTAMP_MICROS:
+            os << R"("logicalType": "timestamp-micros")";
             break;
-        case DURATION:os << R"("logicalType": "duration")";
+        case DURATION:
+            os << R"("logicalType": "duration")";
             break;
-        case UUID:os << R"("logicalType": "uuid")";
+        case UUID:
+            os << R"("logicalType": "uuid")";
             break;
     }
 }
 
-}  // namespace avro
+} // namespace avro

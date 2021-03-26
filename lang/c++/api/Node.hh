@@ -21,15 +21,15 @@
 
 #include "Config.hh"
 
+#include <boost/noncopyable.hpp>
 #include <cassert>
 #include <memory>
-#include <boost/noncopyable.hpp>
 #include <utility>
 
 #include "Exception.hh"
 #include "LogicalType.hh"
-#include "Types.hh"
 #include "SchemaResolution.hh"
+#include "Types.hh"
 
 namespace avro {
 
@@ -41,6 +41,7 @@ using NodePtr = std::shared_ptr<Node>;
 class AVRO_DECL Name {
     std::string ns_;
     std::string simpleName_;
+
 public:
     Name() = default;
     explicit Name(const std::string &fullname);
@@ -67,8 +68,7 @@ public:
     }
 };
 
-inline
-std::ostream &operator<<(std::ostream &os, const Name &n) {
+inline std::ostream &operator<<(std::ostream &os, const Name &n) {
     return os << n.fullname();
 }
 
@@ -89,11 +89,9 @@ std::ostream &operator<<(std::ostream &os, const Name &n) {
 
 class AVRO_DECL Node : private boost::noncopyable {
 public:
-
-    explicit Node(Type type) :
-        type_(type),
-        logicalType_(LogicalType::NONE),
-        locked_(false) {}
+    explicit Node(Type type) : type_(type),
+                               logicalType_(LogicalType::NONE),
+                               locked_(false) {}
 
     virtual ~Node();
 
@@ -171,7 +169,6 @@ public:
                                     size_t depth) const = 0;
 
 protected:
-
     void checkLock() const {
         if (locked()) {
             throw Exception("Cannot modify locked schema");
@@ -190,7 +187,6 @@ protected:
     virtual void doSetFixedSize(size_t size) = 0;
 
 private:
-
     const Type type_;
     LogicalType logicalType_;
     bool locked_;
@@ -203,6 +199,6 @@ inline std::ostream &operator<<(std::ostream &os, const avro::Node &n) {
     n.printJson(os, 0);
     return os;
 }
-}
+} // namespace std
 
 #endif

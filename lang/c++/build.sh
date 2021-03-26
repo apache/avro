@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {lint|test|dist|clean|install|doc}"
+  echo "Usage: $0 {lint|test|dist|clean|install|doc|format}"
   exit 1
 }
 
@@ -112,6 +112,9 @@ case "$target" in
   doc)
     do_doc
     ;;
+
+  format)
+    clang-format -i --style file `find api -type f` `find impl -type f`
 
   clean)
     (cd build && make clean)

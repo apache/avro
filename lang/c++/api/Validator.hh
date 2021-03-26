@@ -20,9 +20,9 @@
 #define avro_Validating_hh__
 
 #include <boost/noncopyable.hpp>
+#include <cstdint>
 #include <utility>
 #include <vector>
-#include <cstdint>
 
 #include "Config.hh"
 #include "Types.hh"
@@ -32,7 +32,6 @@ namespace avro {
 
 class AVRO_DECL NullValidator : private boost::noncopyable {
 public:
-
     explicit NullValidator(const ValidSchema &schema) {}
     NullValidator() = default;
 
@@ -60,7 +59,6 @@ public:
 
     void checkTypeExpected(Type) {}
     void checkFixedSizeExpected(int) {}
-
 };
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
@@ -71,7 +69,6 @@ public:
 
 class AVRO_DECL Validator : private boost::noncopyable {
 public:
-
     explicit Validator(ValidSchema schema);
 
     void setCount(int64_t val);
@@ -93,8 +90,7 @@ public:
         if (!typeIsExpected(type)) {
             throw Exception(
                 boost::format("Type %1% does not match schema %2%")
-                    % type % nextType_
-            );
+                % type % nextType_);
         }
         advance();
     }
@@ -103,14 +99,12 @@ public:
         if (nextSizeExpected() != size) {
             throw Exception(
                 boost::format("Wrong size for fixed, got %1%, expected %2%")
-                    % size % nextSizeExpected()
-            );
+                % size % nextSizeExpected());
         }
         checkTypeExpected(AVRO_FIXED);
     }
 
 private:
-
     using flag_t = uint32_t;
 
     static flag_t typeToFlag(Type type) {
@@ -142,15 +136,13 @@ private:
     int64_t count_;
 
     struct CompoundType {
-        explicit CompoundType(NodePtr n) :
-            node(std::move(n)), pos(0) {}
-        NodePtr node;  ///< save the node
+        explicit CompoundType(NodePtr n) : node(std::move(n)), pos(0) {}
+        NodePtr node; ///< save the node
         size_t pos;   ///< track the leaf position to visit
     };
 
     std::vector<CompoundType> compoundStack_;
     std::vector<size_t> counters_;
-
 };
 
 } // namespace avro

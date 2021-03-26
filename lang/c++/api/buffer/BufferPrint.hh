@@ -19,10 +19,10 @@
 #ifndef avro_BufferPrint_hh__
 #define avro_BufferPrint_hh__
 
-#include <ctype.h>
-#include <iostream>
-#include <iomanip>
 #include "BufferReader.hh"
+#include <ctype.h>
+#include <iomanip>
+#include <iostream>
 
 /**
  * \file BufferPrint.hh
@@ -43,8 +43,7 @@ namespace detail {
  **/
 
 inline void
-hexPrint(std::ostream &os, BufferReader &reader)
-{
+hexPrint(std::ostream &os, BufferReader &reader) {
     std::ios_base::fmtflags savedFlags = os.flags();
 
     char sixteenBytes[16];
@@ -53,7 +52,7 @@ hexPrint(std::ostream &os, BufferReader &reader)
     os << std::setfill('0');
     os << std::hex;
 
-    while(reader.bytesRemaining()) {
+    while (reader.bytesRemaining()) {
 
         os << std::setw(8) << offset << "  ";
 
@@ -84,32 +83,27 @@ hexPrint(std::ostream &os, BufferReader &reader)
             os << "   ";
         }
         os << " |";
-        for(i = 0; i < inBuffer; ++i) {
-            os.put(isprint(sixteenBytes[i] & 0xff) ? sixteenBytes[i] : '.' );
+        for (i = 0; i < inBuffer; ++i) {
+            os.put(isprint(sixteenBytes[i] & 0xff) ? sixteenBytes[i] : '.');
         }
         os << "|\n";
-
     }
 
     // restore flags
-    os.flags( savedFlags);
+    os.flags(savedFlags);
 }
 
 } // namespace detail
 
-} // namespace
+} // namespace avro
 
-inline
-std::ostream& operator<<(std::ostream& os, const avro::OutputBuffer& buffer)
-{
+inline std::ostream &operator<<(std::ostream &os, const avro::OutputBuffer &buffer) {
     avro::BufferReader reader(buffer);
     avro::detail::hexPrint(os, reader);
     return os;
 }
 
-inline
-std::ostream& operator<<(std::ostream& os, const avro::InputBuffer& buffer)
-{
+inline std::ostream &operator<<(std::ostream &os, const avro::InputBuffer &buffer) {
     avro::BufferReader reader(buffer);
     avro::detail::hexPrint(os, reader);
     return os;

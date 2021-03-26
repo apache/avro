@@ -31,12 +31,10 @@
 
 namespace avro {
 
-
 /// The root Schema object is a base class.  Nobody constructs this class directly.
 
 class AVRO_DECL Schema {
 public:
-
     virtual ~Schema() = default;
 
     Type type() const {

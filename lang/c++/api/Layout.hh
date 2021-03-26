@@ -19,8 +19,8 @@
 #ifndef avro_Layout_hh__
 #define avro_Layout_hh__
 
-#include <boost/noncopyable.hpp>
 #include "Config.hh"
+#include <boost/noncopyable.hpp>
 
 /// \file Layout.hh
 ///
@@ -49,7 +49,6 @@ public:
 class AVRO_DECL CompoundLayout : public Layout {
 
 public:
-
     explicit CompoundLayout(size_t offset = 0) : Layout(offset) {}
 
     void add(std::unique_ptr<Layout> &layout) {
@@ -61,8 +60,7 @@ public:
     }
 
 private:
-
-    std::vector<std::unique_ptr<Layout> > layouts_;
+    std::vector<std::unique_ptr<Layout>> layouts_;
 };
 
 } // namespace avro
