@@ -29,8 +29,7 @@ int main() {
         avro::compileJsonSchema(std::cin, schema);
 
         schema.toJson(std::cout);
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
         std::cerr << "Failed to parse or compile schema: " << e.what() << std::endl;
         ret = 1;
     }

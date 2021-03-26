@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#include <fstream>
 #include "Compiler.hh"
-#include "ValidSchema.hh"
 #include "Decoder.hh"
+#include "ValidSchema.hh"
+#include <fstream>
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 void testLargeSchema() {
     std::ifstream in("jsonschemas/large_schema.avsc");

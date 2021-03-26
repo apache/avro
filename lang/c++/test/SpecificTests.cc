@@ -22,17 +22,18 @@
 #include "Specific.hh"
 #include "Stream.hh"
 
-using std::unique_ptr;
-using std::string;
-using std::vector;
-using std::map;
 using std::array;
+using std::map;
+using std::string;
+using std::unique_ptr;
+using std::vector;
 
 namespace avro {
 
 class C {
     int32_t i_;
     int64_t l_;
+
 public:
     C() : i_(0), l_(0) {}
     C(int32_t i, int64_t l) : i_(i), l_(l) {}
@@ -65,6 +66,7 @@ class Test {
     unique_ptr<OutputStream> os;
     EncoderPtr e;
     DecoderPtr d;
+
 public:
     Test() : os(memoryOutputStream()), e(binaryEncoder()), d(binaryDecoder()) {
         e->init(*os);
@@ -176,8 +178,8 @@ void testCustom() {
     BOOST_CHECK(b == n);
 }
 
-}
-}
+} // namespace specific
+} // namespace avro
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int argc, char *argv[]) {

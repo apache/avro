@@ -21,8 +21,8 @@
 #include "ValidSchema.hh"
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace avro {
 namespace schema {
@@ -170,7 +170,7 @@ const char *roundTripSchemas[] = {
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f1\",\"type\":\"long\"},"
     "{\"name\":\"f2\",\"type\":\"int\"}]}",
-/* Avro-C++ cannot do a round-trip on error schemas.
+    /* Avro-C++ cannot do a round-trip on error schemas.
  * "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
  *       "[{\"name\":\"f1\",\"type\":\"long\"},"
  *       "{\"name\":\"f2\",\"type\":\"int\"}]}"
@@ -235,8 +235,7 @@ const char *malformedLogicalTypes[] = {
     "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":4,\"name\":\"a\",\"precision\":20}",
     "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":129,\"name\":\"a\",\"precision\":311}",
     // Scale is larger than precision.
-    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":5,\"scale\":10}"
-};
+    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":5,\"scale\":10}"};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
@@ -407,8 +406,7 @@ static void testLogicalTypes() {
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_MILLIS);
         GenericDatum datum(schema);
-        BOOST_CHECK(datum.logicalType().type() ==
-            LogicalType::TIMESTAMP_MILLIS);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_MILLIS);
     }
     {
         BOOST_TEST_CHECKPOINT(timestampMicrosType);
@@ -417,8 +415,7 @@ static void testLogicalTypes() {
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::TIMESTAMP_MICROS);
         GenericDatum datum(schema);
-        BOOST_CHECK(datum.logicalType().type() ==
-            LogicalType::TIMESTAMP_MICROS);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::TIMESTAMP_MICROS);
     }
     {
         BOOST_TEST_CHECKPOINT(durationType);
@@ -450,10 +447,10 @@ static void testMalformedLogicalTypes(const char *schema) {
     BOOST_CHECK(datum.logicalType().type() == LogicalType::NONE);
 }
 
-}
-}
+} // namespace schema
+} // namespace avro
 
-#define ENDOF(x)  (x + sizeof(x) / sizeof(x[0]))
+#define ENDOF(x) (x + sizeof(x) / sizeof(x[0]))
 
 #define ADD_PARAM_TEST(ts, func, data) \
     ts->add(BOOST_PARAM_TEST_CASE(&func, data, ENDOF(data)))

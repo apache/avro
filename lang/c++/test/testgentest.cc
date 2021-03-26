@@ -16,27 +16,27 @@
  * limitations under the License.
  */
 
-#include <string.h>
-#include <stdlib.h>
+#include <boost/test/included/unit_test_framework.hpp>
 #include <fstream>
 #include <sstream>
-#include <boost/test/included/unit_test_framework.hpp>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
 #endif
 
-#include "testgen.hh" // < generated header
+#include "testgen.hh"  // < generated header
 #include "testgen2.hh" // < generated header
 
-#include "Serializer.hh"
-#include "Writer.hh"
-#include "Reader.hh"
-#include "Node.hh"
-#include "ValidSchema.hh"
 #include "Compiler.hh"
-#include "ResolvingReader.hh"
+#include "Node.hh"
+#include "Reader.hh"
 #include "ResolverSchema.hh"
+#include "ResolvingReader.hh"
+#include "Serializer.hh"
+#include "ValidSchema.hh"
+#include "Writer.hh"
 #include "buffer/BufferPrint.hh"
 
 std::string gWriter("jsonschemas/bigrecord");
@@ -74,7 +74,7 @@ void printRecord(testgen::RootRecord &record) {
 
     if (record.anotherunion.choice == 0) {
         std::cout << "unionbytes ";
-        const std::vector<uint8_t> &val = record.anotherunion.getValue<std::vector<uint8_t> >();
+        const std::vector<uint8_t> &val = record.anotherunion.getValue<std::vector<uint8_t>>();
         for (size_t i = 0; i < val.size(); ++i) {
             std::cout << i << ":" << static_cast<int>(val[i]) << " ";
         }
@@ -355,7 +355,6 @@ struct TestCodeGenerator {
 
     testgen::RootRecord myRecord_;
     avro::ValidSchema schema_;
-
 };
 
 struct TestSchemaResolving {

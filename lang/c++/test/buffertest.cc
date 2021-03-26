@@ -18,8 +18,8 @@
 
 #include <boost/test/included/unit_test_framework.hpp>
 
-#include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/thread.hpp>
 
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>
@@ -28,16 +28,16 @@
 #include <iostream>
 
 #define BUFFER_UNITTEST
-#include "buffer/BufferStream.hh"
-#include "buffer/BufferReader.hh"
 #include "buffer/BufferPrint.hh"
+#include "buffer/BufferReader.hh"
+#include "buffer/BufferStream.hh"
 
 using namespace avro;
+using detail::kDefaultBlockSize;
+using detail::kMaxBlockSize;
+using detail::kMinBlockSize;
 using std::cout;
 using std::endl;
-using detail::kDefaultBlockSize;
-using detail::kMinBlockSize;
-using detail::kMaxBlockSize;
 
 std::string makeString(size_t len) {
     std::string newstring;
@@ -235,8 +235,7 @@ void TestDiscard() {
 
         try {
             ob.discardData(ob.size() + 1);
-        }
-        catch (std::exception &e) {
+        } catch (std::exception &e) {
             std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
         ob.discardData(ob.size());
@@ -348,8 +347,7 @@ void TestExtractToInput() {
 
         try {
             ob.extractData(ob.size() + 1);
-        }
-        catch (std::exception &e) {
+        } catch (std::exception &e) {
             std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
 
@@ -481,7 +479,6 @@ void TestSeekAndTell() {
         BOOST_CHECK_EQUAL(is.tellg(), static_cast<std::streampos>(is.getBuffer().size()));
         is.seekg(is.getBuffer().size() + 1);
         BOOST_CHECK_EQUAL(is.tellg(), static_cast<std::streampos>(-1));
-
     }
 }
 
@@ -520,7 +517,7 @@ void TestSeek() {
         const std::string str = "SampleMessage";
 
         avro::OutputBuffer tmp1, tmp2, tmp3;
-        tmp1.writeTo(str.c_str(), 3); // Sam
+        tmp1.writeTo(str.c_str(), 3);      // Sam
         tmp2.writeTo(str.c_str() + 3, 7);  // pleMess
         tmp3.writeTo(str.c_str() + 10, 3); // age
 
@@ -534,7 +531,7 @@ void TestSeek() {
         avro::InputBuffer buf(tmp1);
 
         cout << "Starting string: " << str << '\n';
-        BOOST_CHECK_EQUAL(static_cast<std::string::size_type>( buf.size()), str.size());
+        BOOST_CHECK_EQUAL(static_cast<std::string::size_type>(buf.size()), str.size());
 
         avro::istream is(buf);
 
@@ -556,7 +553,7 @@ void TestSeek() {
 
         std::streampos loc = is.tellg();
         cout << "Saved loc = " << loc << '\n';
-        BOOST_CHECK_EQUAL(static_cast<std::string::size_type>( loc ), (str.size() - part2.size()));
+        BOOST_CHECK_EQUAL(static_cast<std::string::size_type>(loc), (str.size() - part2.size()));
 
         cout << "Reading remaining bytes: " << is.rdbuf() << '\n';
         cout << "bytes avail = " << is.rdbuf()->in_avail() << '\n';
@@ -570,7 +567,6 @@ void TestSeek() {
         oss << is.rdbuf();
         cout << "After reading bytes: " << oss.str() << '\n';
         BOOST_CHECK_EQUAL(oss.str(), part2);
-
     }
 }
 
@@ -582,7 +578,7 @@ void TestIterator() {
         BOOST_CHECK_EQUAL(ob.size(), 0U);
         BOOST_CHECK_EQUAL(ob.freeSpace(), 2 * kMaxBlockSize + kMinBlockSize);
 
-        BOOST_CHECK_EQUAL (std::distance(ob.begin(), ob.end()), 3);
+        BOOST_CHECK_EQUAL(std::distance(ob.begin(), ob.end()), 3);
 
         OutputBuffer::const_iterator iter = ob.begin();
         BOOST_CHECK_EQUAL(iter->size(), kMaxBlockSize);
@@ -601,7 +597,7 @@ void TestIterator() {
         BOOST_CHECK_EQUAL(ob.numDataChunks(), 2);
 
         InputBuffer ib = ob;
-        BOOST_CHECK_EQUAL (std::distance(ib.begin(), ib.end()), 2);
+        BOOST_CHECK_EQUAL(std::distance(ib.begin(), ib.end()), 2);
 
         size_t acc = 0;
         for (OutputBuffer::const_iterator iter = ob.begin();
@@ -613,16 +609,14 @@ void TestIterator() {
 
         try {
             ob.wroteTo(acc + 1);
-        }
-        catch (std::exception &e) {
+        } catch (std::exception &e) {
             std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
     }
 }
 
 #ifdef HAVE_BOOST_ASIO
-void server(boost::barrier &b)
-{
+void server(boost::barrier &b) {
     using boost::asio::ip::tcp;
     boost::asio::io_service io_service;
     tcp::acceptor a(io_service, tcp::endpoint(tcp::v4(), 33333));
@@ -643,7 +637,7 @@ void server(boost::barrier &b)
     std::string res;
 
     avro::InputBuffer::const_iterator iter = rbuf.begin();
-    while(iter != rbuf.end() ) {
+    while (iter != rbuf.end()) {
         res.append(boost::asio::buffer_cast<const char *>(*iter), boost::asio::buffer_size(*iter));
         cout << "Received Buffer size: " << boost::asio::buffer_size(*iter) << endl;
         BOOST_CHECK_EQUAL(length, boost::asio::buffer_size(*iter));
@@ -654,10 +648,9 @@ void server(boost::barrier &b)
     BOOST_CHECK_EQUAL(res, "hello world");
 }
 
-void TestAsioBuffer()
-{
+void TestAsioBuffer() {
     using boost::asio::ip::tcp;
-    BOOST_TEST_MESSAGE( "TestAsioBuffer");
+    BOOST_TEST_MESSAGE("TestAsioBuffer");
     {
         boost::barrier b(2);
 
@@ -675,13 +668,12 @@ void TestAsioBuffer()
 
         tcp::socket socket(io_service);
         boost::system::error_code error = boost::asio::error::host_not_found;
-        while (error && endpoint_iterator != end)
-        {
-          socket.close();
-          socket.connect(*endpoint_iterator++, error);
+        while (error && endpoint_iterator != end) {
+            socket.close();
+            socket.connect(*endpoint_iterator++, error);
         }
         if (error) {
-          throw error;
+            throw error;
         }
 
         std::string hello = "hello ";
@@ -704,7 +696,7 @@ void TestAsioBuffer()
         const avro::InputBuffer rbuf(buf);
 
         avro::InputBuffer::const_iterator iter = rbuf.begin();
-        while(iter != rbuf.end() ) {
+        while (iter != rbuf.end()) {
             std::string str(boost::asio::buffer_cast<const char *>(*iter), boost::asio::buffer_size(*iter));
             cout << "Buffer size: " << boost::asio::buffer_size(*iter) << endl;
             cout << "Buffer: \"" << str << '"' << endl;
@@ -950,15 +942,13 @@ void TestCopy() {
         try {
             BufferReader br(wb);
             br.seek(10);
-        }
-        catch (std::exception &e) {
+        } catch (std::exception &e) {
             cout << "Intentially triggered exception: " << e.what() << endl;
         }
         try {
             BufferReader br(wb);
             avro::InputBuffer ib = br.copyData(10);
-        }
-        catch (std::exception &e) {
+        } catch (std::exception &e) {
             cout << "Intentially triggered exception: " << e.what() << endl;
         }
 
@@ -1085,8 +1075,7 @@ void TestPrinter() {
 }
 
 struct BufferTestSuite : public boost::unit_test::test_suite {
-    BufferTestSuite() :
-        boost::unit_test::test_suite("BufferTestSuite") {
+    BufferTestSuite() : boost::unit_test::test_suite("BufferTestSuite") {
         add(BOOST_TEST_CASE(TestReserve));
         add(BOOST_TEST_CASE(TestGrow));
         add(BOOST_TEST_CASE(TestDiscard));
@@ -1113,9 +1102,8 @@ struct BufferTestSuite : public boost::unit_test::test_suite {
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int, char *[]) {
-    boost::unit_test::test_suite *test(BOOST_TEST_SUITE ("Buffer Unit Tests"));
+    boost::unit_test::test_suite *test(BOOST_TEST_SUITE("Buffer Unit Tests"));
     test->add(new BufferTestSuite());
 
     return test;
 }
-

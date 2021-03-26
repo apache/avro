@@ -80,7 +80,6 @@ void test2dArray() {
     std::ostringstream actual;
     schema.toJson(actual);
     BOOST_CHECK_EQUAL(expected, actual.str());
-
 }
 
 boost::unit_test::test_suite *

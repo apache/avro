@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-
 #include <limits>
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "../impl/json/JsonDom.hh"
 
@@ -106,7 +105,6 @@ void testString(const TestData<const char *> &d) {
 static void testNull() {
     Entity n = loadEntity("null");
     BOOST_CHECK_EQUAL(n.type(), etNull);
-
 }
 
 static void testArray0() {
@@ -175,10 +173,10 @@ static void testObject2() {
     BOOST_CHECK_EQUAL(a[1].stringValue(), "v0");
 }
 
-}
-}
+} // namespace json
+} // namespace avro
 
-#define COUNTOF(x)  (sizeof(x) / sizeof(x[0]))
+#define COUNTOF(x) (sizeof(x) / sizeof(x[0]))
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int argc, char *argv[]) {

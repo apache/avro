@@ -18,25 +18,25 @@
 
 #include <iostream>
 
-#include "Encoder.hh"
-#include "Decoder.hh"
 #include "Compiler.hh"
-#include "ValidSchema.hh"
+#include "Decoder.hh"
+#include "Encoder.hh"
 #include "Generic.hh"
 #include "Specific.hh"
+#include "ValidSchema.hh"
 
-#include <stdint.h>
-#include <vector>
-#include <stack>
-#include <string>
-#include <functional>
 #include <boost/bind.hpp>
+#include <functional>
+#include <stack>
+#include <stdint.h>
+#include <string>
+#include <vector>
 
-#include <boost/test/included/unit_test_framework.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
-#include <boost/random/mersenne_twister.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/parameterized_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace avro {
 
@@ -82,16 +82,16 @@ static const unsigned int count = 10;
  * For most tests, the data is generated at random.
  */
 
-using std::string;
-using std::vector;
-using std::stack;
-using std::pair;
-using std::make_pair;
-using std::istringstream;
-using std::ostringstream;
 using std::back_inserter;
 using std::copy;
+using std::istringstream;
+using std::make_pair;
+using std::ostringstream;
+using std::pair;
+using std::stack;
+using std::string;
 using std::unique_ptr;
+using std::vector;
 
 template<typename T>
 T from_string(const std::string &s) {
@@ -126,6 +126,7 @@ std::string to_string(const vector<uint8_t> &t) {
 class Scanner {
     const char *p;
     const char *const end;
+
 public:
     Scanner(const char *calls) : p(calls), end(calls + strlen(calls)) {}
     Scanner(const char *calls, size_t len) : p(calls), end(calls + len) {}
@@ -276,12 +277,12 @@ static unique_ptr<OutputStream> generate(Encoder &e, const char *calls,
             }
             case 'b': {
                 sc.extractInt();
-                e.encodeBytes(from_string<vector<uint8_t> >(*it++));
+                e.encodeBytes(from_string<vector<uint8_t>>(*it++));
                 break;
             }
             case 'f': {
                 sc.extractInt();
-                e.encodeFixed(from_string<vector<uint8_t> >(*it++));
+                e.encodeFixed(from_string<vector<uint8_t>>(*it++));
                 break;
             }
             case 'e': {
@@ -332,7 +333,7 @@ struct StackElement {
     bool isArray;
     StackElement(size_t s, bool a) : size(s), count(0), isArray(a) {}
 };
-}
+} // namespace
 
 static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
                                                 vector<string>::const_iterator it, bool isArray) {
@@ -342,7 +343,8 @@ static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
         char c = sc.advance();
         switch (c) {
             case '[':
-            case '{':++level;
+            case '{':
+                ++level;
                 break;
             case ']':
             case '}':
@@ -355,24 +357,26 @@ static vector<string>::const_iterator skipCalls(Scanner &sc, Decoder &d,
             case 'I':
             case 'L':
             case 'F':
-            case 'D':++it;
+            case 'D':
+                ++it;
                 break;
             case 'S':
             case 'K':
             case 'b':
             case 'f':
-            case 'e':++it;       // Fall through.
+            case 'e': ++it; // Fall through.
             case 'c':
-            case 'U':sc.extractInt();
+            case 'U':
+                sc.extractInt();
                 break;
             case 's':
             case 'N':
-            case 'R':break;
-            default:BOOST_FAIL("Don't know how to skip: " << c);
+            case 'R': break;
+            default: BOOST_FAIL("Don't know how to skip: " << c);
         }
     }
     BOOST_FAIL("End reached while trying to skip");
-    throw 0;    // Just to keep the compiler happy.
+    throw 0; // Just to keep the compiler happy.
 }
 
 static void check(Decoder &d, unsigned int skipLevel,
@@ -384,40 +388,37 @@ static void check(Decoder &d, unsigned int skipLevel,
     while (!sc.isDone()) {
         char c = sc.advance();
         switch (c) {
-            case 'N':d.decodeNull();
+            case 'N':
+                d.decodeNull();
                 break;
             case 'B': {
                 bool b1 = d.decodeBool();
                 bool b2 = from_string<bool>(*it++);
                 BOOST_CHECK_EQUAL(b1, b2);
-            }
-                break;
+            } break;
             case 'I': {
                 int32_t b1 = d.decodeInt();
                 int32_t b2 = from_string<int32_t>(*it++);
                 BOOST_CHECK_EQUAL(b1, b2);
-            }
-                break;
+            } break;
             case 'L': {
                 int64_t b1 = d.decodeLong();
                 int64_t b2 = from_string<int64_t>(*it++);
                 BOOST_CHECK_EQUAL(b1, b2);
-            }
-                break;
+            } break;
             case 'F': {
                 float b1 = d.decodeFloat();
                 float b2 = from_string<float>(*it++);
                 BOOST_CHECK_CLOSE(b1, b2, 0.001f);
-            }
-                break;
+            } break;
             case 'D': {
                 double b1 = d.decodeDouble();
                 double b2 = from_string<double>(*it++);
                 BOOST_CHECK_CLOSE(b1, b2, 0.001f);
-            }
-                break;
+            } break;
             case 'S':
-            case 'K':sc.extractInt();
+            case 'K':
+                sc.extractInt();
                 if (containerStack.size() >= skipLevel) {
                     d.skipString();
                 } else {
@@ -427,12 +428,13 @@ static void check(Decoder &d, unsigned int skipLevel,
                 }
                 ++it;
                 break;
-            case 'b':sc.extractInt();
+            case 'b':
+                sc.extractInt();
                 if (containerStack.size() >= skipLevel) {
                     d.skipBytes();
                 } else {
                     vector<uint8_t> b1 = d.decodeBytes();
-                    vector<uint8_t> b2 = from_string<vector<uint8_t> >(*it);
+                    vector<uint8_t> b2 = from_string<vector<uint8_t>>(*it);
                     BOOST_CHECK_EQUAL_COLLECTIONS(b1.begin(), b1.end(),
                                                   b2.begin(), b2.end());
                 }
@@ -444,7 +446,7 @@ static void check(Decoder &d, unsigned int skipLevel,
                     d.skipFixed(len);
                 } else {
                     vector<uint8_t> b1 = d.decodeFixed(len);
-                    vector<uint8_t> b2 = from_string<vector<uint8_t> >(*it);
+                    vector<uint8_t> b2 = from_string<vector<uint8_t>>(*it);
                     BOOST_CHECK_EQUAL_COLLECTIONS(b1.begin(), b1.end(),
                                                   b2.begin(), b2.end());
                 }
@@ -455,8 +457,7 @@ static void check(Decoder &d, unsigned int skipLevel,
                 size_t b1 = d.decodeEnum();
                 size_t b2 = sc.extractInt();
                 BOOST_CHECK_EQUAL(b1, b2);
-            }
-                break;
+            } break;
             case '[':
                 if (containerStack.size() >= skipLevel) {
                     size_t n = d.skipArray();
@@ -488,8 +489,7 @@ static void check(Decoder &d, unsigned int skipLevel,
                     BOOST_CHECK_EQUAL(zero, d.arrayNext());
                 }
                 containerStack.pop();
-            }
-                break;
+            } break;
             case '}': {
                 const StackElement &se = containerStack.top();
                 BOOST_CHECK_EQUAL(se.size, se.count);
@@ -497,27 +497,25 @@ static void check(Decoder &d, unsigned int skipLevel,
                     BOOST_CHECK_EQUAL(zero, d.mapNext());
                 }
                 containerStack.pop();
-            }
-                break;
+            } break;
             case 's': {
                 StackElement &se = containerStack.top();
                 if (se.size == se.count) {
-                    se.size += (se.isArray ?
-                                d.arrayNext() : d.mapNext());
+                    se.size += (se.isArray ? d.arrayNext() : d.mapNext());
                 }
                 ++se.count;
-            }
-                break;
-            case 'c':sc.extractInt();
+            } break;
+            case 'c':
+                sc.extractInt();
                 break;
             case 'U': {
                 size_t idx = sc.extractInt();
                 BOOST_CHECK_EQUAL(idx, d.decodeUnionIndex());
-            }
-                break;
-            case 'R':static_cast<ResolvingDecoder &>(d).fieldOrder();
+            } break;
+            case 'R':
+                static_cast<ResolvingDecoder &>(d).fieldOrder();
                 continue;
-            default:BOOST_FAIL("Unknown mnemonic: " << c);
+            default: BOOST_FAIL("Unknown mnemonic: " << c);
         }
     }
     BOOST_CHECK(it == values.end());
@@ -766,7 +764,8 @@ void testWriterFail(const TestData2 &td) {
     vector<string> v;
     unique_ptr<OutputStream> p;
     BOOST_CHECK_THROW(testEncoder(CodecFactory::newEncoder(vs),
-                                  td.incorrectCalls, v, p), Exception);
+                                  td.incorrectCalls, v, p),
+                      Exception);
 }
 
 template<typename CodecFactory>
@@ -923,7 +922,8 @@ static const TestData data[] = {
     {"{\"type\":\"array\", \"items\": \"string\"}", "[]", 2},
     {"{\"type\":\"array\", \"items\": \"bytes\"}", "[]", 2},
     {"{\"type\":\"array\", \"items\":{\"type\":\"fixed\", "
-     "\"name\":\"fi\", \"size\": 10}}", "[]", 2},
+     "\"name\":\"fi\", \"size\": 10}}",
+     "[]", 2},
 
     {"{\"type\":\"array\", \"items\": \"boolean\"}", "[c1sB]", 2},
     {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]", 2},
@@ -935,7 +935,8 @@ static const TestData data[] = {
     {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sIc1sI]", 2},
     {"{\"type\":\"array\", \"items\": \"int\"}", "[c2sIsI]", 2},
     {"{\"type\":\"array\", \"items\":{\"type\":\"fixed\", "
-     "\"name\":\"fi\", \"size\": 10}}", "[c2sf10sf10]", 2},
+     "\"name\":\"fi\", \"size\": 10}}",
+     "[c2sf10sf10]", 2},
 
     {"{\"type\":\"map\", \"values\": \"boolean\"}", "{}", 2},
     {"{\"type\":\"map\", \"values\": \"int\"}", "{}", 2},
@@ -945,7 +946,8 @@ static const TestData data[] = {
     {"{\"type\":\"map\", \"values\": \"string\"}", "{}", 2},
     {"{\"type\":\"map\", \"values\": \"bytes\"}", "{}", 2},
     {"{\"type\":\"map\", \"values\": "
-     "{\"type\":\"array\", \"items\":\"int\"}}", "{}", 2},
+     "{\"type\":\"array\", \"items\":\"int\"}}",
+     "{}", 2},
 
     {"{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sK5B}", 2},
     {"{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}", 2},
@@ -955,31 +957,40 @@ static const TestData data[] = {
     {"{\"type\":\"map\", \"values\": \"string\"}", "{c1sK5S10}", 2},
     {"{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sK5b10}", 2},
     {"{\"type\":\"map\", \"values\": "
-     "{\"type\":\"array\", \"items\":\"int\"}}", "{c1sK5[c3sIsIsI]}", 2},
+     "{\"type\":\"array\", \"items\":\"int\"}}",
+     "{c1sK5[c3sIsIsI]}", 2},
 
     {"{\"type\":\"map\", \"values\": \"boolean\"}",
      "{c1sK5Bc2sK5BsK5B}", 2},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"boolean\"}]}", "B", 1},
+     "{\"name\":\"f\", \"type\":\"boolean\"}]}",
+     "B", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"int\"}]}", "I", 1},
+     "{\"name\":\"f\", \"type\":\"int\"}]}",
+     "I", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"long\"}]}", "L", 1},
+     "{\"name\":\"f\", \"type\":\"long\"}]}",
+     "L", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"float\"}]}", "F", 1},
+     "{\"name\":\"f\", \"type\":\"float\"}]}",
+     "F", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"double\"}]}", "D", 1},
+     "{\"name\":\"f\", \"type\":\"double\"}]}",
+     "D", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"string\"}]}", "S10", 1},
+     "{\"name\":\"f\", \"type\":\"string\"}]}",
+     "S10", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"bytes\"}]}", "b10", 1},
+     "{\"name\":\"f\", \"type\":\"bytes\"}]}",
+     "b10", 1},
 
     // multi-field records
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\"},"
      "{\"name\":\"f2\", \"type\":\"double\"},"
-     "{\"name\":\"f3\", \"type\":\"string\"}]}", "IDS10", 1},
+     "{\"name\":\"f3\", \"type\":\"string\"}]}",
+     "IDS10", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\":\"null\"},"
      "{\"name\":\"f1\", \"type\":\"boolean\"},"
@@ -1096,7 +1107,7 @@ static const TestData data[] = {
      "{\"name\":\"car\", \"type\":\"Lisp\"},"
      "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
      "U2U1S10U0N", 1},
-    {"{"  // https://issues.apache.org/jira/browse/AVRO-1635
+    {"{" // https://issues.apache.org/jira/browse/AVRO-1635
      "  \"name\": \"Container\","
      "  \"type\": \"record\","
      "  \"fields\": [{"
@@ -1215,25 +1226,31 @@ static const TestData3 data3[] = {
      "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}", 2},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
+     "{\"name\":\"f\", \"type\":\"int\"}]}",
+     "I",
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"long\"}]}", "L", 1},
+     "{\"name\":\"f\", \"type\":\"long\"}]}",
+     "L", 1},
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"int\"}]}", "I",
+     "{\"name\":\"f\", \"type\":\"int\"}]}",
+     "I",
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"double\"}]}", "D", 1},
+     "{\"name\":\"f\", \"type\":\"double\"}]}",
+     "D", 1},
 
     // multi-field record with promotions
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\":\"boolean\"},"
      "{\"name\":\"f1\", \"type\":\"int\"},"
      "{\"name\":\"f2\", \"type\":\"float\"},"
-     "{\"name\":\"f3\", \"type\":\"string\"}]}", "BIFS",
+     "{\"name\":\"f3\", \"type\":\"string\"}]}",
+     "BIFS",
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\":\"boolean\"},"
      "{\"name\":\"f1\", \"type\":\"long\"},"
      "{\"name\":\"f2\", \"type\":\"double\"},"
-     "{\"name\":\"f3\", \"type\":\"string\"}]}", "BLDS", 1},
+     "{\"name\":\"f3\", \"type\":\"string\"}]}",
+     "BLDS", 1},
 
     {"[\"int\", \"long\"]", "U0I", "[\"long\", \"string\"]", "U0L", 1},
     {"[\"int\", \"long\"]", "U0I", "[\"double\", \"string\"]", "U0D", 1},
@@ -1254,51 +1271,68 @@ static const TestData4 data4[] = {
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"string\"},"
      "{\"name\":\"f2\", \"type\":\"string\"},"
-     "{\"name\":\"f3\", \"type\":\"int\"}]}", "S10S10IS10S10I",
+     "{\"name\":\"f3\", \"type\":\"int\"}]}",
+     "S10S10IS10S10I",
      {"s1", "s2", "100", "t1", "t2", "200", NULL},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"string\" },"
-     "{\"name\":\"f2\", \"type\":\"string\"}]}", "RS10S10RS10S10",
-     {"s1", "s2", "t1", "t2", NULL}, 1, 2},
+     "{\"name\":\"f2\", \"type\":\"string\"}]}",
+     "RS10S10RS10S10",
+     {"s1", "s2", "t1", "t2", NULL},
+     1,
+     2},
 
     // Reordered fields
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\"},"
-     "{\"name\":\"f2\", \"type\":\"string\"}]}", "IS10",
+     "{\"name\":\"f2\", \"type\":\"string\"}]}",
+     "IS10",
      {"10", "hello", NULL},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f2\", \"type\":\"string\" },"
-     "{\"name\":\"f1\", \"type\":\"long\"}]}", "RLS10",
-     {"10", "hello", NULL}, 1, 1},
+     "{\"name\":\"f1\", \"type\":\"long\"}]}",
+     "RLS10",
+     {"10", "hello", NULL},
+     1,
+     1},
 
     // Default values
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
-     {NULL},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "RI",
-     {"100", NULL}, 1, 1},
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "", {NULL}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+                                                                       "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}",
+     "RI",
+     {"100", NULL},
+     1,
+     1},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
+     "{\"name\":\"f2\", \"type\":\"int\"}]}",
+     "I",
      {"10", NULL},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
-     "{\"name\":\"f2\", \"type\":\"int\"}]}", "RII",
-     {"10", "101", NULL}, 1, 1},
+     "{\"name\":\"f2\", \"type\":\"int\"}]}",
+     "RII",
+     {"10", "101", NULL},
+     1,
+     1},
 
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
      "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
+     "{\"name\": \"g2\", \"type\": \"long\"}]}",
+     "IL",
      {"10", "11", NULL},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
      "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}}", "RRIIL",
-     {"10", "101", "11", NULL}, 1, 1},
+     "{\"name\": \"g2\", \"type\": \"long\"}]}}",
+     "RRIIL",
+     {"10", "101", "11", NULL},
+     1,
+     1},
 
     // Default value for a record.
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
@@ -1306,7 +1340,8 @@ static const TestData4 data4[] = {
      "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"long\" },"
      "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}", "LIL",
+     "{\"name\": \"g2\", \"type\": \"long\"}]}",
+     "LIL",
      {"10", "12", "13", NULL},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
@@ -1320,14 +1355,17 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}] }, "
      "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
      "RRLILRLI",
-     {"10", "12", "13", "15", "101", NULL}, 1, 1},
+     {"10", "12", "13", "15", "101", NULL},
+     1,
+     1},
 
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"long\" },"
      "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
-     "{\"name\": \"g2\", \"type\": \"long\"}]}", "LIL",
+     "{\"name\": \"g2\", \"type\": \"long\"}]}",
+     "LIL",
      {"10", "12", "13", NULL},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
@@ -1339,24 +1377,30 @@ static const TestData4 data4[] = {
      "\"type\":\"inner1\", "
      "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
      "RRLILRLI",
-     {"10", "12", "13", "15", "101", NULL}, 1, 1},
+     {"10", "12", "13", "15", "101", NULL},
+     1,
+     1},
 
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
-     {NULL},
-     "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
-     "\"default\": [100]}]}", "[c1sI]",
-     {"100", NULL}, 1, 1},
+    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "", {NULL}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+                                                                       "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
+                                                                       "\"default\": [100]}]}",
+     "[c1sI]",
+     {"100", NULL},
+     1,
+     1},
 
     {"{ \"type\": \"array\", \"items\": {\"type\":\"record\","
      "\"name\":\"r\",\"fields\":["
-     "{\"name\":\"f0\", \"type\": \"int\"}]} }", "[c1sI]",
+     "{\"name\":\"f0\", \"type\": \"int\"}]} }",
+     "[c1sI]",
      {"99", NULL},
      "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
      "\"name\":\"r\",\"fields\":["
      "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
      "[Rc1sI]",
-     {"100", NULL}, 1, 1},
+     {"100", NULL},
+     1,
+     1},
 
     // Record of array of record with deleted field as last field
     {"{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
@@ -1364,14 +1408,18 @@ static const TestData4 data4[] = {
      "\"type\":{\"type\":\"array\",\"items\":{"
      "\"name\":\"item\",\"type\":\"record\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\"},"
-     "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}", "[c1sIL]",
+     "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}",
+     "[c1sIL]",
      {"10", "11", NULL},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\","
      "\"type\":{\"type\":\"array\",\"items\":{"
      "\"name\":\"item\",\"type\":\"record\",\"fields\":["
-     "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}", "R[c1sI]",
-     {"10", NULL}, 2, 1},
+     "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}",
+     "R[c1sI]",
+     {"10", NULL},
+     2,
+     1},
 
     // Enum resolution
     {"{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
@@ -1379,41 +1427,48 @@ static const TestData4 data4[] = {
      {NULL},
      "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
      "e1",
-     {NULL}, 1, 1},
+     {NULL},
+     1,
+     1},
 
     {"{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"x\", \"y\" ]}",
      "e1",
      {NULL},
      "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
      "e0",
-     {NULL}, 1, 1},
-
+     {NULL},
+     1,
+     1},
 
     // Union
-    {"\"int\"", "I", {"100", NULL},
-     "[ \"long\", \"int\"]", "U1I", {"100", NULL}, 1, 1},
+    {"\"int\"", "I", {"100", NULL}, "[ \"long\", \"int\"]", "U1I", {"100", NULL}, 1, 1},
 
-    {"[ \"long\", \"int\"]", "U1I", {"100", NULL},
-     "\"int\"", "I", {"100", NULL}, 1, 1},
+    {"[ \"long\", \"int\"]", "U1I", {"100", NULL}, "\"int\"", "I", {"100", NULL}, 1, 1},
 
     // Arrray of unions
     {"{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
-     "[c2sU1IsU1I]", {"100", "100", NULL},
+     "[c2sU1IsU1I]",
+     {"100", "100", NULL},
      "{\"type\":\"array\", \"items\": \"int\"}",
-     "[c2sIsI]", {"100", "100", NULL}, 2, 1},
+     "[c2sIsI]",
+     {"100", "100", NULL},
+     2,
+     1},
 
     // Map of unions
     {"{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
-     "{c2sS10U1IsS10U1I}", {"k1", "100", "k2", "100", NULL},
+     "{c2sS10U1IsS10U1I}",
+     {"k1", "100", "k2", "100", NULL},
      "{\"type\":\"map\", \"values\": \"int\"}",
-     "{c2sS10IsS10I}", {"k1", "100", "k2", "100", NULL}, 2, 1},
+     "{c2sS10IsS10I}",
+     {"k1", "100", "k2", "100", NULL},
+     2,
+     1},
 
     // Union + promotion
-    {"\"int\"", "I", {"100", NULL},
-     "[ \"long\", \"string\"]", "U0L", {"100", NULL}, 1, 1},
+    {"\"int\"", "I", {"100", NULL}, "[ \"long\", \"string\"]", "U0L", {"100", NULL}, 1, 1},
 
-    {"[ \"int\", \"string\"]", "U0I", {"100", NULL},
-     "\"long\"", "L", {"100", NULL}, 1, 1},
+    {"[ \"int\", \"string\"]", "U0I", {"100", NULL}, "\"long\"", "L", {"100", NULL}, 1, 1},
 
     // Record where union field is skipped.
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1421,31 +1476,41 @@ static const TestData4 data4[] = {
      "{\"name\":\"f1\", \"type\":\"int\"},"
      "{\"name\":\"f2\", \"type\":[\"int\", \"long\"]},"
      "{\"name\":\"f3\", \"type\":\"float\"}"
-     "]}", "BIU0IF",
+     "]}",
+     "BIU0IF",
      {"1", "100", "121", "10.75", NULL},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\":\"boolean\"},"
      "{\"name\":\"f1\", \"type\":\"long\"},"
-     "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
-     {"1", "100", "10.75", NULL}, 1, 1},
+     "{\"name\":\"f3\", \"type\":\"double\"}]}",
+     "BLD",
+     {"1", "100", "10.75", NULL},
+     1,
+     1},
 };
 
 static const TestData4 data4BinaryOnly[] = {
     // Arrray of unions
     {"{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
-     "[c1sU1Ic1sU1I]", {"100", "100", NULL},
+     "[c1sU1Ic1sU1I]",
+     {"100", "100", NULL},
      "{\"type\":\"array\", \"items\": \"int\"}",
-     "[c1sIc1sI]", {"100", "100", NULL}, 2},
+     "[c1sIc1sI]",
+     {"100", "100", NULL},
+     2},
 
     // Map of unions
     {"{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
-     "{c1sS10U1Ic1sS10U1I}", {"k1", "100", "k2", "100", NULL},
+     "{c1sS10U1Ic1sS10U1I}",
+     {"k1", "100", "k2", "100", NULL},
      "{\"type\":\"map\", \"values\": \"int\"}",
-     "{c1sS10Ic1sS10I}", {"k1", "100", "k2", "100", NULL}, 2},
+     "{c1sS10Ic1sS10I}",
+     {"k1", "100", "k2", "100", NULL},
+     2},
 };
 
-#define COUNTOF(x)  sizeof(x) / sizeof(x[0])
-#define ENDOF(x)    (x) + COUNTOF(x)
+#define COUNTOF(x) sizeof(x) / sizeof(x[0])
+#define ENDOF(x) (x) + COUNTOF(x)
 
 // Boost 1.67 and later expects test cases to have unique names. This dummy
 // helper functions leads to names which compose 'testFunc', 'Factory', and
@@ -1534,8 +1599,7 @@ struct JsonEncoderResolvingDecoderFactory {
     }
 };
 
-struct ValidatingEncoderResolvingDecoderFactory :
-    public ValidatingEncoderFactory {
+struct ValidatingEncoderResolvingDecoderFactory : public ValidatingEncoderFactory {
     static DecoderPtr newDecoder(const ValidSchema &schema) {
         return resolvingDecoder(schema, schema,
                                 validatingDecoder(schema, binaryDecoder()));
@@ -1575,7 +1639,7 @@ void add_tests(boost::unit_test::test_suite &ts) {
     ADD_TESTS(ts, ValidatingCodecFactory, testGenericResolving2, data4);
 }
 
-}   // namespace parsing
+} // namespace parsing
 
 static void testStreamLifetimes() {
     EncoderPtr e = binaryEncoder();
@@ -1593,7 +1657,6 @@ static void testStreamLifetimes() {
         e->encodeDouble(3.14);
         e->flush();
     }
-
 }
 
 static void testLimits(const EncoderPtr &e, const DecoderPtr &d) {
@@ -1725,7 +1788,7 @@ static void testByteCount() {
     BOOST_CHECK_EQUAL(os1->byteCount(), 3);
 }
 
-}   // namespace avro
+} // namespace avro
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int argc, char *argv[]) {

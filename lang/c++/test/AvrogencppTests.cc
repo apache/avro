@@ -16,25 +16,25 @@
  * limitations under the License.
  */
 
-#include "empty_record.hh"
+#include "Compiler.hh"
 #include "bigrecord.hh"
-#include "bigrecord_r.hh"
 #include "bigrecord2.hh"
-#include "tweet.hh"
-#include "union_array_union.hh"
-#include "union_map_union.hh"
-#include "union_conflict.hh"
-#include "recursive.hh"
+#include "bigrecord_r.hh"
 #include "circulardep.hh"
+#include "crossref.hh"
+#include "empty_record.hh"
+#include "primitivetypes.hh"
+#include "recursive.hh"
 #include "reuse.hh"
 #include "tree1.hh"
 #include "tree2.hh"
-#include "crossref.hh"
-#include "primitivetypes.hh"
-#include "Compiler.hh"
+#include "tweet.hh"
+#include "union_array_union.hh"
+#include "union_conflict.hh"
+#include "union_map_union.hh"
 
-#include <fstream>
 #include <boost/test/included/unit_test_framework.hpp>
+#include <fstream>
 
 #ifdef min
 #undef min
@@ -44,25 +44,25 @@
 #undef max
 #endif
 
-using std::unique_ptr;
+using std::ifstream;
 using std::map;
 using std::string;
+using std::unique_ptr;
 using std::vector;
-using std::ifstream;
 
-using avro::ValidSchema;
-using avro::OutputStream;
-using avro::InputStream;
-using avro::Encoder;
+using avro::binaryDecoder;
+using avro::binaryEncoder;
 using avro::Decoder;
-using avro::EncoderPtr;
 using avro::DecoderPtr;
+using avro::Encoder;
+using avro::EncoderPtr;
+using avro::InputStream;
 using avro::memoryInputStream;
 using avro::memoryOutputStream;
-using avro::binaryEncoder;
-using avro::validatingEncoder;
-using avro::binaryDecoder;
+using avro::OutputStream;
 using avro::validatingDecoder;
+using avro::validatingEncoder;
+using avro::ValidSchema;
 
 void setRecord(testgen::RootRecord &myRecord) {
     uint8_t fixed[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -234,14 +234,12 @@ void setRecord(uau::r1 &r) {
 }
 
 void check(const uau::r1 &r1, const uau::r1 &r2) {
-
 }
 
 void setRecord(umu::r1 &r) {
 }
 
 void check(const umu::r1 &r1, const umu::r1 &r2) {
-
 }
 
 template<typename T>
@@ -290,4 +288,3 @@ init_unit_test_suite(int argc, char *argv[]) {
     ts->add(BOOST_TEST_CASE(testNamespace));
     return ts;
 }
-

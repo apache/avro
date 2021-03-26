@@ -16,26 +16,26 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
-#include "Zigzag.hh"
-#include "Node.hh"
-#include "Schema.hh"
-#include "ValidSchema.hh"
-#include "Serializer.hh"
-#include "Parser.hh"
 #include "Compiler.hh"
-#include "SchemaResolution.hh"
-#include "Stream.hh"
-#include "Encoder.hh"
 #include "Decoder.hh"
-#include "buffer/BufferStream.hh"
-#include "buffer/BufferPrint.hh"
-#include "boost/shared_ptr.hpp"
+#include "Encoder.hh"
+#include "Node.hh"
+#include "Parser.hh"
+#include "Schema.hh"
+#include "SchemaResolution.hh"
+#include "Serializer.hh"
+#include "Stream.hh"
+#include "ValidSchema.hh"
+#include "Zigzag.hh"
 #include "boost/make_shared.hpp"
+#include "boost/shared_ptr.hpp"
+#include "buffer/BufferPrint.hh"
+#include "buffer/BufferStream.hh"
 
 #include "AvroSerialize.hh"
 
@@ -90,8 +90,7 @@ struct TestSchema {
         bool caught = false;
         try {
             myenum.addSymbol("three");
-        }
-        catch (Exception &e) {
+        } catch (Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
             caught = true;
         }
@@ -118,8 +117,7 @@ struct TestSchema {
         caught = false;
         try {
             record.addField("mylong", LongSchema());
-        }
-        catch (Exception &e) {
+        } catch (Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
             caught = true;
         }
@@ -270,7 +268,6 @@ struct TestSchema {
             std::cout << "\" field: \"" << fieldName;
         }
         std::cout << "\"\n";
-
     }
 
     template<typename Parser>
@@ -452,7 +449,6 @@ struct TestEncoding {
         testEncoding<int32_t>();
         testEncoding<int64_t>();
     }
-
 };
 
 struct TestNested {
@@ -473,8 +469,7 @@ struct TestNested {
 
         RecordSchema arrayTree("ArrayTree");
         arrayTree.addField("label", StringSchema());
-        arrayTree.addField("children", ArraySchema(
-            SymbolicSchema(Name("ArrayTree"), arrayTree.root())));
+        arrayTree.addField("children", ArraySchema(SymbolicSchema(Name("ArrayTree"), arrayTree.root())));
         rec.addField("array_tree", arrayTree);
 
         schema_.setSchema(rec);
@@ -722,7 +717,6 @@ struct TestNested {
         runEncodeDecode(*validatingEncoder(schema_, binaryEncoder()),
                         *validatingDecoder(schema_, binaryDecoder()),
                         encodeNoRecurse);
-
     }
 
     void testDecodeRecurse() {
@@ -737,7 +731,6 @@ struct TestNested {
         runEncodeDecode(*jsonEncoder(schema_),
                         *jsonDecoder(schema_),
                         encodeNoRecurse);
-
     }
 
     void testDecodeRecurseJson() {
@@ -815,18 +808,17 @@ struct TestBadStuff {
 };
 
 struct TestResolution {
-    TestResolution() :
-        int_(IntSchema()),
-        long_(LongSchema()),
-        bool_(BoolSchema()),
-        float_(FloatSchema()),
-        double_(DoubleSchema()),
+    TestResolution() : int_(IntSchema()),
+                       long_(LongSchema()),
+                       bool_(BoolSchema()),
+                       float_(FloatSchema()),
+                       double_(DoubleSchema()),
 
-        mapOfInt_(MapSchema(IntSchema())),
-        mapOfDouble_(MapSchema(DoubleSchema())),
+                       mapOfInt_(MapSchema(IntSchema())),
+                       mapOfDouble_(MapSchema(DoubleSchema())),
 
-        arrayOfLong_(ArraySchema(LongSchema())),
-        arrayOfFloat_(ArraySchema(FloatSchema())) {
+                       arrayOfLong_(ArraySchema(LongSchema())),
+                       arrayOfFloat_(ArraySchema(FloatSchema())) {
         {
             EnumSchema one("one");
             one.addSymbol("X");
@@ -907,7 +899,6 @@ struct TestResolution {
     }
 
 private:
-
     ValidSchema int_;
     ValidSchema long_;
     ValidSchema bool_;
@@ -986,4 +977,3 @@ init_unit_test_suite(int argc, char *argv[]) {
 
     return test;
 }
-
