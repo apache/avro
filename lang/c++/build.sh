@@ -115,6 +115,7 @@ case "$target" in
 
   format)
     clang-format -i --style file `find api -type f` `find impl -type f`
+    ;;
 
   clean)
     (cd build && make clean)
