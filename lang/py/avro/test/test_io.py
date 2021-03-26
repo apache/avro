@@ -80,7 +80,8 @@ SCHEMAS_TO_VALIDATE = (
         '{"type": "long", "logicalType": "timestamp-micros"}',
         datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=avro.timezones.tst)
     ),
-    ('{"type": "string", "logicalType": "uuid"}', u'570feebe-2bbc-4937-98df-285944e1dbbd'),
+    ('{"type": "string", "logicalType": "uuid"}', u'a4818e1c-8e59-11eb-8dcd-0242ac130003'),  # UUID1
+    ('{"type": "string", "logicalType": "uuid"}', u'570feebe-2bbc-4937-98df-285944e1dbbd'),  # UUID4
     ('{"type": "string", "logicalType": "unknown-logical-type"}', u'12345abcd'),
     ('{"type": "string", "logicalType": "timestamp-millis"}', u'12345abcd'),
     ("""\

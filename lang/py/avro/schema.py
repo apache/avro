@@ -1086,11 +1086,11 @@ class UUIDSchema(LogicalSchema, PrimitiveSchema):
 
     def validate(self, datum):
         try:
-            val = uuid.UUID(datum, version=4)
+            val = uuid.UUID(datum)
         except ValueError:
             # If it's a value error, then the string
             # is not a valid hex code for a UUID.
-            return False
+            return None
 
         return self
 
