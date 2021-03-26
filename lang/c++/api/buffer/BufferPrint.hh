@@ -19,10 +19,10 @@
 #ifndef avro_BufferPrint_hh__
 #define avro_BufferPrint_hh__
 
-#include <ctype.h>
-#include <iostream>
-#include <iomanip>
 #include "BufferReader.hh"
+#include <ctype.h>
+#include <iomanip>
+#include <iostream>
 
 /**
  * \file BufferPrint.hh
@@ -87,7 +87,6 @@ hexPrint(std::ostream &os, BufferReader &reader) {
             os.put(isprint(sixteenBytes[i] & 0xff) ? sixteenBytes[i] : '.');
         }
         os << "|\n";
-
     }
 
     // restore flags
@@ -96,17 +95,15 @@ hexPrint(std::ostream &os, BufferReader &reader) {
 
 } // namespace detail
 
-} // namespace
+} // namespace avro
 
-inline
-std::ostream &operator<<(std::ostream &os, const avro::OutputBuffer &buffer) {
+inline std::ostream &operator<<(std::ostream &os, const avro::OutputBuffer &buffer) {
     avro::BufferReader reader(buffer);
     avro::detail::hexPrint(os, reader);
     return os;
 }
 
-inline
-std::ostream &operator<<(std::ostream &os, const avro::InputBuffer &buffer) {
+inline std::ostream &operator<<(std::ostream &os, const avro::InputBuffer &buffer) {
     avro::BufferReader reader(buffer);
     avro::detail::hexPrint(os, reader);
     return os;

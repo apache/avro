@@ -18,16 +18,16 @@
 
 #include "ValidatingCodec.hh"
 
-#include <string>
-#include <map>
 #include <algorithm>
-#include <memory>
 #include <boost/any.hpp>
+#include <map>
+#include <memory>
+#include <string>
 
-#include "ValidSchema.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
 #include "NodeImpl.hh"
+#include "ValidSchema.hh"
 
 namespace avro {
 
@@ -39,11 +39,11 @@ using std::shared_ptr;
 using std::static_pointer_cast;
 
 using std::map;
-using std::vector;
-using std::pair;
-using std::string;
-using std::reverse;
 using std::ostringstream;
+using std::pair;
+using std::reverse;
+using std::string;
+using std::vector;
 
 /** Follows the design of Avro Parser in Java. */
 ProductionPtr ValidatingGrammarGenerator::generate(const NodePtr &n) {
@@ -61,30 +61,22 @@ Symbol ValidatingGrammarGenerator::generate(const ValidSchema &schema) {
 ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
                                                      map<NodePtr, ProductionPtr> &m) {
     switch (n->type()) {
-        case AVRO_NULL: {
+        case AVRO_NULL:
             return make_shared<Production>(1, Symbol::nullSymbol());
-        }
-        case AVRO_BOOL: {
+        case AVRO_BOOL:
             return make_shared<Production>(1, Symbol::boolSymbol());
-        }
-        case AVRO_INT: {
+        case AVRO_INT:
             return make_shared<Production>(1, Symbol::intSymbol());
-        }
-        case AVRO_LONG: {
+        case AVRO_LONG:
             return make_shared<Production>(1, Symbol::longSymbol());
-        }
-        case AVRO_FLOAT: {
+        case AVRO_FLOAT:
             return make_shared<Production>(1, Symbol::floatSymbol());
-        }
-        case AVRO_DOUBLE: {
+        case AVRO_DOUBLE:
             return make_shared<Production>(1, Symbol::doubleSymbol());
-        }
-        case AVRO_STRING: {
+        case AVRO_STRING:
             return make_shared<Production>(1, Symbol::stringSymbol());
-        }
-        case AVRO_BYTES: {
+        case AVRO_BYTES:
             return make_shared<Production>(1, Symbol::bytesSymbol());
-        }
         case AVRO_FIXED: {
             ProductionPtr result = make_shared<Production>();
             result->push_back(Symbol::sizeCheckSymbol(n->fixedSize()));
@@ -155,9 +147,8 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr &n,
                 return make_shared<Production>(1, Symbol::placeholder(nn));
             }
         }
-        default: {
+        default:
             throw Exception("Unknown node type");
-        }
     }
 }
 
@@ -199,11 +190,8 @@ class ValidatingDecoder : public Decoder {
     }
 
 public:
-
-    ValidatingDecoder(const ValidSchema &s, const shared_ptr<Decoder> b) :
-        base(b),
-        parser(ValidatingGrammarGenerator().generate(s), NULL, handler_) {}
-
+    ValidatingDecoder(const ValidSchema &s, const shared_ptr<Decoder> b) : base(b),
+                                                                           parser(ValidatingGrammarGenerator().generate(s), NULL, handler_) {}
 };
 
 template<typename P>
@@ -401,10 +389,10 @@ class ValidatingEncoder : public Encoder {
     void setItemCount(size_t count);
     void startItem();
     void encodeUnionIndex(size_t e);
+
 public:
-    ValidatingEncoder(const ValidSchema &schema, const EncoderPtr &base) :
-        parser_(ValidatingGrammarGenerator().generate(schema), NULL, handler_),
-        base_(base) {}
+    ValidatingEncoder(const ValidSchema &schema, const EncoderPtr &base) : parser_(ValidatingGrammarGenerator().generate(schema), NULL, handler_),
+                                                                           base_(base) {}
 };
 
 template<typename P>
@@ -533,16 +521,15 @@ int64_t ValidatingEncoder<P>::byteCount() const {
     return base_->byteCount();
 }
 
-}   // namespace parsing
+} // namespace parsing
 
 DecoderPtr validatingDecoder(const ValidSchema &s,
                              const DecoderPtr &base) {
-    return make_shared<parsing::ValidatingDecoder<parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
+    return make_shared<parsing::ValidatingDecoder<parsing::SimpleParser<parsing::DummyHandler>>>(s, base);
 }
 
 EncoderPtr validatingEncoder(const ValidSchema &schema, const EncoderPtr &base) {
-    return make_shared<parsing::ValidatingEncoder<parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
+    return make_shared<parsing::ValidatingEncoder<parsing::SimpleParser<parsing::DummyHandler>>>(schema, base);
 }
 
-}   // namespace avro
-
+} // namespace avro

@@ -22,9 +22,9 @@
 #include <map>
 #include <vector>
 
+#include "NodeImpl.hh"
 #include "Symbol.hh"
 #include "ValidSchema.hh"
-#include "NodeImpl.hh"
 
 namespace avro {
 namespace parsing {
@@ -40,12 +40,12 @@ protected:
                                      std::map<NodePtr, ProductionPtr> &m);
 
     ProductionPtr generate(const NodePtr &schema);
+
 public:
     Symbol generate(const ValidSchema &schema);
-
 };
 
-}   // namespace parsing
-}   // namespace avro
+} // namespace parsing
+} // namespace avro
 
 #endif

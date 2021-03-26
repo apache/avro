@@ -35,7 +35,7 @@ const char *const
         "Array end",
         "Object start",
         "Object end",
-    };
+};
 
 char JsonParser::next() {
     char ch = hasNext ? nextChar : ' ';
@@ -55,11 +55,7 @@ void JsonParser::expectToken(Token tk) {
             if (cur() == tkString
                 && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
                 curToken = tkDouble;
-                dv = sv == "Infinity" ?
-                     std::numeric_limits<double>::infinity() :
-                     sv == "-Infinity" ?
-                     -std::numeric_limits<double>::infinity() :
-                     std::numeric_limits<double>::quiet_NaN();
+                dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() : sv == "-Infinity" ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::quiet_NaN();
                 return;
             } else if (cur() == tkLong) {
                 dv = double(lv);
@@ -118,30 +114,24 @@ JsonParser::Token JsonParser::doAdvance() {
     }
 
     switch (ch) {
-        case '[': {
+        case '[':
             stateStack.push(curState);
             curState = stArray0;
             return tkArrayStart;
-        }
-        case '{': {
+        case '{':
             stateStack.push(curState);
             curState = stObject0;
             return tkObjectStart;
-        }
-        case '"': {
+        case '"':
             return tryString();
-        }
-        case 't': {
+        case 't':
             bv = true;
             return tryLiteral("rue", 3, tkBool);
-        }
-        case 'f': {
+        case 'f':
             bv = false;
             return tryLiteral("alse", 4, tkBool);
-        }
-        case 'n': {
+        case 'n':
             return tryLiteral("ull", 3, tkNull);
-        }
         default:
             if (isdigit(ch) || ch == '-') {
                 return tryNumber(ch);
@@ -293,7 +283,8 @@ JsonParser::Token JsonParser::tryString() {
                 case 'f':
                 case 'n':
                 case 'r':
-                case 't':sv.push_back('\\');
+                case 't':
+                    sv.push_back('\\');
                     sv.push_back(ch);
                     break;
                 case 'u':
@@ -306,17 +297,15 @@ JsonParser::Token JsonParser::tryString() {
                     for (int i = 0; i < 4; i++) {
                         n *= 16;
                         char c = e[i];
-                        if (isdigit(c) ||
-                            (c >= 'a' && c <= 'f') ||
-                            (c >= 'A' && c <= 'F')) {
+                        if (isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
                             sv.push_back(c);
                         } else {
                             throw unexpected(c);
                         }
                     }
-                }
-                    break;
-                default:throw unexpected(ch);
+                } break;
+                default:
+                    throw unexpected(ch);
             }
         } else {
             sv.push_back(ch);
@@ -333,17 +322,23 @@ string JsonParser::decodeString(const string &s, bool binary) {
             switch (ch) {
                 case '"':
                 case '\\':
-                case '/':result.push_back(ch);
+                case '/':
+                    result.push_back(ch);
                     continue;
-                case 'b':result.push_back('\b');
+                case 'b':
+                    result.push_back('\b');
                     continue;
-                case 'f':result.push_back('\f');
+                case 'f':
+                    result.push_back('\f');
                     continue;
-                case 'n':result.push_back('\n');
+                case 'n':
+                    result.push_back('\n');
                     continue;
-                case 'r':result.push_back('\r');
+                case 'r':
+                    result.push_back('\r');
                     continue;
-                case 't':result.push_back('\t');
+                case 't':
+                    result.push_back('\t');
                     continue;
                 case 'u':
                 case 'U': {
@@ -364,8 +359,8 @@ string JsonParser::decodeString(const string &s, bool binary) {
                     if (binary) {
                         if (n > 0xff) {
                             throw Exception(boost::format(
-                                "Invalid byte for binary: %1%%2%") % ch %
-                                string(e, 4));
+                                                "Invalid byte for binary: %1%%2%")
+                                            % ch % string(e, 4));
                         } else {
                             result.push_back(n);
                             continue;
@@ -387,8 +382,8 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         result.push_back((n & 0x3f) | 0x80);
                     } else {
                         throw Exception(boost::format(
-                            "Invalid unicode value: %1%i%2%") % ch %
-                            string(e, 4));
+                                            "Invalid unicode value: %1%i%2%")
+                                        % ch % string(e, 4));
                     }
                 }
                     continue;
@@ -424,6 +419,5 @@ JsonParser::Token JsonParser::tryLiteral(const char exp[], size_t n, Token tk) {
     return tk;
 }
 
-}
-}
-
+} // namespace json
+} // namespace avro

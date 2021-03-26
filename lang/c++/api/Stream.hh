@@ -19,9 +19,9 @@
 #ifndef avro_Stream_hh__
 #define avro_Stream_hh__
 
-#include <memory>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
+#include <memory>
 
 #include "boost/utility.hpp"
 
@@ -35,7 +35,6 @@ namespace avro {
  */
 class AVRO_DECL InputStream : boost::noncopyable {
 protected:
-
     /**
      * An empty constructor.
      */
@@ -82,7 +81,6 @@ typedef std::unique_ptr<InputStream> InputStreamPtr;
  */
 class AVRO_DECL SeekableInputStream : public InputStream {
 protected:
-
     /**
      * An empty constructor.
      */
@@ -109,13 +107,12 @@ typedef std::unique_ptr<SeekableInputStream> SeekableInputStreamPtr;
  */
 class AVRO_DECL OutputStream : boost::noncopyable {
 protected:
-
     /**
      * An empty constructor.
      */
     OutputStream() = default;
-public:
 
+public:
     /**
      * Destructor.
      */
@@ -176,7 +173,7 @@ AVRO_DECL InputStreamPtr memoryInputStream(const OutputStream &source);
  * be a memory output stream. That is it must have been returned by a previous
  * call to memoryOutputStream().
  */
-AVRO_DECL std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream &source);
+AVRO_DECL std::shared_ptr<std::vector<uint8_t>> snapshot(const OutputStream &source);
 
 /**
  * Returns a new OutputStream whose contents would be stored in a file.
@@ -475,7 +472,5 @@ inline void copy(InputStream &in, OutputStream &out) {
     w.flush();
 }
 
-}   // namespace avro
+} // namespace avro
 #endif
-
-

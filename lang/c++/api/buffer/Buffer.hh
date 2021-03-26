@@ -63,7 +63,6 @@ class InputBuffer;
 class AVRO_DECL OutputBuffer {
 
 public:
-
     typedef detail::size_type size_type;
     typedef detail::data_type data_type;
 
@@ -93,8 +92,7 @@ public:
      *
      **/
 
-    OutputBuffer(size_type reserveSize = 0) :
-        pimpl_(new detail::BufferImpl) {
+    OutputBuffer(size_type reserveSize = 0) : pimpl_(new detail::BufferImpl) {
         if (reserveSize) {
             reserve(reserveSize);
         }
@@ -290,12 +288,10 @@ public:
     }
 
 private:
-
     friend class InputBuffer;
     friend class BufferReader;
 
-    explicit OutputBuffer(const detail::BufferImpl::SharedPtr &pimpl) :
-        pimpl_(pimpl) {}
+    explicit OutputBuffer(const detail::BufferImpl::SharedPtr &pimpl) : pimpl_(pimpl) {}
 
     detail::BufferImpl::SharedPtr pimpl_; ///< Must never be null.
 };
@@ -317,7 +313,6 @@ private:
 class AVRO_DECL InputBuffer {
 
 public:
-
     typedef detail::size_type size_type;
     typedef detail::data_type data_type;
 
@@ -335,8 +330,7 @@ public:
      * deleting the underlying data if no other copies of exist.
      **/
 
-    InputBuffer() :
-        pimpl_(new detail::BufferImpl) {}
+    InputBuffer() : pimpl_(new detail::BufferImpl) {}
 
     /**
      * Construct an InputBuffer that contains the contents of an OutputBuffer.
@@ -350,8 +344,7 @@ public:
      * Implicit conversion is allowed.
      **/
 
-    InputBuffer(const OutputBuffer &src) :
-        pimpl_(new detail::BufferImpl(*src.pimpl_)) {}
+    InputBuffer(const OutputBuffer &src) : pimpl_(new detail::BufferImpl(*src.pimpl_)) {}
 
     /**
      * Does the buffer have any data?
@@ -395,13 +388,11 @@ public:
     }
 
 private:
-
     friend class OutputBuffer; // for append function
     friend class istreambuf;
     friend class BufferReader;
 
-    explicit InputBuffer(const detail::BufferImpl::SharedPtr &pimpl) :
-        pimpl_(pimpl) {}
+    explicit InputBuffer(const detail::BufferImpl::SharedPtr &pimpl) : pimpl_(pimpl) {}
 
     /**
      * Class to indicate that a copy of a OutputBuffer to InputBuffer should be
@@ -420,8 +411,7 @@ private:
      * Make a shallow copy of an OutputBuffer in order to read it without
      * causing conversion overhead.
      **/
-    InputBuffer(const OutputBuffer &src, const ShallowCopy &) :
-        pimpl_(src.pimpl_) {}
+    InputBuffer(const OutputBuffer &src, const ShallowCopy &) : pimpl_(src.pimpl_) {}
 
     /**
      * Make a shallow copy of an InputBuffer.  The default copy constructor
@@ -430,8 +420,7 @@ private:
      * manner.
      **/
 
-    InputBuffer(const InputBuffer &src, const ShallowCopy &) :
-        pimpl_(src.pimpl_) {}
+    InputBuffer(const InputBuffer &src, const ShallowCopy &) : pimpl_(src.pimpl_) {}
 
     detail::BufferImpl::ConstSharedPtr pimpl_; ///< Must never be null.
 };
@@ -497,6 +486,6 @@ inline void toIovec(BufferType &buf, std::vector<struct iovec> &iov) {
 }
 #endif
 
-} // namespace
+} // namespace avro
 
 #endif

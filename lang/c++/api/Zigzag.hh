@@ -19,9 +19,9 @@
 #ifndef avro_Encoding_hh__
 #define avro_Encoding_hh__
 
-#include <cstdint>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 
 #include "Config.hh"
 /// \file

@@ -38,15 +38,12 @@ namespace avro {
 class AVRO_DECL ostream : public std::ostream {
 
 public:
-
     /// Default constructor, creates a new OutputBuffer.
-    ostream() :
-        std::ostream(&obuf_) {}
+    ostream() : std::ostream(&obuf_) {}
 
     /// Output to a specific buffer.
-    ostream(OutputBuffer &buf) :
-        std::ostream(&obuf_),
-        obuf_(buf) {}
+    ostream(OutputBuffer &buf) : std::ostream(&obuf_),
+                                 obuf_(buf) {}
 
     /// Return the output buffer created by the write operations to this ostream.
     const OutputBuffer &getBuffer() const {
@@ -54,7 +51,6 @@ public:
     }
 
 protected:
-
     ostreambuf obuf_;
 };
 
@@ -72,15 +68,12 @@ protected:
 class AVRO_DECL istream : public std::istream {
 
 public:
-
     /// Constructor, requires an InputBuffer to read from.
-    explicit istream(const InputBuffer &buf) :
-        std::istream(&ibuf_), ibuf_(buf) {}
+    explicit istream(const InputBuffer &buf) : std::istream(&ibuf_), ibuf_(buf) {}
 
     /// Constructor, takes an OutputBuffer to read from (by making a shallow copy to an InputBuffer).
     /// Writing to the OutputBuffer while an istream is using it may lead to undefined behavior.
-    explicit istream(const OutputBuffer &buf) :
-        std::istream(&ibuf_), ibuf_(buf) {}
+    explicit istream(const OutputBuffer &buf) : std::istream(&ibuf_), ibuf_(buf) {}
 
     /// Return the InputBuffer this stream is reading from.
     const InputBuffer &getBuffer() const {
@@ -88,7 +81,6 @@ public:
     }
 
 protected:
-
     istreambuf ibuf_;
 };
 

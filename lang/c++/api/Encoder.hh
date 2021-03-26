@@ -21,12 +21,12 @@
 
 #include "Config.hh"
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
-#include "ValidSchema.hh"
 #include "Stream.hh"
+#include "ValidSchema.hh"
 
 /// \file
 ///
@@ -168,6 +168,6 @@ AVRO_DECL EncoderPtr jsonEncoder(const ValidSchema &schema);
  */
 AVRO_DECL EncoderPtr jsonPrettyEncoder(const ValidSchema &schema);
 
-}   // namespace avro
+} // namespace avro
 
 #endif

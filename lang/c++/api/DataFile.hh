@@ -21,10 +21,10 @@
 
 #include "Config.hh"
 #include "Encoder.hh"
-#include "buffer/Buffer.hh"
-#include "ValidSchema.hh"
 #include "Specific.hh"
 #include "Stream.hh"
+#include "ValidSchema.hh"
+#include "buffer/Buffer.hh"
 
 #include <map>
 #include <string>
@@ -70,7 +70,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     const DataFileSync sync_;
     int64_t objectCount_;
 
-    typedef std::map<std::string, std::vector<uint8_t> > Metadata;
+    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     int64_t lastSync_;
@@ -146,17 +146,16 @@ public:
 template<typename T>
 class DataFileWriter : boost::noncopyable {
     std::unique_ptr<DataFileWriterBase> base_;
+
 public:
     /**
      * Constructs a new data file.
      */
     DataFileWriter(const char *filename, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
-        base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) {}
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema &schema,
-                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
-        base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
+                   size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) : base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) {}
 
     /**
      * Writes the given piece of data into the file.
@@ -206,7 +205,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
     std::unique_ptr<InputStream> dataStream_;
-    typedef std::map<std::string, std::vector<uint8_t> > Metadata;
+    typedef std::map<std::string, std::vector<uint8_t>> Metadata;
 
     Metadata metadata_;
     DataFileSync sync_{};
@@ -219,6 +218,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
 
     void readDataBlock();
     void doSeek(int64_t position);
+
 public:
     /**
      * Returns the current decoder for this reader.
@@ -305,18 +305,17 @@ public:
 template<typename T>
 class DataFileReader : boost::noncopyable {
     std::unique_ptr<DataFileReaderBase> base_;
+
 public:
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the given schema.
      */
-    DataFileReader(const char *filename, const ValidSchema &readerSchema) :
-        base_(new DataFileReaderBase(filename)) {
+    DataFileReader(const char *filename, const ValidSchema &readerSchema) : base_(new DataFileReaderBase(filename)) {
         base_->init(readerSchema);
     }
 
-    DataFileReader(std::unique_ptr<InputStream> inputStream, const ValidSchema &readerSchema) :
-        base_(new DataFileReaderBase(std::move(inputStream))) {
+    DataFileReader(std::unique_ptr<InputStream> inputStream, const ValidSchema &readerSchema) : base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init(readerSchema);
     }
 
@@ -324,13 +323,11 @@ public:
      * Constructs the reader for the given file and the reader is
      * expected to use the schema that is used with data.
      */
-    explicit DataFileReader(const char *filename) :
-        base_(new DataFileReaderBase(filename)) {
+    explicit DataFileReader(const char *filename) : base_(new DataFileReaderBase(filename)) {
         base_->init();
     }
 
-    explicit DataFileReader(std::unique_ptr<InputStream> inputStream) :
-        base_(new DataFileReaderBase(std::move(inputStream))) {
+    explicit DataFileReader(std::unique_ptr<InputStream> inputStream) : base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init();
     }
 
@@ -414,5 +411,5 @@ public:
     int64_t previousSync() { return base_->previousSync(); }
 };
 
-}   // namespace avro
+} // namespace avro
 #endif

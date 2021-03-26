@@ -19,8 +19,8 @@
 #ifndef avro_BufferReader_hh__
 #define avro_BufferReader_hh__
 
-#include <type_traits>
 #include "Buffer.hh"
+#include <type_traits>
 
 #ifdef min
 #undef min
@@ -43,12 +43,10 @@ namespace avro {
 class AVRO_DECL BufferReader : private boost::noncopyable {
 
 public:
-
     typedef detail::data_type data_type;
     typedef detail::size_type size_type;
 
 private:
-
     size_type chunkRemaining() const {
         return iter_->dataSize() - chunkPos_;
     }
@@ -73,20 +71,17 @@ private:
     }
 
 public:
+    BufferReader(const InputBuffer &buf) : bufferImpl_(buf.pimpl_),
+                                           iter_(bufferImpl_->beginRead()),
+                                           bytes_(bufferImpl_->size()),
+                                           bytesRemaining_(bytes_),
+                                           chunkPos_(0) {}
 
-    BufferReader(const InputBuffer &buf) :
-        bufferImpl_(buf.pimpl_),
-        iter_(bufferImpl_->beginRead()),
-        bytes_(bufferImpl_->size()),
-        bytesRemaining_(bytes_),
-        chunkPos_(0) {}
-
-    BufferReader(const OutputBuffer &buf) :
-        bufferImpl_(buf.pimpl_),
-        iter_(bufferImpl_->beginRead()),
-        bytes_(bufferImpl_->size()),
-        bytesRemaining_(bytes_),
-        chunkPos_(0) {}
+    BufferReader(const OutputBuffer &buf) : bufferImpl_(buf.pimpl_),
+                                            iter_(bufferImpl_->beginRead()),
+                                            bytes_(bufferImpl_->size()),
+                                            bytesRemaining_(bytes_),
+                                            chunkPos_(0) {}
 
     /**
      * How many bytes are still not read from this buffer.
@@ -183,8 +178,8 @@ public:
         if (pos >= curPos) {
             toSkip -= curPos;
         }
-            // if the seek position is ahead of the start of the chunk we can back up to
-            // start of the chunk
+        // if the seek position is ahead of the start of the chunk we can back up to
+        // start of the chunk
         else if (pos >= (curPos - chunkPos_)) {
             curPos -= chunkPos_;
             bytesRemaining_ += chunkPos_;
@@ -219,7 +214,6 @@ public:
     }
 
 private:
-
     void doSkip(size_type sizeToSkip) {
 
         while (sizeToSkip) {
@@ -236,7 +230,7 @@ private:
         }
 
         if (sizeof(T) <= chunkRemaining()) {
-            val = *(reinterpret_cast<const T *> (addr()));
+            val = *(reinterpret_cast<const T *>(addr()));
             incrementChunk(sizeof(T));
         } else {
             read(reinterpret_cast<data_type *>(&val), sizeof(T));
@@ -274,6 +268,6 @@ private:
     size_type chunkPos_;
 };
 
-} // namespace
+} // namespace avro
 
 #endif

@@ -19,8 +19,8 @@
 #ifndef avro_AvroSerialize_hh__
 #define avro_AvroSerialize_hh__
 
-#include "Config.hh"
 #include "AvroTraits.hh"
+#include "Config.hh"
 
 /// \file
 ///

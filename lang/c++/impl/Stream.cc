@@ -46,9 +46,8 @@ class MemoryInputStream : public InputStream {
 
 public:
     MemoryInputStream(const std::vector<uint8_t *> &b,
-                      size_t chunkSize, size_t available) :
-        data_(b), chunkSize_(chunkSize), size_(b.size()),
-        available_(available), cur_(0), curLen_(0) {}
+                      size_t chunkSize, size_t available) : data_(b), chunkSize_(chunkSize), size_(b.size()),
+                                                            available_(available), cur_(0), curLen_(0) {}
 
     bool next(const uint8_t **data, size_t *len) override {
         if (size_t n = maxLen()) {
@@ -87,6 +86,7 @@ class MemoryInputStream2 : public InputStream {
     const uint8_t *const data_;
     const size_t size_;
     size_t curLen_;
+
 public:
     MemoryInputStream2(const uint8_t *data, size_t len)
         : data_(data), size_(len), curLen_(0) {}
@@ -129,7 +129,7 @@ public:
     ~MemoryOutputStream() override {
         for (std::vector<uint8_t *>::const_iterator it = data_.begin();
              it != data_.end(); ++it) {
-            delete[] *it;
+            delete[] * it;
         }
     }
 
@@ -168,17 +168,13 @@ std::unique_ptr<InputStream> memoryInputStream(const uint8_t *data, size_t len) 
 std::unique_ptr<InputStream> memoryInputStream(const OutputStream &source) {
     const auto &mos =
         dynamic_cast<const MemoryOutputStream &>(source);
-    return (mos.data_.empty()) ?
-           std::unique_ptr<InputStream>(new MemoryInputStream2(nullptr, 0)) :
-           std::unique_ptr<InputStream>(new MemoryInputStream(mos.data_,
-                                                              mos.chunkSize_,
-                                                              (mos.chunkSize_ - mos.available_)));
+    return (mos.data_.empty()) ? std::unique_ptr<InputStream>(new MemoryInputStream2(nullptr, 0)) : std::unique_ptr<InputStream>(new MemoryInputStream(mos.data_, mos.chunkSize_, (mos.chunkSize_ - mos.available_)));
 }
 
-std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream &source) {
+std::shared_ptr<std::vector<uint8_t>> snapshot(const OutputStream &source) {
     const auto &mos =
         dynamic_cast<const MemoryOutputStream &>(source);
-    std::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
+    std::shared_ptr<std::vector<uint8_t>> result(new std::vector<uint8_t>());
     size_t c = mos.byteCount_;
     result->reserve(mos.byteCount_);
     for (auto it = mos.data_.begin();
@@ -190,5 +186,4 @@ std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream &source) {
     return result;
 }
 
-}   // namespace avro
-
+} // namespace avro

@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-
 #include "Symbol.hh"
 
 namespace avro {
 namespace parsing {
 
-using std::vector;
-using std::string;
 using std::ostringstream;
+using std::string;
+using std::vector;
 
 const char *Symbol::stringValues[] = {
     "TerminalLow",
@@ -66,8 +65,7 @@ const char *Symbol::stringValues[] = {
     "DefaultStart",
     "DefaultEnd",
     "ImplicitActionHigh",
-    "Error"
-};
+    "Error"};
 
 Symbol Symbol::enumAdjustSymbol(const NodePtr &writer, const NodePtr &reader) {
     vector<string> rs;
@@ -100,10 +98,11 @@ Symbol Symbol::error(const NodePtr &writer, const NodePtr &reader) {
     ostringstream oss;
     oss << "Cannot resolve: " << std::endl;
     writer->printJson(oss, 0);
-    oss << std::endl << "with" << std::endl;
+    oss << std::endl
+        << "with" << std::endl;
     reader->printJson(oss, 0);
     return Symbol(sError, oss.str());
 }
 
-}   // namespace parsing
-}   // namespace avro
+} // namespace parsing
+} // namespace avro

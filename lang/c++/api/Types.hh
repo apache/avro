@@ -30,29 +30,28 @@ namespace avro {
  */
 enum Type {
 
-    AVRO_STRING,    /*!< String */
-    AVRO_BYTES,     /*!< Sequence of variable length bytes data */
-    AVRO_INT,       /*!< 32-bit integer */
-    AVRO_LONG,      /*!< 64-bit integer */
-    AVRO_FLOAT,     /*!< Floating point number */
-    AVRO_DOUBLE,    /*!< Double precision floating point number */
-    AVRO_BOOL,      /*!< Boolean value */
-    AVRO_NULL,      /*!< Null */
+    AVRO_STRING, /*!< String */
+    AVRO_BYTES,  /*!< Sequence of variable length bytes data */
+    AVRO_INT,    /*!< 32-bit integer */
+    AVRO_LONG,   /*!< 64-bit integer */
+    AVRO_FLOAT,  /*!< Floating point number */
+    AVRO_DOUBLE, /*!< Double precision floating point number */
+    AVRO_BOOL,   /*!< Boolean value */
+    AVRO_NULL,   /*!< Null */
 
-    AVRO_RECORD,    /*!< Record, a sequence of fields */
-    AVRO_ENUM,      /*!< Enumeration */
-    AVRO_ARRAY,     /*!< Homogeneous array of some specific type */
-    AVRO_MAP,       /*!< Homogeneous map from string to some specific type */
-    AVRO_UNION,     /*!< Union of one or more types */
-    AVRO_FIXED,     /*!< Fixed number of bytes */
+    AVRO_RECORD, /*!< Record, a sequence of fields */
+    AVRO_ENUM,   /*!< Enumeration */
+    AVRO_ARRAY,  /*!< Homogeneous array of some specific type */
+    AVRO_MAP,    /*!< Homogeneous map from string to some specific type */
+    AVRO_UNION,  /*!< Union of one or more types */
+    AVRO_FIXED,  /*!< Fixed number of bytes */
 
     AVRO_NUM_TYPES, /*!< Marker */
 
     // The following is a pseudo-type used in implementation
 
     AVRO_SYMBOLIC = AVRO_NUM_TYPES, /*!< User internally to avoid circular references. */
-    AVRO_UNKNOWN = -1 /*!< Used internally. */
-
+    AVRO_UNKNOWN = -1               /*!< Used internally. */
 };
 
 /**
@@ -109,6 +108,5 @@ struct AVRO_DECL Null {};
 std::ostream &operator<<(std::ostream &os, const Null &null);
 
 } // namespace avro
-
 
 #endif

@@ -19,13 +19,13 @@
 #ifndef avro_json_JsonIO_hh__
 #define avro_json_JsonIO_hh__
 
+#include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/utility.hpp>
 #include <locale>
+#include <sstream>
 #include <stack>
 #include <string>
-#include <sstream>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/utility.hpp>
 
 #include "Config.hh"
 #include "Stream.hh"
@@ -55,12 +55,12 @@ public:
 
 private:
     enum State {
-        stValue,    // Expect a data type
-        stArray0,   // Expect a data type or ']'
-        stArrayN,   // Expect a ',' or ']'
-        stObject0,  // Expect a string or a '}'
-        stObjectN,  // Expect a ',' or '}'
-        stKey       // Expect a ':'
+        stValue,   // Expect a data type
+        stArray0,  // Expect a data type or ']'
+        stArrayN,  // Expect a ',' or ']'
+        stObject0, // Expect a string or a '}'
+        stObjectN, // Expect a ',' or '}'
+        stKey      // Expect a ':'
     };
     std::stack<State> stateStack;
     State curState;
@@ -199,6 +199,7 @@ class AVRO_DECL JsonPrettyFormatter {
         }
         out_.writeBytes(indent_.data(), charsToIndent);
     }
+
 public:
     JsonPrettyFormatter(StreamWriter &out) : out_(out), level_(0), indent_(10, ' ') {}
 
@@ -308,30 +309,24 @@ class AVRO_DECL JsonGenerator {
                 switch (*p) {
                     case '\\':
                     case '"':
-                    case '/': {
+                    case '/':
                         escape(*p, b, p);
                         break;
-                    }
-                    case '\b': {
+                    case '\b':
                         escape('b', b, p);
                         break;
-                    }
-                    case '\f': {
+                    case '\f':
                         escape('f', b, p);
                         break;
-                    }
-                    case '\n': {
+                    case '\n':
                         escape('n', b, p);
                         break;
-                    }
-                    case '\r': {
+                    case '\r':
                         escape('r', b, p);
                         break;
-                    }
-                    case '\t': {
+                    case '\t':
                         escape('t', b, p);
                         break;
-                    }
                     default:
                         if (std::iscntrl(*p, std::locale::classic())) {
                             write(b, p);
@@ -477,10 +472,9 @@ public:
         out_.write('}');
         sep2();
     }
-
 };
 
-}
-}
+} // namespace json
+} // namespace avro
 
 #endif

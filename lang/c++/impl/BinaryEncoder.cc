@@ -144,4 +144,4 @@ void BinaryEncoder::doEncodeLong(int64_t l) {
     auto size = encodeInt64(l, bytes);
     out_.writeBytes(bytes.data(), size);
 }
-}   // namespace avro
+} // namespace avro

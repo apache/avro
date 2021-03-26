@@ -19,8 +19,8 @@
 #ifndef avro_AvroParse_hh__
 #define avro_AvroParse_hh__
 
-#include "Config.hh"
 #include "AvroTraits.hh"
+#include "Config.hh"
 #include "ResolvingReader.hh"
 
 /// \file
@@ -57,7 +57,6 @@ void translatingParse(Reader &p, T &val, const std::false_type &) {
 // @{
 
 /// The remainder of the file includes default implementations for serializable types.
-
 
 template<typename Reader, typename T>
 void parse(Reader &p, T &val, const std::true_type &) {

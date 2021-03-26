@@ -22,23 +22,23 @@
 
 #include <sstream>
 
-#include <boost/random/mersenne_twister.hpp>
+#include <boost/crc.hpp> // for boost::crc_32_type
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
-#include <boost/crc.hpp>  // for boost::crc_32_type
+#include <boost/random/mersenne_twister.hpp>
 
 #ifdef SNAPPY_CODEC_AVAILABLE
 #include <snappy.h>
 #endif
 
 namespace avro {
-using std::unique_ptr;
-using std::ostringstream;
-using std::istringstream;
-using std::vector;
 using std::copy;
+using std::istringstream;
+using std::ostringstream;
 using std::string;
+using std::unique_ptr;
+using std::vector;
 
 using std::array;
 
@@ -61,43 +61,41 @@ boost::iostreams::zlib_params get_zlib_params() {
     ret.noheader = true;
     return ret;
 }
-}
+} // namespace
 
 DataFileWriterBase::DataFileWriterBase(const char *filename, const ValidSchema &schema, size_t syncInterval,
-                                       Codec codec) :
-    filename_(filename),
-    schema_(schema),
-    encoderPtr_(binaryEncoder()),
-    syncInterval_(syncInterval),
-    codec_(codec),
-    stream_(fileOutputStream(filename)),
-    buffer_(memoryOutputStream()),
-    sync_(makeSync()),
-    objectCount_(0),
-    lastSync_(0) {
+                                       Codec codec) : filename_(filename),
+                                                      schema_(schema),
+                                                      encoderPtr_(binaryEncoder()),
+                                                      syncInterval_(syncInterval),
+                                                      codec_(codec),
+                                                      stream_(fileOutputStream(filename)),
+                                                      buffer_(memoryOutputStream()),
+                                                      sync_(makeSync()),
+                                                      objectCount_(0),
+                                                      lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
-                                       const ValidSchema &schema, size_t syncInterval, Codec codec) :
-    filename_(),
-    schema_(schema),
-    encoderPtr_(binaryEncoder()),
-    syncInterval_(syncInterval),
-    codec_(codec),
-    stream_(std::move(outputStream)),
-    buffer_(memoryOutputStream()),
-    sync_(makeSync()),
-    objectCount_(0),
-    lastSync_(0) {
+                                       const ValidSchema &schema, size_t syncInterval, Codec codec) : filename_(),
+                                                                                                      schema_(schema),
+                                                                                                      encoderPtr_(binaryEncoder()),
+                                                                                                      syncInterval_(syncInterval),
+                                                                                                      codec_(codec),
+                                                                                                      stream_(std::move(outputStream)),
+                                                                                                      buffer_(memoryOutputStream()),
+                                                                                                      sync_(makeSync()),
+                                                                                                      objectCount_(0),
+                                                                                                      lastSync_(0) {
     init(schema, syncInterval, codec);
 }
 
 void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(boost::format("Invalid sync interval: %1%. "
-                                      "Should be between %2% and %3%") % syncInterval %
-            minSyncInterval % maxSyncInterval);
+                                      "Should be between %2% and %3%")
+                        % syncInterval % minSyncInterval % maxSyncInterval);
     }
     setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
@@ -259,16 +257,14 @@ void DataFileWriterBase::setMetadata(const string &key, const string &value) {
     metadata_[key] = v;
 }
 
-DataFileReaderBase::DataFileReaderBase(const char *filename) :
-    filename_(filename), codec_(NULL_CODEC), stream_(fileSeekableInputStream(filename)),
-    decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
-    blockEnd_(-1) {
+DataFileReaderBase::DataFileReaderBase(const char *filename) : filename_(filename), codec_(NULL_CODEC), stream_(fileSeekableInputStream(filename)),
+                                                               decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
+                                                               blockEnd_(-1) {
     readHeader();
 }
 
-DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
-    codec_(NULL_CODEC), stream_(std::move(inputStream)),
-    decoder_(binaryDecoder()), objectCount_(0), eof_(false) {
+DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) : codec_(NULL_CODEC), stream_(std::move(inputStream)),
+                                                                                   decoder_(binaryDecoder()), objectCount_(0), eof_(false) {
     readHeader();
 }
 
@@ -280,16 +276,15 @@ void DataFileReaderBase::init() {
 
 void DataFileReaderBase::init(const ValidSchema &readerSchema) {
     readerSchema_ = readerSchema;
-    dataDecoder_ = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ?
-                   resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
-                   binaryDecoder();
+    dataDecoder_ = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ? resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) : binaryDecoder();
     readDataBlock();
 }
 
 static void drain(InputStream &in) {
     const uint8_t *p = nullptr;
     size_t n = 0;
-    while (in.next(&p, &n));
+    while (in.next(&p, &n))
+        ;
 }
 
 char hex(unsigned int x) {
@@ -358,8 +353,7 @@ class BoundedInputStream : public InputStream {
     }
 
 public:
-    BoundedInputStream(InputStream &in, size_t limit) :
-        in_(in), limit_(limit) {}
+    BoundedInputStream(InputStream &in, size_t limit) : in_(in), limit_(limit) {}
 };
 
 unique_ptr<InputStream> boundedInputStream(InputStream &in, size_t limit) {
@@ -466,7 +460,7 @@ void DataFileReaderBase::readHeader() {
     avro::decode(*decoder_, m);
     if (magic != m) {
         throw Exception("Invalid data file. Magic does not match: "
-                            + filename_);
+                        + filename_);
     }
     avro::decode(*decoder_, metadata_);
     Metadata::const_iterator it = metadata_.find(AVRO_SCHEMA_KEY);
@@ -484,7 +478,7 @@ void DataFileReaderBase::readHeader() {
         codec_ = DEFLATE_CODEC;
 #ifdef SNAPPY_CODEC_AVAILABLE
     } else if (it != metadata_.end()
-        && toString(it->second) == AVRO_SNAPPY_CODEC) {
+               && toString(it->second) == AVRO_SNAPPY_CODEC) {
         codec_ = SNAPPY_CODEC;
 #endif
     } else {
@@ -566,4 +560,4 @@ int64_t DataFileReaderBase::previousSync() const {
     return blockStart_;
 }
 
-}   // namespace avro
+} // namespace avro

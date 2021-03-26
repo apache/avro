@@ -19,18 +19,18 @@
 #ifndef avro_parsing_Symbol_hh__
 #define avro_parsing_Symbol_hh__
 
-#include <vector>
 #include <map>
 #include <set>
-#include <stack>
 #include <sstream>
+#include <stack>
+#include <vector>
 
 #include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
 
-#include "Node.hh"
 #include "Decoder.hh"
 #include "Exception.hh"
+#include "Node.hh"
 
 namespace avro {
 namespace parsing {
@@ -45,7 +45,7 @@ typedef boost::tuple<ProductionPtr, ProductionPtr> RootInfo;
 class Symbol {
 public:
     enum Kind {
-        sTerminalLow,   // extra has nothing
+        sTerminalLow, // extra has nothing
         sNull,
         sBool,
         sInt,
@@ -62,14 +62,14 @@ public:
         sEnum,
         sUnion,
         sTerminalHigh,
-        sSizeCheck,     // Extra has size
-        sNameList,      // Extra has a vector<string>
-        sRoot,          // Root for a schema, extra is Symbol
-        sRepeater,      // Array or Map, extra is symbol
-        sAlternative,   // One of many (union), extra is Union
-        sPlaceholder,   // To be fixed up later.
-        sIndirect,      // extra is shared_ptr<Production>
-        sSymbolic,      // extra is weal_ptr<Production>
+        sSizeCheck,   // Extra has size
+        sNameList,    // Extra has a vector<string>
+        sRoot,        // Root for a schema, extra is Symbol
+        sRepeater,    // Array or Map, extra is symbol
+        sAlternative, // One of many (union), extra is Union
+        sPlaceholder, // To be fixed up later.
+        sIndirect,    // extra is shared_ptr<Production>
+        sSymbolic,    // extra is weal_ptr<Production>
         sEnumAdjust,
         sUnionAdjust,
         sSkipStart,
@@ -78,11 +78,11 @@ public:
         sImplicitActionLow,
         sRecordStart,
         sRecordEnd,
-        sField,         // extra is string
+        sField, // extra is string
         sRecord,
         sSizeList,
         sWriterUnion,
-        sDefaultStart,  // extra has default value in Avro binary encoding
+        sDefaultStart, // extra has default value in Avro binary encoding
         sDefaultEnd,
         sImplicitActionHigh,
         sError
@@ -95,8 +95,8 @@ private:
     explicit Symbol(Kind k) : kind_(k) {}
     template<typename T>
     Symbol(Kind k, T t) : kind_(k), extra_(t) {}
-public:
 
+public:
     Kind kind() const {
         return kind_;
     }
@@ -215,7 +215,7 @@ public:
         return Symbol(sRepeater, RepeaterInfo(s, isArray, read, skip));
     }
 
-    static Symbol defaultStartAction(std::shared_ptr<std::vector<uint8_t> > bb) {
+    static Symbol defaultStartAction(std::shared_ptr<std::vector<uint8_t>> bb) {
         return Symbol(sDefaultStart, bb);
     }
 
@@ -291,7 +291,6 @@ public:
     static Symbol skipStart() {
         return Symbol(sSkipStart);
     }
-
 };
 
 /**
@@ -327,42 +326,36 @@ template<typename T>
 void fixup(Symbol &s, const std::map<T, ProductionPtr> &m,
            std::set<ProductionPtr> &seen) {
     switch (s.kind()) {
-        case Symbol::sIndirect: {
+        case Symbol::sIndirect:
             fixup_internal(s.extra<ProductionPtr>(), m, seen);
             break;
-        }
         case Symbol::sAlternative: {
             const std::vector<ProductionPtr> *vv =
-                s.extrap<std::vector<ProductionPtr> >();
+                s.extrap<std::vector<ProductionPtr>>();
             for (std::vector<ProductionPtr>::const_iterator it = vv->begin();
                  it != vv->end(); ++it) {
                 fixup_internal(*it, m, seen);
             }
-        }
-            break;
+        } break;
         case Symbol::sRepeater: {
             const RepeaterInfo &ri = *s.extrap<RepeaterInfo>();
             fixup_internal(boost::tuples::get<2>(ri), m, seen);
             fixup_internal(boost::tuples::get<3>(ri), m, seen);
-        }
-            break;
+        } break;
         case Symbol::sPlaceholder: {
-            typename std::map<T, std::shared_ptr<Production> >::const_iterator it =
+            typename std::map<T, std::shared_ptr<Production>>::const_iterator it =
                 m.find(s.extra<T>());
             if (it == m.end()) {
                 throw Exception("Placeholder symbol cannot be resolved");
             }
             s = Symbol::symbolic(std::weak_ptr<Production>(it->second));
-        }
-            break;
-        case Symbol::sUnionAdjust: {
-            fixup_internal(s.extrap<std::pair<size_t, ProductionPtr> >()->second,
+        } break;
+        case Symbol::sUnionAdjust:
+            fixup_internal(s.extrap<std::pair<size_t, ProductionPtr>>()->second,
                            m, seen);
             break;
-        }
-        default: {
+        default:
             break;
-        }
     }
 }
 
@@ -374,9 +367,7 @@ class SimpleParser {
 
     static void throwMismatch(Symbol::Kind actual, Symbol::Kind expected) {
         std::ostringstream oss;
-        oss << "Invalid operation. Schema requires: " <<
-            Symbol::toString(expected) << ", got: " <<
-            Symbol::toString(actual);
+        oss << "Invalid operation. Schema requires: " << Symbol::toString(expected) << ", got: " << Symbol::toString(actual);
         throw Exception(oss.str());
     }
 
@@ -384,7 +375,6 @@ class SimpleParser {
         if (expected != actual) {
             throwMismatch(actual, expected);
         }
-
     }
 
     void append(const ProductionPtr &ss) {
@@ -414,8 +404,8 @@ public:
     Symbol::Kind advance(Symbol::Kind k) {
         for (;;) {
             Symbol &s = parsingStack.top();
-//            std::cout << "advance: " << Symbol::toString(s.kind())
-//                      << " looking for " << Symbol::toString(k) << '\n';
+            //            std::cout << "advance: " << Symbol::toString(s.kind())
+            //                      << " looking for " << Symbol::toString(k) << '\n';
             if (s.kind() == k) {
                 parsingStack.pop();
                 return k;
@@ -423,10 +413,9 @@ public:
                 throwMismatch(k, s.kind());
             } else {
                 switch (s.kind()) {
-                    case Symbol::sRoot: {
+                    case Symbol::sRoot:
                         append(boost::tuples::get<0>(*s.extrap<RootInfo>()));
                         continue;
-                    }
                     case Symbol::sIndirect: {
                         ProductionPtr pp =
                             s.extra<ProductionPtr>();
@@ -436,7 +425,7 @@ public:
                         continue;
                     case Symbol::sSymbolic: {
                         ProductionPtr pp(
-                            s.extra<std::weak_ptr<Production> >());
+                            s.extra<std::weak_ptr<Production>>());
                         parsingStack.pop();
                         append(pp);
                     }
@@ -456,23 +445,21 @@ public:
                         append(boost::tuples::get<2>(*p));
                     }
                         continue;
-                    case Symbol::sError: {
+                    case Symbol::sError:
                         throw Exception(s.extra<std::string>());
-                    }
                     case Symbol::sResolve: {
                         const std::pair<Symbol::Kind, Symbol::Kind> *p =
-                            s.extrap<std::pair<Symbol::Kind, Symbol::Kind> >();
+                            s.extrap<std::pair<Symbol::Kind, Symbol::Kind>>();
                         assertMatch(p->second, k);
                         Symbol::Kind result = p->first;
                         parsingStack.pop();
                         return result;
                     }
-                    case Symbol::sSkipStart: {
+                    case Symbol::sSkipStart:
                         parsingStack.pop();
                         skip(*decoder_);
                         break;
-                    }
-                    default: {
+                    default:
                         if (s.isImplicitAction()) {
                             size_t n = handler_.handle(s);
                             if (s.kind() == Symbol::sWriterUnion) {
@@ -487,7 +474,6 @@ public:
                                 << " while looking for " << Symbol::toString(k);
                             throw Exception(oss.str());
                         }
-                    }
                 }
             }
         }
@@ -502,38 +488,30 @@ public:
             Symbol &t = parsingStack.top();
             // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
             switch (t.kind()) {
-                case Symbol::sNull: {
+                case Symbol::sNull:
                     d.decodeNull();
                     break;
-                }
-                case Symbol::sBool: {
+                case Symbol::sBool:
                     d.decodeBool();
                     break;
-                }
-                case Symbol::sInt: {
+                case Symbol::sInt:
                     d.decodeInt();
                     break;
-                }
-                case Symbol::sLong: {
+                case Symbol::sLong:
                     d.decodeLong();
                     break;
-                }
-                case Symbol::sFloat: {
+                case Symbol::sFloat:
                     d.decodeFloat();
                     break;
-                }
-                case Symbol::sDouble: {
+                case Symbol::sDouble:
                     d.decodeDouble();
                     break;
-                }
-                case Symbol::sString: {
+                case Symbol::sString:
                     d.skipString();
                     break;
-                }
-                case Symbol::sBytes: {
+                case Symbol::sBytes:
                     d.skipBytes();
                     break;
-                }
                 case Symbol::sArrayStart: {
                     parsingStack.pop();
                     size_t n = d.skipArray();
@@ -547,9 +525,8 @@ public:
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-                case Symbol::sArrayEnd: {
+                case Symbol::sArrayEnd:
                     break;
-                }
                 case Symbol::sMapStart: {
                     parsingStack.pop();
                     size_t n = d.skipMap();
@@ -563,20 +540,17 @@ public:
                     boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
-                case Symbol::sMapEnd: {
+                case Symbol::sMapEnd:
                     break;
-                }
                 case Symbol::sFixed: {
                     parsingStack.pop();
                     Symbol &t = parsingStack.top();
                     d.decodeFixed(t.extra<size_t>());
-                }
-                    break;
-                case Symbol::sEnum: {
+                } break;
+                case Symbol::sEnum:
                     parsingStack.pop();
                     d.decodeEnum();
                     break;
-                }
                 case Symbol::sUnion: {
                     parsingStack.pop();
                     size_t n = d.decodeUnionIndex();
@@ -602,8 +576,8 @@ public:
                     } else {
                         ns.pop();
                     }
-                }
                     break;
+                }
                 case Symbol::sIndirect: {
                     ProductionPtr pp =
                         t.extra<ProductionPtr>();
@@ -613,7 +587,7 @@ public:
                     continue;
                 case Symbol::sSymbolic: {
                     ProductionPtr pp(
-                        t.extra<std::weak_ptr<Production> >());
+                        t.extra<std::weak_ptr<Production>>());
                     parsingStack.pop();
                     append(pp);
                 }
@@ -645,8 +619,8 @@ public:
     size_t enumAdjust(size_t n) {
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sEnumAdjust, s.kind());
-        const std::pair<std::vector<int>, std::vector<std::string> > *v =
-            s.extrap<std::pair<std::vector<int>, std::vector<std::string> > >();
+        const std::pair<std::vector<int>, std::vector<std::string>> *v =
+            s.extrap<std::pair<std::vector<int>, std::vector<std::string>>>();
         assertLessThan(n, v->first.size());
 
         int result = v->first[n];
@@ -664,7 +638,7 @@ public:
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sUnionAdjust, s.kind());
         std::pair<size_t, ProductionPtr> p =
-            s.extra<std::pair<size_t, ProductionPtr> >();
+            s.extra<std::pair<size_t, ProductionPtr>>();
         parsingStack.pop();
         append(p.second);
         return p.first;
@@ -674,7 +648,7 @@ public:
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sNameList, s.kind());
         const std::vector<std::string> names =
-            s.extra<std::vector<std::string> >();
+            s.extra<std::vector<std::string>>();
         if (e >= names.size()) {
             throw Exception("Not that many names");
         }
@@ -687,7 +661,7 @@ public:
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sNameList, s.kind());
         const std::vector<std::string> names =
-            s.extra<std::vector<std::string> >();
+            s.extra<std::vector<std::string>>();
         std::vector<std::string>::const_iterator it =
             std::find(names.begin(), names.end(), name);
         if (it == names.end()) {
@@ -739,7 +713,7 @@ public:
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sAlternative, s.kind());
         std::vector<ProductionPtr> v =
-            s.extra<std::vector<ProductionPtr> >();
+            s.extra<std::vector<ProductionPtr>>();
         if (n >= v.size()) {
             throw Exception("Not that many branches");
         }
@@ -750,7 +724,7 @@ public:
     const std::vector<size_t> &sizeList() {
         const Symbol &s = parsingStack.top();
         assertMatch(Symbol::sSizeList, s.kind());
-        return *s.extrap<std::vector<size_t> >();
+        return *s.extrap<std::vector<size_t>>();
     }
 
     Symbol::Kind top() const {
@@ -776,8 +750,7 @@ public:
         }
     }
 
-    SimpleParser(const Symbol &s, Decoder *d, Handler &h) :
-        decoder_(d), handler_(h) {
+    SimpleParser(const Symbol &s, Decoder *d, Handler &h) : decoder_(d), handler_(h) {
         parsingStack.push(s);
     }
 
@@ -786,7 +759,6 @@ public:
             parsingStack.pop();
         }
     }
-
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Symbol s);
@@ -808,38 +780,33 @@ inline std::ostream &operator<<(std::ostream &os, const Symbol s) {
                << ' ' << *boost::tuples::get<2>(ri)
                << ' ' << *boost::tuples::get<3>(ri)
                << ')';
-            break;
-        }
+        } break;
         case Symbol::sIndirect: {
             os << '(' << Symbol::toString(s.kind()) << ' '
-               << *s.extra<std::shared_ptr<Production> >() << ')';
-            break;
-        }
+               << *s.extra<std::shared_ptr<Production>>() << ')';
+        } break;
         case Symbol::sAlternative: {
             os << '(' << Symbol::toString(s.kind());
             for (std::vector<ProductionPtr>::const_iterator it =
-                s.extrap<std::vector<ProductionPtr> >()->begin();
-                 it != s.extrap<std::vector<ProductionPtr> >()->end();
+                     s.extrap<std::vector<ProductionPtr>>()->begin();
+                 it != s.extrap<std::vector<ProductionPtr>>()->end();
                  ++it) {
                 os << ' ' << **it;
             }
             os << ')';
-            break;
-        }
+        } break;
         case Symbol::sSymbolic: {
             os << '(' << Symbol::toString(s.kind())
-               << ' ' << s.extra<std::weak_ptr<Production> >().lock()
+               << ' ' << s.extra<std::weak_ptr<Production>>().lock()
                << ')';
-            break;
-        }
-        default: {
+        } break;
+        default:
             os << Symbol::toString(s.kind());
             break;
-        }
     }
     return os;
 }
-}   // namespace parsing
-}   // namespace avro
+} // namespace parsing
+} // namespace avro
 
 #endif

@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
+#include "Types.hh"
 #include <iostream>
 #include <string>
-#include "Types.hh"
 
 namespace avro {
 namespace strings {
@@ -37,14 +37,12 @@ const std::string typeToString[] = {
     "map",
     "union",
     "fixed",
-    "symbolic"
-};
+    "symbolic"};
 
 static_assert((sizeof(typeToString) / sizeof(std::string)) == (AVRO_NUM_TYPES + 1),
               "Incorrect Avro typeToString");
 
 } // namespace strings
-
 
 // this static assert exists because a 32 bit integer is used as a bit-flag for each type,
 // and it would be a problem for this flag if we ever supported more than 32 types
@@ -74,4 +72,3 @@ std::ostream &operator<<(std::ostream &os, const Null &) {
 }
 
 } // namespace avro
-

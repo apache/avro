@@ -18,19 +18,19 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include <string>
-#include <map>
 #include <algorithm>
-#include <cctype>
-#include <memory>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <cctype>
+#include <map>
+#include <memory>
+#include <string>
 
-#include "ValidatingCodec.hh"
-#include "Symbol.hh"
-#include "ValidSchema.hh"
 #include "Decoder.hh"
 #include "Encoder.hh"
 #include "NodeImpl.hh"
+#include "Symbol.hh"
+#include "ValidSchema.hh"
+#include "ValidatingCodec.hh"
 
 #include "../json/JsonIO.hh"
 
@@ -40,16 +40,16 @@ namespace parsing {
 
 using std::make_shared;
 
-using std::map;
-using std::vector;
-using std::string;
-using std::reverse;
-using std::ostringstream;
 using std::istringstream;
+using std::map;
+using std::ostringstream;
+using std::reverse;
+using std::string;
+using std::vector;
 
-using avro::json::JsonParser;
 using avro::json::JsonGenerator;
 using avro::json::JsonNullFormatter;
+using avro::json::JsonParser;
 
 class JsonGrammarGenerator : public ValidatingGrammarGenerator {
     ProductionPtr doGenerate(const NodePtr &n,
@@ -79,9 +79,8 @@ ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr &n,
         case AVRO_FIXED:
         case AVRO_ARRAY:
         case AVRO_MAP:
-        case AVRO_SYMBOLIC: {
+        case AVRO_SYMBOLIC:
             return ValidatingGrammarGenerator::doGenerate(n, m);
-        }
         case AVRO_RECORD: {
             ProductionPtr result = make_shared<Production>();
 
@@ -142,7 +141,8 @@ ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr &n,
             result->push_back(Symbol::unionSymbol());
             return result;
         }
-        default:throw Exception("Unknown node type");
+        default:
+            throw Exception("Unknown node type");
     }
 }
 
@@ -152,28 +152,25 @@ static void expectToken(JsonParser &in, JsonParser::Token tk) {
 
 class JsonDecoderHandler {
     JsonParser &in_;
+
 public:
     JsonDecoderHandler(JsonParser &p) : in_(p) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart: {
+            case Symbol::sRecordStart:
                 expectToken(in_, JsonParser::tkObjectStart);
                 break;
-            }
-            case Symbol::sRecordEnd: {
+            case Symbol::sRecordEnd:
                 expectToken(in_, JsonParser::tkObjectEnd);
                 break;
-            }
-            case Symbol::sField: {
+            case Symbol::sField:
                 expectToken(in_, JsonParser::tkString);
                 if (s.extra<string>() != in_.stringValue()) {
                     throw Exception("Incorrect field");
                 }
                 break;
-            }
-            default: {
+            default:
                 break;
-            }
         }
         return 0;
     }
@@ -210,12 +207,10 @@ class JsonDecoder : public Decoder {
     void expect(JsonParser::Token tk);
     void skipComposite();
     void drain();
+
 public:
-
-    JsonDecoder(const ValidSchema &s) :
-        handler_(in_),
-        parser_(JsonGrammarGenerator().generate(s), NULL, handler_) {}
-
+    JsonDecoder(const ValidSchema &s) : handler_(in_),
+                                        parser_(JsonGrammarGenerator().generate(s), NULL, handler_) {}
 };
 
 template<typename P>
@@ -250,7 +245,7 @@ int32_t JsonDecoder<P>::decodeInt() {
     int64_t result = in_.longValue();
     if (result < INT32_MIN || result > INT32_MAX) {
         throw Exception(boost::format("Value out of range for Avro int: %1%")
-                            % result);
+                        % result);
     }
     return static_cast<int32_t>(result);
 }
@@ -366,21 +361,18 @@ void JsonDecoder<P>::skipComposite() {
     for (;;) {
         switch (in_.advance()) {
             case JsonParser::tkArrayStart:
-            case JsonParser::tkObjectStart: {
+            case JsonParser::tkObjectStart:
                 ++level;
                 continue;
-            }
             case JsonParser::tkArrayEnd:
-            case JsonParser::tkObjectEnd: {
+            case JsonParser::tkObjectEnd:
                 if (level == 0) {
                     return;
                 }
                 --level;
                 continue;
-            }
-            default: {
+            default:
                 continue;
-            }
         }
     }
 }
@@ -451,25 +443,22 @@ size_t JsonDecoder<P>::decodeUnionIndex() {
 template<typename F = JsonNullFormatter>
 class JsonHandler {
     JsonGenerator<F> &generator_;
+
 public:
     JsonHandler(JsonGenerator<F> &g) : generator_(g) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart: {
+            case Symbol::sRecordStart:
                 generator_.objectStart();
                 break;
-            }
-            case Symbol::sRecordEnd: {
+            case Symbol::sRecordEnd:
                 generator_.objectEnd();
                 break;
-            }
-            case Symbol::sField: {
+            case Symbol::sField:
                 generator_.encodeString(s.extra<string>());
                 break;
-            }
-            default: {
+            default:
                 break;
-            }
         }
         return 0;
     }
@@ -501,10 +490,10 @@ class JsonEncoder : public Encoder {
     void setItemCount(size_t count);
     void startItem();
     void encodeUnionIndex(size_t e);
+
 public:
-    JsonEncoder(const ValidSchema &schema) :
-        handler_(out_),
-        parser_(JsonGrammarGenerator().generate(schema), NULL, handler_) {}
+    JsonEncoder(const ValidSchema &schema) : handler_(out_),
+                                             parser_(JsonGrammarGenerator().generate(schema), NULL, handler_) {}
 };
 
 template<typename P, typename F>
@@ -655,24 +644,21 @@ void JsonEncoder<P, F>::encodeUnionIndex(size_t e) {
     parser_.selectBranch(e);
 }
 
-}   // namespace parsing
+} // namespace parsing
 
 DecoderPtr jsonDecoder(const ValidSchema &s) {
     return std::make_shared<parsing::JsonDecoder<
-        parsing::SimpleParser<parsing::JsonDecoderHandler> > >(s);
+        parsing::SimpleParser<parsing::JsonDecoderHandler>>>(s);
 }
 
 EncoderPtr jsonEncoder(const ValidSchema &schema) {
     return std::make_shared<parsing::JsonEncoder<
-        parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonNullFormatter> >, avro::json::JsonNullFormatter> >(
-        schema);
+        parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonNullFormatter>>, avro::json::JsonNullFormatter>>(schema);
 }
 
 EncoderPtr jsonPrettyEncoder(const ValidSchema &schema) {
     return std::make_shared<parsing::JsonEncoder<
-        parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonPrettyFormatter> >,
-        avro::json::JsonPrettyFormatter> >(schema);
+        parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonPrettyFormatter>>, avro::json::JsonPrettyFormatter>>(schema);
 }
 
-}   // namespace avro
-
+} // namespace avro

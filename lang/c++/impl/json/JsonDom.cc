@@ -22,65 +22,44 @@
 
 #include <string.h>
 
-#include "Stream.hh"
 #include "JsonIO.hh"
+#include "Stream.hh"
 
-using std::string;
 using boost::format;
+using std::string;
 
 namespace avro {
 namespace json {
 const char *typeToString(EntityType t) {
     switch (t) {
-        case etNull: {
-            return "null";
-        }
-        case etBool: {
-            return "bool";
-        }
-        case etLong: {
-            return "long";
-        }
-        case etDouble: {
-            return "double";
-        }
-        case etString: {
-            return "string";
-        }
-        case etArray: {
-            return "array";
-        }
-        case etObject: {
-            return "object";
-        }
-        default: {
-            return "unknown";
-        }
+        case etNull: return "null";
+        case etBool: return "bool";
+        case etLong: return "long";
+        case etDouble: return "double";
+        case etString: return "string";
+        case etArray: return "array";
+        case etObject: return "object";
+        default: return "unknown";
     }
 }
 
 Entity readEntity(JsonParser &p) {
     switch (p.peek()) {
-        case JsonParser::tkNull: {
+        case JsonParser::tkNull:
             p.advance();
             return Entity(p.line());
-        }
-        case JsonParser::tkBool: {
+        case JsonParser::tkBool:
             p.advance();
             return Entity(p.boolValue(), p.line());
-        }
-        case JsonParser::tkLong: {
+        case JsonParser::tkLong:
             p.advance();
             return Entity(p.longValue(), p.line());
-        }
-        case JsonParser::tkDouble: {
+        case JsonParser::tkDouble:
             p.advance();
             return Entity(p.doubleValue(), p.line());
-        }
-        case JsonParser::tkString: {
+        case JsonParser::tkString:
             p.advance();
             return Entity(std::make_shared<String>(p.rawString()), p.line());
-        }
         case JsonParser::tkArrayStart: {
             size_t l = p.line();
             p.advance();
@@ -104,9 +83,9 @@ Entity readEntity(JsonParser &p) {
             p.advance();
             return Entity(v, l);
         }
-        default:throw std::domain_error(JsonParser::toString(p.peek()));
+        default:
+            throw std::domain_error(JsonParser::toString(p.peek()));
     }
-
 }
 
 Entity loadEntity(const char *text) {
@@ -126,26 +105,21 @@ Entity loadEntity(const uint8_t *text, size_t len) {
 
 void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
     switch (n.type()) {
-        case etNull: {
+        case etNull:
             g.encodeNull();
             break;
-        }
-        case etBool: {
+        case etBool:
             g.encodeBool(n.boolValue());
             break;
-        }
-        case etLong: {
+        case etLong:
             g.encodeNumber(n.longValue());
             break;
-        }
-        case etDouble: {
+        case etDouble:
             g.encodeNumber(n.doubleValue());
             break;
-        }
-        case etString: {
+        case etString:
             g.encodeString(n.stringValue());
             break;
-        }
         case etArray: {
             g.arrayStart();
             const Array &v = n.arrayValue();
@@ -154,8 +128,7 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
                 writeEntity(g, *it);
             }
             g.arrayEnd();
-            break;
-        }
+        } break;
         case etObject: {
             g.objectStart();
             const Object &v = n.objectValue();
@@ -164,27 +137,25 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
                 writeEntity(g, it->second);
             }
             g.objectEnd();
-            break;
-        }
+        } break;
     }
 }
 
 void Entity::ensureType(EntityType type) const {
     if (type_ != type) {
-        format msg = format("Invalid type. Expected \"%1%\" actual %2%") %
-            typeToString(type) % typeToString(type_);
+        format msg = format("Invalid type. Expected \"%1%\" actual %2%") % typeToString(type) % typeToString(type_);
         throw Exception(msg);
     }
 }
 
 String Entity::stringValue() const {
     ensureType(etString);
-    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
+    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 String Entity::bytesValue() const {
     ensureType(etString);
-    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
+    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String>>(&value_));
 }
 
 std::string Entity::toString() const {
@@ -211,6 +182,5 @@ std::string Entity::toString() const {
     return result;
 }
 
-}
-}
-
+} // namespace json
+} // namespace avro

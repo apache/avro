@@ -21,16 +21,16 @@
 #include <sstream>
 #include <utility>
 
-#include "ValidSchema.hh"
-#include "Schema.hh"
 #include "Node.hh"
+#include "Schema.hh"
+#include "ValidSchema.hh"
 
-using std::string;
-using std::ostringstream;
-using std::make_pair;
 using boost::format;
+using std::make_pair;
+using std::ostringstream;
 using std::shared_ptr;
 using std::static_pointer_cast;
+using std::string;
 
 namespace avro {
 using SymbolMap = std::map<Name, NodePtr>;
@@ -38,7 +38,7 @@ using SymbolMap = std::map<Name, NodePtr>;
 static bool validate(const NodePtr &node, SymbolMap &symbolMap) {
     if (!node->isValid()) {
         throw Exception(format("Schema is invalid, due to bad node of type %1%")
-                            % node->type());
+                        % node->type());
     }
 
     if (node->hasName()) {
@@ -51,8 +51,7 @@ static bool validate(const NodePtr &node, SymbolMap &symbolMap) {
 
         if (node->type() == AVRO_SYMBOLIC) {
             if (!found) {
-                throw Exception(format("Symbolic name \"%1%\" is unknown") %
-                    node->name());
+                throw Exception(format("Symbolic name \"%1%\" is unknown") % node->name());
             }
 
             shared_ptr<NodeSymbolic> symNode =
@@ -106,14 +105,12 @@ ValidSchema::ValidSchema() : root_(NullSchema().root()) {
     validate(root_);
 }
 
-void
-ValidSchema::setSchema(const Schema &schema) {
+void ValidSchema::setSchema(const Schema &schema) {
     root_ = schema.root();
     validate(root_);
 }
 
-void
-ValidSchema::toJson(std::ostream &os) const {
+void ValidSchema::toJson(std::ostream &os) const {
     root_->printJson(os, 0);
     os << '\n';
 }
@@ -128,8 +125,7 @@ ValidSchema::toJson(bool prettyPrint) const {
     return oss.str();
 }
 
-void
-ValidSchema::toFlatList(std::ostream &os) const {
+void ValidSchema::toFlatList(std::ostream &os) const {
     root_->printBasicInfo(os);
 }
 
@@ -183,4 +179,3 @@ string ValidSchema::compactSchema(const string &schema) {
 }
 
 } // namespace avro
-

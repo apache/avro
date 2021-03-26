@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include "Decoder.hh"
-#include "Zigzag.hh"
 #include "Exception.hh"
+#include "Zigzag.hh"
+#include <memory>
 
 namespace avro {
 
@@ -120,7 +120,8 @@ void BinaryDecoder::decodeString(std::string &value) {
     value.resize(len);
     if (len > 0) {
         in_.readBytes(const_cast<uint8_t *>(
-                          reinterpret_cast<const uint8_t *>(value.c_str())), len);
+                          reinterpret_cast<const uint8_t *>(value.c_str())),
+                      len);
     }
 }
 
@@ -218,5 +219,4 @@ int64_t BinaryDecoder::doDecodeLong() {
     return decodeZigzag64(encoded);
 }
 
-}   // namespace avro
-
+} // namespace avro

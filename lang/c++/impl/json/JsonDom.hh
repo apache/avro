@@ -20,14 +20,14 @@
 #define avro_json_JsonDom_hh__
 
 #include <iostream>
-#include <stdint.h>
 #include <map>
+#include <memory>
+#include <stdint.h>
 #include <string>
 #include <vector>
-#include <memory>
 
-#include "boost/any.hpp"
 #include "Config.hh"
+#include "boost/any.hpp"
 
 namespace avro {
 
@@ -67,6 +67,7 @@ class AVRO_DECL Entity {
     size_t line_; // can't be const else noncopyable...
 
     void ensureType(EntityType) const;
+
 public:
     Entity(size_t line = 0) : type_(etNull), line_(line) {}
     Entity(Bool v, size_t line = 0) : type_(etBool), value_(v), line_(line) {}
@@ -101,12 +102,12 @@ public:
 
     const Array &arrayValue() const {
         ensureType(etArray);
-        return **boost::any_cast<std::shared_ptr<Array> >(&value_);
+        return **boost::any_cast<std::shared_ptr<Array>>(&value_);
     }
 
     const Object &objectValue() const {
         ensureType(etObject);
-        return **boost::any_cast<std::shared_ptr<Object> >(&value_);
+        return **boost::any_cast<std::shared_ptr<Object>>(&value_);
     }
 
     std::string toString() const;
@@ -141,13 +142,13 @@ struct type_traits<std::string> {
 };
 
 template<>
-struct type_traits<std::vector<Entity> > {
+struct type_traits<std::vector<Entity>> {
     static EntityType type() { return etArray; }
     static const char *name() { return "array"; }
 };
 
 template<>
-struct type_traits<std::map<std::string, Entity> > {
+struct type_traits<std::map<std::string, Entity>> {
     static EntityType type() { return etObject; }
     static const char *name() { return "object"; }
 };
@@ -160,9 +161,7 @@ AVRO_DECL Entity loadEntity(const uint8_t *text, size_t len);
 
 void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n);
 
-}
-}
+} // namespace json
+} // namespace avro
 
 #endif
-
-

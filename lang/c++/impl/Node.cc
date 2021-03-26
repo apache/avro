@@ -59,8 +59,7 @@ static bool invalidChar2(char c) {
 }
 
 void Name::check() const {
-    if (!ns_.empty() && (ns_[0] == '.' || ns_[ns_.size() - 1] == '.'
-        || std::find_if(ns_.begin(), ns_.end(), invalidChar1) != ns_.end())) {
+    if (!ns_.empty() && (ns_[0] == '.' || ns_[ns_.size() - 1] == '.' || std::find_if(ns_.begin(), ns_.end(), invalidChar1) != ns_.end())) {
         throw Exception("Invalid namespace: " + ns_);
     }
     if (simpleName_.empty()
@@ -78,7 +77,7 @@ void Node::setLogicalType(LogicalType logicalType) {
 
     // Check that the logical type is applicable to the node type.
     switch (logicalType.type()) {
-        case LogicalType::NONE:break;
+        case LogicalType::NONE: break;
         case LogicalType::DECIMAL: {
             if (type_ != AVRO_BYTES && type_ != AVRO_FIXED) {
                 throw Exception("DECIMAL logical type can annotate "
@@ -93,8 +92,8 @@ void Node::setLogicalType(LogicalType logicalType) {
                         boost::format(
                             "DECIMAL precision %1% is too large for the "
                             "FIXED type of size %2%, precision cannot be "
-                            "larger than %3%") % logicalType.precision() %
-                            fixedSize() % maxPrecision);
+                            "larger than %3%")
+                        % logicalType.precision() % fixedSize() % maxPrecision);
                 }
             }
             if (logicalType.scale() > logicalType.precision()) {
