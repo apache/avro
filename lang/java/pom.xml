@@ -61,7 +61,7 @@
     <zstd-jni.version>1.4.9-1</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.0</archetype-plugin.version>
-    <bundle-plugin-version>4.1.0</bundle-plugin-version>
+    <bundle-plugin-version>5.1.2</bundle-plugin-version>
     <exec-plugin.version>3.0.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
