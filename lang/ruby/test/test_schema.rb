@@ -541,6 +541,76 @@ class TestSchema < Test::Unit::TestCase
                  exception.to_s)
   end
 
+  def test_fixed_decimal_to_include_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "name": "aFixed",
+        "logicalType": "decimal",
+        "size": 4,
+        "precision": 9,
+        "scale": 2
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4,
+        'precision' => 9,
+        'scale' => 2
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_fixed_decimal_to_include_precision_no_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "name": "aFixed",
+        "logicalType": "decimal",
+        "size": 4,
+        "precision": 9
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4,
+        'precision' => 9
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  # Note: this is not valid but validation is not yet implemented
+  def test_fixed_decimal_to_without_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "fixed",
+        "size": 4,
+        "name": "aFixed",
+        "logicalType": "decimal"
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'fixed',
+        'name' => 'aFixed',
+        'logicalType' => 'decimal',
+        'size' => 4
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
   def test_bytes_decimal_to_include_precision_scale
     schema = Avro::Schema.parse <<-SCHEMA
       {
