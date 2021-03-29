@@ -51,13 +51,13 @@ char JsonParser::next() {
 
 void JsonParser::expectToken(Token tk) {
     if (advance() != tk) {
-        if (tk == tkDouble) {
-            if (cur() == tkString
+        if (tk == Token::Double) {
+            if (cur() == Token::String
                 && (sv == "Infinity" || sv == "-Infinity" || sv == "NaN")) {
-                curToken = tkDouble;
+                curToken = Token::Double;
                 dv = sv == "Infinity" ? std::numeric_limits<double>::infinity() : sv == "-Infinity" ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::quiet_NaN();
                 return;
-            } else if (cur() == tkLong) {
+            } else if (cur() == Token::Long) {
                 dv = double(lv);
                 return;
             }
@@ -76,7 +76,7 @@ JsonParser::Token JsonParser::doAdvance() {
         if (curState == stArray0 || curState == stArrayN) {
             curState = stateStack.top();
             stateStack.pop();
-            return tkArrayEnd;
+            return Token::ArrayEnd;
         } else {
             throw unexpected(ch);
         }
@@ -84,7 +84,7 @@ JsonParser::Token JsonParser::doAdvance() {
         if (curState == stObject0 || curState == stObjectN) {
             curState = stateStack.top();
             stateStack.pop();
-            return tkObjectEnd;
+            return Token::ObjectEnd;
         } else {
             throw unexpected(ch);
         }
@@ -117,21 +117,21 @@ JsonParser::Token JsonParser::doAdvance() {
         case '[':
             stateStack.push(curState);
             curState = stArray0;
-            return tkArrayStart;
+            return Token::ArrayStart;
         case '{':
             stateStack.push(curState);
             curState = stObject0;
-            return tkObjectStart;
+            return Token::ObjectStart;
         case '"':
             return tryString();
         case 't':
             bv = true;
-            return tryLiteral("rue", 3, tkBool);
+            return tryLiteral("rue", 3, Token::Bool);
         case 'f':
             bv = false;
-            return tryLiteral("alse", 4, tkBool);
+            return tryLiteral("alse", 4, Token::Bool);
         case 'n':
-            return tryLiteral("ull", 3, tkNull);
+            return tryLiteral("ull", 3, Token::Null);
         default:
             if (isdigit(ch) || ch == '-') {
                 return tryNumber(ch);
@@ -244,6 +244,8 @@ JsonParser::Token JsonParser::tryNumber(char ch) {
                     hasNext = true;
                 }
                 break;
+            default:
+                throw Exception("Unexpected JSON parse state");
         }
         if (state == 1 || state == 2 || state == 4 || state == 7) {
             if (hasNext) {
@@ -252,10 +254,10 @@ JsonParser::Token JsonParser::tryNumber(char ch) {
             std::istringstream iss(sv);
             if (state == 1 || state == 2) {
                 iss >> lv;
-                return tkLong;
+                return Token::Long;
             } else {
                 iss >> dv;
-                return tkDouble;
+                return Token::Double;
             }
         } else {
             if (hasNext) {
@@ -272,7 +274,7 @@ JsonParser::Token JsonParser::tryString() {
     for (;;) {
         char ch = in_.read();
         if (ch == '"') {
-            return tkString;
+            return Token::String;
         } else if (ch == '\\') {
             ch = in_.read();
             switch (ch) {
@@ -294,9 +296,8 @@ JsonParser::Token JsonParser::tryString() {
                     in_.readBytes(reinterpret_cast<uint8_t *>(e), 4);
                     sv.push_back('\\');
                     sv.push_back(ch);
-                    for (int i = 0; i < 4; i++) {
+                    for (char c : e) {
                         n *= 16;
-                        char c = e[i];
                         if (isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
                             sv.push_back(c);
                         } else {
@@ -344,10 +345,10 @@ string JsonParser::decodeString(const string &s, bool binary) {
                 case 'U': {
                     uint32_t n = 0;
                     char e[4];
-                    for (int i = 0; i < 4; i++) {
+                    for (char &i : e) {
                         n *= 16;
                         char c = *++it;
-                        e[i] = c;
+                        i = c;
                         if (isdigit(c)) {
                             n += c - '0';
                         } else if (c >= 'a' && c <= 'f') {
@@ -387,6 +388,8 @@ string JsonParser::decodeString(const string &s, bool binary) {
                     }
                 }
                     continue;
+                default:
+                    throw Exception("Unexpected JSON parse state");
             }
         } else {
             result.push_back(ch);
