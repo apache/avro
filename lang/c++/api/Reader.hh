@@ -19,15 +19,15 @@
 #ifndef avro_Reader_hh__
 #define avro_Reader_hh__
 
-#include <cstdint>
-#include <vector>
 #include <array>
 #include <boost/noncopyable.hpp>
+#include <cstdint>
+#include <vector>
 
 #include "Config.hh"
-#include "Zigzag.hh"
 #include "Types.hh"
 #include "Validator.hh"
+#include "Zigzag.hh"
 #include "buffer/BufferReader.hh"
 
 namespace avro {
@@ -41,13 +41,10 @@ template<class ValidatorType>
 class ReaderImpl : private boost::noncopyable {
 
 public:
+    explicit ReaderImpl(const InputBuffer &buffer) : reader_(buffer) {}
 
-    explicit ReaderImpl(const InputBuffer &buffer) :
-        reader_(buffer) {}
-
-    ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) :
-        validator_(schema),
-        reader_(buffer) {}
+    ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) : validator_(schema),
+                                                                       reader_(buffer) {}
 
     void readValue(Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
@@ -165,7 +162,6 @@ public:
     }
 
 private:
-
     uint64_t readVarInt() {
         uint64_t encoded = 0;
         uint8_t val = 0;
@@ -195,7 +191,6 @@ private:
 
     ValidatorType validator_;
     BufferReader reader_;
-
 };
 
 using Reader = ReaderImpl<NullValidator>;

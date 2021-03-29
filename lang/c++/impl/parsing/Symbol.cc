@@ -16,17 +16,16 @@
  * limitations under the License.
  */
 
-
 #include "Symbol.hh"
 
 namespace avro {
 namespace parsing {
 
-using std::vector;
-using std::string;
 using std::ostringstream;
+using std::string;
+using std::vector;
 
-const char* Symbol::stringValues[] = {
+const char *Symbol::stringValues[] = {
     "TerminalLow",
     "Null",
     "Bool",
@@ -66,11 +65,9 @@ const char* Symbol::stringValues[] = {
     "DefaultStart",
     "DefaultEnd",
     "ImplicitActionHigh",
-    "Error"
-};
+    "Error"};
 
-Symbol Symbol::enumAdjustSymbol(const NodePtr& writer, const NodePtr& reader)
-{
+Symbol Symbol::enumAdjustSymbol(const NodePtr &writer, const NodePtr &reader) {
     vector<string> rs;
     size_t rc = reader->names();
     for (size_t i = 0; i < rc; ++i) {
@@ -84,7 +81,7 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr& writer, const NodePtr& reader)
     vector<string> err;
 
     for (size_t i = 0; i < wc; ++i) {
-        const string& s = writer->nameAt(i);
+        const string &s = writer->nameAt(i);
         vector<string>::const_iterator it = find(rs.begin(), rs.end(), s);
         if (it == rs.end()) {
             int pos = err.size() + 1;
@@ -97,15 +94,15 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr& writer, const NodePtr& reader)
     return Symbol(sEnumAdjust, make_pair(adj, err));
 }
 
-Symbol Symbol::error(const NodePtr& writer, const NodePtr& reader)
-{
+Symbol Symbol::error(const NodePtr &writer, const NodePtr &reader) {
     ostringstream oss;
     oss << "Cannot resolve: " << std::endl;
     writer->printJson(oss, 0);
-    oss << std::endl << "with" << std::endl;
+    oss << std::endl
+        << "with" << std::endl;
     reader->printJson(oss, 0);
     return Symbol(sError, oss.str());
 }
 
-}   // namespace parsing
-}   // namespace avro
+} // namespace parsing
+} // namespace avro

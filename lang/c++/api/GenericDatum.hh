@@ -20,9 +20,9 @@
 #define avro_GenericDatum_hh__
 
 #include <cstdint>
-#include <vector>
 #include <map>
 #include <string>
+#include <vector>
 
 #if __cplusplus >= 201703L
 #include <any>
@@ -79,6 +79,7 @@ protected:
         : type_(t), logicalType_(logicalType), value_(v) {}
 
     void init(const NodePtr &schema);
+
 public:
     /**
      * The avro data type this datum holds.
@@ -170,8 +171,7 @@ public:
     /// std::vector<uint8_t>.
     /// We don't make this explicit constructor because we want to allow automatic conversion
     // NOLINTNEXTLINE(google-explicit-constructor)
-    GenericDatum(const std::vector<uint8_t> &v) :
-        type_(AVRO_BYTES), logicalType_(LogicalType::NONE), value_(v) {}
+    GenericDatum(const std::vector<uint8_t> &v) : type_(AVRO_BYTES), logicalType_(LogicalType::NONE), value_(v) {}
 
     /**
      * Constructs a datum corresponding to the given avro type.
@@ -190,8 +190,7 @@ public:
      * \param v The value for this type.
      */
     template<typename T>
-    GenericDatum(const NodePtr &schema, const T &v) :
-        type_(schema->type()), logicalType_(schema->logicalType()) {
+    GenericDatum(const NodePtr &schema, const T &v) : type_(schema->type()), logicalType_(schema->logicalType()) {
         init(schema);
 #if __cplusplus >= 201703L
         *std::any_cast<T>(&value_) = v;
@@ -215,6 +214,7 @@ public:
 class AVRO_DECL GenericContainer {
     NodePtr schema_;
     static void assertType(const NodePtr &schema, Type type);
+
 protected:
     /**
      * Constructs a container corresponding to the given schema.
@@ -243,8 +243,7 @@ public:
      * and the given value. The schema should be of Avro type union
      * and the value should correspond to one of the branches of the union.
      */
-    explicit GenericUnion(const NodePtr &schema) :
-        GenericContainer(AVRO_UNION, schema), curBranch_(schema->leaves()) {
+    explicit GenericUnion(const NodePtr &schema) : GenericContainer(AVRO_UNION, schema), curBranch_(schema->leaves()) {
         selectBranch(0);
     }
 
@@ -286,6 +285,7 @@ public:
  */
 class AVRO_DECL GenericRecord : public GenericContainer {
     std::vector<GenericDatum> fields_;
+
 public:
     /**
      * Constructs a generic record corresponding to the given schema \p schema,
@@ -389,6 +389,7 @@ public:
     Value &value() {
         return value_;
     }
+
 private:
     Value value_;
 };
@@ -401,7 +402,7 @@ public:
     /**
      * The contents type for the map.
      */
-    typedef std::vector<std::pair<std::string, GenericDatum> > Value;
+    typedef std::vector<std::pair<std::string, GenericDatum>> Value;
 
     /**
      * Constructs a generic map corresponding to the given schema \p schema,
@@ -423,6 +424,7 @@ public:
     Value &value() {
         return value_;
     }
+
 private:
     Value value_;
 };
@@ -446,12 +448,10 @@ public:
      * Constructs a generic enum corresponding to the given schema \p schema,
      * which should be of Avro type enum.
      */
-    explicit GenericEnum(const NodePtr &schema) :
-        GenericContainer(AVRO_ENUM, schema), value_(0) {
+    explicit GenericEnum(const NodePtr &schema) : GenericContainer(AVRO_ENUM, schema), value_(0) {
     }
 
-    GenericEnum(const NodePtr &schema, const std::string &symbol) :
-        GenericContainer(AVRO_ENUM, schema), value_(index(schema, symbol)) {
+    GenericEnum(const NodePtr &schema, const std::string &symbol) : GenericContainer(AVRO_ENUM, schema), value_(index(schema, symbol)) {
     }
 
     /**
@@ -511,6 +511,7 @@ public:
  */
 class AVRO_DECL GenericFixed : public GenericContainer {
     std::vector<uint8_t> value_;
+
 public:
     /**
      * Constructs a generic enum corresponding to the given schema \p schema,
@@ -539,12 +540,14 @@ public:
 
 inline Type GenericDatum::type() const {
     return (type_ == AVRO_UNION) ?
-           #if __cplusplus >= 201703L
-           std::any_cast<GenericUnion>(&value_)->datum().type() :
-           #else
-           boost::any_cast<GenericUnion>(&value_)->datum().type() :
-           #endif
-           type_;
+#if __cplusplus >= 201703L
+                                 std::any_cast<GenericUnion>(&value_)->datum().type()
+                                 :
+#else
+                                 boost::any_cast<GenericUnion>(&value_)->datum().type()
+                                 :
+#endif
+                                 type_;
 }
 
 inline LogicalType GenericDatum::logicalType() const {
@@ -554,24 +557,24 @@ inline LogicalType GenericDatum::logicalType() const {
 template<typename T>
 T &GenericDatum::value() {
     return (type_ == AVRO_UNION) ?
-           #if __cplusplus >= 201703L
-           std::any_cast<GenericUnion>(&value_)->datum().value<T>() :
-        *std::any_cast<T>(&value_);
-           #else
-           boost::any_cast<GenericUnion>(&value_)->datum().value<T>() :
-           *boost::any_cast<T>(&value_);
+#if __cplusplus >= 201703L
+                                 std::any_cast<GenericUnion>(&value_)->datum().value<T>()
+                                 : *std::any_cast<T>(&value_);
+#else
+                                 boost::any_cast<GenericUnion>(&value_)->datum().value<T>()
+                                 : *boost::any_cast<T>(&value_);
 #endif
 }
 
 template<typename T>
 const T &GenericDatum::value() const {
     return (type_ == AVRO_UNION) ?
-           #if __cplusplus >= 201703L
-           std::any_cast<GenericUnion>(&value_)->datum().value<T>() :
-        *std::any_cast<T>(&value_);
-           #else
-           boost::any_cast<GenericUnion>(&value_)->datum().value<T>() :
-           *boost::any_cast<T>(&value_);
+#if __cplusplus >= 201703L
+                                 std::any_cast<GenericUnion>(&value_)->datum().value<T>()
+                                 : *std::any_cast<T>(&value_);
+#else
+                                 boost::any_cast<GenericUnion>(&value_)->datum().value<T>()
+                                 : *boost::any_cast<T>(&value_);
 #endif
 }
 
@@ -591,5 +594,5 @@ inline void GenericDatum::selectBranch(size_t branch) {
 #endif
 }
 
-}   // namespace avro
+} // namespace avro
 #endif // avro_GenericDatum_hh__

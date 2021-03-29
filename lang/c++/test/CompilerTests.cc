@@ -27,8 +27,7 @@
 // Assert that empty defaults don't make json schema compilation violate bounds
 // checks, as they did in AVRO-1853. Please note that on Linux bounds are only
 // checked in Debug builds (CMAKE_BUILD_TYPE=Debug).
-void testEmptyBytesDefault()
-{
+void testEmptyBytesDefault() {
     std::string input = "{\n\
     \"type\": \"record\",\n\
     \"name\": \"testrecord\",\n\
@@ -60,8 +59,7 @@ void testEmptyBytesDefault()
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
-void test2dArray()
-{
+void test2dArray() {
     std::string input = "{\n\
     \"type\": \"array\",\n\
     \"items\": {\n\
@@ -82,15 +80,13 @@ void test2dArray()
     std::ostringstream actual;
     schema.toJson(actual);
     BOOST_CHECK_EQUAL(expected, actual.str());
-
 }
 
-boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
+boost::unit_test::test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
     using namespace boost::unit_test;
 
-    test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
+    test_suite *ts = BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
     ts->add(BOOST_TEST_CASE(&testEmptyBytesDefault));
     ts->add(BOOST_TEST_CASE(&test2dArray));
     return ts;

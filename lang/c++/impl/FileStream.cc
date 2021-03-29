@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include <fstream>
 #include "Stream.hh"
+#include <fstream>
 #ifndef _WIN32
-#include "unistd.h"
 #include "fcntl.h"
+#include "unistd.h"
 #include <cerrno>
 
 #ifndef O_BINARY
@@ -34,9 +34,9 @@
 #endif
 #endif
 
-using std::unique_ptr;
 using std::istream;
 using std::ostream;
+using std::unique_ptr;
 
 namespace avro {
 namespace {
@@ -44,14 +44,12 @@ struct BufferCopyIn {
     virtual ~BufferCopyIn() = default;
     virtual void seek(size_t len) = 0;
     virtual bool read(uint8_t *b, size_t toRead, size_t &actual) = 0;
-
 };
 
 struct FileBufferCopyIn : public BufferCopyIn {
 #ifdef _WIN32
     HANDLE h_;
-    FileBufferCopyIn(const char* filename) :
-        h_(::CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+    FileBufferCopyIn(const char *filename) : h_(::CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -67,9 +65,9 @@ struct FileBufferCopyIn : public BufferCopyIn {
         }
     }
 
-    bool read(uint8_t* b, size_t toRead, size_t& actual) {
+    bool read(uint8_t *b, size_t toRead, size_t &actual) {
         DWORD dw = 0;
-        if (! ::ReadFile(h_, b, toRead, &dw, NULL)) {
+        if (!::ReadFile(h_, b, toRead, &dw, NULL)) {
             throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
         }
         actual = static_cast<size_t>(dw);
@@ -78,11 +76,9 @@ struct FileBufferCopyIn : public BufferCopyIn {
 #else
     const int fd_;
 
-    explicit FileBufferCopyIn(const char *filename) :
-        fd_(open(filename, O_RDONLY | O_BINARY)) {
+    explicit FileBufferCopyIn(const char *filename) : fd_(open(filename, O_RDONLY | O_BINARY)) {
         if (fd_ < 0) {
-            throw Exception(boost::format("Cannot open file: %1%") %
-                ::strerror(errno));
+            throw Exception(boost::format("Cannot open file: %1%") % ::strerror(errno));
         }
     }
 
@@ -93,8 +89,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
     void seek(size_t len) override {
         off_t r = ::lseek(fd_, len, SEEK_CUR);
         if (r == static_cast<off_t>(-1)) {
-            throw Exception(boost::format("Cannot skip file: %1%") %
-                strerror(errno));
+            throw Exception(boost::format("Cannot skip file: %1%") % strerror(errno));
         }
     }
 
@@ -107,7 +102,6 @@ struct FileBufferCopyIn : public BufferCopyIn {
         return false;
     }
 #endif
-
 };
 
 struct IStreamBufferCopyIn : public BufferCopyIn {
@@ -130,7 +124,6 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
         actual = static_cast<size_t>(is_.gcount());
         return (!is_.eof() || actual != 0);
     }
-
 };
 
 struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
@@ -154,7 +147,7 @@ struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
     }
 };
 
-}
+} // namespace
 
 class BufferCopyInInputStream : public SeekableInputStream {
     const size_t bufferSize_;
@@ -218,13 +211,12 @@ class BufferCopyInInputStream : public SeekableInputStream {
     }
 
 public:
-    BufferCopyInInputStream(unique_ptr<BufferCopyIn> in, size_t bufferSize) :
-        bufferSize_(bufferSize),
-        buffer_(new uint8_t[bufferSize]),
-        in_(std::move(in)),
-        byteCount_(0),
-        next_(buffer_),
-        available_(0) {}
+    BufferCopyInInputStream(unique_ptr<BufferCopyIn> in, size_t bufferSize) : bufferSize_(bufferSize),
+                                                                              buffer_(new uint8_t[bufferSize]),
+                                                                              in_(std::move(in)),
+                                                                              byteCount_(0),
+                                                                              next_(buffer_),
+                                                                              available_(0) {}
 
     ~BufferCopyInInputStream() override {
         delete[] buffer_;
@@ -240,8 +232,7 @@ struct BufferCopyOut {
 struct FileBufferCopyOut : public BufferCopyOut {
 #ifdef _WIN32
     HANDLE h_;
-    FileBufferCopyOut(const char* filename) :
-        h_(::CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+    FileBufferCopyOut(const char *filename) : h_(::CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -251,10 +242,10 @@ struct FileBufferCopyOut : public BufferCopyOut {
         ::CloseHandle(h_);
     }
 
-    void write(const uint8_t* b, size_t len) {
+    void write(const uint8_t *b, size_t len) {
         while (len > 0) {
             DWORD dw = 0;
-            if (! ::WriteFile(h_, b, len, &dw, NULL)) {
+            if (!::WriteFile(h_, b, len, &dw, NULL)) {
                 throw Exception(boost::format("Cannot read file: %1%") % ::GetLastError());
             }
             b += dw;
@@ -264,12 +255,10 @@ struct FileBufferCopyOut : public BufferCopyOut {
 #else
     const int fd_;
 
-    explicit FileBufferCopyOut(const char *filename) :
-        fd_(::open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644)) {
+    explicit FileBufferCopyOut(const char *filename) : fd_(::open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644)) {
 
         if (fd_ < 0) {
-            throw Exception(boost::format("Cannot open file: %1%") %
-                ::strerror(errno));
+            throw Exception(boost::format("Cannot open file: %1%") % ::strerror(errno));
         }
     }
 
@@ -279,12 +268,10 @@ struct FileBufferCopyOut : public BufferCopyOut {
 
     void write(const uint8_t *b, size_t len) override {
         if (::write(fd_, b, len) < 0) {
-            throw Exception(boost::format("Cannot write file: %1%") %
-                ::strerror(errno));
+            throw Exception(boost::format("Cannot write file: %1%") % ::strerror(errno));
         }
     }
 #endif
-
 };
 
 struct OStreamBufferCopyOut : public BufferCopyOut {
@@ -296,10 +283,9 @@ struct OStreamBufferCopyOut : public BufferCopyOut {
     void write(const uint8_t *b, size_t len) override {
         os_.write(reinterpret_cast<const char *>(b), len);
     }
-
 };
 
-}
+} // namespace
 
 class BufferCopyOutputStream : public OutputStream {
     size_t bufferSize_;
@@ -339,12 +325,11 @@ class BufferCopyOutputStream : public OutputStream {
     }
 
 public:
-    BufferCopyOutputStream(unique_ptr<BufferCopyOut> out, size_t bufferSize) :
-        bufferSize_(bufferSize),
-        buffer_(new uint8_t[bufferSize]),
-        out_(std::move(out)),
-        next_(buffer_),
-        available_(bufferSize_), byteCount_(0) {}
+    BufferCopyOutputStream(unique_ptr<BufferCopyOut> out, size_t bufferSize) : bufferSize_(bufferSize),
+                                                                               buffer_(new uint8_t[bufferSize]),
+                                                                               out_(std::move(out)),
+                                                                               next_(buffer_),
+                                                                               available_(bufferSize_), byteCount_(0) {}
 
     ~BufferCopyOutputStream() override {
         delete[] buffer_;
@@ -387,4 +372,4 @@ unique_ptr<OutputStream> ostreamOutputStream(ostream &os,
     return unique_ptr<OutputStream>(new BufferCopyOutputStream(std::move(out), bufferSize));
 }
 
-}   // namespace avro
+} // namespace avro

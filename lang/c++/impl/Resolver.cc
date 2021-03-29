@@ -17,20 +17,20 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include "Resolver.hh"
+#include "AvroTraits.hh"
 #include "Layout.hh"
 #include "NodeImpl.hh"
-#include "ValidSchema.hh"
 #include "Reader.hh"
-#include "AvroTraits.hh"
+#include "ValidSchema.hh"
+#include <memory>
 
 namespace avro {
 using std::unique_ptr;
 
 class ResolverFactory;
 typedef std::shared_ptr<Resolver> ResolverPtr;
-typedef std::vector<std::unique_ptr<Resolver> > ResolverPtrVector;
+typedef std::vector<std::unique_ptr<Resolver>> ResolverPtrVector;
 
 // #define DEBUG_VERBOSE
 
@@ -49,9 +49,7 @@ NoOp noop;
 template<typename T>
 class PrimitiveSkipper : public Resolver {
 public:
-
-    PrimitiveSkipper() :
-        Resolver() {}
+    PrimitiveSkipper() : Resolver() {}
 
     void parse(Reader &reader, uint8_t *address) const override {
         T val;
@@ -63,40 +61,34 @@ public:
 template<typename T>
 class PrimitiveParser : public Resolver {
 public:
-
-    explicit PrimitiveParser(const PrimitiveLayout &offset) :
-        Resolver(),
-        offset_(offset.offset()) {}
+    explicit PrimitiveParser(const PrimitiveLayout &offset) : Resolver(),
+                                                              offset_(offset.offset()) {}
 
     void parse(Reader &reader, uint8_t *address) const override {
-        T *location = reinterpret_cast<T *> (address + offset_);
+        T *location = reinterpret_cast<T *>(address + offset_);
         reader.readValue(*location);
         DEBUG_OUT("Reading " << *location);
     }
 
 private:
-
     size_t offset_;
 };
 
 template<typename WT, typename RT>
 class PrimitivePromoter : public Resolver {
 public:
-
-    explicit PrimitivePromoter(const PrimitiveLayout &offset) :
-        Resolver(),
-        offset_(offset.offset()) {}
+    explicit PrimitivePromoter(const PrimitiveLayout &offset) : Resolver(),
+                                                                offset_(offset.offset()) {}
 
     void parse(Reader &reader, uint8_t *address) const override {
         parseIt<WT>(reader, address);
     }
 
 private:
-
     void parseIt(Reader &reader, uint8_t *address, const std::true_type &) const {
         WT val;
         reader.readValue(val);
-        RT *location = reinterpret_cast<RT *> (address + offset_);
+        RT *location = reinterpret_cast<RT *>(address + offset_);
         *location = static_cast<RT>(val);
         DEBUG_OUT("Promoting " << val);
     }
@@ -112,11 +104,9 @@ private:
 };
 
 template<>
-class PrimitiveSkipper<std::vector<uint8_t> > : public Resolver {
+class PrimitiveSkipper<std::vector<uint8_t>> : public Resolver {
 public:
-
-    PrimitiveSkipper() :
-        Resolver() {}
+    PrimitiveSkipper() : Resolver() {}
 
     void parse(Reader &reader, uint8_t *address) const override {
         std::vector<uint8_t> val;
@@ -126,27 +116,23 @@ public:
 };
 
 template<>
-class PrimitiveParser<std::vector<uint8_t> > : public Resolver {
+class PrimitiveParser<std::vector<uint8_t>> : public Resolver {
 public:
-
-    explicit PrimitiveParser(const PrimitiveLayout &offset) :
-        Resolver(),
-        offset_(offset.offset()) {}
+    explicit PrimitiveParser(const PrimitiveLayout &offset) : Resolver(),
+                                                              offset_(offset.offset()) {}
 
     void parse(Reader &reader, uint8_t *address) const override {
-        auto *location = reinterpret_cast<std::vector<uint8_t> *> (address + offset_);
+        auto *location = reinterpret_cast<std::vector<uint8_t> *>(address + offset_);
         reader.readBytes(*location);
         DEBUG_OUT("Reading bytes");
     }
 
 private:
-
     size_t offset_;
 };
 
 class RecordSkipper : public Resolver {
 public:
-
     RecordSkipper(ResolverFactory &factory, const NodePtr &writer);
 
     void parse(Reader &reader, uint8_t *address) const override {
@@ -160,14 +146,11 @@ public:
     }
 
 protected:
-
     ResolverPtrVector resolvers_;
-
 };
 
 class RecordParser : public Resolver {
 public:
-
     void parse(Reader &reader, uint8_t *address) const override {
         DEBUG_OUT("Reading record");
 
@@ -181,14 +164,11 @@ public:
     RecordParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
 protected:
-
     ResolverPtrVector resolvers_;
-
 };
 
 class MapSkipper : public Resolver {
 public:
-
     MapSkipper(ResolverFactory &factory, const NodePtr &writer);
 
     void parse(Reader &reader, uint8_t *address) const override {
@@ -206,13 +186,11 @@ public:
     }
 
 protected:
-
     ResolverPtr resolver_;
 };
 
 class MapParser : public Resolver {
 public:
-
     typedef uint8_t *(*GenericMapSetter)(uint8_t *map, const std::string &key);
 
     MapParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
@@ -223,7 +201,7 @@ public:
         uint8_t *mapAddress = address + offset_;
 
         std::string key;
-        auto *setter = reinterpret_cast<GenericMapSetter *> (address + setFuncOffset_);
+        auto *setter = reinterpret_cast<GenericMapSetter *>(address + setFuncOffset_);
 
         int64_t size;
         do {
@@ -239,7 +217,6 @@ public:
     }
 
 protected:
-
     ResolverPtr resolver_;
     size_t offset_;
     size_t setFuncOffset_;
@@ -247,7 +224,6 @@ protected:
 
 class ArraySkipper : public Resolver {
 public:
-
     ArraySkipper(ResolverFactory &factory, const NodePtr &writer);
 
     void parse(Reader &reader, uint8_t *address) const override {
@@ -263,7 +239,6 @@ public:
     }
 
 protected:
-
     ResolverPtr resolver_;
 };
 
@@ -271,7 +246,6 @@ typedef uint8_t *(*GenericArraySetter)(uint8_t *array);
 
 class ArrayParser : public Resolver {
 public:
-
     ArrayParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
     void parse(Reader &reader, uint8_t *address) const override {
@@ -279,7 +253,7 @@ public:
 
         uint8_t *arrayAddress = address + offset_;
 
-        auto *setter = reinterpret_cast<GenericArraySetter *> (address + setFuncOffset_);
+        auto *setter = reinterpret_cast<GenericArraySetter *>(address + setFuncOffset_);
 
         int64_t size;
         do {
@@ -293,9 +267,7 @@ public:
     }
 
 protected:
-
-    ArrayParser() :
-        Resolver(), offset_(0), setFuncOffset_(0) {}
+    ArrayParser() : Resolver(), offset_(0), setFuncOffset_(0) {}
 
     ResolverPtr resolver_;
     size_t offset_;
@@ -304,9 +276,7 @@ protected:
 
 class EnumSkipper : public Resolver {
 public:
-
-    EnumSkipper(ResolverFactory &factory, const NodePtr &writer) :
-        Resolver() {}
+    EnumSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {}
 
     void parse(Reader &reader, uint8_t *address) const override {
         int64_t val = reader.readEnum();
@@ -316,15 +286,13 @@ public:
 
 class EnumParser : public Resolver {
 public:
-
     enum EnumRepresentation {
         VAL
     };
 
-    EnumParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
-        Resolver(),
-        offset_(offsets.at(0).offset()),
-        readerSize_(reader->names()) {
+    EnumParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) : Resolver(),
+                                                                                                                        offset_(offsets.at(0).offset()),
+                                                                                                                        readerSize_(reader->names()) {
         const size_t writerSize = writer->names();
 
         mapping_.reserve(writerSize);
@@ -342,23 +310,20 @@ public:
         assert(static_cast<size_t>(val) < mapping_.size());
 
         if (mapping_[val] < readerSize_) {
-            auto *location = reinterpret_cast<EnumRepresentation *> (address + offset_);
+            auto *location = reinterpret_cast<EnumRepresentation *>(address + offset_);
             *location = static_cast<EnumRepresentation>(mapping_[val]);
             DEBUG_OUT("Setting enum" << *location);
         }
     }
 
 protected:
-
     size_t offset_;
     size_t readerSize_;
     std::vector<size_t> mapping_;
-
 };
 
 class UnionSkipper : public Resolver {
 public:
-
     UnionSkipper(ResolverFactory &factory, const NodePtr &writer);
 
     void parse(Reader &reader, uint8_t *address) const override {
@@ -368,13 +333,11 @@ public:
     }
 
 protected:
-
     ResolverPtrVector resolvers_;
 };
 
 class UnionParser : public Resolver {
 public:
-
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
     UnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
@@ -385,15 +348,14 @@ public:
         auto *readerChoice = reinterpret_cast<int64_t *>(address + choiceOffset_);
 
         *readerChoice = choiceMapping_[writerChoice];
-        auto *setter = reinterpret_cast<GenericUnionSetter *> (address + setFuncOffset_);
-        auto *value = reinterpret_cast<uint8_t *> (address + offset_);
+        auto *setter = reinterpret_cast<GenericUnionSetter *>(address + setFuncOffset_);
+        auto *value = reinterpret_cast<uint8_t *>(address + offset_);
         uint8_t *location = (*setter)(value, *readerChoice);
 
         resolvers_[writerChoice]->parse(reader, location);
     }
 
 protected:
-
     ResolverPtrVector resolvers_;
     std::vector<int64_t> choiceMapping_;
     size_t offset_;
@@ -403,7 +365,6 @@ protected:
 
 class UnionToNonUnionParser : public Resolver {
 public:
-
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
     UnionToNonUnionParser(ResolverFactory &factory,
@@ -418,13 +379,11 @@ public:
     }
 
 protected:
-
     ResolverPtrVector resolvers_;
 };
 
 class NonUnionToUnionParser : public Resolver {
 public:
-
     typedef uint8_t *(*GenericUnionSetter)(uint8_t *, int64_t);
 
     NonUnionToUnionParser(ResolverFactory &factory,
@@ -437,15 +396,14 @@ public:
 
         auto *choice = reinterpret_cast<int64_t *>(address + choiceOffset_);
         *choice = choice_;
-        auto *setter = reinterpret_cast<GenericUnionSetter *> (address + setFuncOffset_);
-        auto *value = reinterpret_cast<uint8_t *> (address + offset_);
+        auto *setter = reinterpret_cast<GenericUnionSetter *>(address + setFuncOffset_);
+        auto *value = reinterpret_cast<uint8_t *>(address + offset_);
         uint8_t *location = (*setter)(value, choice_);
 
         resolver_->parse(reader, location);
     }
 
 protected:
-
     ResolverPtr resolver_;
     size_t choice_;
     size_t offset_;
@@ -455,9 +413,7 @@ protected:
 
 class FixedSkipper : public Resolver {
 public:
-
-    FixedSkipper(ResolverFactory &factory, const NodePtr &writer) :
-        Resolver() {
+    FixedSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {
         size_ = writer->fixedSize();
     }
 
@@ -468,31 +424,25 @@ public:
     }
 
 protected:
-
     int size_;
-
 };
 
 class FixedParser : public Resolver {
 public:
-
-    FixedParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
-        Resolver() {
+    FixedParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) : Resolver() {
         size_ = writer->fixedSize();
         offset_ = offsets.at(0).offset();
     }
 
     void parse(Reader &reader, uint8_t *address) const override {
         DEBUG_OUT("Reading fixed");
-        auto *location = reinterpret_cast<uint8_t *> (address + offset_);
+        auto *location = reinterpret_cast<uint8_t *>(address + offset_);
         reader.readFixed(location, size_);
     }
 
 protected:
-
     int size_;
     size_t offset_;
-
 };
 
 class ResolverFactory : private boost::noncopyable {
@@ -562,22 +512,18 @@ class ResolverFactory : private boost::noncopyable {
     }
 
 public:
-
     unique_ptr<Resolver>
     construct(const NodePtr &writer, const NodePtr &reader, const Layout &offset) {
 
-        typedef unique_ptr<Resolver>
-        (ResolverFactory::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Layout &offset);
+        typedef unique_ptr<Resolver> (ResolverFactory::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Layout &offset);
 
-        NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
-                                resolveSymbol(writer) : writer;
+        NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ? resolveSymbol(writer) : writer;
 
-        NodePtr currentReader = (reader->type() == AVRO_SYMBOLIC) ?
-                                resolveSymbol(reader) : reader;
+        NodePtr currentReader = (reader->type() == AVRO_SYMBOLIC) ? resolveSymbol(reader) : reader;
 
         static const BuilderFunc funcs[] = {
             &ResolverFactory::constructPrimitive<std::string>,
-            &ResolverFactory::constructPrimitive<std::vector<uint8_t> >,
+            &ResolverFactory::constructPrimitive<std::vector<uint8_t>>,
             &ResolverFactory::constructPrimitive<int32_t>,
             &ResolverFactory::constructPrimitive<int64_t>,
             &ResolverFactory::constructPrimitive<float>,
@@ -589,8 +535,7 @@ public:
             &ResolverFactory::constructCompound<ArrayParser, ArraySkipper>,
             &ResolverFactory::constructCompound<MapParser, MapSkipper>,
             &ResolverFactory::constructCompound<UnionParser, UnionSkipper>,
-            &ResolverFactory::constructCompound<FixedParser, FixedSkipper>
-        };
+            &ResolverFactory::constructCompound<FixedParser, FixedSkipper>};
 
         static_assert((sizeof(funcs) / sizeof(BuilderFunc)) == (AVRO_NUM_TYPES),
                       "Invalid number of builder functions");
@@ -606,12 +551,11 @@ public:
 
         typedef unique_ptr<Resolver> (ResolverFactory::*BuilderFunc)(const NodePtr &writer);
 
-        NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
-                                writer->leafAt(0) : writer;
+        NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ? writer->leafAt(0) : writer;
 
         static const BuilderFunc funcs[] = {
             &ResolverFactory::constructPrimitiveSkipper<std::string>,
-            &ResolverFactory::constructPrimitiveSkipper<std::vector<uint8_t> >,
+            &ResolverFactory::constructPrimitiveSkipper<std::vector<uint8_t>>,
             &ResolverFactory::constructPrimitiveSkipper<int32_t>,
             &ResolverFactory::constructPrimitiveSkipper<int64_t>,
             &ResolverFactory::constructPrimitiveSkipper<float>,
@@ -623,8 +567,7 @@ public:
             &ResolverFactory::constructCompoundSkipper<ArraySkipper>,
             &ResolverFactory::constructCompoundSkipper<MapSkipper>,
             &ResolverFactory::constructCompoundSkipper<UnionSkipper>,
-            &ResolverFactory::constructCompoundSkipper<FixedSkipper>
-        };
+            &ResolverFactory::constructCompoundSkipper<FixedSkipper>};
 
         static_assert((sizeof(funcs) / sizeof(BuilderFunc)) == (AVRO_NUM_TYPES),
                       "Invalid number of builder functions");
@@ -636,8 +579,7 @@ public:
     }
 };
 
-RecordSkipper::RecordSkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver() {
+RecordSkipper::RecordSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
     for (size_t i = 0; i < leaves; ++i) {
@@ -649,8 +591,7 @@ RecordSkipper::RecordSkipper(ResolverFactory &factory, const NodePtr &writer) :
 RecordParser::RecordParser(ResolverFactory &factory,
                            const NodePtr &writer,
                            const NodePtr &reader,
-                           const CompoundLayout &offsets) :
-    Resolver() {
+                           const CompoundLayout &offsets) : Resolver() {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
     for (size_t i = 0; i < leaves; ++i) {
@@ -671,34 +612,29 @@ RecordParser::RecordParser(ResolverFactory &factory,
     }
 }
 
-MapSkipper::MapSkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver(),
-    resolver_(factory.skipper(writer->leafAt(1))) {}
+MapSkipper::MapSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver(),
+                                                                          resolver_(factory.skipper(writer->leafAt(1))) {}
 
 MapParser::MapParser(ResolverFactory &factory,
                      const NodePtr &writer,
                      const NodePtr &reader,
-                     const CompoundLayout &offsets) :
-    Resolver(),
-    resolver_(factory.construct(writer->leafAt(1), reader->leafAt(1), offsets.at(1))),
-    offset_(offsets.offset()),
-    setFuncOffset_(offsets.at(0).offset()) {}
+                     const CompoundLayout &offsets) : Resolver(),
+                                                      resolver_(factory.construct(writer->leafAt(1), reader->leafAt(1), offsets.at(1))),
+                                                      offset_(offsets.offset()),
+                                                      setFuncOffset_(offsets.at(0).offset()) {}
 
-ArraySkipper::ArraySkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver(),
-    resolver_(factory.skipper(writer->leafAt(0))) {}
+ArraySkipper::ArraySkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver(),
+                                                                              resolver_(factory.skipper(writer->leafAt(0))) {}
 
 ArrayParser::ArrayParser(ResolverFactory &factory,
                          const NodePtr &writer,
                          const NodePtr &reader,
-                         const CompoundLayout &offsets) :
-    Resolver(),
-    resolver_(factory.construct(writer->leafAt(0), reader->leafAt(0), offsets.at(1))),
-    offset_(offsets.offset()),
-    setFuncOffset_(offsets.at(0).offset()) {}
+                         const CompoundLayout &offsets) : Resolver(),
+                                                          resolver_(factory.construct(writer->leafAt(0), reader->leafAt(0), offsets.at(1))),
+                                                          offset_(offsets.offset()),
+                                                          setFuncOffset_(offsets.at(0).offset()) {}
 
-UnionSkipper::UnionSkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver() {
+UnionSkipper::UnionSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
     for (size_t i = 0; i < leaves; ++i) {
@@ -737,16 +673,15 @@ checkUnionMatch(const NodePtr &writer, const NodePtr &reader, size_t &index) {
     return bestMatch;
 }
 
-}
+} // namespace
 
 UnionParser::UnionParser(ResolverFactory &factory,
                          const NodePtr &writer,
                          const NodePtr &reader,
-                         const CompoundLayout &offsets) :
-    Resolver(),
-    offset_(offsets.offset()),
-    choiceOffset_(offsets.at(0).offset()),
-    setFuncOffset_(offsets.at(1).offset()) {
+                         const CompoundLayout &offsets) : Resolver(),
+                                                          offset_(offsets.offset()),
+                                                          choiceOffset_(offsets.at(0).offset()),
+                                                          setFuncOffset_(offsets.at(1).offset()) {
 
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
@@ -774,12 +709,11 @@ UnionParser::UnionParser(ResolverFactory &factory,
 NonUnionToUnionParser::NonUnionToUnionParser(ResolverFactory &factory,
                                              const NodePtr &writer,
                                              const NodePtr &reader,
-                                             const CompoundLayout &offsets) :
-    Resolver(),
-    offset_(offsets.offset()),
-    choice_(0),
-    choiceOffset_(offsets.at(0).offset()),
-    setFuncOffset_(offsets.at(1).offset()) {
+                                             const CompoundLayout &offsets) : Resolver(),
+                                                                              offset_(offsets.offset()),
+                                                                              choice_(0),
+                                                                              choiceOffset_(offsets.at(0).offset()),
+                                                                              setFuncOffset_(offsets.at(1).offset()) {
 #ifndef NDEBUG
     SchemaResolution bestMatch =
 #endif
@@ -791,8 +725,7 @@ NonUnionToUnionParser::NonUnionToUnionParser(ResolverFactory &factory,
 UnionToNonUnionParser::UnionToNonUnionParser(ResolverFactory &factory,
                                              const NodePtr &writer,
                                              const NodePtr &reader,
-                                             const Layout &offsets) :
-    Resolver() {
+                                             const Layout &offsets) : Resolver() {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
     for (size_t i = 0; i < leaves; ++i) {

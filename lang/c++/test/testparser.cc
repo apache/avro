@@ -22,16 +22,14 @@
 #include "Compiler.hh"
 #include "ValidSchema.hh"
 
-int main()
-{
+int main() {
     int ret = 0;
     try {
         avro::ValidSchema schema;
         avro::compileJsonSchema(std::cin, schema);
 
         schema.toJson(std::cout);
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
         std::cerr << "Failed to parse or compile schema: " << e.what() << std::endl;
         ret = 1;
     }

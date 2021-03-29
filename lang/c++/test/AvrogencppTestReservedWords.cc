@@ -19,8 +19,8 @@
 
 #include "Compiler.hh"
 
-#include <fstream>
 #include <boost/test/included/unit_test_framework.hpp>
+#include <fstream>
 
 #ifdef min
 #undef min
@@ -30,39 +30,34 @@
 #undef max
 #endif
 
-
-using std::unique_ptr;
+using std::ifstream;
 using std::map;
 using std::string;
+using std::unique_ptr;
 using std::vector;
-using std::ifstream;
 
-using avro::ValidSchema;
-using avro::OutputStream;
-using avro::InputStream;
-using avro::Encoder;
+using avro::binaryDecoder;
+using avro::binaryEncoder;
 using avro::Decoder;
-using avro::EncoderPtr;
 using avro::DecoderPtr;
+using avro::Encoder;
+using avro::EncoderPtr;
+using avro::InputStream;
 using avro::memoryInputStream;
 using avro::memoryOutputStream;
-using avro::binaryEncoder;
-using avro::validatingEncoder;
-using avro::binaryDecoder;
+using avro::OutputStream;
 using avro::validatingDecoder;
+using avro::validatingEncoder;
+using avro::ValidSchema;
 
-
-void testCppReservedWords()
-{
+void testCppReservedWords() {
     // Simply including the generated header is enough to test this.
     // the header will not compile if reserved words were used
 }
 
-boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[])
-{
-    boost::unit_test::test_suite* ts = BOOST_TEST_SUITE("Code generator tests");
+boost::unit_test::test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
+    boost::unit_test::test_suite *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testCppReservedWords));
     return ts;
 }
-

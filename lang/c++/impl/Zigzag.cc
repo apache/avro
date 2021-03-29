@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 #include "Zigzag.hh"
 
 namespace avro {

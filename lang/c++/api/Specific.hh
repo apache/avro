@@ -19,18 +19,18 @@
 #ifndef avro_Codec_hh__
 #define avro_Codec_hh__
 
+#include "array"
+#include <algorithm>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <algorithm>
-#include "array"
 
 #include "boost/blank.hpp"
 
 #include "AvroTraits.hh"
 #include "Config.hh"
-#include "Encoder.hh"
 #include "Decoder.hh"
+#include "Encoder.hh"
 
 /**
  * A bunch of templates and specializations for encoding and decoding
@@ -190,7 +190,7 @@ struct codec_traits<std::string> {
  * codec_traits for Avro bytes.
  */
 template<>
-struct codec_traits<std::vector<uint8_t> > {
+struct codec_traits<std::vector<uint8_t>> {
     /**
      * Encodes a given value.
      */
@@ -210,7 +210,7 @@ struct codec_traits<std::vector<uint8_t> > {
  * codec_traits for Avro fixed.
  */
 template<size_t N>
-struct codec_traits<std::array<uint8_t, N> > {
+struct codec_traits<std::array<uint8_t, N>> {
     /**
      * Encodes a given value.
      */
@@ -232,7 +232,7 @@ struct codec_traits<std::array<uint8_t, N> > {
  * codec_traits for Avro arrays.
  */
 template<typename T>
-struct codec_traits<std::vector<T> > {
+struct codec_traits<std::vector<T>> {
     /**
      * Encodes a given value.
      */
@@ -281,7 +281,7 @@ struct codec_traits<std::conditional<avro::is_not_defined<bool_codec_traits>::va
  * codec_traits for Avro maps.
  */
 template<typename T>
-struct codec_traits<std::map<std::string, T> > {
+struct codec_traits<std::map<std::string, T>> {
     /**
      * Encodes a given value.
      */
@@ -352,9 +352,6 @@ void decode(Decoder &d, T &t) {
     codec_traits<T>::decode(d, t);
 }
 
-}   // namespace avro
+} // namespace avro
 
 #endif // avro_Codec_hh__
-
-
-

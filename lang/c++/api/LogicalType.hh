@@ -60,6 +60,6 @@ private:
     int scale_;
 };
 
-}  // namespace avro
+} // namespace avro
 
 #endif
