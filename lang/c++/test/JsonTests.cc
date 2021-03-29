@@ -174,7 +174,7 @@ static void testObject2() {
 } // namespace json
 } // namespace avro
 
-#define COUNTOF(x) (sizeof(x) / sizeof(x[0]))
+#define COUNT_OF(x) (sizeof(x) / sizeof(x[0]))
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int /* argc */, char * /* argv */[]) {
@@ -185,16 +185,16 @@ init_unit_test_suite(int /* argc */, char * /* argv */[]) {
     ts->add(BOOST_TEST_CASE(&avro::json::testNull));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testBool,
                                   avro::json::boolData,
-                                  avro::json::boolData + COUNTOF(avro::json::boolData)));
+                                  avro::json::boolData + COUNT_OF(avro::json::boolData)));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testLong,
                                   avro::json::longData,
-                                  avro::json::longData + COUNTOF(avro::json::longData)));
+                                  avro::json::longData + COUNT_OF(avro::json::longData)));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testDouble,
                                   avro::json::doubleData,
-                                  avro::json::doubleData + COUNTOF(avro::json::doubleData)));
+                                  avro::json::doubleData + COUNT_OF(avro::json::doubleData)));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::json::testString,
                                   avro::json::stringData,
-                                  avro::json::stringData + COUNTOF(avro::json::stringData)));
+                                  avro::json::stringData + COUNT_OF(avro::json::stringData)));
 
     ts->add(BOOST_TEST_CASE(&avro::json::testArray0));
     ts->add(BOOST_TEST_CASE(&avro::json::testArray1));
