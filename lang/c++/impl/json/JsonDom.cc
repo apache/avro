@@ -37,8 +37,8 @@ const char *typeToString(EntityType t) {
         case EntityType::Long: return "long";
         case EntityType::Double: return "double";
         case EntityType::String: return "string";
-        case EntityType::Array: return "array";
-        case EntityType::Object: return "object";
+        case EntityType::Arr: return "array";
+        case EntityType::Obj: return "object";
         default: return "unknown";
     }
 }
@@ -120,7 +120,7 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
         case EntityType::String:
             g.encodeString(n.stringValue());
             break;
-        case EntityType::Array: {
+        case EntityType::Arr: {
             g.arrayStart();
             const Array &v = n.arrayValue();
             for (const auto &it : v) {
@@ -128,7 +128,7 @@ void writeEntity(JsonGenerator<JsonNullFormatter> &g, const Entity &n) {
             }
             g.arrayEnd();
         } break;
-        case EntityType::Object: {
+        case EntityType::Obj: {
             g.objectStart();
             const Object &v = n.objectValue();
             for (const auto &it : v) {

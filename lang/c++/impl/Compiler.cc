@@ -206,7 +206,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
             assertType(e, json::EntityType::Null);
             return GenericDatum();
         case AVRO_RECORD: {
-            assertType(e, json::EntityType::Object);
+            assertType(e, json::EntityType::Obj);
             GenericRecord result(n);
             const map<string, Entity> &v = e.objectValue();
             for (size_t i = 0; i < n->leaves(); ++i) {
@@ -225,7 +225,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
             assertType(e, json::EntityType::String);
             return GenericDatum(n, GenericEnum(n, e.stringValue()));
         case AVRO_ARRAY: {
-            assertType(e, json::EntityType::Array);
+            assertType(e, json::EntityType::Arr);
             GenericArray result(n);
             const vector<Entity> &elements = e.arrayValue();
             for (const auto &element : elements) {
@@ -234,7 +234,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
             return GenericDatum(n, result);
         }
         case AVRO_MAP: {
-            assertType(e, json::EntityType::Object);
+            assertType(e, json::EntityType::Obj);
             GenericMap result(n);
             const map<string, Entity> &v = e.objectValue();
             for (const auto &it : v) {
@@ -468,8 +468,8 @@ static NodePtr makeNode(const Entity &e, const Array &m,
 static NodePtr makeNode(const json::Entity &e, SymbolTable &st, const string &ns) {
     switch (e.type()) {
         case json::EntityType::String: return makeNode(e.stringValue(), st, ns);
-        case json::EntityType::Object: return makeNode(e, e.objectValue(), st, ns);
-        case json::EntityType::Array: return makeNode(e, e.arrayValue(), st, ns);
+        case json::EntityType::Obj: return makeNode(e, e.objectValue(), st, ns);
+        case json::EntityType::Arr: return makeNode(e, e.arrayValue(), st, ns);
         default: throw Exception(boost::format("Invalid Avro type: %1%") % e.toString());
     }
 }

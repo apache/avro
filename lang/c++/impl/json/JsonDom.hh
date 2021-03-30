@@ -55,8 +55,8 @@ enum class EntityType {
     Long,
     Double,
     String,
-    Array,
-    Object
+    Arr,
+    Obj
 };
 
 const char *typeToString(EntityType t);
@@ -88,10 +88,10 @@ public:
     Entity(const std::shared_ptr<String> &v, size_t line = 0) : type_(EntityType::String), value_(v), line_(line) {}
     // Not explicit because do want implicit conversion
     // NOLINTNEXTLINE(google-explicit-constructor)
-    Entity(const std::shared_ptr<Array> &v, size_t line = 0) : type_(EntityType::Array), value_(v), line_(line) {}
+    Entity(const std::shared_ptr<Array> &v, size_t line = 0) : type_(EntityType::Arr), value_(v), line_(line) {}
     // Not explicit because do want implicit conversion
     // NOLINTNEXTLINE(google-explicit-constructor)
-    Entity(const std::shared_ptr<Object> &v, size_t line = 0) : type_(EntityType::Object), value_(v), line_(line) {}
+    Entity(const std::shared_ptr<Object> &v, size_t line = 0) : type_(EntityType::Obj), value_(v), line_(line) {}
 
     EntityType type() const { return type_; }
 
@@ -117,12 +117,12 @@ public:
     String bytesValue() const;
 
     const Array &arrayValue() const {
-        ensureType(EntityType::Array);
+        ensureType(EntityType::Arr);
         return **boost::any_cast<std::shared_ptr<Array>>(&value_);
     }
 
     const Object &objectValue() const {
-        ensureType(EntityType::Object);
+        ensureType(EntityType::Obj);
         return **boost::any_cast<std::shared_ptr<Object>>(&value_);
     }
 
@@ -159,13 +159,13 @@ struct type_traits<std::string> {
 
 template<>
 struct type_traits<std::vector<Entity>> {
-    static EntityType type() { return EntityType::Array; }
+    static EntityType type() { return EntityType::Arr; }
     static const char *name() { return "array"; }
 };
 
 template<>
 struct type_traits<std::map<std::string, Entity>> {
-    static EntityType type() { return EntityType::Object; }
+    static EntityType type() { return EntityType::Obj; }
     static const char *name() { return "object"; }
 };
 

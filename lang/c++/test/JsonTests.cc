@@ -107,14 +107,14 @@ static void testNull() {
 
 static void testArray0() {
     Entity n = loadEntity("[]");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Array);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Arr);
     const Array &a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 0);
 }
 
 static void testArray1() {
     Entity n = loadEntity("[200]");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Array);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Arr);
     const Array &a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 1);
     BOOST_CHECK_EQUAL(a[0].type(), EntityType::Long);
@@ -123,7 +123,7 @@ static void testArray1() {
 
 static void testArray2() {
     Entity n = loadEntity("[200, \"v100\"]");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Array);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Arr);
     const Array &a = n.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 2);
     BOOST_CHECK_EQUAL(a[0].type(), EntityType::Long);
@@ -134,14 +134,14 @@ static void testArray2() {
 
 static void testObject0() {
     Entity n = loadEntity("{}");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Object);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Obj);
     const Object &m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 0);
 }
 
 static void testObject1() {
     Entity n = loadEntity("{\"k1\": 100}");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Object);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Obj);
     const Object &m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 1);
     BOOST_CHECK_EQUAL(m.begin()->first, "k1");
@@ -151,7 +151,7 @@ static void testObject1() {
 
 static void testObject2() {
     Entity n = loadEntity(R"({"k1": 100, "k2": [400, "v0"]})");
-    BOOST_CHECK_EQUAL(n.type(), EntityType::Object);
+    BOOST_CHECK_EQUAL(n.type(), EntityType::Obj);
     const Object &m = n.objectValue();
     BOOST_CHECK_EQUAL(m.size(), 2);
 
@@ -162,7 +162,7 @@ static void testObject2() {
 
     it = m.find("k2");
     BOOST_CHECK(it != m.end());
-    BOOST_CHECK_EQUAL(it->second.type(), EntityType::Array);
+    BOOST_CHECK_EQUAL(it->second.type(), EntityType::Arr);
     const Array &a = it->second.arrayValue();
     BOOST_CHECK_EQUAL(a.size(), 2);
     BOOST_CHECK_EQUAL(a[0].type(), EntityType::Long);
