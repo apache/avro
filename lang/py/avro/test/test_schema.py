@@ -897,7 +897,7 @@ class CanonicalFormTestCase(unittest.TestCase):
              '{"name":"serverHash","type":{"name":"org.apache.avro.ipc.MD5","type":"fixed","size":16}},'
              '{"name":"meta","type":["null",{"type":"map","values":"bytes"}]}]}'))
 
-    def test_large_record_handshake_request(self):
+    def test_large_record_handshake_response(self):
         s = avro.schema.parse("""
             {
             "type": "record",
