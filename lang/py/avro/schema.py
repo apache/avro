@@ -41,6 +41,7 @@ A schema may be one of:
 """
 
 import abc
+import collections
 import datetime
 import decimal
 import json
@@ -113,6 +114,16 @@ VALID_FIELD_SORT_ORDERS = (
     'ignore',
 )
 
+CANONICAL_FIELD_ORDER = (
+    'name',
+    'type',
+    'fields',
+    'symbols',
+    'items',
+    'values',
+    'size',
+)
+
 INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
@@ -136,7 +147,18 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class Schema(abc.ABC):
+class CanonicalPropertiesMixin(object):
+    """A Mixin that provides canonical properties to Schema and Field types."""
+    @property
+    def canonical_properties(self):
+        props = self.props
+        return collections.OrderedDict(
+            (key, props[key])
+            for key in CANONICAL_FIELD_ORDER
+            if key in props)
+
+
+class Schema(abc.ABC, CanonicalPropertiesMixin):
     """Base class for all Schema classes."""
     _props = None
 
@@ -213,6 +235,19 @@ class Schema(abc.ABC):
         @return Optional[Schema]
         """
         raise Exception("Must be implemented by subclasses.")
+
+    @abc.abstractmethod
+    def to_canonical_json(self, names):
+        """
+        Converts the schema object into its Canonical Form
+        http://avro.apache.org/docs/current/spec.html#Parsing+Canonical+Form+for+Schemas
+        """
+        raise NotImplementedError("to_canonical_json must be implemented by subclasses")
+
+    @property
+    def canonical_form(self):
+        # The separators eliminate whitespace around commas and colons.
+        return json.dumps(self.to_canonical_json(None), separators=(",", ":"))
 
 
 class Name:
@@ -407,7 +442,7 @@ class DecimalLogicalSchema(LogicalSchema):
         super(DecimalLogicalSchema, self).__init__('decimal')
 
 
-class Field:
+class Field(CanonicalPropertiesMixin):
     def __init__(self, type, name, has_default, default=None,
                  order=None, names=None, doc=None, other_props=None):
         # Ensure valid ctor args
@@ -475,6 +510,13 @@ class Field:
         to_dump['type'] = self.type.to_json(names)
         return to_dump
 
+    def to_canonical_json(self, names=None):
+        if names is None:
+            names = Names()
+        to_dump = self.canonical_properties
+        to_dump["type"] = self.type.to_canonical_json(names)
+        return to_dump
+
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
@@ -525,6 +567,9 @@ class PrimitiveSchema(Schema):
             return self.fullname
         else:
             return self.props
+
+    def to_canonical_json(self, names=None):
+        return self.fullname if len(self.props) == 1 else self.canonical_properties
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this type of primitive schema, else None
@@ -600,6 +645,12 @@ class FixedSchema(NamedSchema):
         else:
             names.names[self.fullname] = self
             return names.prune_namespace(self.props)
+
+    def to_canonical_json(self, names):
+        to_dump = self.canonical_properties
+        to_dump["name"] = self.fullname
+
+        return to_dump
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this schema, else None."""
@@ -681,6 +732,16 @@ class EnumSchema(NamedSchema):
             names.names[self.fullname] = self
             return names.prune_namespace(self.props)
 
+    def to_canonical_json(self, names=None):
+        names_as_json = self.to_json(names)
+        if isinstance(names_as_json, str):
+            to_dump = self.fullname
+        else:
+            to_dump = self.canonical_properties
+            to_dump["name"] = self.fullname
+
+        return to_dump
+
     def validate(self, datum):
         """Return self if datum is a valid member of this Enum, else None."""
         return self if datum in self.symbols else None
@@ -729,6 +790,14 @@ class ArraySchema(Schema):
         to_dump['items'] = item_schema.to_json(names)
         return to_dump
 
+    def to_canonical_json(self, names=None):
+        if names is None:
+            names = Names()
+        to_dump = self.canonical_properties
+        item_schema = self.get_prop("items")
+        to_dump["items"] = item_schema.to_canonical_json(names)
+        return to_dump
+
     def validate(self, datum):
         """Return self if datum is a valid representation of this schema, else None."""
         return self if isinstance(datum, list) else None
@@ -772,6 +841,13 @@ class MapSchema(Schema):
             names = Names()
         to_dump = self.props.copy()
         to_dump['values'] = self.get_prop('values').to_json(names)
+        return to_dump
+
+    def to_canonical_json(self, names):
+        if names is None:
+            names = Names()
+        to_dump = self.canonical_properties
+        to_dump["values"] = self.get_prop("values").to_canonical_json(names)
         return to_dump
 
     def validate(self, datum):
@@ -835,6 +911,11 @@ class UnionSchema(Schema):
         for schema in self.schemas:
             to_dump.append(schema.to_json(names))
         return to_dump
+
+    def to_canonical_json(self, names):
+        if names is None:
+            names = Names()
+        return [schema.to_canonical_json(names) for schema in self.schemas]
 
     def validate(self, datum):
         """Return the first branch schema of which datum is a valid example, else None."""
@@ -961,6 +1042,25 @@ class RecordSchema(NamedSchema):
 
         to_dump = names.prune_namespace(self.props.copy())
         to_dump['fields'] = [f.to_json(names) for f in self.fields]
+        return to_dump
+
+    def to_canonical_json(self, names):
+        if names is None:
+            names = Names()
+
+        if self.type == 'request':
+            raise NotImplementedError("Canonical form (probably) does not make sense on type request")
+
+        to_dump = self.canonical_properties
+        to_dump["name"] = self.fullname
+
+        if self.fullname in names.names:
+            return self.name_ref(names)
+        else:
+            names.names[self.fullname] = self
+
+        to_dump["fields"] = [f.to_canonical_json(names) for f in self.fields]
+
         return to_dump
 
     def validate(self, datum):

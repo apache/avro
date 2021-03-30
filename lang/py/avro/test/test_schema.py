@@ -105,6 +105,28 @@ UNION_EXAMPLES = [
                        {"type": "array", "items": "string"}]),
 ]
 
+NAMED_IN_UNION_EXAMPLES = [
+  ValidTestSchema({
+    "namespace": "org.apache.avro.test",
+    "type": "record",
+    "name": "Test",
+    "fields": [
+        {
+            "type": {
+                "symbols": ["one", "two"],
+                "type": "enum",
+                "name": "NamedEnum"
+                },
+            "name": "thenamedenum"
+        },
+        {
+            "type": ["null", "NamedEnum"],
+            "name": "unionwithreftoenum"
+        }
+    ]
+    })
+]
+
 RECORD_EXAMPLES = [
     ValidTestSchema({"type": "record", "name": "Test", "fields": [{"name": "f", "type": "long"}]}),
     ValidTestSchema({"type": "error", "name": "Test", "fields": [{"name": "f", "type": "long"}]}),
@@ -295,6 +317,7 @@ EXAMPLES += ENUM_EXAMPLES
 EXAMPLES += ARRAY_EXAMPLES
 EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
+EXAMPLES += NAMED_IN_UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
 EXAMPLES += DECIMAL_LOGICAL_TYPE
@@ -583,6 +606,401 @@ class OtherAttributesTestCase(unittest.TestCase):
                 self._check_props(p)
 
 
+class CanonicalFormTestCase(unittest.TestCase):
+    r"""Enable generating canonical-form test cases over the valid schema.
+        Transforming into Parsing Canonical Form
+        Assuming an input schema (in JSON form) that's already UTF-8 text for a valid Avro schema (including all
+        quotes as required by JSON), the following transformations will produce its Parsing Canonical Form:
+            - [PRIMITIVES] Convert primitive schemas to their simple form (e.g., int instead of {"type":"int"}).
+            - [FULLNAMES] Replace short names with fullnames, using applicable namespaces to do so. Then eliminate
+                namespace attributes, which are now redundant.
+            - [STRIP] Keep only attributes that are relevant to parsing data, which are: type, name, fields, symbols,
+                items, values, size. Strip all others (e.g., doc and aliases).
+            - [ORDER] Order the appearance of fields of JSON objects as follows: name, type, fields, symbols, items,
+                values, size. For example, if an object has type, name, and size fields, then the name field should
+                appear first, followed by the type and then the size fields.
+            - [STRINGS] For all JSON string literals in the schema text, replace any escaped characters
+                (e.g., \uXXXX escapes) with their UTF-8 equivalents.
+            - [INTEGERS] Eliminate quotes around and any leading zeros in front of JSON integer literals
+                (which appear in the size attributes of fixed schemas).
+            - [WHITESPACE] Eliminate all whitespace in JSON outside of string literals.
+        We depend on the Python json parser to properly handle the STRINGS and INTEGERS rules, so
+        we don't test them here.
+    """
+
+    def compact_json_string(self, json_doc):
+        """Returns compact-encoded JSON string representation for supplied document.
+
+        Args:
+            json_doc (json): JSON Document
+
+        Returns:
+            str: Compact-encoded, stringified JSON document
+        """
+        return json.dumps(json_doc, separators=(',', ':'))
+
+    def test_primitive_int(self):
+        """
+        Convert primitive schemas to their simple form (e.g., int instead of {"type":"int"}).
+        """
+        s = avro.schema.parse(json.dumps('int'))
+        self.assertEqual(s.canonical_form, '"int"')
+
+        s = avro.schema.parse(json.dumps({"type": "int"}))
+        self.assertEqual(s.canonical_form, '"int"')
+
+    def test_primitive_float(self):
+        s = avro.schema.parse(json.dumps('float'))
+        self.assertEqual(s.canonical_form, '"float"')
+
+        s = avro.schema.parse(json.dumps({"type": "float"}))
+        self.assertEqual(s.canonical_form, '"float"')
+
+    def test_primitive_double(self):
+        s = avro.schema.parse(json.dumps('double'))
+        self.assertEqual(s.canonical_form, '"double"')
+
+        s = avro.schema.parse(json.dumps({"type": "double"}))
+        self.assertEqual(s.canonical_form, '"double"')
+
+    def test_primitive_null(self):
+        s = avro.schema.parse(json.dumps('null'))
+        self.assertEqual(s.canonical_form, '"null"')
+
+        s = avro.schema.parse(json.dumps({"type": "null"}))
+        self.assertEqual(s.canonical_form, '"null"')
+
+    def test_primitive_bytes(self):
+        s = avro.schema.parse(json.dumps('bytes'))
+        self.assertEqual(s.canonical_form, '"bytes"')
+
+        s = avro.schema.parse(json.dumps({"type": "bytes"}))
+        self.assertEqual(s.canonical_form, '"bytes"')
+
+    def test_primitive_long(self):
+        s = avro.schema.parse(json.dumps('long'))
+        self.assertEqual(s.canonical_form, '"long"')
+
+        s = avro.schema.parse(json.dumps({"type": "long"}))
+        self.assertEqual(s.canonical_form, '"long"')
+
+    def test_primitive_boolean(self):
+        s = avro.schema.parse(json.dumps('boolean'))
+        self.assertEqual(s.canonical_form, '"boolean"')
+
+        s = avro.schema.parse(json.dumps({"type": "boolean"}))
+        self.assertEqual(s.canonical_form, '"boolean"')
+
+    def test_primitive_string(self):
+        s = avro.schema.parse(json.dumps('string'))
+        self.assertEqual(s.canonical_form, '"string"')
+
+        s = avro.schema.parse(json.dumps({"type": "string"}))
+        self.assertEqual(s.canonical_form, '"string"')
+
+    def test_integer_canonical_form(self):
+        """
+        Integer literals starting with 0 are illegal in python, because of ambiguity. This is a placeholder test
+        for INTEGERS canonical form, which should generally succeed provided a valid integer has been supplied.
+        """
+        s = avro.schema.parse('{"name":"md5","type":"fixed","size":16}')
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "md5",
+                "type": "fixed",
+                "size": 16}))
+
+    def test_string_with_escaped_characters(self):
+        """
+        Replace any escaped characters (e.g., \u0031 escapes) with their UTF-8 equivalents.
+        """
+        s = avro.schema.parse('{"name":"\u0041","type":"fixed","size":16}')
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "A",
+                "type": "fixed",
+                "size": 16}))
+
+    def test_fullname(self):
+        """
+        Replace short names with fullnames, using applicable namespaces to do so. Then eliminate namespace attributes, which are now redundant.
+        """
+        s = avro.schema.parse(json.dumps({
+            "namespace": "avro",
+            "name": "example",
+            "type": "enum",
+            "symbols": ["a", "b"]}))
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "avro.example",
+                "type": "enum",
+                "symbols": ["a", "b"]}))
+
+    def test_strip(self):
+        """
+        Keep only attributes that are relevant to parsing data, which are: type, name, fields, symbols, items, values,
+        size. Strip all others (e.g., doc and aliases).
+        """
+        s = avro.schema.parse(json.dumps({
+            "name": "foo",
+            "type": "enum",
+            "doc": "test",
+            "aliases": ["bar"],
+            "symbols": ["a", "b"]}))
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "foo",
+                "type": "enum",
+                "symbols": ["a", "b"]}))
+
+    def test_order(self):
+        """
+        Order the appearance of fields of JSON objects as follows: name, type, fields, symbols, items, values, size.
+        For example, if an object has type, name, and size fields, then the name field should appear first, followed
+        by the type and then the size fields.
+        """
+        s = avro.schema.parse(json.dumps({
+            "symbols": ["a", "b"],
+            "type": "enum",
+            "name": "example"}))
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "example",
+                "type": "enum",
+                "symbols": ["a", "b"]}))
+
+    def test_whitespace(self):
+        """
+        Eliminate all whitespace in JSON outside of string literals.
+        """
+        s = avro.schema.parse(
+            '''{"type": "fixed",
+            "size": 16,
+            "name": "md5"}
+                ''')
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "name": "md5",
+                "type": "fixed",
+                "size": 16}))
+
+    def test_record_field(self):
+        """
+        Ensure that record fields produce the correct parsing canonical form.
+        """
+        s = avro.schema.parse(json.dumps({
+            "type": "record",
+            "name": "Test",
+            "doc": "This is a test schema",
+            "aliases": ["also", "known", "as"],
+            "fields": [
+                {
+                    "type": {
+                        "symbols": ["one", "two"],
+                        "type": "enum",
+                        "name": "NamedEnum"},
+                    "name": "thenamedenum",
+                    "doc": "This is a named enum"
+                },
+                {
+                    "type": ["null", "NamedEnum"],
+                    "name": "unionwithreftoenum"
+                }
+            ]
+        }))
+        expected = self.compact_json_string({
+            "name": "Test",
+            "type": "record",
+            "fields": [
+                {
+                    "name": "thenamedenum",
+                    "type": {
+                        "name": "NamedEnum",
+                        "type": "enum",
+                        "symbols": ["one", "two"]
+                    }
+                },
+                {
+                    "name": "unionwithreftoenum",
+                    "type": ["null", "NamedEnum"]
+                }
+            ]
+        })
+        self.assertEqual(s.canonical_form, expected)
+
+    def test_array(self):
+        """
+        Ensure that array schema produce the correct parsing canonical form.
+        """
+        s = avro.schema.parse(json.dumps({
+            "items": "long",
+            "type": "array"}))
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "type": "array",
+                "items": "long"}))
+
+    def test_map(self):
+        """
+        Ensure that map schema produce the correct parsing canonical form.
+        """
+        s = avro.schema.parse(json.dumps({
+            "values": "long",
+            "type": "map"}))
+        self.assertEqual(
+            s.canonical_form,
+            self.compact_json_string({
+                "type": "map",
+                "values": "long"}))
+
+    def test_union(self):
+        """
+        Ensure that a union schema produces the correct parsing canonical form.
+        """
+        s = avro.schema.parse(json.dumps(["string", "null", "long"]))
+        self.assertEqual(
+            s.canonical_form,
+            '["string","null","long"]')
+
+    def test_large_record_handshake_request(self):
+        s = avro.schema.parse("""
+            {
+            "type": "record",
+            "name": "HandshakeRequest",
+            "namespace": "org.apache.avro.ipc",
+            "fields": [
+                {
+                "name": "clientHash",
+                "type": {"type": "fixed", "name": "MD5", "size": 16}
+                },
+                {"name": "clientProtocol", "type": ["null", "string"]},
+                {"name": "serverHash", "type": "MD5"},
+                {
+                "name": "meta",
+                "type": ["null", {"type": "map", "values": "bytes"}]
+                }
+            ]
+            }
+            """)
+        self.assertEqual(
+            s.canonical_form,
+            ('{"name":"org.apache.avro.ipc.HandshakeRequest","type":"record",'
+             '"fields":[{"name":"clientHash","type":{"name":"org.apache.avro.ipc.MD5",'
+             '"type":"fixed","size":16}},{"name":"clientProtocol","type":["null","string"]},'
+             '{"name":"serverHash","type":{"name":"org.apache.avro.ipc.MD5","type":"fixed","size":16}},'
+             '{"name":"meta","type":["null",{"type":"map","values":"bytes"}]}]}'))
+
+    def test_large_record_handshake_request(self):
+        s = avro.schema.parse("""
+            {
+            "type": "record",
+            "name": "HandshakeResponse",
+            "namespace": "org.apache.avro.ipc",
+            "fields": [
+                {
+                "name": "match",
+                "type": {
+                    "type": "enum",
+                    "name": "HandshakeMatch",
+                    "symbols": ["BOTH", "CLIENT", "NONE"]
+                }
+                },
+                {"name": "serverProtocol", "type": ["null", "string"]},
+                {
+                "name": "serverHash",
+                "type": ["null", {"name": "MD5", "size": 16, "type": "fixed"}]
+                },
+                {
+                "name": "meta",
+                "type": ["null", {"type": "map", "values": "bytes"}]}]
+                }
+            """)
+        self.assertEqual(
+            s.canonical_form,
+            ('{"name":"org.apache.avro.ipc.HandshakeResponse","type":"rec'
+             'ord","fields":[{"name":"match","type":{"name":"org.apache.a'
+             'vro.ipc.HandshakeMatch","type":"enum","symbols":["BOTH","CL'
+             'IENT","NONE"]}},{"name":"serverProtocol","type":["null","st'
+             'ring"]},{"name":"serverHash","type":["null",{"name":"org.ap'
+             'ache.avro.ipc.MD5","type":"fixed","size":16}]},{"name":"met'
+             'a","type":["null",{"type":"map","values":"bytes"}]}]}'))
+
+    def test_large_record_interop(self):
+        s = avro.schema.parse("""
+            {
+            "type": "record",
+            "name": "Interop",
+            "namespace": "org.apache.avro",
+            "fields": [
+                {"name": "intField", "type": "int"},
+                {"name": "longField", "type": "long"},
+                {"name": "stringField", "type": "string"},
+                {"name": "boolField", "type": "boolean"},
+                {"name": "floatField", "type": "float"},
+                {"name": "doubleField", "type": "double"},
+                {"name": "bytesField", "type": "bytes"},
+                {"name": "nullField", "type": "null"},
+                {"name": "arrayField", "type": {"type": "array", "items": "double"}},
+                {
+                "name": "mapField",
+                "type": {
+                    "type": "map",
+                    "values": {"name": "Foo",
+                            "type": "record",
+                            "fields": [{"name": "label", "type": "string"}]}
+                }
+                },
+                {
+                "name": "unionField",
+                "type": ["boolean", "double", {"type": "array", "items": "bytes"}]
+                },
+                {
+                "name": "enumField",
+                "type": {"type": "enum", "name": "Kind", "symbols": ["A", "B", "C"]}
+                },
+                {
+                "name": "fixedField",
+                "type": {"type": "fixed", "name": "MD5", "size": 16}
+                },
+                {
+                "name": "recordField",
+                "type": {"type": "record",
+                        "name": "Node",
+                        "fields": [{"name": "label", "type": "string"},
+                                    {"name": "children",
+                                    "type": {"type": "array",
+                                                "items": "Node"}}]}
+                }
+            ]
+            }
+            """)
+        self.assertEqual(
+            s.canonical_form,
+            ('{"name":"org.apache.avro.Interop","type":"record","fields":[{"na'
+             'me":"intField","type":"int"},{"name":"longField","type":"long"},'
+             '{"name":"stringField","type":"string"},{"name":"boolField","type'
+             '":"boolean"},{"name":"floatField","type":"float"},{"name":"doubl'
+             'eField","type":"double"},{"name":"bytesField","type":"bytes"},{"'
+             'name":"nullField","type":"null"},{"name":"arrayField","type":{"t'
+             'ype":"array","items":"double"}},{"name":"mapField","type":{"type'
+             '":"map","values":{"name":"org.apache.avro.Foo","type":"record","'
+             'fields":[{"name":"label","type":"string"}]}}},{"name":"unionFiel'
+             'd","type":["boolean","double",{"type":"array","items":"bytes"}]}'
+             ',{"name":"enumField","type":{"name":"org.apache.avro.Kind","type'
+             '":"enum","symbols":["A","B","C"]}},{"name":"fixedField","type":{'
+             '"name":"org.apache.avro.MD5","type":"fixed","size":16}},{"name":'
+             '"recordField","type":{"name":"org.apache.avro.Node","type":"reco'
+             'rd","fields":[{"name":"label","type":"string"},{"name":"children'
+             '","type":{"type":"array","items":"org.apache.avro.Node"}}]}}]}'))
+
+
 def load_tests(loader, default_tests, pattern):
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
@@ -591,6 +1009,7 @@ def load_tests(loader, default_tests, pattern):
     suite.addTests(RoundTripParseTestCase(ex) for ex in VALID_EXAMPLES)
     suite.addTests(DocAttributesTestCase(ex) for ex in DOC_EXAMPLES)
     suite.addTests(OtherAttributesTestCase(ex) for ex in OTHER_PROP_EXAMPLES)
+    suite.addTests(loader.loadTestsFromTestCase(CanonicalFormTestCase))
     return suite
 
 
