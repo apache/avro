@@ -26,8 +26,6 @@ Js: ["lang/js/**/*"]
 Perl: ["lang/perl/**/*"]
 Php: ["lang/php/**/*"]
 Python: ["lang/py/**/*"]
-Python3: ["lang/py3/**/*"]
 Ruby: ["lang/ruby/**/*"]
 build: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
 website: ["doc/**/*"]
-

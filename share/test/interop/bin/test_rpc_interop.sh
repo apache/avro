@@ -25,15 +25,15 @@ java_tool() {
   java -jar "lang/java/tools/target/avro-tools-$VERSION.jar" "$@"
 }
 
-py3_tool() {
-  PYTHONPATH=lang/py3 python3 -m avro.tool "$@"
+py_tool() {
+  PYTHONPATH=lang/py python3 -m avro.tool "$@"
 }
 
 ruby_tool() {
   ruby -Ilang/ruby/lib lang/ruby/test/tool.rb "$@"
 }
 
-tools=( {java,py3,ruby}_tool )
+tools=( {java,py,ruby}_tool )
 
 proto=share/test/schemas/simple.avpr
 

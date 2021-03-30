@@ -382,9 +382,6 @@
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>
-                <exclude>lang/py3/.eggs/**</exclude>
-                <exclude>lang/py3/build/**</exclude>
-                <exclude>lang/py3/dist/**</exclude>
                 <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
