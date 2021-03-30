@@ -20,7 +20,7 @@
 # limitations under the License.
 from copy import copy
 from enum import Enum
-from typing import Dict, List, Optional, Set, cast
+from typing import List, Optional, Set, cast
 
 from avro.errors import AvroRuntimeException
 from avro.schema import ArraySchema, EnumSchema, Field, FixedSchema, MapSchema, NamedSchema, RecordSchema, Schema, UnionSchema
