@@ -51,9 +51,9 @@ private:
         return iter_->dataSize() - chunkPos_;
     }
 
-    void incrementChunk(size_type howmuch) {
-        bytesRemaining_ -= howmuch;
-        chunkPos_ += howmuch;
+    void incrementChunk(size_type howMuch) {
+        bytesRemaining_ -= howMuch;
+        chunkPos_ += howMuch;
         if (chunkPos_ == iter_->dataSize()) {
             chunkPos_ = 0;
             ++iter_;
@@ -71,17 +71,17 @@ private:
     }
 
 public:
-    BufferReader(const InputBuffer &buf) : bufferImpl_(buf.pimpl_),
-                                           iter_(bufferImpl_->beginRead()),
-                                           bytes_(bufferImpl_->size()),
-                                           bytesRemaining_(bytes_),
-                                           chunkPos_(0) {}
+    explicit BufferReader(const InputBuffer &buf) : bufferImpl_(buf.pimpl_),
+                                                    iter_(bufferImpl_->beginRead()),
+                                                    bytes_(bufferImpl_->size()),
+                                                    bytesRemaining_(bytes_),
+                                                    chunkPos_(0) {}
 
-    BufferReader(const OutputBuffer &buf) : bufferImpl_(buf.pimpl_),
-                                            iter_(bufferImpl_->beginRead()),
-                                            bytes_(bufferImpl_->size()),
-                                            bytesRemaining_(bytes_),
-                                            chunkPos_(0) {}
+    explicit BufferReader(const OutputBuffer &buf) : bufferImpl_(buf.pimpl_),
+                                                     iter_(bufferImpl_->beginRead()),
+                                                     bytes_(bufferImpl_->size()),
+                                                     bytesRemaining_(bytes_),
+                                                     chunkPos_(0) {}
 
     /**
      * How many bytes are still not read from this buffer.

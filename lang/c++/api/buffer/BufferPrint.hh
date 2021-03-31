@@ -20,7 +20,7 @@
 #define avro_BufferPrint_hh__
 
 #include "BufferReader.hh"
-#include <ctype.h>
+#include <cctype>
 #include <iomanip>
 #include <iostream>
 

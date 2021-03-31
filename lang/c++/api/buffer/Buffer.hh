@@ -22,6 +22,7 @@
 #ifndef _WIN32
 #include <sys/uio.h>
 #endif
+#include <utility>
 #include <vector>
 
 #include "../Config.hh"
@@ -92,7 +93,7 @@ public:
      *
      **/
 
-    OutputBuffer(size_type reserveSize = 0) : pimpl_(new detail::BufferImpl) {
+    explicit OutputBuffer(size_type reserveSize = 0) : pimpl_(new detail::BufferImpl) {
         if (reserveSize) {
             reserve(reserveSize);
         }
@@ -291,7 +292,7 @@ private:
     friend class InputBuffer;
     friend class BufferReader;
 
-    explicit OutputBuffer(const detail::BufferImpl::SharedPtr &pimpl) : pimpl_(pimpl) {}
+    explicit OutputBuffer(detail::BufferImpl::SharedPtr pimpl) : pimpl_(std::move(pimpl)) {}
 
     detail::BufferImpl::SharedPtr pimpl_; ///< Must never be null.
 };
@@ -343,7 +344,7 @@ public:
      *
      * Implicit conversion is allowed.
      **/
-
+    // NOLINTNEXTLINE(google-explicit-constructor)
     InputBuffer(const OutputBuffer &src) : pimpl_(new detail::BufferImpl(*src.pimpl_)) {}
 
     /**

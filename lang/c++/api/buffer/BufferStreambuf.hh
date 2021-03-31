@@ -19,6 +19,8 @@
 #ifndef avro_BufferStreambuf_hh__
 #define avro_BufferStreambuf_hh__
 
+#include <utility>
+
 #include "Buffer.hh"
 
 /** \file BufferStreambuf.hh
@@ -57,13 +59,13 @@ public:
 
 protected:
     /// Write a single character to the stream.
-    virtual int_type overflow(int_type c) {
+    int_type overflow(int_type c) override {
         buffer_.writeTo(static_cast<OutputBuffer::data_type>(c));
         return c;
     }
 
     /// Write a block of characters to the stream.
-    virtual std::streamsize xsputn(const char_type *s, std::streamsize n) {
+    std::streamsize xsputn(const char_type *s, std::streamsize n) override {
         return buffer_.writeTo(s, static_cast<size_t>(n));
     }
 
@@ -88,10 +90,10 @@ class AVRO_DECL istreambuf : public std::streambuf {
 
 public:
     /// Default constructor requires an InputBuffer to read from.
-    explicit istreambuf(const InputBuffer &buffer) : std::streambuf(),
-                                                     buffer_(buffer),
-                                                     basePos_(0),
-                                                     iter_(buffer_.begin()) {
+    explicit istreambuf(InputBuffer buffer) : std::streambuf(),
+                                              buffer_(std::move(buffer)),
+                                              basePos_(0),
+                                              iter_(buffer_.begin()) {
         setBuffer();
     }
 
@@ -110,7 +112,7 @@ public:
 
 protected:
     /// The current chunk of data is exhausted, read the next chunk.
-    virtual int_type underflow() {
+    int_type underflow() override {
         if (iter_ != buffer_.end()) {
             basePos_ += (egptr() - eback());
             ++iter_;
@@ -120,7 +122,7 @@ protected:
 
     /// Get a block of data from the stream.  Overrides default behavior
     /// to ignore eof characters that may reside in the stream.
-    virtual std::streamsize xsgetn(char_type *c, std::streamsize len) {
+    std::streamsize xsgetn(char_type *c, std::streamsize len) override {
         std::streamsize bytesCopied = 0;
 
         while (bytesCopied < len) {
@@ -128,7 +130,7 @@ protected:
             size_t inBuffer = egptr() - gptr();
 
             if (inBuffer) {
-                size_t remaining = static_cast<size_t>(len - bytesCopied);
+                auto remaining = static_cast<size_t>(len - bytesCopied);
                 size_t toCopy = std::min(inBuffer, remaining);
                 memcpy(c, gptr(), toCopy);
                 c += toCopy;
@@ -148,7 +150,7 @@ protected:
     }
 
     /// Special seek override to navigate InputBuffer chunks.
-    virtual pos_type seekoff(off_type off, std::ios::seekdir dir, std::ios_base::openmode) {
+    pos_type seekoff(off_type off, std::ios::seekdir dir, std::ios_base::openmode) override {
 
         off_type curpos = basePos_ + (gptr() - eback());
         off_type newpos = off;
@@ -168,7 +170,7 @@ protected:
         // if the position is after our current buffer make
         // sure it's not past the end of the buffer
         if ((newpos > endpos) && (newpos > static_cast<off_type>(buffer_.size()))) {
-            return pos_type(-1);
+            return {-1};
         }
         // if the new position is before our current iterator
         // reset the iterator to the beginning
@@ -191,13 +193,13 @@ protected:
     }
 
     /// Calls seekoff for implemention.
-    virtual pos_type seekpos(pos_type pos, std::ios_base::openmode) {
+    pos_type seekpos(pos_type pos, std::ios_base::openmode) override {
         return istreambuf::seekoff(pos, std::ios::beg, std::ios_base::openmode(0));
     }
 
     /// Shows the number of bytes buffered in the current chunk, or next chunk if
     /// current is exhausted.
-    virtual std::streamsize showmanyc() {
+    std::streamsize showmanyc() override {
 
         // this function only gets called when the current buffer has been
         // completely read, verify this is the case, and if so, underflow to
@@ -221,7 +223,7 @@ private:
             setg(loc, loc, loc + iter_->size());
             ret = std::char_traits<char>::to_int_type(*gptr());
         } else {
-            setg(0, 0, 0);
+            setg(nullptr, nullptr, nullptr);
         }
         return ret;
     }
