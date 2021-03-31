@@ -2,6 +2,8 @@
 
 ## Unreleased
 * Built using Avro 1.10.2
+* Built using Gradle 6.8.3
+* Updated compatibility testing through Gradle 6.8.3
 
 ## 1.0.0
 * Published to Maven Central (no longer published to JCenter)
