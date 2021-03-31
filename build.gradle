@@ -27,7 +27,7 @@ repositories {
     }
 }
 
-def compileAvroVersion = "1.10.1"
+def compileAvroVersion = "1.10.2"
 def codenarcVersion = "1.5"
 def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
 
@@ -242,7 +242,7 @@ if (JavaVersion.current().java9Compatible) {
     sourceCompatibility = 8
 }
 
-def avroVersions = ["1.10.0", "1.10.1"]
+def avroVersions = ["1.10.0", "1.10.1", "1.10.2"]
 
 def keyAvroVersions = avroVersions.last()
 def gradle5KotlinVersions = []

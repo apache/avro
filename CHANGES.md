@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Built using Avro 1.10.2
 
 ## 1.0.0
 * Published to Maven Central (no longer published to JCenter)

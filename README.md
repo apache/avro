@@ -16,8 +16,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * Though not supported yet, tests are also run against early-access builds of Java 16 to provide early notification of potential incompatibilities
 * Currently built against Gradle 6.7.1
     * Currently tested against Gradle 5.1-5.6.4 and 6.0-6.7.1
-* Currently built against Avro 1.10.1
-    * Currently tested against Avro 1.10.0-1.10.1
+* Currently built against Avro 1.10.2
+    * Currently tested against Avro 1.10.0-1.10.2
 * Support for Kotlin
     * Currently tested against Kotlin plugin versions 1.3.20-1.3.72 and 1.4.0-1.4.20 using the latest compatible version of Gradle
     * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
