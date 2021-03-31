@@ -209,13 +209,14 @@ class Message:
         return json.dumps(self.to_json())
 
     def to_json(self, names=None):
-        if names is None:
-            names = avro.schema.Names()
+        names = names or avro.schema.Names()
+
         to_dump = {}
         to_dump['request'] = self.request.to_json(names)
         to_dump['response'] = self.response.to_json(names)
         if self.errors:
             to_dump['errors'] = self.errors.to_json(names)
+
         return to_dump
 
     def __eq__(self, that):
@@ -231,6 +232,7 @@ def make_avpr_object(json_data):
         messages = json_data.get('messages')
     except AttributeError:
         raise avro.errors.ProtocolParseException('Not a JSON object: %s' % json_data)
+
     return Protocol(name, namespace, types, messages)
 
 
