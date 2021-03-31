@@ -16,14 +16,11 @@
  * limitations under the License.
  */
 
-#define __STDC_LIMIT_MACROS
-
 #include <algorithm>
-#include <ctype.h>
 #include <map>
 #include <memory>
-#include <stack>
 #include <string>
+#include <utility>
 
 #include "Decoder.hh"
 #include "Encoder.hh"
@@ -74,7 +71,7 @@ class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
         vector<pair<string, size_t>> result;
         size_t c = n->names();
         for (size_t i = 0; i < c; ++i) {
-            result.push_back(make_pair(n->nameAt(i), i));
+            result.emplace_back(n->nameAt(i), i);
         }
         return result;
     }
@@ -160,7 +157,7 @@ static shared_ptr<vector<uint8_t>> getAvroBinary(
 template<typename T1, typename T2>
 struct equalsFirst {
     const T1 &v_;
-    equalsFirst(const T1 &v) : v_(v) {}
+    explicit equalsFirst(const T1 &v) : v_(v) {}
     bool operator()(const pair<T1, T2> &p) {
         return p.first == v_;
     }
@@ -198,9 +195,8 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
      */
     for (vector<pair<string, size_t>>::const_iterator it = wf.begin();
          it != wf.end(); ++it) {
-        vector<pair<string, size_t>>::iterator it2 =
-            find_if(rf.begin(), rf.end(),
-                    equalsFirst<string, size_t>(it->first));
+        auto it2 = find_if(rf.begin(), rf.end(),
+                           equalsFirst<string, size_t>(it->first));
         if (it2 != rf.end()) {
             ProductionPtr p = doGenerate2(writer->leafAt(it->second),
                                           reader->leafAt(it2->second), m, m2);
@@ -353,12 +349,12 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
             case AVRO_UNION:
                 return resolveUnion(writer, reader, m, m2);
             case AVRO_SYMBOLIC: {
-                shared_ptr<NodeSymbolic> w =
+                shared_ptr<NodeSymbolic> w2 =
                     static_pointer_cast<NodeSymbolic>(writer);
-                shared_ptr<NodeSymbolic> r =
+                shared_ptr<NodeSymbolic> r2 =
                     static_pointer_cast<NodeSymbolic>(reader);
-                NodePair p(w->getNode(), r->getNode());
-                map<NodePair, ProductionPtr>::iterator it = m.find(p);
+                NodePair p(w2->getNode(), r2->getNode());
+                auto it = m.find(p);
                 if (it != m.end() && it->second) {
                     return it->second;
                 } else {
@@ -376,20 +372,20 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
             case AVRO_LONG:
                 if (writerType == AVRO_INT) {
                     return make_shared<Production>(1,
-                                                   Symbol::resolveSymbol(Symbol::sInt, Symbol::sLong));
+                                                   Symbol::resolveSymbol(Symbol::Kind::Int, Symbol::Kind::Long));
                 }
                 break;
             case AVRO_FLOAT:
                 if (writerType == AVRO_INT || writerType == AVRO_LONG) {
                     return make_shared<Production>(1,
-                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::sInt : Symbol::sLong, Symbol::sFloat));
+                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::Kind::Int : Symbol::Kind::Long, Symbol::Kind::Float));
                 }
                 break;
             case AVRO_DOUBLE:
                 if (writerType == AVRO_INT || writerType == AVRO_LONG
                     || writerType == AVRO_FLOAT) {
                     return make_shared<Production>(1,
-                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::sInt : writerType == AVRO_LONG ? Symbol::sLong : Symbol::sFloat, Symbol::sDouble));
+                                                   Symbol::resolveSymbol(writerType == AVRO_INT ? Symbol::Kind::Int : writerType == AVRO_LONG ? Symbol::Kind::Long : Symbol::Kind::Float, Symbol::Kind::Double));
                 }
                 break;
 
@@ -428,20 +424,20 @@ class ResolvingDecoderHandler {
     const DecoderPtr binDecoder;
 
 public:
-    ResolvingDecoderHandler(DecoderPtr &base) : base_(base),
-                                                binDecoder(binaryDecoder()) {}
+    explicit ResolvingDecoderHandler(DecoderPtr &base) : base_(base),
+                                                         binDecoder(binaryDecoder()) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sWriterUnion:
+            case Symbol::Kind::WriterUnion:
                 return base_->decodeUnionIndex();
-            case Symbol::sDefaultStart:
+            case Symbol::Kind::DefaultStart:
                 defaultData_ = s.extra<shared_ptr<vector<uint8_t>>>();
                 backup_ = base_;
                 inp_ = memoryInputStream(&(*defaultData_)[0], defaultData_->size());
                 base_ = binDecoder;
                 base_->init(*inp_);
                 return 0;
-            case Symbol::sDefaultEnd:
+            case Symbol::Kind::DefaultEnd:
                 base_ = backup_;
                 backup_.reset();
                 return 0;
@@ -451,7 +447,7 @@ public:
     }
 
     void reset() {
-        if (backup_ != NULL) {
+        if (backup_ != nullptr) {
             base_ = backup_;
             backup_.reset();
         }
@@ -464,39 +460,39 @@ class ResolvingDecoderImpl : public ResolvingDecoder {
     ResolvingDecoderHandler handler_;
     Parser parser_;
 
-    void init(InputStream &is);
-    void decodeNull();
-    bool decodeBool();
-    int32_t decodeInt();
-    int64_t decodeLong();
-    float decodeFloat();
-    double decodeDouble();
-    void decodeString(string &value);
-    void skipString();
-    void decodeBytes(vector<uint8_t> &value);
-    void skipBytes();
-    void decodeFixed(size_t n, vector<uint8_t> &value);
-    void skipFixed(size_t n);
-    size_t decodeEnum();
-    size_t arrayStart();
-    size_t arrayNext();
-    size_t skipArray();
-    size_t mapStart();
-    size_t mapNext();
-    size_t skipMap();
-    size_t decodeUnionIndex();
-    const vector<size_t> &fieldOrder();
-    void drain() {
+    void init(InputStream &is) override;
+    void decodeNull() override;
+    bool decodeBool() override;
+    int32_t decodeInt() override;
+    int64_t decodeLong() override;
+    float decodeFloat() override;
+    double decodeDouble() override;
+    void decodeString(string &value) override;
+    void skipString() override;
+    void decodeBytes(vector<uint8_t> &value) override;
+    void skipBytes() override;
+    void decodeFixed(size_t n, vector<uint8_t> &value) override;
+    void skipFixed(size_t n) override;
+    size_t decodeEnum() override;
+    size_t arrayStart() override;
+    size_t arrayNext() override;
+    size_t skipArray() override;
+    size_t mapStart() override;
+    size_t mapNext() override;
+    size_t skipMap() override;
+    size_t decodeUnionIndex() override;
+    const vector<size_t> &fieldOrder() override;
+    void drain() override {
         parser_.processImplicitActions();
         base_->drain();
     }
 
 public:
     ResolvingDecoderImpl(const ValidSchema &writer, const ValidSchema &reader,
-                         const DecoderPtr &base) : base_(base),
-                                                   handler_(base_),
-                                                   parser_(ResolvingGrammarGenerator().generate(writer, reader),
-                                                           &(*base_), handler_) {
+                         DecoderPtr base) : base_(std::move(base)),
+                                            handler_(base_),
+                                            parser_(ResolvingGrammarGenerator().generate(writer, reader),
+                                                    &(*base_), handler_) {
     }
 };
 
@@ -509,93 +505,93 @@ void ResolvingDecoderImpl<P>::init(InputStream &is) {
 
 template<typename P>
 void ResolvingDecoderImpl<P>::decodeNull() {
-    parser_.advance(Symbol::sNull);
+    parser_.advance(Symbol::Kind::Null);
     base_->decodeNull();
 }
 
 template<typename P>
 bool ResolvingDecoderImpl<P>::decodeBool() {
-    parser_.advance(Symbol::sBool);
+    parser_.advance(Symbol::Kind::Bool);
     return base_->decodeBool();
 }
 
 template<typename P>
 int32_t ResolvingDecoderImpl<P>::decodeInt() {
-    parser_.advance(Symbol::sInt);
+    parser_.advance(Symbol::Kind::Int);
     return base_->decodeInt();
 }
 
 template<typename P>
 int64_t ResolvingDecoderImpl<P>::decodeLong() {
-    Symbol::Kind k = parser_.advance(Symbol::sLong);
-    return k == Symbol::sInt ? base_->decodeInt() : base_->decodeLong();
+    Symbol::Kind k = parser_.advance(Symbol::Kind::Long);
+    return k == Symbol::Kind::Int ? base_->decodeInt() : base_->decodeLong();
 }
 
 template<typename P>
 float ResolvingDecoderImpl<P>::decodeFloat() {
-    Symbol::Kind k = parser_.advance(Symbol::sFloat);
-    return k == Symbol::sInt ? base_->decodeInt() : k == Symbol::sLong ? base_->decodeLong() : base_->decodeFloat();
+    Symbol::Kind k = parser_.advance(Symbol::Kind::Float);
+    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : base_->decodeFloat();
 }
 
 template<typename P>
 double ResolvingDecoderImpl<P>::decodeDouble() {
-    Symbol::Kind k = parser_.advance(Symbol::sDouble);
-    return k == Symbol::sInt ? base_->decodeInt() : k == Symbol::sLong ? base_->decodeLong() : k == Symbol::sFloat ? base_->decodeFloat() : base_->decodeDouble();
+    Symbol::Kind k = parser_.advance(Symbol::Kind::Double);
+    return k == Symbol::Kind::Int ? base_->decodeInt() : k == Symbol::Kind::Long ? base_->decodeLong() : k == Symbol::Kind::Float ? base_->decodeFloat() : base_->decodeDouble();
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::decodeString(string &value) {
-    parser_.advance(Symbol::sString);
+    parser_.advance(Symbol::Kind::String);
     base_->decodeString(value);
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::skipString() {
-    parser_.advance(Symbol::sString);
+    parser_.advance(Symbol::Kind::String);
     base_->skipString();
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::decodeBytes(vector<uint8_t> &value) {
-    parser_.advance(Symbol::sBytes);
+    parser_.advance(Symbol::Kind::Bytes);
     base_->decodeBytes(value);
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::skipBytes() {
-    parser_.advance(Symbol::sBytes);
+    parser_.advance(Symbol::Kind::Bytes);
     base_->skipBytes();
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::decodeFixed(size_t n, vector<uint8_t> &value) {
-    parser_.advance(Symbol::sFixed);
+    parser_.advance(Symbol::Kind::Fixed);
     parser_.assertSize(n);
     return base_->decodeFixed(n, value);
 }
 
 template<typename P>
 void ResolvingDecoderImpl<P>::skipFixed(size_t n) {
-    parser_.advance(Symbol::sFixed);
+    parser_.advance(Symbol::Kind::Fixed);
     parser_.assertSize(n);
     base_->skipFixed(n);
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::decodeEnum() {
-    parser_.advance(Symbol::sEnum);
+    parser_.advance(Symbol::Kind::Enum);
     size_t n = base_->decodeEnum();
     return parser_.enumAdjust(n);
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::arrayStart() {
-    parser_.advance(Symbol::sArrayStart);
+    parser_.advance(Symbol::Kind::ArrayStart);
     size_t result = base_->arrayStart();
     parser_.pushRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
-        parser_.advance(Symbol::sArrayEnd);
+        parser_.advance(Symbol::Kind::ArrayEnd);
     }
     return result;
 }
@@ -607,14 +603,14 @@ size_t ResolvingDecoderImpl<P>::arrayNext() {
     parser_.nextRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
-        parser_.advance(Symbol::sArrayEnd);
+        parser_.advance(Symbol::Kind::ArrayEnd);
     }
     return result;
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::skipArray() {
-    parser_.advance(Symbol::sArrayStart);
+    parser_.advance(Symbol::Kind::ArrayStart);
     size_t n = base_->skipArray();
     if (n == 0) {
         parser_.pop();
@@ -622,18 +618,18 @@ size_t ResolvingDecoderImpl<P>::skipArray() {
         parser_.pushRepeatCount(n);
         parser_.skip(*base_);
     }
-    parser_.advance(Symbol::sArrayEnd);
+    parser_.advance(Symbol::Kind::ArrayEnd);
     return 0;
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::mapStart() {
-    parser_.advance(Symbol::sMapStart);
+    parser_.advance(Symbol::Kind::MapStart);
     size_t result = base_->mapStart();
     parser_.pushRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
-        parser_.advance(Symbol::sMapEnd);
+        parser_.advance(Symbol::Kind::MapEnd);
     }
     return result;
 }
@@ -645,14 +641,14 @@ size_t ResolvingDecoderImpl<P>::mapNext() {
     parser_.nextRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
-        parser_.advance(Symbol::sMapEnd);
+        parser_.advance(Symbol::Kind::MapEnd);
     }
     return result;
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::skipMap() {
-    parser_.advance(Symbol::sMapStart);
+    parser_.advance(Symbol::Kind::MapStart);
     size_t n = base_->skipMap();
     if (n == 0) {
         parser_.pop();
@@ -660,19 +656,19 @@ size_t ResolvingDecoderImpl<P>::skipMap() {
         parser_.pushRepeatCount(n);
         parser_.skip(*base_);
     }
-    parser_.advance(Symbol::sMapEnd);
+    parser_.advance(Symbol::Kind::MapEnd);
     return 0;
 }
 
 template<typename P>
 size_t ResolvingDecoderImpl<P>::decodeUnionIndex() {
-    parser_.advance(Symbol::sUnion);
+    parser_.advance(Symbol::Kind::Union);
     return parser_.unionAdjust();
 }
 
 template<typename P>
 const vector<size_t> &ResolvingDecoderImpl<P>::fieldOrder() {
-    parser_.advance(Symbol::sRecord);
+    parser_.advance(Symbol::Kind::Record);
     return parser_.sizeList();
 }
 

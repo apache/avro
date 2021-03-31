@@ -84,14 +84,14 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr &writer, const NodePtr &reader) {
         const string &s = writer->nameAt(i);
         vector<string>::const_iterator it = find(rs.begin(), rs.end(), s);
         if (it == rs.end()) {
-            int pos = err.size() + 1;
+            auto pos = err.size() + 1;
             adj.push_back(-pos);
             err.push_back(s);
         } else {
             adj.push_back(it - rs.begin());
         }
     }
-    return Symbol(sEnumAdjust, make_pair(adj, err));
+    return Symbol(Kind::EnumAdjust, make_pair(adj, err));
 }
 
 Symbol Symbol::error(const NodePtr &writer, const NodePtr &reader) {
@@ -101,7 +101,7 @@ Symbol Symbol::error(const NodePtr &writer, const NodePtr &reader) {
     oss << std::endl
         << "with" << std::endl;
     reader->printJson(oss, 0);
-    return Symbol(sError, oss.str());
+    return Symbol(Kind::Error, oss.str());
 }
 
 } // namespace parsing
