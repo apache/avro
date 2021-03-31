@@ -39,16 +39,16 @@ inline char toHex(unsigned int n) {
 
 class AVRO_DECL JsonParser : boost::noncopyable {
 public:
-    enum Token {
-        tkNull,
-        tkBool,
-        tkLong,
-        tkDouble,
-        tkString,
-        tkArrayStart,
-        tkArrayEnd,
-        tkObjectStart,
-        tkObjectEnd
+    enum class Token {
+        Null,
+        Bool,
+        Long,
+        Double,
+        String,
+        ArrayStart,
+        ArrayEnd,
+        ObjectStart,
+        ObjectEnd
     };
 
     size_t line() const { return line_; }
@@ -80,13 +80,14 @@ private:
     Token tryLiteral(const char exp[], size_t n, Token tk);
     Token tryNumber(char ch);
     Token tryString();
-    Exception unexpected(unsigned char ch);
+    static Exception unexpected(unsigned char ch);
     char next();
 
     static std::string decodeString(const std::string &s, bool binary);
 
 public:
-    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) {}
+    JsonParser() : curState(stValue), hasNext(false), nextChar(0), peeked(false),
+                   curToken(Token::Null), bv(false), lv(0), dv(0), line_(1) {}
 
     void init(InputStream &is) {
         // Clear by swapping with an empty stack
@@ -171,13 +172,13 @@ public:
     static const char *const tokenNames[];
 
     static const char *toString(Token tk) {
-        return tokenNames[tk];
+        return tokenNames[static_cast<size_t>(tk)];
     }
 };
 
 class AVRO_DECL JsonNullFormatter {
 public:
-    JsonNullFormatter(StreamWriter &) {}
+    explicit JsonNullFormatter(StreamWriter &) {}
 
     void handleObjectStart() {}
     void handleObjectEnd() {}
@@ -201,7 +202,7 @@ class AVRO_DECL JsonPrettyFormatter {
     }
 
 public:
-    JsonPrettyFormatter(StreamWriter &out) : out_(out), level_(0), indent_(10, ' ') {}
+    explicit JsonPrettyFormatter(StreamWriter &out) : out_(out), level_(0), indent_(10, ' ') {}
 
     void handleObjectStart() {
         out_.write('\n');
@@ -280,7 +281,7 @@ class AVRO_DECL JsonGenerator {
                     throw Exception("Invalid UTF-8 sequence");
                 } else {
                     int more = 1;
-                    uint32_t value = 0;
+                    uint32_t value;
                     if ((*p & 0x20) != 0) {
                         more++;
                         if ((*p & 0x10) != 0) {

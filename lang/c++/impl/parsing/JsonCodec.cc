@@ -158,13 +158,13 @@ public:
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
             case Symbol::sRecordStart:
-                expectToken(in_, JsonParser::tkObjectStart);
+                expectToken(in_, JsonParser::Token::ObjectStart);
                 break;
             case Symbol::sRecordEnd:
-                expectToken(in_, JsonParser::tkObjectEnd);
+                expectToken(in_, JsonParser::Token::ObjectEnd);
                 break;
             case Symbol::sField:
-                expectToken(in_, JsonParser::tkString);
+                expectToken(in_, JsonParser::Token::String);
                 if (s.extra<string>() != in_.stringValue()) {
                     throw Exception("Incorrect field");
                 }
@@ -227,13 +227,13 @@ void JsonDecoder<P>::expect(JsonParser::Token tk) {
 template<typename P>
 void JsonDecoder<P>::decodeNull() {
     parser_.advance(Symbol::sNull);
-    expect(JsonParser::tkNull);
+    expect(JsonParser::Token::Null);
 }
 
 template<typename P>
 bool JsonDecoder<P>::decodeBool() {
     parser_.advance(Symbol::sBool);
-    expect(JsonParser::tkBool);
+    expect(JsonParser::Token::Bool);
     bool result = in_.boolValue();
     return result;
 }
@@ -241,7 +241,7 @@ bool JsonDecoder<P>::decodeBool() {
 template<typename P>
 int32_t JsonDecoder<P>::decodeInt() {
     parser_.advance(Symbol::sInt);
-    expect(JsonParser::tkLong);
+    expect(JsonParser::Token::Long);
     int64_t result = in_.longValue();
     if (result < INT32_MIN || result > INT32_MAX) {
         throw Exception(boost::format("Value out of range for Avro int: %1%")
@@ -253,7 +253,7 @@ int32_t JsonDecoder<P>::decodeInt() {
 template<typename P>
 int64_t JsonDecoder<P>::decodeLong() {
     parser_.advance(Symbol::sLong);
-    expect(JsonParser::tkLong);
+    expect(JsonParser::Token::Long);
     int64_t result = in_.longValue();
     return result;
 }
@@ -261,7 +261,7 @@ int64_t JsonDecoder<P>::decodeLong() {
 template<typename P>
 float JsonDecoder<P>::decodeFloat() {
     parser_.advance(Symbol::sFloat);
-    expect(JsonParser::tkDouble);
+    expect(JsonParser::Token::Double);
     double result = in_.doubleValue();
     return static_cast<float>(result);
 }
@@ -269,7 +269,7 @@ float JsonDecoder<P>::decodeFloat() {
 template<typename P>
 double JsonDecoder<P>::decodeDouble() {
     parser_.advance(Symbol::sDouble);
-    expect(JsonParser::tkDouble);
+    expect(JsonParser::Token::Double);
     double result = in_.doubleValue();
     return result;
 }
@@ -277,14 +277,14 @@ double JsonDecoder<P>::decodeDouble() {
 template<typename P>
 void JsonDecoder<P>::decodeString(string &value) {
     parser_.advance(Symbol::sString);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
     value = in_.stringValue();
 }
 
 template<typename P>
 void JsonDecoder<P>::skipString() {
     parser_.advance(Symbol::sString);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
 }
 
 static vector<uint8_t> toBytes(const string &s) {
@@ -294,21 +294,21 @@ static vector<uint8_t> toBytes(const string &s) {
 template<typename P>
 void JsonDecoder<P>::decodeBytes(vector<uint8_t> &value) {
     parser_.advance(Symbol::sBytes);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
     value = toBytes(in_.bytesValue());
 }
 
 template<typename P>
 void JsonDecoder<P>::skipBytes() {
     parser_.advance(Symbol::sBytes);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
 }
 
 template<typename P>
 void JsonDecoder<P>::decodeFixed(size_t n, vector<uint8_t> &value) {
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
     value = toBytes(in_.bytesValue());
     if (value.size() != n) {
         throw Exception("Incorrect value for fixed");
@@ -319,7 +319,7 @@ template<typename P>
 void JsonDecoder<P>::skipFixed(size_t n) {
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
     vector<uint8_t> result = toBytes(in_.bytesValue());
     if (result.size() != n) {
         throw Exception("Incorrect value for fixed");
@@ -329,7 +329,7 @@ void JsonDecoder<P>::skipFixed(size_t n) {
 template<typename P>
 size_t JsonDecoder<P>::decodeEnum() {
     parser_.advance(Symbol::sEnum);
-    expect(JsonParser::tkString);
+    expect(JsonParser::Token::String);
     size_t result = parser_.indexForName(in_.stringValue());
     return result;
 }
@@ -338,14 +338,14 @@ template<typename P>
 size_t JsonDecoder<P>::arrayStart() {
     parser_.advance(Symbol::sArrayStart);
     parser_.pushRepeatCount(0);
-    expect(JsonParser::tkArrayStart);
+    expect(JsonParser::Token::ArrayStart);
     return arrayNext();
 }
 
 template<typename P>
 size_t JsonDecoder<P>::arrayNext() {
     parser_.processImplicitActions();
-    if (in_.peek() == JsonParser::tkArrayEnd) {
+    if (in_.peek() == JsonParser::Token::ArrayEnd) {
         in_.advance();
         parser_.popRepeater();
         parser_.advance(Symbol::sArrayEnd);
@@ -360,12 +360,12 @@ void JsonDecoder<P>::skipComposite() {
     size_t level = 0;
     for (;;) {
         switch (in_.advance()) {
-            case JsonParser::tkArrayStart:
-            case JsonParser::tkObjectStart:
+            case JsonParser::Token::ArrayStart:
+            case JsonParser::Token::ObjectStart:
                 ++level;
                 continue;
-            case JsonParser::tkArrayEnd:
-            case JsonParser::tkObjectEnd:
+            case JsonParser::Token::ArrayEnd:
+            case JsonParser::Token::ObjectEnd:
                 if (level == 0) {
                     return;
                 }
@@ -388,7 +388,7 @@ size_t JsonDecoder<P>::skipArray() {
     parser_.advance(Symbol::sArrayStart);
     parser_.pop();
     parser_.advance(Symbol::sArrayEnd);
-    expect(JsonParser::tkArrayStart);
+    expect(JsonParser::Token::ArrayStart);
     skipComposite();
     return 0;
 }
@@ -397,14 +397,14 @@ template<typename P>
 size_t JsonDecoder<P>::mapStart() {
     parser_.advance(Symbol::sMapStart);
     parser_.pushRepeatCount(0);
-    expect(JsonParser::tkObjectStart);
+    expect(JsonParser::Token::ObjectStart);
     return mapNext();
 }
 
 template<typename P>
 size_t JsonDecoder<P>::mapNext() {
     parser_.processImplicitActions();
-    if (in_.peek() == JsonParser::tkObjectEnd) {
+    if (in_.peek() == JsonParser::Token::ObjectEnd) {
         in_.advance();
         parser_.popRepeater();
         parser_.advance(Symbol::sMapEnd);
@@ -419,7 +419,7 @@ size_t JsonDecoder<P>::skipMap() {
     parser_.advance(Symbol::sMapStart);
     parser_.pop();
     parser_.advance(Symbol::sMapEnd);
-    expect(JsonParser::tkObjectStart);
+    expect(JsonParser::Token::ObjectStart);
     skipComposite();
     return 0;
 }
@@ -429,11 +429,11 @@ size_t JsonDecoder<P>::decodeUnionIndex() {
     parser_.advance(Symbol::sUnion);
 
     size_t result;
-    if (in_.peek() == JsonParser::tkNull) {
+    if (in_.peek() == JsonParser::Token::Null) {
         result = parser_.indexForName("null");
     } else {
-        expect(JsonParser::tkObjectStart);
-        expect(JsonParser::tkString);
+        expect(JsonParser::Token::ObjectStart);
+        expect(JsonParser::Token::String);
         result = parser_.indexForName(in_.stringValue());
     }
     parser_.selectBranch(result);
