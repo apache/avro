@@ -9,8 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest] # All supported OS
         java: [8] # Minimum supported major version
+        os: [ubuntu-latest, windows-latest, macOS-latest] # All supported OS
     steps:
     - name: Check out repository
       uses: actions/checkout@v1
@@ -40,18 +40,34 @@ jobs:
         file: ./build/reports/jacoco/test/jacocoTestReport.xml
         flags: baseline,${{ matrix.os }}
         fail_ci_if_error: true
-  # Run further compatibility tests to ensure that key versions of Gradle/Avro
-  # work on a variety of OS/Java version combinations
-  recent-compatibility-tests:
-    name: Java ${{ matrix.java }}/${{ matrix.os }} recent version compatibility
+  compatibility-tests:
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}/os ${{ matrix.os }}"
     needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        avro: ["1.10.0", "1.10.1", "1.10.2"]
+        gradle: [
+            "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
+            "1.4.0", "1.4.10", "1.4.20", "1.4.21",
+            "5.1", "5.1.1", "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6", "5.6.1", "5.6.2", "5.6.3", "5.6.4",
+            "6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2",
+            "6.3", "6.4", "6.4.1", "6.5", "6.5.1", "6.6", "6.6.1",
+            "6.7", "6.7.1", "6.8", "6.8.1", "6.8.2", "6.8.3"
+        ]
+        java: ["8", "11", "13", "14", "15"] # All supported major versions
+#        java: [ "8", "11" ] # LTS versions only; 17 will be the next one
+        kotlin: [
+            "1.2.20", "1.2.21",
+            "1.2.30", "1.2.31", "1.2.40", "1.2.41", "1.2.50", "1.2.51", "1.2.60", "1.2.61", "1.2.70", "1.2.71",
+            "1.3.0", "1.3.10", "1.3.11",
+            "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
+            "1.4.0", "1.4.10", "1.4.20", "1.4.21"
+        ]
         # Exclude mac as it's unreliable at the moment
         # See https://github.com/actions/virtual-environments/issues/736
-        os: [ubuntu-latest, windows-latest]
-        java: [8, 11, 13, 14, 15] # All supported major versions
+        os: ["ubuntu-latest", "windows-latest"]
+#        os: [ "ubuntu-latest" ] # Only a single OS to cut down on execution time
       fail-fast: true
     steps:
     - name: Check out repository
@@ -61,6 +77,8 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         architecture: x64
+    - name: Output Avro version
+      run: echo "Avro ${{ matrix.avro }}"
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
@@ -70,41 +88,7 @@ jobs:
     - name: Run recent version compatibility tests
       uses: eskatos/gradle-command-action@v1
       with:
-        arguments: --info testRecentVersionCompatibility
-        dependencies-cache-enabled: true
-    - name: Stop Gradle Daemon
-      uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: --stop
-  # Run exhaustive compatibility testing of further Gradle/Avro versions on a
-  # smaller set of OS/Java versions
-  full-compatibility-tests:
-    name: Java ${{ matrix.java }}/${{ matrix.os }} full compatibility
-    needs: [build]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest] # Only a single OS to cut down on execution time
-        java: [8, 11] # LTS versions only; 17 will be the next one
-      fail-fast: true
-    steps:
-    - name: Check out repository
-      uses: actions/checkout@v1
-    - name: Set up Java ${{ matrix.java }}
-      uses: actions/setup-java@v1
-      with:
-        java-version: ${{ matrix.java }}
-        architecture: x64
-    - name: Output Java version
-      run: java -version
-    - name: Output Gradle version
-      uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: --version
-    - name: Run full version compatibility tests
-      uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: --info testVersionCompatibility
+        arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinVersion=${{ matrix.kotlin }}
         dependencies-cache-enabled: true
     - name: Stop Gradle Daemon
       uses: eskatos/gradle-command-action@v1
@@ -113,16 +97,14 @@ jobs:
   # Early visibility to whether the project works on upcoming Java versions
   unsupported-java-versions:
     # Most Java version compatibility failures will manifest directly in the
-    # test suite with any Avro version; no need to run compatibity test
+    # test suite with any Avro version; no need to run compatibility test
     # target.
     name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Exclude mac as it's unreliable at the moment
-        # See https://github.com/actions/virtual-environments/issues/736
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # Only a single OS to cut down on execution time
         java: [16-ea] # EA builds of all current pre-release major versions
       fail-fast: false
     steps:
@@ -145,9 +127,6 @@ jobs:
       with:
         arguments: --info build
         dependencies-cache-enabled: true
-    - name: Build with Gradle
-      continue-on-error: true
-      run: ./gradlew --no-daemon --info build
     - name: Stop Gradle Daemon
       uses: eskatos/gradle-command-action@v1
       with:
