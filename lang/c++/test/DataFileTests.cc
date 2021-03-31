@@ -63,7 +63,7 @@ struct Complex {
 struct Integer {
     int64_t re;
     Integer() : re(0) {}
-    Integer(int64_t r) : re(r) {}
+    explicit Integer(int64_t r) : re(r) {}
 };
 
 using ComplexInteger = Complex<int64_t>;
@@ -72,7 +72,7 @@ using ComplexDouble = Complex<double>;
 struct Double {
     double re;
     Double() : re(0) {}
-    Double(double r) : re(r) {}
+    explicit Double(double r) : re(r) {}
 };
 
 namespace avro {
@@ -237,7 +237,7 @@ public:
 
         GenericDatum &c = p.second;
         c = GenericDatum(writerSchema.root());
-        GenericRecord &r = c.value<GenericRecord>();
+        auto &r = c.value<GenericRecord>();
 
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
             r.fieldAt(0) = re;
@@ -255,7 +255,7 @@ public:
 
         GenericDatum &c = p.second;
         c = GenericDatum(writerSchema.root());
-        GenericRecord &r = c.value<GenericRecord>();
+        auto &r = c.value<GenericRecord>();
 
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
             r.field("re") = re;
@@ -328,7 +328,7 @@ public:
         const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord &r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 2;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
             const GenericDatum &f0 = r.fieldAt(0);
@@ -355,7 +355,7 @@ public:
         const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord &r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 2;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
             const GenericDatum &f0 = r.field("re");
@@ -382,7 +382,7 @@ public:
         const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord &r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 1;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
             const GenericDatum &f0 = r.fieldAt(0);
@@ -469,7 +469,7 @@ public:
     // This is a direct port of testSplits() from
     // lang/java/avro/src/test/java/org/apache/avro/TestDataFile.java.
     void testReaderSplits() {
-        boost::mt19937 random(static_cast<uint32_t>(time(0)));
+        boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         std::ifstream just_for_length(
             filename, std::ifstream::ate | std::ifstream::binary);
@@ -678,7 +678,7 @@ struct WriterObj {
 
 struct ReaderObj {
     std::string s2;
-    ReaderObj(const char *s2) : s2(s2) {}
+    explicit ReaderObj(const char *s2) : s2(s2) {}
 };
 
 namespace avro {
@@ -693,12 +693,11 @@ struct codec_traits<WriterObj> {
 template<>
 struct codec_traits<ReaderObj> {
     static void decode(Decoder &d, ReaderObj &v) {
-        if (avro::ResolvingDecoder *rd =
+        if (auto *rd =
                 dynamic_cast<avro::ResolvingDecoder *>(&d)) {
             const std::vector<size_t> fo = rd->fieldOrder();
-            for (std::vector<size_t>::const_iterator it = fo.begin();
-                 it != fo.end(); ++it) {
-                switch (*it) {
+            for (unsigned long it : fo) {
+                switch (it) {
                     case 0: {
                         avro::decode(d, v.s2);
                         break;
@@ -820,7 +819,7 @@ void testLastSync(avro::Codec codec) {
                                             writerSchema, 1024, codec);
 
         uint64_t lastSync = df.getCurrentBlockStart();
-        syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, 0));
+        syncMetadata.emplace_back(lastSync, 0);
         for (int i = 0; i < numberOfRecords; i++) {
             df.write(TestRecord(largeString, (int64_t) i));
 
@@ -828,7 +827,7 @@ void testLastSync(avro::Codec codec) {
             if (df.getCurrentBlockStart() != lastSync) {
                 int recordsUptoSync =
                     i; // 1 less than total number of records written, since the sync block is sealed before a write
-                syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, recordsUptoSync));
+                syncMetadata.emplace_back(lastSync, recordsUptoSync);
                 lastSync = df.getCurrentBlockStart();
 
                 //::printf("\nPast current block start %llu, total rows upto sync %d", lastSync, recordsUptoSync);
@@ -836,7 +835,7 @@ void testLastSync(avro::Codec codec) {
         }
 
         //::printf("\nPast current block start %llu, total rows upto sync %d", df.getCurrentBlockStart(), numberOfRecords);
-        syncMetadata.push_back(std::pair<uint64_t, int>(df.getCurrentBlockStart(), numberOfRecords));
+        syncMetadata.emplace_back(df.getCurrentBlockStart(), numberOfRecords);
 
         df.flush();
         df.close();
@@ -1007,21 +1006,21 @@ void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
 test_suite *
 init_unit_test_suite(int argc, char *argv[]) {
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.defalate.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.defalate.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.deflate.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
             &DataFileTest::testWriteWithDeflateCodec, t1));
@@ -1030,7 +1029,7 @@ init_unit_test_suite(int argc, char *argv[]) {
     }
 #ifdef SNAPPY_CODEC_AVAILABLE
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.snappy.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.snappy.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.snappy.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
             &DataFileTest::testWriteWithSnappyCodec, t1));
@@ -1039,14 +1038,14 @@ init_unit_test_suite(int argc, char *argv[]) {
     }
 #endif
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
         shared_ptr<DataFileTest> t2(new DataFileTest("test2.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGeneric, t2));
         addReaderTests(ts, t2);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test3.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test3.df");
         shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteDouble, t3));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDouble, t3));
@@ -1058,14 +1057,14 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test4.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test4.df");
         shared_ptr<DataFileTest> t4(new DataFileTest("test4.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testTruncate, t4));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t4));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test5.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test5.df");
         shared_ptr<DataFileTest> t5(new DataFileTest("test5.df", sch, isch));
         ts->add(
             BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGenericByName, t5));
@@ -1073,13 +1072,13 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test6.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test6.df");
         shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test8.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test8.df");
         shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
 #ifdef SNAPPY_CODEC_AVAILABLE
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
@@ -1087,14 +1086,14 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test7.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test7.df");
         shared_ptr<DataFileTest> t7(new DataFileTest("test7.df", fsch, fsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite, t7));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t7));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test9.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test9.df");
         shared_ptr<DataFileTest> t9(new DataFileTest("test9.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t9));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSyncSeek, t9));
@@ -1102,7 +1101,7 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test10.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test10.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test10.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(
@@ -1111,7 +1110,7 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test11.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test11.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test11.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSplits, t));
@@ -1119,7 +1118,7 @@ init_unit_test_suite(int argc, char *argv[]) {
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
@@ -1145,5 +1144,5 @@ init_unit_test_suite(int argc, char *argv[]) {
     boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
 #endif
 
-    return 0;
+    return nullptr;
 }

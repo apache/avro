@@ -38,17 +38,17 @@ const char *basicSchemas[] = {
     "\"string\"",
 
     // Primitive types - longer
-    "{ \"type\": \"null\" }",
-    "{ \"type\": \"boolean\" }",
-    "{ \"type\": \"int\" }",
-    "{ \"type\": \"long\" }",
-    "{ \"type\": \"float\" }",
-    "{ \"type\": \"double\" }",
-    "{ \"type\": \"bytes\" }",
-    "{ \"type\": \"string\" }",
+    R"({ "type": "null" })",
+    R"({ "type": "boolean" })",
+    R"({ "type": "int" })",
+    R"({ "type": "long" })",
+    R"({ "type": "float" })",
+    R"({ "type": "double" })",
+    R"({ "type": "bytes" })",
+    R"({ "type": "string" })",
 
     // Record
-    "{\"type\":\"record\",\"name\":\"Test\",\"doc\":\"Doc_string\",\"fields\":[]}",
+    R"({"type":"record","name":"Test","doc":"Doc_string","fields":[]})",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f\",\"type\":\"long\"}]}",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
@@ -63,44 +63,44 @@ const char *basicSchemas[] = {
     "\"fields\":[{\"name\":\"value\",\"type\":\"long\",\"doc\":\"recursive_doc\"},"
     "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    "{\"type\":\"enum\",\"doc\":\"enum_doc\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
+    R"({"type":"enum","doc":"enum_doc","name":"Test","symbols":["A","B"]})",
 
     // Array
-    "{\"type\":\"array\",\"doc\":\"array_doc\",\"items\":\"long\"}",
+    R"({"type":"array","doc":"array_doc","items":"long"})",
     "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Map
-    "{\"type\":\"map\",\"doc\":\"map_doc\",\"values\":\"long\"}",
+    R"({"type":"map","doc":"map_doc","values":"long"})",
     "{\"type\":\"map\",\"values\":{\"type\":\"enum\", "
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Union
-    "[\"string\",\"null\",\"long\"]",
+    R"(["string","null","long"])",
 
     // Fixed
-    "{\"type\":\"fixed\",\"doc\":\"fixed_doc\",\"name\":\"Test\",\"size\":1}",
+    R"({"type":"fixed","doc":"fixed_doc","name":"Test","size":1})",
     "{\"type\":\"fixed\",\"name\":\"MyFixed\","
     "\"namespace\":\"org.apache.hadoop.avro\",\"size\":1}",
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
+    R"({"type":"fixed","name":"Test","size":1})",
+    R"({"type":"fixed","name":"Test","size":1})",
 
     // Extra attributes (should be ignored)
-    "{\"type\": \"null\", \"extra attribute\": \"should be ignored\"}",
-    "{\"type\": \"boolean\", \"extra1\": 1, \"extra2\": 2, \"extra3\": 3}",
+    R"({"type": "null", "extra attribute": "should be ignored"})",
+    R"({"type": "boolean", "extra1": 1, "extra2": 2, "extra3": 3})",
     "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
     "[{\"name\": \"f\",\"type\": \"long\"}], \"extra attribute\": 1}",
     "{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"],"
     "\"extra attribute\": 1}",
-    "{\"type\": \"array\", \"items\": \"long\", \"extra attribute\": 1}",
-    "{\"type\": \"map\", \"values\": \"long\", \"extra attribute\": 1}",
-    "{\"type\": \"fixed\", \"name\": \"Test\", \"size\": 1, \"extra attribute\": 1}",
+    R"({"type": "array", "items": "long", "extra attribute": 1})",
+    R"({"type": "map", "values": "long", "extra attribute": 1})",
+    R"({"type": "fixed", "name": "Test", "size": 1, "extra attribute": 1})",
 
     // defaults
     // default double -  long
-    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 2 }]}",
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : 2 }]})",
     // default double - double
-    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 1.2 }]}",
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : 1.2 }]})",
 
     // namespace with '$' in it.
     "{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"a.b$\",\"fields\":"
@@ -110,9 +110,9 @@ const char *basicSchemas[] = {
 const char *basicSchemaErrors[] = {
     // Record
     // No fields
-    "{\"type\":\"record\",\"name\":\"LongList\"}",
+    R"({"type":"record","name":"LongList"})",
     // Fields not an array
-    "{\"type\":\"record\",\"name\":\"LongList\", \"fields\": \"hi\"}",
+    R"({"type":"record","name":"LongList", "fields": "hi"})",
 
     // Undefined name
     "{\"type\":\"record\",\"name\":\"LongList\","
@@ -135,22 +135,22 @@ const char *basicSchemaErrors[] = {
 
     // Union
     // Duplicate type
-    "[\"string\", \"long\", \"long\"]",
+    R"(["string", "long", "long"])",
     // Duplicate type
     "[{\"type\": \"array\", \"items\": \"long\"}, "
     "{\"type\": \"array\", \"items\": \"string\"}]",
 
     // Fixed
     // No size
-    "{\"type\": \"fixed\", \"name\": \"Missing size\"}",
+    R"({"type": "fixed", "name": "Missing size"})",
     // No name
-    "{\"type\": \"fixed\", \"size\": 314}",
+    R"({"type": "fixed", "size": 314})",
 
     // defaults
     // default double - null
-    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : null }]}",
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : null }]})",
     // default double - string
-    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : \"string\" }]}"
+    R"({ "name":"test", "type": "record", "fields": [ {"name": "double","type": "double","default" : "string" }]})"
 
 };
 
@@ -164,7 +164,7 @@ const char *roundTripSchemas[] = {
     "\"bytes\"",
     "\"string\"",
     // Record
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
+    R"({"type":"record","name":"Test","fields":[]})",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f\",\"type\":\"long\"}]}",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
@@ -180,39 +180,39 @@ const char *roundTripSchemas[] = {
     "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
     "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    "{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
+    R"({"type":"enum","name":"Test","symbols":["A","B"]})",
 
     // Array
-    "{\"type\":\"array\",\"items\":\"long\"}",
+    R"({"type":"array","items":"long"})",
     "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Map
-    "{\"type\":\"map\",\"values\":\"long\"}",
+    R"({"type":"map","values":"long"})",
     "{\"type\":\"map\",\"values\":{\"type\":\"enum\","
     "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Union
-    "[\"string\",\"null\",\"long\"]",
+    R"(["string","null","long"])",
 
     // Fixed
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
+    R"({"type":"fixed","name":"Test","size":1})",
     "{\"type\":\"fixed\",\"namespace\":\"org.apache.hadoop.avro\","
     "\"name\":\"MyFixed\",\"size\":1}",
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
-    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
+    R"({"type":"fixed","name":"Test","size":1})",
+    R"({"type":"fixed","name":"Test","size":1})",
 
     // Logical types
-    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":12,\"scale\":6}",
-    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":16,\"logicalType\":\"decimal\",\"precision\":38,\"scale\":9}",
-    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":129,\"logicalType\":\"decimal\",\"precision\":310,\"scale\":155}",
-    "{\"type\":\"int\",\"logicalType\":\"date\"}",
-    "{\"type\":\"int\",\"logicalType\":\"time-millis\"}",
-    "{\"type\":\"long\",\"logicalType\":\"time-micros\"}",
-    "{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}",
-    "{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}",
-    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}",
-    "{\"type\":\"string\",\"logicalType\":\"uuid\"}",
+    R"({"type":"bytes","logicalType":"decimal","precision":12,"scale":6})",
+    R"({"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9})",
+    R"({"type":"fixed","name":"test","size":129,"logicalType":"decimal","precision":310,"scale":155})",
+    R"({"type":"int","logicalType":"date"})",
+    R"({"type":"int","logicalType":"time-millis"})",
+    R"({"type":"long","logicalType":"time-micros"})",
+    R"({"type":"long","logicalType":"timestamp-millis"})",
+    R"({"type":"long","logicalType":"timestamp-micros"})",
+    R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})",
+    R"({"type":"string","logicalType":"uuid"})",
 
     // namespace with '$' in it.
     "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
@@ -221,24 +221,24 @@ const char *roundTripSchemas[] = {
 
 const char *malformedLogicalTypes[] = {
     // Wrong base type.
-    "{\"type\":\"long\",\"logicalType\": \"decimal\",\"precision\": 10}",
-    "{\"type\":\"string\",\"logicalType\":\"date\"}",
-    "{\"type\":\"string\",\"logicalType\":\"time-millis\"}",
-    "{\"type\":\"string\",\"logicalType\":\"time-micros\"}",
-    "{\"type\":\"string\",\"logicalType\":\"timestamp-millis\"}",
-    "{\"type\":\"string\",\"logicalType\":\"timestamp-micros\"}",
-    "{\"type\":\"string\",\"logicalType\":\"duration\"}",
-    "{\"type\":\"long\",\"logicalType\":\"uuid\"}",
+    R"({"type":"long","logicalType": "decimal","precision": 10})",
+    R"({"type":"string","logicalType":"date"})",
+    R"({"type":"string","logicalType":"time-millis"})",
+    R"({"type":"string","logicalType":"time-micros"})",
+    R"({"type":"string","logicalType":"timestamp-millis"})",
+    R"({"type":"string","logicalType":"timestamp-micros"})",
+    R"({"type":"string","logicalType":"duration"})",
+    R"({"type":"long","logicalType":"uuid"})",
     // Missing the required field 'precision'.
-    "{\"type\":\"bytes\",\"logicalType\":\"decimal\"}",
+    R"({"type":"bytes","logicalType":"decimal"})",
     // The claimed precision is not supported by the size of the fixed type.
-    "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":4,\"name\":\"a\",\"precision\":20}",
-    "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":129,\"name\":\"a\",\"precision\":311}",
+    R"({"type":"fixed","logicalType":"decimal","size":4,"name":"a","precision":20})",
+    R"({"type":"fixed","logicalType":"decimal","size":129,"name":"a","precision":311})",
     // Scale is larger than precision.
-    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":5,\"scale\":10}"};
+    R"({"type":"bytes","logicalType":"decimal","precision":5,"scale":10})"};
 const char *schemasToCompact[] = {
     // Schema without any whitespace
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
+    R"({"type":"record","name":"Test","fields":[]})",
 
     // Schema with whitespaces outside of field names/values only.
     "{\"type\":   \"record\",\n   \n\"name\":\"Test\", \t\t\"fields\":[]}\n \n",
@@ -254,8 +254,8 @@ const char *schemasToCompact[] = {
     "]}"};
 
 const char *compactSchemas[] = {
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
-    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
+    R"({"type":"record","name":"Test","fields":[]})",
+    R"({"type":"record","name":"Test","fields":[]})",
     "{\"type\":\"record\",\"name\":\"ComplexInteger\","
     "\"doc\":\"record_doc °C \u00f8 \\u001f \\n \\n \\t\","
     "\"fields\":["
@@ -456,10 +456,10 @@ static void testMalformedLogicalTypes(const char *schema) {
     ts->add(BOOST_PARAM_TEST_CASE(&func, data, ENDOF(data)))
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
 
-    test_suite *ts = BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
     ts->add(BOOST_TEST_CASE(&avro::schema::testTypes));
     ADD_PARAM_TEST(ts, avro::schema::testBasic, avro::schema::basicSchemas);
     ADD_PARAM_TEST(ts, avro::schema::testBasic_fail,

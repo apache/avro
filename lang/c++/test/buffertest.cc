@@ -19,15 +19,10 @@
 #include <boost/test/included/unit_test_framework.hpp>
 
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>
 #endif
-#include <fstream>
-#include <iostream>
-
-#define BUFFER_UNITTEST
 #include "buffer/BufferPrint.hh"
 #include "buffer/BufferReader.hh"
 #include "buffer/BufferStream.hh"
@@ -502,9 +497,9 @@ void TestReadSome() {
         char datain[5000];
 
         while (is.rdbuf()->in_avail()) {
-            size_t bytesAvail = static_cast<size_t>(is.rdbuf()->in_avail());
+            auto bytesAvail = static_cast<size_t>(is.rdbuf()->in_avail());
             cout << "Bytes avail = " << bytesAvail << endl;
-            size_t in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
+            auto in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
             cout << "Bytes read = " << in << endl;
             BOOST_CHECK_EQUAL(bytesAvail, in);
         }
@@ -600,10 +595,8 @@ void TestIterator() {
         BOOST_CHECK_EQUAL(std::distance(ib.begin(), ib.end()), 2);
 
         size_t acc = 0;
-        for (OutputBuffer::const_iterator iter = ob.begin();
-             iter != ob.end();
-             ++iter) {
-            acc += iter->size();
+        for (auto &it : ob) {
+            acc += it.size();
         }
         BOOST_CHECK_EQUAL(ob.freeSpace(), acc);
 
@@ -728,7 +721,7 @@ void TestSplit() {
 
         char datain[12];
         avro::istream is(buf);
-        size_t in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
+        auto in = static_cast<size_t>(is.readsome(datain, sizeof(datain)));
         BOOST_CHECK_EQUAL(in, sizeof(datain));
         BOOST_CHECK_EQUAL(static_cast<size_t>(is.tellg()), sizeof(datain));
 
@@ -767,7 +760,7 @@ void TestSplitOnBorder() {
 
         std::unique_ptr<char[]> datain(new char[firstChunkSize]);
         avro::istream is(buf);
-        size_t in = static_cast<size_t>(is.readsome(&datain[0], firstChunkSize));
+        auto in = static_cast<size_t>(is.readsome(&datain[0], firstChunkSize));
         BOOST_CHECK_EQUAL(in, firstChunkSize);
 
         OutputBuffer newBuf;
@@ -947,7 +940,7 @@ void TestCopy() {
         }
         try {
             BufferReader br(wb);
-            avro::InputBuffer ib = br.copyData(10);
+            avro::InputBuffer it = br.copyData(10);
         } catch (std::exception &e) {
             cout << "Intentially triggered exception: " << e.what() << endl;
         }
@@ -1102,7 +1095,7 @@ struct BufferTestSuite : public boost::unit_test::test_suite {
 
 boost::unit_test::test_suite *
 init_unit_test_suite(int, char *[]) {
-    boost::unit_test::test_suite *test(BOOST_TEST_SUITE("Buffer Unit Tests"));
+    auto *test(BOOST_TEST_SUITE("Buffer Unit Tests"));
     test->add(new BufferTestSuite());
 
     return test;

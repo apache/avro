@@ -18,23 +18,12 @@
 
 #include "Compiler.hh"
 #include "bigrecord.hh"
-#include "bigrecord2.hh"
 #include "bigrecord_r.hh"
-#include "circulardep.hh"
-#include "crossref.hh"
-#include "empty_record.hh"
-#include "primitivetypes.hh"
-#include "recursive.hh"
-#include "reuse.hh"
-#include "tree1.hh"
-#include "tree2.hh"
 #include "tweet.hh"
 #include "union_array_union.hh"
-#include "union_conflict.hh"
 #include "union_map_union.hh"
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <fstream>
 
 #ifdef min
 #undef min
@@ -279,8 +268,8 @@ void testEncoding2() {
 }
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
-    boost::unit_test::test_suite *ts = BOOST_TEST_SUITE("Code generator tests");
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
+    auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testEncoding));
     ts->add(BOOST_TEST_CASE(testResolution));
     ts->add(BOOST_TEST_CASE(testEncoding2<uau::r1>));

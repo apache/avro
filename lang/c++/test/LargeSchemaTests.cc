@@ -23,7 +23,6 @@
 
 #include <boost/test/included/unit_test_framework.hpp>
 #include <boost/test/parameterized_test.hpp>
-#include <boost/test/unit_test.hpp>
 
 void testLargeSchema() {
     std::ifstream in("jsonschemas/large_schema.avsc");
@@ -35,10 +34,10 @@ void testLargeSchema() {
 }
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
 
-    test_suite *ts = BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for schemas");
     ts->add(BOOST_TEST_CASE(&testLargeSchema));
     return ts;
 }

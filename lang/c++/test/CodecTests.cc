@@ -26,9 +26,9 @@
 #include "ValidSchema.hh"
 
 #include <boost/bind.hpp>
+#include <cstdint>
 #include <functional>
 #include <stack>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -128,7 +128,7 @@ class Scanner {
     const char *const end;
 
 public:
-    Scanner(const char *calls) : p(calls), end(calls + strlen(calls)) {}
+    explicit Scanner(const char *calls) : p(calls), end(calls + strlen(calls)) {}
     Scanner(const char *calls, size_t len) : p(calls), end(calls + len) {}
     char advance() {
         return *p++;
@@ -156,7 +156,7 @@ static string randomString(size_t len) {
     std::string result;
     result.reserve(len + 1);
     for (size_t i = 0; i < len; ++i) {
-        char c = static_cast<char>(rnd()) & 0x7f;
+        auto c = static_cast<char>(rnd()) & 0x7f;
         if (c == '\0') {
             c = '\x7f';
         }
@@ -237,7 +237,7 @@ static vector<string> randomValues(const char *calls) {
 static unique_ptr<OutputStream> generate(Encoder &e, const char *calls,
                                          const vector<string> &values) {
     Scanner sc(calls);
-    vector<string>::const_iterator it = values.begin();
+    auto it = values.begin();
     unique_ptr<OutputStream> ob = memoryOutputStream();
     e.init(*ob);
 
@@ -384,7 +384,7 @@ static void check(Decoder &d, unsigned int skipLevel,
     const size_t zero = 0;
     Scanner sc(calls);
     stack<StackElement> containerStack;
-    vector<string>::const_iterator it = values.begin();
+    auto it = values.begin();
     while (!sc.isDone()) {
         char c = sc.advance();
         switch (c) {
@@ -398,22 +398,22 @@ static void check(Decoder &d, unsigned int skipLevel,
             } break;
             case 'I': {
                 int32_t b1 = d.decodeInt();
-                int32_t b2 = from_string<int32_t>(*it++);
+                auto b2 = from_string<int32_t>(*it++);
                 BOOST_CHECK_EQUAL(b1, b2);
             } break;
             case 'L': {
                 int64_t b1 = d.decodeLong();
-                int64_t b2 = from_string<int64_t>(*it++);
+                auto b2 = from_string<int64_t>(*it++);
                 BOOST_CHECK_EQUAL(b1, b2);
             } break;
             case 'F': {
                 float b1 = d.decodeFloat();
-                float b2 = from_string<float>(*it++);
+                auto b2 = from_string<float>(*it++);
                 BOOST_CHECK_CLOSE(b1, b2, 0.001f);
             } break;
             case 'D': {
                 double b1 = d.decodeDouble();
-                double b2 = from_string<double>(*it++);
+                auto b2 = from_string<double>(*it++);
                 BOOST_CHECK_CLOSE(b1, b2, 0.001f);
             } break;
             case 'S':
@@ -633,8 +633,8 @@ void testCodec(const TestData &td) {
 
         // dump(*p);
 
-        for (unsigned int i = 0; i <= td.depth; ++i) {
-            unsigned int skipLevel = td.depth - i;
+        for (unsigned int j = 0; j <= td.depth; ++j) {
+            unsigned int skipLevel = td.depth - j;
             BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
                                            << " schema: " << td.schema
                                            << " calls: " << td.calls
@@ -669,8 +669,8 @@ void testCodecResolving(const TestData3 &td) {
         // dump(*p);
 
         ValidSchema rvs = makeValidSchema(td.readerSchema);
-        for (unsigned int i = 0; i <= td.depth; ++i) {
-            unsigned int skipLevel = td.depth - i;
+        for (unsigned int j = 0; j <= td.depth; ++j) {
+            unsigned int skipLevel = td.depth - j;
             BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
                                            << " writer schema: " << td.writerSchema
                                            << " writer calls: " << td.writerCalls
@@ -689,7 +689,7 @@ void testCodecResolving(const TestData3 &td) {
 static vector<string> mkValues(const char *const values[]) {
     vector<string> result;
     for (const char *const *p = values; *p; ++p) {
-        result.push_back(*p);
+        result.emplace_back(*p);
     }
     return result;
 }
@@ -909,58 +909,58 @@ static const TestData data[] = {
     {"\"bytes\"", "b0", 1},
     {"\"bytes\"", "b10", 1},
 
-    {"{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 1}", "f1", 1},
-    {"{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 10}", "f10", 1},
-    {"{\"type\":\"enum\", \"name\":\"en\", \"symbols\":[\"v1\", \"v2\"]}",
+    {R"({"type":"fixed", "name":"fi", "size": 1})", "f1", 1},
+    {R"({"type":"fixed", "name":"fi", "size": 10})", "f10", 1},
+    {R"({"type":"enum", "name":"en", "symbols":["v1", "v2"]})",
      "e1", 1},
 
-    {"{\"type\":\"array\", \"items\": \"boolean\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"long\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"float\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"double\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"string\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"bytes\"}", "[]", 2},
+    {R"({"type":"array", "items": "boolean"})", "[]", 2},
+    {R"({"type":"array", "items": "int"})", "[]", 2},
+    {R"({"type":"array", "items": "long"})", "[]", 2},
+    {R"({"type":"array", "items": "float"})", "[]", 2},
+    {R"({"type":"array", "items": "double"})", "[]", 2},
+    {R"({"type":"array", "items": "string"})", "[]", 2},
+    {R"({"type":"array", "items": "bytes"})", "[]", 2},
     {"{\"type\":\"array\", \"items\":{\"type\":\"fixed\", "
      "\"name\":\"fi\", \"size\": 10}}",
      "[]", 2},
 
-    {"{\"type\":\"array\", \"items\": \"boolean\"}", "[c1sB]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]", 2},
-    {"{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]", 2},
-    {"{\"type\":\"array\", \"items\": \"float\"}", "[c1sF]", 2},
-    {"{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]", 2},
-    {"{\"type\":\"array\", \"items\": \"string\"}", "[c1sS10]", 2},
-    {"{\"type\":\"array\", \"items\": \"bytes\"}", "[c1sb10]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sIc1sI]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[c2sIsI]", 2},
+    {R"({"type":"array", "items": "boolean"})", "[c1sB]", 2},
+    {R"({"type":"array", "items": "int"})", "[c1sI]", 2},
+    {R"({"type":"array", "items": "long"})", "[c1sL]", 2},
+    {R"({"type":"array", "items": "float"})", "[c1sF]", 2},
+    {R"({"type":"array", "items": "double"})", "[c1sD]", 2},
+    {R"({"type":"array", "items": "string"})", "[c1sS10]", 2},
+    {R"({"type":"array", "items": "bytes"})", "[c1sb10]", 2},
+    {R"({"type":"array", "items": "int"})", "[c1sIc1sI]", 2},
+    {R"({"type":"array", "items": "int"})", "[c2sIsI]", 2},
     {"{\"type\":\"array\", \"items\":{\"type\":\"fixed\", "
      "\"name\":\"fi\", \"size\": 10}}",
      "[c2sf10sf10]", 2},
 
-    {"{\"type\":\"map\", \"values\": \"boolean\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"long\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"float\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"double\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"string\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"bytes\"}", "{}", 2},
+    {R"({"type":"map", "values": "boolean"})", "{}", 2},
+    {R"({"type":"map", "values": "int"})", "{}", 2},
+    {R"({"type":"map", "values": "long"})", "{}", 2},
+    {R"({"type":"map", "values": "float"})", "{}", 2},
+    {R"({"type":"map", "values": "double"})", "{}", 2},
+    {R"({"type":"map", "values": "string"})", "{}", 2},
+    {R"({"type":"map", "values": "bytes"})", "{}", 2},
     {"{\"type\":\"map\", \"values\": "
      "{\"type\":\"array\", \"items\":\"int\"}}",
      "{}", 2},
 
-    {"{\"type\":\"map\", \"values\": \"boolean\"}", "{c1sK5B}", 2},
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}", 2},
-    {"{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}", 2},
-    {"{\"type\":\"map\", \"values\": \"float\"}", "{c1sK5F}", 2},
-    {"{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}", 2},
-    {"{\"type\":\"map\", \"values\": \"string\"}", "{c1sK5S10}", 2},
-    {"{\"type\":\"map\", \"values\": \"bytes\"}", "{c1sK5b10}", 2},
+    {R"({"type":"map", "values": "boolean"})", "{c1sK5B}", 2},
+    {R"({"type":"map", "values": "int"})", "{c1sK5I}", 2},
+    {R"({"type":"map", "values": "long"})", "{c1sK5L}", 2},
+    {R"({"type":"map", "values": "float"})", "{c1sK5F}", 2},
+    {R"({"type":"map", "values": "double"})", "{c1sK5D}", 2},
+    {R"({"type":"map", "values": "string"})", "{c1sK5S10}", 2},
+    {R"({"type":"map", "values": "bytes"})", "{c1sK5b10}", 2},
     {"{\"type\":\"map\", \"values\": "
      "{\"type\":\"array\", \"items\":\"int\"}}",
      "{c1sK5[c3sIsIsI]}", 2},
 
-    {"{\"type\":\"map\", \"values\": \"boolean\"}",
+    {R"({"type":"map", "values": "boolean"})",
      "{c1sK5Bc2sK5BsK5B}", 2},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1065,21 +1065,21 @@ static const TestData data[] = {
      "\"type\":[\"null\", \"int\"]}]}}",
      "[c2sLU0NsLU1I]", 2},
 
-    {"[\"boolean\", \"null\" ]", "U0B", 1},
-    {"[\"int\", \"null\" ]", "U0I", 1},
-    {"[\"long\", \"null\" ]", "U0L", 1},
-    {"[\"float\", \"null\" ]", "U0F", 1},
-    {"[\"double\", \"null\" ]", "U0D", 1},
-    {"[\"string\", \"null\" ]", "U0S10", 1},
-    {"[\"bytes\", \"null\" ]", "U0b10", 1},
+    {R"(["boolean", "null" ])", "U0B", 1},
+    {R"(["int", "null" ])", "U0I", 1},
+    {R"(["long", "null" ])", "U0L", 1},
+    {R"(["float", "null" ])", "U0F", 1},
+    {R"(["double", "null" ])", "U0D", 1},
+    {R"(["string", "null" ])", "U0S10", 1},
+    {R"(["bytes", "null" ])", "U0b10", 1},
 
-    {"[\"null\", \"int\"]", "U0N", 1},
-    {"[\"boolean\", \"int\"]", "U0B", 1},
-    {"[\"boolean\", \"int\"]", "U1I", 1},
-    {"[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
+    {R"(["null", "int"])", "U0N", 1},
+    {R"(["boolean", "int"])", "U0B", 1},
+    {R"(["boolean", "int"])", "U1I", 1},
+    {R"(["boolean", {"type":"array", "items":"int"} ])",
      "U0B", 1},
 
-    {"[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
+    {R"(["boolean", {"type":"array", "items":"int"} ])",
      "U1[c1sI]", 2},
 
     // Recursion
@@ -1178,7 +1178,7 @@ static const TestData2 data2[] = {
     {"\"boolean\"", "B", "[]", 1},
     {"\"boolean\"", "B", "{}", 1},
     {"\"boolean\"", "B", "U0", 1},
-    {"{\"type\":\"fixed\", \"name\":\"fi\", \"size\": 1}", "f1", "f2", 1},
+    {R"({"type":"fixed", "name":"fi", "size": 1})", "f1", "f2", 1},
 };
 
 static const TestData3 data3[] = {
@@ -1189,41 +1189,41 @@ static const TestData3 data3[] = {
     {"\"long\"", "L", "\"double\"", "D", 1},
     {"\"float\"", "F", "\"double\"", "D", 1},
 
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[]",
-     "{\"type\":\"array\", \"items\": \"long\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"long\"}", "[]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[]", 2},
-    {"{\"type\":\"array\", \"items\": \"float\"}", "[]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[]", 2},
+    {R"({"type":"array", "items": "int"})", "[]",
+     R"({"type":"array", "items": "long"})", "[]", 2},
+    {R"({"type":"array", "items": "int"})", "[]",
+     R"({"type":"array", "items": "double"})", "[]", 2},
+    {R"({"type":"array", "items": "long"})", "[]",
+     R"({"type":"array", "items": "double"})", "[]", 2},
+    {R"({"type":"array", "items": "float"})", "[]",
+     R"({"type":"array", "items": "double"})", "[]", 2},
 
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]",
-     "{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]", 2},
-    {"{\"type\":\"array\", \"items\": \"int\"}", "[c1sI]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]", 2},
-    {"{\"type\":\"array\", \"items\": \"long\"}", "[c1sL]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]", 2},
-    {"{\"type\":\"array\", \"items\": \"float\"}", "[c1sF]",
-     "{\"type\":\"array\", \"items\": \"double\"}", "[c1sD]", 2},
+    {R"({"type":"array", "items": "int"})", "[c1sI]",
+     R"({"type":"array", "items": "long"})", "[c1sL]", 2},
+    {R"({"type":"array", "items": "int"})", "[c1sI]",
+     R"({"type":"array", "items": "double"})", "[c1sD]", 2},
+    {R"({"type":"array", "items": "long"})", "[c1sL]",
+     R"({"type":"array", "items": "double"})", "[c1sD]", 2},
+    {R"({"type":"array", "items": "float"})", "[c1sF]",
+     R"({"type":"array", "items": "double"})", "[c1sD]", 2},
 
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{}",
-     "{\"type\":\"map\", \"values\": \"long\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"long\"}", "{}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{}", 2},
-    {"{\"type\":\"map\", \"values\": \"float\"}", "{}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{}", 2},
+    {R"({"type":"map", "values": "int"})", "{}",
+     R"({"type":"map", "values": "long"})", "{}", 2},
+    {R"({"type":"map", "values": "int"})", "{}",
+     R"({"type":"map", "values": "double"})", "{}", 2},
+    {R"({"type":"map", "values": "long"})", "{}",
+     R"({"type":"map", "values": "double"})", "{}", 2},
+    {R"({"type":"map", "values": "float"})", "{}",
+     R"({"type":"map", "values": "double"})", "{}", 2},
 
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}",
-     "{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}", 2},
-    {"{\"type\":\"map\", \"values\": \"int\"}", "{c1sK5I}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}", 2},
-    {"{\"type\":\"map\", \"values\": \"long\"}", "{c1sK5L}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}", 2},
-    {"{\"type\":\"map\", \"values\": \"float\"}", "{c1sK5F}",
-     "{\"type\":\"map\", \"values\": \"double\"}", "{c1sK5D}", 2},
+    {R"({"type":"map", "values": "int"})", "{c1sK5I}",
+     R"({"type":"map", "values": "long"})", "{c1sK5L}", 2},
+    {R"({"type":"map", "values": "int"})", "{c1sK5I}",
+     R"({"type":"map", "values": "double"})", "{c1sK5D}", 2},
+    {R"({"type":"map", "values": "long"})", "{c1sK5L}",
+     R"({"type":"map", "values": "double"})", "{c1sK5D}", 2},
+    {R"({"type":"map", "values": "float"})", "{c1sK5F}",
+     R"({"type":"map", "values": "double"})", "{c1sK5D}", 2},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f\", \"type\":\"int\"}]}",
@@ -1252,18 +1252,18 @@ static const TestData3 data3[] = {
      "{\"name\":\"f3\", \"type\":\"string\"}]}",
      "BLDS", 1},
 
-    {"[\"int\", \"long\"]", "U0I", "[\"long\", \"string\"]", "U0L", 1},
-    {"[\"int\", \"long\"]", "U0I", "[\"double\", \"string\"]", "U0D", 1},
-    {"[\"long\", \"double\"]", "U0L", "[\"double\", \"string\"]", "U0D", 1},
-    {"[\"float\", \"double\"]", "U0F", "[\"double\", \"string\"]", "U0D", 1},
+    {R"(["int", "long"])", "U0I", R"(["long", "string"])", "U0L", 1},
+    {R"(["int", "long"])", "U0I", R"(["double", "string"])", "U0D", 1},
+    {R"(["long", "double"])", "U0L", R"(["double", "string"])", "U0D", 1},
+    {R"(["float", "double"])", "U0F", R"(["double", "string"])", "U0D", 1},
 
-    {"\"int\"", "I", "[\"int\", \"string\"]", "U0I", 1},
+    {"\"int\"", "I", R"(["int", "string"])", "U0I", 1},
 
-    {"[\"int\", \"double\"]", "U0I", "\"int\"", "I", 1},
-    {"[\"int\", \"double\"]", "U0I", "\"long\"", "L", 1},
+    {R"(["int", "double"])", "U0I", "\"int\"", "I", 1},
+    {R"(["int", "double"])", "U0I", "\"long\"", "L", 1},
 
-    {"[\"boolean\", \"int\"]", "U1I", "[\"boolean\", \"long\"]", "U1L", 1},
-    {"[\"boolean\", \"int\"]", "U1I", "[\"long\", \"boolean\"]", "U0L", 1},
+    {R"(["boolean", "int"])", "U1I", R"(["boolean", "long"])", "U1L", 1},
+    {R"(["boolean", "int"])", "U1I", R"(["long", "boolean"])", "U0L", 1},
 };
 
 static const TestData4 data4[] = {
@@ -1273,12 +1273,12 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"string\"},"
      "{\"name\":\"f3\", \"type\":\"int\"}]}",
      "S10S10IS10S10I",
-     {"s1", "s2", "100", "t1", "t2", "200", NULL},
+     {"s1", "s2", "100", "t1", "t2", "200", nullptr},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"string\" },"
      "{\"name\":\"f2\", \"type\":\"string\"}]}",
      "RS10S10RS10S10",
-     {"s1", "s2", "t1", "t2", NULL},
+     {"s1", "s2", "t1", "t2", nullptr},
      1,
      2},
 
@@ -1287,32 +1287,32 @@ static const TestData4 data4[] = {
      "{\"name\":\"f1\", \"type\":\"int\"},"
      "{\"name\":\"f2\", \"type\":\"string\"}]}",
      "IS10",
-     {"10", "hello", NULL},
+     {"10", "hello", nullptr},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f2\", \"type\":\"string\" },"
      "{\"name\":\"f1\", \"type\":\"long\"}]}",
      "RLS10",
-     {"10", "hello", NULL},
+     {"10", "hello", nullptr},
      1,
      1},
 
     // Default values
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "", {NULL}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-                                                                       "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}",
+    {R"({"type":"record","name":"r","fields":[]})", "", {nullptr}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+                                                                   "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}",
      "RI",
-     {"100", NULL},
+     {"100", nullptr},
      1,
      1},
 
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f2\", \"type\":\"int\"}]}",
      "I",
-     {"10", NULL},
+     {"10", nullptr},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
      "{\"name\":\"f2\", \"type\":\"int\"}]}",
      "RII",
-     {"10", "101", NULL},
+     {"10", "101", nullptr},
      1,
      1},
 
@@ -1322,7 +1322,7 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
      "{\"name\": \"g2\", \"type\": \"long\"}]}",
      "IL",
-     {"10", "11", NULL},
+     {"10", "11", nullptr},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
@@ -1330,7 +1330,7 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
      "{\"name\": \"g2\", \"type\": \"long\"}]}}",
      "RRIIL",
-     {"10", "101", "11", NULL},
+     {"10", "101", "11", nullptr},
      1,
      1},
 
@@ -1342,7 +1342,7 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
      "{\"name\": \"g2\", \"type\": \"long\"}]}",
      "LIL",
-     {"10", "12", "13", NULL},
+     {"10", "12", "13", nullptr},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
@@ -1355,7 +1355,7 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}] }, "
      "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
      "RRLILRLI",
-     {"10", "12", "13", "15", "101", NULL},
+     {"10", "12", "13", "15", "101", nullptr},
      1,
      1},
 
@@ -1366,7 +1366,7 @@ static const TestData4 data4[] = {
      "{\"name\":\"f2\", \"type\":\"int\"}] } }, "
      "{\"name\": \"g2\", \"type\": \"long\"}]}",
      "LIL",
-     {"10", "12", "13", NULL},
+     {"10", "12", "13", nullptr},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\", "
      "\"type\":{\"type\":\"record\",\"name\":\"inner1\",\"fields\":["
@@ -1377,15 +1377,15 @@ static const TestData4 data4[] = {
      "\"type\":\"inner1\", "
      "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
      "RRLILRLI",
-     {"10", "12", "13", "15", "101", NULL},
+     {"10", "12", "13", "15", "101", nullptr},
      1,
      1},
 
-    {"{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "", {NULL}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
-                                                                       "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
-                                                                       "\"default\": [100]}]}",
+    {R"({"type":"record","name":"r","fields":[]})", "", {nullptr}, "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+                                                                   "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
+                                                                   "\"default\": [100]}]}",
      "[c1sI]",
-     {"100", NULL},
+     {"100", nullptr},
      1,
      1},
 
@@ -1393,12 +1393,12 @@ static const TestData4 data4[] = {
      "\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\": \"int\"}]} }",
      "[c1sI]",
-     {"99", NULL},
+     {"99", nullptr},
      "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
      "\"name\":\"r\",\"fields\":["
      "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
      "[Rc1sI]",
-     {"100", NULL},
+     {"100", nullptr},
      1,
      1},
 
@@ -1410,65 +1410,65 @@ static const TestData4 data4[] = {
      "{\"name\":\"f1\", \"type\":\"int\"},"
      "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}",
      "[c1sIL]",
-     {"10", "11", NULL},
+     {"10", "11", nullptr},
      "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
      "{\"name\": \"g1\","
      "\"type\":{\"type\":\"array\",\"items\":{"
      "\"name\":\"item\",\"type\":\"record\",\"fields\":["
      "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}",
      "R[c1sI]",
-     {"10", NULL},
+     {"10", nullptr},
      2,
      1},
 
     // Enum resolution
-    {"{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
+    {R"({"type":"enum","name":"e","symbols":["x","y","z"]})",
      "e2",
-     {NULL},
-     "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
+     {nullptr},
+     R"({"type":"enum","name":"e","symbols":[ "y", "z" ]})",
      "e1",
-     {NULL},
+     {nullptr},
      1,
      1},
 
-    {"{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"x\", \"y\" ]}",
+    {R"({"type":"enum","name":"e","symbols":[ "x", "y" ]})",
      "e1",
-     {NULL},
-     "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
+     {nullptr},
+     R"({"type":"enum","name":"e","symbols":[ "y", "z" ]})",
      "e0",
-     {NULL},
+     {nullptr},
      1,
      1},
 
     // Union
-    {"\"int\"", "I", {"100", NULL}, "[ \"long\", \"int\"]", "U1I", {"100", NULL}, 1, 1},
+    {"\"int\"", "I", {"100", nullptr}, R"([ "long", "int"])", "U1I", {"100", nullptr}, 1, 1},
 
-    {"[ \"long\", \"int\"]", "U1I", {"100", NULL}, "\"int\"", "I", {"100", NULL}, 1, 1},
+    {R"([ "long", "int"])", "U1I", {"100", nullptr}, "\"int\"", "I", {"100", nullptr}, 1, 1},
 
     // Arrray of unions
-    {"{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
+    {R"({"type":"array", "items":[ "long", "int"]})",
      "[c2sU1IsU1I]",
-     {"100", "100", NULL},
-     "{\"type\":\"array\", \"items\": \"int\"}",
+     {"100", "100", nullptr},
+     R"({"type":"array", "items": "int"})",
      "[c2sIsI]",
-     {"100", "100", NULL},
+     {"100", "100", nullptr},
      2,
      1},
 
     // Map of unions
-    {"{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
+    {R"({"type":"map", "values":[ "long", "int"]})",
      "{c2sS10U1IsS10U1I}",
-     {"k1", "100", "k2", "100", NULL},
-     "{\"type\":\"map\", \"values\": \"int\"}",
+     {"k1", "100", "k2", "100", nullptr},
+     R"({"type":"map", "values": "int"})",
      "{c2sS10IsS10I}",
-     {"k1", "100", "k2", "100", NULL},
+     {"k1", "100", "k2", "100", nullptr},
      2,
      1},
 
     // Union + promotion
-    {"\"int\"", "I", {"100", NULL}, "[ \"long\", \"string\"]", "U0L", {"100", NULL}, 1, 1},
+    {"\"int\"", "I", {"100", nullptr}, R"([ "long", "string"])", "U0L", {"100", nullptr}, 1, 1},
 
-    {"[ \"int\", \"string\"]", "U0I", {"100", NULL}, "\"long\"", "L", {"100", NULL}, 1, 1},
+    {R"([ "int", "string"])", "U0I", {"100", nullptr}, "\"long\"", "L", {"100", nullptr}, 1, 1},
 
     // Record where union field is skipped.
     {"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1478,34 +1478,34 @@ static const TestData4 data4[] = {
      "{\"name\":\"f3\", \"type\":\"float\"}"
      "]}",
      "BIU0IF",
-     {"1", "100", "121", "10.75", NULL},
+     {"1", "100", "121", "10.75", nullptr},
      "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
      "{\"name\":\"f0\", \"type\":\"boolean\"},"
      "{\"name\":\"f1\", \"type\":\"long\"},"
      "{\"name\":\"f3\", \"type\":\"double\"}]}",
      "BLD",
-     {"1", "100", "10.75", NULL},
+     {"1", "100", "10.75", nullptr},
      1,
      1},
 };
 
 static const TestData4 data4BinaryOnly[] = {
     // Arrray of unions
-    {"{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
+    {R"({"type":"array", "items":[ "long", "int"]})",
      "[c1sU1Ic1sU1I]",
-     {"100", "100", NULL},
-     "{\"type\":\"array\", \"items\": \"int\"}",
+     {"100", "100", nullptr},
+     R"({"type":"array", "items": "int"})",
      "[c1sIc1sI]",
-     {"100", "100", NULL},
+     {"100", "100", nullptr},
      2},
 
     // Map of unions
-    {"{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
+    {R"({"type":"map", "values":[ "long", "int"]})",
      "{c1sS10U1Ic1sS10U1I}",
-     {"k1", "100", "k2", "100", NULL},
-     "{\"type\":\"map\", \"values\": \"int\"}",
+     {"k1", "100", "k2", "100", nullptr},
+     R"({"type":"map", "values": "int"})",
      "{c1sS10Ic1sS10I}",
-     {"k1", "100", "k2", "100", NULL},
+     {"k1", "100", "k2", "100", nullptr},
      2},
 };
 
@@ -1726,12 +1726,12 @@ struct JsonData {
 };
 
 const JsonData jsonData[] = {
-    {"{\"type\": \"double\"}", " 10 ", "D", 1},
-    {"{\"type\": \"double\"}", " 10.0 ", "D", 1},
-    {"{\"type\": \"double\"}", " \"Infinity\"", "D", 1},
-    {"{\"type\": \"double\"}", " \"-Infinity\"", "D", 1},
-    {"{\"type\": \"double\"}", " \"NaN\"", "D", 1},
-    {"{\"type\": \"long\"}", " 10 ", "L", 1},
+    {R"({"type": "double"})", " 10 ", "D", 1},
+    {R"({"type": "double"})", " 10.0 ", "D", 1},
+    {R"({"type": "double"})", " \"Infinity\"", "D", 1},
+    {R"({"type": "double"})", " \"-Infinity\"", "D", 1},
+    {R"({"type": "double"})", " \"NaN\"", "D", 1},
+    {R"({"type": "long"})", " 10 ", "L", 1},
 };
 
 static void testJson(const JsonData &data) {
@@ -1794,7 +1794,7 @@ boost::unit_test::test_suite *
 init_unit_test_suite(int argc, char *argv[]) {
     using namespace boost::unit_test;
 
-    test_suite *ts = BOOST_TEST_SUITE("Avro C++ unit tests for codecs");
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for codecs");
     avro::parsing::add_tests(*ts);
     ts->add(BOOST_TEST_CASE(avro::testStreamLifetimes));
     ts->add(BOOST_TEST_CASE(avro::testLimitsBinaryCodec));
