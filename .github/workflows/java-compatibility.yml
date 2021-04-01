@@ -80,7 +80,7 @@ jobs:
       matrix:
         avro: ["1.10.2"]
         gradle: ["6.8.3", "7.0-rc-1"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["16", "17ea"]
+        java: ["16", "17-ea"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
