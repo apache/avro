@@ -31,11 +31,6 @@ namespace parsing {
 
 class ValidatingGrammarGenerator {
 protected:
-    template<typename T>
-    static void doFixup(Production &p, const std::map<T, ProductionPtr> &m);
-
-    template<typename T>
-    static void doFixup(Symbol &s, const std::map<T, ProductionPtr> &m);
     virtual ProductionPtr doGenerate(const NodePtr &n,
                                      std::map<NodePtr, ProductionPtr> &m);
 

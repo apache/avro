@@ -49,7 +49,7 @@ public:
                       size_t chunkSize, size_t available) : data_(b), chunkSize_(chunkSize), size_(b.size()),
                                                             available_(available), cur_(0), curLen_(0) {}
 
-    bool next(const uint8_t **data, size_t *len) override {
+    bool next(const uint8_t **data, size_t *len) final {
         if (size_t n = maxLen()) {
             *data = data_[cur_] + curLen_;
             *len = n - curLen_;
@@ -59,11 +59,11 @@ public:
         return false;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         curLen_ -= len;
     }
 
-    void skip(size_t len) override {
+    void skip(size_t len) final {
         while (len > 0) {
             if (size_t n = maxLen()) {
                 if ((curLen_ + len) < n) {
@@ -77,7 +77,7 @@ public:
         }
     }
 
-    size_t byteCount() const override {
+    size_t byteCount() const final {
         return cur_ * chunkSize_ + curLen_;
     }
 };
@@ -91,7 +91,7 @@ public:
     MemoryInputStream2(const uint8_t *data, size_t len)
         : data_(data), size_(len), curLen_(0) {}
 
-    bool next(const uint8_t **data, size_t *len) override {
+    bool next(const uint8_t **data, size_t *len) final {
         if (curLen_ == size_) {
             return false;
         }
@@ -101,18 +101,18 @@ public:
         return true;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         curLen_ -= len;
     }
 
-    void skip(size_t len) override {
+    void skip(size_t len) final {
         if (len > (size_ - curLen_)) {
             len = size_ - curLen_;
         }
         curLen_ += len;
     }
 
-    size_t byteCount() const override {
+    size_t byteCount() const final {
         return curLen_;
     }
 };
@@ -126,14 +126,14 @@ public:
 
     explicit MemoryOutputStream(size_t chunkSize) : chunkSize_(chunkSize),
                                                     available_(0), byteCount_(0) {}
-    ~MemoryOutputStream() override {
+    ~MemoryOutputStream() final {
         for (std::vector<uint8_t *>::const_iterator it = data_.begin();
              it != data_.end(); ++it) {
             delete[] * it;
         }
     }
 
-    bool next(uint8_t **data, size_t *len) override {
+    bool next(uint8_t **data, size_t *len) final {
         if (available_ == 0) {
             data_.push_back(new uint8_t[chunkSize_]);
             available_ = chunkSize_;
@@ -145,16 +145,16 @@ public:
         return true;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         available_ += len;
         byteCount_ -= len;
     }
 
-    uint64_t byteCount() const override {
+    uint64_t byteCount() const final {
         return byteCount_;
     }
 
-    void flush() override {}
+    void flush() final {}
 };
 
 std::unique_ptr<OutputStream> memoryOutputStream(size_t chunkSize) {

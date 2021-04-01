@@ -16,18 +16,14 @@
  * limitations under the License.
  */
 
-#define __STDC_LIMIT_MACROS
-
 #include <algorithm>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <cctype>
 #include <map>
 #include <memory>
 #include <string>
 
 #include "Decoder.hh"
 #include "Encoder.hh"
-#include "NodeImpl.hh"
 #include "Symbol.hh"
 #include "ValidSchema.hh"
 #include "ValidatingCodec.hh"
@@ -53,7 +49,7 @@ using avro::json::JsonParser;
 
 class JsonGrammarGenerator : public ValidatingGrammarGenerator {
     ProductionPtr doGenerate(const NodePtr &n,
-                             std::map<NodePtr, ProductionPtr> &m);
+                             std::map<NodePtr, ProductionPtr> &m) final;
 };
 
 static std::string nameOf(const NodePtr &n) {
@@ -154,16 +150,16 @@ class JsonDecoderHandler {
     JsonParser &in_;
 
 public:
-    JsonDecoderHandler(JsonParser &p) : in_(p) {}
+    explicit JsonDecoderHandler(JsonParser &p) : in_(p) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart:
+            case Symbol::Kind::RecordStart:
                 expectToken(in_, JsonParser::Token::ObjectStart);
                 break;
-            case Symbol::sRecordEnd:
+            case Symbol::Kind::RecordEnd:
                 expectToken(in_, JsonParser::Token::ObjectEnd);
                 break;
-            case Symbol::sField:
+            case Symbol::Kind::Field:
                 expectToken(in_, JsonParser::Token::String);
                 if (s.extra<string>() != in_.stringValue()) {
                     throw Exception("Incorrect field");
@@ -182,35 +178,35 @@ class JsonDecoder : public Decoder {
     JsonDecoderHandler handler_;
     P parser_;
 
-    void init(InputStream &is);
-    void decodeNull();
-    bool decodeBool();
-    int32_t decodeInt();
-    int64_t decodeLong();
-    float decodeFloat();
-    double decodeDouble();
-    void decodeString(string &value);
-    void skipString();
-    void decodeBytes(vector<uint8_t> &value);
-    void skipBytes();
-    void decodeFixed(size_t n, vector<uint8_t> &value);
-    void skipFixed(size_t n);
-    size_t decodeEnum();
-    size_t arrayStart();
-    size_t arrayNext();
-    size_t skipArray();
-    size_t mapStart();
-    size_t mapNext();
-    size_t skipMap();
-    size_t decodeUnionIndex();
+    void init(InputStream &is) final;
+    void decodeNull() final;
+    bool decodeBool() final;
+    int32_t decodeInt() final;
+    int64_t decodeLong() final;
+    float decodeFloat() final;
+    double decodeDouble() final;
+    void decodeString(string &value) final;
+    void skipString() final;
+    void decodeBytes(vector<uint8_t> &value) final;
+    void skipBytes() final;
+    void decodeFixed(size_t n, vector<uint8_t> &value) final;
+    void skipFixed(size_t n) final;
+    size_t decodeEnum() final;
+    size_t arrayStart() final;
+    size_t arrayNext() final;
+    size_t skipArray() final;
+    size_t mapStart() final;
+    size_t mapNext() final;
+    size_t skipMap() final;
+    size_t decodeUnionIndex() final;
 
     void expect(JsonParser::Token tk);
     void skipComposite();
-    void drain();
+    void drain() final;
 
 public:
-    JsonDecoder(const ValidSchema &s) : handler_(in_),
-                                        parser_(JsonGrammarGenerator().generate(s), NULL, handler_) {}
+    explicit JsonDecoder(const ValidSchema &s) : handler_(in_),
+                                                 parser_(JsonGrammarGenerator().generate(s), NULL, handler_) {}
 };
 
 template<typename P>
@@ -226,13 +222,13 @@ void JsonDecoder<P>::expect(JsonParser::Token tk) {
 
 template<typename P>
 void JsonDecoder<P>::decodeNull() {
-    parser_.advance(Symbol::sNull);
+    parser_.advance(Symbol::Kind::Null);
     expect(JsonParser::Token::Null);
 }
 
 template<typename P>
 bool JsonDecoder<P>::decodeBool() {
-    parser_.advance(Symbol::sBool);
+    parser_.advance(Symbol::Kind::Bool);
     expect(JsonParser::Token::Bool);
     bool result = in_.boolValue();
     return result;
@@ -240,7 +236,7 @@ bool JsonDecoder<P>::decodeBool() {
 
 template<typename P>
 int32_t JsonDecoder<P>::decodeInt() {
-    parser_.advance(Symbol::sInt);
+    parser_.advance(Symbol::Kind::Int);
     expect(JsonParser::Token::Long);
     int64_t result = in_.longValue();
     if (result < INT32_MIN || result > INT32_MAX) {
@@ -252,7 +248,7 @@ int32_t JsonDecoder<P>::decodeInt() {
 
 template<typename P>
 int64_t JsonDecoder<P>::decodeLong() {
-    parser_.advance(Symbol::sLong);
+    parser_.advance(Symbol::Kind::Long);
     expect(JsonParser::Token::Long);
     int64_t result = in_.longValue();
     return result;
@@ -260,7 +256,7 @@ int64_t JsonDecoder<P>::decodeLong() {
 
 template<typename P>
 float JsonDecoder<P>::decodeFloat() {
-    parser_.advance(Symbol::sFloat);
+    parser_.advance(Symbol::Kind::Float);
     expect(JsonParser::Token::Double);
     double result = in_.doubleValue();
     return static_cast<float>(result);
@@ -268,7 +264,7 @@ float JsonDecoder<P>::decodeFloat() {
 
 template<typename P>
 double JsonDecoder<P>::decodeDouble() {
-    parser_.advance(Symbol::sDouble);
+    parser_.advance(Symbol::Kind::Double);
     expect(JsonParser::Token::Double);
     double result = in_.doubleValue();
     return result;
@@ -276,14 +272,14 @@ double JsonDecoder<P>::decodeDouble() {
 
 template<typename P>
 void JsonDecoder<P>::decodeString(string &value) {
-    parser_.advance(Symbol::sString);
+    parser_.advance(Symbol::Kind::String);
     expect(JsonParser::Token::String);
     value = in_.stringValue();
 }
 
 template<typename P>
 void JsonDecoder<P>::skipString() {
-    parser_.advance(Symbol::sString);
+    parser_.advance(Symbol::Kind::String);
     expect(JsonParser::Token::String);
 }
 
@@ -293,20 +289,20 @@ static vector<uint8_t> toBytes(const string &s) {
 
 template<typename P>
 void JsonDecoder<P>::decodeBytes(vector<uint8_t> &value) {
-    parser_.advance(Symbol::sBytes);
+    parser_.advance(Symbol::Kind::Bytes);
     expect(JsonParser::Token::String);
     value = toBytes(in_.bytesValue());
 }
 
 template<typename P>
 void JsonDecoder<P>::skipBytes() {
-    parser_.advance(Symbol::sBytes);
+    parser_.advance(Symbol::Kind::Bytes);
     expect(JsonParser::Token::String);
 }
 
 template<typename P>
 void JsonDecoder<P>::decodeFixed(size_t n, vector<uint8_t> &value) {
-    parser_.advance(Symbol::sFixed);
+    parser_.advance(Symbol::Kind::Fixed);
     parser_.assertSize(n);
     expect(JsonParser::Token::String);
     value = toBytes(in_.bytesValue());
@@ -317,7 +313,7 @@ void JsonDecoder<P>::decodeFixed(size_t n, vector<uint8_t> &value) {
 
 template<typename P>
 void JsonDecoder<P>::skipFixed(size_t n) {
-    parser_.advance(Symbol::sFixed);
+    parser_.advance(Symbol::Kind::Fixed);
     parser_.assertSize(n);
     expect(JsonParser::Token::String);
     vector<uint8_t> result = toBytes(in_.bytesValue());
@@ -328,7 +324,7 @@ void JsonDecoder<P>::skipFixed(size_t n) {
 
 template<typename P>
 size_t JsonDecoder<P>::decodeEnum() {
-    parser_.advance(Symbol::sEnum);
+    parser_.advance(Symbol::Kind::Enum);
     expect(JsonParser::Token::String);
     size_t result = parser_.indexForName(in_.stringValue());
     return result;
@@ -336,7 +332,7 @@ size_t JsonDecoder<P>::decodeEnum() {
 
 template<typename P>
 size_t JsonDecoder<P>::arrayStart() {
-    parser_.advance(Symbol::sArrayStart);
+    parser_.advance(Symbol::Kind::ArrayStart);
     parser_.pushRepeatCount(0);
     expect(JsonParser::Token::ArrayStart);
     return arrayNext();
@@ -348,7 +344,7 @@ size_t JsonDecoder<P>::arrayNext() {
     if (in_.peek() == JsonParser::Token::ArrayEnd) {
         in_.advance();
         parser_.popRepeater();
-        parser_.advance(Symbol::sArrayEnd);
+        parser_.advance(Symbol::Kind::ArrayEnd);
         return 0;
     }
     parser_.nextRepeatCount(1);
@@ -385,9 +381,9 @@ void JsonDecoder<P>::drain() {
 
 template<typename P>
 size_t JsonDecoder<P>::skipArray() {
-    parser_.advance(Symbol::sArrayStart);
+    parser_.advance(Symbol::Kind::ArrayStart);
     parser_.pop();
-    parser_.advance(Symbol::sArrayEnd);
+    parser_.advance(Symbol::Kind::ArrayEnd);
     expect(JsonParser::Token::ArrayStart);
     skipComposite();
     return 0;
@@ -395,7 +391,7 @@ size_t JsonDecoder<P>::skipArray() {
 
 template<typename P>
 size_t JsonDecoder<P>::mapStart() {
-    parser_.advance(Symbol::sMapStart);
+    parser_.advance(Symbol::Kind::MapStart);
     parser_.pushRepeatCount(0);
     expect(JsonParser::Token::ObjectStart);
     return mapNext();
@@ -407,7 +403,7 @@ size_t JsonDecoder<P>::mapNext() {
     if (in_.peek() == JsonParser::Token::ObjectEnd) {
         in_.advance();
         parser_.popRepeater();
-        parser_.advance(Symbol::sMapEnd);
+        parser_.advance(Symbol::Kind::MapEnd);
         return 0;
     }
     parser_.nextRepeatCount(1);
@@ -416,9 +412,9 @@ size_t JsonDecoder<P>::mapNext() {
 
 template<typename P>
 size_t JsonDecoder<P>::skipMap() {
-    parser_.advance(Symbol::sMapStart);
+    parser_.advance(Symbol::Kind::MapStart);
     parser_.pop();
-    parser_.advance(Symbol::sMapEnd);
+    parser_.advance(Symbol::Kind::MapEnd);
     expect(JsonParser::Token::ObjectStart);
     skipComposite();
     return 0;
@@ -426,7 +422,7 @@ size_t JsonDecoder<P>::skipMap() {
 
 template<typename P>
 size_t JsonDecoder<P>::decodeUnionIndex() {
-    parser_.advance(Symbol::sUnion);
+    parser_.advance(Symbol::Kind::Union);
 
     size_t result;
     if (in_.peek() == JsonParser::Token::Null) {
@@ -445,16 +441,16 @@ class JsonHandler {
     JsonGenerator<F> &generator_;
 
 public:
-    JsonHandler(JsonGenerator<F> &g) : generator_(g) {}
+    explicit JsonHandler(JsonGenerator<F> &g) : generator_(g) {}
     size_t handle(const Symbol &s) {
         switch (s.kind()) {
-            case Symbol::sRecordStart:
+            case Symbol::Kind::RecordStart:
                 generator_.objectStart();
                 break;
-            case Symbol::sRecordEnd:
+            case Symbol::Kind::RecordEnd:
                 generator_.objectEnd();
                 break;
-            case Symbol::sField:
+            case Symbol::Kind::Field:
                 generator_.encodeString(s.extra<string>());
                 break;
             default:
@@ -470,30 +466,30 @@ class JsonEncoder : public Encoder {
     JsonHandler<F> handler_;
     P parser_;
 
-    void init(OutputStream &os);
-    void flush();
-    int64_t byteCount() const;
-    void encodeNull();
-    void encodeBool(bool b);
-    void encodeInt(int32_t i);
-    void encodeLong(int64_t l);
-    void encodeFloat(float f);
-    void encodeDouble(double d);
-    void encodeString(const std::string &s);
-    void encodeBytes(const uint8_t *bytes, size_t len);
-    void encodeFixed(const uint8_t *bytes, size_t len);
-    void encodeEnum(size_t e);
-    void arrayStart();
-    void arrayEnd();
-    void mapStart();
-    void mapEnd();
-    void setItemCount(size_t count);
-    void startItem();
-    void encodeUnionIndex(size_t e);
+    void init(OutputStream &os) final;
+    void flush() final;
+    int64_t byteCount() const final;
+    void encodeNull() final;
+    void encodeBool(bool b) final;
+    void encodeInt(int32_t i) final;
+    void encodeLong(int64_t l) final;
+    void encodeFloat(float f) final;
+    void encodeDouble(double d) final;
+    void encodeString(const std::string &s) final;
+    void encodeBytes(const uint8_t *bytes, size_t len) final;
+    void encodeFixed(const uint8_t *bytes, size_t len) final;
+    void encodeEnum(size_t e) final;
+    void arrayStart() final;
+    void arrayEnd() final;
+    void mapStart() final;
+    void mapEnd() final;
+    void setItemCount(size_t count) final;
+    void startItem() final;
+    void encodeUnionIndex(size_t e) final;
 
 public:
-    JsonEncoder(const ValidSchema &schema) : handler_(out_),
-                                             parser_(JsonGrammarGenerator().generate(schema), NULL, handler_) {}
+    explicit JsonEncoder(const ValidSchema &schema) : handler_(out_),
+                                                      parser_(JsonGrammarGenerator().generate(schema), NULL, handler_) {}
 };
 
 template<typename P, typename F>
@@ -514,34 +510,34 @@ int64_t JsonEncoder<P, F>::byteCount() const {
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeNull() {
-    parser_.advance(Symbol::sNull);
+    parser_.advance(Symbol::Kind::Null);
     out_.encodeNull();
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeBool(bool b) {
-    parser_.advance(Symbol::sBool);
+    parser_.advance(Symbol::Kind::Bool);
     out_.encodeBool(b);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeInt(int32_t i) {
-    parser_.advance(Symbol::sInt);
+    parser_.advance(Symbol::Kind::Int);
     out_.encodeNumber(i);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeLong(int64_t l) {
-    parser_.advance(Symbol::sLong);
+    parser_.advance(Symbol::Kind::Long);
     out_.encodeNumber(l);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeFloat(float f) {
-    parser_.advance(Symbol::sFloat);
+    parser_.advance(Symbol::Kind::Float);
     if (f == std::numeric_limits<float>::infinity()) {
         out_.encodeString("Infinity");
-    } else if (f == -std::numeric_limits<float>::infinity()) {
+    } else if (-f == std::numeric_limits<float>::infinity()) {
         out_.encodeString("-Infinity");
     } else if (boost::math::isnan(f)) {
         out_.encodeString("NaN");
@@ -552,10 +548,10 @@ void JsonEncoder<P, F>::encodeFloat(float f) {
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeDouble(double d) {
-    parser_.advance(Symbol::sDouble);
+    parser_.advance(Symbol::Kind::Double);
     if (d == std::numeric_limits<double>::infinity()) {
         out_.encodeString("Infinity");
-    } else if (d == -std::numeric_limits<double>::infinity()) {
+    } else if (-d == std::numeric_limits<double>::infinity()) {
         out_.encodeString("-Infinity");
     } else if (boost::math::isnan(d)) {
         out_.encodeString("NaN");
@@ -566,33 +562,33 @@ void JsonEncoder<P, F>::encodeDouble(double d) {
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeString(const std::string &s) {
-    parser_.advance(Symbol::sString);
+    parser_.advance(Symbol::Kind::String);
     out_.encodeString(s);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeBytes(const uint8_t *bytes, size_t len) {
-    parser_.advance(Symbol::sBytes);
+    parser_.advance(Symbol::Kind::Bytes);
     out_.encodeBinary(bytes, len);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeFixed(const uint8_t *bytes, size_t len) {
-    parser_.advance(Symbol::sFixed);
+    parser_.advance(Symbol::Kind::Fixed);
     parser_.assertSize(len);
     out_.encodeBinary(bytes, len);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeEnum(size_t e) {
-    parser_.advance(Symbol::sEnum);
+    parser_.advance(Symbol::Kind::Enum);
     const string &s = parser_.nameForIndex(e);
     out_.encodeString(s);
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::arrayStart() {
-    parser_.advance(Symbol::sArrayStart);
+    parser_.advance(Symbol::Kind::ArrayStart);
     parser_.pushRepeatCount(0);
     out_.arrayStart();
 }
@@ -600,13 +596,13 @@ void JsonEncoder<P, F>::arrayStart() {
 template<typename P, typename F>
 void JsonEncoder<P, F>::arrayEnd() {
     parser_.popRepeater();
-    parser_.advance(Symbol::sArrayEnd);
+    parser_.advance(Symbol::Kind::ArrayEnd);
     out_.arrayEnd();
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::mapStart() {
-    parser_.advance(Symbol::sMapStart);
+    parser_.advance(Symbol::Kind::MapStart);
     parser_.pushRepeatCount(0);
     out_.objectStart();
 }
@@ -614,7 +610,7 @@ void JsonEncoder<P, F>::mapStart() {
 template<typename P, typename F>
 void JsonEncoder<P, F>::mapEnd() {
     parser_.popRepeater();
-    parser_.advance(Symbol::sMapEnd);
+    parser_.advance(Symbol::Kind::MapEnd);
     out_.objectEnd();
 }
 
@@ -626,14 +622,14 @@ void JsonEncoder<P, F>::setItemCount(size_t count) {
 template<typename P, typename F>
 void JsonEncoder<P, F>::startItem() {
     parser_.processImplicitActions();
-    if (parser_.top() != Symbol::sRepeater) {
+    if (parser_.top() != Symbol::Kind::Repeater) {
         throw Exception("startItem at not an item boundary");
     }
 }
 
 template<typename P, typename F>
 void JsonEncoder<P, F>::encodeUnionIndex(size_t e) {
-    parser_.advance(Symbol::sUnion);
+    parser_.advance(Symbol::Kind::Union);
 
     const std::string name = parser_.nameForIndex(e);
 
