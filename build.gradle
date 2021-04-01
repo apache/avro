@@ -28,8 +28,6 @@ repositories {
 }
 
 def compileAvroVersion = "1.10.2"
-def codenarcVersion = "1.5"
-def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
 
 // Write the plugin's classpath to a file to share with the tests
 task createClasspathManifest {
@@ -47,26 +45,10 @@ task createClasspathManifest {
 dependencies {
     implementation localGroovy()
     implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
-    testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+    testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
     testImplementation gradleTestKit()
     testImplementation "uk.co.datumedge:hamcrest-json:0.2"
     testRuntimeOnly files(createClasspathManifest) // Add the classpath file to the test runtime classpath
-}
-
-configurations {
-    codenarc {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == "org.codehaus.groovy") {
-                if (details.requested.name == "groovy" && details.requested.version != codenarcGroovyVersion) {
-                    // Template support appears to have moved between modules in between versions
-                    details.useTarget("${details.requested.group}:groovy-all:${codenarcGroovyVersion}")
-                } else {
-                    details.useVersion codenarcGroovyVersion
-                }
-                details.because "Required for Java 14+ support"
-            }
-        }
-    }
 }
 
 tasks.withType(AbstractCompile) {
@@ -204,7 +186,7 @@ codenarc {
     maxPriority1Violations = 0
     maxPriority2Violations = 0
     maxPriority3Violations = 0
-    toolVersion = codenarcVersion
+    toolVersion = "2.0.0"
 }
 
 //tasks.create("testAvroCompatibility") {
