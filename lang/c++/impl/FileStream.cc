@@ -86,14 +86,14 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::close(fd_);
     }
 
-    void seek(size_t len) override {
+    void seek(size_t len) final {
         off_t r = ::lseek(fd_, len, SEEK_CUR);
         if (r == static_cast<off_t>(-1)) {
             throw Exception(boost::format("Cannot skip file: %1%") % strerror(errno));
         }
     }
 
-    bool read(uint8_t *b, size_t toRead, size_t &actual) override {
+    bool read(uint8_t *b, size_t toRead, size_t &actual) final {
         int n = ::read(fd_, b, toRead);
         if (n > 0) {
             actual = n;
@@ -129,7 +129,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
     explicit NonSeekableIStreamBufferCopyIn(istream &is) : IStreamBufferCopyIn(is) {}
 
-    void seek(size_t len) override {
+    void seek(size_t len) final {
         const size_t bufSize = 4096;
         uint8_t buf[bufSize];
         while (len > 0) {
@@ -157,7 +157,7 @@ class BufferCopyInInputStream : public SeekableInputStream {
     uint8_t *next_;
     size_t available_;
 
-    bool next(const uint8_t **data, size_t *size) override {
+    bool next(const uint8_t **data, size_t *size) final {
         if (available_ == 0 && !fill()) {
             return false;
         }
@@ -169,13 +169,13 @@ class BufferCopyInInputStream : public SeekableInputStream {
         return true;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         next_ -= len;
         available_ += len;
         byteCount_ -= len;
     }
 
-    void skip(size_t len) override {
+    void skip(size_t len) final {
         while (len > 0) {
             if (available_ == 0) {
                 in_->seek(len);
@@ -190,7 +190,7 @@ class BufferCopyInInputStream : public SeekableInputStream {
         }
     }
 
-    size_t byteCount() const override { return byteCount_; }
+    size_t byteCount() const final { return byteCount_; }
 
     bool fill() {
         size_t n = 0;
@@ -202,7 +202,7 @@ class BufferCopyInInputStream : public SeekableInputStream {
         return false;
     }
 
-    void seek(int64_t position) override {
+    void seek(int64_t position) final {
         // BufferCopyIn::seek is relative to byteCount_, whereas position is
         // absolute.
         in_->seek(position - byteCount_ - available_);
@@ -266,7 +266,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
         ::close(fd_);
     }
 
-    void write(const uint8_t *b, size_t len) override {
+    void write(const uint8_t *b, size_t len) final {
         if (::write(fd_, b, len) < 0) {
             throw Exception(boost::format("Cannot write file: %1%") % ::strerror(errno));
         }
@@ -280,7 +280,7 @@ struct OStreamBufferCopyOut : public BufferCopyOut {
     explicit OStreamBufferCopyOut(ostream &os) : os_(os) {
     }
 
-    void write(const uint8_t *b, size_t len) override {
+    void write(const uint8_t *b, size_t len) final {
         os_.write(reinterpret_cast<const char *>(b), len);
     }
 };
@@ -296,7 +296,7 @@ class BufferCopyOutputStream : public OutputStream {
     size_t byteCount_;
 
     // Invariant: byteCount_ == bytesWritten + bufferSize_ - available_;
-    bool next(uint8_t **data, size_t *len) override {
+    bool next(uint8_t **data, size_t *len) final {
         if (available_ == 0) {
             flush();
         }
@@ -308,17 +308,17 @@ class BufferCopyOutputStream : public OutputStream {
         return true;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         available_ += len;
         next_ -= len;
         byteCount_ -= len;
     }
 
-    uint64_t byteCount() const override {
+    uint64_t byteCount() const final {
         return byteCount_;
     }
 
-    void flush() override {
+    void flush() final {
         out_->write(buffer_, bufferSize_ - available_);
         next_ = buffer_;
         available_ = bufferSize_;

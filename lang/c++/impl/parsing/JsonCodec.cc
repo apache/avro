@@ -49,7 +49,7 @@ using avro::json::JsonParser;
 
 class JsonGrammarGenerator : public ValidatingGrammarGenerator {
     ProductionPtr doGenerate(const NodePtr &n,
-                             std::map<NodePtr, ProductionPtr> &m) override;
+                             std::map<NodePtr, ProductionPtr> &m) final;
 };
 
 static std::string nameOf(const NodePtr &n) {
@@ -178,31 +178,31 @@ class JsonDecoder : public Decoder {
     JsonDecoderHandler handler_;
     P parser_;
 
-    void init(InputStream &is) override;
-    void decodeNull() override;
-    bool decodeBool() override;
-    int32_t decodeInt() override;
-    int64_t decodeLong() override;
-    float decodeFloat() override;
-    double decodeDouble() override;
-    void decodeString(string &value) override;
-    void skipString() override;
-    void decodeBytes(vector<uint8_t> &value) override;
-    void skipBytes() override;
-    void decodeFixed(size_t n, vector<uint8_t> &value) override;
-    void skipFixed(size_t n) override;
-    size_t decodeEnum() override;
-    size_t arrayStart() override;
-    size_t arrayNext() override;
-    size_t skipArray() override;
-    size_t mapStart() override;
-    size_t mapNext() override;
-    size_t skipMap() override;
-    size_t decodeUnionIndex() override;
+    void init(InputStream &is) final;
+    void decodeNull() final;
+    bool decodeBool() final;
+    int32_t decodeInt() final;
+    int64_t decodeLong() final;
+    float decodeFloat() final;
+    double decodeDouble() final;
+    void decodeString(string &value) final;
+    void skipString() final;
+    void decodeBytes(vector<uint8_t> &value) final;
+    void skipBytes() final;
+    void decodeFixed(size_t n, vector<uint8_t> &value) final;
+    void skipFixed(size_t n) final;
+    size_t decodeEnum() final;
+    size_t arrayStart() final;
+    size_t arrayNext() final;
+    size_t skipArray() final;
+    size_t mapStart() final;
+    size_t mapNext() final;
+    size_t skipMap() final;
+    size_t decodeUnionIndex() final;
 
     void expect(JsonParser::Token tk);
     void skipComposite();
-    void drain() override;
+    void drain() final;
 
 public:
     explicit JsonDecoder(const ValidSchema &s) : handler_(in_),
@@ -466,26 +466,26 @@ class JsonEncoder : public Encoder {
     JsonHandler<F> handler_;
     P parser_;
 
-    void init(OutputStream &os) override;
-    void flush() override;
-    int64_t byteCount() const override;
-    void encodeNull() override;
-    void encodeBool(bool b) override;
-    void encodeInt(int32_t i) override;
-    void encodeLong(int64_t l) override;
-    void encodeFloat(float f) override;
-    void encodeDouble(double d) override;
-    void encodeString(const std::string &s) override;
-    void encodeBytes(const uint8_t *bytes, size_t len) override;
-    void encodeFixed(const uint8_t *bytes, size_t len) override;
-    void encodeEnum(size_t e) override;
-    void arrayStart() override;
-    void arrayEnd() override;
-    void mapStart() override;
-    void mapEnd() override;
-    void setItemCount(size_t count) override;
-    void startItem() override;
-    void encodeUnionIndex(size_t e) override;
+    void init(OutputStream &os) final;
+    void flush() final;
+    int64_t byteCount() const final;
+    void encodeNull() final;
+    void encodeBool(bool b) final;
+    void encodeInt(int32_t i) final;
+    void encodeLong(int64_t l) final;
+    void encodeFloat(float f) final;
+    void encodeDouble(double d) final;
+    void encodeString(const std::string &s) final;
+    void encodeBytes(const uint8_t *bytes, size_t len) final;
+    void encodeFixed(const uint8_t *bytes, size_t len) final;
+    void encodeEnum(size_t e) final;
+    void arrayStart() final;
+    void arrayEnd() final;
+    void mapStart() final;
+    void mapEnd() final;
+    void setItemCount(size_t count) final;
+    void startItem() final;
+    void encodeUnionIndex(size_t e) final;
 
 public:
     explicit JsonEncoder(const ValidSchema &schema) : handler_(out_),

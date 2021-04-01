@@ -323,7 +323,7 @@ class BoundedInputStream : public InputStream {
     InputStream &in_;
     size_t limit_;
 
-    bool next(const uint8_t **data, size_t *len) override {
+    bool next(const uint8_t **data, size_t *len) final {
         if (limit_ != 0 && in_.next(data, len)) {
             if (*len > limit_) {
                 in_.backup(*len - limit_);
@@ -335,12 +335,12 @@ class BoundedInputStream : public InputStream {
         return false;
     }
 
-    void backup(size_t len) override {
+    void backup(size_t len) final {
         in_.backup(len);
         limit_ += len;
     }
 
-    void skip(size_t len) override {
+    void skip(size_t len) final {
         if (len > limit_) {
             len = limit_;
         }
@@ -348,7 +348,7 @@ class BoundedInputStream : public InputStream {
         limit_ -= len;
     }
 
-    size_t byteCount() const override {
+    size_t byteCount() const final {
         return in_.byteCount();
     }
 

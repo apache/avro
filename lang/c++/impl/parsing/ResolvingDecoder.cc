@@ -460,29 +460,29 @@ class ResolvingDecoderImpl : public ResolvingDecoder {
     ResolvingDecoderHandler handler_;
     Parser parser_;
 
-    void init(InputStream &is) override;
-    void decodeNull() override;
-    bool decodeBool() override;
-    int32_t decodeInt() override;
-    int64_t decodeLong() override;
-    float decodeFloat() override;
-    double decodeDouble() override;
-    void decodeString(string &value) override;
-    void skipString() override;
-    void decodeBytes(vector<uint8_t> &value) override;
-    void skipBytes() override;
-    void decodeFixed(size_t n, vector<uint8_t> &value) override;
-    void skipFixed(size_t n) override;
-    size_t decodeEnum() override;
-    size_t arrayStart() override;
-    size_t arrayNext() override;
-    size_t skipArray() override;
-    size_t mapStart() override;
-    size_t mapNext() override;
-    size_t skipMap() override;
-    size_t decodeUnionIndex() override;
-    const vector<size_t> &fieldOrder() override;
-    void drain() override {
+    void init(InputStream &is) final;
+    void decodeNull() final;
+    bool decodeBool() final;
+    int32_t decodeInt() final;
+    int64_t decodeLong() final;
+    float decodeFloat() final;
+    double decodeDouble() final;
+    void decodeString(string &value) final;
+    void skipString() final;
+    void decodeBytes(vector<uint8_t> &value) final;
+    void skipBytes() final;
+    void decodeFixed(size_t n, vector<uint8_t> &value) final;
+    void skipFixed(size_t n) final;
+    size_t decodeEnum() final;
+    size_t arrayStart() final;
+    size_t arrayNext() final;
+    size_t skipArray() final;
+    size_t mapStart() final;
+    size_t mapNext() final;
+    size_t skipMap() final;
+    size_t decodeUnionIndex() final;
+    const vector<size_t> &fieldOrder() final;
+    void drain() final {
         parser_.processImplicitActions();
         base_->drain();
     }

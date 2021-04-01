@@ -51,7 +51,7 @@ class PrimitiveSkipper : public Resolver {
 public:
     PrimitiveSkipper() : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         T val;
         reader.readValue(val);
         DEBUG_OUT("Skipping " << val);
@@ -64,7 +64,7 @@ public:
     explicit PrimitiveParser(const PrimitiveLayout &offset) : Resolver(),
                                                               offset_(offset.offset()) {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         T *location = reinterpret_cast<T *>(address + offset_);
         reader.readValue(*location);
         DEBUG_OUT("Reading " << *location);
@@ -80,7 +80,7 @@ public:
     explicit PrimitivePromoter(const PrimitiveLayout &offset) : Resolver(),
                                                                 offset_(offset.offset()) {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         parseIt<WT>(reader, address);
     }
 
@@ -108,7 +108,7 @@ class PrimitiveSkipper<std::vector<uint8_t>> : public Resolver {
 public:
     PrimitiveSkipper() : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         std::vector<uint8_t> val;
         reader.readBytes(val);
         DEBUG_OUT("Skipping bytes");
@@ -121,7 +121,7 @@ public:
     explicit PrimitiveParser(const PrimitiveLayout &offset) : Resolver(),
                                                               offset_(offset.offset()) {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         auto *location = reinterpret_cast<std::vector<uint8_t> *>(address + offset_);
         reader.readBytes(*location);
         DEBUG_OUT("Reading bytes");
@@ -135,7 +135,7 @@ class RecordSkipper : public Resolver {
 public:
     RecordSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping record");
 
         reader.readRecord();
@@ -151,7 +151,7 @@ protected:
 
 class RecordParser : public Resolver {
 public:
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading record");
 
         reader.readRecord();
@@ -171,7 +171,7 @@ class MapSkipper : public Resolver {
 public:
     MapSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping map");
 
         std::string key;
@@ -195,7 +195,7 @@ public:
 
     MapParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading map");
 
         uint8_t *mapAddress = address + offset_;
@@ -226,7 +226,7 @@ class ArraySkipper : public Resolver {
 public:
     ArraySkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping array");
 
         int64_t size;
@@ -248,7 +248,7 @@ class ArrayParser : public Resolver {
 public:
     ArrayParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading array");
 
         uint8_t *arrayAddress = address + offset_;
@@ -278,7 +278,7 @@ class EnumSkipper : public Resolver {
 public:
     EnumSkipper(ResolverFactory &factory, const NodePtr &writer) : Resolver() {}
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         int64_t val = reader.readEnum();
         DEBUG_OUT("Skipping enum" << val);
     }
@@ -305,7 +305,7 @@ public:
         }
     }
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         auto val = static_cast<size_t>(reader.readEnum());
         assert(static_cast<size_t>(val) < mapping_.size());
 
@@ -326,7 +326,7 @@ class UnionSkipper : public Resolver {
 public:
     UnionSkipper(ResolverFactory &factory, const NodePtr &writer);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping union");
         auto choice = static_cast<size_t>(reader.readUnion());
         resolvers_[choice]->parse(reader, address);
@@ -342,7 +342,7 @@ public:
 
     UnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading union");
         auto writerChoice = static_cast<size_t>(reader.readUnion());
         auto *readerChoice = reinterpret_cast<int64_t *>(address + choiceOffset_);
@@ -372,7 +372,7 @@ public:
                           const NodePtr &reader,
                           const Layout &offsets);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading union to non-union");
         auto choice = static_cast<size_t>(reader.readUnion());
         resolvers_[choice]->parse(reader, address);
@@ -391,7 +391,7 @@ public:
                           const NodePtr &reader,
                           const CompoundLayout &offsets);
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading non-union to union");
 
         auto *choice = reinterpret_cast<int64_t *>(address + choiceOffset_);
@@ -417,7 +417,7 @@ public:
         size_ = writer->fixedSize();
     }
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Skipping fixed");
         std::unique_ptr<uint8_t[]> val(new uint8_t[size_]);
         reader.readFixed(&val[0], size_);
@@ -434,7 +434,7 @@ public:
         offset_ = offsets.at(0).offset();
     }
 
-    void parse(Reader &reader, uint8_t *address) const override {
+    void parse(Reader &reader, uint8_t *address) const final {
         DEBUG_OUT("Reading fixed");
         auto *location = reinterpret_cast<uint8_t *>(address + offset_);
         reader.readFixed(location, size_);
