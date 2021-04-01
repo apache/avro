@@ -73,7 +73,7 @@ class GenericHandler(http.server.BaseHTTPRequestHandler):
 
 
 def run_server(uri, proto, msg, datum):
-    url_obj = urllib.parse(uri)
+    url_obj = urllib.parse.urlparse(uri)
     server_addr = (url_obj.hostname, url_obj.port)
     global responder
     global server_should_shutdown
@@ -88,7 +88,7 @@ def run_server(uri, proto, msg, datum):
 
 
 def send_message(uri, proto, msg, datum):
-    url_obj = urllib.parse(uri)
+    url_obj = urllib.parse.urlparse(uri)
     client = avro.ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
     proto_json = open(proto, 'rb').read()
     requestor = avro.ipc.Requestor(avro.protocol.parse(proto_json), client)
