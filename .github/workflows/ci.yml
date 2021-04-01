@@ -18,7 +18,7 @@ jobs:
         java-version: ${{ matrix.java }}
     - uses: eskatos/gradle-command-action@v1
       with:
-        arguments: build
+        arguments: --info build
         dependencies-cache-enabled: true
         configuration-cache-enabled: true
     - uses: codecov/codecov-action@v1
