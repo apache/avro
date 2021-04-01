@@ -312,18 +312,17 @@ test {
 }
 
 tasks.create(name: "testCompatibility", type: Test) {
-    def compatAvroVersion = findProperty("avroVersion") ?: "unspecified"
-    def compatGradleVersion = findProperty("gradleVersion") ?: "unspecified"
-    def compatKotlinPluginVersion = findProperty("kotlinPluginVersion") ?: "unspecified"
-    description = "Test cross-compatibility of the plugin with Avro ${compatAvroVersion}, Gradle ${compatGradleVersion}, and Kotlin ${compatKotlinPluginVersion}"
+    description = "Test cross-compatibility of the plugin with Avro/Gradle"
     systemProperties = [
-        avroVersion: compatAvroVersion,
-        gradleVersion: compatGradleVersion,
-        kotlinPluginVersion: compatKotlinPluginVersion,
+        avroVersion: findProperty("avroVersion"),
+        gradleVersion: findProperty("gradleVersion"),
     ]
+    filter {
+        excludeTestsMatching "*KotlinPlugin*"
+    }
     reports {
-        html.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinPluginVersion}")
-        junitXml.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinPluginVersion}")
+        html.destination = file("$buildDir/reports/tests-compatibility")
+        junitXml.destination = file("$buildDir/reports/tests-compatibility")
     }
 }
 
