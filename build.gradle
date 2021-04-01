@@ -306,7 +306,7 @@ test {
     systemProperties = [
         avroVersion: compileAvroVersion,
         gradleVersion: gradle.gradleVersion,
-        kotlinVersion: latestKotlinVersion,
+        kotlinPluginVersion: latestKotlinVersion,
     ]
     finalizedBy jacocoTestReport // report is always generated after tests run
 }
@@ -314,16 +314,33 @@ test {
 tasks.create(name: "testCompatibility", type: Test) {
     def compatAvroVersion = findProperty("avroVersion") ?: "unspecified"
     def compatGradleVersion = findProperty("gradleVersion") ?: "unspecified"
-    def compatKotlinVersion = findProperty("kotlinVersion") ?: "unspecified"
-    description = "Test cross-compatibility of the plugin with Avro ${compatAvroVersion}, Gradle ${compatGradleVersion}, and Kotlin ${compatKotlinVersion}"
+    def compatKotlinPluginVersion = findProperty("kotlinPluginVersion") ?: "unspecified"
+    description = "Test cross-compatibility of the plugin with Avro ${compatAvroVersion}, Gradle ${compatGradleVersion}, and Kotlin ${compatKotlinPluginVersion}"
     systemProperties = [
         avroVersion: compatAvroVersion,
         gradleVersion: compatGradleVersion,
-        kotlinVersion: compatKotlinVersion,
+        kotlinPluginVersion: compatKotlinPluginVersion,
     ]
     reports {
-        html.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinVersion}")
-        junitXml.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinVersion}")
+        html.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinPluginVersion}")
+        junitXml.destination = file("$buildDir/reports/tests-avro${compatAvroVersion}-gradle${compatGradleVersion}-kotlin${compatKotlinPluginVersion}")
+    }
+}
+
+tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
+    def compatAvroVersion = findProperty("avroVersion") ?: "unspecified"
+    def compatGradleVersion = findProperty("gradleVersion") ?: "unspecified"
+    def compatKotlinPluginVersion = findProperty("kotlinPluginVersion") ?: "unspecified"
+    description = "Test cross-compatibility of the plugin with Kotlin ${compatKotlinPluginVersion}"
+    systemProperties = [
+        avroVersion: compatAvroVersion,
+        gradleVersion: compatGradleVersion,
+        kotlinPluginVersion: compatKotlinPluginVersion,
+    ]
+    include '**/KotlinPlugin*Spec'
+    reports {
+        html.destination = file("$buildDir/reports/tests-kotlinPlugin${compatKotlinPluginVersion}")
+        junitXml.destination = file("$buildDir/reports/tests-kotlinPlugin${compatKotlinPluginVersion}")
     }
 }
 
