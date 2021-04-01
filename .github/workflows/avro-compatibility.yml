@@ -2,7 +2,7 @@ name: Avro Compatibility Tests
 on: [push, pull_request]
 jobs:
   test:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:

@@ -2,7 +2,7 @@ name: Kotlin Plugin Compatibility Tests
 on: [push, pull_request]
 jobs:
   java8-gradle5_1:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}//kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -27,7 +27,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java8-gradle5_3:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}//kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -49,7 +49,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java11-gradle5_6_4:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}//kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -74,7 +74,7 @@ jobs:
           configuration-cache-enabled: true
 
   modern:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}//kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:

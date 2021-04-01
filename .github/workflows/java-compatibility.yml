@@ -2,7 +2,7 @@ name: Java Compatibility Tests
 on: [push, pull_request]
 jobs:
   java8-12:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -20,7 +20,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java13:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -38,7 +38,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java14:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -56,7 +56,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java15:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -74,7 +74,7 @@ jobs:
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java16-17:
-    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
