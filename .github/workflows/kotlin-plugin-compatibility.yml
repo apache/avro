@@ -19,13 +19,14 @@ jobs:
       fail-fast: false # TODO: remove after testing
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/run-tests
+      - uses: actions/setup-java@v1
         with:
-          task-name: testKotlinPluginCompatibility
-          avro-version: ${{ matrix.avro }}
-          gradle-version: ${{ matrix.gradle }}
           java-version: ${{ matrix.java }}
-          kotlin-plugin-version: ${{ matrix.kotlin }}
+      - uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
 #  java-11:
 #    name: "Compatibility: java ${{ matrix.java }}/kotlin ${{ matrix.kotlin }}"
 #    runs-on: "ubuntu-latest"
