@@ -331,8 +331,7 @@ class Names:
 
     def get_name(self, name_attr, space_attr):
         test = Name(name_attr, space_attr, self.default_namespace).fullname
-
-        return None if test not in self.names else self.names[test]
+        return self.names.get(test)
 
     def prune_namespace(self, properties):
         """given a properties, return properties with namespace removed if
