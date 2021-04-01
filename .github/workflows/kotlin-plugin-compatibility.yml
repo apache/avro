@@ -54,7 +54,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.10.2"] # Latest version that this plugin supports
-        gradle: ["6.8.3"] # Latest version that this plugin supports
+        gradle: ["5.6.4"]
         java: ["11"] # Latest LTS version that this plugin supports
         kotlin: [
             # Earlier versions don't support Java 10+

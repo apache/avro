@@ -234,7 +234,7 @@ codenarc {
 
 // Java 8+ is required due to requirements introduced in Avro 1.9.0
 // Java 8+ is also required by Gradle 5.x
-if (JavaVersion.current().java9Compatible) {
+if (JavaVersion.current().java10Compatible) {
     compileJava {
         options.release = 8
     }
