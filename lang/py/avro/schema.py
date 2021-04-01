@@ -44,6 +44,7 @@ import abc
 import collections
 import datetime
 import decimal
+import hashlib
 import json
 import math
 import re
@@ -147,7 +148,7 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class CanonicalPropertiesMixin(object):
+class CanonicalPropertiesMixin:
     """A Mixin that provides canonical properties to Schema and Field types."""
     @property
     def canonical_properties(self):
@@ -158,7 +159,74 @@ class CanonicalPropertiesMixin(object):
             if key in props)
 
 
-class Schema(abc.ABC, CanonicalPropertiesMixin):
+class FingerprintMixin:
+    """
+    A Mixin to generate schema fingerprints for supported algorithms
+    """
+    _FP_TABLE = None
+    _EMPTY64 = 0xc15d213aa4d7a795
+
+    SUPPORTED_ALGORITHMS = hashlib.algorithms_guaranteed.union({'CRC-64-AVRO'})
+
+    def fingerprint(self, algorithm='CRC-64-AVRO'):
+        """
+        Generate fingerprint for supplied algorithm.
+
+        'CRC-64-AVRO' will be used as the algorithm by default, but any
+        algorithm supported by hashlib (as can be referenced with
+        `hashlib.algorithms_guaranteed`) can be specified.
+
+        `algorithm` param is used as an algorithm name, and NoSuchAlgorithmException
+        will be thrown if the algorithm is not among supported.
+        """
+        schema = self.canonical_form.encode('utf-8')
+
+        if algorithm not in self.SUPPORTED_ALGORITHMS:
+            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
+
+        if algorithm == 'CRC-64-AVRO':
+            return self._crc_64_fingerprint(schema)
+
+        # Generate digests with hashlib for all other algorithms
+        # Lowercase algorithm to support algorithm strings sent by other languages like Java
+        h = hashlib.new(algorithm.lower(), schema)
+        return h.digest()
+
+    def _populate_fp_table(self):
+        self._FP_TABLE = []
+
+        for i in range(256):
+            fp = i
+            for _ in range(8):
+                mask = -(fp & 1)
+                fp = (fp >> 1) ^ (self._EMPTY64 & mask)
+
+            self._FP_TABLE.append(fp)
+
+    def _crc_64_fingerprint(self, data):
+        """The 64-bit Rabin Fingerprint.
+
+        As described in the Avro specification.
+
+        Args:
+            data: A bytes object containing the UTF-8 encoded parsing canonical
+            form of an Avro schema.
+        Returns:
+            A bytes object with a length of eight.
+        """
+        if self._FP_TABLE is None:
+            self._populate_fp_table()
+        result = self._EMPTY64
+
+        for b in data:
+            result = (result >> 8) ^ self._FP_TABLE[(result ^ b) & 0xff]
+
+        # Although not mentioned in the Avro specification, the Java
+        # implementation gives fingerprint bytes in little-endian order
+        return result.to_bytes(length=8, byteorder='little', signed=False)
+
+
+class Schema(abc.ABC, CanonicalPropertiesMixin, FingerprintMixin):
     """Base class for all Schema classes."""
     _props = None
 
