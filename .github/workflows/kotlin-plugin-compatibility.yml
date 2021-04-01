@@ -16,7 +16,9 @@ jobs:
             "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
             "1.4.0", "1.4.10", "1.4.20", "1.4.21"
         ]
+      fail-fast: false # TODO: remove after testing
     steps:
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/run-tests
         with:
           task-name: testKotlinPluginCompatibility
