@@ -1,8 +1,8 @@
-name: Avro Compatibility Tests
+name: Java Compatibility Tests
 on: [push, pull_request]
 jobs:
   java8-12:
-    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}/kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -16,11 +16,11 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java13:
-    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}/kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -34,11 +34,11 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java14:
-    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}/kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -52,11 +52,11 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java15:
-    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}/kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -70,11 +70,11 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
   java16-17:
-    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}/kotlin ${{ matrix.kotlin }}"
+    name: "Compatibility: avro ${{ matrix.avro }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
@@ -90,6 +90,6 @@ jobs:
       - uses: eskatos/gradle-command-action@v1
         continue-on-error: true
         with:
-          arguments: --info testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
