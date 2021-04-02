@@ -35,8 +35,8 @@ class GradleCompatibility {
         if (GradleFeatures.objectFactoryFileCollection.isSupported()) {
             return project.getObjects().fileCollection();
         } else {
-            Class<?>[] parameterTypes = { Object[].class };
-            Object[] args = { new Object[0] };
+            Class<?>[] parameterTypes = {Object[].class};
+            Object[] args = {new Object[0]};
             return invokeMethod(project.getLayout(), "configurableFiles", parameterTypes, args);
         }
     }
