@@ -60,8 +60,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateSchema").outcome == SUCCESS
         def expectedFileContents = getClass().getResource("Message.avsc").text.trim()
-        def generateFileContents = new File(testProjectDir.root,
-            "build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").text.trim()
+        def generateFileContents = projectFile("build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").text.trim()
         expectedFileContents == generateFileContents
     }
 

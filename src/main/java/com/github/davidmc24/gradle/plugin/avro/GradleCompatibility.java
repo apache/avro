@@ -35,15 +35,17 @@ class GradleCompatibility {
         if (GradleFeatures.objectFactoryFileCollection.isSupported()) {
             return project.getObjects().fileCollection();
         } else {
-            return invokeAccessorMethod(project.getLayout(), "configurableFiles");
+            Class<?>[] parameterTypes = { Object[].class };
+            Object[] args = { new Object[0] };
+            return invokeMethod(project.getLayout(), "configurableFiles", parameterTypes, args);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T invokeAccessorMethod(Object object, String methodName) {
+    private static <T> T invokeMethod(Object object, String methodName, Class<?>[] parameterTypes, Object[] args) {
         try {
-            Method method = object.getClass().getMethod(methodName);
-            return (T) method.invoke(object);
+            Method method = object.getClass().getMethod(methodName, parameterTypes);
+            return (T) method.invoke(object, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
             throw new RuntimeException("Failed to invoke method via reflection", ex);
         }

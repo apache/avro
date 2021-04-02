@@ -40,8 +40,8 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         |}
         |""".stripMargin()
 
-        copyResource("shared.avdl", testProjectDir.newFolder("src", "shared"))
-        copyResource("dependent.avdl", testProjectDir.newFolder("src", "dependent"))
+        copyResource("shared.avdl", projectFolder("src/shared"))
+        copyResource("dependent.avdl", projectFolder("src/dependent"))
 
         when: "running the task"
         def result = run("generateProtocol")
@@ -64,7 +64,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         |}
         |""".stripMargin()
 
-        copyResource("shared.avdl", testProjectDir.newFolder("src", "shared"))
+        copyResource("shared.avdl", projectFolder("src/shared"))
         copyResource("dependent.avdl", avroDir)
 
         when: "running the task"
@@ -80,8 +80,8 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         given: "a project with two IDL files with the same name, but in different directories"
         applyAvroPlugin()
 
-        copyResource("namespaced-idl/v1/test.avdl", testProjectDir.newFolder("src", "main", "avro", "v1"))
-        copyResource("namespaced-idl/v2/test.avdl", testProjectDir.newFolder("src", "main", "avro", "v2"))
+        copyResource("namespaced-idl/v1/test.avdl", projectFolder("src/main/avro/v1"))
+        copyResource("namespaced-idl/v2/test.avdl", projectFolder("src/main/avro/v2"))
 
         when: "running the task"
         def result = run("generateAvroProtocol")

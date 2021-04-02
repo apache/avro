@@ -51,8 +51,7 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
         addDefaultRepository()
         addAvroDependency()
-        testProjectDir.newFolder("buildSrc")
-        testProjectDir.newFile("buildSrc/build.gradle") << """
+        projectFile("buildSrc/build.gradle") << """
         |repositories {
         |    mavenCentral()
         |}
@@ -98,8 +97,7 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
         addDefaultRepository()
         addAvroDependency()
-        testProjectDir.newFolder("buildSrc")
-        testProjectDir.newFile("buildSrc/build.gradle") << """
+        projectFile("buildSrc/build.gradle") << """
         |repositories {
         |    mavenCentral()
         |}
@@ -145,8 +143,7 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
         addDefaultRepository()
         addAvroDependency()
-        testProjectDir.newFolder("buildSrc")
-        testProjectDir.newFile("buildSrc/build.gradle") << """
+        projectFile("buildSrc/build.gradle") << """
         |repositories {
         |    mavenCentral()
         |}

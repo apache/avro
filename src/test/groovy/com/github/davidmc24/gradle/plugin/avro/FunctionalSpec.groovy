@@ -39,9 +39,9 @@ abstract class FunctionalSpec extends Specification {
         println "Testing using Avro version ${avroVersion}."
         println "Testing using Gradle version ${gradleVersion}."
 
-        buildFile = new File(testProjectDir, "build.gradle")
-        avroDir = new File(testProjectDir, "src/main/avro")
-        avroSubDir = new File(testProjectDir, "src/main/avro/foo")
+        buildFile = projectFile("build.gradle")
+        avroDir = projectFile("src/main/avro")
+        avroSubDir = projectFile("src/main/avro/foo")
     }
 
     protected String readPluginClasspath() {
@@ -108,11 +108,19 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected File projectFile(String path) {
-        return new File(testProjectDir.root, path)
+        File file = new File(testProjectDir, path)
+        file.parentFile.mkdirs()
+        return file
+    }
+
+    protected File projectFolder(String path) {
+        File file = new File(testProjectDir, path)
+        file.mkdirs()
+        return file
     }
 
     protected GradleRunner createGradleRunner() {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withGradleVersion(gradleVersion.version).withPluginClasspath()
+        return GradleRunner.create().withProjectDir(testProjectDir).withGradleVersion(gradleVersion.version).withPluginClasspath()
     }
 
     protected BuildResult run(String... args = ["build"]) {

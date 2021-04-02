@@ -29,7 +29,7 @@ class KotlinPluginCompatibilityFunctionalSpec extends FunctionalSpec {
 
     def "works with kotlin-gradle-plugin"() {
         given:
-        File kotlinDir = testProjectDir.newFolder("src", "main", "kotlin")
+        File kotlinDir = projectFolder("src/main/kotlin")
         applyAvroPlugin()
         applyPlugin("org.jetbrains.kotlin.jvm", kotlinPluginVersion)
         applyPlugin("application")
