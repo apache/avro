@@ -10,13 +10,13 @@ plugins {
     id "signing"
     id "java-gradle-plugin"
     id "org.nosphere.gradle.github.actions" version "1.2.0"
+    id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
 }
 
 group = "com.github.davidmc24.gradle.plugin"
 version = "1.0.1-SNAPSHOT"
 
 def isCI = System.getenv("CI") == "true"
-def isSnapshot = version.endsWith('-SNAPSHOT')
 
 repositories {
     mavenCentral()
@@ -118,17 +118,11 @@ publishing {
             }
         }
     }
+}
+
+nexusPublishing {
     repositories {
-        maven {
-            def snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-            def releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            name = "OSSRH"
-            url = isSnapshot ? snapshotUrl : releaseUrl
-            credentials {
-                username = System.getenv("MAVEN_USERNAME")
-                password = System.getenv("MAVEN_PASSWORD")
-            }
-        }
+        sonatype()
     }
 }
 
