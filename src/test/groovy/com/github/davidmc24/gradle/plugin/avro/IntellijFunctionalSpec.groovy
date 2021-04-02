@@ -28,15 +28,15 @@ class IntellijFunctionalSpec extends FunctionalSpec {
     def "generated intellij project files include source directories for generated source"() {
         given:
         copyResource("user.avsc", avroDir)
-        testProjectDir.newFolder("src", "main", "java")
-        testProjectDir.newFolder("src", "test", "java")
-        testProjectDir.newFolder("src", "test", "avro")
+        projectFolder("src/main/java")
+        projectFolder("src/test/java")
+        projectFolder("src/test/avro")
 
         when:
         runIdea()
 
         then:
-        def moduleFile = new File(testProjectDir.root, "${testProjectDir.root.name}.iml")
+        def moduleFile = projectFile("${testProjectDir.name}.iml")
         def module = new XmlSlurper().parseText(moduleFile.text)
         module.component.content.sourceFolder.findAll { it.@isTestSource.text() == "false" }.@url*.text().sort() == [
             'file://$MODULE_DIR\$/build/generated-main-avro-java',

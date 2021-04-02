@@ -9,7 +9,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 @Subject(ResolveAvroDependenciesTask)
 class ResolveAvroDependenciesTaskFunctionalSpec extends FunctionalSpec {
     def "resolves dependencies"() {
-        def srcDir = testProjectDir.newFolder("src", "avro", "normalized")
+        def srcDir = projectFolder("src/avro/normalized")
 
         given: "a build with the task declared"
         applyAvroBasePlugin()

@@ -1,5 +1,3 @@
-import org.gradle.util.GradleVersion
-
 plugins {
     id "groovy"
     id "checkstyle"
@@ -28,8 +26,6 @@ repositories {
 }
 
 def compileAvroVersion = "1.10.2"
-def codenarcVersion = "1.5"
-def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
 
 // Write the plugin's classpath to a file to share with the tests
 task createClasspathManifest {
@@ -47,26 +43,10 @@ task createClasspathManifest {
 dependencies {
     implementation localGroovy()
     implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
-    testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+    testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
     testImplementation gradleTestKit()
     testImplementation "uk.co.datumedge:hamcrest-json:0.2"
     testRuntimeOnly files(createClasspathManifest) // Add the classpath file to the test runtime classpath
-}
-
-configurations {
-    codenarc {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == "org.codehaus.groovy") {
-                if (details.requested.name == "groovy" && details.requested.version != codenarcGroovyVersion) {
-                    // Template support appears to have moved between modules in between versions
-                    details.useTarget("${details.requested.group}:groovy-all:${codenarcGroovyVersion}")
-                } else {
-                    details.useVersion codenarcGroovyVersion
-                }
-                details.because "Required for Java 14+ support"
-            }
-        }
-    }
 }
 
 tasks.withType(AbstractCompile) {
@@ -198,37 +178,12 @@ codenarc {
     maxPriority1Violations = 0
     maxPriority2Violations = 0
     maxPriority3Violations = 0
-    toolVersion = codenarcVersion
-}
-
-tasks.create("testAvroCompatibility") {
-    description = "Tests cross-compatibility of the plugin with different versions of Avro."
-    group = "Verification"
-}
-
-tasks.create("testGradleCompatibility") {
-    description = "Tests cross-compatibility of the plugin with different versions of Gradle."
-    group = "Verification"
-}
-
-tasks.create("testKotlinCompatibility") {
-    description = "Tests cross-compatibility of the plugin with different versions of Kotlin."
-    group = "Verification"
-}
-
-tasks.create("testVersionCompatibility") {
-    description = "Tests cross-compatibility of the plugin with different versions of Avro, Gradle, and Kotlin."
-    group = "Verification"
-}
-
-tasks.create("testRecentVersionCompatibility") {
-    description = "Tests cross-compatibility of the plugin with recent versions of Avro, Gradle, and Kotlin."
-    group = "Verification"
+    toolVersion = "2.0.0"
 }
 
 // Java 8+ is required due to requirements introduced in Avro 1.9.0
 // Java 8+ is also required by Gradle 5.x
-if (JavaVersion.current().java9Compatible) {
+if (JavaVersion.current().java10Compatible) {
     compileJava {
         options.release = 8
     }
@@ -236,72 +191,49 @@ if (JavaVersion.current().java9Compatible) {
     sourceCompatibility = 8
 }
 
-def avroVersions = ["1.10.0", "1.10.1", "1.10.2"]
-
-def keyAvroVersions = avroVersions.last()
-def gradle5KotlinVersions = []
-if (!JavaVersion.current().java10Compatible) {
-    // Java 10 support was added in Kotlin 1.2.30
-    gradle5KotlinVersions.addAll([
-        "1.2.20", "1.2.21",
-    ])
-}
-gradle5KotlinVersions.addAll([
-    "1.2.30", "1.2.31", "1.2.40", "1.2.41", "1.2.50", "1.2.51", "1.2.60", "1.2.61", "1.2.70", "1.2.71",
-    "1.3.0", "1.3.10", "1.3.11",
-])
-def latestGradleKotlinVersions = [
-    "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
-    "1.4.0", "1.4.10", "1.4.20", "1.4.21"
-]
-def kotlinVersions = gradle5KotlinVersions + latestGradleKotlinVersions
-def keyKotlinVersions = [] // First and last version for each supported line
-// Determine first supported version
-if (!JavaVersion.current().java10Compatible) {
-    // Java 10 support was added in Kotlin 1.2.30
-    keyKotlinVersions.add("1.2.20")
-} else {
-    keyKotlinVersions.add("1.2.30")
-}
-keyKotlinVersions.addAll([
-    "1.2.71",
-    "1.3.0", "1.3.72", // First and last version for 1.3.x line
-    "1.4.0", "1.4.21", // First and last version for 1.4.x line
-])
-def pre5_3KotlinVersion = "1.3.72" // Kotlin plugin 1.4.x appears to require Gradle 5.3+
-def keyGradleVersions = [] // First and last version for each supported line
-def firstSupportedGradleVersion = null
-def gradleVersions = []
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
-    // Java 13 support was added in Gradle 6.0
-    gradleVersions.addAll("5.1", "5.1.1", "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6", "5.6.1", "5.6.2", "5.6.3", "5.6.4")
-    keyGradleVersions.addAll("5.1", "5.6.4") // First and last for the 5.x line
-    firstSupportedGradleVersion = gradleVersions.first()
-}
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
-    // Java 14 support was added in Gradle 6.3
-    gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
-    keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line before Java 14 support
-}
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
-    // Java 15 support was added in Gradle 6.7
-    gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5", "6.5.1", "6.6", "6.6.1")
-    keyGradleVersions.addAll("6.3", "6.6.1") // First and last for the 6.x line before Java 15 support
-}
-gradleVersions.addAll("6.7", "6.7.1", "6.8", "6.8.1", "6.8.2", "6.8.3")
-keyGradleVersions.addAll("6.7", "6.8.3") // First and last for the 6.x line after Java 15 support
-
-def latestAvroVersion = avroVersions.last()
-def latestGradleVersion = gradleVersions.last()
-def latestKotlinVersion = kotlinVersions.last()
+def latestKotlinVersion = "1.4.21"
 
 test {
+    useJUnitPlatform()
     systemProperties = [
         avroVersion: compileAvroVersion,
         gradleVersion: gradle.gradleVersion,
-        kotlinVersion: latestKotlinVersion,
+        kotlinPluginVersion: latestKotlinVersion,
     ]
     finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+tasks.create(name: "testCompatibility", type: Test) {
+    description = "Test cross-compatibility of the plugin with Avro/Gradle"
+    useJUnitPlatform()
+    systemProperties = [
+        avroVersion: findProperty("avroVersion"),
+        gradleVersion: findProperty("gradleVersion"),
+    ]
+    filter {
+        excludeTestsMatching "*KotlinPlugin*"
+    }
+    reports {
+        html.destination = file("$buildDir/reports/tests/compatibility")
+        junitXml.destination = file("$buildDir/reports/tests/compatibility")
+    }
+}
+
+tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
+    description = "Test cross-compatibility of the plugin with the Kotlin plugin"
+    useJUnitPlatform()
+    systemProperties = [
+        avroVersion: findProperty("avroVersion"),
+        gradleVersion: findProperty("gradleVersion"),
+        kotlinPluginVersion: findProperty("kotlinPluginVersion"),
+    ]
+    filter {
+        includeTestsMatching "*KotlinPlugin*"
+    }
+    reports {
+        html.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
+        junitXml.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
+    }
 }
 
 jacoco {
@@ -314,82 +246,6 @@ jacocoTestReport {
     reports {
         html.enabled true
         xml.enabled true
-    }
-}
-
-avroVersions.each { def avroVersion ->
-    gradleVersions.each { def gradleVersion ->
-        def kotlinVersion = GradleVersion.version(gradleVersion) < GradleVersion.version("5.3") ? pre5_3KotlinVersion : latestKotlinVersion
-        def newTask = tasks.create(name: "testAvro${avroVersion}Gradle${gradleVersion}", type: Test) {
-            description = "Test cross-compatibility of the plugin with Avro ${avroVersion} and Gradle ${gradleVersion}"
-            systemProperties = [
-                avroVersion: avroVersion,
-                gradleVersion: gradleVersion,
-                kotlinVersion: kotlinVersion,
-            ]
-            reports {
-                html.destination = file("$buildDir/reports/tests-avro${avroVersion}-gradle${gradleVersion}")
-                junitXml.destination = file("$buildDir/reports/tests-avro${avroVersion}-gradle${gradleVersion}")
-            }
-        }
-        testVersionCompatibility.dependsOn newTask
-        if (avroVersion == latestAvroVersion) {
-            testGradleCompatibility.dependsOn newTask
-        }
-        if (gradleVersion == latestGradleVersion) {
-            testAvroCompatibility.dependsOn newTask
-        }
-        if (gradleVersion in keyGradleVersions && avroVersion in keyAvroVersions) {
-            testRecentVersionCompatibility.dependsOn newTask
-        }
-    }
-}
-
-gradle5KotlinVersions.each { def kotlinVersion ->
-    def avroVersion = latestAvroVersion
-    def gradleVersion = firstSupportedGradleVersion
-    if (gradleVersion) {
-        def newTask = tasks.create(name: "testKotlin${kotlinVersion}", type: Test) {
-            description = "Test cross-compatibility of the plugin with Kotlin ${kotlinVersion}"
-            systemProperties = [
-                avroVersion  : avroVersion,
-                gradleVersion: gradleVersion,
-                kotlinVersion: kotlinVersion,
-            ]
-            include("**/KotlinCompatibilityFunctionalSpec.class")
-            reports {
-                html.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
-                junitXml.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
-            }
-        }
-        testVersionCompatibility.dependsOn newTask
-        testKotlinCompatibility.dependsOn newTask
-        if (kotlinVersion in keyKotlinVersions) {
-            testRecentVersionCompatibility.dependsOn newTask
-        }
-    }
-}
-
-latestGradleKotlinVersions.each { def kotlinVersion ->
-    def avroVersion = latestAvroVersion
-    def gradleVersion = latestGradleVersion
-    def newTask = tasks.create(name: "testKotlin${kotlinVersion}", type: Test) {
-        description = "Test cross-compatibility of the plugin with Kotlin ${kotlinVersion}"
-        systemProperties = [
-            avroVersion  : avroVersion,
-            gradleVersion: gradleVersion,
-            kotlinVersion: kotlinVersion,
-        ]
-        include("**/KotlinCompatibilityFunctionalSpec.class")
-        reports {
-            html.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
-            junitXml.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
-        }
-    }
-    testVersionCompatibility.dependsOn newTask
-    testKotlinCompatibility.dependsOn newTask
-    if (kotlinVersion in keyKotlinVersions) {
-        testRecentVersionCompatibility.dependsOn newTask
     }
 }
 

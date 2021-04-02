@@ -238,7 +238,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
     def "supports configuring templateDirectory"() {
         given:
-        def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")
+        def templatesDir = projectFolder("templates/alternateTemplates")
         copyResource("user.avsc", avroDir)
         copyResource("record.vm", templatesDir)
         // This functionality doesn't work with the plugins DSL syntax.

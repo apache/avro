@@ -16,6 +16,8 @@
 
 package com.github.davidmc24.gradle.plugin.avro;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 
@@ -33,7 +35,19 @@ class GradleCompatibility {
         if (GradleFeatures.objectFactoryFileCollection.isSupported()) {
             return project.getObjects().fileCollection();
         } else {
-            return project.getLayout().configurableFiles();
+            Class<?>[] parameterTypes = {Object[].class};
+            Object[] args = {new Object[0]};
+            return invokeMethod(project.getLayout(), "configurableFiles", parameterTypes, args);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T invokeMethod(Object object, String methodName, Class<?>[] parameterTypes, Object[] args) {
+        try {
+            Method method = object.getClass().getMethod(methodName, parameterTypes);
+            return (T) method.invoke(object, args);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            throw new RuntimeException("Failed to invoke method via reflection", ex);
         }
     }
 }

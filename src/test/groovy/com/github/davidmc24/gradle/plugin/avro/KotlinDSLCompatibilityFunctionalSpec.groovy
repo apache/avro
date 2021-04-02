@@ -7,7 +7,7 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
 
     def "setup"() {
         buildFile.delete() // Don't use the Groovy build file created by the superclass
-        kotlinBuildFile = testProjectDir.newFile("build.gradle.kts")
+        kotlinBuildFile = projectFile("build.gradle.kts")
         kotlinBuildFile << """
         |plugins {
         |    java

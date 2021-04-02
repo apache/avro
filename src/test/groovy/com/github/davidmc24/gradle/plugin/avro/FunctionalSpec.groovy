@@ -18,9 +18,8 @@ package com.github.davidmc24.gradle.plugin.avro
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
+import spock.lang.TempDir
 
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
@@ -29,8 +28,8 @@ abstract class FunctionalSpec extends Specification {
     @SuppressWarnings(["FieldName"])
     protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion", "undefined"))
 
-    @Rule
-    TemporaryFolder testProjectDir
+    @TempDir
+    File testProjectDir
 
     File buildFile
     File avroDir
@@ -40,9 +39,9 @@ abstract class FunctionalSpec extends Specification {
         println "Testing using Avro version ${avroVersion}."
         println "Testing using Gradle version ${gradleVersion}."
 
-        buildFile = testProjectDir.newFile("build.gradle")
-        avroDir = testProjectDir.newFolder("src", "main", "avro")
-        avroSubDir = testProjectDir.newFolder("src", "main", "avro", "foo")
+        buildFile = projectFile("build.gradle")
+        avroDir = projectFile("src/main/avro")
+        avroSubDir = projectFile("src/main/avro/foo")
     }
 
     protected String readPluginClasspath() {
@@ -109,11 +108,19 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected File projectFile(String path) {
-        return new File(testProjectDir.root, path)
+        File file = new File(testProjectDir, path)
+        file.parentFile.mkdirs()
+        return file
+    }
+
+    protected File projectFolder(String path) {
+        File file = new File(testProjectDir, path)
+        file.mkdirs()
+        return file
     }
 
     protected GradleRunner createGradleRunner() {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withGradleVersion(gradleVersion.version).withPluginClasspath()
+        return GradleRunner.create().withProjectDir(testProjectDir).withGradleVersion(gradleVersion.version).withPluginClasspath()
     }
 
     protected BuildResult run(String... args = ["build"]) {

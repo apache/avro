@@ -19,19 +19,19 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.util.GradleVersion
 
 @SuppressWarnings(["Println"])
-class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
+class KotlinPluginCompatibilityFunctionalSpec extends FunctionalSpec {
     @SuppressWarnings(["FieldName"])
-    protected static final String kotlinVersion = System.getProperty("kotlinVersion", "undefined")
+    protected static final String kotlinPluginVersion = System.getProperty("kotlinPluginVersion", "undefined")
 
     def "setup"() {
-        println "Testing using Kotlin version ${kotlinVersion}."
+        println "Testing using Kotlin plugin version ${kotlinPluginVersion}."
     }
 
     def "works with kotlin-gradle-plugin"() {
         given:
-        File kotlinDir = testProjectDir.newFolder("src", "main", "kotlin")
+        File kotlinDir = projectFolder("src/main/kotlin")
         applyAvroPlugin()
-        applyPlugin("org.jetbrains.kotlin.jvm", kotlinVersion)
+        applyPlugin("org.jetbrains.kotlin.jvm", kotlinPluginVersion)
         applyPlugin("application")
         addDefaultRepository()
         addAvroDependency()
@@ -54,7 +54,7 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
             // The kotlin plugin prior to 1.4.20 doesn't support the configuration cache, so we need to disable it.
             // This is a bit of a mis-use of the GradleVersion class, but it's way easier than writing our own
             // version comparison logic.
-            if (GradleVersion.version(kotlinVersion) < GradleVersion.version("1.4.20")) {
+            if (GradleVersion.version(kotlinPluginVersion) < GradleVersion.version("1.4.20")) {
                 args << "--no-configuration-cache"
             }
         }
