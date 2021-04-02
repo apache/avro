@@ -9,6 +9,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 **NOTE**: Pre-1.0 versions used a different publishing process/namespace.  It is strongly recommended to upgrade to a newer version.  Further details can be found in the [change log](CHANGES.md).
 
 * Currently tested against Java 8-15
+    * Java 17 is not yet supported
+    * Java 16 appears to work in Gradle 7.0-rc-1; use at your own risk
     * Java 15 support requires Gradle 6.7 or higher (as per Gradle's release notes)
     * Java 14 support requires Gradle 6.3 or higher (as per Gradle's release notes)
     * Java 13 support requires Gradle 6.0 or higher

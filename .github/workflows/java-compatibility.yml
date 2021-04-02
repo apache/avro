@@ -73,14 +73,32 @@ jobs:
           arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-  java16-17:
+  java16:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
         avro: ["1.10.2"]
-        gradle: ["6.8.3", "7.0-rc-1"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["16", "17-ea"]
+        gradle: ["7.0-rc-1"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["16"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+  java17:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.10.2"]
+        gradle: ["7.0-rc-1"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["17-ea"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
