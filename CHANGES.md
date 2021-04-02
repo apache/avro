@@ -3,8 +3,10 @@
 ## Unreleased
 * Built using Avro 1.10.2
 * Built using Gradle 7.0-rc-1
-* Updated compatibility testing through Gradle 6.8.3
+* Updated compatibility testing through Gradle 6.8.3/7.0-rc-1
 * Updated compatibility testing through Kotlin 1.4.32
+* Updated compatibility testing to include Java 16/17-ea
+* Adopted Github Actions for compatibility testing
 
 ## 1.0.0
 * Published to Maven Central (no longer published to JCenter)
