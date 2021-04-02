@@ -214,8 +214,8 @@ tasks.create(name: "testCompatibility", type: Test) {
         excludeTestsMatching "*KotlinPlugin*"
     }
     reports {
-        html.destination = file("$buildDir/reports/tests-compatibility")
-        junitXml.destination = file("$buildDir/reports/tests-compatibility")
+        html.destination = file("$buildDir/reports/tests/compatibility")
+        junitXml.destination = file("$buildDir/reports/tests/compatibility")
     }
 }
 
@@ -231,8 +231,8 @@ tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
         includeTestsMatching "*KotlinPlugin*"
     }
     reports {
-        html.destination = file("$buildDir/reports/tests-kotlinPluginCompatibility")
-        junitXml.destination = file("$buildDir/reports/tests-kotlinPluginCompatibility")
+        html.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
+        junitXml.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
     }
 }
 
