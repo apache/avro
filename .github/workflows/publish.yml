@@ -12,12 +12,11 @@ jobs:
           java-version: 8
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: --no-daemon --info --stacktrace publishToSonatype closeAndReleaseSonatypeStagingRepository
+          # For now, release manually; closeAndReleaseSonatypeStagingRepository when I have confidence
+          arguments: --no-daemon --info --stacktrace publishToSonatype closeSonatypeStagingRepository -PsonatypeUsername=${{ secrets.SONATYPE_USERNAME }} -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }}
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
         env:
-          ORG_GRADLE_PROJECT_SONATYPEPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
-          ORG_GRADLE_PROJECT_SONATYPEUSERNAME: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
