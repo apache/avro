@@ -15,6 +15,6 @@ jobs:
         java-version: ${{ matrix.java }}
     - uses: eskatos/gradle-command-action@v1
       with:
-        arguments: --no-daemon --info --stacktrace testCompatibility
+        arguments: --no-daemon --info --stacktrace test
         dependencies-cache-enabled: true
         configuration-cache-enabled: true
