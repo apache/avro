@@ -2,6 +2,9 @@ name: Publish package to the Maven Central Repository
 on:
   release:
     types: [created]
+  push:
+    branches:
+      - fix-publish
 jobs:
   publish:
     runs-on: ubuntu-latest
