@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.github.davidmc24.gradle.plugin"
-version = "1.0.1-SNAPSHOT"
+version = "1.1.0"
 
 def isCI = System.getenv("CI") == "true"
 
