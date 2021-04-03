@@ -24,6 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/utility.hpp>
+#include <utility>
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio/buffer.hpp>
 #endif
@@ -61,7 +62,7 @@ typedef boost::function<void(void)> free_func;
  **/
 class CallOnDestroy {
 public:
-    CallOnDestroy(const free_func &func) : func_(func) {}
+    explicit CallOnDestroy(free_func func) : func_(std::move(func)) {}
     ~CallOnDestroy() {
         if (func_) {
             func_();
@@ -92,13 +93,11 @@ private:
 class Chunk {
 
 public:
-    typedef boost::shared_ptr<Chunk> SharedPtr;
-
     /// Default constructor, allocates a new underlying block for this chunk.
-    Chunk(size_type size) : underlyingBlock_(new data_type[size]),
-                            readPos_(underlyingBlock_.get()),
-                            writePos_(readPos_),
-                            endPos_(readPos_ + size) {}
+    explicit Chunk(size_type size) : underlyingBlock_(new data_type[size]),
+                                     readPos_(underlyingBlock_.get()),
+                                     writePos_(readPos_),
+                                     endPos_(readPos_ + size) {}
 
     /// Foreign buffer constructor, uses the supplied data for this chunk, and
     /// only for reading.
@@ -283,9 +282,9 @@ public:
                    size_(0) {}
 
     /// Copy constructor, gets a copy of all the chunks with data.
-    explicit BufferImpl(const BufferImpl &src) : readChunks_(src.readChunks_),
-                                                 freeSpace_(0),
-                                                 size_(src.size_) {}
+    BufferImpl(const BufferImpl &src) : readChunks_(src.readChunks_),
+                                        freeSpace_(0),
+                                        size_(src.size_) {}
 
     /// Amount of data held in this buffer.
     size_type size() const {
@@ -343,7 +342,7 @@ public:
     /// An uninstantiable function, this is if boost::is_fundamental check fails,
     /// and will compile-time assert.
     template<typename T>
-    void writeTo(T val, const std::false_type &) {
+    void writeTo(T /*val*/, const std::false_type &) {
         BOOST_STATIC_ASSERT(sizeof(T) == 0);
     }
 
@@ -453,10 +452,10 @@ public:
 
     /// Copy data to a different buffer by copying the chunks.  It's
     /// a bit like extract, but without modifying the source buffer.
-    void copyData(BufferImpl &dest,
-                  ChunkList::const_iterator iter,
-                  size_type offset,
-                  size_type bytes) const {
+    static void copyData(BufferImpl &dest,
+                         ChunkList::const_iterator iter,
+                         size_type offset,
+                         size_type bytes) {
         // now we are positioned to start the copying, copy as many
         // chunks as we need, the first chunk may have a non-zero offset
         // if the data to copy is not at the start of the chunk
@@ -499,16 +498,9 @@ public:
         readChunks_.push_back(Chunk(data, size, func));
         size_ += size;
     }
+    BufferImpl &operator=(const BufferImpl &src) = delete;
 
 private:
-    /// Assignment not allowed
-    BufferImpl &operator=(const BufferImpl &src);
-    /* {
-        readChunks_.assign(src.readChunks_.begin(), src.readChunks_.end());
-        size_ = src.size();
-        return *this;
-    } */
-
     ChunkList readChunks_;  ///< chunks of this buffer containing data
     ChunkList writeChunks_; ///< chunks of this buffer containing free space
 

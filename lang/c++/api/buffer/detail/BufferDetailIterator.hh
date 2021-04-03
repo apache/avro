@@ -45,7 +45,7 @@ struct InputIteratorHelper {
     InputIteratorHelper() : iter_() {}
 
     /// Construct a helper with an iterator.
-    InputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
+    explicit InputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
 
     /// The location of valid data in this chunk.
     const data_type *data() const {
@@ -83,7 +83,7 @@ struct OutputIteratorHelper {
     OutputIteratorHelper() : iter_() {}
 
     /// Construct a helper with an iterator.
-    OutputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
+    explicit OutputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
 
     /// The location of the first writable byte in this chunk.
     data_type *data() const {
