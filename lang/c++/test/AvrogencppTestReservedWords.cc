@@ -20,7 +20,6 @@
 #include "Compiler.hh"
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <fstream>
 
 #ifdef min
 #undef min
@@ -56,8 +55,8 @@ void testCppReservedWords() {
 }
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
-    boost::unit_test::test_suite *ts = BOOST_TEST_SUITE("Code generator tests");
+init_unit_test_suite(int /* argc */, char * /*argv*/[]) {
+    auto *ts = BOOST_TEST_SUITE("Code generator tests");
     ts->add(BOOST_TEST_CASE(testCppReservedWords));
     return ts;
 }

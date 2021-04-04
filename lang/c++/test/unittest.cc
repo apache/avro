@@ -17,9 +17,7 @@
  */
 
 #include <boost/test/included/unit_test_framework.hpp>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include "Compiler.hh"
 #include "Decoder.hh"
@@ -47,9 +45,9 @@ static const uint8_t fixeddata[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
 #undef max
 #endif
 struct TestSchema {
-    TestSchema() {}
+    TestSchema() = default;
 
-    void createExampleSchema() {
+    static void createExampleSchema() {
         // First construct our complex data type:
         avro::RecordSchema myRecord("complex");
 
@@ -130,7 +128,7 @@ struct TestSchema {
         schema_.setSchema(record);
     }
 
-    void checkNameLookup() {
+    void checkNameLookup() const {
         NodePtr node = schema_.root();
 
         size_t index = 0;
@@ -257,7 +255,7 @@ struct TestSchema {
         // no-op printer
     }
 
-    void printNext(Parser<ValidatingReader> &p) {
+    static void printNext(Parser<ValidatingReader> &p) {
         std::cout << "Next: \"" << nextType(p);
         std::string recordName;
         std::string fieldName;
@@ -272,7 +270,7 @@ struct TestSchema {
 
     template<typename Parser>
     void readMap(Parser &p) {
-        int64_t size = 0;
+        int64_t size;
         do {
             printNext(p);
             size = p.readMapBlockSize();
@@ -290,7 +288,7 @@ struct TestSchema {
 
     template<typename Parser>
     void readArray(Parser &p) {
-        int64_t size = 0;
+        int64_t size;
         double d = 0.0;
         do {
             printNext(p);
@@ -319,7 +317,7 @@ struct TestSchema {
     template<typename Parser>
     void readFixed(Parser &p) {
 
-        std::array<uint8_t, 16> input;
+        std::array<uint8_t, 16> input{};
         p.readFixed(input);
         BOOST_CHECK_EQUAL(input.size(), 16U);
 
@@ -417,12 +415,12 @@ struct TestSchema {
 
 struct TestEncoding {
 
-    void compare(int32_t val) {
+    static void compare(int32_t val) {
         uint32_t encoded = encodeZigzag32(val);
         BOOST_CHECK_EQUAL(decodeZigzag32(encoded), val);
     }
 
-    void compare(int64_t val) {
+    static void compare(int64_t val) {
         uint64_t encoded = encodeZigzag64(val);
         BOOST_CHECK_EQUAL(decodeZigzag64(encoded), val);
     }
@@ -452,7 +450,7 @@ struct TestEncoding {
 };
 
 struct TestNested {
-    TestNested() {}
+    TestNested() = default;
 
     void createSchema() {
         std::cout << "TestNested\n";
@@ -477,7 +475,7 @@ struct TestNested {
         schema_.toFlatList(std::cout);
     }
 
-    InputBuffer serializeNoRecurse() {
+    InputBuffer serializeNoRecurse() const {
         std::cout << "No recurse\n";
         Serializer<ValidatingWriter> s(schema_);
         s.writeRecord();
@@ -512,7 +510,7 @@ struct TestNested {
         e.arrayEnd();
     }
 
-    InputBuffer serializeRecurse() {
+    InputBuffer serializeRecurse() const {
         std::cout << "Recurse\n";
         Serializer<ValidatingWriter> s(schema_);
         s.writeRecord();
@@ -680,7 +678,7 @@ struct TestNested {
         decodeArrayRecord(d);
     }
 
-    void testToScreen() {
+    void testToScreen() const {
         InputBuffer buf1 = serializeNoRecurse();
         InputBuffer buf2 = serializeRecurse();
         std::cout << buf1;
@@ -757,7 +755,7 @@ struct TestNested {
 };
 
 struct TestGenerated {
-    TestGenerated() {}
+    TestGenerated() = default;
 
     void test() {
         std::cout << "TestGenerated\n";
@@ -790,7 +788,7 @@ struct TestBadStuff {
     void testBadSchema() {
         std::cout << "TestBadSchema\n";
 
-        std::string str("{ \"type\" : \"wrong\" }");
+        std::string str(R"({ "type" : "wrong" })");
         std::istringstream in(str);
 
         avro::ValidSchema schema;
@@ -955,10 +953,10 @@ void testNestedMapSchema() {
 }
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
 
-    test_suite *test = BOOST_TEST_SUITE("Avro C++ unit test suite");
+    auto *test = BOOST_TEST_SUITE("Avro C++ unit test suite");
 
     test->add(BOOST_CLASS_TEST_CASE(&TestEncoding::test,
                                     boost::make_shared<TestEncoding>()));

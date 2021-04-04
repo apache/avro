@@ -137,7 +137,7 @@ static const char filename[] = "test_str.bin";
 
 struct FileRemover {
     const boost::filesystem::path file;
-    FileRemover(const char *filename) : file(filename) {}
+    explicit FileRemover(const char *fn) : file(fn) {}
     ~FileRemover() { boost::filesystem::remove(file); }
 };
 
@@ -181,9 +181,8 @@ TestData data[] = {
 } // namespace avro
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
-    boost::unit_test::test_suite *ts =
-        BOOST_TEST_SUITE("Avro C++ unit test suite for streams");
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit test suite for streams");
 
     ts->add(BOOST_TEST_CASE(
         &avro::stream::testEmpty_memoryStream<avro::stream::CheckEmpty1>));

@@ -182,10 +182,10 @@ void testCustom() {
 } // namespace avro
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
 
-    test_suite *ts = BOOST_TEST_SUITE("Specific tests");
+    auto *ts = BOOST_TEST_SUITE("Specific tests");
     ts->add(BOOST_TEST_CASE(avro::specific::testBool));
     ts->add(BOOST_TEST_CASE(avro::specific::testInt));
     ts->add(BOOST_TEST_CASE(avro::specific::testLong));

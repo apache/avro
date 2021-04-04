@@ -83,10 +83,10 @@ void test2dArray() {
 }
 
 boost::unit_test::test_suite *
-init_unit_test_suite(int argc, char *argv[]) {
+init_unit_test_suite(int /*argc*/, char * /*argv*/[]) {
     using namespace boost::unit_test;
 
-    test_suite *ts = BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
+    auto *ts = BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
     ts->add(BOOST_TEST_CASE(&testEmptyBytesDefault));
     ts->add(BOOST_TEST_CASE(&test2dArray));
     return ts;
