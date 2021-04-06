@@ -69,6 +69,22 @@ public class SpecificData extends GenericData {
     }
 
   };
+  private static final ClassValue<SpecificData> MODEL_CACHE = new ClassValue<SpecificData>() {
+    @Override
+    protected SpecificData computeValue(Class<?> type) {
+      Field specificDataField;
+      try {
+        specificDataField = type.getDeclaredField("MODEL$");
+        specificDataField.setAccessible(true);
+        return (SpecificData) specificDataField.get(null);
+      } catch (NoSuchFieldException e) {
+        // Return default instance
+        return SpecificData.get();
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException("while trying to access field MODEL$ on " + type.getCanonicalName(), e);
+      }
+    }
+  };
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
@@ -168,17 +184,7 @@ public class SpecificData extends GenericData {
    */
   public static <T> SpecificData getForClass(Class<T> c) {
     if (SpecificRecordBase.class.isAssignableFrom(c)) {
-      final Field specificDataField;
-      try {
-        specificDataField = c.getDeclaredField("MODEL$");
-        specificDataField.setAccessible(true);
-        return (SpecificData) specificDataField.get(null);
-      } catch (NoSuchFieldException e) {
-        // Return default instance
-        return SpecificData.get();
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      }
+      return MODEL_CACHE.get(c);
     }
     return SpecificData.get();
   }
