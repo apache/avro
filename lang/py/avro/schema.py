@@ -41,6 +41,7 @@ A schema may be one of:
 """
 
 import abc
+import collections
 import datetime
 import decimal
 import json
@@ -113,6 +114,16 @@ VALID_FIELD_SORT_ORDERS = (
     'ignore',
 )
 
+CANONICAL_FIELD_ORDER = (
+    'name',
+    'type',
+    'fields',
+    'symbols',
+    'items',
+    'values',
+    'size',
+)
+
 INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
@@ -136,7 +147,18 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class Schema(abc.ABC):
+class CanonicalPropertiesMixin(object):
+    """A Mixin that provides canonical properties to Schema and Field types."""
+    @property
+    def canonical_properties(self):
+        props = self.props
+        return collections.OrderedDict(
+            (key, props[key])
+            for key in CANONICAL_FIELD_ORDER
+            if key in props)
+
+
+class Schema(abc.ABC, CanonicalPropertiesMixin):
     """Base class for all Schema classes."""
     _props = None
 
@@ -202,8 +224,11 @@ class Schema(abc.ABC):
         in the parameter names.
         """
 
+    @abc.abstractmethod
     def validate(self, datum):
         """Returns the appropriate schema object if datum is valid for that schema, else None.
+
+        To be implemented in subclasses.
 
         Validation concerns only shape and type of data in the top level of the current schema.
         In most cases, the returned schema object will be self. However, for UnionSchema objects,
@@ -212,7 +237,20 @@ class Schema(abc.ABC):
         @arg datum: The data to be checked for validity according to this schema
         @return Optional[Schema]
         """
-        raise Exception("Must be implemented by subclasses.")
+
+    @abc.abstractmethod
+    def to_canonical_json(self, names=None):
+        """
+        Converts the schema object into its Canonical Form
+        http://avro.apache.org/docs/current/spec.html#Parsing+Canonical+Form+for+Schemas
+
+        To be implemented in subclasses.
+        """
+
+    @property
+    def canonical_form(self):
+        # The separators eliminate whitespace around commas and colons.
+        return json.dumps(self.to_canonical_json(), separators=(",", ":"))
 
 
 class Name:
@@ -223,22 +261,24 @@ class Name:
     def __init__(self, name_attr, space_attr, default_space):
         """The fullname is determined in one of the following ways:
 
-        - A name and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
+        - A name and namespace are both specified. For example, one might use "name": "X",
+            "namespace": "org.foo" to indicate the fullname org.foo.X.
         - A fullname is specified. If the name specified contains a dot,
-          then it is assumed to be a fullname, and any namespace also specified is ignored.
-          For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
+            then it is assumed to be a fullname, and any namespace also specified is ignored.
+            For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
         - A name only is specified, i.e., a name that contains no dots.
-          In this case the namespace is taken from the most tightly enclosing schema or protocol.
-          For example, if "name": "X" is specified, and this occurs within a field of
-          the record definition of org.foo.Y, then the fullname is org.foo.X.
-          If there is no enclosing namespace then the null namespace is used.
+            In this case the namespace is taken from the most tightly enclosing schema or protocol.
+            For example, if "name": "X" is specified, and this occurs within a field of
+            the record definition of org.foo.Y, then the fullname is org.foo.X.
+            If there is no enclosing namespace then the null namespace is used.
 
         References to previously defined names are as in the latter two cases above:
         if they contain a dot they are a fullname,
         if they do not contain a dot, the namespace is the namespace of the enclosing definition.
 
         @arg name_attr: name value read in schema or None.
-        @arg space_attr: namespace value read in schema or None. The empty string may be used as a namespace to indicate the null namespace.
+        @arg space_attr: namespace value read in schema or None. The empty string may be used as a namespace
+            to indicate the null namespace.
         @arg default_space: the current default space or None.
         """
         if name_attr is None:
@@ -291,9 +331,7 @@ class Names:
 
     def get_name(self, name_attr, space_attr):
         test = Name(name_attr, space_attr, self.default_namespace).fullname
-        if test not in self.names:
-            return None
-        return self.names[test]
+        return self.names.get(test)
 
     def prune_namespace(self, properties):
         """given a properties, return properties with namespace removed if
@@ -301,12 +339,15 @@ class Names:
         if self.default_namespace is None:
             # I have no default -- no change
             return properties
+
         if 'namespace' not in properties:
             # he has no namespace - no change
             return properties
+
         if properties['namespace'] != self.default_namespace:
             # we're different - leave his stuff alone
             return properties
+
         # we each have a namespace and it's redundant. delete his.
         prunable = properties.copy()
         del(prunable['namespace'])
@@ -316,10 +357,10 @@ class Names:
         """
         Add a new schema object to the name set.
 
-          @arg name_attr: name value read in schema
-          @arg space_attr: namespace value read in schema.
+        @arg name_attr: name value read in schema
+        @arg space_attr: namespace value read in schema.
 
-          @return: the Name that was just added.
+        @return: the Name that was just added.
         """
         to_add = Name(name_attr, space_attr, self.default_namespace)
 
@@ -407,7 +448,7 @@ class DecimalLogicalSchema(LogicalSchema):
         super(DecimalLogicalSchema, self).__init__('decimal')
 
 
-class Field:
+class Field(CanonicalPropertiesMixin):
     def __init__(self, type, name, has_default, default=None,
                  order=None, names=None, doc=None, other_props=None):
         # Ensure valid ctor args
@@ -469,10 +510,19 @@ class Field:
         return json.dumps(self.to_json())
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         to_dump = self.props.copy()
         to_dump['type'] = self.type.to_json(names)
+
+        return to_dump
+
+    def to_canonical_json(self, names=None):
+        names = names or Names()
+
+        to_dump = self.canonical_properties
+        to_dump["type"] = self.type.to_canonical_json(names)
+
         return to_dump
 
     def __eq__(self, that):
@@ -525,6 +575,9 @@ class PrimitiveSchema(Schema):
             return self.fullname
         else:
             return self.props
+
+    def to_canonical_json(self, names=None):
+        return self.fullname if len(self.props) == 1 else self.canonical_properties
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this type of primitive schema, else None
@@ -593,13 +646,19 @@ class FixedSchema(NamedSchema):
         return self.type == writer.type and self.check_props(writer, ['fullname', 'size'])
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         if self.fullname in names.names:
             return self.name_ref(names)
-        else:
-            names.names[self.fullname] = self
-            return names.prune_namespace(self.props)
+
+        names.names[self.fullname] = self
+        return names.prune_namespace(self.props)
+
+    def to_canonical_json(self, names=None):
+        to_dump = self.canonical_properties
+        to_dump["name"] = self.fullname
+
+        return to_dump
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this schema, else None."""
@@ -673,13 +732,24 @@ class EnumSchema(NamedSchema):
         return self.type == writer.type and self.check_props(writer, ['fullname'])
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         if self.fullname in names.names:
             return self.name_ref(names)
+
+        names.names[self.fullname] = self
+        return names.prune_namespace(self.props)
+
+    def to_canonical_json(self, names=None):
+        names_as_json = self.to_json(names)
+
+        if isinstance(names_as_json, str):
+            to_dump = self.fullname
         else:
-            names.names[self.fullname] = self
-            return names.prune_namespace(self.props)
+            to_dump = self.canonical_properties
+            to_dump["name"] = self.fullname
+
+        return to_dump
 
     def validate(self, datum):
         """Return self if datum is a valid member of this Enum, else None."""
@@ -722,11 +792,21 @@ class ArraySchema(Schema):
         return self.type == writer.type and self.items.check_props(writer.items, ['type'])
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         to_dump = self.props.copy()
         item_schema = self.get_prop('items')
         to_dump['items'] = item_schema.to_json(names)
+
+        return to_dump
+
+    def to_canonical_json(self, names=None):
+        names = names or Names()
+
+        to_dump = self.canonical_properties
+        item_schema = self.get_prop("items")
+        to_dump["items"] = item_schema.to_canonical_json(names)
+
         return to_dump
 
     def validate(self, datum):
@@ -768,10 +848,19 @@ class MapSchema(Schema):
         return writer.type == self.type and self.values.check_props(writer.values, ['type'])
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         to_dump = self.props.copy()
         to_dump['values'] = self.get_prop('values').to_json(names)
+
+        return to_dump
+
+    def to_canonical_json(self, names=None):
+        names = names or Names()
+
+        to_dump = self.canonical_properties
+        to_dump["values"] = self.get_prop("values").to_canonical_json(names)
+
         return to_dump
 
     def validate(self, datum):
@@ -829,12 +918,18 @@ class UnionSchema(Schema):
         return writer.type in {'union', 'error_union'} or any(s.match(writer) for s in self.schemas)
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         to_dump = []
         for schema in self.schemas:
             to_dump.append(schema.to_json(names))
+
         return to_dump
+
+    def to_canonical_json(self, names=None):
+        names = names or Names()
+
+        return [schema.to_canonical_json(names) for schema in self.schemas]
 
     def validate(self, datum):
         """Return the first branch schema of which datum is a valid example, else None."""
@@ -853,14 +948,15 @@ class ErrorUnionSchema(UnionSchema):
         UnionSchema.__init__(self, ['string'] + schemas, names)
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         to_dump = []
         for schema in self.schemas:
             # Don't print the system error schema
             if schema.type == 'string':
                 continue
             to_dump.append(schema.to_json(names))
+
         return to_dump
 
 
@@ -948,8 +1044,8 @@ class RecordSchema(NamedSchema):
         return fields_dict
 
     def to_json(self, names=None):
-        if names is None:
-            names = Names()
+        names = names or Names()
+
         # Request records don't have names
         if self.type == 'request':
             return [f.to_json(names) for f in self.fields]
@@ -961,6 +1057,24 @@ class RecordSchema(NamedSchema):
 
         to_dump = names.prune_namespace(self.props.copy())
         to_dump['fields'] = [f.to_json(names) for f in self.fields]
+
+        return to_dump
+
+    def to_canonical_json(self, names=None):
+        names = names or Names()
+
+        if self.type == 'request':
+            raise NotImplementedError("Canonical form (probably) does not make sense on type request")
+
+        to_dump = self.canonical_properties
+        to_dump["name"] = self.fullname
+
+        if self.fullname in names.names:
+            return self.name_ref(names)
+
+        names.names[self.fullname] = self
+        to_dump["fields"] = [f.to_canonical_json(names) for f in self.fields]
+
         return to_dump
 
     def validate(self, datum):
@@ -1124,18 +1238,19 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
     @arg names: A Names object (tracks seen names and default space)
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
     """
-    if names is None:
-        names = Names()
+    names = names or Names()
 
     # JSON object (non-union)
     if callable(getattr(json_data, 'get', None)):
         type = json_data.get('type')
         other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
         logical_type = json_data.get('logicalType')
+
         if logical_type:
             logical_schema = make_logical_schema(logical_type, type, other_props or {})
             if logical_schema is not None:
                 return logical_schema
+
         if type in NAMED_TYPES:
             name = json_data.get('name')
             namespace = json_data.get('namespace', names.default_namespace)
@@ -1159,8 +1274,10 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
                 return RecordSchema(name, namespace, fields, names, type, doc, other_props)
             else:
                 raise avro.errors.SchemaParseException('Unknown Named Type: %s' % type)
+
         if type in PRIMITIVE_TYPES:
             return PrimitiveSchema(type, other_props)
+
         if type in VALID_TYPES:
             if type == 'array':
                 items = json_data.get('items')

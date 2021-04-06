@@ -55,6 +55,10 @@ import org.apache.avro.logicaltypes.AvroDatatype;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -121,6 +125,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   static final JsonFactory FACTORY = new JsonFactory();
+  static final Logger LOG = LoggerFactory.getLogger(Schema.class);
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
@@ -1763,6 +1768,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
           }
           f.aliases = parseAliases(field);
           fields.add(f);
+          if (fieldSchema.getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
+            LOG.warn(
+                "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
+                name, fieldName, getOptionalText(field, "logicalType"));
         }
         result.setFields(fields);
       } else if (type.equals("enum")) { // enum

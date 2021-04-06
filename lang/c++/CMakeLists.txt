@@ -20,6 +20,12 @@ cmake_minimum_required (VERSION 2.6)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 cmake_policy (SET CMP0042 NEW)
 
 if (NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
@@ -52,9 +58,6 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
         -DBOOST_IOSTREAMS_DYN_LINK
         -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
-else()
-# Replease c++11 with c++17 below in case C++ 17 should be used
-    add_definitions(-std=c++11 -fPIC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -80,6 +83,7 @@ if (SNAPPY_FOUND)
 else (SNAPPY_FOUND)
     set(SNAPPY_PKG "")
     set(SNAPPY_LIBRARIES "")
+    set(SNAPPY_INCLUDE_DIR "")
     message("Disabled snappy codec. libsnappy not found.")
 endif (SNAPPY_FOUND)
 

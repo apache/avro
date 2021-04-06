@@ -253,7 +253,7 @@ def main(argv):
 
     # write options
     write_options = optparse.OptionGroup(parser, "write options")
-    write_options.add_option("--schema", help="schema file (required)")
+    write_options.add_option("--schema", help="schema JSON file (required)")
     write_options.add_option("--input-type",
                              help="input file(s) type (json or csv)",
                              choices=["json", "csv"], default=None)
@@ -262,7 +262,7 @@ def main(argv):
 
     opts, args = parser.parse_args(argv[1:])
     if len(args) < 1:
-        parser.error("You much specify `cat` or `write`")  # Will exit
+        parser.error("You must specify `cat` or `write`")  # Will exit
 
     command_name = args.pop(0)
     try:

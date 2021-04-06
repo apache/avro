@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 #include "Zigzag.hh"
 
 namespace avro {
@@ -38,7 +37,6 @@ encodeInt64(int64_t input, std::array<uint8_t, 10> &output) noexcept {
     output[bytesOut++] = v;
     return bytesOut;
 }
-
 size_t
 encodeInt32(int32_t input, std::array<uint8_t, 5> &output) noexcept {
     auto val = encodeZigzag32(input);

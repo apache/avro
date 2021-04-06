@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {lint|test|dist|clean|install|doc}"
+  echo "Usage: $0 {lint|test|dist|clean|install|doc|format}"
   exit 1
 }
 
@@ -113,9 +113,13 @@ case "$target" in
     do_doc
     ;;
 
+  format)
+    clang-format -i --style file `find api -type f` `find impl -type f` `find test -type f`
+    ;;
+
   clean)
     (cd build && make clean)
-    rm -rf doc test.avro test?.df test_skip.df
+    rm -rf doc test.avro test?.df test??.df test_skip.df test_lastSync.df test_readRecordUsingLastSync.df
     ;;
 
   install)
