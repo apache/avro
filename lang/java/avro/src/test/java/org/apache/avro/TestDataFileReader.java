@@ -29,13 +29,16 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Test;
-import com.sun.management.UnixOperatingSystemMXBean;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
