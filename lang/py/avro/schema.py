@@ -166,7 +166,10 @@ class FingerprintMixin:
     _FP_TABLE = None
     _EMPTY64 = 0xc15d213aa4d7a795
 
-    SUPPORTED_ALGORITHMS = hashlib.algorithms_guaranteed.union({'CRC-64-AVRO'})
+    # All algorithms guaranteed by hashlib are supported
+    SUPPORTED_ALGORITHMS = set(hashlib.algorithms_guaranteed)
+    # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
+    SUPPORTED_ALGORITHMS.update({'CRC-64-AVRO'})
 
     def fingerprint(self, algorithm='CRC-64-AVRO'):
         """
