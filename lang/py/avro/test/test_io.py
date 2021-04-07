@@ -392,13 +392,13 @@ class TestIO(unittest.TestCase):
         self.assertEqual(datum_to_read, datum_read)
 
     def test_type_exception_int(self):
-        print_test_name('TEST TYPE EXCEPTION')
         writers_schema = avro.schema.parse(json.dumps({
             "type": "record", "name": "Test",
             "fields": [
                 {"name": "F", "type": "int"},
                 {"name": "E", "type": "int"}]}))
         datum_to_write = {'E': 5, 'F': 'Bad'}
+
         with self.assertRaises(avro.errors.AvroTypeException) as exc:
             write_datum(datum_to_write, writers_schema)
         assert str(exc.exception) == 'The datum "Bad" provided for "F" is not an example of the schema "int"'
@@ -409,6 +409,7 @@ class TestIO(unittest.TestCase):
             "fields": [
                 {"name": "foo", "type": "long"}]}))
         datum_to_write = {'foo': 5.0}
+
         with self.assertRaises(avro.errors.AvroTypeException) as exc:
             write_datum(datum_to_write, writers_schema)
         assert str(exc.exception) == 'The datum "5.0" provided for "foo" is not an example of the schema "long"'
@@ -419,11 +420,11 @@ class TestIO(unittest.TestCase):
             "fields": [
                 {"name": "foo", "type": "long"}]}))
         datum_to_write = ('foo', 5.0)
-        pretty_expected = json.dumps(json.loads(str(writers_schema)), indent=2)
-        with self.assertRaises(avro.errors.AvroTypeException) as exc:
+
+        with self.assertRaisesRegex(
+                avro.errors.AvroTypeException,
+                r'The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*'):
             write_datum(datum_to_write, writers_schema)
-        assert str(exc.exception) == \
-            f"""The datum "(\'foo\', 5.0)" provided for "Test" is not an example of the schema {pretty_expected}"""
 
 
 if __name__ == '__main__':

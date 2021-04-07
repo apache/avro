@@ -155,7 +155,10 @@ def validate(expected_schema, datum, raise_on_error=False):
         else:
             # the current node was not valid.
             if raise_on_error:
-                raise avro.errors.AvroTypeException(current_node.schema, current_node.name, current_node.datum)
+                raise avro.errors.AvroTypeException(
+                    expected_schema=current_node.schema,
+                    name=current_node.name,
+                    datum=current_node.datum)
             else:
                 # preserve the prior validation behavior of returning false when there are problems.
                 return False
