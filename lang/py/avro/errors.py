@@ -44,18 +44,10 @@ class IgnoredLogicalType(AvroWarning):
 
 class AvroTypeException(AvroException):
     """Raised when datum is not an example of schema."""
-    def __init__(self, **kwargs):
-        if any(key not in kwargs.keys() for key in ['expected_schema', 'name', 'datum']):
-            raise TypeError('Missing keyword argument to AvroTypeException')
-
-        fail_msg = 'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}'
-        pretty_expected = json.dumps(json.loads(str(kwargs['expected_schema'])), indent=2)
-
-        super(AvroTypeException, self).__init__(
-            fail_msg.format(
-                datum=kwargs['datum'],
-                name=kwargs['name'],
-                pretty_expected=pretty_expected))
+    def __init__(self, expected_schema, name, datum):
+        pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
+        fail_msg = f'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}'
+        super(AvroTypeException, self).__init__(fail_msg)
 
 
 class SchemaResolutionException(AvroException):
