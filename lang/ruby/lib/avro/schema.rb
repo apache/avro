@@ -500,11 +500,13 @@ module Avro
       end
 
       def match_schema?(schema)
+        return true if super
+
         if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
           return precision == schema.precision && (scale || 0) == (schema.scale || 0)
         end
 
-        return super
+        false
       end
     end
 
@@ -532,11 +534,13 @@ module Avro
       end
 
       def match_schema?(schema)
+        return true if super && size == schema.size
+
         if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
           return precision == schema.precision && (scale || 0) == (schema.scale || 0)
         end
 
-        super && size == schema.size
+        false
       end
     end
 
