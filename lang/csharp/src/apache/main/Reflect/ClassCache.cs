@@ -32,6 +32,7 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -214,8 +215,12 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        var t = c.GetPropertyType(f);
-                        LoadClassCache(t, f.Schema);
+                        if (!_previousFields.ContainsKey(f.Name))
+                        {
+                            _previousFields.TryAdd(f.Name, f.Schema);
+                            var t = c.GetPropertyType(f);
+                            LoadClassCache(t, f.Schema);
+                        }
                     }
 
                     break;
