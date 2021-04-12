@@ -15,6 +15,7 @@
  */
 package com.github.davidmc24.gradle.plugin.avro
 
+import com.vdurmont.semver4j.Semver
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
@@ -24,7 +25,7 @@ import spock.lang.TempDir
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
     @SuppressWarnings(["FieldName"])
-    protected static final String avroVersion = System.getProperty("avroVersion", "undefined")
+    protected static final Semver avroVersion = new Semver(System.getProperty("avroVersion", "undefined"))
     @SuppressWarnings(["FieldName"])
     protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion", "undefined"))
 
@@ -142,5 +143,13 @@ abstract class FunctionalSpec extends Specification {
             arguments << "--configuration-cache"
         }
         return arguments
+    }
+
+    protected boolean isLocalTimestampConversionSupported() {
+        return avroVersion.isGreaterThanOrEqualTo(new Semver("1.10.0"))
+    }
+
+    protected String getInteropIDLResourceName() {
+        return localTimestampConversionSupported ? "interop.avdl" : "interop-1.9.avdl"
     }
 }

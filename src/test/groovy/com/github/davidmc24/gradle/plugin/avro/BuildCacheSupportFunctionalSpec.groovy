@@ -58,7 +58,7 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
     @IgnoreIf({ OperatingSystem.current.windows })
     def "supports build cache for IDL to protocol conversion"() {
         given: "a project is built once with build cache enabled"
-        copyResource("interop.avdl", avroDir)
+        copyResource(interopIDLResourceName, avroDir)
         run("build", "--build-cache")
 
         and: "the project is cleaned"

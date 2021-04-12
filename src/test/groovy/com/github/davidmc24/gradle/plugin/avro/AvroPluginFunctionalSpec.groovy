@@ -55,7 +55,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
     def "can generate and compile java files from IDL"() {
         given:
-        copyResource("interop.avdl", avroDir)
+        copyResource(interopIDLResourceName, avroDir)
 
         when:
         def result = run()
@@ -89,7 +89,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         interopJavaContent.contains("LocalDate dateField")
         interopJavaContent.contains("LocalTime timeField")
         interopJavaContent.contains("Instant timeStampField")
-        interopJavaContent.contains("LocalDateTime localTimeStampField")
+        if (localTimestampConversionSupported) {
+            interopJavaContent.contains("LocalDateTime localTimeStampField")
+        }
     }
 
     def "supports json schema files in subdirectories"() {
@@ -122,7 +124,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
     def "supports IDL files in subdirectories"() {
         given:
-        copyResource("interop.avdl", avroSubDir)
+        copyResource(interopIDLResourceName, avroSubDir)
 
         when:
         def result = run()

@@ -46,6 +46,7 @@ dependencies {
     testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
     testImplementation gradleTestKit()
     testImplementation "uk.co.datumedge:hamcrest-json:0.2"
+    testImplementation "com.vdurmont:semver4j:3.1.0"
     testRuntimeOnly files(createClasspathManifest) // Add the classpath file to the test runtime classpath
 }
 
@@ -205,6 +206,7 @@ test {
 
 tasks.create(name: "testCompatibility", type: Test) {
     description = "Test cross-compatibility of the plugin with Avro/Gradle"
+    group = "Verification"
     useJUnitPlatform()
     systemProperties = [
         avroVersion: findProperty("avroVersion"),
@@ -221,6 +223,7 @@ tasks.create(name: "testCompatibility", type: Test) {
 
 tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
     description = "Test cross-compatibility of the plugin with the Kotlin plugin"
+    group = "Verification"
     useJUnitPlatform()
     systemProperties = [
         avroVersion: findProperty("avroVersion"),
