@@ -22,10 +22,11 @@ cd "$(dirname "$0")"
 
 # maintain our gems here
 export GEM_HOME="$PWD/.gem/"
-export PATH="$GEM_HOME/bin:$PATH"
+export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
 
 # bootstrap bundler
 gem install --no-document -v 1.17.3 bundler
+rbenv rehash
 bundle install
 
 for target in "$@"

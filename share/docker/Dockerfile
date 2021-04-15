@@ -32,7 +32,6 @@ RUN apt-get -qqy update \
                                                  asciidoc \
                                                  bison \
                                                  bzip2 \
-                                                 bundler \
                                                  cmake \
                                                  cppcheck \
                                                  curl \
@@ -46,8 +45,10 @@ RUN apt-get -qqy update \
                                                  libfreetype6-dev \
                                                  libglib2.0-dev \
                                                  libjansson-dev \
+                                                 libreadline-dev \
                                                  libsnappy-dev \
                                                  libsnappy1v5 \
+                                                 libssl-dev \
                                                  make \
                                                  mypy \
                                                  perl \
@@ -56,9 +57,6 @@ RUN apt-get -qqy update \
                                                  python3-setuptools \
                                                  python3-snappy \
                                                  python3-wheel \
-                                                 rake \
-                                                 ruby \
-                                                 ruby-dev \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
@@ -188,9 +186,20 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
-# Install Ruby modules
+# Install Ruby
+ENV RBENV_ROOT /usr/local/rbenv
+RUN git clone https://github.com/rbenv/rbenv.git /usr/local/rbenv \
+  && git clone https://github.com/rbenv/ruby-build.git /usr/local/rbenv/plugins/ruby-build \
+  && /usr/local/rbenv/plugins/ruby-build/install.sh \
+  && echo 'eval "$(rbenv init -)"' >> /etc/profile.d/rbenv.sh \
+  && echo 'eval "$(rbenv init -)"' >> /etc/bash.bashrc
+ENV PATH /usr/local/rbenv/bin:$PATH
+RUN rbenv install 2.6.7 && rbenv global 2.6.7 \
+  && rbenv exec gem install bundler -v 1.17.3 --no-document
 COPY lang/ruby/Gemfile /tmp
-RUN bundle install --gemfile=/tmp/Gemfile
+RUN rbenv exec bundle install --gemfile=/tmp/Gemfile \
+  && chgrp -R staff /usr/local/rbenv \
+  && chmod -R g+rw /usr/local/rbenv
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8 (installed as an AdoptOpenJDK package)
