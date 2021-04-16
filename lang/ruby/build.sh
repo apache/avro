@@ -22,10 +22,13 @@ cd "$(dirname "$0")"
 
 # maintain our gems here
 export GEM_HOME="$PWD/.gem/"
-export PATH="$GEM_HOME/bin:$PATH"
+export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
 
 # bootstrap bundler
 gem install --no-document -v 1.17.3 bundler
+
+# rbenv is used by the Dockerfile but not the Github action in CI
+rbenv rehash || echo "Not using rbenv"
 bundle install
 
 for target in "$@"
