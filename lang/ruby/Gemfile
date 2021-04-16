@@ -25,5 +25,5 @@ gem 'parallel'
 gem 'webrick'
 
 # rubocop v1.0 and later introduces new Lint cops to be addressed
-gem 'rubocop', '< 1.0'
+gem 'rubocop', '< 2.0'
 gem 'rdoc'
