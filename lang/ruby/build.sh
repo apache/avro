@@ -28,14 +28,14 @@ export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
 gem install --no-document -v 1.17.3 bundler
 
 # rbenv is used by the Dockerfile but not the Github action in CI
-rbenv rehash || echo "Not using rbenv"
+rbenv rehash 2>/dev/null || echo "Not using rbenv"
 bundle install
 
 for target in "$@"
 do
   case "$target" in
     lint)
-      bundle exec rubocop --lint
+      bundle exec rubocop
       ;;
 
     test)

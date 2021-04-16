@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -76,7 +77,7 @@ module Avro
         # The float is converted into a 32-bit integer using a method
         # equivalent to Java's floatToIntBits and then encoded in
         # little-endian format.
-        read_and_unpack(4, 'e'.freeze)
+        read_and_unpack(4, 'e')
       end
 
       def read_double
@@ -84,7 +85,7 @@ module Avro
         # The double is converted into a 64-bit integer using a method
         # equivalent to Java's doubleToLongBits and then encoded in
         # little-endian format.
-        read_and_unpack(8, 'E'.freeze)
+        read_and_unpack(8, 'E')
       end
 
       def read_bytes
@@ -97,7 +98,7 @@ module Avro
         # A string is encoded as a long followed by that many bytes of
         # UTF-8 encoded character data.
         read_bytes.tap do |string|
-          string.force_encoding('UTF-8'.freeze) if string.respond_to? :force_encoding
+          string.force_encoding('UTF-8') if string.respond_to? :force_encoding
         end
       end
 
@@ -205,7 +206,7 @@ module Avro
       # equivalent to Java's floatToIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
-        @writer.write([datum].pack('e'.freeze))
+        @writer.write([datum].pack('e'))
       end
 
       # A double is written as 8 bytes.
@@ -213,7 +214,7 @@ module Avro
       # equivalent to Java's doubleToLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
-        @writer.write([datum].pack('E'.freeze))
+        @writer.write([datum].pack('E'))
       end
 
       # Bytes are encoded as a long followed by that many bytes of data.
@@ -225,7 +226,7 @@ module Avro
       # A string is encoded as a long followed by that many bytes of
       # UTF-8 encoded character data
       def write_string(datum)
-        datum = datum.encode('utf-8'.freeze) if datum.respond_to? :encode
+        datum = datum.encode('utf-8') if datum.respond_to? :encode
         write_bytes(datum)
       end
 

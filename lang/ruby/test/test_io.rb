@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -217,7 +218,7 @@ EOS
     [64, '80 01'],
     [8192, '80 80 01'],
     [-8193, '81 80 01'],
-  ]
+  ].freeze
 
   def avro_hexlify(reader)
     bytes = []
@@ -266,46 +267,46 @@ EOS
 
   def test_utf8_string_encoding
     [
-      "\xC3".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse('"string"'))
       datum_writer.write(value, encoder)
 
-      assert_equal "\x04\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\x04\xc3\x83", encoding: 'BINARY'), output
     end
   end
 
   def test_bytes_encoding
     [
-      "\xC3\x83".force_encoding('BINARY'),
-      "\xC3\x83".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3\x83", encoding: 'BINARY'),
+      String.new("\xC3\x83", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse('"bytes"'))
       datum_writer.write(value, encoder)
 
-      assert_equal "\x04\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\x04\xc3\x83", encoding: 'BINARY'), output
     end
   end
 
   def test_fixed_encoding
     [
-      "\xC3\x83".force_encoding('BINARY'),
-      "\xC3\x83".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3\x83", encoding: 'BINARY'),
+      String.new("\xC3\x83", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       schema = '{"type": "fixed", "name": "TwoBytes", "size": 2}'
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse(schema))
       datum_writer.write(value, encoder)
 
-      assert_equal "\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\xC3\x83", encoding: 'BINARY'), output
     end
   end
 
@@ -567,7 +568,7 @@ EOS
     datum = randomdata.next
     assert validate(schm, datum), 'datum is not valid for schema'
     w = Avro::IO::DatumWriter.new(schm)
-    writer = StringIO.new "", "w"
+    writer = StringIO.new(+"", "w")
     w.write(datum, Avro::IO::BinaryEncoder.new(writer))
     r = datum_reader(schm)
     reader = StringIO.new(writer.string)

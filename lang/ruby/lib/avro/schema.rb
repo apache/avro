@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -29,7 +30,7 @@ module Avro
     NAMED_TYPES_SYM     = Set.new(NAMED_TYPES.map(&:to_sym))
     VALID_TYPES_SYM     = Set.new(VALID_TYPES.map(&:to_sym))
 
-    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/
+    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/.freeze
 
     INT_MIN_VALUE = -(1 << 31)
     INT_MAX_VALUE = (1 << 31) - 1
@@ -175,7 +176,7 @@ module Avro
       fp
     end
 
-    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01]
+    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01].freeze
     def single_object_encoding_header
       [SINGLE_OBJECT_MAGIC_NUMBER, single_object_schema_fingerprint].flatten
     end
@@ -413,7 +414,7 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
+      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/.freeze
 
       attr_reader :symbols, :doc, :default
 

@@ -1,0 +1,33 @@
+AllCops:
+  TargetRubyVersion: 2.6
+  NewCops: disable
+
+Bundler:
+  Enabled: false
+
+Layout:
+  Enabled: false
+
+Lint:
+  Enabled: true
+
+Metrics:
+  Enabled: false
+
+Naming:
+  Enabled: false
+
+Security:
+  Enabled: false
+
+Style:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+Style/MutableConstant:
+  Enabled: true
+
+Style/RedundantFreeze:
+  Enabled: true
