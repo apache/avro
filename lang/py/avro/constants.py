@@ -28,6 +28,7 @@ TIMESTAMP_MICROS = "timestamp-micros"
 TIMESTAMP_MILLIS = "timestamp-millis"
 TIME_MICROS = "time-micros"
 TIME_MILLIS = "time-millis"
+UUID = "uuid"
 
 SUPPORTED_LOGICAL_TYPE = [
     DATE,
@@ -35,5 +36,6 @@ SUPPORTED_LOGICAL_TYPE = [
     TIMESTAMP_MICROS,
     TIMESTAMP_MILLIS,
     TIME_MICROS,
-    TIME_MILLIS
+    TIME_MILLIS,
+    UUID
 ]

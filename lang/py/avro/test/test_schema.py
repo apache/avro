@@ -242,10 +242,11 @@ TIMESTAMPMICROS_LOGICAL_TYPE = [
     ValidTestSchema({"type": "long", "logicalType": "timestamp-micros"})
 ]
 
+UUID_LOGICAL_TYPE = [
+    ValidTestSchema({"type": "string", "logicalType": "uuid"})
+]
+
 IGNORED_LOGICAL_TYPE = [
-    ValidTestSchema(
-        {"type": "string", "logicalType": "uuid"},
-        warnings=[avro.errors.IgnoredLogicalType('Unknown uuid, using string.')]),
     ValidTestSchema(
         {"type": "string", "logicalType": "unknown-logical-type"},
         warnings=[avro.errors.IgnoredLogicalType('Unknown unknown-logical-type, using string.')]),
@@ -326,6 +327,7 @@ EXAMPLES += TIMEMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMEMICROS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMICROS_LOGICAL_TYPE
+EXAMPLES += UUID_LOGICAL_TYPE
 EXAMPLES += IGNORED_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if getattr(e, "valid", False)]
