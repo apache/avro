@@ -442,7 +442,7 @@
     <profile>
       <id>hadoop2</id>
       <properties>
-        <hadoop.version>2.7.7</hadoop.version>
+        <hadoop.version>2.10.1</hadoop.version>
       </properties>
     </profile>
   </profiles>
