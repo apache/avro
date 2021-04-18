@@ -55,7 +55,7 @@
     <commons-compress.version>1.20</commons-compress.version>
     <commons-lang.version>3.12.0</commons-lang.version>
     <tukaani.version>1.9</tukaani.version>
-    <easymock.version>4.2</easymock.version>
+    <easymock.version>4.3</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.36.1</grpc.version>
     <zstd-jni.version>1.4.9-4</zstd-jni.version>
