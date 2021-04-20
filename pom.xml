@@ -110,12 +110,33 @@
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
-            <id>enforce-maven-version</id>
+            <id>default-cli</id>
             <goals>
               <goal>enforce</goal>
             </goals>
             <configuration>
               <rules>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>1.8</maxJdkVersion>
+                  <!--
+                    Multi release jars that are Java 8 compatible should pass,
+                    but the extra-enforcer-plugin does not detect them
+                    correctly so we should ignore them explicitly.
+                    -->
+                  <ignoreClasses>
+                    <ignoreClass>module-info</ignoreClass>
+                  </ignoreClasses>
+                  <excludes>
+                    <!--
+                      Supplied by the user JDK and compiled with matching
+                      version. Is not shaded, so safe to ignore.
+                    -->
+                    <exclude>jdk.tools:jdk.tools</exclude>
+                  </excludes>
+                </enforceBytecodeVersion>
+                <requireJavaVersion>
+                  <version>[1.8,)</version>
+                </requireJavaVersion>
                 <requireMavenVersion>
                   <version>[3.3.9,)</version>
                 </requireMavenVersion>
