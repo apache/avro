@@ -21,6 +21,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+    - .github/workflows/test-lang-py.yml
     - lang/py/**
 
 defaults:
