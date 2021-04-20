@@ -14,7 +14,6 @@
 # limitations under the License.
 
 name: 'Test JavaScript'
-
 on:
   workflow_dispatch:
   push:
@@ -22,6 +21,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+    - .github/workflows/test-lang-js.yml
     - lang/js/**
 
 defaults:
