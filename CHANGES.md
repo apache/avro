@@ -2,6 +2,7 @@
 
 ## Unreleased
 * Avro 1.9.0-1.9.2 is supported again (no changed needed; just change in support policy and testing)
+* `generateAvroProtocol` task fails if avpr file will get overwritten (due to mutliple IDL files using the same namespace and protocol)
 
 ## 1.1.0
 * Built using Avro 1.10.2
