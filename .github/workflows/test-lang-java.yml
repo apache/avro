@@ -23,6 +23,7 @@ on:
     paths:
     - .github/workflows/test-lang-java.yml
     - lang/java/**
+    - pom.xml
 
 defaults:
   run:
