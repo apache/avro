@@ -96,7 +96,15 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected void copyResource(String name, File targetFolder) {
-        def file = new File(targetFolder, name)
+        copyResource(name, targetFolder, name)
+    }
+
+    protected void copyResource(String name, File targetFolder, String targetName) {
+        def resource = getClass().getResourceAsStream(name)
+        def file = new File(targetFolder, targetName)
+        if (resource == null) {
+            throw new FileNotFoundException("Could not resource with name ${name}")
+        }
         file.parentFile.mkdirs()
         file << getClass().getResourceAsStream(name)
     }
@@ -121,6 +129,8 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected GradleRunner createGradleRunner() {
+//        // Set up code coverage reporting based on https://github.com/koral--/jacoco-gradle-testkit-plugin
+//        copyResource("/testkit-gradle.properties", testProjectDir, "gradle.properties")
         return GradleRunner.create().withProjectDir(testProjectDir).withGradleVersion(gradleVersion.version).withPluginClasspath()
     }
 

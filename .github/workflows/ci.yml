@@ -14,7 +14,7 @@ jobs:
         arguments: --no-daemon --info --stacktrace build
         dependencies-cache-enabled: true
         configuration-cache-enabled: true
-    - uses: codecov/codecov-action@v1
-      with:
-        file: ./build/reports/jacoco/test/jacocoTestReport.xml
-        fail_ci_if_error: true
+#    - uses: codecov/codecov-action@v1
+#      with:
+#        file: ./build/reports/jacoco/test/jacocoTestReport.xml
+#        fail_ci_if_error: true

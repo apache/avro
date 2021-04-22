@@ -3,13 +3,22 @@ plugins {
     id "checkstyle"
     id "codenarc"
     id "idea"
-    id "jacoco"
+//    id "jacoco"
     id "maven-publish"
     id "signing"
     id "java-gradle-plugin"
     id "org.nosphere.gradle.github.actions" version "1.2.0"
     id "io.github.gradle-nexus.publish-plugin" version "1.0.0"
+//    id "pl.droidsonroids.jacoco.testkit" version "1.0.8"
 }
+
+// Gradle TestKit (which most of this plugins tests run using) runs the builds in a separate
+// JVM than the tests.  Thus, for Jacoco to pick up on it, you need to do some extra legwork.
+// https://github.com/koral--/jacoco-gradle-testkit-plugin seeks to solve that
+// However, Gradle 7.0-rc-1 doesn't currently support the combination of the configuration cache
+// with a Java agent (such as Jacoco) and TestKit.
+// Thus, for now, no coverage reporting, as I place a higher value on testing configuration cache
+// support.
 
 group = "com.github.davidmc24.gradle.plugin"
 version = "1.1.1-SNAPSHOT"
@@ -201,7 +210,7 @@ test {
         gradleVersion: gradle.gradleVersion,
         kotlinPluginVersion: latestKotlinVersion,
     ]
-    finalizedBy jacocoTestReport // report is always generated after tests run
+//    finalizedBy jacocoTestReport // report is always generated after tests run
 }
 
 tasks.create(name: "testCompatibility", type: Test) {
@@ -239,18 +248,18 @@ tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
     }
 }
 
-jacoco {
-    // 0.8.7+ needed for Java 15 support
-    // See https://www.jacoco.org/jacoco/trunk/doc/changes.html
-    toolVersion = "0.8.7-SNAPSHOT"
-}
+//jacoco {
+//    // 0.8.7+ needed for Java 15 support
+//    // See https://www.jacoco.org/jacoco/trunk/doc/changes.html
+//    toolVersion = "0.8.7-SNAPSHOT"
+//}
 
-jacocoTestReport {
-    reports {
-        html.enabled true
-        xml.enabled true
-    }
-}
+//jacocoTestReport {
+//    reports {
+//        html.enabled true
+//        xml.enabled true
+//    }
+//}
 
 tasks.withType(Test) {
     jvmArgs "-Xss320k"
