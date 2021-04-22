@@ -54,22 +54,6 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
 
-      - name: Override DNS to fix IP address for hostname
-        run: |
-          ip -br addr
-          echo "'hostname -i' shows '$(hostname -i)'"
-          echo "'hostname -I' shows '$(hostname -I)'"
-          hostname_short=$(hostname -s)
-          hostname_long=$(hostname -f)
-          if ! grep -q $hostname_short /etc/hosts; then
-          actual_ip=$(ip -4 addr show dev eth0 | grep -o 'inet [0-9.]*' | cut -f2 -d ' ')
-          echo "Setting $hostname_long / $hostname_short to $actual_ip in /etc/hosts"
-          echo "$actual_ip $hostname_long $hostname_short" | sudo tee -a /etc/hosts
-          ip -br addr
-          echo "'hostname -i' shows '$(hostname -i)'"
-          echo "'hostname -I' shows '$(hostname -I)'"
-          fi
-
       - name: Lint
         run: ./build.sh lint
 
@@ -99,22 +83,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-
-      - name: Override DNS to fix IP address for hostname
-        run: |
-          ip -br addr
-          echo "'hostname -i' shows '$(hostname -i)'"
-          echo "'hostname -I' shows '$(hostname -I)'"
-          hostname_short=$(hostname -s)
-          hostname_long=$(hostname -f)
-          if ! grep -q $hostname_short /etc/hosts; then
-          actual_ip=$(ip -4 addr show dev eth0 | grep -o 'inet [0-9.]*' | cut -f2 -d ' ')
-          echo "Setting $hostname_long / $hostname_short to $actual_ip in /etc/hosts"
-          echo "$actual_ip $hostname_long $hostname_short" | sudo tee -a /etc/hosts
-          ip -br addr
-          echo "'hostname -i' shows '$(hostname -i)'"
-          echo "'hostname -I' shows '$(hostname -I)'"
-          fi
 
       - name: Install Java Avro for Interop Test
         working-directory: .
