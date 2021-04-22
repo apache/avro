@@ -92,12 +92,13 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     private void processIDLFile(File idlFile, ClassLoader loader) {
         getLogger().info("Processing {}", idlFile);
         try (Idl idl = new Idl(idlFile, loader)) {
+            File outputDir = getOutputDir().get().getAsFile();
             Protocol protocol = idl.CompilationUnit();
             String filePath = AvroUtils.assemblePath(protocol);
             if (!processedFiles.add(filePath)) {
                 throw new GradleException("File already processed with same namespace and protocol name.");
             }
-            File protoFile = new File(getOutputDir().get().getAsFile(), AvroUtils.assemblePath(protocol));
+            File protoFile = new File(outputDir, filePath);
             String protoJson = protocol.toString(true);
             FileUtils.writeJsonFile(protoFile, protoJson);
             getLogger().debug("Wrote {}", protoFile.getPath());
