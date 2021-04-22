@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.compiler.idl.ParseException;
@@ -41,10 +43,12 @@ import static com.github.davidmc24.gradle.plugin.avro.Constants.IDL_EXTENSION;
 public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private FileCollection classpath;
+    private Set<String> processedFiles;
 
     public GenerateAvroProtocolTask() {
         super();
         this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
+        this.processedFiles = new HashSet<String>();
     }
 
     public void setClasspath(FileCollection classpath) {
@@ -88,12 +92,17 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     private void processIDLFile(File idlFile, ClassLoader loader) {
         getLogger().info("Processing {}", idlFile);
         try (Idl idl = new Idl(idlFile, loader)) {
+            File outputDir = getOutputDir().get().getAsFile();
             Protocol protocol = idl.CompilationUnit();
-            File protoFile = new File(getOutputDir().get().getAsFile(), AvroUtils.assemblePath(protocol));
+            String filePath = AvroUtils.assemblePath(protocol);
+            if (!processedFiles.add(filePath)) {
+                throw new GradleException("File already processed with same namespace and protocol name.");
+            }
+            File protoFile = new File(outputDir, filePath);
             String protoJson = protocol.toString(true);
             FileUtils.writeJsonFile(protoFile, protoJson);
             getLogger().debug("Wrote {}", protoFile.getPath());
-        } catch (IOException | ParseException ex) {
+        } catch (IOException | ParseException | GradleException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
         }
     }

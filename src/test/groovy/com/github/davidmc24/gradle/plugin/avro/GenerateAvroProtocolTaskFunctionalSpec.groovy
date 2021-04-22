@@ -91,4 +91,20 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         projectFile("build/generated-main-avro-avpr/org/example/v1/TestProtocol.avpr").file
         projectFile("build/generated-main-avro-avpr/org/example/v2/TestProtocol.avpr").file
     }
+
+    def "fails if avpr will be overwritten"() {
+        given: "a project with two IDL files with the same protocol name and namespace"
+        applyAvroPlugin()
+
+        copyResource("namespaced-idl/v1/test.avdl", projectFolder("src/main/avro/v1"))
+        copyResource("namespaced-idl/v1/test_same_protocol.avdl", projectFolder("src/main/avro/v1"))
+
+        when: "running the task"
+        run("generateAvroProtocol")
+
+        then:
+        def ex = thrown(Exception)
+        ex.message.contains("Failed to compile IDL file")
+        ex.message.contains("File already processed with same namespace and protocol name.")
+    }
 }
