@@ -179,7 +179,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$,MODEL$);
     }
 
     /**
@@ -203,7 +203,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.NoSettersTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$,MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;

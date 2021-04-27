@@ -310,7 +310,7 @@ static {
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$,MODEL$);
     }
 
     /**
@@ -338,7 +338,7 @@ static {
      */
     private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())} other) {
 #if ($schema.isError())      super(other)#else
-      super(SCHEMA$)#end;
+      super(SCHEMA$,MODEL$)#end;
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});

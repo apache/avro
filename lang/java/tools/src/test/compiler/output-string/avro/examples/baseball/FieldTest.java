@@ -310,7 +310,7 @@ static {
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$,MODEL$);
     }
 
     /**
@@ -350,7 +350,7 @@ static {
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.FieldTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$,MODEL$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
