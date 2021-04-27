@@ -91,19 +91,24 @@ public class SpecificData extends GenericData {
   public static final String ELEMENT_PROP = "java-element-class";
 
   /**
-   * List of Java reserved words from
-   * https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9 combined
-   * with the boolean and null literals. combined with the classnames used
-   * internally in the generated avro code.
+   * Reserved words from
+   * https://docs.oracle.com/javase/specs/jls/se16/html/jls-3.html require
+   * mangling in order to be used in generated Java code.
    */
-  public static final Set<String> RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
-          "continue", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for",
-          "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null",
-          "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch",
-          "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while",
-          /* classnames use internally by the avro code generator */
-          "Builder"));
+  public static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(
+      // Keywords from Section 3.9 can't be used as identifiers.
+      "_", "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
+      "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if",
+      "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private",
+      "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
+      "throw", "throws", "transient", "try", "void", "volatile", "while",
+      // Literals from Section 3.10 can't be used as identifiers.
+      "true", "false", "null",
+      // Some keywords from Section 3.8 can't be used as type identifiers.
+      "var", "yield", "record",
+      // Note that module-related restricted keywords can still be used
+      // Class names used internally by the avro code generator
+      "Builder"));
 
   /**
    * Read/write some common builtin classes as strings. Representing these as
