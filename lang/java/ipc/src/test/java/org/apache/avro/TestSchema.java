@@ -509,11 +509,8 @@ public class TestSchema {
         + "[{\"name\":\"x\", \"type\":\"string\"}]}";
     Schema schema = new Schema.Parser().parse(recordJson);
     GenericData.Record record = new GenericData.Record(schema);
-    try {
-      checkBinary(schema, record, new GenericDatumWriter<>(), new GenericDatumReader<>());
-    } catch (NullPointerException e) {
-      assertEquals("null of string in field x of Test", e.getMessage());
-    }
+    assertThrows(NullPointerException.class,
+        () -> checkBinary(schema, record, new GenericDatumWriter<>(), new GenericDatumReader<>()));
   }
 
   private static void checkParseError(String json) {
