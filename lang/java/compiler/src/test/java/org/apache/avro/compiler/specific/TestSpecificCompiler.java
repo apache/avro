@@ -36,10 +36,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestName;
@@ -607,12 +609,69 @@ public class TestSpecificCompiler {
     Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
   }
 
+  /**
+   * Checks that identifiers that may cause problems in Java code will compile
+   * correctly when used in a generated specific record.
+   *
+   * @param schema                         A schema with an identifier __test__
+   *                                       that will be replaced.
+   * @param throwsTypeExceptionOnPrimitive If true, using a reserved word that is
+   *                                       also an Avro primitive type name must
+   *                                       throw an exception instead of
+   *                                       generating code.
+   * @param dstDirPrefix                   Where to generate the java code before
+   *                                       compiling.
+   */
+  public void testManglingReservedIdentifiers(String schema, boolean throwsTypeExceptionOnPrimitive,
+      String dstDirPrefix) throws IOException {
+    for (String reserved : SpecificData.RESERVED_WORDS) {
+      try {
+        Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
+        assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), dstDirPrefix + "_" + reserved),
+            new SpecificCompiler(s).compile());
+      } catch (AvroTypeException e) {
+        if (!(throwsTypeExceptionOnPrimitive && e.getMessage().contains("Schemas may not be named after primitives")))
+          throw e;
+      }
+    }
+  }
+
   @Test
-  public void testPackageNameScape() throws Exception {
-    Schema unionTypesWithMultipleFields = new Schema.Parser()
-        .parse(new File("src/test/resources/simple_record_for_scape.avsc"));
-    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
-        new SpecificCompiler(unionTypesWithMultipleFields).compile());
+  public void testMangleRecordName() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("__test__").fields().requiredInt("field").endRecord().toString(), true,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleRecordNamespace() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("__test__.Record").fields().requiredInt("field").endRecord().toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleField() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("Record").fields().requiredInt("__test__").endRecord().toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleEnumName() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.enumeration("__test__").symbols("reserved").toString(), true,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleEnumSymbol() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.enumeration("Enum").symbols("__test__").toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleFixedName() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.fixed("__test__").size(2).toString(), true, name.getMethodName());
   }
 
   @Test
