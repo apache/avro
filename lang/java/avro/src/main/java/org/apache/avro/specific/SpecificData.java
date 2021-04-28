@@ -243,6 +243,14 @@ public class SpecificData extends GenericData {
   }.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
+  /** Undoes mangling for reserved words. */
+  protected static String unmangle(String word) {
+    while (word.endsWith("$")) {
+      word = word.substring(0, word.length() - 1);
+    }
+    return word;
+  }
+
   /** Return the class that implements a schema, or null if none exists. */
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
