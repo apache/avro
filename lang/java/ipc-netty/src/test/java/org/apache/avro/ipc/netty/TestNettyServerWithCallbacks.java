@@ -153,7 +153,7 @@ public class TestNettyServerWithCallbacks {
     // Test asynchronous RPC (future):
     CallFuture<Integer> future1 = new CallFuture<>();
     simpleClient.add(8, 8, future1);
-    Assert.assertEquals(new Integer(16), future1.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals(Integer.valueOf(16), future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
@@ -169,7 +169,7 @@ public class TestNettyServerWithCallbacks {
         future2.handleError(error);
       }
     });
-    Assert.assertEquals(new Integer(768), future2.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals(Integer.valueOf(768), future2.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future2.getError());
   }
 
@@ -278,7 +278,7 @@ public class TestNettyServerWithCallbacks {
         // Try again with callbacks:
         CallFuture<Integer> addFuture = new CallFuture<>();
         simpleClient2.add(1, 2, addFuture);
-        Assert.assertEquals(new Integer(3), addFuture.get());
+        Assert.assertEquals(Integer.valueOf(3), addFuture.get());
 
         // Shut down server:
         server2.close();

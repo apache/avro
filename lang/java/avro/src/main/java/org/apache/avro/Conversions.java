@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import java.math.RoundingMode;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
@@ -30,8 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-
-import static java.math.BigDecimal.ROUND_UNNECESSARY;
 
 public class Conversions {
 
@@ -123,7 +122,7 @@ public class Conversions {
       boolean scaleAdjusted = false;
       if (valueScale != scale) {
         try {
-          value = value.setScale(scale, ROUND_UNNECESSARY);
+          value = value.setScale(scale, RoundingMode.UNNECESSARY);
           scaleAdjusted = true;
         } catch (ArithmeticException aex) {
           throw new AvroTypeException(
