@@ -615,12 +615,10 @@ public class TestSpecificCompiler {
    *
    * @param schema                         A schema with an identifier __test__
    *                                       that will be replaced.
-   * @param throwsTypeExceptionOnPrimitive If indentifiers that are also Avro
-   *                                       primitives are illegal. For example,
-   *                                       "int" can't be an Avro record name
-   *                                       under any circumstance, but it can be
-   *                                       in a field name if it is appropriately
-   *                                       mangled.
+   * @param throwsTypeExceptionOnPrimitive If true, using a reserved word that is
+   *                                       also an Avro primitive type name must
+   *                                       throw an exception instead of
+   *                                       generating code.
    * @param dstDirPrefix                   Where to generate the java code before
    *                                       compiling.
    */
