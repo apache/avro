@@ -1,0 +1,8 @@
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.github.davidmc24.gradle.plugin:gradle-avro-plugin:1.2.0'
+    implementation 'org.apache.avro:avro:1.10.2'
+}

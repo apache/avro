@@ -1,0 +1,9 @@
+apply plugin: custom.AvroConventionPlugin
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.avro:avro:1.10.2'
+}

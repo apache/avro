@@ -80,6 +80,11 @@ There are a number of configuration options supported in the `avro` block.
 | templateDirectory                    | see below             | `templateDir` passed to Avro compiler                          |
 | enableDecimalLogicalType             | `true`                | `enableDecimalLogicalType` passed to Avro compiler             |
 
+Additionally, the `avro` extension exposes the following methods:
+
+* `logicalTypeFactory(String typeName, Class typeFactoryClass)`: register an additional logical type factory
+* `customConversion(Class conversionClass)`: register a custom conversion
+
 ## createSetters
 
 Valid values: `true` (default), `false`; supports equivalent `String` values
