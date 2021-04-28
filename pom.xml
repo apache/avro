@@ -48,6 +48,7 @@
     <!-- plugin versions -->
     <antrun-plugin.version>3.0.0</antrun-plugin.version>
     <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
+    <checkstyle.version>8.42</checkstyle.version>
     <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <extra-enforcer-rules.version>1.3</extra-enforcer-rules.version>
