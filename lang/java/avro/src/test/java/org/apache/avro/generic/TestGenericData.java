@@ -24,6 +24,10 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -406,6 +410,15 @@ public class TestGenericData {
     assertEquals("\"Infinity\"", data.toString(Double.POSITIVE_INFINITY));
     assertEquals("\"-Infinity\"", data.toString(Double.NEGATIVE_INFINITY));
     assertEquals("\"NaN\"", data.toString(Double.NaN));
+  }
+
+  @Test
+  public void testToStringConvertsDatesAsStrings() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("\"1961-04-12T06:07:10Z\"", data.toString(Instant.parse("1961-04-12T06:07:10Z")));
+    assertEquals("\"1961-04-12\"", data.toString(LocalDate.parse("1961-04-12")));
+    assertEquals("\"1961-04-12T06:07:10\"", data.toString(LocalDateTime.parse("1961-04-12T06:07:10")));
+    assertEquals("\"10:10:10\"", data.toString(LocalTime.parse("10:10:10")));
   }
 
   @Test
