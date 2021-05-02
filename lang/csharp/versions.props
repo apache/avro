@@ -56,7 +56,7 @@
     <MicrosoftBuildUtilitiesCoreVersion>16.8.0</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>16.9.4</MicrosoftNETTestSdkVersion>
-    <NUnitVersion>3.13.1</NUnitVersion>
+    <NUnitVersion>3.13.2</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.12.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>3.17.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
