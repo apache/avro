@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -99,7 +100,7 @@ class TestLogicalTypes < Test::Unit::TestCase
   end
 
   def encode(datum, schema)
-    buffer = StringIO.new("")
+    buffer = StringIO.new
     encoder = Avro::IO::BinaryEncoder.new(buffer)
 
     datum_writer = Avro::IO::DatumWriter.new(schema)
