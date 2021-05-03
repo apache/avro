@@ -182,8 +182,8 @@ public class SpecificData extends GenericData {
    * Falls back to the default instance {@link SpecificData#get()} for other
    * classes or if the field is not found.
    *
-   * @param c A class
-   * @param   <T> .
+   * @param c   A class
+   * @param <T> .
    * @return The SpecificData from the SpecificRecordBase instance, or the default
    *         SpecificData instance.
    */
