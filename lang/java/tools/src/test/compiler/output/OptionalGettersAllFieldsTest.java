@@ -239,7 +239,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$,MODEL$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -271,7 +271,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.OptionalGettersAllFieldsTest other) {
-      super(SCHEMA$,MODEL$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;
