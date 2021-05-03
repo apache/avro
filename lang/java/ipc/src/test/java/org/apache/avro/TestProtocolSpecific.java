@@ -17,31 +17,10 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.ipc.HttpTransceiver;
-import org.apache.avro.ipc.RPCContext;
-import org.apache.avro.ipc.RPCPlugin;
-import org.apache.avro.ipc.Requestor;
-import org.apache.avro.ipc.Responder;
-import org.apache.avro.ipc.Server;
-import org.apache.avro.ipc.SocketServer;
-import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.ipc.generic.GenericRequestor;
-import org.apache.avro.test.Simple;
-import org.apache.avro.test.Kind;
-import org.apache.avro.test.MD5;
-import org.apache.avro.test.TestError;
-import org.apache.avro.test.TestRecord;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.AfterClass;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
@@ -52,7 +31,35 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.RPCContext;
+import org.apache.avro.ipc.RPCPlugin;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.SocketServer;
+import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.test.Kind;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.TestError;
+import org.apache.avro.test.TestRecord;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestProtocolSpecific {
 
