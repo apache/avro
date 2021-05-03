@@ -19,12 +19,17 @@ package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.junit.Rule;

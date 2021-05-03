@@ -291,6 +291,11 @@
               <version>4.19.0</version>
             </eclipse>
             <removeUnusedImports/>
+            <replaceRegex>
+              <name>Remove wildcard imports</name>
+              <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
+              <replacement>$1</replacement>
+            </replaceRegex>
           </java>
         </configuration>
         <executions>

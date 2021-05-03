@@ -17,12 +17,18 @@
  */
 package org.apache.avro;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-
-import com.fasterxml.jackson.databind.node.NullNode;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import org.apache.avro.Schema.Field.Order;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
