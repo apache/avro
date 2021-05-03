@@ -288,7 +288,7 @@
               <!-- Avro uses Sun's java code style conventions with 2 spaces, this is a modified version of
                    the eclipse formatter -->
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
-              <version>4.10.0</version>
+              <version>4.19.0</version>
             </eclipse>
             <removeUnusedImports/>
           </java>

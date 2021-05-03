@@ -52,7 +52,7 @@
     <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <extra-enforcer-rules.version>1.3</extra-enforcer-rules.version>
-    <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.10.3</spotless-maven-plugin.version>
     <surefire.version>3.0.0-M5</surefire.version>
   </properties>
 
