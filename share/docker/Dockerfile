@@ -101,8 +101,8 @@ RUN set -eux; \
   rm "maven.tar.gz"
 ENV PATH="/opt/maven/bin:${PATH}"
 
-# Install nodejs 6
-RUN curl -sSL https://deb.nodesource.com/setup_10.x \
+# Install nodejs
+RUN curl -sSL https://deb.nodesource.com/setup_12.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
