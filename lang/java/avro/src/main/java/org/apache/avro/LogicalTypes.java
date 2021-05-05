@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,6 +64,38 @@ public class LogicalTypes {
 
   public static LogicalType fromSchemaIgnoreInvalid(Schema schema) {
     return fromSchemaImpl(schema, false);
+  }
+
+  /**
+   * Utility function to resolve the logical type from the given Schema
+   *
+   * @param schema a Schema representing a logical type
+   * @return the logical type represented by the schema, or null if the schema
+   *         doesn't represent a logical type, or if the logical type is ambiguous
+   */
+  public static LogicalType fromSchemaIncludingNullable(Schema schema) {
+    if (schema.getLogicalType() != null) {
+      return schema.getLogicalType();
+    } else if (schema.isUnion()) {
+      List<Schema> types = schema.getTypes();
+      if (types.size() == 1) {
+        // The union has a single branch that may or may not be a logical type - return
+        // it either way
+        return types.get(0).getLogicalType();
+      } else if (types.size() == 2) {
+        // The union has exactly two branches.
+        // If one branch is null and one is a logical type, return the logical type,
+        // else return neither
+        Schema t1 = types.get(0);
+        Schema t2 = types.get(1);
+        if (t1.getLogicalType() != null && t2.getType() == Schema.Type.NULL) {
+          return t1.getLogicalType();
+        } else if (t1.getType() == Schema.Type.NULL && t2.getLogicalType() != null) {
+          return t2.getLogicalType();
+        }
+      }
+    }
+    return null;
   }
 
   private static LogicalType fromSchemaImpl(Schema schema, boolean throwErrors) {

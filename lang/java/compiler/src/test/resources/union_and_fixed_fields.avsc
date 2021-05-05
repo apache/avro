@@ -14,5 +14,9 @@
   {
     "name" : "f",
     "type" : {"type": "fixed", "size": 16, "name": "md5"}
+  },
+  {
+    "name" : "n",
+    "type" : [ "null", { "type": "long", "logicalType": "timestamp-millis" } ]
   } ]
 }

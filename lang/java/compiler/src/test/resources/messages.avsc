@@ -1,0 +1,16 @@
+{
+  "type": "record",  "name": "Messages",
+  "fields": [ {
+    "name": "timestamp",
+    "type": { "type": "long", "logicalType": "timestamp-millis" }
+  }, {
+    "name": "unionWithOnlyTimestamp",
+    "type": [ { "type": "long", "logicalType": "timestamp-millis" } ]
+  }, {
+    "name": "nullableTimestamp",
+    "type": [ "null", { "type": "long", "logicalType": "timestamp-millis" } ]
+  }, {
+    "name": "dateOrTimestamp",
+    "type": [ { "type": "int", "logicalType": "date" }, { "type": "long", "logicalType": "timestamp-millis" } ]
+  }]
+}

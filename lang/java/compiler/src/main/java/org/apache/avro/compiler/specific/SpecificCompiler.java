@@ -60,7 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.avro.LogicalType.resolveLogicalType;
+import static org.apache.avro.LogicalTypes.fromSchemaIncludingNullable;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
 
 /**
@@ -910,7 +910,7 @@ public class SpecificCompiler {
 
   public boolean hasLogicalTypeField(Schema schema) {
     for (Schema.Field field : schema.getFields()) {
-      if (resolveLogicalType(field.schema()) != null) {
+      if (fromSchemaIncludingNullable(field.schema()) != null) {
         return true;
       }
     }
@@ -922,7 +922,7 @@ public class SpecificCompiler {
       return "null";
     }
 
-    LogicalType logicalType = resolveLogicalType(schema);
+    LogicalType logicalType = fromSchemaIncludingNullable(schema);
 
     if (logicalType == null
         || (LogicalTypes.Decimal.class.equals(logicalType.getClass()) && !enableDecimalLogicalType)) {
