@@ -132,7 +132,7 @@ namespace Avro
         /// <returns>A string representation of the numeric value.</returns>
         public override string ToString()
         {
-            var number = UnscaledValue.ToString(CultureInfo.CurrentCulture);
+            var number = UnscaledValue.ToString($"D{Scale + 1}", CultureInfo.CurrentCulture);
 
             if (Scale > 0)
                 return number.Insert(number.Length - Scale, CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
