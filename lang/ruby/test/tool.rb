@@ -101,9 +101,9 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]) {|f|
-          f.each{|e| datum = e; break }
-        }
+        Avro::DataFile.open(ARGV[5]) do |f|
+          datum = f.first
+        end
       when "-data"
         puts "JSON Decoder not yet implemented."
         return 1
@@ -125,7 +125,7 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]){|f| f.each{|e| datum = e; break } }
+        Avro::DataFile.open(ARGV[5]){ |f| datum = f.first }
       when "-data"
         puts "JSON Decoder not yet implemented"
         return 1

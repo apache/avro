@@ -564,7 +564,7 @@ module Avro
     class Field < Schema
       attr_reader :type, :name, :default, :order, :doc, :aliases
 
-      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil, aliases=nil)
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil, aliases=nil) # rubocop:disable Lint/MissingSuper
         @type = subparse(type, names, namespace)
         @name = name
         @default = default

@@ -27,6 +27,6 @@ gem 'webrick'
 
 gem 'memory_profiler'
 
-# rubocop v1.0 and later introduces new Lint cops to be addressed
-gem 'rubocop', '< 1.0'
+# next major version will enable new cops
+gem 'rubocop', '~> 1.15'
 gem 'rdoc'

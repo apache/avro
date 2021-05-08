@@ -17,6 +17,7 @@
 AllCops:
   TargetRubyVersion: 2.6
   NewCops: disable
+  SuggestExtensions: false
 
 Bundler:
   Enabled: false
