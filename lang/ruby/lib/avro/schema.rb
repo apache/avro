@@ -39,7 +39,7 @@ module Avro
 
     DEFAULT_VALIDATE_OPTIONS = { recursive: true, encoded: false }.freeze
 
-    DECIMAL_LOGICAL_TYPE = 'decimal'.freeze
+    DECIMAL_LOGICAL_TYPE = 'decimal'
 
     def self.parse(json_string)
       real_parse(MultiJson.load(json_string), {})
