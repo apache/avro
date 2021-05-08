@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source 'https://rubygems.org' 
+source 'https://rubygems.org'
 gem 'rake'
 gem 'echoe'
 gem 'multi_json'
@@ -28,3 +28,6 @@ gem 'webrick'
 # rubocop v1.0 and later introduces new Lint cops to be addressed
 gem 'rubocop', '< 1.0'
 gem 'rdoc'
+
+# memory_profiler 0.9.13 requires Ruby 2.3.8+
+gem 'memory_profiler', '<= 0.9.12'

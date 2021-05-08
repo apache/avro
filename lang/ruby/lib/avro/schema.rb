@@ -136,7 +136,7 @@ module Avro
     def type; @type_sym.to_s; end
 
     def type_adapter
-      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type) || LogicalTypes::Identity
+      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type, self) || LogicalTypes::Identity
     end
 
     # Returns the MD5 fingerprint of the schema as an Integer.
