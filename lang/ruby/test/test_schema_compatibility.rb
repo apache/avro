@@ -293,6 +293,111 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     assert_false(can_read?(writer_schema, reader_schema))
   end
 
+  def test_bytes_decimal
+    bytes_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes2_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes_decimal_different_precision_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":5, "scale":4}')
+    bytes_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes2_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":0}')
+    bytes_unknown_logical_type_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"unknown"}')
+
+    # decimal bytes and non-decimal bytes can be mixed
+    assert_true(can_read?(bytes_schema, bytes_decimal_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_unknown_logical_type_schema))
+
+    # decimal bytes match even if precision and scale differ
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_different_precision_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_no_scale_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_zero_scale_schema))
+    # - zero and no scale are equivalent
+    assert_true(can_read?(bytes_decimal_zero_scale_schema, bytes_decimal_no_scale_schema))
+    # - different schemas with the same attributes match
+    assert_true(can_read?(bytes_decimal_schema, bytes2_decimal_schema))
+    # - different schemas with the same no scale match
+    assert_true(can_read?(bytes2_decimal_no_scale_schema, bytes_decimal_no_scale_schema))
+  end
+
+  def test_fixed_decimal
+    fixed_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed2_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed2", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_different_precision_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":3, "scale":2}')
+    fixed_decimal_size3_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":3, "name":"FixedS3", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_unknown_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"unknown"}')
+    fixed_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":0}')
+    fixed_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4}')
+
+    # decimal fixed and non-decimal can be mixed if fixed name matches
+    assert_true(can_read?(fixed_decimal_schema, fixed1_schema))
+    assert_true(can_read?(fixed1_schema, fixed_decimal_schema))
+    assert_false(can_read?(fixed2_schema, fixed_decimal_schema))
+
+    # decimal logical types match even if fixed name differs
+    assert_true(can_read?(fixed_decimal_schema, fixed2_decimal_schema))
+
+    # fixed with the same name & size match even if decimal precision and scale differ
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_different_precision_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_size3_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_unknown_schema))
+    # - zero and no scale are equivalent but these match anyway due to same name & size
+    assert_true(can_read?(fixed_decimal_no_scale_schema, fixed_decimal_zero_scale_schema))
+    # - scale does not match
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_no_scale_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_zero_scale_schema))
+  end
+
+  def test_decimal_different_types
+    fixed_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_scale4_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":0}')
+    fixed_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4}')
+    bytes_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":0}')
+    bytes_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+
+    # decimal logical types can be read
+    assert_true(can_read?(fixed_decimal_schema, bytes_decimal_schema))
+    assert_true(can_read?(bytes_decimal_schema, fixed_decimal_schema))
+
+    # non-decimal bytes and fixed cannot be mixed
+    assert_false(can_read?(fixed_decimal_schema, bytes_schema))
+    assert_false(can_read?(bytes_schema, fixed_decimal_schema))
+    assert_false(can_read?(fixed1_schema, bytes_decimal_schema))
+    assert_false(can_read?(bytes_decimal_schema, fixed1_schema))
+
+    # decimal precision and scale must match
+    assert_false(can_read?(fixed_decimal_scale4_schema, bytes_decimal_schema))
+    assert_false(can_read?(bytes_decimal_schema, fixed_decimal_scale4_schema))
+
+    # zero scale and no scale are equivalent
+    assert_true(can_read?(bytes_decimal_no_scale_schema, fixed_decimal_zero_scale_schema))
+    assert_true(can_read?(fixed_decimal_zero_scale_schema, bytes_decimal_no_scale_schema))
+    assert_true(can_read?(bytes_decimal_zero_scale_schema, fixed_decimal_no_scale_schema))
+    assert_true(can_read?(fixed_decimal_no_scale_schema, bytes_decimal_zero_scale_schema))
+  end
+
   # Tests from lang/java/avro/src/test/java/org/apache/avro/io/parsing/TestResolvingGrammarGenerator2.java
 
   def point_2d_schema

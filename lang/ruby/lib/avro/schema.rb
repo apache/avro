@@ -39,6 +39,8 @@ module Avro
 
     DEFAULT_VALIDATE_OPTIONS = { recursive: true, encoded: false }.freeze
 
+    DECIMAL_LOGICAL_TYPE = 'decimal'.freeze
+
     def self.parse(json_string)
       real_parse(MultiJson.load(json_string), {})
     end
@@ -76,7 +78,9 @@ module Avro
           case type_sym
           when :fixed
             size = json_obj['size']
-            return FixedSchema.new(name, namespace, size, names, logical_type, aliases)
+            precision = json_obj['precision']
+            scale = json_obj['scale']
+            return FixedSchema.new(name, namespace, size, names, logical_type, aliases, precision, scale)
           when :enum
             symbols = json_obj['symbols']
             doc     = json_obj['doc']
@@ -284,6 +288,10 @@ module Avro
       def match_fullname?(name)
         name == fullname || fullname_aliases.include?(name)
       end
+
+      def match_schema?(schema)
+        type_sym == schema.type_sym && match_fullname?(schema.fullname)
+      end
     end
 
     class RecordSchema < NamedSchema
@@ -468,6 +476,11 @@ module Avro
         hsh = super
         hsh.size == 1 ? type : hsh
       end
+
+      def match_schema?(schema)
+        return type_sym == schema.type_sym
+        # TODO: eventually this could handle schema promotion for primitive schemas too
+      end
     end
 
     class BytesSchema < PrimitiveSchema
@@ -486,22 +499,49 @@ module Avro
         avro['scale'] = scale if scale
         avro
       end
+
+      def match_schema?(schema)
+        return true if super
+
+        if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
+          return precision == schema.precision && (scale || 0) == (schema.scale || 0)
+        end
+
+        false
+      end
     end
 
     class FixedSchema < NamedSchema
-      attr_reader :size
-      def initialize(name, space, size, names=nil, logical_type=nil, aliases=nil)
+      attr_reader :size, :precision, :scale
+      def initialize(name, space, size, names=nil, logical_type=nil, aliases=nil, precision=nil, scale=nil)
         # Ensure valid cto args
         unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
         super(:fixed, name, space, names, nil, logical_type, aliases)
         @size = size
+        @precision = precision
+        @scale = scale
       end
 
       def to_avro(names=Set.new)
         avro = super
-        avro.is_a?(Hash) ? avro.merge('size' => size) : avro
+        return avro if avro.is_a?(String)
+
+        avro['size'] = size
+        avro['precision'] = precision if precision
+        avro['scale'] = scale if scale
+        avro
+      end
+
+      def match_schema?(schema)
+        return true if super && size == schema.size
+
+        if logical_type == DECIMAL_LOGICAL_TYPE && schema.logical_type == DECIMAL_LOGICAL_TYPE
+          return precision == schema.precision && (scale || 0) == (schema.scale || 0)
+        end
+
+        false
       end
     end
 
