@@ -159,15 +159,15 @@ class TestLogicalTypes < Test::Unit::TestCase
 
     type = Avro::LogicalTypes::BytesDecimal.new(schema)
 
-    enc = "\xcb\x43\x38".force_encoding('BINARY')
+    enc = "\xcb\x43\x38".dup.force_encoding('BINARY')
     assert_equal enc, type.encode(BigDecimal('-3.4562'))
     assert_equal BigDecimal('-3.4562'), type.decode(enc)
 
-    assert_equal "\x34\xbc\xc8".force_encoding('BINARY'), type.encode(BigDecimal('3.4562'))
-    assert_equal BigDecimal('3.4562'), type.decode("\x34\xbc\xc8".force_encoding('BINARY'))
+    assert_equal "\x34\xbc\xc8".dup.force_encoding('BINARY'), type.encode(BigDecimal('3.4562'))
+    assert_equal BigDecimal('3.4562'), type.decode("\x34\xbc\xc8".dup.force_encoding('BINARY'))
 
-    assert_equal "\x6a\x33\x0e\x87\x00".force_encoding('BINARY'), type.encode(BigDecimal('456123.123456'))
-    assert_equal BigDecimal('456123.123456'), type.decode("\x6a\x33\x0e\x87\x00".force_encoding('BINARY'))
+    assert_equal "\x6a\x33\x0e\x87\x00".dup.force_encoding('BINARY'), type.encode(BigDecimal('456123.123456'))
+    assert_equal BigDecimal('456123.123456'), type.decode("\x6a\x33\x0e\x87\x00".dup.force_encoding('BINARY'))
   end
 
   def test_logical_type_with_schema
@@ -221,8 +221,8 @@ class TestLogicalTypes < Test::Unit::TestCase
 
     type = Avro::LogicalTypes::BytesDecimal.new(schema)
 
-    positive_enc = "\x02\b".force_encoding('BINARY')
-    negative_enc = "\xFD\xF8".force_encoding('BINARY')
+    positive_enc = "\x02\b".dup.force_encoding('BINARY')
+    negative_enc = "\xFD\xF8".dup.force_encoding('BINARY')
 
     [positive_enc, negative_enc].each do |encoded|
       report = MemoryProfiler.report do
