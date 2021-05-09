@@ -1556,6 +1556,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
   private static String validateName(String name) {
     if (!validateNames.get())
       return name; // not validating names
+    if (name == null)
+      throw new SchemaParseException("Null name");
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");
