@@ -393,13 +393,11 @@ module Avro
         case field_schema.type_sym
         when :null
           return nil
-        when :boolean
-          return default_value
         when :int, :long
           return Integer(default_value)
         when :float, :double
           return Float(default_value)
-        when :enum, :fixed, :string, :bytes
+        when :boolean, :enum, :fixed, :string, :bytes
           return default_value
         when :array
           read_array = []

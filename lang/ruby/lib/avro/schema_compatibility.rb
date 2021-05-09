@@ -62,6 +62,7 @@ module Avro
       end
 
       # Handle schema promotion
+      # rubocop:disable Lint/DuplicateBranch
       if w_type == :int && INT_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
       elsif w_type == :long && LONG_COERCIBLE_TYPES_SYM.include?(r_type)
@@ -73,6 +74,7 @@ module Avro
       elsif w_type == :bytes && r_type == :string
         return true
       end
+      # rubocop:enable Lint/DuplicateBranch
 
       if readers_schema.respond_to?(:match_schema?)
         readers_schema.match_schema?(writers_schema)
