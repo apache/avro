@@ -215,9 +215,13 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        if (!_previousFields.ContainsKey(f.Name))
+                        /*              
+                        //.StackOverflowException
+                        var t = c.GetPropertyType(f);
+                        LoadClassCache(t, f.Schema);
+                        */
+                        if (_previousFields.TryAdd(f.Name, f.Schema))
                         {
-                            _previousFields.TryAdd(f.Name, f.Schema);
                             var t = c.GetPropertyType(f);
                             LoadClassCache(t, f.Schema);
                         }
