@@ -46,6 +46,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -811,7 +812,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       } else if (name.name != null) {
         names.put(name, this);
       }
-      return false;
+      return names.customWrite(this, gen);
     }
 
     public void writeName(Names names, JsonGenerator gen) throws IOException {
@@ -1343,9 +1344,17 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * may refer to it by name.
    */
   public static class Parser {
-    private Names names = new Names();
+    private final Names names;
     private boolean validate = true;
     private boolean validateDefaults = true;
+
+    public Parser() {
+      this(new Names());
+    }
+
+    public Parser(Names names) {
+      this.names = names;
+    }
 
     /**
      * Adds the provided types to the set of defined, named types known to this
@@ -1503,7 +1512,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     PRIMITIVES.put("null", Type.NULL);
   }
 
-  static class Names extends LinkedHashMap<Name, Schema> {
+  public static class Names extends LinkedHashMap<Name, Schema> {
     private static final long serialVersionUID = 1L;
     private String space; // default namespace
 
@@ -1549,6 +1558,15 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new SchemaParseException("Can't redefine: " + name);
       return super.put(name, schema);
     }
+
+    public Schema customRead(Function<String, JsonNode> object) {
+      throw new UnsupportedOperationException();
+    }
+
+    public boolean customWrite(Schema schema, JsonGenerator gen) throws IOException {
+      return false;
+    }
+
   }
 
   private static ThreadLocal<Boolean> validateNames = ThreadLocal.withInitial(() -> true);
@@ -1642,6 +1660,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new SchemaParseException("Undefined name: " + schema);
       return result;
     } else if (schema.isObject()) {
+      Schema custom = names.customRead(schema::get);
+      if (custom != null) {
+        return custom;
+      }
       Schema result;
       String type = getRequiredText(schema, "type", "No type");
       Name name = null;
