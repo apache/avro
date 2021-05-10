@@ -936,7 +936,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       } else if (name.name != null) {
         names.put(name, this);
       }
-      return false;
+      return names.customWrite(this, gen);
     }
 
     public void writeName(Names names, JsonGenerator gen) throws IOException {
@@ -1705,7 +1705,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     PRIMITIVES.put("null", Type.NULL);
   }
 
-  static class Names extends LinkedHashMap<Name, Schema> {
+  public static class Names extends LinkedHashMap<Name, Schema> {
     private static final long serialVersionUID = 1L;
     private String space; // default namespace
 
@@ -1757,6 +1757,15 @@ public abstract class Schema extends JsonProperties implements Serializable {
       }
       return super.put(name, schema);
     }
+
+    public Schema customRead(Function<String, JsonNode> object) {
+      throw new UnsupportedOperationException();
+    }
+
+    public boolean customWrite(Schema schema, JsonGenerator gen) throws IOException {
+      return false;
+    }
+
   }
 
   private static ThreadLocal<NameValidator> validateNames = ThreadLocalWithInitial
