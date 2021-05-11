@@ -1560,7 +1560,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public Schema customRead(Function<String, JsonNode> object) {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     public boolean customWrite(Schema schema, JsonGenerator gen) throws IOException {
