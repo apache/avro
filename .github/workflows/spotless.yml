@@ -20,6 +20,9 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    paths:
+    - .github/workflows/spotless.yml
+    - lang/java/**
 
 jobs:
   spotless:
