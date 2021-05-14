@@ -32,51 +32,72 @@ import avro.io
 import avro.schema
 
 TYPES = ("A", "CNAME")
-SCHEMA = avro.schema.parse(json.dumps({
-    "type": "record",
-    "name": "Query",
-    "fields": [
-        {"name": "query", "type": "string"},
-        {"name": "response", "type": "string"},
-        {"name": "type", "type": "string", "default": "A"}
-    ]
-}))
+SCHEMA = avro.schema.parse(
+    json.dumps(
+        {
+            "type": "record",
+            "name": "Query",
+            "fields": [
+                {"name": "query", "type": "string"},
+                {"name": "response", "type": "string"},
+                {"name": "type", "type": "string", "default": "A"},
+            ],
+        }
+    )
+)
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
-MAX_WRITE_SECONDS = 3 if platform.python_implementation() == 'PyPy' else 1
-MAX_READ_SECONDS = 3 if platform.python_implementation() == 'PyPy' else 1
+MAX_WRITE_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
+MAX_READ_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
+
+
+try:
+    randbytes = random.randbytes  # type: ignore
+except AttributeError:
+
+    def randbytes(n):
+        """Polyfill for random.randbytes in Python < 3.9"""
+        return random.choices(range(256), k=n)
 
 
 class TestBench(unittest.TestCase):
     def test_minimum_speed(self):
-        with tempfile.NamedTemporaryFile(suffix='avr') as temp:
+        with tempfile.NamedTemporaryFile(suffix="avr") as temp:
             pass
-        self.assertLess(time_writes(temp.name, NUMBER_OF_TESTS), MAX_WRITE_SECONDS,
-                        'Took longer than {} second(s) to write the test file with {} values.'
-                        .format(MAX_WRITE_SECONDS, NUMBER_OF_TESTS))
-        self.assertLess(time_read(temp.name), MAX_READ_SECONDS,
-                        'Took longer than {} second(s) to read the test file with {} values.'
-                        .format(MAX_READ_SECONDS, NUMBER_OF_TESTS))
+        self.assertLess(
+            time_writes(temp.name, NUMBER_OF_TESTS),
+            MAX_WRITE_SECONDS,
+            f"Took longer than {MAX_WRITE_SECONDS} second(s) to write the test file with {NUMBER_OF_TESTS} values.",
+        )
+        self.assertLess(
+            time_read(temp.name),
+            MAX_READ_SECONDS,
+            f"Took longer than {MAX_READ_SECONDS} second(s) to read the test file with {NUMBER_OF_TESTS} values.",
+        )
 
 
 def rand_name():
-    return ''.join(random.sample(string.ascii_lowercase, 15))
+    return "".join(random.sample(string.ascii_lowercase, 15))
 
 
 def rand_ip():
-    return '{}.{}.{}.{}'.format(*[random.randint(0, 255) for _ in range(4)])
+    return ".".join(map(str, randbytes(4)))
 
 
 def picks(n):
-    return [{"query": rand_name(), "response": rand_ip(), "type": random.choice(TYPES)}
-            for _ in range(n)]
+    return [
+        {"query": rand_name(), "response": rand_ip(), "type": random.choice(TYPES)}
+        for _ in range(n)
+    ]
 
 
 def time_writes(path, number):
-    with avro.datafile.DataFileWriter(open(path, 'wb'), WRITER, SCHEMA) as dw:
+    with avro.datafile.DataFileWriter(open(path, "wb"), WRITER, SCHEMA) as dw:
         globals_ = {"dw": dw, "picks": picks(number)}
-        return timeit.timeit('dw.append(next(p))', number=number, setup='p=iter(picks)', globals=globals_)
+        return timeit.timeit(
+            "dw.append(next(p))", number=number, setup="p=iter(picks)", globals=globals_
+        )
 
 
 def time_read(path):
@@ -84,24 +105,30 @@ def time_read(path):
     Time how long it takes to read the file written in the `write` function.
     We only do this once, because the size of the file is defined by the number sent to `write`.
     """
-    with avro.datafile.DataFileReader(open(path, 'rb'), READER) as dr:
-        return timeit.timeit('tuple(dr)', number=1, globals={"dr": dr})
+    with avro.datafile.DataFileReader(open(path, "rb"), READER) as dr:
+        return timeit.timeit("tuple(dr)", number=1, globals={"dr": dr})
 
 
 def parse_args():  # pragma: no cover
-    parser = argparse.ArgumentParser(description='Benchmark writing some random avro.')
-    parser.add_argument('--number', '-n', type=int, default=timeit.default_number, help='how many times to run')
+    parser = argparse.ArgumentParser(description="Benchmark writing some random avro.")
+    parser.add_argument(
+        "--number",
+        "-n",
+        type=int,
+        default=timeit.default_number,
+        help="how many times to run",
+    )
     return parser.parse_args()
 
 
 def main():  # pragma: no cover
     args = parse_args()
-    with tempfile.NamedTemporaryFile(suffix='.avr') as temp:
+    with tempfile.NamedTemporaryFile(suffix=".avr") as temp:
         pass
-    print("Using file {}".format(temp.name))
-    print("Writing: {}".format(time_writes(temp.name, args.number)))
-    print("Reading: {}".format(time_read(temp.name)))
+    print(f"Using file {temp.name}")
+    print(f"Writing: {time_writes(temp.name, args.number)}")
+    print(f"Reading: {time_read(temp.name)}")
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main()

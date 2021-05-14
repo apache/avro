@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
 ##
@@ -67,8 +66,20 @@ PRIMITIVE_EXAMPLES.extend([ValidTestSchema({"type": t}) for t in avro.schema.PRI
 
 FIXED_EXAMPLES = [
     ValidTestSchema({"type": "fixed", "name": "Test", "size": 1}),
-    ValidTestSchema({"type": "fixed", "name": "MyFixed", "size": 1,
-                     "namespace": "org.apache.hadoop.avro"}),
+    ValidTestSchema(
+        {
+            "type": "fixed",
+            "name": "MyFixed",
+            "size": 1,
+            "namespace": "org.apache.hadoop.avro",
+        }
+    ),
+    ValidTestSchema(
+        {"type": "fixed", "name": "NullNamespace", "namespace": None, "size": 1}
+    ),
+    ValidTestSchema(
+        {"type": "fixed", "name": "EmptyStringNamespace", "namespace": "", "size": 1}
+    ),
     InvalidTestSchema({"type": "fixed", "name": "Missing size"}),
     InvalidTestSchema({"type": "fixed", "size": 314}),
     InvalidTestSchema({"type": "fixed", "size": 314, "name": "dr. spaceman"}, comment='AVRO-621'),
@@ -538,14 +549,21 @@ class RoundTripParseTestCase(unittest.TestCase):
         ignores this class. The autoloader will ignore this class as long as it has
         no methods starting with `test_`.
         """
-        super().__init__('parse_round_trip')
+        super().__init__("parse_round_trip")
         self.test_schema = test_schema
 
     def parse_round_trip(self):
         """The string of a Schema should be parseable to the same Schema."""
         parsed = self.test_schema.parse()
         round_trip = avro.schema.parse(str(parsed))
-        self.assertEqual(parsed, round_trip)
+        self.assertEqual(
+            parsed,
+            round_trip,
+            {
+                "original schema": parsed.to_json(),
+                "round trip schema": round_trip.to_json(),
+            },
+        )
 
 
 class DocAttributesTestCase(unittest.TestCase):
