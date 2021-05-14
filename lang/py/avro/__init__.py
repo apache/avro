@@ -21,6 +21,6 @@
 
 import pkgutil
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs']
+__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs', 'compatibility']
 
 __version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()
