@@ -35,7 +35,7 @@ Naming:
   Enabled: false
 
 Security:
-  Enabled: false
+  Enabled: true
 
 Style:
   Enabled: false

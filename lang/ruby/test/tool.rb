@@ -22,7 +22,7 @@ require 'logger'
 
 class GenericResponder < Avro::IPC::Responder
   def initialize(proto, msg, datum)
-    proto_json = open(proto).read
+    proto_json = File.open(proto).read
     super(Avro::Protocol.parse(proto_json))
     @msg = msg
     @datum = datum
@@ -63,14 +63,14 @@ end
 def send_message(uri, proto, msg, datum)
   uri = URI.parse(uri)
   trans = Avro::IPC::HTTPTransceiver.new(uri.host, uri.port)
-  proto_json = open(proto).read
+  proto_json = File.open(proto).read
   requestor = Avro::IPC::Requestor.new(Avro::Protocol.parse(proto_json),
                                        trans)
   p requestor.request(msg, datum)
 end
 
 def file_or_stdin(f)
-  f == "-" ? STDIN : open(f)
+  f == "-" ? STDIN : File.open(f)
 end
 
 def main
