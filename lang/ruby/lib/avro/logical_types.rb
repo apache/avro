@@ -73,12 +73,12 @@ module Avro
     # value in big-endian byte order.
     class BytesDecimal < LogicalTypeWithSchema
       # Messages for exceptions
-      ERROR_INSUFFICIENT_PRECISION = 'Precision is too small'.freeze
-      ERROR_ROUNDING_NECESSARY     = 'Rounding necessary'.freeze
-      ERROR_VALUE_MUST_BE_NUMERIC  = 'value must be numeric'.freeze
+      ERROR_INSUFFICIENT_PRECISION = 'Precision is too small'
+      ERROR_ROUNDING_NECESSARY     = 'Rounding necessary'
+      ERROR_VALUE_MUST_BE_NUMERIC  = 'value must be numeric'
 
       # The pattern used to pack up the byte array (8 bit unsigned integer/char)
-      PACK_UNSIGNED_CHARS = 'C*'.freeze
+      PACK_UNSIGNED_CHARS = 'C*'
 
       # The number 10 as BigDecimal
       TEN = BigDecimal(10).freeze

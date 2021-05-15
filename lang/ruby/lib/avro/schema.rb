@@ -484,9 +484,9 @@ module Avro
     end
 
     class BytesSchema < PrimitiveSchema
-      ERROR_INVALID_SCALE         = 'Scale must be greater than or equal to 0'.freeze
-      ERROR_INVALID_PRECISION     = 'Precision must be positive'.freeze
-      ERROR_PRECISION_TOO_SMALL   = 'Precision must be greater than scale'.freeze
+      ERROR_INVALID_SCALE         = 'Scale must be greater than or equal to 0'
+      ERROR_INVALID_PRECISION     = 'Precision must be positive'
+      ERROR_PRECISION_TOO_SMALL   = 'Precision must be greater than scale'
 
       attr_reader :precision, :scale
 
