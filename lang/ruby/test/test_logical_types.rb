@@ -209,7 +209,7 @@ class TestLogicalTypes < Test::Unit::TestCase
       end
 
       assert_equal 5, report.total_allocated
-      # Ruby 2.3, 2.4 and 2.7 do not retain anything. Ruby 2.5 and some 2.6 retain 1
+      # Ruby 2.7 does not retain anything. Ruby 2.6 retains 1
       assert_operator 1, :>=, report.total_retained
     end
   end
@@ -230,7 +230,8 @@ class TestLogicalTypes < Test::Unit::TestCase
       end
 
       assert_equal 5, report.total_allocated
-      assert_equal 0, report.total_retained
+      # Ruby 2.7 does not retain anything. Ruby 2.6 retains 1
+      assert_operator 1, :>=, report.total_retained
     end
   end
 

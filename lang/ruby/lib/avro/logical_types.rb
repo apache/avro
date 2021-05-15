@@ -96,11 +96,6 @@ module Avro
       #
       # @param schema [Avro::Schema]
       #     The schema defining precision and scale for the conversion
-      #
-      # @raise [ArgumentError]
-      #     If precision or scale have invalid values. Precision must be
-      #     positive and greater or equal to scale. If scale is missing,
-      #     it defaults to 0.
       def initialize(schema)
         super
 
