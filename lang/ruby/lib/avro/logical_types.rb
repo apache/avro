@@ -22,7 +22,6 @@ require 'bigdecimal/util'
 
 module Avro
   module LogicalTypes
-
     ##
     # Base class for logical types requiring a schema to be present
     class LogicalTypeWithSchema
@@ -74,12 +73,9 @@ module Avro
     # value in big-endian byte order.
     class BytesDecimal < LogicalTypeWithSchema
       # Messages for exceptions
-      ERROR_INSUFICIENT_PRECISION = 'Precision is too small'.freeze
-      ERROR_INVALID_SCALE         = 'Scale must be greater than or equal to 0'.freeze
-      ERROR_INVALID_PRECISION     = 'Precision must be positive'.freeze
-      ERROR_PRECISION_TOO_SMALL   = 'Precision must be greater than scale'.freeze
-      ERROR_ROUNDING_NECESSARY    = 'Rounding necessary'.freeze
-      ERROR_VALUE_MUST_BE_NUMERIC = 'value must be numeric'.freeze
+      ERROR_INSUFFICIENT_PRECISION = 'Precision is too small'.freeze
+      ERROR_ROUNDING_NECESSARY     = 'Rounding necessary'.freeze
+      ERROR_VALUE_MUST_BE_NUMERIC  = 'value must be numeric'.freeze
 
       # The pattern used to pack up the byte array (8 bit unsigned integer/char)
       PACK_UNSIGNED_CHARS = 'C*'.freeze
@@ -111,8 +107,6 @@ module Avro
         @scale     = schema.scale.to_i
         @precision = schema.precision.to_i
         @factor    = TEN ** @scale
-
-        validate!
       end
 
       ##
@@ -203,20 +197,10 @@ module Avro
         raise RangeError, ERROR_ROUNDING_NECESSARY if fractional_part > scale
 
         if length > precision || (length - fractional_part) > (precision - scale)
-          raise RangeError, ERROR_INSUFICIENT_PRECISION
+          raise RangeError, ERROR_INSUFFICIENT_PRECISION
         end
 
         (decimal * @factor).to_i
-      end
-
-      ##
-      # Make sure the schema definition is legit
-      #
-      # @raise [ArgumentError] If scale or precision are not quite right
-      def validate!
-        raise ArgumentError, ERROR_INVALID_SCALE if scale.negative?
-        raise ArgumentError, ERROR_INVALID_PRECISION unless precision.positive?
-        raise ArgumentError, ERROR_PRECISION_TOO_SMALL if precision < scale
       end
     end
 

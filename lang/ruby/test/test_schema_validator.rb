@@ -571,17 +571,5 @@ class TestSchemaValidator < Test::Unit::TestCase
 
     schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4)
     assert_valid_schema(schema, [BigDecimal('123'), 2], ['4.2', BigDecimal('233.2')], true)
-
-    [
-      [4, -1],
-      [-1, 4],
-      [3, 4],
-      [nil, nil]
-    ].each do |precision, scale|
-      schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: precision, scale: scale)
-      assert_raise(Avro::SchemaValidator::ValidationError) do
-        validate_simple!(schema, BigDecimal('1.23'))
-      end
-    end
   end
 end
