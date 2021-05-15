@@ -558,4 +558,18 @@ class TestSchemaValidator < Test::Unit::TestCase
     assert_equal(1, exception.result.errors.size)
     assert_equal("at . extra field 'color' - not in schema", exception.to_s)
   end
+
+  def test_validate_bytes_decimal
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 2)
+    assert_valid_schema(schema, [BigDecimal('1.23'), 4.2, 1], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 4)
+    assert_valid_schema(schema, [BigDecimal('0.2345'), 0.2, 0.1], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 0)
+    assert_valid_schema(schema, [BigDecimal('123'), 2], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4)
+    assert_valid_schema(schema, [BigDecimal('123'), 2], ['4.2', BigDecimal('233.2')], true)
+  end
 end

@@ -136,7 +136,7 @@ module Avro
     def type; @type_sym.to_s; end
 
     def type_adapter
-      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type) || LogicalTypes::Identity
+      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type, self) || LogicalTypes::Identity
     end
 
     # Returns the MD5 fingerprint of the schema as an Integer.
@@ -484,11 +484,19 @@ module Avro
     end
 
     class BytesSchema < PrimitiveSchema
+      ERROR_INVALID_SCALE         = 'Scale must be greater than or equal to 0'
+      ERROR_INVALID_PRECISION     = 'Precision must be positive'
+      ERROR_PRECISION_TOO_SMALL   = 'Precision must be greater than scale'
+
       attr_reader :precision, :scale
+
       def initialize(type, logical_type=nil, precision=nil, scale=nil)
         super(type.to_sym, logical_type)
-        @precision = precision
-        @scale = scale
+
+        @precision = precision.to_i if precision
+        @scale = scale.to_i if scale
+
+        validate_decimal! if logical_type == DECIMAL_LOGICAL_TYPE
       end
 
       def to_avro(names=nil)
@@ -508,6 +516,14 @@ module Avro
         end
 
         false
+      end
+
+      private
+
+      def validate_decimal!
+        raise Avro::SchemaParseError, ERROR_INVALID_PRECISION unless precision.to_i.positive?
+        raise Avro::SchemaParseError, ERROR_INVALID_SCALE if scale.to_i.negative?
+        raise Avro::SchemaParseError, ERROR_PRECISION_TOO_SMALL if precision < scale.to_i
       end
     end
 
