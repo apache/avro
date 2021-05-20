@@ -9,6 +9,7 @@
 [![Test Ruby](https://github.com/apache/avro/workflows/Test%20Ruby/badge.svg)][Test Ruby]
 [![Test Python](https://github.com/apache/avro/workflows/Test%20Python/badge.svg)][Test Python]
 [![Test PHP](https://github.com/apache/avro/workflows/Test%20PHP/badge.svg)][Test PHP]
+[![CodeQL](https://github.com/apache/avro/workflows/CodeQL/badge.svg)][CodeQL]
 
 -----
 
@@ -32,3 +33,4 @@ To contribute to Avro, please read:
 [Test Ruby]: https://github.com/apache/avro/actions?query=workflow%3A%22Test+Ruby%22
 [Test Python]: https://github.com/apache/avro/actions?query=workflow%3A%22Test+Python%22
 [Test PHP]: https://github.com/apache/avro/actions?query=workflow%3A%22Test+PHP%22
+[CodeQL]: https://github.com/apache/avro/actions?query=workflow%3A%22CodeQL
