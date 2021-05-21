@@ -597,7 +597,12 @@ class OtherAttributesTestCase(unittest.TestCase):
     def check_attributes(self):
         """Other attributes and their types on a schema should be preserved."""
         sch = self.test_schema.parse()
+        try:
+            self.assertNotEqual(sch, object(), "A schema is never equal to a non-schema instance.")
+        except AttributeError:
+            self.fail("Comparing a schema to a non-schema should be False, but not error.")
         round_trip = avro.schema.parse(str(sch))
+        self.assertEqual(sch, round_trip, "A schema should be equal to another schema parsed from the same json.")
         self.assertEqual(sch.other_props, round_trip.other_props,
                          "Properties were not preserved in a round-trip parse.")
         self._check_props(sch.other_props)
