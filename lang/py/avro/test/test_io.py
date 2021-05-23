@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
 ##
@@ -429,6 +428,42 @@ class DefaultValueTestCase(unittest.TestCase):
 
 
 class TestMisc(unittest.TestCase):
+    def test_decimal_bytes_small_scale(self):
+        """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
+        datum = decimal.Decimal("3.1415")
+        _, _, exp = datum.as_tuple()
+        scale = -1 * exp - 1
+        schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "bytes",
+                    "logicalType": "decimal",
+                    "precision": 5,
+                    "scale": scale,
+                }
+            )
+        )
+        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum, schema)
+
+    def test_decimal_fixed_small_scale(self):
+        """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
+        datum = decimal.Decimal("3.1415")
+        _, _, exp = datum.as_tuple()
+        scale = -1 * exp - 1
+        schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "type": "fixed",
+                    "logicalType": "decimal",
+                    "name": "Test",
+                    "size": 8,
+                    "precision": 5,
+                    "scale": scale,
+                }
+            )
+        )
+        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum, schema)
+
     def test_unknown_symbol(self):
         datum_to_write = "FOO"
         writers_schema = avro.schema.parse(

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
 ##
@@ -490,7 +489,7 @@ class BinaryEncoder:
         signed long is 8, 8 bytes are written.
         """
         sign, digits, exp = datum.as_tuple()
-        if exp > scale:
+        if (-1 * exp) > scale:
             raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
@@ -516,7 +515,7 @@ class BinaryEncoder:
         Decimal in fixed are encoded as size of fixed bytes.
         """
         sign, digits, exp = datum.as_tuple()
-        if exp > scale:
+        if (-1 * exp) > scale:
             raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
