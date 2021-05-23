@@ -443,7 +443,9 @@ class TestMisc(unittest.TestCase):
                 }
             )
         )
-        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum, schema)
+        self.assertRaises(
+            avro.errors.AvroOutOfScaleException, write_datum, datum, schema
+        )
 
     def test_decimal_fixed_small_scale(self):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -462,7 +464,9 @@ class TestMisc(unittest.TestCase):
                 }
             )
         )
-        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum, schema)
+        self.assertRaises(
+            avro.errors.AvroOutOfScaleException, write_datum, datum, schema
+        )
 
     def test_unknown_symbol(self):
         datum_to_write = "FOO"
