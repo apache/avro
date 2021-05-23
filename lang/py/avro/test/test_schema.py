@@ -499,7 +499,7 @@ class SchemaParseTestCase(unittest.TestCase):
         ignores this class. The autoloader will ignore this class as long as it has
         no methods starting with `test_`.
         """
-        super(SchemaParseTestCase, self).__init__(
+        super().__init__(
             'parse_valid' if test_schema.valid else 'parse_invalid')
         self.test_schema = test_schema
         # Never hide repeated warnings when running this test case.
@@ -538,7 +538,7 @@ class RoundTripParseTestCase(unittest.TestCase):
         ignores this class. The autoloader will ignore this class as long as it has
         no methods starting with `test_`.
         """
-        super(RoundTripParseTestCase, self).__init__('parse_round_trip')
+        super().__init__('parse_round_trip')
         self.test_schema = test_schema
 
     def parse_round_trip(self):
