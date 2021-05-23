@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +19,16 @@
 
 import pkgutil
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs', 'compatibility']
+__all__ = [
+    "schema",
+    "io",
+    "datafile",
+    "protocol",
+    "ipc",
+    "constants",
+    "timezones",
+    "codecs",
+    "compatibility",
+]
 
-__version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()
+__version__ = (pkgutil.get_data(__name__, "VERSION.txt") or b"0.0.1+unknown").decode().strip()

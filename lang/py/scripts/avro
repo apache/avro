@@ -216,7 +216,7 @@ def write(opts, files):
             schema = avro.schema.parse(schema_file.read())
         out = _open(opts.output, "wb")
     except (IOError, OSError) as e:
-        raise avro.errors.UsageError("Can't open file - %s" % e)
+        raise avro.errors.UsageError(f"Can't open file - {e}")
 
     writer = avro.datafile.DataFileWriter(getattr(out, 'buffer', out), avro.io.DatumWriter(), schema)
 
@@ -271,7 +271,7 @@ def main(argv):
             "write": write,
         }[command_name]
     except KeyError:
-        raise avro.errors.UsageError("Unknown command - {!s}".format(command_name))
+        raise avro.errors.UsageError(f"Unknown command - {command_name!s}")
     command(opts, args)
 
 

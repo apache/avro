@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -41,21 +39,24 @@ import avro.io
 #
 # Constants
 #
-STRUCT_CRC32 = struct.Struct('>I')  # big-endian unsigned int
+STRUCT_CRC32 = struct.Struct(">I")  # big-endian unsigned int
 
 
 try:
     import bz2
+
     has_bzip2 = True
 except ImportError:
     has_bzip2 = False
 try:
     import snappy
+
     has_snappy = True
 except ImportError:
     has_snappy = False
 try:
     import zstandard as zstd
+
     has_zstandard = True
 except ImportError:
     has_zstandard = False
@@ -116,6 +117,7 @@ class DeflateCodec(Codec):
 
 
 if has_bzip2:
+
     class BZip2Codec(Codec):
         def compress(self, data):
             compressed_data = bz2.compress(data)
@@ -129,11 +131,12 @@ if has_bzip2:
 
 
 if has_snappy:
+
     class SnappyCodec(Codec):
         def compress(self, data):
             compressed_data = snappy.compress(data)
             # A 4-byte, big-endian CRC32 checksum
-            compressed_data += STRUCT_CRC32.pack(binascii.crc32(data) & 0xffffffff)
+            compressed_data += STRUCT_CRC32.pack(binascii.crc32(data) & 0xFFFFFFFF)
             return compressed_data, len(compressed_data)
 
         def decompress(self, readers_decoder):
@@ -147,11 +150,12 @@ if has_snappy:
 
         def check_crc32(self, bytes, checksum):
             checksum = STRUCT_CRC32.unpack(checksum)[0]
-            if binascii.crc32(bytes) & 0xffffffff != checksum:
+            if binascii.crc32(bytes) & 0xFFFFFFFF != checksum:
                 raise avro.errors.AvroException("Checksum failure")
 
 
 if has_zstandard:
+
     class ZstandardCodec(Codec):
         def compress(self, data):
             compressed_data = zstd.ZstdCompressor().compress(data)
@@ -183,16 +187,15 @@ def get_codec(codec_name):
         return SnappyCodec()
     if codec_name == "zstandard" and has_zstandard:
         return ZstandardCodec()
-    raise avro.errors.UnsupportedCodec("Unsupported codec: {}. (Is it installed?)"
-                                       .format(codec_name))
+    raise avro.errors.UnsupportedCodec(f"Unsupported codec: {codec_name}. (Is it installed?)")
 
 
 def supported_codec_names():
-    codec_names = ['null', 'deflate']
+    codec_names = ["null", "deflate"]
     if has_bzip2:
-        codec_names.append('bzip2')
+        codec_names.append("bzip2")
     if has_snappy:
-        codec_names.append('snappy')
+        codec_names.append("snappy")
     if has_zstandard:
-        codec_names.append('zstandard')
+        codec_names.append("zstandard")
     return codec_names

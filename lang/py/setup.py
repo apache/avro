@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,15 +18,16 @@
 # limitations under the License.
 
 
-import setuptools  # type: ignore
 import distutils.errors
 import glob
 import os
 import subprocess
 
+import setuptools  # type: ignore
+
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_AVRO_DIR = os.path.join(_HERE, 'avro')
-_VERSION_FILE_NAME = 'VERSION.txt'
+_AVRO_DIR = os.path.join(_HERE, "avro")
+_VERSION_FILE_NAME = "VERSION.txt"
 
 
 def _is_distribution():
@@ -39,7 +39,7 @@ def _is_distribution():
     """
     # If a file PKG-INFO exists as a sibling of setup.py,
     # assume we are running as source distribution:
-    return os.path.exists(os.path.join(_HERE, 'PKG-INFO'))
+    return os.path.exists(os.path.join(_HERE, "PKG-INFO"))
 
 
 def _generate_package_data():
@@ -48,30 +48,30 @@ def _generate_package_data():
     This data will already exist in a distribution package,
     so this function only runs for local version control work tree.
     """
-    distutils.log.info('Generating package data')
+    distutils.log.info("Generating package data")
 
     # Avro top-level source directory:
     root_dir = os.path.dirname(os.path.dirname(_HERE))
-    share_dir = os.path.join(root_dir, 'share')
+    share_dir = os.path.join(root_dir, "share")
 
     # Create a PEP440 compliant version file.
     version_file_path = os.path.join(share_dir, _VERSION_FILE_NAME)
-    with open(version_file_path, 'rb') as vin:
-        version = vin.read().replace(b'-', b'+')
-    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'wb') as vout:
+    with open(version_file_path, "rb") as vin:
+        version = vin.read().replace(b"-", b"+")
+    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), "wb") as vout:
         vout.write(version)
 
-    avro_schemas_dir = os.path.join(share_dir, 'schemas', 'org', 'apache', 'avro')
-    ipc_dir = os.path.join(avro_schemas_dir, 'ipc')
-    tether_dir = os.path.join(avro_schemas_dir, 'mapred', 'tether')
+    avro_schemas_dir = os.path.join(share_dir, "schemas", "org", "apache", "avro")
+    ipc_dir = os.path.join(avro_schemas_dir, "ipc")
+    tether_dir = os.path.join(avro_schemas_dir, "mapred", "tether")
 
     # Copy necessary avsc files:
     avsc_files = (
-        ((share_dir, 'test', 'schemas', 'interop.avsc'), ('',)),
-        ((ipc_dir, 'HandshakeRequest.avsc'), ('',)),
-        ((ipc_dir, 'HandshakeResponse.avsc'), ('',)),
-        ((tether_dir, 'InputProtocol.avpr'), ('tether',)),
-        ((tether_dir, 'OutputProtocol.avpr'), ('tether',)),
+        ((share_dir, "test", "schemas", "interop.avsc"), ("",)),
+        ((ipc_dir, "HandshakeRequest.avsc"), ("",)),
+        ((ipc_dir, "HandshakeResponse.avsc"), ("",)),
+        ((tether_dir, "InputProtocol.avpr"), ("tether",)),
+        ((tether_dir, "OutputProtocol.avpr"), ("tether",)),
     )
 
     for src, dst in avsc_files:
@@ -84,13 +84,13 @@ class GenerateInteropDataCommand(setuptools.Command):
     """A command to generate Avro files for data interop test."""
 
     user_options = [
-        ('schema-file=', None, 'path to input Avro schema file'),
-        ('output-path=', None, 'path to output Avro data files'),
+        ("schema-file=", None, "path to input Avro schema file"),
+        ("output-path=", None, "path to output Avro data files"),
     ]
 
     def initialize_options(self):
-        self.schema_file = os.path.join(_AVRO_DIR, 'interop.avsc')
-        self.output_path = os.path.join(_AVRO_DIR, 'test', 'interop', 'data')
+        self.schema_file = os.path.join(_AVRO_DIR, "interop.avsc")
+        self.output_path = os.path.join(_AVRO_DIR, "test", "interop", "data")
 
     def finalize_options(self):
         pass
@@ -99,10 +99,10 @@ class GenerateInteropDataCommand(setuptools.Command):
         # Late import -- this can only be run when avro is on the pythonpath,
         # more or less after install.
         import avro.test.gen_interop_data
+
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-        avro.test.gen_interop_data.generate(self.schema_file,
-                                            os.path.join(self.output_path, 'py.avro'))
+        avro.test.gen_interop_data.generate(self.schema_file, os.path.join(self.output_path, "py.avro"))
 
 
 def _get_version():
@@ -123,10 +123,12 @@ def main():
     if not _is_distribution():
         _generate_package_data()
 
-    setuptools.setup(cmdclass={
-        "generate_interop_data": GenerateInteropDataCommand,
-    })
+    setuptools.setup(
+        cmdclass={
+            "generate_interop_data": GenerateInteropDataCommand,
+        }
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

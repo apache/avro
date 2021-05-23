@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -34,12 +32,12 @@ class TestIPC(unittest.TestCase):
         pass
 
     def test_server_with_path(self):
-        client_with_custom_path = avro.ipc.HTTPTransceiver('apache.org', 80, '/service/article')
-        self.assertEqual('/service/article', client_with_custom_path.req_resource)
+        client_with_custom_path = avro.ipc.HTTPTransceiver("apache.org", 80, "/service/article")
+        self.assertEqual("/service/article", client_with_custom_path.req_resource)
 
-        client_with_default_path = avro.ipc.HTTPTransceiver('apache.org', 80)
-        self.assertEqual('/', client_with_default_path.req_resource)
+        client_with_default_path = avro.ipc.HTTPTransceiver("apache.org", 80)
+        self.assertEqual("/", client_with_default_path.req_resource)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

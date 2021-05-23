@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -97,9 +96,7 @@ SCHEMAS_TO_VALIDATE = tuple(
         ),
         (
             {"type": "long", "logicalType": "timestamp-millis"},
-            datetime.datetime(
-                9999, 12, 31, 23, 59, 59, 999000, tzinfo=avro.timezones.utc
-            ),
+            datetime.datetime(9999, 12, 31, 23, 59, 59, 999000, tzinfo=avro.timezones.utc),
         ),
         (
             {"type": "long", "logicalType": "timestamp-millis"},
@@ -111,9 +108,7 @@ SCHEMAS_TO_VALIDATE = tuple(
         ),
         (
             {"type": "long", "logicalType": "timestamp-micros"},
-            datetime.datetime(
-                9999, 12, 31, 23, 59, 59, 999999, tzinfo=avro.timezones.utc
-            ),
+            datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=avro.timezones.utc),
         ),
         (
             {"type": "long", "logicalType": "timestamp-micros"},
@@ -285,9 +280,7 @@ class RoundTripTestCase(unittest.TestCase):
         A datum should be the same after being encoded and then decoded.
         """
         with warnings.catch_warnings(record=True) as actual_warnings:
-            writer, encoder, datum_writer = write_datum(
-                self.test_datum, self.test_schema
-            )
+            writer, encoder, datum_writer = write_datum(self.test_datum, self.test_schema)
             round_trip_datum = read_datum(writer, self.test_schema)
             expected, round_trip, message = (
                 (
@@ -327,9 +320,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
 
     def check_binary_encoding(self):
         with warnings.catch_warnings(record=True) as actual_warnings:
-            writer, encoder, datum_writer = write_datum(
-                self.test_datum, self.writers_schema
-            )
+            writer, encoder, datum_writer = write_datum(self.test_datum, self.writers_schema)
             writer.seek(0)
             hex_val = avro_hexlify(writer)
             self.assertEqual(
@@ -342,9 +333,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
         VALUE_TO_READ = 6253
         with warnings.catch_warnings(record=True) as actual_warnings:
             # write the value to skip and a known value
-            writer, encoder, datum_writer = write_datum(
-                self.test_datum, self.writers_schema
-            )
+            writer, encoder, datum_writer = write_datum(self.test_datum, self.writers_schema)
             datum_writer.write(VALUE_TO_READ, encoder)
 
             # skip the value
@@ -443,9 +432,7 @@ class TestMisc(unittest.TestCase):
                 }
             )
         )
-        self.assertRaises(
-            avro.errors.AvroOutOfScaleException, write_datum, datum, schema
-        )
+        self.assertRaises(avro.errors.AvroOutOfScaleException, write_datum, datum, schema)
 
     def test_decimal_fixed_small_scale(self):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -464,26 +451,18 @@ class TestMisc(unittest.TestCase):
                 }
             )
         )
-        self.assertRaises(
-            avro.errors.AvroOutOfScaleException, write_datum, datum, schema
-        )
+        self.assertRaises(avro.errors.AvroOutOfScaleException, write_datum, datum, schema)
 
     def test_unknown_symbol(self):
         datum_to_write = "FOO"
-        writers_schema = avro.schema.parse(
-            json.dumps({"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]})
-        )
-        readers_schema = avro.schema.parse(
-            json.dumps({"type": "enum", "name": "Test", "symbols": ["BAR", "BAZ"]})
-        )
+        writers_schema = avro.schema.parse(json.dumps({"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]}))
+        readers_schema = avro.schema.parse(json.dumps({"type": "enum", "name": "Test", "symbols": ["BAR", "BAZ"]}))
 
         writer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
         reader = io.BytesIO(writer.getvalue())
         decoder = avro.io.BinaryDecoder(reader)
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
-        self.assertRaises(
-            avro.errors.SchemaResolutionException, datum_reader.read, decoder
-        )
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
     def test_no_default_value(self):
         writers_schema = LONG_RECORD_SCHEMA
@@ -503,9 +482,7 @@ class TestMisc(unittest.TestCase):
         reader = io.BytesIO(writer.getvalue())
         decoder = avro.io.BinaryDecoder(reader)
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
-        self.assertRaises(
-            avro.errors.SchemaResolutionException, datum_reader.read, decoder
-        )
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
     def test_projection(self):
         writers_schema = LONG_RECORD_SCHEMA
@@ -565,39 +542,22 @@ class TestMisc(unittest.TestCase):
             )
         )
         datum_to_write = {"E": 5, "F": "Bad"}
-        self.assertRaises(
-            avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema
-        )
+        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema)
 
 
 def load_tests(loader, default_tests, pattern):
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(TestMisc))
-    suite.addTests(
-        IoValidateTestCase(schema_str, datum)
-        for schema_str, datum in SCHEMAS_TO_VALIDATE
-    )
-    suite.addTests(
-        RoundTripTestCase(schema_str, datum)
-        for schema_str, datum in SCHEMAS_TO_VALIDATE
-    )
+    suite.addTests(IoValidateTestCase(schema_str, datum) for schema_str, datum in SCHEMAS_TO_VALIDATE)
+    suite.addTests(RoundTripTestCase(schema_str, datum) for schema_str, datum in SCHEMAS_TO_VALIDATE)
     for skip in False, True:
         for type_ in "int", "long":
-            suite.addTests(
-                BinaryEncodingTestCase(skip, type_, datum, hex_)
-                for datum, hex_ in BINARY_ENCODINGS
-            )
+            suite.addTests(BinaryEncodingTestCase(skip, type_, datum, hex_) for datum, hex_ in BINARY_ENCODINGS)
     suite.addTests(
-        SchemaPromotionTestCase(write_type, read_type)
-        for write_type, read_type in itertools.combinations(
-            ("int", "long", "float", "double"), 2
-        )
+        SchemaPromotionTestCase(write_type, read_type) for write_type, read_type in itertools.combinations(("int", "long", "float", "double"), 2)
     )
-    suite.addTests(
-        DefaultValueTestCase(field_type, default)
-        for field_type, default in DEFAULT_VALUE_EXAMPLES
-    )
+    suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
     return suite
 
 

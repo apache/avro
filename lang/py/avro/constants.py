@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -37,5 +35,5 @@ SUPPORTED_LOGICAL_TYPE = [
     TIMESTAMP_MILLIS,
     TIME_MICROS,
     TIME_MILLIS,
-    UUID
+    UUID,
 ]

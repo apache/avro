@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -52,7 +50,7 @@ class TestTetherTask(unittest.TestCase):
             # launch the server in a separate process
             proc = subprocess.Popen([sys.executable, pyfile, "start_server", str(server_port)])
 
-            print("Mock server started process pid={}".format(proc.pid))
+            print(f"Mock server started process pid={proc.pid}")
 
             # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
             # so we give the subprocess time to start up
@@ -67,7 +65,7 @@ class TestTetherTask(unittest.TestCase):
             task.configure(
                 avro.tether.tether_task.TaskType.MAP,
                 str(task.inschema),
-                str(task.midschema)
+                str(task.midschema),
             )
 
             # Serialize some data so we can send it to the input function
@@ -87,7 +85,7 @@ class TestTetherTask(unittest.TestCase):
             task.configure(
                 avro.tether.tether_task.TaskType.REDUCE,
                 str(task.midschema),
-                str(task.outschema)
+                str(task.outschema),
             )
 
             # Serialize some data so we can send it to the input function
@@ -109,9 +107,9 @@ class TestTetherTask(unittest.TestCase):
             task.status("Status message")
         finally:
             # close the process
-            if not(proc is None):
+            if not (proc is None):
                 proc.kill()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

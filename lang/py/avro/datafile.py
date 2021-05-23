@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -22,6 +20,7 @@
 """Read/Write Avro File Object Containers."""
 
 import io
+import json
 import os
 import random
 import zlib
@@ -35,21 +34,27 @@ import avro.schema
 # Constants
 #
 VERSION = 1
-MAGIC = bytes(b'Obj' + bytearray([VERSION]))
+MAGIC = bytes(b"Obj" + bytearray([VERSION]))
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
 SYNC_INTERVAL = 4000 * SYNC_SIZE  # TODO(hammer): make configurable
-META_SCHEMA = avro.schema.parse("""\
-{"type": "record", "name": "org.apache.avro.file.Header",
- "fields" : [
-   {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": %d}},
-   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
-   {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
-""" % (MAGIC_SIZE, SYNC_SIZE))
+META_SCHEMA = avro.schema.parse(
+    json.dumps(
+        {
+            "type": "record",
+            "name": "org.apache.avro.file.Header",
+            "fields": [
+                {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": MAGIC_SIZE}},
+                {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+                {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": SYNC_SIZE}},
+            ],
+        }
+    )
+)
 
-NULL_CODEC = 'null'
+NULL_CODEC = "null"
 VALID_CODECS = avro.codecs.supported_codec_names()
-VALID_ENCODINGS = ['binary']  # not used yet
+VALID_ENCODINGS = ["binary"]  # not used yet
 
 CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
@@ -103,7 +108,7 @@ class _DataFile:
     def codec(self, value):
         """Meta are stored as bytes, but codec is set as a string."""
         if value not in VALID_CODECS:
-            raise avro.errors.DataFileException("Unknown codec: {!r}".format(value))
+            raise avro.errors.DataFileException(f"Unknown codec: {value!r}")
         self.set_meta(CODEC_KEY, value.encode())
 
     @property
@@ -164,9 +169,7 @@ class DataFileWriter(_DataFile):
     buffer_encoder = property(lambda self: self._buffer_encoder)
 
     def _write_header(self):
-        header = {'magic': MAGIC,
-                  'meta': self.meta,
-                  'sync': self.sync_marker}
+        header = {"magic": MAGIC, "meta": self.meta, "sync": self.sync_marker}
         self.datum_writer.write_data(META_SCHEMA, header, self.encoder)
         self._header_written = True
 
@@ -179,7 +182,7 @@ class DataFileWriter(_DataFile):
     def codec(self, value):
         """Meta are stored as bytes, but codec is set as a string."""
         if value not in VALID_CODECS:
-            raise avro.errors.DataFileException("Unknown codec: {!r}".format(value))
+            raise avro.errors.DataFileException(f"Unknown codec: {value!r}")
         self.set_meta(CODEC_KEY, value.encode())
 
     # TODO(hammer): make a schema for blocks and use datum_writer
@@ -241,6 +244,7 @@ class DataFileWriter(_DataFile):
 
 class DataFileReader(_DataFile):
     """Read files written by DataFileWriter."""
+
     # TODO(hammer): allow user to specify expected schema?
     # TODO(hammer): allow user to specify the encoder
 
@@ -288,20 +292,17 @@ class DataFileReader(_DataFile):
         self.reader.seek(0, 0)
 
         # read header into a dict
-        header = self.datum_reader.read_data(
-            META_SCHEMA, META_SCHEMA, self.raw_decoder)
+        header = self.datum_reader.read_data(META_SCHEMA, META_SCHEMA, self.raw_decoder)
 
         # check magic number
-        if header.get('magic') != MAGIC:
-            fail_msg = "Not an Avro data file: %s doesn't match %s."\
-                       % (header.get('magic'), MAGIC)
-            raise avro.errors.AvroException(fail_msg)
+        if header.get("magic") != MAGIC:
+            raise avro.errors.AvroException(f"Not an Avro data file: {header.get('magic')!r} doesn't match {MAGIC!r}.")
 
         # set metadata
-        self._meta = header['meta']
+        self._meta = header["meta"]
 
         # set sync marker
-        self._sync_marker = header['sync']
+        self._sync_marker = header["sync"]
 
     def _read_block_header(self):
         self.block_count = self.raw_decoder.read_long()
