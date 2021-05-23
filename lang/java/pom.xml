@@ -57,7 +57,7 @@
     <tukaani.version>1.9</tukaani.version>
     <easymock.version>4.3</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.37.1</grpc.version>
+    <grpc.version>1.38.0</grpc.version>
     <zstd-jni.version>1.4.9-5</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.0</archetype-plugin.version>
