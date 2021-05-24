@@ -332,6 +332,11 @@
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
                 <exclude>lang/ruby/.bundle/**</exclude>
+                <exclude>lang/rust/target/**</exclude>
+                <exclude>lang/rust/precommit_venv/**</exclude>
+                <exclude>lang/rust/Cargo.lock</exclude>
+                <exclude>lang/rust/README.tpl</exclude>
+                <exclude>lang/rust/.requirements-precommit.txt</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
