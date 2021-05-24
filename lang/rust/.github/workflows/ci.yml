@@ -1,0 +1,58 @@
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "**" ]
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+name: Continuous Integration
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+          - 1.48.0  # MSRV
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt
+
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all-features --all-targets
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --all-targets
+
+      # because of https://github.com/rust-lang/cargo/issues/6669
+      - name: Test docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --doc
