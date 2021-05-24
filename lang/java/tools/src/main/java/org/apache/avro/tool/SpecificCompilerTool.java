@@ -48,14 +48,15 @@ public class SpecificCompilerTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> origArgs) throws Exception {
     if (origArgs.size() < 3) {
-      System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] "
-              + "[-noSetters] [-addExtraOptionalGetters] [-optionalGetters <optionalGettersType>] "
-              + "[-templateDir <templateDir>] (schema|protocol) input... outputdir");
+      System.err.println("Usage: [-encoding <outputencoding>] [-string] [-doNotModifySchema] [-bigDecimal] "
+          + "[-fieldVisibility <visibilityType>] "
+          + "[-noSetters] [-addExtraOptionalGetters] [-optionalGetters <optionalGettersType>] "
+          + "[-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
       System.err.println(" outputdir - directory to write generated java");
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
+      System.err.println(" -doNotModifySchema - do not modify schemas as provided");
       System.err.println(" -fieldVisibility [private|public] - use either and default private");
       System.err.println(" -noSetters - do not generate setters");
       System.err
@@ -192,6 +193,7 @@ public class SpecificCompilerTool implements Tool {
     compiler.setEnableDecimalLogicalType(opts.useLogicalDecimal);
     opts.encoding.ifPresent(compiler::setOutputCharacterEncoding);
     opts.fieldVisibility.ifPresent(compiler::setFieldVisibility);
+    compiler.setModifySchema(!opts.doNotModifySchema);
     compiler.compileToDestination(src, output);
   }
 
@@ -268,6 +270,7 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal;
     boolean createSetters;
     boolean addExtraOptionalGetters;
+    boolean doNotModifySchema;
     Optional<OptionalGettersType> optionalGettersType;
     Optional<String> templateDir;
   }

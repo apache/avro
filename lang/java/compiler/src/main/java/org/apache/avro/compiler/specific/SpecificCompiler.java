@@ -122,6 +122,7 @@ public class SpecificCompiler {
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
+  private boolean modifySchema = true;
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
 
@@ -560,7 +561,9 @@ public class SpecificCompiler {
   }
 
   OutputFile compile(Schema schema) {
-    schema = addStringType(schema); // annotate schema as needed
+    if (modifySchema) {
+      schema = addStringType(schema); // annotate schema as needed
+    }
     String output = "";
     VelocityContext context = new VelocityContext();
     context.put("this", this);
@@ -1212,5 +1215,17 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  /**
+   * Sets whether the input schema is modified with Java specific logical String
+   * type with field "avro.java.string". Modifications only occur if stringType is
+   * set to StringType.String AND modifySchema is true.
+   *
+   * @param modifySchema Whether to modify schemas with logical type (defaults to
+   *                     true)
+   */
+  public void setModifySchema(boolean modifySchema) {
+    this.modifySchema = modifySchema;
   }
 }

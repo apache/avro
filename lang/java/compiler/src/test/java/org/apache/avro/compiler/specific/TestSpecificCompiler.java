@@ -77,6 +77,10 @@ public class TestSpecificCompiler {
 
   private File src = new File("src/test/resources/simple_record.avsc");
 
+  // Need a test file with a string, modifying above breaks some tests that make
+  // file assumptions
+  private File srcWithString = new File("src/test/resources/simple_record_with_string.avsc");
+
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
     assertCompilesWithJavaCompiler(dstDir, outputs, false);
@@ -136,8 +140,12 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
+    return createCompiler(this.src);
+  }
+
+  private SpecificCompiler createCompiler(File sourceSchema) throws IOException {
     Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(this.src);
+    Schema schema = parser.parse(sourceSchema);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
@@ -318,6 +326,33 @@ public class TestSpecificCompiler {
     // Compare as strings
     assertThat("Generated files should contain the same characters in the proper encodings",
         new String(fileInDefaultEncoding), equalTo(new String(fileInDifferentEncoding, differentEncoding)));
+  }
+
+  @Test
+  public void testSettingDoNotModifySchema() throws Exception {
+    SpecificCompiler compiler = createCompiler(this.srcWithString);
+    compiler.setStringType(StringType.String); // This is only type in which schema is modified
+    // Generated file with Java types (default)
+    compiler.compileToDestination(this.srcWithString, this.OUTPUT_DIR.getRoot());
+    byte[] fileWithDefaultModification = new byte[(int) this.outputFile.length()];
+    FileInputStream is = new FileInputStream(this.outputFile);
+    is.read(fileWithDefaultModification);
+    is.close(); // close input stream otherwise delete might fail
+    if (!this.outputFile.delete()) {
+      throw new IllegalStateException("unable to delete " + this.outputFile); // delete otherwise compiler might not
+      // overwrite because src timestamp hasn't
+      // changed.
+    }
+    // Generate file without Java specific type (should be less bytes)
+    compiler.setModifySchema(false);
+    compiler.compileToDestination(this.srcWithString, this.OUTPUT_DIR.getRoot());
+    byte[] fileWithoutModification = new byte[(int) this.outputFile.length()];
+    is = new FileInputStream(this.outputFile);
+    is.read(fileWithoutModification);
+    is.close();
+    // Compare as bytes
+    assertThat("Generated file should contain different bytes", fileWithDefaultModification,
+        not(equalTo(fileWithoutModification)));
   }
 
   @Test
