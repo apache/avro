@@ -16,27 +16,24 @@
 # under the License.
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "**" ]
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - .github/workflows/test-lang-rust-audit.yml
+      - lang/rust/Cargo.toml
+      - lang/rust/Cargo.lock
 
-name: Clippy Check
-
+name: Security Audit
 jobs:
-  clippy_check:
+  audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: clippy
-          override: true
-      - uses: actions-rs/clippy-check@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Audit
+        uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets -- -Dclippy::all -Dunused_imports

@@ -16,13 +16,14 @@
 # under the License.
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "**" ]
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - .github/workflows/test-lang-rust-ci.yml
+      - lang/rust/**
 
 name: Continuous Integration
 
