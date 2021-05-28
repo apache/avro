@@ -18,7 +18,7 @@
 # You may wish to alter this file to override the set of languages analyzed,
 # or to provide custom queries or build logic.
 
-name: "CodeQL"
+name: "CodeQL C#"
 
 on:
   push:
@@ -28,6 +28,9 @@ on:
     # The branches below must be a subset of the branches above
     branches:
     - master
+    paths:
+    - .github/workflows/test-lang-csharp.yml
+    - lang/csharp/**
 
 jobs:
   analyze:
@@ -41,9 +44,6 @@ jobs:
         # Supported options are ['csharp', 'cpp', 'go', 'java', 'javascript', 'python']
         language:
         - csharp
-        - java
-        - javascript
-        - python
         # Learn more...
         # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
 
