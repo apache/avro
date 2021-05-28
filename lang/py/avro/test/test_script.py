@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -37,7 +35,7 @@ import avro.schema
 NUM_RECORDS = 7
 
 
-SCHEMA = '''
+SCHEMA = """
 {
     "namespace": "test.avro",
         "name": "LooneyTunes",
@@ -48,7 +46,7 @@ SCHEMA = '''
             {"name": "type", "type": "string"}
         ]
 }
-'''
+"""
 
 LOONIES = (
     ("daffy", "duck", "duck"),
@@ -68,11 +66,11 @@ def looney_records():
 
 SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "scripts", "avro")
 
-_JSON_PRETTY = '''{
+_JSON_PRETTY = """{
     "first": "daffy",
     "last": "duck",
     "type": "duck"
-}'''
+}"""
 
 
 def gen_avro(filename):
@@ -149,22 +147,20 @@ class TestCat(unittest.TestCase):
 
     def test_fields(self):
         # One field selection (no comma)
-        out = self._run('--fields', 'last')
-        assert json.loads(out[0]) == {'last': 'duck'}
+        out = self._run("--fields", "last")
+        assert json.loads(out[0]) == {"last": "duck"}
 
         # Field selection (with comma and space)
-        out = self._run('--fields', 'first, last')
-        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
+        out = self._run("--fields", "first, last")
+        assert json.loads(out[0]) == {"first": "daffy", "last": "duck"}
 
         # Empty fields should get all
-        out = self._run('--fields', '')
-        assert json.loads(out[0]) == \
-            {'first': 'daffy', 'last': 'duck',
-             'type': 'duck'}
+        out = self._run("--fields", "")
+        assert json.loads(out[0]) == {"first": "daffy", "last": "duck", "type": "duck"}
 
         # Non existing fields are ignored
-        out = self._run('--fields', 'first,last,age')
-        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
+        out = self._run("--fields", "first,last,age")
+        assert json.loads(out[0]) == {"first": "daffy", "last": "duck"}
 
 
 class TestWrite(unittest.TestCase):
@@ -234,7 +230,7 @@ class TestWrite(unittest.TestCase):
 
     def test_multi_file(self):
         tmp = _tempfile()
-        with open(tmp, 'wb') as o:
+        with open(tmp, "wb") as o:
             self._run(self.json_file, self.json_file, stdout=o)
         assert len(self.load_avro(tmp)) == 2 * NUM_RECORDS
         os.unlink(tmp)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -57,9 +56,7 @@ class AvroTypeException(AvroException):
             expected_schema, datum = args[:2]
         except (IndexError, ValueError):
             return super().__init__(*args)
-        return super().__init__(
-            f"The datum {datum} is not an example of the schema {_safe_pretty(expected_schema)}"
-        )
+        return super().__init__(f"The datum {datum} is not an example of the schema {_safe_pretty(expected_schema)}")
 
 
 class AvroOutOfScaleException(AvroTypeException):
@@ -70,23 +67,13 @@ class AvroOutOfScaleException(AvroTypeException):
             scale, datum, exponent = args[:3]
         except (IndexError, ValueError):
             return super().__init__(*args)
-        return super().__init__(
-            f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}"
-        )
+        return super().__init__(f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}")
 
 
 class SchemaResolutionException(AvroException):
     def __init__(self, fail_msg, writers_schema=None, readers_schema=None, *args):
-        writers_message = (
-            f"\nWriter's Schema: {_safe_pretty(writers_schema)}"
-            if writers_schema
-            else ""
-        )
-        readers_message = (
-            f"\nReader's Schema: {_safe_pretty(readers_schema)}"
-            if readers_schema
-            else ""
-        )
+        writers_message = f"\nWriter's Schema: {_safe_pretty(writers_schema)}" if writers_schema else ""
+        readers_message = f"\nReader's Schema: {_safe_pretty(readers_schema)}" if readers_schema else ""
         super().__init__((fail_msg or "") + writers_message + readers_message, *args)
 
 

@@ -86,18 +86,13 @@ def rand_ip():
 
 
 def picks(n):
-    return [
-        {"query": rand_name(), "response": rand_ip(), "type": random.choice(TYPES)}
-        for _ in range(n)
-    ]
+    return [{"query": rand_name(), "response": rand_ip(), "type": random.choice(TYPES)} for _ in range(n)]
 
 
 def time_writes(path, number):
     with avro.datafile.DataFileWriter(open(path, "wb"), WRITER, SCHEMA) as dw:
         globals_ = {"dw": dw, "picks": picks(number)}
-        return timeit.timeit(
-            "dw.append(next(p))", number=number, setup="p=iter(picks)", globals=globals_
-        )
+        return timeit.timeit("dw.append(next(p))", number=number, setup="p=iter(picks)", globals=globals_)
 
 
 def time_read(path):

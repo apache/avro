@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -26,34 +24,31 @@ import avro
 import avro.datafile
 import avro.io
 
-_INTEROP_DATA_DIR = os.path.join(os.path.dirname(avro.__file__), 'test', 'interop', 'data')
+_INTEROP_DATA_DIR = os.path.join(os.path.dirname(avro.__file__), "test", "interop", "data")
 
 
-@unittest.skipUnless(os.path.exists(_INTEROP_DATA_DIR),
-                     "{} does not exist".format(_INTEROP_DATA_DIR))
+@unittest.skipUnless(os.path.exists(_INTEROP_DATA_DIR), f"{_INTEROP_DATA_DIR} does not exist")
 class TestDataFileInterop(unittest.TestCase):
     def test_interop(self):
         """Test Interop"""
         for f in os.listdir(_INTEROP_DATA_DIR):
             filename = os.path.join(_INTEROP_DATA_DIR, f)
             assert os.stat(filename).st_size > 0
-            base_ext = os.path.splitext(os.path.basename(f))[0].split('_', 1)
+            base_ext = os.path.splitext(os.path.basename(f))[0].split("_", 1)
             if len(base_ext) < 2 or base_ext[1] in avro.datafile.VALID_CODECS:
-                print('READING %s' % f)
-                print()
+                print(f"READING {f}\n")
 
                 # read data in binary from file
                 datum_reader = avro.io.DatumReader()
-                with open(filename, 'rb') as reader:
+                with open(filename, "rb") as reader:
                     dfr = avro.datafile.DataFileReader(reader, datum_reader)
                     i = 0
                     for i, datum in enumerate(dfr, 1):
                         assert datum is not None
                     assert i > 0
             else:
-                print('SKIPPING %s due to an unsupported codec' % f)
-                print()
+                print(f"SKIPPING {f} due to an unsupported codec\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

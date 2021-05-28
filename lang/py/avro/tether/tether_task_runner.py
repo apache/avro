@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -60,32 +58,32 @@ class TaskRunnerResponder(avro.ipc.Responder):
 
     def invoke(self, message, request):
         try:
-            if message.name == 'configure':
+            if message.name == "configure":
                 self.log.info("TetherTaskRunner: Received configure")
                 self.task.configure(request["taskType"], request["inSchema"], request["outSchema"])
-            elif message.name == 'partitions':
+            elif message.name == "partitions":
                 self.log.info("TetherTaskRunner: Received partitions")
                 try:
                     self.task.partitions = request["partitions"]
                 except Exception as e:
-                    self.log.error("Exception occured while processing the partitions message: Message:\n" + traceback.format_exc())
+                    self.log.error("Exception occured while processing the partitions message: Message:\n%s", traceback.format_exc())
                     raise
-            elif message.name == 'input':
+            elif message.name == "input":
                 self.log.info("TetherTaskRunner: Received input")
                 self.task.input(request["data"], request["count"])
-            elif message.name == 'abort':
+            elif message.name == "abort":
                 self.log.info("TetherTaskRunner: Received abort")
                 self.runner.close()
-            elif message.name == 'complete':
+            elif message.name == "complete":
                 self.log.info("TetherTaskRunner: Received complete")
                 self.task.complete()
                 self.task.close()
                 self.runner.close()
             else:
-                self.log.warning("TetherTaskRunner: Received unknown message {0}".format(message.name))
+                self.log.warning("TetherTaskRunner: Received unknown message %s", message.name)
 
         except Exception as e:
-            self.log.error("Error occured while processing message: {0}".format(message.name))
+            self.log.error("Error occured while processing message: %s", message.name)
             e = traceback.format_exc()
             self.task.fail(e)
 
@@ -102,20 +100,18 @@ def HTTPHandlerGen(runner):
     runner - instance of the task runner
     """
 
-    if not(isinstance(runner, weakref.ProxyType)):
+    if not (isinstance(runner, weakref.ProxyType)):
         runnerref = weakref.proxy(runner)
     else:
         runnerref = runner
 
     class TaskRunnerHTTPHandler(http.server.BaseHTTPRequestHandler):
-        """Create a handler for the parent.
-        """
+        """Create a handler for the parent."""
 
         runner = runnerref
 
         def __init__(self, *args, **param):
-            """
-            """
+            """ """
             http.server.BaseHTTPRequestHandler.__init__(self, *args, **param)
 
         def do_POST(self):
@@ -124,7 +120,7 @@ def HTTPHandlerGen(runner):
             call_request = call_request_reader.read_framed_message()
             resp_body = self.responder.respond(call_request)
             self.send_response(200)
-            self.send_header('Content-Type', 'avro/binary')
+            self.send_header("Content-Type", "avro/binary")
             self.end_headers()
             resp_writer = avro.ipc.FramedWriter(self.wfile)
             resp_writer.write_framed_message(resp_body)
@@ -187,7 +183,7 @@ class TaskRunner:
         self.task.open(port, clientPort=outputport)
 
         # wait for the other thread to finish
-        if (join):
+        if join:
             self.task.ready_for_shutdown.wait()
             self.server.shutdown()
 
@@ -204,7 +200,7 @@ class TaskRunner:
         self.task.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # TODO::Make the logging level a parameter we can set
     # logging.basicConfig(level=logging.INFO,filename='/tmp/log',filemode='w')
     logging.basicConfig(level=logging.INFO)
@@ -216,7 +212,7 @@ if __name__ == '__main__':
 
     mod, cname = fullcls.rsplit(".", 1)
 
-    logging.info("tether_task_runner.__main__: Task: {0}".format(fullcls))
+    logging.info(f"tether_task_runner.__main__: Task: {fullcls}")
 
     modobj = __import__(mod, fromlist=cname)
 

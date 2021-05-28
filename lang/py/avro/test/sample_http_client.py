@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -53,7 +51,7 @@ MAIL_PROTOCOL_JSON = """\
 }
 """
 MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
-SERVER_HOST = 'localhost'
+SERVER_HOST = "localhost"
 SERVER_PORT = 9090
 
 
@@ -62,16 +60,16 @@ def make_requestor(server_host, server_port, protocol):
     return avro.ipc.Requestor(protocol, client)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) not in [4, 5]:
         raise avro.errors.UsageError("Usage: <to> <from> <body> [<count>]")
 
     # client code - attach to the server and send a message
     # fill in the Message record
     message = dict()
-    message['to'] = sys.argv[1]
-    message['from'] = sys.argv[2]
-    message['body'] = sys.argv[3]
+    message["to"] = sys.argv[1]
+    message["from"] = sys.argv[2]
+    message["body"] = sys.argv[3]
 
     try:
         num_messages = int(sys.argv[4])
@@ -80,15 +78,15 @@ if __name__ == '__main__':
 
     # build the parameters for the request
     params = {}
-    params['message'] = message
+    params["message"] = message
 
     # send the requests and print the result
     for msg_count in range(num_messages):
         requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-        result = requestor.request('send', params)
+        result = requestor.request("send", params)
         print("Result: " + result)
 
     # try out a replay message
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-    result = requestor.request('replay', dict())
+    result = requestor.request("replay", dict())
     print("Replay Result: " + result)

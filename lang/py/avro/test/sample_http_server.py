@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 import avro.ipc
 import avro.protocol
 
@@ -27,34 +27,25 @@ try:
 except ImportError:
     import http.server as http_server  # type: ignore
 
-MAIL_PROTOCOL_JSON = """\
-{"namespace": "example.proto",
- "protocol": "Mail",
-
- "types": [
-     {"name": "Message", "type": "record",
-      "fields": [
-          {"name": "to",   "type": "string"},
-          {"name": "from", "type": "string"},
-          {"name": "body", "type": "string"}
-      ]
-     }
- ],
-
- "messages": {
-     "send": {
-         "request": [{"name": "message", "type": "Message"}],
-         "response": "string"
-     },
-     "replay": {
-         "request": [],
-         "response": "string"
-     }
- }
-}
-"""
+MAIL_PROTOCOL_JSON = json.dumps(
+    {
+        "namespace": "example.proto",
+        "protocol": "Mail",
+        "types": [
+            {
+                "name": "Message",
+                "type": "record",
+                "fields": [{"name": "to", "type": "string"}, {"name": "from", "type": "string"}, {"name": "body", "type": "string"}],
+            }
+        ],
+        "messages": {
+            "send": {"request": [{"name": "message", "type": "Message"}], "response": "string"},
+            "replay": {"request": [], "response": "string"},
+        },
+    }
+)
 MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
-SERVER_ADDRESS = ('localhost', 9090)
+SERVER_ADDRESS = ("localhost", 9090)
 
 
 class MailResponder(avro.ipc.Responder):
@@ -62,13 +53,10 @@ class MailResponder(avro.ipc.Responder):
         avro.ipc.Responder.__init__(self, MAIL_PROTOCOL)
 
     def invoke(self, message, request):
-        if message.name == 'send':
-            request_content = request['message']
-            response = "Sent message to %(to)s from %(from)s with body %(body)s" % \
-                       request_content
-            return response
-        elif message.name == 'replay':
-            return 'replay'
+        if message.name == "send":
+            return f"Sent message to {request['message']['to']} from {request['message']['from']} with body {request['message']['body']}"
+        if message.name == "replay":
+            return "replay"
 
 
 class MailHandler(http_server.BaseHTTPRequestHandler):
@@ -78,13 +66,13 @@ class MailHandler(http_server.BaseHTTPRequestHandler):
         call_request = call_request_reader.read_framed_message()
         resp_body = self.responder.respond(call_request)
         self.send_response(200)
-        self.send_header('Content-Type', 'avro/binary')
+        self.send_header("Content-Type", "avro/binary")
         self.end_headers()
         resp_writer = avro.ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mail_server = http_server.HTTPServer(SERVER_ADDRESS, MailHandler)
     mail_server.allow_reuse_address = True
     mail_server.serve_forever()
