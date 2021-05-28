@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
 ##
@@ -411,14 +410,16 @@ class NamedSchema(Schema):
     def __init__(self, type, name, namespace=None, names=None, other_props=None):
         # Ensure valid ctor args
         if not name:
-            fail_msg = 'Named Schemas must have a non-empty name.'
+            fail_msg = "Named Schemas must have a non-empty name."
             raise avro.errors.SchemaParseException(fail_msg)
         elif not isinstance(name, str):
-            fail_msg = 'The name property must be a string.'
+            fail_msg = "The name property must be a string."
             raise avro.errors.SchemaParseException(fail_msg)
         elif namespace is not None and not isinstance(namespace, str):
-            fail_msg = 'The namespace property must be a string.'
+            fail_msg = "The namespace property must be a string."
             raise avro.errors.SchemaParseException(fail_msg)
+
+        namespace = namespace or None  # Empty string -> None
 
         # Call parent ctor
         Schema.__init__(self, type, other_props)
@@ -427,9 +428,9 @@ class NamedSchema(Schema):
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
-        self.set_prop('name', name)
+        self.set_prop("name", name)
         if namespace is not None:
-            self.set_prop('namespace', new_name.space)
+            self.set_prop("namespace", new_name.space)
 
         # Store full name as calculated from name, namespace
         self._fullname = new_name.fullname
