@@ -22,7 +22,7 @@ require 'logger'
 
 class GenericResponder < Avro::IPC::Responder
   def initialize(proto, msg, datum)
-    proto_json = open(proto).read
+    proto_json = File.open(proto).read
     super(Avro::Protocol.parse(proto_json))
     @msg = msg
     @datum = datum
@@ -63,14 +63,14 @@ end
 def send_message(uri, proto, msg, datum)
   uri = URI.parse(uri)
   trans = Avro::IPC::HTTPTransceiver.new(uri.host, uri.port)
-  proto_json = open(proto).read
+  proto_json = File.open(proto).read
   requestor = Avro::IPC::Requestor.new(Avro::Protocol.parse(proto_json),
                                        trans)
   p requestor.request(msg, datum)
 end
 
 def file_or_stdin(f)
-  f == "-" ? STDIN : open(f)
+  f == "-" ? STDIN : File.open(f)
 end
 
 def main
@@ -101,9 +101,9 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]) {|f|
-          f.each{|e| datum = e; break }
-        }
+        Avro::DataFile.open(ARGV[5]) do |f|
+          datum = f.first
+        end
       when "-data"
         puts "JSON Decoder not yet implemented."
         return 1
@@ -125,7 +125,7 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]){|f| f.each{|e| datum = e; break } }
+        Avro::DataFile.open(ARGV[5]){ |f| datum = f.first }
       when "-data"
         puts "JSON Decoder not yet implemented"
         return 1
