@@ -32,6 +32,9 @@ import io
 import struct
 import sys
 import zlib
+from array import array
+from mmap import mmap
+from typing import List, Sequence, Tuple, Union
 
 import avro.errors
 import avro.io
@@ -66,7 +69,7 @@ class Codec(abc.ABC):
     """Abstract base class for all Avro codec classes."""
 
     @abc.abstractmethod
-    def compress(self, data):
+    def compress(self, data: bytes) -> Tuple[bytes, int]:
         """Compress the passed data.
 
         :param data: a byte string to be compressed
@@ -77,7 +80,7 @@ class Codec(abc.ABC):
         """
 
     @abc.abstractmethod
-    def decompress(self, readers_decoder):
+    def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         """Read compressed data via the passed BinaryDecoder and decompress it.
 
         :param readers_decoder: a BinaryDecoder object currently being used for
@@ -91,22 +94,22 @@ class Codec(abc.ABC):
 
 
 class NullCodec(Codec):
-    def compress(self, data):
+    def compress(self, data: bytes) -> Tuple[bytes, int]:
         return data, len(data)
 
-    def decompress(self, readers_decoder):
+    def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         readers_decoder.skip_long()
         return readers_decoder
 
 
 class DeflateCodec(Codec):
-    def compress(self, data):
+    def compress(self, data: bytes) -> Tuple[bytes, int]:
         # The first two characters and last character are zlib
         # wrappers around deflate data.
         compressed_data = zlib.compress(data)[2:-1]
         return compressed_data, len(compressed_data)
 
-    def decompress(self, readers_decoder):
+    def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         # Compressed data is stored as (length, data), which
         # corresponds to how the "bytes" type is encoded.
         data = readers_decoder.read_bytes()
@@ -119,11 +122,11 @@ class DeflateCodec(Codec):
 if has_bzip2:
 
     class BZip2Codec(Codec):
-        def compress(self, data):
+        def compress(self, data: bytes) -> Tuple[bytes, int]:
             compressed_data = bz2.compress(data)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             uncompressed = bz2.decompress(data)
@@ -133,13 +136,13 @@ if has_bzip2:
 if has_snappy:
 
     class SnappyCodec(Codec):
-        def compress(self, data):
+        def compress(self, data: bytes) -> Tuple[bytes, int]:
             compressed_data = snappy.compress(data)
             # A 4-byte, big-endian CRC32 checksum
             compressed_data += STRUCT_CRC32.pack(binascii.crc32(data) & 0xFFFFFFFF)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             # Compressed data includes a 4-byte CRC32 checksum
             length = readers_decoder.read_long()
             data = readers_decoder.read(length - 4)
@@ -148,20 +151,20 @@ if has_snappy:
             self.check_crc32(uncompressed, checksum)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
-        def check_crc32(self, bytes, checksum):
+        def check_crc32(self, bytes_: bytes, checksum: Union[array[int], bytes, bytearray, memoryview, mmap]) -> None:
             checksum = STRUCT_CRC32.unpack(checksum)[0]
-            if binascii.crc32(bytes) & 0xFFFFFFFF != checksum:
+            if binascii.crc32(bytes_) & 0xFFFFFFFF != checksum:
                 raise avro.errors.AvroException("Checksum failure")
 
 
 if has_zstandard:
 
     class ZstandardCodec(Codec):
-        def compress(self, data):
+        def compress(self, data: bytes) -> Tuple[bytes, int]:
             compressed_data = zstd.ZstdCompressor().compress(data)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        def decompress(self, readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             uncompressed = bytearray()
@@ -175,7 +178,7 @@ if has_zstandard:
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
-def get_codec(codec_name):
+def get_codec(codec_name: str) -> Codec:
     codec_name = codec_name.lower()
     if codec_name == "null":
         return NullCodec()
@@ -190,7 +193,7 @@ def get_codec(codec_name):
     raise avro.errors.UnsupportedCodec(f"Unsupported codec: {codec_name}. (Is it installed?)")
 
 
-def supported_codec_names():
+def supported_codec_names() -> List[str]:
     codec_names = ["null", "deflate"]
     if has_bzip2:
         codec_names.append("bzip2")
