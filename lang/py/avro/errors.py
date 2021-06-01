@@ -106,3 +106,11 @@ class UsageError(RuntimeError, AvroException):
 
 class AvroRuntimeException(RuntimeError, AvroException):
     """Raised when compatibility parsing encounters an unknown type"""
+
+
+class UninitializedDataFileException(AvroException):
+    """Raised when attempting to use a DataFile without a datum decoder."""
+
+
+class UninitializedDatumIOException(AvroException):
+    """Raised when attempting to use a DatumReader or DatumWriter without a schema."""

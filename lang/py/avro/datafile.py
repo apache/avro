@@ -353,6 +353,8 @@ class DataFileReader(_DataFile):
                 raise StopIteration
             self._read_block_header()
 
+        if self.datum_decoder is None:
+            raise avro.errors.UninitializedDataFileException
         datum = self.datum_reader.read(self.datum_decoder)
         self.block_count -= 1
         return datum
