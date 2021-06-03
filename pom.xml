@@ -50,9 +50,10 @@
     <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
     <checkstyle.version>8.42</checkstyle.version>
     <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
+    <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <extra-enforcer-rules.version>1.3</extra-enforcer-rules.version>
-    <spotless-maven-plugin.version>2.10.3</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.11.1</spotless-maven-plugin.version>
     <surefire.version>3.0.0-M5</surefire.version>
   </properties>
 
@@ -104,6 +105,11 @@
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
           <version>${spotless-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -194,6 +200,7 @@
         </dependencies>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
           <goalPrefix>avro</goalPrefix>

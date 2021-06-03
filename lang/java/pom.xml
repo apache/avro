@@ -347,7 +347,6 @@
                       <pluginExecutionFilter>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-plugin-plugin</artifactId>
-                        <versionRange>[${plugin-plugin.version},)</versionRange>
                         <goals>
                           <goal>helpmojo</goal>
                           <goal>descriptor</goal>
