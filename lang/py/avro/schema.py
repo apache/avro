@@ -48,6 +48,7 @@ import re
 import sys
 import uuid
 import warnings
+from typing import List, Sequence, cast
 
 import avro.constants
 import avro.errors
@@ -762,7 +763,11 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             self.set_prop("doc", doc)
 
     # read-only properties
-    symbols = property(lambda self: self.get_prop("symbols"))
+    @property
+    def symbols(self) -> Sequence[str]:
+        symbols = self.get_prop("symbols")
+        return cast(List[str], symbols)
+
     doc = property(lambda self: self.get_prop("doc"))
 
     def match(self, writer):

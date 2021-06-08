@@ -18,9 +18,12 @@
 # limitations under the License.
 
 import json
+from typing import Any, Optional
+
+from avro.schema import Schema
 
 
-def _safe_pretty(schema):
+def _safe_pretty(schema: Any) -> Any:
     """Try to pretty-print a schema, but never raise an exception within another exception."""
     try:
         return json.dumps(json.loads(str(schema)), indent=2)
@@ -51,7 +54,7 @@ class IgnoredLogicalType(AvroWarning):
 class AvroTypeException(AvroException):
     """Raised when datum is not an example of schema."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         try:
             expected_schema, datum = args[:2]
         except (IndexError, ValueError):
@@ -62,7 +65,7 @@ class AvroTypeException(AvroException):
 class AvroOutOfScaleException(AvroTypeException):
     """Raised when attempting to write a decimal datum with an exponent too large for the decimal schema."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         try:
             scale, datum, exponent = args[:3]
         except (IndexError, ValueError):
@@ -71,7 +74,7 @@ class AvroOutOfScaleException(AvroTypeException):
 
 
 class SchemaResolutionException(AvroException):
-    def __init__(self, fail_msg, writers_schema=None, readers_schema=None, *args):
+    def __init__(self, fail_msg: str, writers_schema: Optional[Schema] = None, readers_schema: Optional[Schema] = None, *args: Any) -> None:
         writers_message = f"\nWriter's Schema: {_safe_pretty(writers_schema)}" if writers_schema else ""
         readers_message = f"\nReader's Schema: {_safe_pretty(readers_schema)}" if readers_schema else ""
         super().__init__((fail_msg or "") + writers_message + readers_message, *args)
@@ -103,3 +106,11 @@ class UsageError(RuntimeError, AvroException):
 
 class AvroRuntimeException(RuntimeError, AvroException):
     """Raised when compatibility parsing encounters an unknown type"""
+
+
+class UninitializedDataFileException(AvroException):
+    """Raised when attempting to use a DataFile without a datum decoder."""
+
+
+class UninitializedDatumIOException(AvroException):
+    """Raised when attempting to use a DatumReader or DatumWriter without a schema."""

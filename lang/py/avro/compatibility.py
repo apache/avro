@@ -18,7 +18,7 @@
 # limitations under the License.
 from copy import copy
 from enum import Enum
-from typing import List, Optional, Set, cast
+from typing import Any, List, MutableMapping, Optional, Set, cast
 
 from avro.errors import AvroRuntimeException
 from avro.schema import (
@@ -85,7 +85,7 @@ class SchemaCompatibilityResult:
         incompatibilities: List[SchemaIncompatibilityType] = None,
         messages: Optional[Set[str]] = None,
         locations: Optional[Set[str]] = None,
-    ):
+    ) -> None:
         self.locations = locations or {"/"}
         self.messages = messages or set()
         self.compatibility = compatibility
@@ -128,16 +128,15 @@ class ReaderWriter:
     def __hash__(self) -> int:
         return id(self.reader) ^ id(self.writer)
 
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, ReaderWriter):
-            return False
-        return self.reader is other.reader and self.writer is other.writer
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, ReaderWriter) and (self.reader is other.reader) and (self.writer is other.writer)
 
 
 class ReaderWriterCompatibilityChecker:
     ROOT_REFERENCE_TOKEN = "/"
+    memoize_map: MutableMapping[ReaderWriter, SchemaCompatibilityResult]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.memoize_map = {}
 
     def get_compatibility(
@@ -374,9 +373,7 @@ def incompatible(incompat_type: SchemaIncompatibilityType, message: str, locatio
 
 
 def schema_name_equals(reader: NamedSchema, writer: NamedSchema) -> bool:
-    if reader.name == writer.name:
-        return True
-    return writer.fullname in reader.props.get("aliases", [])
+    return (reader.name == writer.name) or (writer.fullname in reader.props.get("aliases", []))
 
 
 def lookup_writer_field(writer_schema: RecordSchema, reader_field: Field) -> Optional[Field]:

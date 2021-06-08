@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,6 +20,8 @@
 
 
 import distutils.errors
+import distutils.file_util
+import distutils.log
 import glob
 import os
 import subprocess
@@ -30,7 +33,7 @@ _AVRO_DIR = os.path.join(_HERE, "avro")
 _VERSION_FILE_NAME = "VERSION.txt"
 
 
-def _is_distribution():
+def _is_distribution() -> bool:
     """Tests whether setup.py is invoked from a distribution.
 
     Returns:
@@ -42,13 +45,13 @@ def _is_distribution():
     return os.path.exists(os.path.join(_HERE, "PKG-INFO"))
 
 
-def _generate_package_data():
+def _generate_package_data() -> None:
     """Generate package data.
 
     This data will already exist in a distribution package,
     so this function only runs for local version control work tree.
     """
-    distutils.log.info("Generating package data")
+    distutils.log.info("Generating package data", "")
 
     # Avro top-level source directory:
     root_dir = os.path.dirname(os.path.dirname(_HERE))
@@ -75,9 +78,7 @@ def _generate_package_data():
     )
 
     for src, dst in avsc_files:
-        src = os.path.join(*src)
-        dst = os.path.join(_AVRO_DIR, *dst)
-        distutils.file_util.copy_file(src, dst)
+        distutils.file_util.copy_file(os.path.join(*src), os.path.join(_AVRO_DIR, *dst))
 
 
 class GenerateInteropDataCommand(setuptools.Command):
@@ -88,14 +89,14 @@ class GenerateInteropDataCommand(setuptools.Command):
         ("output-path=", None, "path to output Avro data files"),
     ]
 
-    def initialize_options(self):
+    def initialize_options(self) -> None:
         self.schema_file = os.path.join(_AVRO_DIR, "interop.avsc")
         self.output_path = os.path.join(_AVRO_DIR, "test", "interop", "data")
 
-    def finalize_options(self):
+    def finalize_options(self) -> None:
         pass
 
-    def run(self):
+    def run(self) -> None:
         # Late import -- this can only be run when avro is on the pythonpath,
         # more or less after install.
         import avro.test.gen_interop_data
@@ -105,7 +106,7 @@ class GenerateInteropDataCommand(setuptools.Command):
         avro.test.gen_interop_data.generate(self.schema_file, os.path.join(self.output_path, "py.avro"))
 
 
-def _get_version():
+def _get_version() -> str:
     curdir = os.getcwd()
     if os.path.isfile("avro/VERSION.txt"):
         version_file = "avro/VERSION.txt"
@@ -119,7 +120,7 @@ def _get_version():
         return verfile.read().rstrip().replace("-", "+")
 
 
-def main():
+def main() -> None:
     if not _is_distribution():
         _generate_package_data()
 
