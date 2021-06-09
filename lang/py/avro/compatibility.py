@@ -18,7 +18,7 @@
 # limitations under the License.
 from copy import copy
 from enum import Enum
-from typing import List, Optional, Set, cast
+from typing import Container, Iterable, List, Optional, Set, cast
 
 from avro.errors import AvroRuntimeException
 from avro.schema import (
@@ -374,16 +374,18 @@ def incompatible(incompat_type: SchemaIncompatibilityType, message: str, locatio
 
 
 def schema_name_equals(reader: NamedSchema, writer: NamedSchema) -> bool:
-    if reader.name == writer.name:
-        return True
-    return writer.fullname in reader.props.get("aliases", [])
+    aliases = reader.props.get("aliases")
+    return (reader.name == writer.name) or (isinstance(aliases, Container) and writer.fullname in aliases)
 
 
 def lookup_writer_field(writer_schema: RecordSchema, reader_field: Field) -> Optional[Field]:
     direct = writer_schema.fields_dict.get(reader_field.name)
     if direct:
         return cast(Field, direct)
-    for alias in reader_field.props.get("aliases", []):
+    aliases = reader_field.props.get("aliases")
+    if not isinstance(aliases, Iterable):
+        return None
+    for alias in aliases:
         writer_field = writer_schema.fields_dict.get(alias)
         if writer_field is not None:
             return cast(Field, writer_field)
