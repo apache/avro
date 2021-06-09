@@ -37,3 +37,23 @@ SUPPORTED_LOGICAL_TYPE = [
     TIME_MILLIS,
     UUID,
 ]
+
+PRIMITIVE_TYPES = (
+    "null",
+    "boolean",
+    "string",
+    "bytes",
+    "int",
+    "long",
+    "float",
+    "double",
+)
+
+NAMED_TYPES = (
+    "fixed",
+    "enum",
+    "record",
+    "error",
+)
+
+VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + ("array", "map", "union", "request", "error_union")

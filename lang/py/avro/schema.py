@@ -44,42 +44,18 @@ import datetime
 import decimal
 import json
 import math
-import re
 import sys
 import uuid
 import warnings
 
 import avro.constants
 import avro.errors
+from avro.constants import NAMED_TYPES, PRIMITIVE_TYPES, VALID_TYPES
+from avro.name import Name, Names, validate_basename
 
 #
 # Constants
 #
-
-# The name portion of a fullname, record field names, and enum symbols must:
-# start with [A-Za-z_]
-# subsequently contain only [A-Za-z0-9_]
-_BASE_NAME_PATTERN = re.compile(r"(?:^|\.)[A-Za-z_][A-Za-z0-9_]*$")
-
-PRIMITIVE_TYPES = (
-    "null",
-    "boolean",
-    "string",
-    "bytes",
-    "int",
-    "long",
-    "float",
-    "double",
-)
-
-NAMED_TYPES = (
-    "fixed",
-    "enum",
-    "record",
-    "error",
-)
-
-VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + ("array", "map", "union", "request", "error_union")
 
 SCHEMA_RESERVED_PROPS = (
     "type",
@@ -121,12 +97,6 @@ INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
-
-
-def validate_basename(basename):
-    """Raise InvalidName if the given basename is not a valid name."""
-    if not _BASE_NAME_PATTERN.search(basename):
-        raise avro.errors.InvalidName(f"{basename!s} is not a valid Avro name because it does not match the pattern {_BASE_NAME_PATTERN.pattern!s}")
 
 
 def _is_timezone_aware_datetime(dt):
@@ -269,131 +239,6 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         Determines how two schema are compared.
         Consider the mixins EqualByPropsMixin and EqualByJsonMixin
         """
-
-
-class Name:
-    """Class to describe Avro name."""
-
-    _full = None
-
-    def __init__(self, name_attr, space_attr, default_space):
-        """The fullname is determined in one of the following ways:
-
-        - A name and namespace are both specified. For example, one might use "name": "X",
-            "namespace": "org.foo" to indicate the fullname org.foo.X.
-        - A fullname is specified. If the name specified contains a dot,
-            then it is assumed to be a fullname, and any namespace also specified is ignored.
-            For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
-        - A name only is specified, i.e., a name that contains no dots.
-            In this case the namespace is taken from the most tightly enclosing schema or protocol.
-            For example, if "name": "X" is specified, and this occurs within a field of
-            the record definition of org.foo.Y, then the fullname is org.foo.X.
-            If there is no enclosing namespace then the null namespace is used.
-
-        References to previously defined names are as in the latter two cases above:
-        if they contain a dot they are a fullname,
-        if they do not contain a dot, the namespace is the namespace of the enclosing definition.
-
-        @arg name_attr: name value read in schema or None.
-        @arg space_attr: namespace value read in schema or None. The empty string may be used as a namespace
-            to indicate the null namespace.
-        @arg default_space: the current default space or None.
-        """
-        if name_attr is None:
-            return
-        if name_attr == "":
-            raise avro.errors.SchemaParseException("Name must not be the empty string.")
-
-        if "." in name_attr or space_attr == "" or not (space_attr or default_space):
-            # The empty string may be used as a namespace to indicate the null namespace.
-            self._full = name_attr
-        else:
-            self._full = f"{space_attr or default_space!s}.{name_attr!s}"
-
-        self._validate_fullname(self._full)
-
-    def _validate_fullname(self, fullname):
-        for name in fullname.split("."):
-            validate_basename(name)
-
-    def __eq__(self, other):
-        """Equality of names is defined on the fullname and is case-sensitive."""
-        try:
-            return self.fullname == other.fullname
-        except AttributeError:
-            return False
-
-    @property
-    def fullname(self):
-        return self._full
-
-    @property
-    def space(self):
-        """Back out a namespace from full name."""
-        if self._full is None:
-            return None
-        return self._full.rsplit(".", 1)[0] if "." in self._full else None
-
-    def get_space(self):
-        warnings.warn("Name.get_space() is deprecated in favor of Name.space")
-        return self.space
-
-
-class Names:
-    """Track name set and default namespace during parsing."""
-
-    def __init__(self, default_namespace=None):
-        self.names = {}
-        self.default_namespace = default_namespace
-
-    def has_name(self, name_attr, space_attr):
-        test = Name(name_attr, space_attr, self.default_namespace).fullname
-        return test in self.names
-
-    def get_name(self, name_attr, space_attr):
-        test = Name(name_attr, space_attr, self.default_namespace).fullname
-        return self.names.get(test)
-
-    def prune_namespace(self, properties):
-        """given a properties, return properties with namespace removed if
-        it matches the own default namespace"""
-        if self.default_namespace is None:
-            # I have no default -- no change
-            return properties
-
-        if "namespace" not in properties:
-            # he has no namespace - no change
-            return properties
-
-        if properties["namespace"] != self.default_namespace:
-            # we're different - leave his stuff alone
-            return properties
-
-        # we each have a namespace and it's redundant. delete his.
-        prunable = properties.copy()
-        del prunable["namespace"]
-        return prunable
-
-    def add_name(self, name_attr, space_attr, new_schema):
-        """
-        Add a new schema object to the name set.
-
-        @arg name_attr: name value read in schema
-        @arg space_attr: namespace value read in schema.
-
-        @return: the Name that was just added.
-        """
-        to_add = Name(name_attr, space_attr, self.default_namespace)
-
-        if to_add.fullname in VALID_TYPES:
-            fail_msg = f"{to_add.fullname} is a reserved type name."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif to_add.fullname in self.names:
-            fail_msg = f'The name "{to_add.fullname}" is already in use.'
-            raise avro.errors.SchemaParseException(fail_msg)
-
-        self.names[to_add.fullname] = new_schema
-        return to_add
 
 
 class NamedSchema(Schema):
