@@ -47,6 +47,7 @@ import math
 import sys
 import uuid
 import warnings
+from typing import MutableMapping, Optional, Sequence, cast
 
 import avro.constants
 import avro.errors
@@ -99,7 +100,7 @@ LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
 
 
-def _is_timezone_aware_datetime(dt):
+def _is_timezone_aware_datetime(dt: datetime.datetime) -> bool:
     return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
 
 
@@ -108,67 +109,25 @@ def _is_timezone_aware_datetime(dt):
 #
 
 
-class EqualByJsonMixin:
-    """Equal if the json serializations are equal."""
+class PropertiesMixin:
+    """A mixin that provides basic properties."""
 
-    def __eq__(self, that):
-        try:
-            that_str = json.loads(str(that))
-        except json.decoder.JSONDecodeError:
-            return False
-        return json.loads(str(self)) == that_str
-
-
-class EqualByPropsMixin:
-    """Equal if the props are equal."""
-
-    def __eq__(self, that):
-        try:
-            return self.props == that.props
-        except AttributeError:
-            return False
-
-
-class CanonicalPropertiesMixin:
-    """A Mixin that provides canonical properties to Schema and Field types."""
+    _reserved_properties: Sequence[str] = ()
+    _props: Optional[MutableMapping[str, object]] = None
 
     @property
-    def canonical_properties(self):
-        props = self.props
-        return collections.OrderedDict((key, props[key]) for key in CANONICAL_FIELD_ORDER if key in props)
-
-
-class Schema(abc.ABC, CanonicalPropertiesMixin):
-    """Base class for all Schema classes."""
-
-    _props = None
-
-    def __init__(self, type, other_props=None):
-        # Ensure valid ctor args
-        if not isinstance(type, str):
-            fail_msg = "Schema type must be a string."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif type not in VALID_TYPES:
-            fail_msg = f"{type} is not a valid type."
-            raise avro.errors.SchemaParseException(fail_msg)
-
-        # add members
+    def props(self) -> MutableMapping[str, object]:
         if self._props is None:
             self._props = {}
-        self.set_prop("type", type)
-        self.type = type
-        self._props.update(other_props or {})
-
-    @property
-    def props(self):
         return self._props
 
-    @property
-    def other_props(self):
-        """Dictionary of non-reserved properties"""
-        return get_other_props(self.props, SCHEMA_RESERVED_PROPS)
+    def get_prop(self, key: str) -> Optional[object]:
+        return self.props.get(key)
 
-    def check_props(self, other, props):
+    def set_prop(self, key: str, value: object) -> None:
+        self.props[key] = value
+
+    def check_props(self, other: "PropertiesMixin", props: Sequence[str]) -> bool:
         """Check that the given props are identical in two schemas.
 
         @arg other: The other schema to check
@@ -177,26 +136,66 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         """
         return all(getattr(self, prop) == getattr(other, prop) for prop in props)
 
+    @property
+    def other_props(self) -> MutableMapping[str, object]:
+        """Dictionary of non-reserved properties"""
+        return get_other_props(self.props, self._reserved_properties)
+
+
+class EqualByJsonMixin:
+    """A mixin that defines equality as equal if the json serializations are equal."""
+
+    def __eq__(self, that: object) -> bool:
+        try:
+            that_str = json.loads(str(that))
+        except json.decoder.JSONDecodeError:
+            return False
+        return cast(bool, json.loads(str(self)) == that_str)
+
+
+class EqualByPropsMixin(PropertiesMixin):
+    """A mixin that defines equality as equal if the props are equal."""
+
+    def __eq__(self, that: object) -> bool:
+        return hasattr(that, "props") and self.props == getattr(that, "props")
+
+
+class CanonicalPropertiesMixin(PropertiesMixin):
+    """A Mixin that provides canonical properties to Schema and Field types."""
+
+    @property
+    def canonical_properties(self) -> MutableMapping[str, object]:
+        props = self.props
+        return collections.OrderedDict((key, props[key]) for key in CANONICAL_FIELD_ORDER if key in props)
+
+
+class Schema(abc.ABC, CanonicalPropertiesMixin):
+    """Base class for all Schema classes."""
+
+    _reserved_properties = SCHEMA_RESERVED_PROPS
+
+    def __init__(self, type_: str, other_props: Optional[MutableMapping[str, object]] = None) -> None:
+        if not isinstance(type_, str):
+            raise avro.errors.SchemaParseException("Schema type must be a string.")
+        if type_ not in VALID_TYPES:
+            raise avro.errors.SchemaParseException(f"{type_} is not a valid type.")
+        self.set_prop("type", type_)
+        self.type = type_
+        self.props.update(other_props or {})
+
     @abc.abstractmethod
-    def match(self, writer):
+    def match(self, writer: "Schema") -> bool:
         """Return True if the current schema (as reader) matches the writer schema.
 
         @arg writer: the writer schema to match against.
         @return bool
         """
 
-    # utility functions to manipulate properties dict
-    def get_prop(self, key):
-        return self._props.get(key)
-
-    def set_prop(self, key, value):
-        self._props[key] = value
-
-    def __str__(self):
+    def __str__(self) -> str:
         return json.dumps(self.to_json())
 
     @abc.abstractmethod
-    def to_json(self, names):
+    def to_json(self, names: Optional[Names] = None) -> object:
         """
         Converts the schema object into its AVRO specification representation.
 
@@ -206,7 +205,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         """
 
     @abc.abstractmethod
-    def validate(self, datum):
+    def validate(self, datum: object) -> Optional["Schema"]:
         """Returns the appropriate schema object if datum is valid for that schema, else None.
 
         To be implemented in subclasses.
@@ -220,7 +219,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         """
 
     @abc.abstractmethod
-    def to_canonical_json(self, names=None):
+    def to_canonical_json(self, names: Optional[Names] = None) -> object:
         """
         Converts the schema object into its Canonical Form
         http://avro.apache.org/docs/current/spec.html#Parsing+Canonical+Form+for+Schemas
@@ -229,12 +228,12 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         """
 
     @property
-    def canonical_form(self):
+    def canonical_form(self) -> str:
         # The separators eliminate whitespace around commas and colons.
         return json.dumps(self.to_canonical_json(), separators=(",", ":"))
 
     @abc.abstractmethod
-    def __eq__(self, that):
+    def __eq__(self, that: object) -> bool:
         """
         Determines how two schema are compared.
         Consider the mixins EqualByPropsMixin and EqualByJsonMixin
@@ -244,22 +243,16 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
 
-    def __init__(self, type, name, namespace=None, names=None, other_props=None):
+    def __init__(self, type_, name, namespace=None, names=None, other_props=None):
         # Ensure valid ctor args
         if not name:
-            fail_msg = "Named Schemas must have a non-empty name."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, str):
-            fail_msg = "The name property must be a string."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif namespace is not None and not isinstance(namespace, str):
-            fail_msg = "The namespace property must be a string."
-            raise avro.errors.SchemaParseException(fail_msg)
-
+            raise avro.errors.SchemaParseException("Named Schemas must have a non-empty name.")
+        if not isinstance(name, str):
+            raise avro.errors.SchemaParseException("The name property must be a string.")
+        if namespace is not None and not isinstance(namespace, str):
+            raise avro.errors.SchemaParseException("The namespace property must be a string.")
         namespace = namespace or None  # Empty string -> None
-
-        # Call parent ctor
-        Schema.__init__(self, type, other_props)
+        super().__init__(type_, other_props)
 
         # Add class members
         new_name = names.add_name(name, namespace, self)
@@ -314,9 +307,11 @@ class DecimalLogicalSchema(LogicalSchema):
 
 
 class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
+    _reserved_properties: Sequence[str] = FIELD_RESERVED_PROPS
+
     def __init__(
         self,
-        type,
+        type_,
         name,
         has_default,
         default=None,
@@ -325,30 +320,22 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
         doc=None,
         other_props=None,
     ):
-        # Ensure valid ctor args
         if not name:
-            fail_msg = "Fields must have a non-empty name."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, str):
-            fail_msg = "The name property must be a string."
-            raise avro.errors.SchemaParseException(fail_msg)
-        elif order is not None and order not in VALID_FIELD_SORT_ORDERS:
-            fail_msg = f"The order property {order} is not valid."
-            raise avro.errors.SchemaParseException(fail_msg)
-
-        # add members
-        self._props = {}
+            raise avro.errors.SchemaParseException("Fields must have a non-empty name.")
+        if not isinstance(name, str):
+            raise avro.errors.SchemaParseException("The name property must be a string.")
+        if order is not None and order not in VALID_FIELD_SORT_ORDERS:
+            raise avro.errors.SchemaParseException(f"The order property {order} is not valid.")
         self._has_default = has_default
-        self._props.update(other_props or {})
+        self.props.update(other_props or {})
 
-        if isinstance(type, str) and names is not None and names.has_name(type, None):
-            type_schema = names.get_name(type, None)
+        if isinstance(type_, str) and names is not None and names.has_name(type_, None):
+            type_schema = names.get_name(type_, None)
         else:
             try:
-                type_schema = make_avsc_object(type, names)
+                type_schema = make_avsc_object(type_, names)
             except Exception as e:
-                fail_msg = f'Type property "{type}" not a valid Avro schema: {e}'
-                raise avro.errors.SchemaParseException(fail_msg)
+                raise avro.errors.SchemaParseException(f'Type property "{type_}" not a valid Avro schema: {e}')
         self.set_prop("type", type_schema)
         self.set_prop("name", name)
         self.type = type_schema
@@ -366,20 +353,6 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
     has_default = property(lambda self: self._has_default)
     order = property(lambda self: self.get_prop("order"))
     doc = property(lambda self: self.get_prop("doc"))
-    props = property(lambda self: self._props)
-
-    # Read-only property dict. Non-reserved properties
-    other_props = property(
-        lambda self: get_other_props(self._props, FIELD_RESERVED_PROPS),
-        doc="dictionary of non-reserved properties",
-    )
-
-    # utility functions to manipulate properties dict
-    def get_prop(self, key):
-        return self._props.get(key)
-
-    def set_prop(self, key, value):
-        self._props[key] = value
 
     def __str__(self):
         return json.dumps(self.to_json())
@@ -1080,13 +1053,12 @@ class UUIDSchema(LogicalSchema, PrimitiveSchema):
 #
 
 
-def get_other_props(all_props, reserved_props):
+def get_other_props(all_props: MutableMapping[str, object], reserved_props: Sequence[str]) -> MutableMapping[str, object]:
     """
     Retrieve the non-reserved properties from a dictionary of properties
     @args reserved_props: The set of reserved properties to exclude
     """
-    if callable(getattr(all_props, "items", None)):
-        return {k: v for k, v in all_props.items() if k not in reserved_props}
+    return {k: v for k, v in all_props.items() if k not in reserved_props}
 
 
 def make_bytes_decimal_schema(other_props):
