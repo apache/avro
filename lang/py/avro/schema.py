@@ -47,7 +47,7 @@ import math
 import sys
 import uuid
 import warnings
-from typing import MutableMapping, Optional, Sequence, cast
+from typing import Callable, Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
@@ -143,14 +143,14 @@ class PropertiesMixin:
 
 
 class EqualByJsonMixin:
-    """A mixin that defines equality as equal if the json serializations are equal."""
+    """A mixin that defines equality as equal if the json deserializations are equal."""
 
     def __eq__(self, that: object) -> bool:
         try:
-            that_str = json.loads(str(that))
+            that_obj = json.loads(str(that))
         except json.decoder.JSONDecodeError:
             return False
-        return cast(bool, json.loads(str(self)) == that_str)
+        return cast(bool, json.loads(str(self)) == that_obj)
 
 
 class EqualByPropsMixin(PropertiesMixin):
@@ -243,8 +243,15 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
 
-    def __init__(self, type_, name, namespace=None, names=None, other_props=None):
-        # Ensure valid ctor args
+    def __init__(
+        self,
+        type_: str,
+        name: str,
+        namespace: Optional[str] = None,
+        names: Optional[Names] = None,
+        other_props: Optional[MutableMapping[str, object]] = None,
+    ) -> None:
+        super().__init__(type_, other_props)
         if not name:
             raise avro.errors.SchemaParseException("Named Schemas must have a non-empty name.")
         if not isinstance(name, str):
@@ -252,9 +259,7 @@ class NamedSchema(Schema):
         if namespace is not None and not isinstance(namespace, str):
             raise avro.errors.SchemaParseException("The namespace property must be a string.")
         namespace = namespace or None  # Empty string -> None
-        super().__init__(type_, other_props)
-
-        # Add class members
+        names = names or Names()
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
