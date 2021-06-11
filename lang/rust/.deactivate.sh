@@ -1,4 +1,5 @@
-#
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,18 +16,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-# Pull Request Labeler Github Action Configuration: https://github.com/marketplace/actions/labeler
 
-C: ["lang/c/**/*"]
-C++: ["lang/c++/**/*"]
-C#: ["lang/csharp/**/*"]
-Java: ["lang/java/**/*"]
-Js: ["lang/js/**/*"]
-Perl: ["lang/perl/**/*"]
-Php: ["lang/php/**/*"]
-Python: ["lang/py/**/*"]
-Ruby: ["lang/ruby/**/*"]
-Rust: ["lang/rust/**/*"]
-build: ["**/*Dockerfile*", "**/*.sh", "**/*pom.xml", ".github/**/*"]
-website: ["doc/**/*"]
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    deactivate
+fi
