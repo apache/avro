@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+name: Rust Security Audit
 on:
   workflow_dispatch:
   push:
@@ -26,14 +27,13 @@ on:
       - lang/rust/Cargo.toml
       - lang/rust/Cargo.lock
 
-name: Security Audit
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Audit
+      - name: Rust Audit
         uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

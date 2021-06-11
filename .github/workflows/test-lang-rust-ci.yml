@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+name: Rust Continuous Integration
 on:
   workflow_dispatch:
   push:
@@ -24,8 +25,6 @@ on:
     paths:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
-
-name: Continuous Integration
 
 jobs:
   ci:
@@ -42,7 +41,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Toolchain
+      - name: Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -50,26 +49,26 @@ jobs:
           override: true
           components: rustfmt
 
-      - name: Format
+      - name: Rust Format
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-      - name: Build
+      - name: Rust Build
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --all-features --all-targets
 
-      - name: Test
+      - name: Rust Test
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all-features --all-targets
 
       # because of https://github.com/rust-lang/cargo/issues/6669
-      - name: Test docs
+      - name: Rust Test docs
         uses: actions-rs/cargo@v1
         with:
           command: test
