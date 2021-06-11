@@ -60,6 +60,6 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord> extend
    * @param other the record instance to copy.
    */
   protected SpecificRecordBuilderBase(T other) {
-    super(other.getSchema(), SpecificData.getForSchema(other.getSchema()));
+    super(other.getSchema(), SpecificData.getForClass(other.getClass()));
   }
 }
