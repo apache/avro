@@ -44,7 +44,7 @@
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
     <netty.version>4.1.65.Final</netty.version>
-    <protobuf.version>3.17.2</protobuf.version>
+    <protobuf.version>3.17.3</protobuf.version>
     <thrift.version>0.14.1</thrift.version>
     <slf4j.version>1.7.30</slf4j.version>
     <snappy.version>1.1.8.4</snappy.version>
