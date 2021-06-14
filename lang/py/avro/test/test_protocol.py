@@ -411,17 +411,16 @@ class ProtocolParseTestCase(unittest.TestCase):
         """Parsing a valid protocol should not error."""
         try:
             self.test_proto.parse()
-        except avro.errors.ProtocolParseException:
+        except avro.errors.ProtocolParseException:  # pragma: no coverage
             self.fail(f"Valid protocol failed to parse: {self.test_proto!s}")
 
     def parse_invalid(self):
         """Parsing an invalid protocol should error."""
-        try:
+        with self.assertRaises(
+            (avro.errors.ProtocolParseException, avro.errors.SchemaParseException),
+            msg=f"Invalid protocol should not have parsed: {self.test_proto!s}",
+        ):
             self.test_proto.parse()
-        except (avro.errors.ProtocolParseException, avro.errors.SchemaParseException):
-            pass
-        else:
-            self.fail(f"Invalid protocol should not have parsed: {self.test_proto!s}")
 
 
 class ErrorProtocolTestCase(unittest.TestCase):
@@ -439,8 +438,9 @@ class ErrorProtocolTestCase(unittest.TestCase):
     def check_error_protocol_exists(self):
         """Protocol messages should always have at least a string error protocol."""
         p = self.test_proto.parse()
-        for k, m in p.messages.items():
-            self.assertIsNotNone(m.errors, f"Message {k} did not have the expected implicit string error protocol.")
+        if p.messages is not None:
+            for k, m in p.messages.items():
+                self.assertIsNotNone(m.errors, f"Message {k} did not have the expected implicit string error protocol.")
 
 
 class RoundTripParseTestCase(unittest.TestCase):
@@ -468,8 +468,9 @@ def load_tests(loader, default_tests, pattern):
     suite.addTests(loader.loadTestsFromTestCase(TestMisc))
     suite.addTests(ProtocolParseTestCase(ex) for ex in EXAMPLES)
     suite.addTests(RoundTripParseTestCase(ex) for ex in VALID_EXAMPLES)
+    suite.addTests(ErrorProtocolTestCase(ex) for ex in VALID_EXAMPLES)
     return suite
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

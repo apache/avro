@@ -134,8 +134,9 @@ class TaskRunner:
     implements the logic for the mapper and reducer phases
     """
 
-    server = None
+    _server = None
     sthread = None
+    timeout = 12  # number of seconds to wait for server to come up.
 
     def __init__(self, task):
         """
@@ -149,6 +150,14 @@ class TaskRunner:
         if not isinstance(task, avro.tether.tether_task.TetherTask):
             raise avro.errors.AvroException("task must be an instance of tether task")
         self.task = task
+
+    @property
+    def server(self):
+        for t in range(self.timeout):
+            if self._server:
+                return self._server
+            time.sleep(1)
+        raise RuntimeError("Server never started")
 
     def start(self, outputport=None, join=True):
         """
@@ -170,9 +179,9 @@ class TaskRunner:
         address = ("localhost", port)
 
         def thread_run(task_runner=None):
-            task_runner.server = http.server.HTTPServer(address, HTTPHandlerGen(task_runner))
-            task_runner.server.allow_reuse_address = True
-            task_runner.server.serve_forever()
+            task_runner._server = http.server.HTTPServer(address, HTTPHandlerGen(task_runner))
+            task_runner._server.allow_reuse_address = True
+            task_runner._server.serve_forever()
 
         # create a separate thread for the http server
         sthread = threading.Thread(target=thread_run, kwargs={"task_runner": self})
@@ -185,7 +194,7 @@ class TaskRunner:
         # wait for the other thread to finish
         if join:
             self.task.ready_for_shutdown.wait()
-            self.server.shutdown()
+            self._server.shutdown()
 
             # should we do some kind of check to make sure it exits
             self.log.info("Shutdown the logger")
@@ -196,7 +205,6 @@ class TaskRunner:
         """
         Handler for the close message
         """
-
         self.task.close()
 
 

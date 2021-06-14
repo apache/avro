@@ -52,9 +52,9 @@ MAX_WRITE_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
 MAX_READ_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
 
 
-try:
+try:  # pragma: no cover
     randbytes = random.randbytes  # type: ignore
-except AttributeError:
+except AttributeError:  # pragma: no cover
 
     def randbytes(n):
         """Polyfill for random.randbytes in Python < 3.9"""

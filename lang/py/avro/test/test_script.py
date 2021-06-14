@@ -189,7 +189,7 @@ class TestWrite(unittest.TestCase):
         for filename in (self.csv_file, self.json_file, self.schema_file):
             try:
                 os.unlink(filename)
-            except OSError:
+            except OSError:  # pragma: no coverage
                 continue
 
     def _run(self, *args, **kw):

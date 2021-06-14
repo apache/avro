@@ -561,5 +561,5 @@ def load_tests(loader, default_tests, pattern):
     return suite
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()
