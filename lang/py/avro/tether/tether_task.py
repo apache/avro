@@ -22,9 +22,9 @@ import collections
 import io
 import logging
 import os
-import sys
 import threading
 import traceback
+from typing import cast
 
 import avro.errors
 import avro.io
@@ -46,7 +46,8 @@ with open(pfile) as hf:
 inputProtocol = avro.protocol.parse(prototxt)
 
 # use a named tuple to represent the tasktype enumeration
-taskschema = inputProtocol.types_dict["TaskType"]
+assert inputProtocol.types_dict is not None
+taskschema = cast(avro.schema.EnumSchema, inputProtocol.types_dict["TaskType"])
 # Mypy cannot statically type check a dynamically constructed named tuple.
 # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
 _ttype = collections.namedtuple("_ttype", ("MAP", "REDUCE"))

@@ -47,7 +47,7 @@ import math
 import sys
 import uuid
 import warnings
-from typing import MutableMapping, Optional, Sequence, cast
+from typing import Mapping, MutableMapping, Optional, Sequence, cast
 
 import avro.constants
 import avro.errors
@@ -137,20 +137,20 @@ class PropertiesMixin:
         return all(getattr(self, prop) == getattr(other, prop) for prop in props)
 
     @property
-    def other_props(self) -> MutableMapping[str, object]:
+    def other_props(self) -> Mapping[str, object]:
         """Dictionary of non-reserved properties"""
         return get_other_props(self.props, self._reserved_properties)
 
 
 class EqualByJsonMixin:
-    """A mixin that defines equality as equal if the json serializations are equal."""
+    """A mixin that defines equality as equal if the json deserializations are equal."""
 
     def __eq__(self, that: object) -> bool:
         try:
-            that_str = json.loads(str(that))
+            that_obj = json.loads(str(that))
         except json.decoder.JSONDecodeError:
             return False
-        return cast(bool, json.loads(str(self)) == that_str)
+        return cast(bool, json.loads(str(self)) == that_obj)
 
 
 class EqualByPropsMixin(PropertiesMixin):
@@ -164,7 +164,7 @@ class CanonicalPropertiesMixin(PropertiesMixin):
     """A Mixin that provides canonical properties to Schema and Field types."""
 
     @property
-    def canonical_properties(self) -> MutableMapping[str, object]:
+    def canonical_properties(self) -> Mapping[str, object]:
         props = self.props
         return collections.OrderedDict((key, props[key]) for key in CANONICAL_FIELD_ORDER if key in props)
 
@@ -174,7 +174,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 
     _reserved_properties = SCHEMA_RESERVED_PROPS
 
-    def __init__(self, type_: str, other_props: Optional[MutableMapping[str, object]] = None) -> None:
+    def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None) -> None:
         if not isinstance(type_, str):
             raise avro.errors.SchemaParseException("Schema type must be a string.")
         if type_ not in VALID_TYPES:
@@ -243,8 +243,15 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
 
-    def __init__(self, type_, name, namespace=None, names=None, other_props=None):
-        # Ensure valid ctor args
+    def __init__(
+        self,
+        type_: str,
+        name: str,
+        namespace: Optional[str] = None,
+        names: Optional[Names] = None,
+        other_props: Optional[Mapping[str, object]] = None,
+    ) -> None:
+        super().__init__(type_, other_props)
         if not name:
             raise avro.errors.SchemaParseException("Named Schemas must have a non-empty name.")
         if not isinstance(name, str):
@@ -252,9 +259,7 @@ class NamedSchema(Schema):
         if namespace is not None and not isinstance(namespace, str):
             raise avro.errors.SchemaParseException("The namespace property must be a string.")
         namespace = namespace or None  # Empty string -> None
-        super().__init__(type_, other_props)
-
-        # Add class members
+        names = names or Names()
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
@@ -811,33 +816,28 @@ class ErrorUnionSchema(UnionSchema):
 
 class RecordSchema(EqualByJsonMixin, NamedSchema):
     @staticmethod
-    def make_field_objects(field_data, names):
+    def make_field_objects(field_data: Sequence[Mapping[str, object]], names: avro.name.Names) -> Sequence[Field]:
         """We're going to need to make message parameters too."""
         field_objects = []
         field_names = []
-        for i, field in enumerate(field_data):
-            if callable(getattr(field, "get", None)):
-                type = field.get("type")
-                name = field.get("name")
-
-                # null values can have a default value of None
-                has_default = False
-                default = None
-                if "default" in field:
-                    has_default = True
-                    default = field.get("default")
-
-                order = field.get("order")
-                doc = field.get("doc")
-                other_props = get_other_props(field, FIELD_RESERVED_PROPS)
-                new_field = Field(type, name, has_default, default, order, names, doc, other_props)
-                # make sure field name has not been used yet
-                if new_field.name in field_names:
-                    fail_msg = f"Field name {new_field.name} already in use."
-                    raise avro.errors.SchemaParseException(fail_msg)
-                field_names.append(new_field.name)
-            else:
+        for field in field_data:
+            if not callable(getattr(field, "get", None)):
                 raise avro.errors.SchemaParseException(f"Not a valid field: {field}")
+            type = field.get("type")
+            name = field.get("name")
+
+            # null values can have a default value of None
+            has_default = "default" in field
+            default = field.get("default")
+            order = field.get("order")
+            doc = field.get("doc")
+            other_props = get_other_props(field, FIELD_RESERVED_PROPS)
+            new_field = Field(type, name, has_default, default, order, names, doc, other_props)
+            # make sure field name has not been used yet
+            if new_field.name in field_names:
+                fail_msg = f"Field name {new_field.name} already in use."
+                raise avro.errors.SchemaParseException(fail_msg)
+            field_names.append(new_field.name)
             field_objects.append(new_field)
         return field_objects
 
@@ -1053,7 +1053,7 @@ class UUIDSchema(LogicalSchema, PrimitiveSchema):
 #
 
 
-def get_other_props(all_props: MutableMapping[str, object], reserved_props: Sequence[str]) -> MutableMapping[str, object]:
+def get_other_props(all_props: Mapping[str, object], reserved_props: Sequence[str]) -> Mapping[str, object]:
     """
     Retrieve the non-reserved properties from a dictionary of properties
     @args reserved_props: The set of reserved properties to exclude
@@ -1096,7 +1096,7 @@ def make_logical_schema(logical_type, type_, other_props):
     return None
 
 
-def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
+def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None, validate_enum_symbols: bool = True) -> Schema:
     """
     Build Avro Schema from data parsed out of JSON string.
 
@@ -1107,6 +1107,7 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
 
     # JSON object (non-union)
     if callable(getattr(json_data, "get", None)):
+        json_data = cast(Mapping, json_data)
         type = json_data.get("type")
         other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
         logical_type = json_data.get("logicalType")
@@ -1114,7 +1115,7 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
         if logical_type:
             logical_schema = make_logical_schema(logical_type, type, other_props or {})
             if logical_schema is not None:
-                return logical_schema
+                return cast(Schema, logical_schema)
 
         if type in NAMED_TYPES:
             name = json_data.get("name")
@@ -1174,9 +1175,8 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
     elif json_data in PRIMITIVE_TYPES:
         return PrimitiveSchema(json_data)
     # not for us!
-    else:
-        fail_msg = f"Could not make an Avro Schema object from {json_data}"
-        raise avro.errors.SchemaParseException(fail_msg)
+    fail_msg = f"Could not make an Avro Schema object from {json_data}"
+    raise avro.errors.SchemaParseException(fail_msg)
 
 
 # TODO(hammer): make method for reading from a file?

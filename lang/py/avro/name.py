@@ -143,7 +143,7 @@ class Names:
         del prunable["namespace"]
         return prunable
 
-    def add_name(self, name_attr: str, space_attr: str, new_schema: "NamedSchema") -> Name:
+    def add_name(self, name_attr: str, space_attr: Optional[str], new_schema: "NamedSchema") -> Name:
         """
         Add a new schema object to the name set.
 
