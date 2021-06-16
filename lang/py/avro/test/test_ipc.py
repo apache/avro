@@ -39,5 +39,5 @@ class TestIPC(unittest.TestCase):
         self.assertEqual("/", client_with_default_path.req_resource)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

@@ -691,18 +691,12 @@ class TestMisc(unittest.TestCase):
     def test_parse_invalid_symbol(self):
         """Disabling enumschema symbol validation should allow invalid symbols to pass."""
         test_schema_string = json.dumps({"type": "enum", "name": "AVRO2174", "symbols": ["white space"]})
-
+        with self.assertRaises(avro.errors.InvalidName, msg="When enum symbol validation is enabled, an invalid symbol should raise InvalidName."):
+            avro.schema.parse(test_schema_string, validate_enum_symbols=True)
         try:
-            case = avro.schema.parse(test_schema_string, validate_enum_symbols=True)
-        except avro.errors.InvalidName:
-            pass
-        else:
-            self.fail("When enum symbol validation is enabled, " "an invalid symbol should raise InvalidName.")
-
-        try:
-            case = avro.schema.parse(test_schema_string, validate_enum_symbols=False)
-        except avro.errors.InvalidName:
-            self.fail("When enum symbol validation is disabled, " "an invalid symbol should not raise InvalidName.")
+            avro.schema.parse(test_schema_string, validate_enum_symbols=False)
+        except avro.errors.InvalidName:  # pragma: no coverage
+            self.fail("When enum symbol validation is disabled, an invalid symbol should not raise InvalidName.")
 
 
 class SchemaParseTestCase(unittest.TestCase):
@@ -724,7 +718,7 @@ class SchemaParseTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as actual_warnings:
             try:
                 self.test_schema.parse()
-            except (avro.errors.AvroException, avro.errors.SchemaParseException):
+            except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
                 self.fail(f"Valid schema failed to parse: {self.test_schema!s}")
             actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
             if self.test_schema.warnings:
@@ -735,12 +729,10 @@ class SchemaParseTestCase(unittest.TestCase):
 
     def parse_invalid(self):
         """Parsing an invalid schema should error."""
-        try:
+        with self.assertRaises(
+            (avro.errors.AvroException, avro.errors.SchemaParseException), msg=f"Invalid schema should not have parsed: {self.test_schema!s}"
+        ):
             self.test_schema.parse()
-        except (avro.errors.AvroException, avro.errors.SchemaParseException):
-            pass
-        else:
-            self.fail(f"Invalid schema should not have parsed: {self.test_schema!s}")
 
 
 class RoundTripParseTestCase(unittest.TestCase):
@@ -824,7 +816,7 @@ class OtherAttributesTestCase(unittest.TestCase):
         sch = self.test_schema.parse()
         try:
             self.assertNotEqual(sch, object(), "A schema is never equal to a non-schema instance.")
-        except AttributeError:
+        except AttributeError:  # pragma: no coverage
             self.fail("Comparing a schema to a non-schema should be False, but not error.")
         round_trip = avro.schema.parse(str(sch))
         self.assertEqual(
@@ -1256,5 +1248,5 @@ def load_tests(loader, default_tests, pattern):
     return suite
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

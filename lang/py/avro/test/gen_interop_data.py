@@ -27,7 +27,7 @@ import avro.io
 import avro.schema
 
 NULL_CODEC = "null"
-CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
+CODECS_TO_VALIDATE = avro.codecs.KNOWN_CODECS.keys()
 
 DATUM = {
     "intField": 12,

@@ -43,8 +43,6 @@ class TestTetherTaskRunner(unittest.TestCase):
         proc = None
         try:
             # launch the server in a separate process
-            env = dict()
-            env["PYTHONPATH"] = ":".join(sys.path)
             parent_port = avro.tether.util.find_port()
 
             pyfile = avro.test.mock_tether_parent.__file__
@@ -59,13 +57,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
             runner.start(outputport=parent_port, join=False)
-            for _ in range(12):
-                if runner.server is not None:
-                    break
-                time.sleep(1)
-            else:
-                raise RuntimeError("Server never started")
-
             # Test sending various messages to the server and ensuring they are processed correctly
             requestor = avro.tether.tether_task.HTTPRequestor(
                 "localhost",
@@ -140,8 +131,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             # shutdown the logging
             logging.shutdown()
 
-        except Exception as e:
-            raise
         finally:
             # close the process
             if not (proc is None):
@@ -158,8 +147,6 @@ class TestTetherTaskRunner(unittest.TestCase):
         runnerproc = None
         try:
             # launch the server in a separate process
-            env = dict()
-            env["PYTHONPATH"] = ":".join(sys.path)
             parent_port = avro.tether.util.find_port()
 
             pyfile = avro.test.mock_tether_parent.__file__
@@ -171,16 +158,13 @@ class TestTetherTaskRunner(unittest.TestCase):
             time.sleep(1)
 
             # start the tether_task_runner in a separate process
-            env = {"AVRO_TETHER_OUTPUT_PORT": f"{parent_port}"}
-            env["PYTHONPATH"] = ":".join(sys.path)
-
             runnerproc = subprocess.Popen(
                 [
                     sys.executable,
                     avro.tether.tether_task_runner.__file__,
                     "avro.test.word_count_task.WordCountTask",
                 ],
-                env=env,
+                env={"AVRO_TETHER_OUTPUT_PORT": f"{parent_port}", "PYTHONPATH": ":".join(sys.path)},
             )
 
             # possible race condition wait for the process to start
@@ -191,8 +175,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             # so we give the subprocess time to start up
             time.sleep(1)
 
-        except Exception as e:
-            raise
         finally:
             # close the process
             if not (runnerproc is None):
@@ -202,5 +184,5 @@ class TestTetherTaskRunner(unittest.TestCase):
                 proc.kill()
 
 
-if __name__ == ("__main__"):
+if __name__ == ("__main__"):  # pragma: no coverage
     unittest.main()

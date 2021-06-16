@@ -70,7 +70,7 @@ _OUT_SCHEMA = """{
 _PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)), os.path.dirname(__file__)])
 
 
-def _has_java():
+def _has_java():  # pragma: no coverage
     """Detect if this system has a usable java installed.
 
     On most systems, this is just checking if `java` is in the PATH.
@@ -177,5 +177,5 @@ class TestTetherWordCount(unittest.TestCase):
         self.assertDictEqual(actual_counts, expected_counts)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

@@ -53,7 +53,7 @@ META_SCHEMA = avro.schema.parse(
 )
 
 NULL_CODEC = "null"
-VALID_CODECS = avro.codecs.supported_codec_names()
+VALID_CODECS = avro.codecs.KNOWN_CODECS.keys()
 VALID_ENCODINGS = ["binary"]  # not used yet
 
 CODEC_KEY = "avro.codec"
