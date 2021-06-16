@@ -30,9 +30,8 @@ import abc
 import binascii
 import io
 import struct
-import sys
 import zlib
-from typing import Collection, Dict, Tuple, Type
+from typing import Dict, Tuple, Type
 
 import avro.errors
 import avro.io
