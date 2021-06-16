@@ -32,6 +32,7 @@ import io
 import struct
 import sys
 import zlib
+from typing import Collection, Dict, Tuple, Type
 
 import avro.errors
 import avro.io
@@ -40,6 +41,11 @@ import avro.io
 # Constants
 #
 STRUCT_CRC32 = struct.Struct(">I")  # big-endian unsigned int
+
+
+def _check_crc32(bytes_: bytes, checksum: bytes) -> None:
+    if binascii.crc32(bytes_) & 0xFFFFFFFF != STRUCT_CRC32.unpack(checksum)[0]:
+        raise avro.errors.AvroException("Checksum failure")
 
 
 try:
@@ -65,8 +71,9 @@ except ImportError:
 class Codec(abc.ABC):
     """Abstract base class for all Avro codec classes."""
 
+    @staticmethod
     @abc.abstractmethod
-    def compress(self, data):
+    def compress(data: bytes) -> Tuple[bytes, int]:
         """Compress the passed data.
 
         :param data: a byte string to be compressed
@@ -76,8 +83,9 @@ class Codec(abc.ABC):
         :return: compressed data and its length
         """
 
+    @staticmethod
     @abc.abstractmethod
-    def decompress(self, readers_decoder):
+    def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         """Read compressed data via the passed BinaryDecoder and decompress it.
 
         :param readers_decoder: a BinaryDecoder object currently being used for
@@ -91,22 +99,26 @@ class Codec(abc.ABC):
 
 
 class NullCodec(Codec):
-    def compress(self, data):
+    @staticmethod
+    def compress(data: bytes) -> Tuple[bytes, int]:
         return data, len(data)
 
-    def decompress(self, readers_decoder):
+    @staticmethod
+    def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         readers_decoder.skip_long()
         return readers_decoder
 
 
 class DeflateCodec(Codec):
-    def compress(self, data):
+    @staticmethod
+    def compress(data: bytes) -> Tuple[bytes, int]:
         # The first two characters and last character are zlib
         # wrappers around deflate data.
         compressed_data = zlib.compress(data)[2:-1]
         return compressed_data, len(compressed_data)
 
-    def decompress(self, readers_decoder):
+    @staticmethod
+    def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
         # Compressed data is stored as (length, data), which
         # corresponds to how the "bytes" type is encoded.
         data = readers_decoder.read_bytes()
@@ -119,11 +131,13 @@ class DeflateCodec(Codec):
 if has_bzip2:
 
     class BZip2Codec(Codec):
-        def compress(self, data):
+        @staticmethod
+        def compress(data: bytes) -> Tuple[bytes, int]:
             compressed_data = bz2.compress(data)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        @staticmethod
+        def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             uncompressed = bz2.decompress(data)
@@ -133,35 +147,34 @@ if has_bzip2:
 if has_snappy:
 
     class SnappyCodec(Codec):
-        def compress(self, data):
+        @staticmethod
+        def compress(data: bytes) -> Tuple[bytes, int]:
             compressed_data = snappy.compress(data)
             # A 4-byte, big-endian CRC32 checksum
             compressed_data += STRUCT_CRC32.pack(binascii.crc32(data) & 0xFFFFFFFF)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        @staticmethod
+        def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             # Compressed data includes a 4-byte CRC32 checksum
             length = readers_decoder.read_long()
             data = readers_decoder.read(length - 4)
             uncompressed = snappy.decompress(data)
             checksum = readers_decoder.read(4)
-            self.check_crc32(uncompressed, checksum)
+            _check_crc32(uncompressed, checksum)
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
-
-        def check_crc32(self, bytes, checksum):
-            checksum = STRUCT_CRC32.unpack(checksum)[0]
-            if binascii.crc32(bytes) & 0xFFFFFFFF != checksum:
-                raise avro.errors.AvroException("Checksum failure")
 
 
 if has_zstandard:
 
     class ZstandardCodec(Codec):
-        def compress(self, data):
+        @staticmethod
+        def compress(data: bytes) -> Tuple[bytes, int]:
             compressed_data = zstd.ZstdCompressor().compress(data)
             return compressed_data, len(compressed_data)
 
-        def decompress(self, readers_decoder):
+        @staticmethod
+        def decompress(readers_decoder: avro.io.BinaryDecoder) -> avro.io.BinaryDecoder:
             length = readers_decoder.read_long()
             data = readers_decoder.read(length)
             uncompressed = bytearray()
@@ -175,27 +188,15 @@ if has_zstandard:
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
-def get_codec(codec_name):
-    codec_name = codec_name.lower()
-    if codec_name == "null":
-        return NullCodec()
-    if codec_name == "deflate":
-        return DeflateCodec()
-    if codec_name == "bzip2" and has_bzip2:
-        return BZip2Codec()
-    if codec_name == "snappy" and has_snappy:
-        return SnappyCodec()
-    if codec_name == "zstandard" and has_zstandard:
-        return ZstandardCodec()
-    raise avro.errors.UnsupportedCodec(f"Unsupported codec: {codec_name}. (Is it installed?)")
+KNOWN_CODECS: Dict[str, Type[Codec]] = {
+    name[:-5].lower(): class_
+    for name, class_ in globals().items()
+    if class_ != Codec and name.endswith("Codec") and isinstance(class_, type) and issubclass(class_, Codec)
+}
 
 
-def supported_codec_names():
-    codec_names = ["null", "deflate"]
-    if has_bzip2:
-        codec_names.append("bzip2")
-    if has_snappy:
-        codec_names.append("snappy")
-    if has_zstandard:
-        codec_names.append("zstandard")
-    return codec_names
+def get_codec(codec_name: str) -> Type[Codec]:
+    try:
+        return KNOWN_CODECS[codec_name]
+    except KeyError:
+        raise avro.errors.UnsupportedCodec(f"Unsupported codec: {codec_name}. (Is it installed?)")
