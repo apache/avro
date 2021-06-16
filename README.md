@@ -1,19 +1,19 @@
 # Apache Avro™
 
-[![Test C](https://github.com/apache/avro/actions/workflows/test-lang-c/badge.svg)][Test C]
-[![Test C#](https://github.com/apache/avro/actions/workflows/test-lang-csharp/badge.svg)][Test C#]
-[![Test C++](https://github.com/apache/avro/actions/workflows/test-lang-c++/badge.svg)][Test C++]
-[![Test Java](https://github.com/apache/avro/actions/workflows/test-lang-java/badge.svg)][Test Java]
-[![Test JavaScript](https://github.com/apache/avro/actions/workflows/test-lang-js/badge.svg)][Test JavaScript]
-[![Test Perl](https://github.com/apache/avro/actions/workflows/test-lang-perl/badge.svg)][Test Perl]
-[![Test Ruby](https://github.com/apache/avro/actions/workflows/test-lang-ruby/badge.svg)][Test Ruby]
-[![Test Python](https://github.com/apache/avro/actions/workflows/test-lang-py/badge.svg)][Test Python]
-[![Test PHP](https://github.com/apache/avro/actions/workflows/test-lang-php/badge.svg)][Test PHP]
+[![Test C](https://github.com/apache/avro/actions/workflows/test-lang-c.yml/badge.svg)][Test C]
+[![Test C#](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml/badge.svg)][Test C#]
+[![Test C++](https://github.com/apache/avro/actions/workflows/test-lang-c++.yml/badge.svg)][Test C++]
+[![Test Java](https://github.com/apache/avro/actions/workflows/test-lang-java.yml/badge.svg)][Test Java]
+[![Test JavaScript](https://github.com/apache/avro/actions/workflows/test-lang-js.yml/badge.svg)][Test JavaScript]
+[![Test Perl](https://github.com/apache/avro/actions/workflows/test-lang-perl.yml/badge.svg)][Test Perl]
+[![Test Ruby](https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml/badge.svg)][Test Ruby]
+[![Test Python](https://github.com/apache/avro/actions/workflows/test-lang-py.yml/badge.svg)][Test Python]
+[![Test PHP](https://github.com/apache/avro/actions/workflows/test-lang-php.yml/badge.svg)][Test PHP]
 
 [![CodeQL C#](https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg)][CodeQL C#]
-[![CodeQL Java](https://github.com/apache/avro/actions/workflows/CodeQL%20Java/badge.svg)][CodeQL Java]
-[![CodeQL JavaScript](https://github.com/apache/avro/actions/workflows/CodeQL%20JavaScript/badge.svg)][CodeQL JavaScript]
-[![CodeQL Python](https://github.com/apache/avro/actions/workflows/CodeQL%20Python/badge.svg)][CodeQL Python]
+[![CodeQL Java](https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg)][CodeQL Java]
+[![CodeQL JavaScript](https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml/badge.svg)][CodeQL JavaScript]
+[![CodeQL Python](https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml/badge.svg)][CodeQL Python]
 
 -----
 
