@@ -1,19 +1,19 @@
 # Apache Avro™
 
-[![Test C](https://github.com/apache/avro/actions/workflows/test-lang-c.yml/badge.svg)][Test C]
-[![Test C#](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml/badge.svg)][Test C#]
-[![Test C++](https://github.com/apache/avro/actions/workflows/test-lang-c++.yml/badge.svg)][Test C++]
-[![Test Java](https://github.com/apache/avro/actions/workflows/test-lang-java.yml/badge.svg)][Test Java]
-[![Test JavaScript](https://github.com/apache/avro/actions/workflows/test-lang-js.yml/badge.svg)][Test JavaScript]
-[![Test Perl](https://github.com/apache/avro/actions/workflows/test-lang-perl.yml/badge.svg)][Test Perl]
-[![Test Ruby](https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml/badge.svg)][Test Ruby]
-[![Test Python](https://github.com/apache/avro/actions/workflows/test-lang-py.yml/badge.svg)][Test Python]
-[![Test PHP](https://github.com/apache/avro/actions/workflows/test-lang-php.yml/badge.svg)][Test PHP]
+[![test c][test c img]][test c]
+[![test c#][test c# img]][test c#]
+[![test c++][test c++ img]][test c++]
+[![test java][test java img]][test java]
+[![test javascript][test javascript img]][test javascript]
+[![test perl][test perl img]][test perl]
+[![test ruby][test ruby img]][test ruby]
+[![test python][test python img]][test python]
+[![test php][test php img]][test php]
 
-[![CodeQL C#](https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg)][CodeQL C#]
-[![CodeQL Java](https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg)][CodeQL Java]
-[![CodeQL JavaScript](https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml/badge.svg)][CodeQL JavaScript]
-[![CodeQL Python](https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml/badge.svg)][CodeQL Python]
+[![codeql c#][codeql c# img]][codeql c#]
+[![codeql java][codeql java img]][codeql java]
+[![codeql javascript][codeql javascript img]][codeql javascript]
+[![codeql python][codeql python img]][codeql python]
 
 -----
 
@@ -27,18 +27,34 @@ To contribute to Avro, please read:
 
   https://cwiki.apache.org/confluence/display/AVRO/How+To+Contribute
 
+<!-- Arranged this way for easy copy-pasting and editor string manipulation -->
 
-[Test C]: https://github.com/apache/avro/actions/workflows/test-lang-c.yml
-[Test C#]: https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml
-[Test C++]: https://github.com/apache/avro/actions/workflows/test-lang-c++.yml
-[Test Java]: https://github.com/apache/avro/actions/workflows/test-lang-java.yml
-[Test JavaScript]: https://github.com/apache/avro/actions/workflows/test-lang-js.yml
-[Test Perl]: https://github.com/apache/avro/actions/workflows/test-lang-perl.yml
-[Test Ruby]: https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml
-[Test Python]: https://github.com/apache/avro/actions/workflows/test-lang-py.yml
-[Test PHP]: https://github.com/apache/avro/actions/workflows/test-lang-php.yml
+[test c]:          https://github.com/apache/avro/actions/workflows/test-lang-c.yml
+[test c#]:         https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml
+[test c++]:        https://github.com/apache/avro/actions/workflows/test-lang-c++.yml
+[test java]:       https://github.com/apache/avro/actions/workflows/test-lang-java.yml
+[test javascript]: https://github.com/apache/avro/actions/workflows/test-lang-js.yml
+[test perl]:       https://github.com/apache/avro/actions/workflows/test-lang-perl.yml
+[test ruby]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml
+[test python]:     https://github.com/apache/avro/actions/workflows/test-lang-py.yml
+[test php]:        https://github.com/apache/avro/actions/workflows/test-lang-php.yml
 
-[CodeQL C#]: https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml
-[CodeQL Java]: https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml
-[CodeQL JavaScript]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml
-[CodeQL Python]: https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml
+[codeql c#]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml
+[codeql java]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml
+[codeql javascript]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml
+[codeql python]:     https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml
+
+[test c img]:          https://github.com/apache/avro/actions/workflows/test-lang-c.yml/badge.svg
+[test c# img]:         https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml/badge.svg
+[test c++ img]:        https://github.com/apache/avro/actions/workflows/test-lang-c++.yml/badge.svg
+[test java img]:       https://github.com/apache/avro/actions/workflows/test-lang-java.yml/badge.svg
+[test javascript img]: https://github.com/apache/avro/actions/workflows/test-lang-js.yml/badge.svg
+[test perl img]:       https://github.com/apache/avro/actions/workflows/test-lang-perl.yml/badge.svg
+[test ruby img]:       https://github.com/apache/avro/actions/workflows/test-lang-ruby.yml/badge.svg
+[test python img]:     https://github.com/apache/avro/actions/workflows/test-lang-py.yml/badge.svg
+[test php img]:        https://github.com/apache/avro/actions/workflows/test-lang-php.yml/badge.svg
+
+[codeql c# img]:         https://github.com/apache/avro/actions/workflows/codeql-csharp-analysis.yml/badge.svg
+[codeql java img]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg
+[codeql javascript img]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml/badge.svg
+[codeql python img]:     https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml/badge.svg
