@@ -129,7 +129,9 @@ class _DataFile(AbstractContextManager):
 class DataFileWriter(_DataFile):
 
     # TODO(hammer): make 'encoder' a metadata property
-    def __init__(self, writer, datum_writer, writers_schema=None, codec=NULL_CODEC):
+    def __init__(
+        self, writer, datum_writer: avro.io.DatumWriter, writers_schema: Optional[avro.schema.Schema] = None, codec: str = NULL_CODEC
+    ) -> None:
         """
         If the schema is not present, presume we're appending.
 
@@ -165,12 +167,25 @@ class DataFileWriter(_DataFile):
             writer.seek(0, 2)
             self._header_written = True
 
-    # read-only properties
-    writer = property(lambda self: self._writer)
-    encoder = property(lambda self: self._encoder)
-    datum_writer = property(lambda self: self._datum_writer)
-    buffer_writer = property(lambda self: self._buffer_writer)
-    buffer_encoder = property(lambda self: self._buffer_encoder)
+    @property
+    def writer(self):
+        return self._writer
+
+    @property
+    def encoder(self):
+        return self._encoder
+
+    @property
+    def datum_writer(self):
+        return self._datum_writer
+
+    @property
+    def buffer_writer(self):
+        return self._buffer_writer
+
+    @property
+    def buffer_encoder(self):
+        return self._buffer_encoder
 
     def _write_header(self):
         header = {"magic": MAGIC, "meta": self.meta, "sync": self.sync_marker}
@@ -271,12 +286,25 @@ class DataFileReader(_DataFile):
     def __iter__(self):
         return self
 
-    # read-only properties
-    reader = property(lambda self: self._reader)
-    raw_decoder = property(lambda self: self._raw_decoder)
-    datum_decoder = property(lambda self: self._datum_decoder)
-    datum_reader = property(lambda self: self._datum_reader)
-    file_length = property(lambda self: self._file_length)
+    @property
+    def reader(self):
+        return self._reader
+
+    @property
+    def raw_decoder(self):
+        return self._raw_decoder
+
+    @property
+    def datum_decoder(self):
+        return self._datum_decoder
+
+    @property
+    def datum_reader(self):
+        return self._datum_reader
+
+    @property
+    def file_length(self):
+        return self._file_length
 
     def determine_file_length(self):
         """
