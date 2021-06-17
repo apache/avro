@@ -19,11 +19,15 @@
 
 """Read/Write Avro File Object Containers."""
 
+import abc
 import io
 import json
 import os
 import random
 import zlib
+from contextlib import AbstractContextManager
+from types import TracebackType
+from typing import MutableMapping, Optional, Type
 
 import avro.codecs
 import avro.errors
@@ -38,7 +42,7 @@ MAGIC = bytes(b"Obj" + bytearray([VERSION]))
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
 SYNC_INTERVAL = 4000 * SYNC_SIZE  # TODO(hammer): make configurable
-META_SCHEMA = avro.schema.parse(
+META_SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
     json.dumps(
         {
             "type": "record",
@@ -64,60 +68,60 @@ SCHEMA_KEY = "avro.schema"
 #
 
 
-class _DataFile:
+class _DataFile(AbstractContextManager):
     """Mixin for methods common to both reading and writing."""
 
     block_count = 0
-    _meta = None
-    _sync_marker = None
+    _meta: Optional[MutableMapping[str, bytes]] = None
+    _sync_marker: int
 
-    def __enter__(self):
-        return self
+    @abc.abstractmethod
+    def close(self) -> None:
+        pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_: Optional[Type[BaseException]], value: Optional[BaseException], traceback: Optional[TracebackType]) -> None:
         # Perform a close if there's no exception
-        if type is None:
+        if type_ is None:
             self.close()
 
-    def get_meta(self, key):
+    def get_meta(self, key: str) -> Optional[bytes]:
         return self.meta.get(key)
 
-    def set_meta(self, key, val):
+    def set_meta(self, key: str, val: bytes) -> None:
         self.meta[key] = val
 
     @property
-    def sync_marker(self):
+    def sync_marker(self) -> int:
         return self._sync_marker
 
     @property
-    def meta(self):
+    def meta(self) -> MutableMapping[str, bytes]:
         """Read-only dictionary of metadata for this datafile."""
         if self._meta is None:
             self._meta = {}
         return self._meta
 
     @property
-    def codec(self):
+    def codec(self) -> str:
         """Meta are stored as bytes, but codec is returned as a string."""
-        try:
-            return self.get_meta(CODEC_KEY).decode()
-        except AttributeError:
-            return "null"
+        codec = self.get_meta(CODEC_KEY)
+        return "null" if codec is None else codec.decode()
 
     @codec.setter
-    def codec(self, value):
+    def codec(self, value: str) -> None:
         """Meta are stored as bytes, but codec is set as a string."""
         if value not in VALID_CODECS:
             raise avro.errors.DataFileException(f"Unknown codec: {value!r}")
         self.set_meta(CODEC_KEY, value.encode())
 
     @property
-    def schema(self):
+    def schema(self) -> str:
         """Meta are stored as bytes, but schema is returned as a string."""
-        return self.get_meta(SCHEMA_KEY).decode()
+        schema_str = self.get_meta(SCHEMA_KEY)
+        return '"null"' if schema_str is None else schema_str.decode()
 
     @schema.setter
-    def schema(self, value):
+    def schema(self, value: str) -> None:
         """Meta are stored as bytes, but schema is set as a string."""
         self.set_meta(SCHEMA_KEY, value.encode())
 
