@@ -20,6 +20,7 @@
 import http.server
 import socket
 import sys
+from typing import Mapping
 
 import avro.errors
 import avro.ipc
@@ -38,7 +39,7 @@ class MockParentResponder(avro.ipc.Responder):
     def __init__(self) -> None:
         super().__init__(avro.tether.tether_task.outputProtocol)
 
-    def invoke(self, message, request) -> None:
+    def invoke(self, message: avro.protocol.Message, request: Mapping[str, str]) -> None:
         response = f"MockParentResponder: Received '{message.name}'"
         responses = {
             "configure": f"{response}': inputPort={request.get('port')}",
@@ -52,7 +53,7 @@ class MockParentResponder(avro.ipc.Responder):
 class MockParentHandler(http.server.BaseHTTPRequestHandler):
     """Create a handler for the parent."""
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         self.responder = MockParentResponder()
         call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
@@ -64,7 +65,8 @@ class MockParentHandler(http.server.BaseHTTPRequestHandler):
         resp_writer.write_framed_message(resp_body)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    global SERVER_ADDRESS
     if len(sys.argv) <= 1:
         raise avro.errors.UsageError("Usage: mock_tether_parent command")
 
@@ -83,3 +85,7 @@ if __name__ == "__main__":
         parent_server = http.server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
         parent_server.allow_reuse_address = True
         parent_server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
