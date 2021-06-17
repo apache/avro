@@ -17,15 +17,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import http.server
 import json
+from typing import Mapping
 
 import avro.ipc
 import avro.protocol
-
-try:
-    import BaseHTTPServer as http_server  # type: ignore
-except ImportError:
-    import http.server as http_server  # type: ignore
 
 MAIL_PROTOCOL_JSON = json.dumps(
     {
@@ -49,18 +46,19 @@ SERVER_ADDRESS = ("localhost", 9090)
 
 
 class MailResponder(avro.ipc.Responder):
-    def __init__(self):
-        avro.ipc.Responder.__init__(self, MAIL_PROTOCOL)
+    def __init__(self) -> None:
+        super().__init__(MAIL_PROTOCOL)
 
-    def invoke(self, message, request):
+    def invoke(self, message: avro.protocol.Message, request: Mapping[str, Mapping[str, str]]) -> str:
         if message.name == "send":
             return f"Sent message to {request['message']['to']} from {request['message']['from']} with body {request['message']['body']}"
         if message.name == "replay":
             return "replay"
+        raise RuntimeError
 
 
-class MailHandler(http_server.BaseHTTPRequestHandler):
-    def do_POST(self):
+class MailHandler(http.server.BaseHTTPRequestHandler):
+    def do_POST(self) -> None:
         self.responder = MailResponder()
         call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
@@ -72,7 +70,11 @@ class MailHandler(http_server.BaseHTTPRequestHandler):
         resp_writer.write_framed_message(resp_body)
 
 
-if __name__ == "__main__":
+def main():
     mail_server = http_server.HTTPServer(SERVER_ADDRESS, MailHandler)
     mail_server.allow_reuse_address = True
     mail_server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

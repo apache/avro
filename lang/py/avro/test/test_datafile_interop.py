@@ -19,35 +19,32 @@
 
 import os
 import unittest
+from pathlib import Path
+from typing import Optional, cast
 
 import avro
 import avro.datafile
 import avro.io
 
-_INTEROP_DATA_DIR = os.path.join(os.path.dirname(avro.__file__), "test", "interop", "data")
+_INTEROP_DATA_DIR = Path(avro.__file__).parent / "test" / "interop" / "data"
 
 
 @unittest.skipUnless(os.path.exists(_INTEROP_DATA_DIR), f"{_INTEROP_DATA_DIR} does not exist")
 class TestDataFileInterop(unittest.TestCase):
-    def test_interop(self):
+    def test_interop(self) -> None:
         """Test Interop"""
-        for f in os.listdir(_INTEROP_DATA_DIR):
-            filename = os.path.join(_INTEROP_DATA_DIR, f)
-            assert os.stat(filename).st_size > 0
-            base_ext = os.path.splitext(os.path.basename(f))[0].split("_", 1)
-            if len(base_ext) < 2 or base_ext[1] in avro.datafile.VALID_CODECS:
-                print(f"READING {f}\n")
-
-                # read data in binary from file
-                datum_reader = avro.io.DatumReader()
-                with open(filename, "rb") as reader:
-                    dfr = avro.datafile.DataFileReader(reader, datum_reader)
-                    i = 0
-                    for i, datum in enumerate(dfr, 1):
-                        assert datum is not None
-                    assert i > 0
-            else:
-                print(f"SKIPPING {f} due to an unsupported codec\n")
+        datum: Optional[object] = None
+        for filename in _INTEROP_DATA_DIR.iterdir():
+            self.assertGreater(os.stat(filename).st_size, 0)
+            base_ext = filename.stem.split("_", 1)
+            if len(base_ext) < 2 or base_ext[1] not in avro.codecs.KNOWN_CODECS:
+                print(f"SKIPPING {filename} due to an unsupported codec\n")
+                continue
+            i = None
+            with self.subTest(filename=filename), avro.datafile.DataFileReader(filename.open("rb"), avro.io.DatumReader()) as dfr:
+                for i, datum in enumerate(cast(avro.datafile.DataFileReader, dfr), 1):
+                    self.assertIsNotNone(datum)
+                self.assertIsNotNone(i)
 
 
 if __name__ == "__main__":

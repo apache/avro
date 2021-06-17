@@ -63,24 +63,6 @@ CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
 
 
-class _DataFileContextManager:
-    """Mixin for making datafiles context managers."""
-
-    __slots__ = ()
-
-    @abc.abstractmethod
-    def close(self) -> None:
-        pass
-
-    def __enter__(self) -> "_DataFileContextManager":
-        return self
-
-    def __exit__(self, type_: Optional[Type[BaseException]], value: Optional[BaseException], traceback: Optional[TracebackType]) -> None:
-        """Perform a close if there's no exception."""
-        if type_ is None:
-            self.close()
-
-
 class _DataFileMetaProperties:
     """Mixin for meta properties."""
 
@@ -102,7 +84,7 @@ class _DataFileMetaProperties:
         return self._meta
 
 
-class _DataFile(_DataFileContextManager, _DataFileMetaProperties):
+class _DataFile(_DataFileMetaProperties):
     """Mixin for methods common to both reading and writing."""
 
     __slots__ = ("block_count", "_sync_marker")
@@ -271,6 +253,14 @@ class DataFileWriter(_DataFile):
         self.flush()
         self.writer.close()
 
+    def __enter__(self) -> "DataFileWriter":
+        return self
+
+    def __exit__(self, type_: Optional[Type[BaseException]], value: Optional[BaseException], traceback: Optional[TracebackType]) -> None:
+        """Perform a close if there's no exception."""
+        if type_ is None:
+            self.close()
+
 
 class DataFileReader(_DataFile):
     """Read files written by DataFileWriter."""
@@ -390,6 +380,14 @@ class DataFileReader(_DataFile):
     def close(self) -> None:
         """Close this reader."""
         self.reader.close()
+
+    def __enter__(self) -> "DataFileReader":
+        return self
+
+    def __exit__(self, type_: Optional[Type[BaseException]], value: Optional[BaseException], traceback: Optional[TracebackType]) -> None:
+        """Perform a close if there's no exception."""
+        if type_ is None:
+            self.close()
 
 
 def generate_sixteen_random_bytes() -> bytes:
