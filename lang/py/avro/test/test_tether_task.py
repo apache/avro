@@ -36,7 +36,7 @@ class TestTetherTask(unittest.TestCase):
     TODO: We should validate the the server response by looking at stdout
     """
 
-    def test_tether_task(self):
+    def test_tether_task(self) -> None:
         """
         Test that the tether_task is working. We run the mock_tether_parent in a separate
         subprocess
@@ -62,6 +62,8 @@ class TestTetherTask(unittest.TestCase):
 
             # ***************************************************************
             # Test the mapper
+            if avro.tether.tether_task.TaskType is None:
+                self.fail()
             task.configure(
                 avro.tether.tether_task.TaskType.MAP,
                 str(task.inschema),
@@ -89,11 +91,10 @@ class TestTetherTask(unittest.TestCase):
             )
 
             # Serialize some data so we can send it to the input function
-            datum = {"key": "word", "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(task.midschema)
-            datum_writer.write(datum, encoder)
+            datum_writer.write({"key": "word", "value": 2}, encoder)
 
             writer.seek(0)
             data = writer.read()

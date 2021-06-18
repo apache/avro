@@ -18,8 +18,8 @@
 # limitations under the License.
 
 import http.server
-import socket
 import sys
+from typing import Mapping
 
 import avro.errors
 import avro.ipc
@@ -38,7 +38,7 @@ class MockParentResponder(avro.ipc.Responder):
     def __init__(self) -> None:
         super().__init__(avro.tether.tether_task.outputProtocol)
 
-    def invoke(self, message, request) -> None:
+    def invoke(self, message: avro.protocol.Message, request: Mapping[str, str]) -> None:
         response = f"MockParentResponder: Received '{message.name}'"
         responses = {
             "configure": f"{response}': inputPort={request.get('port')}",
@@ -52,7 +52,7 @@ class MockParentResponder(avro.ipc.Responder):
 class MockParentHandler(http.server.BaseHTTPRequestHandler):
     """Create a handler for the parent."""
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         self.responder = MockParentResponder()
         call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
@@ -64,22 +64,26 @@ class MockParentHandler(http.server.BaseHTTPRequestHandler):
         resp_writer.write_framed_message(resp_body)
 
 
+def main() -> None:
+    global SERVER_ADDRESS
+
+    if len(sys.argv) != 3 or sys.argv[1].lower() != "start_server":
+        raise avro.errors.UsageError("Usage: mock_tether_parent start_server port")
+
+    try:
+        port = int(sys.argv[2])
+    except ValueError as e:
+        raise avro.errors.UsageError("Usage: mock_tether_parent start_server port") from e
+
+    SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
+    print(f"mock_tether_parent: Launching Server on Port: {SERVER_ADDRESS[1]}")
+
+    # flush the output so it shows up in the parent process
+    sys.stdout.flush()
+    parent_server = http.server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
+    parent_server.allow_reuse_address = True
+    parent_server.serve_forever()
+
+
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        raise avro.errors.UsageError("Usage: mock_tether_parent command")
-
-    cmd = sys.argv[1].lower()
-    if sys.argv[1] == "start_server":
-        if len(sys.argv) == 3:
-            port = int(sys.argv[2])
-        else:
-            raise avro.errors.UsageError("Usage: mock_tether_parent start_server port")
-
-        SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
-        print(f"mock_tether_parent: Launching Server on Port: {SERVER_ADDRESS[1]}")
-
-        # flush the output so it shows up in the parent process
-        sys.stdout.flush()
-        parent_server = http.server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
-        parent_server.allow_reuse_address = True
-        parent_server.serve_forever()
+    main()
