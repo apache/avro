@@ -17,8 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Read/Write Avro File Object Containers."""
+"""
+Read/Write Avro File Object Containers.
 
+https://avro.apache.org/docs/current/spec.html#Object+Container+Files
+"""
 import abc
 import io
 import json
@@ -32,10 +35,8 @@ import avro.codecs
 import avro.errors
 import avro.io
 import avro.schema
+import avro.utils
 
-#
-# Constants
-#
 VERSION = 1
 MAGIC = bytes(b"Obj" + bytearray([VERSION]))
 MAGIC_SIZE = len(MAGIC)
@@ -63,65 +64,80 @@ CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
 
 
-class _DataFileMetaProperties:
-    """Mixin for meta properties."""
+class _DataFileMetadata:
+    """
+    Mixin for meta properties.
+
+    Files may include arbitrary user-specified metadata.
+    File metadata is written as if defined by the following map schema:
+
+    `{"type": "map", "values": "bytes"}`
+
+    All metadata properties that start with "avro." are reserved.
+    The following file metadata properties are currently used:
+
+    - `avro.schema` contains the schema of objects stored in the file, as JSON data (required).
+    - `avro.codec`, the name of the compression codec used to compress blocks, as a string.
+      Implementations are required to support the following codecs: "null" and "deflate".
+      If codec is absent, it is assumed to be "null". See avro.codecs for implementation details.
+    """
 
     __slots__ = ("_meta",)
 
     _meta: MutableMapping[str, bytes]
 
     def get_meta(self, key: str) -> Optional[bytes]:
+        """Get the metadata property at `key`."""
         return self.meta.get(key)
 
     def set_meta(self, key: str, val: bytes) -> None:
+        """Set the metadata property at `key`."""
         self.meta[key] = val
+
+    def del_meta(self, key: str) -> None:
+        """Unset the metadata property at `key`."""
+        del self.meta[key]
 
     @property
     def meta(self) -> MutableMapping[str, bytes]:
-        """Read-only dictionary of metadata for this datafile."""
+        """Get the dictionary of metadata for this datafile."""
         if not hasattr(self, "_meta"):
             self._meta = {}
         return self._meta
 
-
-class _DataFile(_DataFileMetaProperties):
-    """Mixin for methods common to both reading and writing."""
-
-    __slots__ = ("block_count", "_sync_marker")
-
-    block_count: int
-    _sync_marker: bytes
-
     @property
-    def sync_marker(self) -> bytes:
-        return self._sync_marker
+    def schema(self) -> str:
+        """Get the schema of objects stored in the file from the file's metadata."""
+        schema_str = self.get_meta(SCHEMA_KEY)
+        if schema_str:
+            return schema_str.decode()
+        raise avro.errors.DataFileException("Missing required schema metadata.")
+
+    @schema.setter
+    def schema(self, value: str) -> None:
+        """Set the schema of objects stored in the file's metadata."""
+        self.set_meta(SCHEMA_KEY, value.encode())
 
     @property
     def codec(self) -> str:
-        """Meta are stored as bytes, but codec is returned as a string."""
+        """Get the file's compression codec algorithm from the file's metadata."""
         codec = self.get_meta(CODEC_KEY)
         return "null" if codec is None else codec.decode()
 
     @codec.setter
     def codec(self, value: str) -> None:
-        """Meta are stored as bytes, but codec is set as a string."""
+        """Set the file's compression codec algorithm in the file's metadata."""
         if value not in VALID_CODECS:
             raise avro.errors.DataFileException(f"Unknown codec: {value!r}")
         self.set_meta(CODEC_KEY, value.encode())
 
-    @property
-    def schema(self) -> str:
-        """Meta are stored as bytes, but schema is returned as a string."""
-        schema_str = self.get_meta(SCHEMA_KEY)
-        return '"null"' if schema_str is None else schema_str.decode()
-
-    @schema.setter
-    def schema(self, value: str) -> None:
-        """Meta are stored as bytes, but schema is set as a string."""
-        self.set_meta(SCHEMA_KEY, value.encode())
+    @codec.deleter
+    def codec(self) -> None:
+        """Unset the file's compression codec algorithm from the file's metadata."""
+        self.del_meta(CODEC_KEY)
 
 
-class DataFileWriter(_DataFile):
+class DataFileWriter(_DataFileMetadata):
     __slots__ = (
         "_buffer_encoder",
         "_buffer_writer",
@@ -129,6 +145,8 @@ class DataFileWriter(_DataFile):
         "_encoder",
         "_header_written",
         "_writer",
+        "block_count",
+        "sync_marker",
     )
 
     _buffer_encoder: avro.io.BinaryEncoder
@@ -137,6 +155,8 @@ class DataFileWriter(_DataFile):
     _encoder: avro.io.BinaryEncoder
     _header_written: bool
     _writer: BinaryIO
+    block_count: int
+    sync_marker: bytes
 
     def __init__(
         self, writer: BinaryIO, datum_writer: avro.io.DatumWriter, writers_schema: Optional[avro.schema.Schema] = None, codec: str = NULL_CODEC
@@ -156,7 +176,7 @@ class DataFileWriter(_DataFile):
 
             # TODO(hammer): collect arbitrary metadata
             # collect metadata
-            self._sync_marker = dfr.sync_marker
+            self.sync_marker = dfr.sync_marker
             self.codec = dfr.codec
 
             # get schema used to write existing file
@@ -167,7 +187,7 @@ class DataFileWriter(_DataFile):
             writer.seek(0, 2)
             self._header_written = True
             return
-        self._sync_marker = generate_sixteen_random_bytes()
+        self.sync_marker = avro.utils.randbytes(16)
         self.codec = codec
         self.schema = str(writers_schema)
         self.datum_writer.writers_schema = writers_schema
@@ -262,7 +282,7 @@ class DataFileWriter(_DataFile):
             self.close()
 
 
-class DataFileReader(_DataFile):
+class DataFileReader(_DataFileMetadata):
     """Read files written by DataFileWriter."""
 
     __slots__ = (
@@ -271,12 +291,16 @@ class DataFileReader(_DataFile):
         "_file_length",
         "_raw_decoder",
         "_reader",
+        "block_count",
+        "sync_marker",
     )
     _datum_decoder: Optional[avro.io.BinaryDecoder]
     _datum_reader: avro.io.DatumReader
     _file_length: int
     _raw_decoder: avro.io.BinaryDecoder
     _reader: BinaryIO
+    block_count: int
+    sync_marker: bytes
 
     # TODO(hammer): allow user to specify expected schema?
     # TODO(hammer): allow user to specify the encoder
@@ -348,7 +372,7 @@ class DataFileReader(_DataFile):
         self._meta = header["meta"]
 
         # set sync marker
-        self._sync_marker = header["sync"]
+        self.sync_marker = header["sync"]
 
     def _read_block_header(self) -> None:
         self.block_count = self.raw_decoder.read_long()
@@ -361,10 +385,10 @@ class DataFileReader(_DataFile):
         return True. Otherwise, seek back to where we started and return False.
         """
         proposed_sync_marker = self.reader.read(SYNC_SIZE)
-        if proposed_sync_marker != self.sync_marker:
-            self.reader.seek(-SYNC_SIZE, 1)
-            return False
-        return True
+        if proposed_sync_marker == self.sync_marker:
+            return True
+        self.reader.seek(-SYNC_SIZE, 1)
+        return False
 
     def __next__(self) -> object:
         """Return the next datum in the file."""
@@ -388,10 +412,3 @@ class DataFileReader(_DataFile):
         """Perform a close if there's no exception."""
         if type_ is None:
             self.close()
-
-
-def generate_sixteen_random_bytes() -> bytes:
-    try:
-        return os.urandom(16)
-    except NotImplementedError:
-        return bytes(random.randrange(256) for i in range(16))

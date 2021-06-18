@@ -32,6 +32,7 @@ from typing import List, Mapping, Sequence
 import avro.datafile
 import avro.io
 import avro.schema
+import avro.utils
 
 TYPES = ("A", "CNAME")
 SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
@@ -52,15 +53,6 @@ WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
 MAX_WRITE_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
 MAX_READ_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
-
-
-try:  # pragma: no cover
-    randbytes = random.randbytes  # type: ignore
-except AttributeError:  # pragma: no cover
-
-    def randbytes(n: int) -> bytes:
-        """Polyfill for random.randbytes in Python < 3.9"""
-        return bytes(random.choices(range(256), k=n))
 
 
 class TestBench(unittest.TestCase):
@@ -85,7 +77,7 @@ def rand_name() -> str:
 
 
 def rand_ip() -> str:
-    return ".".join(map(str, randbytes(4)))
+    return ".".join(map(str, avro.utils.randbytes(4)))
 
 
 def picks(n) -> Sequence[Mapping[str, str]]:
