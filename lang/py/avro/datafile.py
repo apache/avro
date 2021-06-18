@@ -22,12 +22,8 @@ Read/Write Avro File Object Containers.
 
 https://avro.apache.org/docs/current/spec.html#Object+Container+Files
 """
-import abc
 import io
 import json
-import os
-import random
-import zlib
 from types import TracebackType
 from typing import BinaryIO, MutableMapping, Optional, Type
 
