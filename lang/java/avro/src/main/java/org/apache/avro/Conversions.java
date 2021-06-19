@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -156,9 +157,9 @@ public class Conversions {
       private static final String DOC_STR = "For more information on the duration logical type, please refer to " + DOC_URL;
 
       private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {
-          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE,
-          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE,
-          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE
+          0x0, 0x0, 0x0, 0x0,
+          0x0, 0x0, 0x0, 0x0,
+          0x0, 0x0, 0x0, 0x0
       };
 
       private static byte[] toBytes(int value){
@@ -166,7 +167,7 @@ public class Conversions {
       }
 
       private static int toInt(byte[] bytes) {
-          return ByteBuffer.wrap(bytes).getInt();
+          return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
       }
 
       private static byte[] buildByteArray(int months, int days, int milliSeconds) {
@@ -242,7 +243,7 @@ public class Conversions {
           }
 
           try {
-              milliSeconds = (int) value.toMillis();
+              milliSeconds = (int) value.minus(months * MONTH_DAYS, ChronoUnit.DAYS).minus(days, ChronoUnit.DAYS).toMillis();
           } catch (Throwable e) {
               throw new IllegalArgumentException("The milliseconds part of a duration must fit a 4-byte int, longer duration given. " + DOC_STR, e);
           }
