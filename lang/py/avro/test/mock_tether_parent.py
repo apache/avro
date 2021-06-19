@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import http.server
 import sys
 from typing import Mapping
@@ -64,17 +65,21 @@ class MockParentHandler(http.server.BaseHTTPRequestHandler):
         resp_writer.write_framed_message(resp_body)
 
 
+def _parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments"""
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(required=True, dest="command") if sys.version_info >= (3, 7) else parser.add_subparsers(dest="command")
+    subparser_start_server = subparsers.add_parser("start_server", help="Start the server")
+    subparser_start_server.add_argument("port", type=int)
+    return parser.parse_args()
+
+
 def main() -> None:
     global SERVER_ADDRESS
-
-    if len(sys.argv) != 3 or sys.argv[1].lower() != "start_server":
-        raise avro.errors.UsageError("Usage: mock_tether_parent start_server port")
-
-    try:
-        port = int(sys.argv[2])
-    except ValueError as e:
-        raise avro.errors.UsageError("Usage: mock_tether_parent start_server port") from e
-
+    args = _parse_args()
+    if args.command != "start_server":
+        raise NotImplementedError(f"{args.command} is not a known command")
+    port = args.port
     SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
     print(f"mock_tether_parent: Launching Server on Port: {SERVER_ADDRESS[1]}")
 

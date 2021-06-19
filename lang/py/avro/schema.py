@@ -44,10 +44,10 @@ import datetime
 import decimal
 import json
 import math
-import sys
 import uuid
 import warnings
-from typing import Mapping, MutableMapping, Optional, Sequence, cast
+from pathlib import Path
+from typing import Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
@@ -1189,27 +1189,22 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
     raise avro.errors.SchemaParseException(fail_msg)
 
 
-# TODO(hammer): make method for reading from a file?
-
-
-def parse(json_string, validate_enum_symbols=True):
+def parse(json_string: str, validate_enum_symbols: bool = True) -> Schema:
     """Constructs the Schema from the JSON text.
 
     @arg json_string: The json string of the schema to parse
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
     @return Schema
     """
-    # parse the JSON
     try:
         json_data = json.loads(json_string)
-    except Exception as e:
-        msg = f"Error parsing JSON: {json_string}, error = {e}"
-        new_exception = avro.errors.SchemaParseException(msg)
-        traceback = sys.exc_info()[2]
-        raise new_exception.with_traceback(traceback)
+    except json.decoder.JSONDecodeError as e:
+        raise avro.errors.SchemaParseException(f"Error parsing JSON: {json_string}, error = {e}") from e
+    return make_avsc_object(json_data, Names(), validate_enum_symbols)
 
-    # Initialize the names object
-    names = Names()
 
-    # construct the Avro Schema object
-    return make_avsc_object(json_data, names, validate_enum_symbols)
+def from_path(path: Union[Path, str], validate_enum_symbols: bool = True) -> Schema:
+    """
+    Constructs the Schema from a path to an avsc (json) file.
+    """
+    return parse(Path(path).read_text(), validate_enum_symbols)
