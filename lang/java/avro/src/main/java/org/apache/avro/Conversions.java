@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Duration;
 
 public class Conversions {
 
@@ -144,6 +145,113 @@ public class Conversions {
 
       return value;
     }
+  }
+
+  public static class DurationConversion extends Conversion<Duration> {
+
+      private static final int MONTH_DAYS = 30;
+      private static final int GRANULARITY_BYTES = 4;
+      private static final String DOC_URL = "http://avro.apache.org/docs/current/spec.html#Duration";
+      private static final String DOC_STR = "For more information on the duration logical type, please refer to " + DOC_URL;
+
+      private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {
+          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE,
+          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE,
+          Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE, Byte.MIN_VALUE
+      };
+
+      private static byte[] toBytes(int value){
+          return ByteBuffer.allocate(GRANULARITY_BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
+      }
+
+      private static int toInt(byte[] bytes) {
+          return ByteBuffer.wrap(bytes).getInt();
+      }
+
+      private static byte[] buildByteArray(int months, int days, int milliSeconds) {
+          byte[] monthBytes = toBytes(months);
+          byte[] dayBytes = toBytes(days);
+          byte[] milliSecondBytes = toBytes(milliSeconds);
+
+          return ByteBuffer
+                  .allocate(monthBytes.length + dayBytes.length + milliSecondBytes.length)
+                  .put(monthBytes)
+                  .put(dayBytes)
+                  .put(milliSecondBytes)
+                  .array();
+      }
+
+      @Override
+      public Class<Duration> getConvertedType() {
+          return Duration.class;
+      }
+
+      @Override
+      public String getLogicalTypeName() {
+          return "duration";
+      }
+
+      @Override
+      public Duration fromFixed(GenericFixed value, Schema schema, LogicalType type) {
+          byte[] payload = value.bytes();
+          int payloadLength = payload.length;
+
+          if (payloadLength != GRANULARITY_BYTES * 3) {
+              throw new IllegalArgumentException("Duration must be stored on a 12-byte long value, but " + payloadLength + " bytes given. " + DOC_STR);
+          }
+
+          if (Arrays.equals(payload, EMPTY_BYTE_ARRAY)) {
+              return Duration.ZERO;
+          }
+
+          byte[] monthBytes = new byte[]{ payload[0], payload[1], payload[2], payload[3] };
+          byte[] dayBytes = new byte[]{ payload[4], payload[5], payload[6], payload[7] };
+          byte[] milliSecondBytes = new byte[]{ payload[8], payload[9], payload[10], payload[11] };
+
+          int months = toInt(monthBytes);
+          int days = toInt(dayBytes);
+          int milliSeconds = toInt(milliSecondBytes);
+
+          return Duration.ofDays((long) months * MONTH_DAYS + days).plusMillis(milliSeconds);
+      }
+
+      @Override
+      public GenericFixed toFixed(Duration value, Schema schema, LogicalType type) {
+
+          if (value.isZero()) {
+              return new GenericData.Fixed(schema, EMPTY_BYTE_ARRAY);
+          }
+
+          long totalDays = value.toDays();
+
+          int months = 0;
+          int days = 0;
+          int milliSeconds = 0;
+
+          try {
+              months = (int) (totalDays / MONTH_DAYS);
+          } catch (Throwable e) {
+              throw new IllegalArgumentException("The months part of a duration must fit a 4-byte int, longer duration given. " + DOC_STR, e);
+          }
+
+          try {
+              days = (int) (totalDays % MONTH_DAYS);
+          } catch (Throwable e) {
+              throw new IllegalArgumentException("The days part of a duration must fit a 4-byte int, longer duration given. " + DOC_STR, e);
+          }
+
+          try {
+              milliSeconds = (int) value.toMillis();
+          } catch (Throwable e) {
+              throw new IllegalArgumentException("The milliseconds part of a duration must fit a 4-byte int, longer duration given. " + DOC_STR, e);
+          }
+
+          // TODO adjust millis with nano
+
+          byte[] result = buildByteArray(months, days, milliSeconds);
+
+          return new GenericData.Fixed(schema, result);
+      }
   }
 
   /**

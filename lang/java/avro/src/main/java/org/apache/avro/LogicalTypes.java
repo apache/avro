@@ -102,6 +102,9 @@ public class LogicalTypes {
       case LOCAL_TIMESTAMP_MILLIS:
         logicalType = LOCAL_TIMESTAMP_MILLIS_TYPE;
         break;
+      case DURATION:
+        logicalType = DURATION_TYPE;
+        break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
         logicalType = (typeFactory == null) ? null : typeFactory.fromSchema(schema);
@@ -134,6 +137,7 @@ public class LogicalTypes {
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
   private static final String LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis";
   private static final String LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros";
+  private static final String DURATION = "duration";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
   public static Decimal decimal(int precision) {
@@ -192,6 +196,13 @@ public class LogicalTypes {
   public static LocalTimestampMicros localTimestampMicros() {
     return LOCAL_TIMESTAMP_MICROS_TYPE;
   }
+
+  private static final Duration DURATION_TYPE = new Duration();
+
+  public static Duration duration() {
+    return DURATION_TYPE;
+  }
+
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers */
   public static class Decimal extends LogicalType {
@@ -406,6 +417,52 @@ public class LogicalTypes {
       super.validate(schema);
       if (schema.getType() != Schema.Type.LONG) {
         throw new IllegalArgumentException("Local timestamp (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+
+  /** TimeMicros represents a time in microseconds without a date */
+  public static class TimeMicros extends LogicalType {
+    private TimeMicros() {
+      super(TIME_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Time (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  /** TimestampMillis represents a date and time in milliseconds */
+  public static class TimestampMillis extends LogicalType {
+    private TimestampMillis() {
+      super(TIMESTAMP_MILLIS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Timestamp (millis) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  /** Duration represents an amount of time defined by a number of months, days and milliseconds */
+  public static class Duration extends LogicalType {
+    private Duration() {
+      super(DURATION);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.FIXED || schema.getSize() != 12) {
+        throw new IllegalArgumentException("Duration can only be used with an underlying fixed type of size 12");
       }
     }
   }
