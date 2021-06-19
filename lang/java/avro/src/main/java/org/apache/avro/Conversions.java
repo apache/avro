@@ -156,11 +156,7 @@ public class Conversions {
       private static final String DOC_URL = "http://avro.apache.org/docs/current/spec.html#Duration";
       private static final String DOC_STR = "For more information on the duration logical type, please refer to " + DOC_URL;
 
-      private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {
-          0x0, 0x0, 0x0, 0x0,
-          0x0, 0x0, 0x0, 0x0,
-          0x0, 0x0, 0x0, 0x0
-      };
+      private static final byte[] EMPTY_BYTE_ARRAY = new byte[12];
 
       private static byte[] toBytes(int value){
           return ByteBuffer.allocate(GRANULARITY_BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
@@ -226,9 +222,9 @@ public class Conversions {
 
           long totalDays = value.toDays();
 
-          int months = 0;
-          int days = 0;
-          int milliSeconds = 0;
+          int months;
+          int days;
+          int milliSeconds;
 
           try {
               months = (int) (totalDays / MONTH_DAYS);
@@ -243,12 +239,14 @@ public class Conversions {
           }
 
           try {
-              milliSeconds = (int) value.minus(months * MONTH_DAYS, ChronoUnit.DAYS).minus(days, ChronoUnit.DAYS).toMillis();
+              milliSeconds = (int) value.minus(totalDays, ChronoUnit.DAYS).toMillis();
           } catch (Throwable e) {
               throw new IllegalArgumentException("The milliseconds part of a duration must fit a 4-byte int, longer duration given. " + DOC_STR, e);
           }
 
-          // TODO adjust millis with nano
+          if (value.getNano() - milliSeconds * 1_000_000 > 0) {
+            milliSeconds += 1;
+          }
 
           byte[] result = buildByteArray(months, days, milliSeconds);
 

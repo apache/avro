@@ -32,6 +32,10 @@ import java.util.Arrays;
 import static java.math.RoundingMode.HALF_EVEN;
 import static org.junit.Assert.*;
 
+/*
+ *  TODO test for negative duration
+ *  TODO test for empty byte array (0 duration)
+ */
 public class TestDurationConversion {
 
   private static final Conversion<Duration> CONVERSION = new Conversions.DurationConversion();
@@ -124,6 +128,23 @@ public class TestDurationConversion {
       0x0, 0x0, 0x0, 0x0,
       0x0, 0x0, 0x0, 0x0,
       -0x38, 0x0, 0x0, 0x0
+    };
+
+    final GenericFixed fixed = CONVERSION.toFixed(durationValue, schema, duration);
+
+    assertArrayEquals(bytes, fixed.bytes());
+  }
+
+  @Test
+  public void testConvertingMillisecondsWithNanosecondAdjustmentToBytes() {
+    LogicalTypes.Duration duration = (LogicalTypes.Duration) logicalType;
+
+    final Duration durationValue = Duration.ofMillis(200).plusNanos(10);
+
+    final byte[] bytes = new byte[]{
+      0x0, 0x0, 0x0, 0x0,
+      0x0, 0x0, 0x0, 0x0,
+      -0x37, 0x0, 0x0, 0x0
     };
 
     final GenericFixed fixed = CONVERSION.toFixed(durationValue, schema, duration);
