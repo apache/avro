@@ -421,37 +421,6 @@ public class LogicalTypes {
     }
   }
 
-
-  /** TimeMicros represents a time in microseconds without a date */
-  public static class TimeMicros extends LogicalType {
-    private TimeMicros() {
-      super(TIME_MICROS);
-    }
-
-    @Override
-    public void validate(Schema schema) {
-      super.validate(schema);
-      if (schema.getType() != Schema.Type.LONG) {
-        throw new IllegalArgumentException("Time (micros) can only be used with an underlying long type");
-      }
-    }
-  }
-
-  /** TimestampMillis represents a date and time in milliseconds */
-  public static class TimestampMillis extends LogicalType {
-    private TimestampMillis() {
-      super(TIMESTAMP_MILLIS);
-    }
-
-    @Override
-    public void validate(Schema schema) {
-      super.validate(schema);
-      if (schema.getType() != Schema.Type.LONG) {
-        throw new IllegalArgumentException("Timestamp (millis) can only be used with an underlying long type");
-      }
-    }
-  }
-
   /** Duration represents an amount of time defined by a number of months, days and milliseconds */
   public static class Duration extends LogicalType {
     private Duration() {
@@ -461,7 +430,7 @@ public class LogicalTypes {
     @Override
     public void validate(Schema schema) {
       super.validate(schema);
-      if (schema.getType() != Schema.Type.FIXED || schema.getSize() != 12) {
+      if (schema.getType() != Schema.Type.FIXED || schema.getFixedSize() != 12) {
         throw new IllegalArgumentException("Duration can only be used with an underlying fixed type of size 12");
       }
     }

@@ -226,6 +226,34 @@ public class TestLogicalType {
     assertEqualsFalse("Different logical type", schema1, schema3);
   }
 
+  @Test
+  public void testDurationFromSchema() {
+    Schema schema = Schema.createFixed("aFixed", null, null, 12);
+    schema.addProp("logicalType", "duration");
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(schema);
+
+    Assert.assertTrue("Should be a Duration", logicalType instanceof LogicalTypes.Duration);
+  }
+
+  @Test
+  public void testDurationValidation() {
+    assertThrows("Should reject too short type", IllegalArgumentException.class,
+    "Duration can only be used with an underlying fixed type of size 12", () -> {
+        LogicalTypes.duration().addToSchema(
+          Schema.createFixed("aFixed", null, null, 11)
+        );
+      return null;
+    });
+
+    assertThrows("Should reject too long type", IllegalArgumentException.class,
+      "Duration can only be used with an underlying fixed type of size 12", () -> {
+        LogicalTypes.duration().addToSchema(
+          Schema.createFixed("anotherFixed", null, null, 13)
+        );
+        return null;
+      });
+  }
+
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
     Assert.assertTrue("Should be equal (forward): " + message, o1.equals(o2));
     Assert.assertTrue("Should be equal (reverse): " + message, o2.equals(o1));
