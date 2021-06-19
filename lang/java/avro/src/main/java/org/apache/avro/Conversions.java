@@ -216,7 +216,7 @@ public class Conversions {
       @Override
       public GenericFixed toFixed(Duration value, Schema schema, LogicalType type) {
 
-          if (value.isZero()) {
+          if (value == null || value.isZero()) {
               return new GenericData.Fixed(schema, EMPTY_BYTE_ARRAY);
           }
 
