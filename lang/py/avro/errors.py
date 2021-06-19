@@ -56,7 +56,11 @@ class AvroTypeException(AvroException):
             expected_schema, datum = args[:2]
         except (IndexError, ValueError):
             return super().__init__(*args)
-        return super().__init__(f"The datum {datum} is not an example of the schema {_safe_pretty(expected_schema)}")
+        return super().__init__(f"The datum {datum} of the type {type(datum)} is not an example of the schema {_safe_pretty(expected_schema)}")
+
+
+class InvalidDefaultException(AvroTypeException):
+    """Raised when a default value isn't a suitable type for the schema."""
 
 
 class AvroOutOfScaleException(AvroTypeException):
@@ -79,6 +83,10 @@ class SchemaResolutionException(AvroException):
 
 class DataFileException(AvroException):
     """Raised when there's a problem reading or writing file object containers."""
+
+
+class IONotReadyException(AvroException):
+    """Raised when attempting an avro operation on an io object that isn't fully initialized."""
 
 
 class AvroRemoteException(AvroException):

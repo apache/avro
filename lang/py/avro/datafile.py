@@ -25,13 +25,13 @@ https://avro.apache.org/docs/current/spec.html#Object+Container+Files
 import io
 import json
 from types import TracebackType
-from typing import BinaryIO, MutableMapping, Optional, Type
+from typing import BinaryIO, MutableMapping, Optional, Type, cast
 
 import avro.codecs
 import avro.errors
 import avro.io
 import avro.schema
-import avro.utils
+from avro.utils import TypedDict, randbytes
 
 VERSION = 1
 MAGIC = bytes(b"Obj" + bytearray([VERSION]))
@@ -58,6 +58,12 @@ VALID_ENCODINGS = ["binary"]  # not used yet
 
 CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
+
+
+class HeaderType(TypedDict):
+    magic: bytes
+    meta: MutableMapping[str, bytes]
+    sync: bytes
 
 
 class _DataFileMetadata:
@@ -183,7 +189,7 @@ class DataFileWriter(_DataFileMetadata):
             writer.seek(0, 2)
             self._header_written = True
             return
-        self.sync_marker = avro.utils.randbytes(16)
+        self.sync_marker = randbytes(16)
         self.codec = codec
         self.schema = str(writers_schema)
         self.datum_writer.writers_schema = writers_schema
@@ -358,16 +364,10 @@ class DataFileReader(_DataFileMetadata):
         self.reader.seek(0, 0)
 
         # read header into a dict
-        header = self.datum_reader.read_data(META_SCHEMA, META_SCHEMA, self.raw_decoder)
-
-        # check magic number
+        header = cast(HeaderType, self.datum_reader.read_data(META_SCHEMA, META_SCHEMA, self.raw_decoder))
         if header.get("magic") != MAGIC:
             raise avro.errors.AvroException(f"Not an Avro data file: {header.get('magic')!r} doesn't match {MAGIC!r}.")
-
-        # set metadata
         self._meta = header["meta"]
-
-        # set sync marker
         self.sync_marker = header["sync"]
 
     def _read_block_header(self) -> None:
@@ -393,6 +393,8 @@ class DataFileReader(_DataFileMetadata):
                 raise StopIteration
             self._read_block_header()
 
+        if self.datum_decoder is None:
+            raise avro.errors.DataFileException("DataFile is not ready to read because it has no decoder")
         datum = self.datum_reader.read(self.datum_decoder)
         self.block_count -= 1
         return datum

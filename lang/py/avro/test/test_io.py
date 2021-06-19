@@ -25,10 +25,17 @@ import itertools
 import json
 import unittest
 import warnings
+from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
 
 import avro.io
 import avro.schema
 import avro.timezones
+from avro.utils import TypedDict
+
+
+class DefaultValueTestCaseType(TypedDict):
+    H: object
+
 
 SCHEMAS_TO_VALIDATE = tuple(
     (json.dumps(schema), datum)
@@ -212,7 +219,7 @@ LONG_RECORD_SCHEMA = avro.schema.parse(
 LONG_RECORD_DATUM = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7}
 
 
-def avro_hexlify(reader):
+def avro_hexlify(reader: BinaryIO) -> bytes:
     """Return the hex value, as a string, of a binary-encoded int or long."""
     b = []
     current_byte = reader.read(1)
@@ -223,7 +230,7 @@ def avro_hexlify(reader):
     return b" ".join(b)
 
 
-def write_datum(datum, writers_schema):
+def write_datum(datum: object, writers_schema: avro.schema.Schema) -> Tuple[io.BytesIO, avro.io.BinaryEncoder, avro.io.DatumWriter]:
     writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(writer)
     datum_writer = avro.io.DatumWriter(writers_schema)
@@ -231,7 +238,7 @@ def write_datum(datum, writers_schema):
     return writer, encoder, datum_writer
 
 
-def read_datum(buffer, writers_schema, readers_schema=None):
+def read_datum(buffer: io.BytesIO, writers_schema: avro.schema.Schema, readers_schema: Optional[avro.schema.Schema] = None) -> object:
     reader = io.BytesIO(buffer.getvalue())
     decoder = avro.io.BinaryDecoder(reader)
     datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
@@ -239,7 +246,7 @@ def read_datum(buffer, writers_schema, readers_schema=None):
 
 
 class IoValidateTestCase(unittest.TestCase):
-    def __init__(self, test_schema, test_datum):
+    def __init__(self, test_schema: str, test_datum: object) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -251,7 +258,7 @@ class IoValidateTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def io_valid(self):
+    def io_valid(self) -> None:
         """
         In these cases, the provided data should be valid with the given schema.
         """
@@ -263,7 +270,7 @@ class IoValidateTestCase(unittest.TestCase):
 
 
 class RoundTripTestCase(unittest.TestCase):
-    def __init__(self, test_schema, test_datum):
+    def __init__(self, test_schema: str, test_datum: object) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -275,37 +282,38 @@ class RoundTripTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def io_round_trip(self):
+    def io_round_trip(self) -> None:
         """
         A datum should be the same after being encoded and then decoded.
         """
         with warnings.catch_warnings(record=True) as actual_warnings:
             writer, encoder, datum_writer = write_datum(self.test_datum, self.test_schema)
             round_trip_datum = read_datum(writer, self.test_schema)
-            expected, round_trip, message = (
-                (
+            expected: object
+            round_trip: object
+            if isinstance(round_trip_datum, decimal.Decimal):
+                expected, round_trip, message = (
                     str(self.test_datum),
                     round_trip_datum.to_eng_string(),
                     "Decimal datum changed value after encode and decode",
                 )
-                if isinstance(round_trip_datum, decimal.Decimal)
-                else (
-                    self.test_datum.astimezone(tz=avro.timezones.utc),
+            elif isinstance(round_trip_datum, datetime.datetime):
+                expected, round_trip, message = (
+                    cast(datetime.datetime, self.test_datum).astimezone(tz=avro.timezones.utc),
                     round_trip_datum,
                     "DateTime datum changed value after encode and decode",
                 )
-                if isinstance(round_trip_datum, datetime.datetime)
-                else (
+            else:
+                expected, round_trip, message = (
                     self.test_datum,
                     round_trip_datum,
                     "Datum changed value after encode and decode",
                 )
-            )
             self.assertEqual(expected, round_trip, message)
 
 
 class BinaryEncodingTestCase(unittest.TestCase):
-    def __init__(self, skip, test_type, test_datum, test_hex):
+    def __init__(self, skip: bool, test_type: str, test_datum: object, test_hex: bytes) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -318,7 +326,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def check_binary_encoding(self):
+    def check_binary_encoding(self) -> None:
         with warnings.catch_warnings(record=True) as actual_warnings:
             writer, encoder, datum_writer = write_datum(self.test_datum, self.writers_schema)
             writer.seek(0)
@@ -329,7 +337,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
                 "Binary encoding did not match expected hex representation.",
             )
 
-    def check_skip_encoding(self):
+    def check_skip_encoding(self) -> None:
         VALUE_TO_READ = 6253
         with warnings.catch_warnings(record=True) as actual_warnings:
             # write the value to skip and a known value
@@ -353,7 +361,7 @@ class BinaryEncodingTestCase(unittest.TestCase):
 
 
 class SchemaPromotionTestCase(unittest.TestCase):
-    def __init__(self, write_type, read_type):
+    def __init__(self, write_type: str, read_type: str) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -365,7 +373,7 @@ class SchemaPromotionTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def check_schema_promotion(self):
+    def check_schema_promotion(self) -> None:
         """Test schema promotion"""
         # note that checking writers_schema.type in read_data
         # allows us to handle promotion correctly
@@ -381,7 +389,7 @@ class SchemaPromotionTestCase(unittest.TestCase):
 
 
 class DefaultValueTestCase(unittest.TestCase):
-    def __init__(self, field_type, default):
+    def __init__(self, field_type: Collection[str], default: Union[Dict[str, int], List[int], None, float, str]) -> None:
         """Ignore the normal signature for unittest.TestCase because we are generating
         many test cases from this one class. This is safe as long as the autoloader
         ignores this class. The autoloader will ignore this class as long as it has
@@ -393,9 +401,10 @@ class DefaultValueTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def check_default_value(self):
+    def check_default_value(self) -> None:
+        datum_read: DefaultValueTestCaseType
         with warnings.catch_warnings(record=True) as actual_warnings:
-            datum_to_read = {"H": self.default}
+            datum_to_read = cast(DefaultValueTestCaseType, {"H": self.default})
             readers_schema = avro.schema.parse(
                 json.dumps(
                     {
@@ -412,12 +421,13 @@ class DefaultValueTestCase(unittest.TestCase):
                 )
             )
             writer, _, _ = write_datum(LONG_RECORD_DATUM, LONG_RECORD_SCHEMA)
-            datum_read = read_datum(writer, LONG_RECORD_SCHEMA, readers_schema)
+            datum_read_ = cast(DefaultValueTestCaseType, read_datum(writer, LONG_RECORD_SCHEMA, readers_schema))
+            datum_read = {"H": cast(bytes, datum_read_["H"]).decode()} if isinstance(datum_read_["H"], bytes) else datum_read_
             self.assertEqual(datum_to_read, datum_read)
 
 
 class TestMisc(unittest.TestCase):
-    def test_decimal_bytes_small_scale(self):
+    def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
@@ -434,7 +444,7 @@ class TestMisc(unittest.TestCase):
         )
         self.assertRaises(avro.errors.AvroOutOfScaleException, write_datum, datum, schema)
 
-    def test_decimal_fixed_small_scale(self):
+    def test_decimal_fixed_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
@@ -453,7 +463,7 @@ class TestMisc(unittest.TestCase):
         )
         self.assertRaises(avro.errors.AvroOutOfScaleException, write_datum, datum, schema)
 
-    def test_unknown_symbol(self):
+    def test_unknown_symbol(self) -> None:
         datum_to_write = "FOO"
         writers_schema = avro.schema.parse(json.dumps({"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]}))
         readers_schema = avro.schema.parse(json.dumps({"type": "enum", "name": "Test", "symbols": ["BAR", "BAZ"]}))
@@ -464,7 +474,7 @@ class TestMisc(unittest.TestCase):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
-    def test_no_default_value(self):
+    def test_no_default_value(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
@@ -484,7 +494,7 @@ class TestMisc(unittest.TestCase):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
-    def test_projection(self):
+    def test_projection(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
@@ -506,7 +516,7 @@ class TestMisc(unittest.TestCase):
         datum_read = read_datum(writer, writers_schema, readers_schema)
         self.assertEqual(datum_to_read, datum_read)
 
-    def test_field_order(self):
+    def test_field_order(self) -> None:
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
@@ -528,7 +538,7 @@ class TestMisc(unittest.TestCase):
         datum_read = read_datum(writer, writers_schema, readers_schema)
         self.assertEqual(datum_to_read, datum_read)
 
-    def test_type_exception(self):
+    def test_type_exception(self) -> None:
         writers_schema = avro.schema.parse(
             json.dumps(
                 {
@@ -545,7 +555,7 @@ class TestMisc(unittest.TestCase):
         self.assertRaises(avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema)
 
 
-def load_tests(loader, default_tests, pattern):
+def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
     """Generate test cases across many test schema."""
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(TestMisc))
