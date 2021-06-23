@@ -32,7 +32,7 @@ from typing import List, Mapping, Sequence
 import avro.datafile
 import avro.io
 import avro.schema
-import avro.utils
+from avro.utils import randbytes
 
 TYPES = ("A", "CNAME")
 SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
@@ -77,7 +77,7 @@ def rand_name() -> str:
 
 
 def rand_ip() -> str:
-    return ".".join(map(str, avro.utils.randbytes(4)))
+    return ".".join(map(str, randbytes(4)))
 
 
 def picks(n) -> Sequence[Mapping[str, str]]:

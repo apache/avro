@@ -554,14 +554,14 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 class EnumSchema(EqualByPropsMixin, NamedSchema):
     def __init__(
         self,
-        name,
-        namespace,
-        symbols,
-        names=None,
-        doc=None,
-        other_props=None,
-        validate_enum_symbols=True,
-    ):
+        name: str,
+        namespace: str,
+        symbols: Sequence[str],
+        names: Optional[avro.name.Names] = None,
+        doc: Optional[str] = None,
+        other_props: Optional[Mapping[str, object]] = None,
+        validate_enum_symbols: bool = True,
+    ) -> None:
         """
         @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
         """
@@ -573,8 +573,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
                     raise avro.errors.InvalidName("An enum symbol must be a valid schema name.")
 
         if len(set(symbols)) < len(symbols):
-            fail_msg = f"Duplicate symbol: {symbols}"
-            raise avro.errors.AvroException(fail_msg)
+            raise avro.errors.AvroException(f"Duplicate symbol: {symbols}")
 
         # Call parent ctor
         NamedSchema.__init__(self, "enum", name, namespace, names, other_props)
@@ -584,8 +583,13 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         if doc is not None:
             self.set_prop("doc", doc)
 
-    # read-only properties
-    symbols = property(lambda self: self.get_prop("symbols"))
+    @property
+    def symbols(self) -> Sequence[str]:
+        symbols = self.get_prop("symbols")
+        if isinstance(symbols, Sequence):
+            return symbols
+        raise Exception
+
     doc = property(lambda self: self.get_prop("doc"))
 
     def match(self, writer):
@@ -1108,19 +1112,21 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
     # JSON object (non-union)
     if callable(getattr(json_data, "get", None)):
         json_data = cast(Mapping, json_data)
-        type = json_data.get("type")
+        type_ = json_data.get("type")
         other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
         logical_type = json_data.get("logicalType")
 
         if logical_type:
-            logical_schema = make_logical_schema(logical_type, type, other_props or {})
+            logical_schema = make_logical_schema(logical_type, type_, other_props or {})
             if logical_schema is not None:
                 return cast(Schema, logical_schema)
 
-        if type in NAMED_TYPES:
+        if type_ in NAMED_TYPES:
             name = json_data.get("name")
+            if not isinstance(name, str):
+                raise avro.errors.SchemaParseException(f"Name {name} must be a string, but it is {type(name)}.")
             namespace = json_data.get("namespace", names.default_namespace)
-            if type == "fixed":
+            if type_ == "fixed":
                 size = json_data.get("size")
                 if logical_type == "decimal":
                     precision = json_data.get("precision")
@@ -1130,8 +1136,13 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                     except avro.errors.IgnoredLogicalType as warning:
                         warnings.warn(warning)
                 return FixedSchema(name, namespace, size, names, other_props)
-            elif type == "enum":
+            elif type_ == "enum":
                 symbols = json_data.get("symbols")
+                if not isinstance(symbols, Sequence):
+                    raise avro.errors.SchemaParseException(f"Enum symbols must be a sequence of strings, but it is {type(symbols)}")
+                for symbol in symbols:
+                    if not isinstance(symbol, str):
+                        raise avro.errors.SchemaParseException(f"Enum symbols must be a sequence of strings, but one symbol is a {type(symbol)}")
                 doc = json_data.get("doc")
                 return EnumSchema(
                     name,
@@ -1142,32 +1153,31 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                     other_props,
                     validate_enum_symbols,
                 )
-            elif type in ["record", "error"]:
+            if type_ in ["record", "error"]:
                 fields = json_data.get("fields")
                 doc = json_data.get("doc")
-                return RecordSchema(name, namespace, fields, names, type, doc, other_props)
-            else:
-                raise avro.errors.SchemaParseException(f"Unknown Named Type: {type}")
+                return RecordSchema(name, namespace, fields, names, type_, doc, other_props)
+            raise avro.errors.SchemaParseException(f"Unknown Named Type: {type_}")
 
-        if type in PRIMITIVE_TYPES:
-            return PrimitiveSchema(type, other_props)
+        if type_ in PRIMITIVE_TYPES:
+            return PrimitiveSchema(type_, other_props)
 
-        if type in VALID_TYPES:
-            if type == "array":
+        if type_ in VALID_TYPES:
+            if type_ == "array":
                 items = json_data.get("items")
                 return ArraySchema(items, names, other_props)
-            elif type == "map":
+            elif type_ == "map":
                 values = json_data.get("values")
                 return MapSchema(values, names, other_props)
-            elif type == "error_union":
+            elif type_ == "error_union":
                 declared_errors = json_data.get("declared_errors")
                 return ErrorUnionSchema(declared_errors, names)
             else:
-                raise avro.errors.SchemaParseException(f"Unknown Valid Type: {type}")
-        elif type is None:
+                raise avro.errors.SchemaParseException(f"Unknown Valid Type: {type_}")
+        elif type_ is None:
             raise avro.errors.SchemaParseException(f'No "type" property: {json_data}')
         else:
-            raise avro.errors.SchemaParseException(f"Undefined type: {type}")
+            raise avro.errors.SchemaParseException(f"Undefined type: {type_}")
     # JSON array (union)
     elif isinstance(json_data, list):
         return UnionSchema(json_data, names)

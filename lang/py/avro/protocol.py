@@ -25,20 +25,15 @@ https://avro.apache.org/docs/current/spec.html#Protocol+Declaration
 
 import hashlib
 import json
-import sys
 from typing import Mapping, Optional, Sequence, Union, cast
 
 import avro.errors
 import avro.name
 import avro.schema
+from avro.utils import TypedDict
 
 # TODO(hammer): confirmed 'fixed' with Doug
 VALID_TYPE_SCHEMA_TYPES = ("enum", "record", "error", "fixed")
-
-if sys.version_info >= (3, 8):
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict
 
 
 class MessageObject(TypedDict, total=False):
