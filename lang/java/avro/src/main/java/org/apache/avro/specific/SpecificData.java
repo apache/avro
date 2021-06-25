@@ -434,7 +434,7 @@ public class SpecificData extends GenericData {
   }
 
   /** True if a class should be serialized with toString(). */
-  protected boolean isStringable(Class<?> c) {
+  public boolean isStringable(Class<?> c) {
     return stringableClasses.contains(c);
   }
 

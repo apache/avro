@@ -31,6 +31,9 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,14 +139,19 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
+    return createCompiler(this.src);
+  }
+
+  private SpecificCompiler createCompiler(File schemaFile) throws IOException {
     Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(this.src);
+    Schema schema = parser.parse(schemaFile);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
     return compiler;
   }
+
 
   @Test
   public void testCanReadTemplateFilesOnTheFilesystem() throws IOException {
@@ -697,6 +705,14 @@ public class TestSpecificCompiler {
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testStringablesAreCompiled() throws Exception {
+    Schema logicalTypesWithMultipleFields = new Schema.Parser()
+      .parse(new File("src/test/resources/record_with_stringables.avsc"));
+    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
+      new SpecificCompiler(logicalTypesWithMultipleFields).compile());
   }
 
   @Test

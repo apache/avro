@@ -217,7 +217,18 @@ static {
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+#if ($this.shouldBeDeserializedFromString($field.schema()))
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    try {
+#end      return Optional.<${this.javaType($field.schema())}>ofNullable(new ${this.javaType($field.schema())}(${this.mangle($field.name(), $schema.isError())}.toString()));
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    } catch (java.lang.Exception e) {
+      throw new org.apache.avro.AvroRuntimeException(e);
+    }
+#end
+#else
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+#end
   }
 #else
   /**
@@ -227,7 +238,18 @@ static {
 #end
    */
   public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
-    return ${this.mangle($field.name(), $schema.isError())};
+#if ($this.shouldBeDeserializedFromString($field.schema()))
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    try {
+    #end    return new ${this.javaType($field.schema())}(${this.mangle($field.name(), $schema.isError())}.toString());
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    } catch (java.lang.Exception e) {
+        throw new org.apache.avro.AvroRuntimeException(e);
+    }
+#end
+#else
+     return ${this.mangle($field.name(), $schema.isError())};
+#end
   }
 #end
 
@@ -239,7 +261,18 @@ static {
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
+#if ($this.shouldBeDeserializedFromString($field.schema()))
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    try {
+    #end  return Optional.<${this.javaType($field.schema())}>ofNullable(new ${this.javaType($field.schema())}(${this.mangle($field.name(), $schema.isError())}.toString()));
+#if ($this.constructorThrowsCheckedException($field.schema()))
+    } catch (java.lang.Exception e) {
+    throw new org.apache.avro.AvroRuntimeException(e);
+    }
+#end
+#else
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+#end
   }
 #end
 
