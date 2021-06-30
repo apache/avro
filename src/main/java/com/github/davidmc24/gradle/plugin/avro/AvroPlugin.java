@@ -23,7 +23,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -144,7 +143,7 @@ public class AvroPlugin implements Plugin<Project> {
     }
 
     private static SourceSetContainer getSourceSets(Project project) {
-        return project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets();
+        return project.getExtensions().getByType(SourceSetContainer.class);
     }
 
     private static SourceSet getMainSourceSet(Project project) {

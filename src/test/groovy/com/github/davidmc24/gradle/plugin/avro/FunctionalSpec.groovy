@@ -24,10 +24,20 @@ import spock.lang.TempDir
 
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
-    @SuppressWarnings(["FieldName"])
-    protected static final Semver avroVersion = new Semver(System.getProperty("avroVersion", "undefined"))
-    @SuppressWarnings(["FieldName"])
-    protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion", "undefined"))
+    protected Semver getAvroVersion() {
+        def version = System.getProperty("avroVersion")
+        if (!version) {
+            throw new IllegalArgumentException("avroVersion project property is required")
+        }
+        return new Semver(version)
+    }
+    protected GradleVersion getGradleVersion() {
+        def version = System.getProperty("gradleVersion")
+        if (!version) {
+            throw new IllegalArgumentException("gradleVersion project property is required")
+        }
+        return GradleVersion.version(version)
+    }
 
     @TempDir
     File testProjectDir
