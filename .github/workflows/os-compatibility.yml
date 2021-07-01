@@ -10,8 +10,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest] # All supported OS
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-java@v1
+    - uses: actions/setup-java@v2
       with:
+        distribution: "zulu"
         java-version: ${{ matrix.java }}
     - uses: eskatos/gradle-command-action@v1
       with:
