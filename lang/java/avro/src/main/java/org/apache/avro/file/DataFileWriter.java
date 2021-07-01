@@ -20,7 +20,6 @@ package org.apache.avro.file;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FilterOutputStream;
@@ -42,6 +41,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 /**
@@ -401,7 +401,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     if (blockCount > 0) {
       try {
         bufOut.flush();
-        ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
+        ByteBuffer uncompressed = buffer.asByteBuffer();
         DataBlock block = new DataBlock(uncompressed, blockCount);
         block.setFlushOnWrite(flushOnEveryBlock);
         block.compressUsing(codec);
@@ -497,16 +497,6 @@ public class DataFileWriter<D> implements Closeable, Flushable {
         // occurred during the write
         count = 0;
       }
-    }
-  }
-
-  private static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {
-    NonCopyingByteArrayOutputStream(int initialSize) {
-      super(initialSize);
-    }
-
-    ByteBuffer getByteArrayAsByteBuffer() {
-      return ByteBuffer.wrap(buf, 0, count);
     }
   }
 
