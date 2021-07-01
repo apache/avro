@@ -18,17 +18,18 @@
 package org.apache.avro.file;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
   public final static int DEFAULT_COMPRESSION = 3;
   public final static boolean DEFAULT_USE_BUFFERPOOL = false;
+  private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
     private final int compressionLevel;
@@ -50,7 +51,6 @@ public class ZstandardCodec extends Codec {
   private final int compressionLevel;
   private final boolean useChecksum;
   private final boolean useBufferPool;
-  private ByteArrayOutputStream outputBuffer;
 
   /**
    * Create a ZstandardCodec instance with the given compressionLevel, checksum,
@@ -69,31 +69,22 @@ public class ZstandardCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = ZstandardLoader.output(baos, compressionLevel, useChecksum, useBufferPool)) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
-    return ByteBuffer.wrap(baos.toByteArray());
+    return baos.asByteBuffer();
   }
 
   @Override
   public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
         compressedData.remaining());
     try (InputStream ios = ZstandardLoader.input(bytesIn, useBufferPool)) {
       IOUtils.copy(ios, baos);
     }
-    return ByteBuffer.wrap(baos.toByteArray());
-  }
-
-  // get and initialize the output buffer for use.
-  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-    if (outputBuffer == null) {
-      outputBuffer = new ByteArrayOutputStream(suggestedLength);
-    }
-    outputBuffer.reset();
-    return outputBuffer;
+    return baos.asByteBuffer();
   }
 
   @Override
