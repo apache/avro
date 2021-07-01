@@ -2150,6 +2150,7 @@ public class SchemaBuilder {
   public final static class FieldBuilder<R> extends NamedBuilder<FieldBuilder<R>> {
     private final FieldAssembler<R> fields;
     private Schema.Field.Order order = Schema.Field.Order.ASCENDING;
+    private boolean validatingDefaults = true;
 
     private FieldBuilder(FieldAssembler<R> fields, NameContext names, String name) {
       super(names, name);
@@ -2171,6 +2172,18 @@ public class SchemaBuilder {
     /** Set this field to ignore order. **/
     public FieldBuilder<R> orderIgnore() {
       order = Schema.Field.Order.IGNORE;
+      return self();
+    }
+
+    /** Validate field default value during {@link #completeField(Schema, JsonNode)}. **/
+    public FieldBuilder<R> validatingDefaults() {
+      validatingDefaults = true;
+      return self();
+    }
+
+    /** Skip field default value validation during {@link #completeField(Schema, JsonNode)}} **/
+    public FieldBuilder<R> notValidatingDefaults() {
+      validatingDefaults = false;
       return self();
     }
 
@@ -2237,7 +2250,7 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema, JsonNode defaultVal) {
-      Field field = new Field(name(), schema, doc(), defaultVal, true, order);
+      Field field = new Field(name(), schema, doc(), defaultVal, validatingDefaults, order);
       addPropsTo(field);
       addAliasesTo(field);
       return fields.addField(field);
