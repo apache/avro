@@ -15,7 +15,7 @@ plugins {
 // Gradle TestKit (which most of this plugins tests run using) runs the builds in a separate
 // JVM than the tests.  Thus, for Jacoco to pick up on it, you need to do some extra legwork.
 // https://github.com/koral--/jacoco-gradle-testkit-plugin seeks to solve that
-// However, Gradle 7.0-rc-1 doesn't currently support the combination of the configuration cache
+// However, Gradle 7.1 doesn't currently support the combination of the configuration cache
 // with a Java agent (such as Jacoco) and TestKit.
 // Thus, for now, no coverage reporting, as I place a higher value on testing configuration cache
 // support.
