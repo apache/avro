@@ -324,41 +324,29 @@ $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain
         </source>
       </section>
       <section>
-        <title>Beta feature: Generating faster code</title>
+        <title>Generating faster code</title>
         <p>
-          In this release we have introduced a new approach to
+          In avro 1.9 we have introduced a new approach to
           generating code that speeds up decoding of objects by more
           than 10% and encoding by more than 30% (future performance
-          enhancements are underway).  To ensure a smooth introduction
-          of this change into production systems, this feature is
-          controlled by a feature flag, the system
+          enhancements are underway). Previously this feature was turned off
+          by default. In avro 1.11 it is on by default.
           property <code>org.apache.avro.specific.use_custom_coders</code>.
-          In this first release, this feature is off by default.  To
-          turn it on, set the system flag to <code>true</code> at
-          runtime.  In the sample above, for example, you could enable
-          the fater coders as follows:
         </p>
-        <source>
-$ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
-    -Dorg.apache.avro.specific.use_custom_coders=true
-        </source>
         <p>
           Note that you do <em>not</em> have to recompile your Avro
           schema to have access to this feature.  The feature is
           compiled and built into your code, and you turn it on and
-          off at runtime using the feature flag.  As a result, you can
-          turn it on during testing, for example, and then off in
-          production.  Or you can turn it on in production, and
-          quickly turn it off if something breaks.
+          off at runtime using the feature flag.
         </p>
         <p>
-          We encourage the Avro community to exercise this new feature
-          early to help build confidence.  (For those paying
-          one-demand for compute resources in the cloud, it can lead
-          to meaningful cost savings.)  As confidence builds, we will
-          turn this feature on by default, and eventually eliminate
-          the feature flag (and the old code).
+          To turn it off, set the system flag to <code>false</code> at
+          runtime.
         </p>
+        <source>
+          $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
+          -Dorg.apache.avro.specific.use_custom_coders=false
+        </source>
       </section>
     </section>
 
