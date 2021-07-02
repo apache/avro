@@ -781,7 +781,7 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  protected boolean isStringable(Class<?> c) {
+  public boolean isStringable(Class<?> c) {
     return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
   }
 
