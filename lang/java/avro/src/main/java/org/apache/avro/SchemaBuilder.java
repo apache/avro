@@ -2175,13 +2175,18 @@ public class SchemaBuilder {
       return self();
     }
 
-    /** Validate field default value during {@link #completeField(Schema, JsonNode)}. **/
+    /**
+     * Validate field default value during {@link #completeField(Schema, JsonNode)}.
+     **/
     public FieldBuilder<R> validatingDefaults() {
       validatingDefaults = true;
       return self();
     }
 
-    /** Skip field default value validation during {@link #completeField(Schema, JsonNode)}} **/
+    /**
+     * Skip field default value validation during
+     * {@link #completeField(Schema, JsonNode)}}
+     **/
     public FieldBuilder<R> notValidatingDefaults() {
       validatingDefaults = false;
       return self();

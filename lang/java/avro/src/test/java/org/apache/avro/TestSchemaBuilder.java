@@ -821,16 +821,11 @@ public class TestSchemaBuilder {
   @Test(expected = AvroRuntimeException.class)
   public void testValidateDefaultsEnabled() {
     try {
-      SchemaBuilder.record("ValidationRecord")
-        .fields()
-        .name("IntegerField")
-        .type("int")
-        .withDefault("Invalid")
-        .endRecord();
-    }
-    catch(AvroRuntimeException e) {
+      SchemaBuilder.record("ValidationRecord").fields().name("IntegerField").type("int").withDefault("Invalid")
+          .endRecord();
+    } catch (AvroRuntimeException e) {
       Assert.assertEquals("Default behavior is to raise an exception due to record having an invalid default",
-        "Invalid default for field IntegerField: \"Invalid\" not a \"int\"", e.getMessage());
+          "Invalid default for field IntegerField: \"Invalid\" not a \"int\"", e.getMessage());
       throw e;
     }
   }
@@ -839,15 +834,11 @@ public class TestSchemaBuilder {
   public void testValidateDefaultsDisabled() {
     final String fieldName = "IntegerField";
     final String defaultValue = "foo";
-    Schema schema = SchemaBuilder.record("ValidationRecord")
-      .fields()
-      .name(fieldName)
-      .notValidatingDefaults()
-      .type("int")
-      .withDefault(defaultValue) // Would throw an exception on endRecord() if validations enabled
-      .endRecord();
+    Schema schema = SchemaBuilder.record("ValidationRecord").fields().name(fieldName).notValidatingDefaults()
+        .type("int").withDefault(defaultValue) // Would throw an exception on endRecord() if validations enabled
+        .endRecord();
     Assert.assertNull("Differing types, so this returns null", schema.getField(fieldName).defaultVal());
-    Assert.assertEquals("Schema is able to be successfully created as is without validation",
-      defaultValue, schema.getField(fieldName).defaultValue().asText());
+    Assert.assertEquals("Schema is able to be successfully created as is without validation", defaultValue,
+        schema.getField(fieldName).defaultValue().asText());
   }
 }
