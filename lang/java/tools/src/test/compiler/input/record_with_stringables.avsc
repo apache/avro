@@ -1,0 +1,53 @@
+{
+  "type": "record",
+  "name": "RecordWithStringables",
+  "namespace": "avro.examples.baseball",
+  "doc": "Test all stringable implementations",
+  "fields": [
+    {
+      "name": "bigDecimal",
+      "type": {
+        "type": "string",
+        "java-class": "java.math.BigDecimal"
+      }
+    },
+    {
+      "name": "bigInteger",
+      "type": {
+        "type": "string",
+        "java-class": "java.math.BigInteger"
+      }
+    },
+    {
+      "name": "uri",
+      "type": {
+        "type": "string",
+        "java-class": "java.net.URI"
+      }
+    },
+    {
+      "name": "url",
+      "type": {
+        "type": "string",
+        "java-class": "java.net.URL"
+      }
+    },
+    {
+      "name": "file",
+      "type": {
+        "type": "string",
+        "java-class": "java.io.File"
+      }
+    },
+    {
+      "name": "nullableBigDecimal",
+      "type": [
+        "null",
+        {
+          "type": "string",
+          "java-class": "java.math.BigDecimal"
+        }
+      ]
+    }
+  ]
+}

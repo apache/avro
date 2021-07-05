@@ -107,8 +107,12 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: name = (java.lang.CharSequence)value$; break;
-    case 1: favorite_number = (java.lang.Integer)value$; break;
+      case 0:
+        name = (java.lang.CharSequence)value$;
+        break;
+      case 1:
+        favorite_number = (java.lang.Integer)value$;
+        break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -382,6 +386,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
     }
   }
 }
+
 
 
 

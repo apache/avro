@@ -115,10 +115,18 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: name = (java.lang.CharSequence)value$; break;
-    case 1: nullable_name = (java.lang.CharSequence)value$; break;
-    case 2: favorite_number = value$; break;
-    case 3: nullable_favorite_number = (java.lang.Integer)value$; break;
+      case 0:
+        name = (java.lang.CharSequence)value$;
+        break;
+      case 1:
+        nullable_name = (java.lang.CharSequence)value$;
+        break;
+      case 2:
+        favorite_number = value$;
+        break;
+      case 3:
+        nullable_favorite_number = (java.lang.Integer)value$;
+        break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -487,6 +495,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
   }
 
 }
+
 
 
 
