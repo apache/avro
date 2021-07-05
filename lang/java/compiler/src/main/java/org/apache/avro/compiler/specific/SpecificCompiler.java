@@ -867,6 +867,40 @@ public class SpecificCompiler {
   }
 
   /**
+   * Utility for template use. Returns true if specified java-class is stringable
+   * and should be deserialized using constructor with String.
+   */
+  public boolean shouldBeDeserializedFromString(Schema schema) {
+    try {
+      Class<?> clazz = Class.forName(javaType(schema));
+      return specificData.isStringable(clazz);
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Utility for template use. Returns true constructor that accepts string
+   * parameter (e.g. new URL(string)) throws checked exception.
+   */
+  public boolean constructorThrowsCheckedException(Schema schema) {
+    try {
+      Class<?> clazz = Class.forName(javaType(schema));
+      Class<?>[] possibleExceptions = clazz.getDeclaredConstructor(String.class).getExceptionTypes();
+      for (Class<?> exceptionClass : possibleExceptions) {
+        if (!Error.class.isAssignableFrom(exceptionClass) && !RuntimeException.class.isAssignableFrom(exceptionClass)) {
+          return true;
+        }
+      }
+      return false;
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Unable to find class " + javaType(schema), e);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException("Class is not stringable and couldn't be deserialized with a String constructor", e);
+    }
+  }
+
+  /**
    * Utility for template use. Returns true if the encode/decode logic in
    * record.vm can handle the schema being presented.
    */

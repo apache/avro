@@ -136,8 +136,12 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
+    return createCompiler(this.src);
+  }
+
+  private SpecificCompiler createCompiler(File schemaFile) throws IOException {
     Schema.Parser parser = new Schema.Parser();
-    Schema schema = parser.parse(this.src);
+    Schema schema = parser.parse(schemaFile);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
@@ -860,4 +864,11 @@ public class TestSpecificCompiler {
     assertEquals(1, itWorksFound);
   }
 
+  @Test
+  public void testStringablesAreCompiled() throws Exception {
+    Schema logicalTypesWithMultipleFields = new Schema.Parser()
+        .parse(new File("src/test/resources/record_with_stringables.avsc"));
+    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
+        new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
 }

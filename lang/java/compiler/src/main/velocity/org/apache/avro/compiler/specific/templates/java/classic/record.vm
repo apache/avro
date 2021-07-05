@@ -201,7 +201,8 @@ static {
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
+      case $i:
+#assignField($field $schema)
 #set ($i = $i + 1)
 #end
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
@@ -854,4 +855,24 @@ $I    } else {
 #set ($indent = $indent - 2)
 #set ($I = $this.indent($indent))
 $I    }
+#end
+
+#macro( assignField $field $schema)
+#set($I = $this.indent(6))
+#if ($this.shouldBeDeserializedFromString($field.schema()))
+#if ($this.constructorThrowsCheckedException($field.schema()))
+$I  try {
+#end
+$I  if (null != value$) {
+$I    ${this.mangle($field.name(), $schema.isError())} = new ${this.javaType($field.schema())}(value$.toString());
+$I  }
+#if ($this.constructorThrowsCheckedException($field.schema()))
+$I  } catch (java.lang.Exception e) {
+$I    throw new org.apache.avro.AvroRuntimeException(e);
+$I  }
+#end
+#else
+$I  ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end};
+#end
+$I  break;
 #end
