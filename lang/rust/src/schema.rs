@@ -160,7 +160,7 @@ impl SchemaKind {
                 | SchemaKind::Double
                 | SchemaKind::Float
                 | SchemaKind::Bytes
-                | SchemaKind::String,
+                | SchemaKind::String
         )
     }
 }
