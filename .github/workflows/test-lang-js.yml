@@ -14,7 +14,6 @@
 # limitations under the License.
 
 name: 'Test JavaScript'
-
 on:
   workflow_dispatch:
   push:
@@ -22,6 +21,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+    - .github/workflows/test-lang-js.yml
     - lang/js/**
 
 defaults:
@@ -35,9 +35,8 @@ jobs:
     strategy:
       matrix:
         node:
-        - 10
-        - 11
         - 12
+        - 14
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node
@@ -64,9 +63,8 @@ jobs:
     strategy:
       matrix:
         node:
-        - 10
-        - 11
         - 12
+        - 14
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node

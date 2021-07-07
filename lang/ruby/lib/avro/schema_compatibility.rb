@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -46,28 +47,22 @@ module Avro
       end
 
       if w_type == r_type
-        return true if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
+        return readers_schema.match_schema?(writers_schema) if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
 
         case r_type
-        when :record
-          return readers_schema.match_fullname?(writers_schema.fullname)
-        when :error
-          return readers_schema.match_fullname?(writers_schema.fullname)
         when :request
           return true
-        when :fixed
-          return readers_schema.match_fullname?(writers_schema.fullname) &&
-            writers_schema.size == readers_schema.size
-        when :enum
-          return readers_schema.match_fullname?(writers_schema.fullname)
         when :map
           return match_schemas(writers_schema.values, readers_schema.values)
         when :array
           return match_schemas(writers_schema.items, readers_schema.items)
+        else
+          return readers_schema.match_schema?(writers_schema)
         end
       end
 
       # Handle schema promotion
+      # rubocop:disable Lint/DuplicateBranch
       if w_type == :int && INT_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
       elsif w_type == :long && LONG_COERCIBLE_TYPES_SYM.include?(r_type)
@@ -79,8 +74,13 @@ module Avro
       elsif w_type == :bytes && r_type == :string
         return true
       end
+      # rubocop:enable Lint/DuplicateBranch
 
-      return false
+      if readers_schema.respond_to?(:match_schema?)
+        readers_schema.match_schema?(writers_schema)
+      else
+        false
+      end
     end
 
     class Checker

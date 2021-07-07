@@ -50,15 +50,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * </p>
  *
  * @param <K> The type of key. If an Avro type, it must be wrapped in an
- *        <code>AvroKey</code>.
+ *            <code>AvroKey</code>.
  * @param <V> The type of value. If an Avro type, it must be wrapped in an
- *        <code>AvroValue</code>.
+ *            <code>AvroValue</code>.
  *
- *        <p>
- *        Writes a directory of files per task, each comprising a single
- *        filesystem block. To reduce the number of files, increase the default
- *        filesystem block size for the job. Each task also requires enough
- *        memory to buffer a filesystem block.
+ *            <p>
+ *            Writes a directory of files per task, each comprising a single
+ *            filesystem block. To reduce the number of files, increase the
+ *            default filesystem block size for the job. Each task also requires
+ *            enough memory to buffer a filesystem block.
  */
 public class AvroTrevniKeyValueOutputFormat<K, V> extends FileOutputFormat<AvroKey<K>, AvroValue<V>> {
 

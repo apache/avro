@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -28,39 +26,36 @@ import avro.datafile
 import avro.io
 import avro.schema
 
-NULL_CODEC = 'null'
-CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
+NULL_CODEC = "null"
+CODECS_TO_VALIDATE = avro.codecs.KNOWN_CODECS.keys()
 
 DATUM = {
-    'intField': 12,
-    'longField': 15234324,
-    'stringField': 'hey',
-    'boolField': True,
-    'floatField': 1234.0,
-    'doubleField': -1234.0,
-    'bytesField': b'12312adf',
-    'nullField': None,
-    'arrayField': [5.0, 0.0, 12.0],
-    'mapField': {'a': {'label': 'a'},
-                 'bee': {'label': 'cee'}},
-    'unionField': 12.0,
-    'enumField': 'C',
-    'fixedField': b'1019181716151413',
-    'recordField': {'label': 'blah',
-                    'children': [{'label': 'inner', 'children': []}]},
+    "intField": 12,
+    "longField": 15234324,
+    "stringField": "hey",
+    "boolField": True,
+    "floatField": 1234.0,
+    "doubleField": -1234.0,
+    "bytesField": b"12312adf",
+    "nullField": None,
+    "arrayField": [5.0, 0.0, 12.0],
+    "mapField": {"a": {"label": "a"}, "bee": {"label": "cee"}},
+    "unionField": 12.0,
+    "enumField": "C",
+    "fixedField": b"1019181716151413",
+    "recordField": {"label": "blah", "children": [{"label": "inner", "children": []}]},
 }
 
 
 def generate(schema_path, output_path):
-    with open(schema_path, 'r') as schema_file:
+    with open(schema_path) as schema_file:
         interop_schema = avro.schema.parse(schema_file.read())
     for codec in CODECS_TO_VALIDATE:
         filename = output_path
         if codec != NULL_CODEC:
             base, ext = os.path.splitext(output_path)
             filename = base + "_" + codec + ext
-        with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
-                                          interop_schema, codec=codec) as dfw:
+        with avro.datafile.DataFileWriter(open(filename, "wb"), avro.io.DatumWriter(), interop_schema, codec=codec) as dfw:
             dfw.append(DATUM)
 
 

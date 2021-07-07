@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,6 +18,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from avro.tether.tether_task import HTTPRequestor, TaskType, TetherTask, inputProtocol, outputProtocol
+from avro.tether.tether_task import (
+    HTTPRequestor,
+    TaskType,
+    TetherTask,
+    inputProtocol,
+    outputProtocol,
+)
 from avro.tether.tether_task_runner import TaskRunner
 from avro.tether.util import find_port

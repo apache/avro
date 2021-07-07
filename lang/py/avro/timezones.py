@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,16 +18,17 @@
 # limitations under the License.
 
 import datetime
+from typing import Optional
 
 
 class UTCTzinfo(datetime.tzinfo):
-    def utcoffset(self, dt):
+    def utcoffset(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
         return datetime.timedelta(0)
 
-    def tzname(self, dt):
+    def tzname(self, dt: Optional[datetime.datetime] = None) -> str:
         return "UTC"
 
-    def dst(self, dt):
+    def dst(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
         return datetime.timedelta(0)
 
 
@@ -38,13 +37,13 @@ utc = UTCTzinfo()
 
 # Test Time Zone with fixed offset and no DST
 class TSTTzinfo(datetime.tzinfo):
-    def utcoffset(self, dt):
+    def utcoffset(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
         return datetime.timedelta(hours=10)
 
-    def tzname(self, dt):
+    def tzname(self, dt: Optional[datetime.datetime] = None) -> str:
         return "TST"
 
-    def dst(self, dt):
+    def dst(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
         return datetime.timedelta(0)
 
 

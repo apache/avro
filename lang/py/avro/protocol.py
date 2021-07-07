@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,229 +17,270 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Protocol implementation."""
+"""
+Protocol implementation.
+
+https://avro.apache.org/docs/current/spec.html#Protocol+Declaration
+"""
 
 import hashlib
 import json
+from typing import Mapping, Optional, Sequence, Union, cast
 
 import avro.errors
+import avro.name
 import avro.schema
-
-#
-# Constants
-#
+from avro.utils import TypedDict
 
 # TODO(hammer): confirmed 'fixed' with Doug
-VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
+VALID_TYPE_SCHEMA_TYPES = ("enum", "record", "error", "fixed")
 
-#
-# Base Classes
-#
+
+class MessageObject(TypedDict, total=False):
+    request: Sequence[Mapping[str, object]]
+    response: Union[str, object]
+    errors: Optional[Sequence[str]]
+
+
+class ProtocolObject(TypedDict, total=False):
+    protocol: str
+    namespace: str
+    types: Sequence[str]
+    messages: Mapping[str, MessageObject]
 
 
 class Protocol:
-    """An application protocol."""
+    """
+    Avro protocols describe RPC interfaces. Like schemas, they are defined with JSON text.
 
-    def _parse_types(self, types, type_names):
-        type_objects = []
-        for type in types:
-            type_object = avro.schema.make_avsc_object(type, type_names)
-            if type_object.type not in VALID_TYPE_SCHEMA_TYPES:
-                fail_msg = 'Type %s not an enum, fixed, record, or error.' % type
-                raise avro.errors.ProtocolParseException(fail_msg)
-            type_objects.append(type_object)
-        return type_objects
+    A protocol is a JSON object with the following attributes:
 
-    def _parse_messages(self, messages, names):
-        message_objects = {}
-        for name, body in messages.items():
-            if name in message_objects:
-                fail_msg = 'Message name "%s" repeated.' % name
-                raise avro.errors.ProtocolParseException(fail_msg)
-            try:
-                request = body.get('request')
-                response = body.get('response')
-                errors = body.get('errors')
-            except AttributeError:
-                fail_msg = 'Message name "%s" has non-object body %s.' % (name, body)
-                raise avro.errors.ProtocolParseException(fail_msg)
-            message_objects[name] = Message(name, request, response, errors, names)
-        return message_objects
+    - protocol, a string, the name of the protocol (required);
+    - namespace, an optional string that qualifies the name;
+    - doc, an optional string describing this protocol;
+    - types, an optional list of definitions of named types (records, enums, fixed and errors). An error definition is just like a record definition except it uses "error" instead of "record". Note that forward references to named types are not permitted.
+    - messages, an optional JSON object whose keys are message names and whose values are objects whose attributes are described below. No two messages may have the same name.
 
-    def __init__(self, name, namespace=None, types=None, messages=None):
-        # Ensure valid ctor args
+    The name and namespace qualification rules defined for schema objects apply to protocols as well.
+    """
+
+    __slots__ = [
+        "_md5",
+        "_messages",
+        "_name",
+        "_namespace",
+        "_types",
+    ]
+
+    _md5: bytes
+    _messages: Optional[Mapping[str, "Message"]]
+    _name: str
+    _namespace: Optional[str]
+    _types: Optional[Sequence[avro.schema.NamedSchema]]
+
+    def __init__(
+        self,
+        name: str,
+        namespace: Optional[str] = None,
+        types: Optional[Sequence[str]] = None,
+        messages: Optional[Mapping[str, "MessageObject"]] = None,
+    ) -> None:
         if not name:
-            fail_msg = 'Protocols must have a non-empty name.'
-            raise avro.errors.ProtocolParseException(fail_msg)
-        elif not isinstance(name, str):
-            fail_msg = 'The name property must be a string.'
-            raise avro.errors.ProtocolParseException(fail_msg)
-        elif not (namespace is None or isinstance(namespace, str)):
-            fail_msg = 'The namespace property must be a string.'
-            raise avro.errors.ProtocolParseException(fail_msg)
-        elif not (types is None or isinstance(types, list)):
-            fail_msg = 'The types property must be a list.'
-            raise avro.errors.ProtocolParseException(fail_msg)
-        elif not (messages is None or callable(getattr(messages, 'get', None))):
-            fail_msg = 'The messages property must be a JSON object.'
-            raise avro.errors.ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException("Protocols must have a non-empty name.")
+        if not isinstance(name, str):
+            raise avro.errors.ProtocolParseException("The name property must be a string.")
+        if not (namespace is None or isinstance(namespace, str)):
+            raise avro.errors.ProtocolParseException("The namespace property must be a string.")
+        if not (types is None or isinstance(types, list)):
+            raise avro.errors.ProtocolParseException("The types property must be a list.")
+        if not (messages is None or callable(getattr(messages, "get", None))):
+            raise avro.errors.ProtocolParseException("The messages property must be a JSON object.")
+        type_names = avro.name.Names()
 
-        self._props = {}
-        self.set_prop('name', name)
-        type_names = avro.schema.Names()
-        if namespace is not None:
-            self.set_prop('namespace', namespace)
-            type_names.default_namespace = namespace
-        if types is not None:
-            self.set_prop('types', self._parse_types(types, type_names))
-        if messages is not None:
-            self.set_prop('messages', self._parse_messages(messages, type_names))
+        self._name = name
+        self._namespace = type_names.default_namespace = namespace
+        self._types = _parse_types(types, type_names) if types else None
+        self._messages = _parse_messages(messages, type_names) if messages else None
         self._md5 = hashlib.md5(str(self).encode()).digest()
 
-    # read-only properties
     @property
-    def name(self):
-        return self.get_prop('name')
+    def name(self) -> str:
+        return self._name
 
     @property
-    def namespace(self):
-        return self.get_prop('namespace')
+    def namespace(self) -> Optional[str]:
+        return self._namespace
 
     @property
-    def fullname(self):
-        return avro.schema.Name(self.name, self.namespace, None).fullname
+    def fullname(self) -> Optional[str]:
+        return avro.name.Name(self.name, self.namespace, None).fullname
 
     @property
-    def types(self):
-        return self.get_prop('types')
+    def types(self) -> Optional[Sequence[avro.schema.NamedSchema]]:
+        return self._types
 
     @property
-    def types_dict(self):
-        return {type.name: type for type in self.types}
+    def types_dict(self) -> Optional[Mapping[str, avro.schema.NamedSchema]]:
+        return None if self.types is None else {type_.name: type_ for type_ in self.types}
 
     @property
-    def messages(self):
-        return self.get_prop('messages')
+    def messages(self) -> Optional[Mapping[str, "Message"]]:
+        return self._messages
 
     @property
-    def md5(self):
+    def md5(self) -> bytes:
         return self._md5
 
-    @property
-    def props(self):
-        return self._props
+    def to_json(self) -> Mapping[str, Union[str, Sequence[object], Mapping[str, "MessageObject"]]]:
+        names = avro.name.Names(default_namespace=self.namespace)
+        return {
+            "protocol": self.name,
+            **({"namespace": self.namespace} if self.namespace else {}),
+            **({"types": [t.to_json(names) for t in self.types]} if self.types else {}),
+            **({"messages": {name: body.to_json(names) for name, body in self.messages.items()}} if self.messages else {}),
+        }
 
-    # utility functions to manipulate properties dict
-    def get_prop(self, key):
-        return self.props.get(key)
-
-    def set_prop(self, key, value):
-        self.props[key] = value
-
-    def to_json(self):
-        to_dump = {}
-        to_dump['protocol'] = self.name
-        names = avro.schema.Names(default_namespace=self.namespace)
-        if self.namespace:
-            to_dump['namespace'] = self.namespace
-        if self.types:
-            to_dump['types'] = [t.to_json(names) for t in self.types]
-        if self.messages:
-            messages_dict = {}
-            for name, body in self.messages.items():
-                messages_dict[name] = body.to_json(names)
-            to_dump['messages'] = messages_dict
-        return to_dump
-
-    def __str__(self):
+    def __str__(self) -> str:
         return json.dumps(self.to_json())
 
-    def __eq__(self, that):
-        to_cmp = json.loads(str(self))
-        return to_cmp == json.loads(str(that))
+    def __eq__(self, that: object) -> bool:
+        this_ = json.loads(str(self))
+        try:
+            that_ = json.loads(str(that))
+        except json.decoder.JSONDecodeError:
+            return False
+        return cast(bool, this_ == that_)
 
 
 class Message:
-    """A Protocol message."""
+    """
+    A message has attributes:
 
-    def _parse_request(self, request, names):
-        if not isinstance(request, list):
-            fail_msg = 'Request property not a list: %s' % request
-            raise avro.errors.ProtocolParseException(fail_msg)
-        return avro.schema.RecordSchema(None, None, request, names, 'request')
+    - a doc, an optional description of the message,
+    - a request, a list of named, typed parameter schemas (this has the same form as the fields of a record declaration);
+    - a response schema;
+    - an optional union of declared error schemas. The effective union has "string" prepended to the declared union, to permit transmission of undeclared "system" errors. For example, if the declared error union is ["AccessError"], then the effective union is ["string", "AccessError"]. When no errors are declared, the effective error union is ["string"]. Errors are serialized using the effective union; however, a protocol's JSON declaration contains only the declared union.
+    - an optional one-way boolean parameter.
 
-    def _parse_response(self, response, names):
-        if isinstance(response, str) and names.has_name(response, None):
-            return names.get_name(response, None)
-        else:
-            return avro.schema.make_avsc_object(response, names)
+    A request parameter list is processed equivalently to an anonymous record. Since record field lists may vary between reader and writer, request parameters may also differ between the caller and responder, and such differences are resolved in the same manner as record field differences.
 
-    def _parse_errors(self, errors, names):
-        if not isinstance(errors, list):
-            fail_msg = 'Errors property not a list: %s' % errors
-            raise avro.errors.ProtocolParseException(fail_msg)
-        errors_for_parsing = {'type': 'error_union', 'declared_errors': errors}
-        return avro.schema.make_avsc_object(errors_for_parsing, names)
+    The one-way parameter may only be true when the response type is "null" and no errors are listed.
+    """
 
-    def __init__(self, name, request, response, errors=None, names=None):
+    __slots__ = [
+        "_errors",
+        "_name",
+        "_request",
+        "_response",
+    ]
+
+    def __init__(
+        self,
+        name: str,
+        request: Sequence[Mapping[str, object]],
+        response: Union[str, object],
+        errors: Optional[Sequence[str]] = None,
+        names: Optional[avro.name.Names] = None,
+    ) -> None:
         self._name = name
+        names = names or avro.name.Names()
+        self._request = _parse_request(request, names)
+        self._response = _parse_response(response, names)
+        self._errors = _parse_errors(errors or [], names)
 
-        self._props = {}
-        self.set_prop('request', self._parse_request(request, names))
-        self.set_prop('response', self._parse_response(response, names))
-        self.set_prop('errors', self._parse_errors(errors or [], names))
+    @property
+    def name(self) -> str:
+        return self._name
 
-    # read-only properties
-    name = property(lambda self: self._name)
-    request = property(lambda self: self.get_prop('request'))
-    response = property(lambda self: self.get_prop('response'))
-    errors = property(lambda self: self.get_prop('errors'))
-    props = property(lambda self: self._props)
+    @property
+    def request(self) -> avro.schema.RecordSchema:
+        return self._request
 
-    # utility functions to manipulate properties dict
-    def get_prop(self, key):
-        return self.props.get(key)
+    @property
+    def response(self) -> avro.schema.Schema:
+        return self._response
 
-    def set_prop(self, key, value):
-        self.props[key] = value
+    @property
+    def errors(self) -> avro.schema.ErrorUnionSchema:
+        return self._errors
 
-    def __str__(self):
+    def __str__(self) -> str:
         return json.dumps(self.to_json())
 
-    def to_json(self, names=None):
-        names = names or avro.schema.Names()
+    def to_json(self, names: Optional[avro.name.Names] = None) -> "MessageObject":
+        names = names or avro.name.Names()
 
-        to_dump = {}
-        to_dump['request'] = self.request.to_json(names)
-        to_dump['response'] = self.response.to_json(names)
+        try:
+            to_dump = MessageObject()
+        except NameError:
+            to_dump = {}
+        to_dump["request"] = self.request.to_json(names)
+        to_dump["response"] = self.response.to_json(names)
         if self.errors:
-            to_dump['errors'] = self.errors.to_json(names)
+            to_dump["errors"] = self.errors.to_json(names)
 
         return to_dump
 
-    def __eq__(self, that):
-        return self.name == that.name and self.props == that.props
+    def __eq__(self, that: object) -> bool:
+        return all(hasattr(that, prop) and getattr(self, prop) == getattr(that, prop) for prop in self.__class__.__slots__)
 
 
-def make_avpr_object(json_data):
+def _parse_request(request: Sequence[Mapping[str, object]], names: avro.name.Names) -> avro.schema.RecordSchema:
+    if not isinstance(request, Sequence):
+        raise avro.errors.ProtocolParseException(f"Request property not a list: {request}")
+    return avro.schema.RecordSchema(None, None, request, names, "request")
+
+
+def _parse_response(response: Union[str, object], names: avro.name.Names) -> avro.schema.Schema:
+    return (isinstance(response, str) and names.get_name(response)) or avro.schema.make_avsc_object(response, names)
+
+
+def _parse_errors(errors: Sequence[str], names: avro.name.Names) -> avro.schema.ErrorUnionSchema:
+    """Even if errors is empty, we still want an ErrorUnionSchema with "string" in it."""
+    if not isinstance(errors, Sequence):
+        raise avro.errors.ProtocolParseException(f"Errors property not a list: {errors}")
+    errors_for_parsing = {"type": "error_union", "declared_errors": errors}
+    return cast(avro.schema.ErrorUnionSchema, avro.schema.make_avsc_object(errors_for_parsing, names))
+
+
+def make_avpr_object(json_data: "ProtocolObject") -> Protocol:
     """Build Avro Protocol from data parsed out of JSON string."""
-    try:
-        name = json_data.get('protocol')
-        namespace = json_data.get('namespace')
-        types = json_data.get('types')
-        messages = json_data.get('messages')
-    except AttributeError:
-        raise avro.errors.ProtocolParseException('Not a JSON object: %s' % json_data)
-
+    if not hasattr(json_data, "get"):
+        raise avro.errors.ProtocolParseException(f"Not a JSON object: {json_data}")
+    name = json_data["protocol"]
+    namespace = json_data.get("namespace")
+    types = json_data.get("types")
+    messages = json_data.get("messages")
     return Protocol(name, namespace, types, messages)
 
 
-def parse(json_string):
+def parse(json_string: str) -> Protocol:
     """Constructs the Protocol from the JSON text."""
     try:
-        json_data = json.loads(json_string)
+        protocol_object = json.loads(json_string)
     except ValueError:
-        raise avro.errors.ProtocolParseException('Error parsing JSON: %s' % json_string)
+        raise avro.errors.ProtocolParseException(f"Error parsing JSON: {json_string}")
+    return make_avpr_object(protocol_object)
 
-    # construct the Avro Protocol object
-    return make_avpr_object(json_data)
+
+def _parse_types(types: Sequence[str], type_names: avro.name.Names) -> Sequence[avro.schema.NamedSchema]:
+    schemas = []
+    for type_ in types:
+        schema = avro.schema.make_avsc_object(type_, type_names)
+        if isinstance(schema, avro.schema.NamedSchema):
+            schemas.append(schema)
+            continue
+        raise avro.errors.ProtocolParseException(f"Type {type_} not an enum, fixed, record, or error.")
+    return schemas
+
+
+def _parse_messages(message_objects: Mapping[str, "MessageObject"], names: avro.name.Names) -> Mapping[str, Message]:
+    messages = {}
+    for name, body in message_objects.items():
+        if not hasattr(body, "get"):
+            raise avro.errors.ProtocolParseException(f'Message name "{name}" has non-object body {body}.')
+        request = body["request"]
+        response = body["response"]
+        errors = body.get("errors")
+        messages[name] = Message(name, request, response, errors, names)
+    return messages

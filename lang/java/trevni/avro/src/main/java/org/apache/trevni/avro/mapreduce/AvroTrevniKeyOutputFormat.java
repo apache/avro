@@ -43,11 +43,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  *
  * @param <T> The (java) type of the Trevni data to write.
  *
- *        <p>
- *        Writes a directory of files per task, each comprising a single
- *        filesystem block. To reduce the number of files, increase the default
- *        filesystem block size for the job. Each task also requires enough
- *        memory to buffer a filesystem block.
+ *            <p>
+ *            Writes a directory of files per task, each comprising a single
+ *            filesystem block. To reduce the number of files, increase the
+ *            default filesystem block size for the job. Each task also requires
+ *            enough memory to buffer a filesystem block.
  */
 public class AvroTrevniKeyOutputFormat<T> extends FileOutputFormat<AvroKey<T>, NullWritable> {
 

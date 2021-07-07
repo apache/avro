@@ -355,4 +355,9 @@ public class TestSchema {
     assertEquals(1.0f, field.defaultVal());
     assertEquals(1.0f, GenericData.get().getDefaultValue(field));
   }
+
+  @Test(expected = SchemaParseException.class)
+  public void testEnumSymbolAsNull() {
+    Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
+  }
 }

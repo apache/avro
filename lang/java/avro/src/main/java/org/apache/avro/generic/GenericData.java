@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -692,9 +693,7 @@ public class GenericData {
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"");
-    } else if (((datum instanceof Float) && // quote Nan & Infinity
-        (((Float) datum).isInfinite() || ((Float) datum).isNaN()))
-        || ((datum instanceof Double) && (((Double) datum).isInfinite() || ((Double) datum).isNaN()))) {
+    } else if (isNanOrInfinity(datum) || isTemporal(datum)) {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
@@ -709,6 +708,15 @@ public class GenericData {
     } else {
       buffer.append(datum);
     }
+  }
+
+  private boolean isTemporal(Object datum) {
+    return datum instanceof Temporal;
+  }
+
+  private boolean isNanOrInfinity(Object datum) {
+    return ((datum instanceof Float) && (((Float) datum).isInfinite() || ((Float) datum).isNaN()))
+        || ((datum instanceof Double) && (((Double) datum).isInfinite() || ((Double) datum).isNaN()));
   }
 
   /* Adapted from https://code.google.com/p/json-simple */

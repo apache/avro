@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -63,8 +64,11 @@ module Avro::IPC
   SYSTEM_ERROR_SCHEMA = Avro::Schema.parse('["string"]')
 
   # protocol cache
+  # rubocop:disable Style/MutableConstant
   REMOTE_HASHES = {}
   REMOTE_PROTOCOLS = {}
+  # rubocop:enable Style/MutableConstant
+
 
   BUFFER_HEADER_LENGTH = 4
   BUFFER_SIZE = 8192
@@ -394,7 +398,7 @@ module Avro::IPC
     def read_framed_message
       message = []
       loop do
-        buffer = StringIO.new(''.force_encoding('BINARY'))
+        buffer = StringIO.new(String.new('', encoding: 'BINARY'))
         buffer_length = read_buffer_length
         if buffer_length == 0
           return message.join

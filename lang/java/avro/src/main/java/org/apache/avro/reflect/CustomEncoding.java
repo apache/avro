@@ -30,7 +30,7 @@ import org.apache.avro.io.Encoder;
  * {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  *
  * @param <T> The class of objects that can be serialized with this encoder /
- *        decoder.
+ *            decoder.
  */
 public abstract class CustomEncoding<T> {
 
