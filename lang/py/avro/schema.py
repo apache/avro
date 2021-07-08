@@ -48,7 +48,7 @@ import math
 import sys
 import uuid
 import warnings
-from typing import Mapping, MutableMapping, Optional, Sequence, cast
+from typing import FrozenSet, Mapping, MutableMapping, Optional, Sequence, cast
 
 import avro.constants
 import avro.errors
@@ -179,7 +179,6 @@ class FingerprintMixin:
     _EMPTY64 = 0xC15D213AA4D7A795
 
     # All algorithms guaranteed by hashlib are supported
-    # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
     # Supported Algorithms are:
     #     - 'blake2b',
     #     - 'blake2s',
@@ -195,7 +194,10 @@ class FingerprintMixin:
     #     - 'sha512',
     #     - 'shake_128',
     #     - 'shake_256'
-    SUPPORTED_ALGORITHMS = frozenset(hashlib.algorithms_guaranteed.union({"CRC-64-AVRO"}))
+    algorithms = set(hashlib.algorithms_guaranteed)
+    # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
+    algorithms.update({"CRC-64-AVRO"})
+    SUPPORTED_ALGORITHMS: FrozenSet[str] = frozenset(algorithms)
 
     def fingerprint(self, algorithm="CRC-64-AVRO"):
         """
