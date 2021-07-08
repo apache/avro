@@ -53,30 +53,27 @@ jobs:
           override: true
           components: rustfmt
 
-      - name: Print PWD
-        run: pwd
-
       - name: Rust Format
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --manifest-path lang/rust/Cargo.toml --all -- --check
 
       - name: Rust Build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-features --all-targets
+          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
 
       - name: Rust Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features --all-targets
+          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --doc
+          args: --manifest-path lang/rust/Cargo.toml --doc
