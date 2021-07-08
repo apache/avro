@@ -27,6 +27,10 @@ on:
       - lang/rust/Cargo.toml
       - lang/rust/Cargo.lock
 
+defaults:
+  run:
+    working-directory: lang/rust
+
 jobs:
   audit:
     runs-on: ubuntu-latest
