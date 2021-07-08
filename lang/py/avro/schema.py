@@ -181,7 +181,7 @@ class FingerprintMixin:
     # All algorithms guaranteed by hashlib are supported
     # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
     # Supported Algorithms are:
-    #     - 'blake2b', 
+    #     - 'blake2b',
     #     - 'blake2s',
     #     - 'md5',
     #     - 'sha1',
