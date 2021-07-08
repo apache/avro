@@ -29,7 +29,7 @@ on:
 
 defaults:
   run:
-    working-directory: lang/rust
+    working-directory: lang/rust # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
 
 jobs:
   audit:
