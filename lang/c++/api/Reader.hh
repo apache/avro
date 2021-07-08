@@ -19,15 +19,15 @@
 #ifndef avro_Reader_hh__
 #define avro_Reader_hh__
 
-#include <cstdint>
-#include <vector>
 #include <array>
 #include <boost/noncopyable.hpp>
+#include <cstdint>
+#include <vector>
 
 #include "Config.hh"
-#include "Zigzag.hh"
 #include "Types.hh"
 #include "Validator.hh"
+#include "Zigzag.hh"
 #include "buffer/BufferReader.hh"
 
 namespace avro {
@@ -41,13 +41,10 @@ template<class ValidatorType>
 class ReaderImpl : private boost::noncopyable {
 
 public:
+    explicit ReaderImpl(const InputBuffer &buffer) : reader_(buffer) {}
 
-    explicit ReaderImpl(const InputBuffer &buffer) :
-        reader_(buffer) {}
-
-    ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) :
-        validator_(schema),
-        reader_(buffer) {}
+    ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) : validator_(schema),
+                                                                       reader_(buffer) {}
 
     void readValue(Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
@@ -55,9 +52,9 @@ public:
 
     void readValue(bool &val) {
         validator_.checkTypeExpected(AVRO_BOOL);
-        uint8_t ival = 0;
-        reader_.read(ival);
-        val = (ival != 0);
+        uint8_t intVal = 0;
+        reader_.read(intVal);
+        val = (intVal != 0);
     }
 
     void readValue(int32_t &val) {
@@ -165,15 +162,14 @@ public:
     }
 
 private:
-
     uint64_t readVarInt() {
         uint64_t encoded = 0;
         uint8_t val = 0;
         int shift = 0;
         do {
             reader_.read(val);
-            uint64_t newbits = static_cast<uint64_t>(val & 0x7f) << shift;
-            encoded |= newbits;
+            uint64_t newBits = static_cast<uint64_t>(val & 0x7f) << shift;
+            encoded |= newBits;
             shift += 7;
         } while (val & 0x80);
 
@@ -195,7 +191,6 @@ private:
 
     ValidatorType validator_;
     BufferReader reader_;
-
 };
 
 using Reader = ReaderImpl<NullValidator>;

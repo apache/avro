@@ -16,55 +16,54 @@
  * limitations under the License.
  */
 
+#include <boost/filesystem.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test_framework.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 #include <sstream>
 
+#include "Compiler.hh"
 #include "DataFile.hh"
 #include "Generic.hh"
 #include "Stream.hh"
-#include "Compiler.hh"
 
-using std::unique_ptr;
-using std::string;
-using std::pair;
-using std::vector;
-using std::map;
-using std::istringstream;
-using std::ostringstream;
 using std::array;
+using std::istringstream;
+using std::map;
+using std::ostringstream;
+using std::pair;
+using std::string;
+using std::unique_ptr;
+using std::vector;
 
 using boost::shared_ptr;
 using boost::unit_test::test_suite;
 
-
-using avro::ValidSchema;
 using avro::GenericDatum;
 using avro::GenericRecord;
 using avro::NodePtr;
+using avro::ValidSchema;
 
 const int DEFAULT_COUNT = 1000;
 
-template <typename T>
+template<typename T>
 struct Complex {
     T re;
     T im;
-    Complex() : re(0), im(0) { }
-    Complex(T r, T i) : re(r), im(i) { }
+    Complex() : re(0), im(0) {}
+    Complex(T r, T i) : re(r), im(i) {}
 };
 
 struct Integer {
     int64_t re;
-    Integer() : re(0) { }
-    Integer(int64_t r) : re(r) { }
+    Integer() : re(0) {}
+    explicit Integer(int64_t r) : re(r) {}
 };
 
 using ComplexInteger = Complex<int64_t>;
@@ -72,52 +71,55 @@ using ComplexDouble = Complex<double>;
 
 struct Double {
     double re;
-    Double() : re(0) { }
-    Double(double r) : re(r) { }
+    Double() : re(0) {}
+    explicit Double(double r) : re(r) {}
 };
 
 namespace avro {
 
-template <typename T> struct codec_traits<Complex<T> > {
-    static void encode(Encoder& e, const Complex<T>& c) {
+template<typename T>
+struct codec_traits<Complex<T>> {
+    static void encode(Encoder &e, const Complex<T> &c) {
         avro::encode(e, c.re);
         avro::encode(e, c.im);
     }
 
-    static void decode(Decoder& d, Complex<T>& c) {
+    static void decode(Decoder &d, Complex<T> &c) {
         avro::decode(d, c.re);
         avro::decode(d, c.im);
     }
 };
 
-template <> struct codec_traits<Integer> {
-    static void decode(Decoder& d, Integer& c) {
+template<>
+struct codec_traits<Integer> {
+    static void decode(Decoder &d, Integer &c) {
         avro::decode(d, c.re);
     }
 };
 
-template <> struct codec_traits<Double> {
-    static void decode(Decoder& d, Double& c) {
+template<>
+struct codec_traits<Double> {
+    static void decode(Decoder &d, Double &c) {
         avro::decode(d, c.re);
     }
 };
 
-template<> struct codec_traits<uint32_t> {
-    static void encode(Encoder& e, const uint32_t& v) {
-      e.encodeFixed( (uint8_t *) &v,sizeof(uint32_t));
+template<>
+struct codec_traits<uint32_t> {
+    static void encode(Encoder &e, const uint32_t &v) {
+        e.encodeFixed((uint8_t *) &v, sizeof(uint32_t));
     }
 
-    static void decode(Decoder& d, uint32_t& v) {
-        std::vector <uint8_t> value;
-        d.decodeFixed(sizeof(uint32_t),value);
-        memcpy(&v,&(value[0]),sizeof(uint32_t));
+    static void decode(Decoder &d, uint32_t &v) {
+        std::vector<uint8_t> value;
+        d.decodeFixed(sizeof(uint32_t), value);
+        memcpy(&v, &(value[0]), sizeof(uint32_t));
     }
 };
 
-}
+} // namespace avro
 
-static ValidSchema makeValidSchema(const char* schema)
-{
+static ValidSchema makeValidSchema(const char *schema) {
     istringstream iss(schema);
     ValidSchema vs;
     compileJsonSchema(iss, vs);
@@ -125,41 +127,41 @@ static ValidSchema makeValidSchema(const char* schema)
 }
 
 static const char sch[] = "{\"type\": \"record\","
-    "\"name\":\"ComplexInteger\", \"fields\": ["
-        "{\"name\":\"re\", \"type\":\"long\"},"
-        "{\"name\":\"im\", \"type\":\"long\"}"
-    "]}";
+                          "\"name\":\"ComplexInteger\", \"fields\": ["
+                          "{\"name\":\"re\", \"type\":\"long\"},"
+                          "{\"name\":\"im\", \"type\":\"long\"}"
+                          "]}";
 static const char isch[] = "{\"type\": \"record\","
-    "\"name\":\"ComplexInteger\", \"fields\": ["
-        "{\"name\":\"re\", \"type\":\"long\"}"
-    "]}";
+                           "\"name\":\"ComplexInteger\", \"fields\": ["
+                           "{\"name\":\"re\", \"type\":\"long\"}"
+                           "]}";
 static const char dsch[] = "{\"type\": \"record\","
-    "\"name\":\"ComplexDouble\", \"fields\": ["
-        "{\"name\":\"re\", \"type\":\"double\"},"
-        "{\"name\":\"im\", \"type\":\"double\"}"
-    "]}";
+                           "\"name\":\"ComplexDouble\", \"fields\": ["
+                           "{\"name\":\"re\", \"type\":\"double\"},"
+                           "{\"name\":\"im\", \"type\":\"double\"}"
+                           "]}";
 static const char dblsch[] =
     "{\"type\": \"record\","
     "\"name\":\"ComplexDouble\", "
     "\"doc\": \"\\\"Quoted_doc_string\\\"\", "
     "\"fields\": ["
-        "{\"name\":\"re\", \"type\":\"double\"}"
+    "{\"name\":\"re\", \"type\":\"double\"}"
     "]}";
 static const char fsch[] = "{\"type\": \"fixed\","
-    "\"name\":\"Fixed_32\", \"size\":4}";
+                           "\"name\":\"Fixed_32\", \"size\":4}";
 static const char ischWithDoc[] =
     "{\"type\": \"record\","
     "\"name\":\"ComplexInteger\", "
     "\"doc\": \"record_doc\", "
     "\"fields\": ["
-        "{\"name\":\"re1\", \"type\":\"long\", \"doc\": \"field_doc\"},"
-        "{\"name\":\"re2\", \"type\":\"long\"},"
-        "{\"name\":\"re3\", \"type\":\"long\", \"doc\": \"\"},"
-        "{\"name\":\"re4\", \"type\":\"long\", "
-        "\"doc\": \"A_\\\"quoted_doc\\\"\"},"
-        "{\"name\":\"re5\", \"type\":\"long\", \"doc\": \"doc with\nspaces\"},"
-        "{\"name\":\"re6\", \"type\":\"long\", "
-        "\"doc\": \"extra slashes\\\\\\\\\"}"
+    "{\"name\":\"re1\", \"type\":\"long\", \"doc\": \"field_doc\"},"
+    "{\"name\":\"re2\", \"type\":\"long\"},"
+    "{\"name\":\"re3\", \"type\":\"long\", \"doc\": \"\"},"
+    "{\"name\":\"re4\", \"type\":\"long\", "
+    "\"doc\": \"A_\\\"quoted_doc\\\"\"},"
+    "{\"name\":\"re5\", \"type\":\"long\", \"doc\": \"doc with\nspaces\"},"
+    "{\"name\":\"re6\", \"type\":\"long\", "
+    "\"doc\": \"extra slashes\\\\\\\\\"}"
     "]}";
 
 static const char schemaWithIdAndString[] = R"({
@@ -177,24 +179,22 @@ static const char schemaWithIdAndString[] = R"({
        ]
     })";
 
-string toString(const ValidSchema& s)
-{
+string toString(const ValidSchema &s) {
     ostringstream oss;
     s.toJson(oss);
     return oss.str();
 }
 
 class DataFileTest {
-    const char* filename;
+    const char *filename;
     const ValidSchema writerSchema;
     const ValidSchema readerSchema;
     const int count;
 
 public:
-    DataFileTest(const char* f, const char* wsch, const char* rsch,
-            int count = DEFAULT_COUNT) :
-        filename(f), writerSchema(makeValidSchema(wsch)),
-        readerSchema(makeValidSchema(rsch)), count(count) { }
+    DataFileTest(const char *f, const char *wsch, const char *rsch,
+                 int count = DEFAULT_COUNT) : filename(f), writerSchema(makeValidSchema(wsch)),
+                                              readerSchema(makeValidSchema(rsch)), count(count) {}
 
     using Pair = pair<ValidSchema, GenericDatum>;
 
@@ -235,9 +235,9 @@ public:
         int64_t im = 5;
         Pair p(writerSchema, GenericDatum());
 
-        GenericDatum& c = p.second;
+        GenericDatum &c = p.second;
         c = GenericDatum(writerSchema.root());
-        GenericRecord& r = c.value<GenericRecord>();
+        auto &r = c.value<GenericRecord>();
 
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
             r.fieldAt(0) = re;
@@ -253,9 +253,9 @@ public:
         int64_t im = 5;
         Pair p(writerSchema, GenericDatum());
 
-        GenericDatum& c = p.second;
+        GenericDatum &c = p.second;
         c = GenericDatum(writerSchema.root());
-        GenericRecord& r = c.value<GenericRecord>();
+        auto &r = c.value<GenericRecord>();
 
         for (int i = 0; i < count; ++i, re *= im, im += 3) {
             r.field("re") = re;
@@ -325,17 +325,17 @@ public:
         int64_t re = 3;
         int64_t im = 5;
 
-        const GenericDatum& ci = p.second;
+        const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord& r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 2;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
-            const GenericDatum& f0 = r.fieldAt(0);
+            const GenericDatum &f0 = r.fieldAt(0);
             BOOST_REQUIRE_EQUAL(f0.type(), avro::AVRO_LONG);
             BOOST_CHECK_EQUAL(f0.value<int64_t>(), re);
 
-            const GenericDatum& f1 = r.fieldAt(1);
+            const GenericDatum &f1 = r.fieldAt(1);
             BOOST_REQUIRE_EQUAL(f1.type(), avro::AVRO_LONG);
             BOOST_CHECK_EQUAL(f1.value<int64_t>(), im);
             re *= im;
@@ -352,17 +352,17 @@ public:
         int64_t re = 3;
         int64_t im = 5;
 
-        const GenericDatum& ci = p.second;
+        const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord& r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 2;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
-            const GenericDatum& f0 = r.field("re");
+            const GenericDatum &f0 = r.field("re");
             BOOST_REQUIRE_EQUAL(f0.type(), avro::AVRO_LONG);
             BOOST_CHECK_EQUAL(f0.value<int64_t>(), re);
 
-            const GenericDatum& f1 = r.field("im");
+            const GenericDatum &f1 = r.field("im");
             BOOST_REQUIRE_EQUAL(f1.type(), avro::AVRO_LONG);
             BOOST_CHECK_EQUAL(f1.value<int64_t>(), im);
             re *= im;
@@ -379,13 +379,13 @@ public:
         int64_t re = 3;
         int64_t im = 5;
 
-        const GenericDatum& ci = p.second;
+        const GenericDatum &ci = p.second;
         while (df.read(p)) {
             BOOST_REQUIRE_EQUAL(ci.type(), avro::AVRO_RECORD);
-            const GenericRecord& r = ci.value<GenericRecord>();
+            const auto &r = ci.value<GenericRecord>();
             const size_t n = 1;
             BOOST_REQUIRE_EQUAL(r.fieldCount(), n);
-            const GenericDatum& f0 = r.fieldAt(0);
+            const GenericDatum &f0 = r.fieldAt(0);
             BOOST_REQUIRE_EQUAL(f0.type(), avro::AVRO_LONG);
             BOOST_CHECK_EQUAL(f0.value<int64_t>(), re);
 
@@ -403,7 +403,7 @@ public:
             prev = df.previousSync();
             sync_points.push_back(prev);
         }
-        std::set<pair<int64_t, int64_t> > actual;
+        std::set<pair<int64_t, int64_t>> actual;
         int num = 0;
         for (int i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
@@ -469,20 +469,19 @@ public:
     // This is a direct port of testSplits() from
     // lang/java/avro/src/test/java/org/apache/avro/TestDataFile.java.
     void testReaderSplits() {
-        boost::mt19937 random(static_cast<uint32_t>(time(0)));
+        boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         std::ifstream just_for_length(
             filename, std::ifstream::ate | std::ifstream::binary);
         int length = just_for_length.tellg();
         int splits = 10;
-        int end = length;      // end of split
-        int remaining = end;   // bytes remaining
-        int actual_count = 0;  // count of entries
+        int end = length;     // end of split
+        int remaining = end;  // bytes remaining
+        int actual_count = 0; // count of entries
         while (remaining > 0) {
             int start =
-                std::max(0, end - boost::random::uniform_int_distribution<>(
-                                      0, 2 * length / splits)(random));
-            df.sync(start);  // count entries in split
+                std::max(0, end - boost::random::uniform_int_distribution<>(0, 2 * length / splits)(random));
+            df.sync(start); // count entries in split
             while (!df.pastSync(end)) {
                 ComplexInteger ci;
                 df.read(ci);
@@ -565,7 +564,7 @@ public:
         ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
         {
             avro::DataFileWriter<ComplexInteger> writer(
-              filename, dschema, 16 * 1024, avro::DEFLATE_CODEC);
+                filename, dschema, 16 * 1024, avro::DEFLATE_CODEC);
 
             for (size_t i = 0; i < number_of_objects; ++i) {
                 ComplexInteger d;
@@ -596,7 +595,7 @@ public:
         ValidSchema dschema = avro::compileJsonSchemaFromString(sch);
         {
             avro::DataFileWriter<ComplexInteger> writer(
-              filename, dschema, 16 * 1024, avro::SNAPPY_CODEC);
+                filename, dschema, 16 * 1024, avro::SNAPPY_CODEC);
 
             for (size_t i = 0; i < number_of_objects; ++i) {
                 ComplexInteger d;
@@ -622,7 +621,7 @@ public:
 #endif
 
     void testSchemaReadWrite() {
-        uint32_t a=42;
+        uint32_t a = 42;
         {
             avro::DataFileWriter<uint32_t> df(filename, writerSchema);
             df.write(a);
@@ -637,73 +636,75 @@ public:
     }
 
     void testSchemaReadWriteWithDoc() {
-        uint32_t a=42;
+        uint32_t a = 42;
         {
-          avro::DataFileWriter<uint32_t> df(filename, writerSchema);
-          df.write(a);
+            avro::DataFileWriter<uint32_t> df(filename, writerSchema);
+            df.write(a);
         }
 
         {
-          avro::DataFileReader<uint32_t> df(filename);
-          uint32_t b;
-          df.read(b);
-          BOOST_CHECK_EQUAL(b, a);
+            avro::DataFileReader<uint32_t> df(filename);
+            uint32_t b;
+            df.read(b);
+            BOOST_CHECK_EQUAL(b, a);
 
-          const NodePtr& root = df.readerSchema().root();
-          BOOST_CHECK_EQUAL(root->getDoc(), "record_doc");
-          BOOST_CHECK_EQUAL(root->leafAt(0)->getDoc(), "field_doc");
-          BOOST_CHECK_EQUAL(root->leafAt(1)->getDoc(), "");
-          BOOST_CHECK_EQUAL(root->leafAt(2)->getDoc(), "");
-          BOOST_CHECK_EQUAL(root->leafAt(3)->getDoc(), "A_\"quoted_doc\"");
-          BOOST_CHECK_EQUAL(root->leafAt(4)->getDoc(), "doc with\nspaces");
-          BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
+            const NodePtr &root = df.readerSchema().root();
+            BOOST_CHECK_EQUAL(root->getDoc(), "record_doc");
+            BOOST_CHECK_EQUAL(root->leafAt(0)->getDoc(), "field_doc");
+            BOOST_CHECK_EQUAL(root->leafAt(1)->getDoc(), "");
+            BOOST_CHECK_EQUAL(root->leafAt(2)->getDoc(), "");
+            BOOST_CHECK_EQUAL(root->leafAt(3)->getDoc(), "A_\"quoted_doc\"");
+            BOOST_CHECK_EQUAL(root->leafAt(4)->getDoc(), "doc with\nspaces");
+            BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
 };
 
-void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
-{
+void addReaderTests(test_suite *ts, const shared_ptr<DataFileTest> &t) {
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadFull, t));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadProjection, t));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderGeneric, t));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderGenericByName, t));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderGenericProjection,
-        t));
+                                  t));
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
 }
 
 struct WriterObj {
     std::string s1;
     std::string s2;
-    WriterObj(const char* s1, const char* s2): s1(s1), s2(s2) {}
+    WriterObj(const char *s1, const char *s2) : s1(s1), s2(s2) {}
 };
 
 struct ReaderObj {
     std::string s2;
-    ReaderObj(const char* s2): s2(s2) {}
+    explicit ReaderObj(const char *s2) : s2(s2) {}
 };
 
 namespace avro {
-template<> struct codec_traits<WriterObj> {
-    static void encode(Encoder& e, const WriterObj& v) {
+template<>
+struct codec_traits<WriterObj> {
+    static void encode(Encoder &e, const WriterObj &v) {
         avro::encode(e, v.s1);
         avro::encode(e, v.s2);
     }
 };
 
-template<> struct codec_traits<ReaderObj> {
-    static void decode(Decoder& d, ReaderObj& v) {
-        if (avro::ResolvingDecoder *rd =
-            dynamic_cast<avro::ResolvingDecoder *>(&d)) {
+template<>
+struct codec_traits<ReaderObj> {
+    static void decode(Decoder &d, ReaderObj &v) {
+        if (auto *rd =
+                dynamic_cast<avro::ResolvingDecoder *>(&d)) {
             const std::vector<size_t> fo = rd->fieldOrder();
-            for (std::vector<size_t>::const_iterator it = fo.begin();
-                it != fo.end(); ++it) {
-                switch (*it) {
-                case 0:
-                    avro::decode(d, v.s2);
-                    break;
-                default:
-                    break;
+            for (unsigned long it : fo) {
+                switch (it) {
+                    case 0: {
+                        avro::decode(d, v.s2);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
             }
         } else {
@@ -711,18 +712,18 @@ template<> struct codec_traits<ReaderObj> {
         }
     }
 };
-}   // namespace avro
+} // namespace avro
 
 void testSkipString(avro::Codec codec) {
     const char *writerSchemaStr = "{"
-        "\"type\": \"record\", \"name\": \"R\", \"fields\":["
-        "{\"name\": \"s1\", \"type\": \"string\"},"
-        "{\"name\": \"s2\", \"type\": \"string\"}"
-        "]}";
+                                  "\"type\": \"record\", \"name\": \"R\", \"fields\":["
+                                  "{\"name\": \"s1\", \"type\": \"string\"},"
+                                  "{\"name\": \"s2\", \"type\": \"string\"}"
+                                  "]}";
     const char *readerSchemaStr = "{"
-        "\"type\": \"record\", \"name\": \"R\", \"fields\":["
-        "{\"name\": \"s2\", \"type\": \"string\"}"
-        "]}";
+                                  "\"type\": \"record\", \"name\": \"R\", \"fields\":["
+                                  "{\"name\": \"s2\", \"type\": \"string\"}"
+                                  "]}";
     avro::ValidSchema writerSchema =
         avro::compileJsonSchemaFromString(writerSchemaStr);
     avro::ValidSchema readerSchema =
@@ -738,7 +739,7 @@ void testSkipString(avro::Codec codec) {
     const char *filename = "test_skip.df";
     {
         avro::DataFileWriter<WriterObj> df(filename,
-                writerSchema, 100, codec);
+                                           writerSchema, 100, codec);
         df.write(WriterObj(largeString, "b1"));
         df.write(WriterObj(largeString, "b2"));
         df.flush();
@@ -755,46 +756,43 @@ void testSkipString(avro::Codec codec) {
     }
 }
 
-void testSkipStringNullCodec()
-{
+void testSkipStringNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::NULL_CODEC);
 }
 
-void testSkipStringDeflateCodec()
-{
+void testSkipStringDeflateCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::DEFLATE_CODEC);
 }
 
 #ifdef SNAPPY_CODEC_AVAILABLE
-void testSkipStringSnappyCodec()
-{
+void testSkipStringSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testSkipString(avro::SNAPPY_CODEC);
 }
 #endif
 
-
 struct TestRecord {
     std::string s1;
     int64_t id;
-    TestRecord(const char* s1, int64_t id) : s1(s1), id(id) {}
+    TestRecord(const char *s1, int64_t id) : s1(s1), id(id) {}
 };
 
 namespace avro {
-    template<> struct codec_traits<TestRecord> {
-        static void encode(Encoder& e, const TestRecord& v) {
-            avro::encode(e, v.s1);
-            avro::encode(e, v.id);
-        }
+template<>
+struct codec_traits<TestRecord> {
+    static void encode(Encoder &e, const TestRecord &v) {
+        avro::encode(e, v.s1);
+        avro::encode(e, v.id);
+    }
 
-        static void decode(Decoder& d, TestRecord& v) {
-            avro::decode(d, v.s1);
-            avro::decode(d, v.id);
-        }
-    };
-}   // namespace avro
+    static void decode(Decoder &d, TestRecord &v) {
+        avro::decode(d, v.s1);
+        avro::decode(d, v.id);
+    }
+};
+} // namespace avro
 
 void testLastSync(avro::Codec codec) {
 
@@ -804,33 +802,32 @@ void testLastSync(avro::Codec codec) {
 
     avro::ValidSchema writerSchema =
         avro::compileJsonSchemaFromString(schemaWithIdAndString);
-    
+
     const size_t stringLen = 100;
     char largeString[stringLen + 1];
-    for(size_t i = 0; i < stringLen; i++) {
+    for (size_t i = 0; i < stringLen; i++) {
         largeString[i] = 'a';
     }
 
     largeString[stringLen] = '\0';
 
-    const char* filename = "test_lastSync.df";
+    const char *filename = "test_lastSync.df";
     std::deque<std::pair<uint64_t, int>> syncMetadata;
     int numberOfRecords = 100;
     {
         avro::DataFileWriter<TestRecord> df(filename,
-            writerSchema, 1024, codec);
+                                            writerSchema, 1024, codec);
 
         uint64_t lastSync = df.getCurrentBlockStart();
-        syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, 0));
-        for(int i = 0; i < numberOfRecords; i++)
-        {
-            df.write(TestRecord(largeString, (int64_t)i));
-            
+        syncMetadata.emplace_back(lastSync, 0);
+        for (int i = 0; i < numberOfRecords; i++) {
+            df.write(TestRecord(largeString, (int64_t) i));
+
             // During the write, gather all the sync boundaries from the lastSync() API
-            if(df.getCurrentBlockStart() != lastSync)
-            {
-                int recordsUptoSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
-                syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, recordsUptoSync));
+            if (df.getCurrentBlockStart() != lastSync) {
+                int recordsUptoSync =
+                    i; // 1 less than total number of records written, since the sync block is sealed before a write
+                syncMetadata.emplace_back(lastSync, recordsUptoSync);
                 lastSync = df.getCurrentBlockStart();
 
                 //::printf("\nPast current block start %llu, total rows upto sync %d", lastSync, recordsUptoSync);
@@ -838,7 +835,7 @@ void testLastSync(avro::Codec codec) {
         }
 
         //::printf("\nPast current block start %llu, total rows upto sync %d", df.getCurrentBlockStart(), numberOfRecords);
-        syncMetadata.push_back(std::pair<uint64_t, int>(df.getCurrentBlockStart(), numberOfRecords));
+        syncMetadata.emplace_back(df.getCurrentBlockStart(), numberOfRecords);
 
         df.flush();
         df.close();
@@ -849,11 +846,9 @@ void testLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(filename);
         TestRecord readRecord("", 0);
 
-        for(int index = 0; index < numberOfRecords; index++)
-        {
+        for (int index = 0; index < numberOfRecords; index++) {
             int rowsRead = index;
-            if(rowsRead > syncMetadata.front().second)
-            {
+            if (rowsRead > syncMetadata.front().second) {
                 syncMetadata.pop_front();
             }
 
@@ -865,17 +860,15 @@ void testLastSync(avro::Codec codec) {
             BOOST_CHECK_EQUAL(expectedId, readRecord.id);
         }
 
-        if(numberOfRecords > syncMetadata.front().second)
-        {
+        if (numberOfRecords > syncMetadata.front().second) {
             syncMetadata.pop_front();
         }
 
         // validate previousSync matches even at the end of the file
         BOOST_CHECK_EQUAL(df.previousSync(), syncMetadata.front().first);
-        BOOST_CHECK_EQUAL(1, syncMetadata.size());  // only 1 item must be remaining in the syncMetadata queue
+        BOOST_CHECK_EQUAL(1, syncMetadata.size()); // only 1 item must be remaining in the syncMetadata queue
     }
 }
-
 
 void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
@@ -888,35 +881,34 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
     const size_t stringLen = 100;
     char largeString[stringLen + 1];
-    for(size_t i = 0; i < stringLen; i++) {
+    for (size_t i = 0; i < stringLen; i++) {
         largeString[i] = 'a';
     }
 
     largeString[stringLen] = '\0';
 
-    const char* filename = "test_readRecordUsingLastSync.df";
-    
+    const char *filename = "test_readRecordUsingLastSync.df";
+
     size_t numberOfRecords = 100;
-    size_t recordToRead = 37;  // pick specific record to read efficiently
+    size_t recordToRead = 37; // pick specific record to read efficiently
     size_t syncPointWithRecord = 0;
     size_t finalSync = 0;
     size_t recordsUptoLastSync = 0;
     size_t firstSyncPoint = 0;
     {
         avro::DataFileWriter<TestRecord> df(filename,
-            writerSchema, 1024, codec);
+                                            writerSchema, 1024, codec);
 
         firstSyncPoint = df.getCurrentBlockStart();
         syncPointWithRecord = firstSyncPoint;
-        for (size_t i = 0; i < numberOfRecords; i++)
-        {
-            df.write(TestRecord(largeString, (int64_t)i));
+        for (size_t i = 0; i < numberOfRecords; i++) {
+            df.write(TestRecord(largeString, (int64_t) i));
 
             // During the write, gather all the sync boundaries from the lastSync() API
             size_t recordsWritten = i + 1;
-            if ((recordsWritten <= recordToRead) && (df.getCurrentBlockStart() != syncPointWithRecord))
-            {
-                recordsUptoLastSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
+            if ((recordsWritten <= recordToRead) && (df.getCurrentBlockStart() != syncPointWithRecord)) {
+                recordsUptoLastSync =
+                    i; // 1 less than total number of records written, since the sync block is sealed before a write
                 syncPointWithRecord = df.getCurrentBlockStart();
 
                 //::printf("\nPast current block start %llu, total rows upto sync %d", syncPointWithRecord, recordsUptoLastSync);
@@ -930,9 +922,10 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
     // Validate that we're able to stitch together {header block | specific block with record} and read the specific record from the stitched block
     {
-        std::unique_ptr<avro::SeekableInputStream> seekableInputStream = avro::fileSeekableInputStream(filename, 1000000);
+        std::unique_ptr<avro::SeekableInputStream>
+            seekableInputStream = avro::fileSeekableInputStream(filename, 1000000);
 
-        const uint8_t* pData = nullptr;
+        const uint8_t *pData = nullptr;
         size_t length = 0;
         bool hasRead = seekableInputStream->next(&pData, &length);
         BOOST_CHECK(hasRead);
@@ -952,7 +945,8 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::copy(pData + syncPointWithRecord, pData + finalSync, std::back_inserter(stitchedData));
 
         // Convert to inputStream
-        std::unique_ptr<avro::InputStream> inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
+        std::unique_ptr<avro::InputStream>
+            inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
         int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
 
@@ -962,8 +956,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
         TestRecord readRecord("", 0);
         //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
-        for(int index = 0; index < recordsUptoRecordToRead; index++)
-        {
+        for (int index = 0; index < recordsUptoRecordToRead; index++) {
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);
@@ -976,90 +969,83 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
     }
 }
 
-void testLastSyncNullCodec()
-{
+void testLastSyncNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testLastSync(avro::NULL_CODEC);
 }
 
-void testLastSyncDeflateCodec()
-{
+void testLastSyncDeflateCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testLastSync(avro::DEFLATE_CODEC);
 }
 
 #ifdef SNAPPY_CODEC_AVAILABLE
-void testLastSyncSnappyCodec()
-{
+void testLastSyncSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testLastSync(avro::SNAPPY_CODEC);
 }
 #endif
 
-void testReadRecordEfficientlyUsingLastSyncNullCodec()
-{
+void testReadRecordEfficientlyUsingLastSyncNullCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::NULL_CODEC);
 }
 
-void testReadRecordEfficientlyUsingLastSyncDeflateCodec()
-{
+void testReadRecordEfficientlyUsingLastSyncDeflateCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::DEFLATE_CODEC);
 }
 
 #ifdef SNAPPY_CODEC_AVAILABLE
-void testReadRecordEfficientlyUsingLastSyncSnappyCodec()
-{
+void testReadRecordEfficientlyUsingLastSyncSnappyCodec() {
     BOOST_TEST_CHECKPOINT(__func__);
     testReadRecordEfficientlyUsingLastSync(avro::SNAPPY_CODEC);
 }
 #endif
 
-test_suite*
-init_unit_test_suite(int argc, char *argv[])
-{
+test_suite *
+init_unit_test_suite(int argc, char *argv[]) {
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.defalate.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.defalate.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.deflate.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
-                    &DataFileTest::testWriteWithDeflateCodec, t1));
+            &DataFileTest::testWriteWithDeflateCodec, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
 #ifdef SNAPPY_CODEC_AVAILABLE
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.snappy.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test1.snappy.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.snappy.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(
-                    &DataFileTest::testWriteWithSnappyCodec, t1));
+            &DataFileTest::testWriteWithSnappyCodec, t1));
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
 #endif
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
         shared_ptr<DataFileTest> t2(new DataFileTest("test2.df", sch, isch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGeneric, t2));
         addReaderTests(ts, t2);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test3.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test3.df");
         shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteDouble, t3));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDouble, t3));
@@ -1071,14 +1057,14 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test4.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test4.df");
         shared_ptr<DataFileTest> t4(new DataFileTest("test4.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testTruncate, t4));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t4));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test5.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test5.df");
         shared_ptr<DataFileTest> t5(new DataFileTest("test5.df", sch, isch));
         ts->add(
             BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGenericByName, t5));
@@ -1086,13 +1072,13 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test6.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test6.df");
         shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test8.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test8.df");
         shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
 #ifdef SNAPPY_CODEC_AVAILABLE
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
@@ -1100,14 +1086,14 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test7.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test7.df");
         shared_ptr<DataFileTest> t7(new DataFileTest("test7.df", fsch, fsch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite, t7));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t7));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test9.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test9.df");
         shared_ptr<DataFileTest> t9(new DataFileTest("test9.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t9));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSyncSeek, t9));
@@ -1115,7 +1101,7 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test10.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test10.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test10.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(
@@ -1124,7 +1110,7 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test11.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test11.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test11.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSplits, t));
@@ -1132,7 +1118,7 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
     {
-        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
+        auto *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
         shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
@@ -1140,32 +1126,23 @@ init_unit_test_suite(int argc, char *argv[])
         boost::unit_test::framework::master_test_suite().add(ts);
     }
 
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testSkipStringNullCodec));
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testSkipStringDeflateCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
 #endif
 
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testLastSyncNullCodec));
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testLastSyncDeflateCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
 #endif
 
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncNullCodec));
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncDeflateCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncNullCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncDeflateCodec));
 #ifdef SNAPPY_CODEC_AVAILABLE
-    boost::unit_test::framework::master_test_suite().
-        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
+    boost::unit_test::framework::master_test_suite().add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
 #endif
 
-    return 0;
+    return nullptr;
 }

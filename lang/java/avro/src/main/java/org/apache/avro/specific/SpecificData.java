@@ -69,25 +69,46 @@ public class SpecificData extends GenericData {
     }
 
   };
+  private static final ClassValue<SpecificData> MODEL_CACHE = new ClassValue<SpecificData>() {
+    @Override
+    protected SpecificData computeValue(Class<?> type) {
+      Field specificDataField;
+      try {
+        specificDataField = type.getDeclaredField("MODEL$");
+        specificDataField.setAccessible(true);
+        return (SpecificData) specificDataField.get(null);
+      } catch (NoSuchFieldException e) {
+        // Return default instance
+        return SpecificData.get();
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException("while trying to access field MODEL$ on " + type.getCanonicalName(), e);
+      }
+    }
+  };
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
   public static final String ELEMENT_PROP = "java-element-class";
 
   /**
-   * List of Java reserved words from
-   * https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9 combined
-   * with the boolean and null literals. combined with the classnames used
-   * internally in the generated avro code.
+   * Reserved words from
+   * https://docs.oracle.com/javase/specs/jls/se16/html/jls-3.html require
+   * mangling in order to be used in generated Java code.
    */
-  public static final Set<String> RESERVED_WORDS = new HashSet<>(
-      Arrays.asList("abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
-          "continue", "default", "do", "double", "else", "enum", "extends", "false", "final", "finally", "float", "for",
-          "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "null",
-          "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch",
-          "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile", "while",
-          /* classnames use internally by the avro code generator */
-          "Builder"));
+  public static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(
+      // Keywords from Section 3.9 can't be used as identifiers.
+      "_", "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
+      "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if",
+      "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private",
+      "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
+      "throw", "throws", "transient", "try", "void", "volatile", "while",
+      // Literals from Section 3.10 can't be used as identifiers.
+      "true", "false", "null",
+      // Some keywords from Section 3.8 can't be used as type identifiers.
+      "var", "yield", "record",
+      // Note that module-related restricted keywords can still be used.
+      // Class names used internally by the avro code generator
+      "Builder"));
 
   /**
    * Read/write some common builtin classes as strings. Representing these as
@@ -161,24 +182,14 @@ public class SpecificData extends GenericData {
    * Falls back to the default instance {@link SpecificData#get()} for other
    * classes or if the field is not found.
    *
-   * @param c A class
-   * @param   <T> .
+   * @param c   A class
+   * @param <T> .
    * @return The SpecificData from the SpecificRecordBase instance, or the default
    *         SpecificData instance.
    */
   public static <T> SpecificData getForClass(Class<T> c) {
     if (SpecificRecordBase.class.isAssignableFrom(c)) {
-      final Field specificDataField;
-      try {
-        specificDataField = c.getDeclaredField("MODEL$");
-        specificDataField.setAccessible(true);
-        return (SpecificData) specificDataField.get(null);
-      } catch (NoSuchFieldException e) {
-        // Return default instance
-        return SpecificData.get();
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException(e);
-      }
+      return MODEL_CACHE.get(c);
     }
     return SpecificData.get();
   }
@@ -231,6 +242,14 @@ public class SpecificData extends GenericData {
   private static final Class NO_CLASS = new Object() {
   }.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+
+  /** Undoes mangling for reserved words. */
+  protected static String unmangle(String word) {
+    while (word.endsWith("$")) {
+      word = word.substring(0, word.length() - 1);
+    }
+    return word;
+  }
 
   /** Return the class that implements a schema, or null if none exists. */
   public Class getClass(Schema schema) {

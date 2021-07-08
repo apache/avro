@@ -1,9 +1,0 @@
-{
-  "type": "record", 
-  "name": "SimpleRecord",
-  "namespace" : "org.public.int.void",
-  "fields" : [
-    {"name": "value", "type": "int"},
-    {"name": "nullableValue", "type": ["null","int"], "doc" : "doc"}
-  ]
-}

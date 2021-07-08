@@ -80,7 +80,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
    * @param b a byte buffer holding serialized data for an instance of this class
    * @return a FooBarSpecificRecord instance decoded from the given buffer
    * @throws java.io.IOException if the given bytes could not be deserialized into
-   *         an instance of this class
+   *                             an instance of this class
    */
   public static FooBarSpecificRecord fromByteBuffer(java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);

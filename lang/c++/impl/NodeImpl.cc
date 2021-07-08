@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-
+#include "NodeImpl.hh"
 #include <sstream>
 #include <utility>
-#include "NodeImpl.hh"
 
 using std::string;
 namespace avro {
@@ -34,21 +33,27 @@ string escape(const string &unescaped) {
         switch (c) {
             case '\\':
             case '"':
-            case '/':s += '\\';
+            case '/':
+                s += '\\';
                 s += c;
                 break;
-            case '\b':s += '\\';
+            case '\b':
+                s += '\\';
                 s += 'b';
                 break;
-            case '\f':s += '\f';
+            case '\f':
+                s += '\f';
                 break;
-            case '\n':s += '\\';
+            case '\n':
+                s += '\\';
                 s += 'n';
                 break;
-            case '\r':s += '\\';
+            case '\r':
+                s += '\\';
                 s += 'r';
                 break;
-            case '\t':s += '\\';
+            case '\t':
+                s += '\\';
                 s += 't';
                 break;
             default:
@@ -65,8 +70,7 @@ string escape(const string &unescaped) {
 
 // Wrap an indentation in a struct for ostream operator<<
 struct indent {
-    explicit indent(int depth) :
-        d(depth) {}
+    explicit indent(size_t depth) : d(depth) {}
     int d;
 };
 
@@ -113,7 +117,7 @@ NodePrimitive::resolve(const Node &reader) const {
                 return RESOLVE_PROMOTABLE_TO_DOUBLE;
             }
 
-        default:break;
+        default: break;
     }
 
     return furtherResolution(reader);
@@ -184,10 +188,9 @@ SchemaResolution
 NodeFixed::resolve(const Node &reader) const {
     if (reader.type() == AVRO_FIXED) {
         return (
-                   (reader.fixedSize() == fixedSize()) &&
-                       (reader.name() == name())
-               ) ?
-               RESOLVE_MATCH : RESOLVE_NO_MATCH;
+                   (reader.fixedSize() == fixedSize()) && (reader.name() == name()))
+            ? RESOLVE_MATCH
+            : RESOLVE_NO_MATCH;
     }
     return furtherResolution(reader);
 }
@@ -198,45 +201,46 @@ NodeSymbolic::resolve(const Node &reader) const {
     return node->resolve(reader);
 }
 
-void
-NodePrimitive::printJson(std::ostream &os, int depth) const {
+void NodePrimitive::printJson(std::ostream &os, size_t depth) const {
     bool hasLogicalType = logicalType().type() != LogicalType::NONE;
 
     if (hasLogicalType) {
-        os << "{\n" << indent(depth) << "\"type\": ";
+        os << "{\n"
+           << indent(depth) << "\"type\": ";
     }
 
     os << '\"' << type() << '\"';
 
     if (hasLogicalType) {
-        os << ",\n" << indent(depth);
+        os << ",\n"
+           << indent(depth);
         logicalType().printJson(os);
         os << "\n}";
     }
     if (!getDoc().empty()) {
-        os << ",\n" << indent(depth) << R"("doc": ")"
+        os << ",\n"
+           << indent(depth) << R"("doc": ")"
            << escape(getDoc()) << "\"";
     }
 }
 
-void
-NodeSymbolic::printJson(std::ostream &os, int depth) const {
+void NodeSymbolic::printJson(std::ostream &os, size_t depth) const {
     os << '\"' << nameAttribute_.get() << '\"';
     if (!getDoc().empty()) {
-        os << ",\n" << indent(depth) << R"("doc": ")"
+        os << ",\n"
+           << indent(depth) << R"("doc": ")"
            << escape(getDoc()) << "\"";
     }
 }
 
-static void printName(std::ostream &os, const Name &n, int depth) {
+static void printName(std::ostream &os, const Name &n, size_t depth) {
     if (!n.ns().empty()) {
         os << indent(depth) << R"("namespace": ")" << n.ns() << "\",\n";
     }
     os << indent(depth) << R"("name": ")" << n.simpleName() << "\",\n";
 }
 
-void
-NodeRecord::printJson(std::ostream &os, int depth) const {
+void NodeRecord::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
@@ -254,17 +258,18 @@ NodeRecord::printJson(std::ostream &os, int depth) const {
         if (i > 0) {
             os << ',';
         }
-        os << '\n' << indent(depth) << "{\n";
+        os << '\n'
+           << indent(depth) << "{\n";
         os << indent(++depth) << R"("name": ")" << leafNameAttributes_.get(i) << "\",\n";
         os << indent(depth) << "\"type\": ";
         leafAttributes_.get(i)->printJson(os, depth);
 
         if (!defaultValues.empty()) {
-            if (!defaultValues[i].isUnion() &&
-                defaultValues[i].type() == AVRO_NULL) {
+            if (!defaultValues[i].isUnion() && defaultValues[i].type() == AVRO_NULL) {
                 // No "default" field.
             } else {
-                os << ",\n" << indent(depth) << "\"default\": ";
+                os << ",\n"
+                   << indent(depth) << "\"default\": ";
                 leafAttributes_.get(i)->printDefaultToJson(defaultValues[i], os,
                                                            depth);
             }
@@ -272,32 +277,40 @@ NodeRecord::printJson(std::ostream &os, int depth) const {
         os << '\n';
         os << indent(--depth) << '}';
     }
-    os << '\n' << indent(--depth) << "]\n";
+    os << '\n'
+       << indent(--depth) << "]\n";
     os << indent(--depth) << '}';
 }
 
 void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                       int depth) const {
+                                       size_t depth) const {
     assert(isPrimitive(g.type()));
 
     switch (g.type()) {
-        case AVRO_NULL:os << "null";
+        case AVRO_NULL:
+            os << "null";
             break;
-        case AVRO_BOOL:os << (g.value<bool>() ? "true" : "false");
+        case AVRO_BOOL:
+            os << (g.value<bool>() ? "true" : "false");
             break;
-        case AVRO_INT:os << g.value<int32_t>();
+        case AVRO_INT:
+            os << g.value<int32_t>();
             break;
-        case AVRO_LONG:os << g.value<int64_t>();
+        case AVRO_LONG:
+            os << g.value<int64_t>();
             break;
-        case AVRO_FLOAT:os << g.value<float>();
+        case AVRO_FLOAT:
+            os << g.value<float>();
             break;
-        case AVRO_DOUBLE:os << g.value<double>();
+        case AVRO_DOUBLE:
+            os << g.value<double>();
             break;
-        case AVRO_STRING:os << "\"" << escape(g.value<string>()) << "\"";
+        case AVRO_STRING:
+            os << "\"" << escape(g.value<string>()) << "\"";
             break;
         case AVRO_BYTES: {
             // Convert to a string:
-            const auto &vg = g.value<std::vector<uint8_t> >();
+            const auto &vg = g.value<std::vector<uint8_t>>();
             string s;
             s.resize(vg.size() * kByteStringSize);
             for (unsigned int i = 0; i < vg.size(); i++) {
@@ -305,20 +318,19 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
                 s.replace(i * kByteStringSize, kByteStringSize, hex_string);
             }
             os << "\"" << s << "\"";
-        }
-            break;
-        default:break;
+        } break;
+        default: break;
     }
 }
 
 void NodeEnum::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                  int depth) const {
+                                  size_t depth) const {
     assert(g.type() == AVRO_ENUM);
     os << "\"" << g.value<GenericEnum>().symbol() << "\"";
 }
 
 void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   int depth) const {
+                                   size_t depth) const {
     assert(g.type() == AVRO_FIXED);
     // ex: "\uOOff"
     // Convert to a string
@@ -333,12 +345,12 @@ void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 }
 
 void NodeUnion::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   int depth) const {
+                                   size_t depth) const {
     leafAt(0)->printDefaultToJson(g, os, depth);
 }
 
 void NodeArray::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                   int depth) const {
+                                   size_t depth) const {
     assert(g.type() == AVRO_ARRAY);
     // ex: "default": [1]
     if (g.value<GenericArray>().value().empty()) {
@@ -356,17 +368,18 @@ void NodeArray::printDefaultToJson(const GenericDatum &g, std::ostream &os,
             leafAt(0)->printDefaultToJson(g.value<GenericArray>().value()[i], os,
                                           depth);
         }
-        os << "\n" << indent(--depth) << "]";
+        os << "\n"
+           << indent(--depth) << "]";
     }
 }
 
 void NodeSymbolic::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                      int depth) const {
+                                      size_t depth) const {
     getNode()->printDefaultToJson(g, os, depth);
 }
 
 void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                    int depth) const {
+                                    size_t depth) const {
     assert(g.type() == AVRO_RECORD);
     if (g.value<GenericRecord>().fieldCount() == 0) {
         os << "{}";
@@ -377,7 +390,7 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
         for (size_t i = 0; i < g.value<GenericRecord>().fieldCount(); i++) {
             if (i == 0) {
                 ++depth;
-            } else {  // i > 0
+            } else { // i > 0
                 os << ",\n";
             }
 
@@ -392,26 +405,26 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
             leafAt(i)->printDefaultToJson(g.value<GenericRecord>().fieldAt(i), os,
                                           depth);
         }
-        os << "\n" << indent(--depth) << "}";
+        os << "\n"
+           << indent(--depth) << "}";
     }
 }
 NodeRecord::NodeRecord(const HasName &name,
                        const MultiLeaves &fields,
                        const LeafNames &fieldsNames,
-                       std::vector<GenericDatum> dv) :
-    NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
-    defaultValues(std::move(dv)) {
+                       std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
+                                                       defaultValues(std::move(dv)) {
     for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
         if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
             throw Exception(boost::format(
-                "Cannot add duplicate field: %1%") %
-                leafNameAttributes_.get(i));
+                                "Cannot add duplicate field: %1%")
+                            % leafNameAttributes_.get(i));
         }
     }
 }
 
 void NodeMap::printDefaultToJson(const GenericDatum &g, std::ostream &os,
-                                 int depth) const {
+                                 size_t depth) const {
     assert(g.type() == AVRO_MAP);
     if (g.value<GenericMap>().value().empty()) {
         os << "{}";
@@ -430,12 +443,12 @@ void NodeMap::printDefaultToJson(const GenericDatum &g, std::ostream &os,
             leafAt(i)->printDefaultToJson(g.value<GenericMap>().value()[i].second, os,
                                           depth);
         }
-        os << "\n" << indent(--depth) << "}";
+        os << "\n"
+           << indent(--depth) << "}";
     }
 }
 
-void
-NodeEnum::printJson(std::ostream &os, int depth) const {
+void NodeEnum::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
     if (!getDoc().empty()) {
@@ -458,8 +471,7 @@ NodeEnum::printJson(std::ostream &os, int depth) const {
     os << indent(--depth) << '}';
 }
 
-void
-NodeArray::printJson(std::ostream &os, int depth) const {
+void NodeArray::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(depth + 1) << "\"type\": \"array\",\n";
     if (!getDoc().empty()) {
@@ -472,8 +484,7 @@ NodeArray::printJson(std::ostream &os, int depth) const {
     os << indent(depth) << '}';
 }
 
-void
-NodeMap::printJson(std::ostream &os, int depth) const {
+void NodeMap::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(depth + 1) << "\"type\": \"map\",\n";
     if (!getDoc().empty()) {
@@ -486,15 +497,12 @@ NodeMap::printJson(std::ostream &os, int depth) const {
     os << indent(depth) << '}';
 }
 
-NodeMap::NodeMap() :
-    NodeImplMap(AVRO_MAP) {
+NodeMap::NodeMap() : NodeImplMap(AVRO_MAP) {
     NodePtr key(new NodePrimitive(AVRO_STRING));
-    // FIXME: Calling virtual member function from constructor
     doAddLeaf(key);
 }
 
-void
-NodeUnion::printJson(std::ostream &os, int depth) const {
+void NodeUnion::printJson(std::ostream &os, size_t depth) const {
     os << "[\n";
     int fields = leafAttributes_.size();
     ++depth;
@@ -509,8 +517,7 @@ NodeUnion::printJson(std::ostream &os, int depth) const {
     os << indent(--depth) << ']';
 }
 
-void
-NodeFixed::printJson(std::ostream &os, int depth) const {
+void NodeFixed::printJson(std::ostream &os, size_t depth) const {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
     if (!getDoc().empty()) {
@@ -521,11 +528,13 @@ NodeFixed::printJson(std::ostream &os, int depth) const {
     os << indent(depth) << "\"size\": " << sizeAttribute_.get();
 
     if (logicalType().type() != LogicalType::NONE) {
-        os << ",\n" << indent(depth);
+        os << ",\n"
+           << indent(depth);
         logicalType().printJson(os);
     }
 
-    os << "\n" << indent(--depth) << '}';
+    os << "\n"
+       << indent(--depth) << '}';
 }
 
 } // namespace avro

@@ -36,7 +36,7 @@
     <avro.version>${project.version}</avro.version>
     <jackson.version>${jackson.version}</jackson.version>
     <junit.version>${junit.version}</junit.version>
-    <logback.version>1.0.0</logback.version>
+    <logback.version>1.2.3</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
 

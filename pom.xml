@@ -47,10 +47,14 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
     <!-- plugin versions -->
     <antrun-plugin.version>3.0.0</antrun-plugin.version>
-    <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
-    <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
+    <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
+    <checkstyle.version>8.42</checkstyle.version>
+    <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
+    <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <extra-enforcer-rules.version>1.3</extra-enforcer-rules.version>
+    <spotless-maven-plugin.version>2.11.1</spotless-maven-plugin.version>
+    <surefire.version>3.0.0-M5</surefire.version>
   </properties>
 
   <modules>
@@ -102,22 +106,49 @@
           <artifactId>spotless-maven-plugin</artifactId>
           <version>${spotless-maven-plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
-            <id>enforce-maven-version</id>
+            <id>default-cli</id>
             <goals>
               <goal>enforce</goal>
             </goals>
             <configuration>
               <rules>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>1.8</maxJdkVersion>
+                  <!--
+                    Multi release jars that are Java 8 compatible should pass,
+                    but the extra-enforcer-plugin does not detect them
+                    correctly so we should ignore them explicitly.
+                    -->
+                  <ignoreClasses>
+                    <ignoreClass>module-info</ignoreClass>
+                  </ignoreClasses>
+                  <excludes>
+                    <!--
+                      Supplied by the user JDK and compiled with matching
+                      version. Is not shaded, so safe to ignore.
+                    -->
+                    <exclude>jdk.tools:jdk.tools</exclude>
+                  </excludes>
+                </enforceBytecodeVersion>
+                <requireJavaVersion>
+                  <version>[1.8,)</version>
+                </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>[3.3.9,)</version>
+                  <version>[3.8.1,)</version>
                 </requireMavenVersion>
               </rules>
             </configuration>
@@ -169,6 +200,7 @@
         </dependencies>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
         <configuration>
           <goalPrefix>avro</goalPrefix>
@@ -307,6 +339,11 @@
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
                 <exclude>lang/ruby/.bundle/**</exclude>
+                <exclude>lang/rust/target/**</exclude>
+                <exclude>lang/rust/precommit_venv/**</exclude>
+                <exclude>lang/rust/Cargo.lock</exclude>
+                <exclude>lang/rust/README.tpl</exclude>
+                <exclude>lang/rust/.requirements-precommit.txt</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
@@ -382,9 +419,6 @@
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>
-                <exclude>lang/py3/.eggs/**</exclude>
-                <exclude>lang/py3/build/**</exclude>
-                <exclude>lang/py3/dist/**</exclude>
                 <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>

@@ -21,12 +21,12 @@
 
 #include "Config.hh"
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
-#include "ValidSchema.hh"
 #include "Stream.hh"
+#include "ValidSchema.hh"
 
 /// \file
 ///
@@ -220,6 +220,6 @@ AVRO_DECL DecoderPtr jsonDecoder(const ValidSchema &schema);
 AVRO_DECL ResolvingDecoderPtr resolvingDecoder(const ValidSchema &writer,
                                                const ValidSchema &reader, const DecoderPtr &base);
 
-}   // namespace avro
+} // namespace avro
 
 #endif

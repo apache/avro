@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include "Decoder.hh"
-#include "Zigzag.hh"
 #include "Exception.hh"
+#include "Zigzag.hh"
+#include <memory>
 
 namespace avro {
 
@@ -28,32 +28,32 @@ using std::make_shared;
 class BinaryDecoder : public Decoder {
     StreamReader in_;
 
-    void init(InputStream &is) override;
-    void decodeNull() override;
-    bool decodeBool() override;
-    int32_t decodeInt() override;
-    int64_t decodeLong() override;
-    float decodeFloat() override;
-    double decodeDouble() override;
-    void decodeString(std::string &value) override;
-    void skipString() override;
-    void decodeBytes(std::vector<uint8_t> &value) override;
-    void skipBytes() override;
-    void decodeFixed(size_t n, std::vector<uint8_t> &value) override;
-    void skipFixed(size_t n) override;
-    size_t decodeEnum() override;
-    size_t arrayStart() override;
-    size_t arrayNext() override;
-    size_t skipArray() override;
-    size_t mapStart() override;
-    size_t mapNext() override;
-    size_t skipMap() override;
-    size_t decodeUnionIndex() override;
+    void init(InputStream &is) final;
+    void decodeNull() final;
+    bool decodeBool() final;
+    int32_t decodeInt() final;
+    int64_t decodeLong() final;
+    float decodeFloat() final;
+    double decodeDouble() final;
+    void decodeString(std::string &value) final;
+    void skipString() final;
+    void decodeBytes(std::vector<uint8_t> &value) final;
+    void skipBytes() final;
+    void decodeFixed(size_t n, std::vector<uint8_t> &value) final;
+    void skipFixed(size_t n) final;
+    size_t decodeEnum() final;
+    size_t arrayStart() final;
+    size_t arrayNext() final;
+    size_t skipArray() final;
+    size_t mapStart() final;
+    size_t mapNext() final;
+    size_t skipMap() final;
+    size_t decodeUnionIndex() final;
 
     int64_t doDecodeLong();
     size_t doDecodeItemCount();
     size_t doDecodeLength();
-    void drain() override;
+    void drain() final;
 };
 
 DecoderPtr binaryDecoder() {
@@ -120,7 +120,8 @@ void BinaryDecoder::decodeString(std::string &value) {
     value.resize(len);
     if (len > 0) {
         in_.readBytes(const_cast<uint8_t *>(
-                          reinterpret_cast<const uint8_t *>(value.c_str())), len);
+                          reinterpret_cast<const uint8_t *>(value.c_str())),
+                      len);
     }
 }
 
@@ -218,5 +219,4 @@ int64_t BinaryDecoder::doDecodeLong() {
     return decodeZigzag64(encoded);
 }
 
-}   // namespace avro
-
+} // namespace avro

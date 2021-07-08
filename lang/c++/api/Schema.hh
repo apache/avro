@@ -31,12 +31,10 @@
 
 namespace avro {
 
-
 /// The root Schema object is a base class.  Nobody constructs this class directly.
 
 class AVRO_DECL Schema {
- public:
-
+public:
     virtual ~Schema() = default;
 
     Type type() const {
@@ -51,7 +49,7 @@ class AVRO_DECL Schema {
         return node_;
     }
 
- protected:
+protected:
     explicit Schema(NodePtr node) : node_(std::move(node)) {}
     explicit Schema(Node *node) : node_(node) {}
 
@@ -59,47 +57,47 @@ class AVRO_DECL Schema {
 };
 
 class AVRO_DECL NullSchema : public Schema {
- public:
+public:
     NullSchema() : Schema(new NodePrimitive(AVRO_NULL)) {}
 };
 
 class AVRO_DECL BoolSchema : public Schema {
- public:
+public:
     BoolSchema() : Schema(new NodePrimitive(AVRO_BOOL)) {}
 };
 
 class AVRO_DECL IntSchema : public Schema {
- public:
+public:
     IntSchema() : Schema(new NodePrimitive(AVRO_INT)) {}
 };
 
 class AVRO_DECL LongSchema : public Schema {
- public:
+public:
     LongSchema() : Schema(new NodePrimitive(AVRO_LONG)) {}
 };
 
 class AVRO_DECL FloatSchema : public Schema {
- public:
+public:
     FloatSchema() : Schema(new NodePrimitive(AVRO_FLOAT)) {}
 };
 
 class AVRO_DECL DoubleSchema : public Schema {
- public:
+public:
     DoubleSchema() : Schema(new NodePrimitive(AVRO_DOUBLE)) {}
 };
 
 class AVRO_DECL StringSchema : public Schema {
- public:
+public:
     StringSchema() : Schema(new NodePrimitive(AVRO_STRING)) {}
 };
 
 class AVRO_DECL BytesSchema : public Schema {
- public:
+public:
     BytesSchema() : Schema(new NodePrimitive(AVRO_BYTES)) {}
 };
 
 class AVRO_DECL RecordSchema : public Schema {
- public:
+public:
     explicit RecordSchema(const std::string &name);
     void addField(const std::string &name, const Schema &fieldSchema);
 
@@ -108,36 +106,36 @@ class AVRO_DECL RecordSchema : public Schema {
 };
 
 class AVRO_DECL EnumSchema : public Schema {
- public:
+public:
     explicit EnumSchema(const std::string &name);
     void addSymbol(const std::string &symbol);
 };
 
 class AVRO_DECL ArraySchema : public Schema {
- public:
+public:
     explicit ArraySchema(const Schema &itemsSchema);
     ArraySchema(const ArraySchema &itemsSchema);
 };
 
 class AVRO_DECL MapSchema : public Schema {
- public:
+public:
     explicit MapSchema(const Schema &valuesSchema);
     MapSchema(const MapSchema &itemsSchema);
 };
 
 class AVRO_DECL UnionSchema : public Schema {
- public:
+public:
     UnionSchema();
     void addType(const Schema &typeSchema);
 };
 
 class AVRO_DECL FixedSchema : public Schema {
- public:
+public:
     FixedSchema(int size, const std::string &name);
 };
 
 class AVRO_DECL SymbolicSchema : public Schema {
- public:
+public:
     SymbolicSchema(const Name &name, const NodePtr &link);
 };
 } // namespace avro

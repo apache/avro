@@ -23,7 +23,7 @@ import org.apache.avro.Schema;
 /**
  * Converts a Java object into an Avro datum.
  *
- * @param <INPUT> The type of the input Java object to convert.
+ * @param <INPUT>  The type of the input Java object to convert.
  * @param <OUTPUT> The type of the Avro datum to convert to.
  */
 public abstract class AvroDatumConverter<INPUT, OUTPUT> {

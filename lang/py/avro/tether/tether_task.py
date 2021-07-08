@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -24,9 +22,9 @@ import collections
 import io
 import logging
 import os
-import sys
 import threading
 import traceback
+from typing import cast
 
 import avro.errors
 import avro.io
@@ -42,13 +40,14 @@ __all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPReq
 
 TaskType = None
 pfile = os.path.split(__file__)[0] + os.sep + "InputProtocol.avpr"
-with open(pfile, 'r') as hf:
+with open(pfile) as hf:
     prototxt = hf.read()
 
 inputProtocol = avro.protocol.parse(prototxt)
 
 # use a named tuple to represent the tasktype enumeration
-taskschema = inputProtocol.types_dict["TaskType"]
+assert inputProtocol.types_dict is not None
+taskschema = cast(avro.schema.EnumSchema, inputProtocol.types_dict["TaskType"])
 # Mypy cannot statically type check a dynamically constructed named tuple.
 # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
 _ttype = collections.namedtuple("_ttype", ("MAP", "REDUCE"))
@@ -56,7 +55,7 @@ TaskType = _ttype(*taskschema.symbols)
 
 pfile = os.path.split(__file__)[0] + os.sep + "OutputProtocol.avpr"
 
-with open(pfile, 'r') as hf:
+with open(pfile) as hf:
     prototxt = hf.read()
 
 outputProtocol = avro.protocol.parse(prototxt)
@@ -117,7 +116,7 @@ def keys_are_equal(rec1, rec2, fkeys):
     """
 
     for f in fkeys:
-        if not(rec1[f] == rec2[f]):
+        if not (rec1[f] == rec2[f]):
             return False
 
     return True
@@ -249,7 +248,7 @@ class TetherTask(abc.ABC):
         if clientPort == 0:
             raise avro.errors.UsageError("AVRO_TETHER_OUTPUT_PORT env var is not set")
 
-        self.log.info("TetherTask.open: Opening connection to parent server on port={0}".format(clientPort))
+        self.log.info("TetherTask.open: Opening connection to parent server on port=%d", clientPort)
 
         # self.outputClient =  avro.ipc.Requestor(outputProtocol, self.clientTransceiver)
         # since HTTP is stateless, a new transciever
@@ -261,7 +260,7 @@ class TetherTask(abc.ABC):
         self.outputClient = HTTPRequestor("127.0.0.1", clientPort, outputProtocol)
 
         try:
-            self.outputClient.request('configure', {"port": inputport})
+            self.outputClient.request("configure", {"port": inputport})
         except Exception:
             estr = traceback.format_exc()
             self.fail(estr)
@@ -288,17 +287,17 @@ class TetherTask(abc.ABC):
             inSchema = avro.schema.parse(inSchemaText)
             outSchema = avro.schema.parse(outSchemaText)
 
-            if (taskType == TaskType.MAP):
+            if taskType == TaskType.MAP:
                 self.inReader = avro.io.DatumReader(writers_schema=inSchema, readers_schema=self.inschema)
                 self.midCollector = Collector(outSchemaText, self.outputClient)
 
-            elif(taskType == TaskType.REDUCE):
+            elif taskType == TaskType.REDUCE:
                 self.midReader = avro.io.DatumReader(writers_schema=inSchema, readers_schema=self.midschema)
                 # this.outCollector = new Collector<OUT>(outSchema);
                 self.outCollector = Collector(outSchemaText, self.outputClient)
 
                 # determine which fields in the input record are they keys for the reducer
-                self._red_fkeys = [f.name for f in self.midschema.fields if not(f.order == 'ignore')]
+                self._red_fkeys = [f.name for f in self.midschema.fields if not (f.order == "ignore")]
 
         except Exception as e:
 
@@ -315,7 +314,7 @@ class TetherTask(abc.ABC):
         self._partitions = npartitions
 
     def input(self, data, count):
-        """ Recieve input from the server
+        """Recieve input from the server
 
         Parameters
         ------------------------------------------------------
@@ -329,20 +328,20 @@ class TetherTask(abc.ABC):
             decoder = avro.io.BinaryDecoder(bdata)
 
             for i in range(count):
-                if (self.taskType == TaskType.MAP):
+                if self.taskType == TaskType.MAP:
                     inRecord = self.inReader.read(decoder)
 
                     # Do we need to pass midCollector if its declared as an instance variable
                     self.map(inRecord, self.midCollector)
 
-                elif (self.taskType == TaskType.REDUCE):
+                elif self.taskType == TaskType.REDUCE:
 
                     # store the previous record
                     prev = self.midRecord
 
                     # read the new record
                     self.midRecord = self.midReader.read(decoder)
-                    if (prev is not None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
+                    if prev is not None and not (keys_are_equal(self.midRecord, prev, self._red_fkeys)):
                         # since the key has changed we need to finalize the processing
                         # for this group of key,value pairs
                         self.reduceFlush(prev, self.outCollector)
@@ -350,19 +349,19 @@ class TetherTask(abc.ABC):
 
         except Exception as e:
             estr = traceback.format_exc()
-            self.log.warning("failing: " + estr)
+            self.log.warning("failing: %s", estr)
             self.fail(estr)
 
     def complete(self):
         """
         Process the complete request
         """
-        if ((self.taskType == TaskType.REDUCE) and not(self.midRecord is None)):
+        if (self.taskType == TaskType.REDUCE) and not (self.midRecord is None):
             try:
                 self.reduceFlush(self.midRecord, self.outCollector)
             except Exception as e:
                 estr = traceback.format_exc()
-                self.log.warning("failing: " + estr)
+                self.log.warning("failing: %s", estr)
                 self.fail(estr)
 
         self.outputClient.request("complete", dict())
@@ -382,7 +381,7 @@ class TetherTask(abc.ABC):
 
     @abc.abstractmethod
     def reduce(self, record, collector):
-        """ Called with input values to generate reducer output. Inputs are sorted by the mapper
+        """Called with input values to generate reducer output. Inputs are sorted by the mapper
         key.
 
         The reduce function is invoked once for each value belonging to a given key outputted
@@ -425,7 +424,7 @@ class TetherTask(abc.ABC):
         """
         Call to fail the task.
         """
-        self.log.error("TetherTask.fail: failure occured message follows:\n{0}".format(message))
+        self.log.error("TetherTask.fail: failure occured message follows:\n%s", message)
         try:
             message = message.decode()
         except AttributeError:
@@ -440,7 +439,7 @@ class TetherTask(abc.ABC):
 
     def close(self):
         self.log.info("TetherTask.close: closing")
-        if not(self.clienTransciever is None):
+        if not (self.clienTransciever is None):
             try:
                 self.clienTransciever.close()
 

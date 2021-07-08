@@ -18,7 +18,7 @@
 # See BUILD.txt.
 
 # Despite this base, JDK8 is used by default.  See below.
-FROM openjdk:11-stretch
+FROM openjdk:11-buster
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
@@ -32,7 +32,6 @@ RUN apt-get -qqy update \
                                                  asciidoc \
                                                  bison \
                                                  bzip2 \
-                                                 bundler \
                                                  cmake \
                                                  cppcheck \
                                                  curl \
@@ -46,20 +45,18 @@ RUN apt-get -qqy update \
                                                  libfreetype6-dev \
                                                  libglib2.0-dev \
                                                  libjansson-dev \
+                                                 libreadline-dev \
                                                  libsnappy-dev \
                                                  libsnappy1v5 \
+                                                 libssl-dev \
                                                  make \
                                                  mypy \
-                                                 openjdk-8-jdk \
                                                  perl \
                                                  python3 \
                                                  python3-pip \
                                                  python3-setuptools \
                                                  python3-snappy \
                                                  python3-wheel \
-                                                 rake \
-                                                 ruby \
-                                                 ruby-dev \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
@@ -67,10 +64,17 @@ RUN apt-get -qqy update \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
+RUN wget -qO- https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
+ && echo "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb buster main" | tee /etc/apt/sources.list.d/adoptopenjdk.list \
+ && apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends adoptopenjdk-8-hotspot \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
+
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
 
-ENV MAVEN_VERSION 3.6.3
+ENV MAVEN_VERSION 3.8.1
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -97,8 +101,8 @@ RUN set -eux; \
   rm "maven.tar.gz"
 ENV PATH="/opt/maven/bin:${PATH}"
 
-# Install nodejs 6
-RUN curl -sSL https://deb.nodesource.com/setup_10.x \
+# Install nodejs
+RUN curl -sSL https://deb.nodesource.com/setup_12.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
@@ -182,21 +186,32 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
-# Install Ruby modules
+# Install Ruby
+ENV RBENV_ROOT /usr/local/rbenv
+RUN git clone https://github.com/rbenv/rbenv.git /usr/local/rbenv \
+  && git clone https://github.com/rbenv/ruby-build.git /usr/local/rbenv/plugins/ruby-build \
+  && /usr/local/rbenv/plugins/ruby-build/install.sh \
+  && echo 'eval "$(rbenv init -)"' >> /etc/profile.d/rbenv.sh \
+  && echo 'eval "$(rbenv init -)"' >> /etc/bash.bashrc
+ENV PATH /usr/local/rbenv/bin:$PATH
+RUN rbenv install 2.6.7 && rbenv global 2.6.7 \
+  && rbenv exec gem install bundler -v 1.17.3 --no-document
 COPY lang/ruby/Gemfile /tmp
-RUN bundle install --gemfile=/tmp/Gemfile
+RUN rbenv exec bundle install --gemfile=/tmp/Gemfile \
+  && chgrp -R staff /usr/local/rbenv \
+  && chmod -R g+rw /usr/local/rbenv
 
 # Note: This "ubertool" container has two JDK versions:
-# - OpenJDK 8 (installed as a package and available at /usr/bin/java)
+# - OpenJDK 8 (installed as an AdoptOpenJDK package)
 # - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
-# Since want the JDK8 as a default, we have to re-prepend it to the PATH.
+# Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
 # The /usr/local/openjdk-8 link is created to be consistent with the
 # openjdk:8 image.
 
-RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/local/openjdk-8
+RUN ln -s /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64 /usr/local/openjdk-8
 ENV JAVA_HOME /usr/local/openjdk-8
 ENV PATH $JAVA_HOME/bin:$PATH
 

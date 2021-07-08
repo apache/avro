@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -28,6 +26,7 @@ TIMESTAMP_MICROS = "timestamp-micros"
 TIMESTAMP_MILLIS = "timestamp-millis"
 TIME_MICROS = "time-micros"
 TIME_MILLIS = "time-millis"
+UUID = "uuid"
 
 SUPPORTED_LOGICAL_TYPE = [
     DATE,
@@ -35,5 +34,26 @@ SUPPORTED_LOGICAL_TYPE = [
     TIMESTAMP_MICROS,
     TIMESTAMP_MILLIS,
     TIME_MICROS,
-    TIME_MILLIS
+    TIME_MILLIS,
+    UUID,
 ]
+
+PRIMITIVE_TYPES = (
+    "null",
+    "boolean",
+    "string",
+    "bytes",
+    "int",
+    "long",
+    "float",
+    "double",
+)
+
+NAMED_TYPES = (
+    "fixed",
+    "enum",
+    "record",
+    "error",
+)
+
+VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + ("array", "map", "union", "request", "error_union")

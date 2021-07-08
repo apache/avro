@@ -20,27 +20,26 @@
 #include <utility>
 
 #include "Compiler.hh"
-#include "Types.hh"
 #include "Schema.hh"
-#include "ValidSchema.hh"
 #include "Stream.hh"
+#include "Types.hh"
+#include "ValidSchema.hh"
 
 #include "json/JsonDom.hh"
 
-using std::string;
-using std::map;
-using std::vector;
-using std::pair;
 using std::make_pair;
+using std::map;
+using std::pair;
+using std::string;
+using std::vector;
 
 namespace avro {
-using json::Entity;
-using json::Object;
 using json::Array;
+using json::Entity;
 using json::EntityType;
+using json::Object;
 
 using SymbolTable = map<Name, NodePtr>;
-
 
 // #define DEBUG_VERBOSE
 
@@ -110,8 +109,7 @@ json::Object::const_iterator findField(const Entity &e,
 template<typename T>
 void ensureType(const Entity &e, const string &name) {
     if (e.type() != json::type_traits<T>::type()) {
-        throw Exception(boost::format("Json field \"%1%\" is not a %2%: %3%") %
-            name % json::type_traits<T>::name() % e.toString());
+        throw Exception(boost::format("Json field \"%1%\" is not a %2%: %3%") % name % json::type_traits<T>::name() % e.toString());
     }
 }
 
@@ -148,16 +146,14 @@ struct Field {
     const string name;
     const NodePtr schema;
     const GenericDatum defaultValue;
-    Field(string n, NodePtr v, GenericDatum dv) :
-        name(std::move(n)), schema(std::move(v)), defaultValue(std::move(dv)) {}
+    Field(string n, NodePtr v, GenericDatum dv) : name(std::move(n)), schema(std::move(v)), defaultValue(std::move(dv)) {}
 };
 
 static void assertType(const Entity &e, EntityType et) {
     if (e.type() != et) {
         throw Exception(boost::format("Unexpected type for default value: "
-                                      "Expected %1%, but found %2% in line %3%") %
-            json::typeToString(et) % json::typeToString(e.type()) %
-            e.line());
+                                      "Expected %1%, but found %2% in line %3%")
+                        % json::typeToString(et) % json::typeToString(e.type()) % e.line());
     }
 }
 
@@ -179,49 +175,57 @@ static GenericDatum makeGenericDatum(NodePtr n,
         t = n->type();
     }
     switch (t) {
-        case AVRO_STRING:assertType(e, json::etString);
+        case AVRO_STRING:
+            assertType(e, json::EntityType::String);
             return GenericDatum(e.stringValue());
-        case AVRO_BYTES:assertType(e, json::etString);
+        case AVRO_BYTES:
+            assertType(e, json::EntityType::String);
             return GenericDatum(toBin(e.bytesValue()));
-        case AVRO_INT:assertType(e, json::etLong);
+        case AVRO_INT:
+            assertType(e, json::EntityType::Long);
             return GenericDatum(static_cast<int32_t>(e.longValue()));
-        case AVRO_LONG:assertType(e, json::etLong);
+        case AVRO_LONG:
+            assertType(e, json::EntityType::Long);
             return GenericDatum(e.longValue());
         case AVRO_FLOAT:
-            if (dt == json::etLong) {
+            if (dt == json::EntityType::Long) {
                 return GenericDatum(static_cast<float>(e.longValue()));
             }
-            assertType(e, json::etDouble);
+            assertType(e, json::EntityType::Double);
             return GenericDatum(static_cast<float>(e.doubleValue()));
         case AVRO_DOUBLE:
-            if (dt == json::etLong) {
+            if (dt == json::EntityType::Long) {
                 return GenericDatum(static_cast<double>(e.longValue()));
             }
-            assertType(e, json::etDouble);
+            assertType(e, json::EntityType::Double);
             return GenericDatum(e.doubleValue());
-        case AVRO_BOOL:assertType(e, json::etBool);
+        case AVRO_BOOL:
+            assertType(e, json::EntityType::Bool);
             return GenericDatum(e.boolValue());
-        case AVRO_NULL:assertType(e, json::etNull);
+        case AVRO_NULL:
+            assertType(e, json::EntityType::Null);
             return GenericDatum();
         case AVRO_RECORD: {
-            assertType(e, json::etObject);
+            assertType(e, json::EntityType::Obj);
             GenericRecord result(n);
             const map<string, Entity> &v = e.objectValue();
             for (size_t i = 0; i < n->leaves(); ++i) {
                 auto it = v.find(n->nameAt(i));
                 if (it == v.end()) {
                     throw Exception(boost::format(
-                        "No value found in default for %1%") % n->nameAt(i));
+                                        "No value found in default for %1%")
+                                    % n->nameAt(i));
                 }
                 result.setFieldAt(i,
                                   makeGenericDatum(n->leafAt(i), it->second, st));
             }
             return GenericDatum(n, result);
         }
-        case AVRO_ENUM:assertType(e, json::etString);
+        case AVRO_ENUM:
+            assertType(e, json::EntityType::String);
             return GenericDatum(n, GenericEnum(n, e.stringValue()));
         case AVRO_ARRAY: {
-            assertType(e, json::etArray);
+            assertType(e, json::EntityType::Arr);
             GenericArray result(n);
             const vector<Entity> &elements = e.arrayValue();
             for (const auto &element : elements) {
@@ -230,7 +234,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
             return GenericDatum(n, result);
         }
         case AVRO_MAP: {
-            assertType(e, json::etObject);
+            assertType(e, json::EntityType::Obj);
             GenericMap result(n);
             const map<string, Entity> &v = e.objectValue();
             for (const auto &it : v) {
@@ -245,9 +249,10 @@ static GenericDatum makeGenericDatum(NodePtr n,
             result.datum() = makeGenericDatum(n->leafAt(0), e, st);
             return GenericDatum(n, result);
         }
-        case AVRO_FIXED:assertType(e, json::etString);
+        case AVRO_FIXED:
+            assertType(e, json::EntityType::String);
             return GenericDatum(n, GenericFixed(n, toBin(e.bytesValue())));
-        default:throw Exception(boost::format("Unknown type: %1%") % t);
+        default: throw Exception(boost::format("Unknown type: %1%") % t);
     }
 }
 
@@ -260,8 +265,7 @@ static Field makeField(const Entity &e, SymbolTable &st, const string &ns) {
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
-    GenericDatum d = (it2 == m.end()) ? GenericDatum() :
-                     makeGenericDatum(node, it2->second, st);
+    GenericDatum d = (it2 == m.end()) ? GenericDatum() : makeGenericDatum(node, it2->second, st);
     return Field(n, node, d);
 }
 
@@ -336,9 +340,8 @@ static NodePtr makeEnumNode(const Entity &e,
     const Array &v = getArrayField(e, m, "symbols");
     concepts::MultiAttribute<string> symbols;
     for (const auto &it : v) {
-        if (it.type() != json::etString) {
-            throw Exception(boost::format("Enum symbol not a string: %1%") %
-                it.toString());
+        if (it.type() != json::EntityType::String) {
+            throw Exception(boost::format("Enum symbol not a string: %1%") % it.toString());
         }
         symbols.add(it.stringValue());
     }
@@ -353,8 +356,7 @@ static NodePtr makeFixedNode(const Entity &e,
                              const Name &name, const Object &m) {
     int v = static_cast<int>(getLongField(e, m, "size"));
     if (v <= 0) {
-        throw Exception(boost::format("Size for fixed is not positive: %1%") %
-            e.toString());
+        throw Exception(boost::format("Size for fixed is not positive: %1%") % e.toString());
     }
     NodePtr node =
         NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
@@ -397,9 +399,8 @@ static Name getName(const Entity &e, const Object &m, const string &ns) {
         if (it != m.end()) {
             if (it->second.type() != json::type_traits<string>::type()) {
                 throw Exception(boost::format(
-                    "Json field \"%1%\" is not a %2%: %3%") %
-                    "namespace" % json::type_traits<string>::name() %
-                    it->second.toString());
+                                    "Json field \"%1%\" is not a %2%: %3%")
+                                % "namespace" % json::type_traits<string>::name() % it->second.toString());
             }
             Name result = Name(name, it->second.stringValue());
             return result;
@@ -412,8 +413,7 @@ static NodePtr makeNode(const Entity &e, const Object &m,
                         SymbolTable &st, const string &ns) {
     const string &type = getStringField(e, m, "type");
     NodePtr result;
-    if (type == "record" || type == "error" ||
-        type == "enum" || type == "fixed") {
+    if (type == "record" || type == "error" || type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
@@ -423,17 +423,15 @@ static NodePtr makeNode(const Entity &e, const Object &m,
                 string doc = getDocField(e, m);
 
                 NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns());
-                (std::dynamic_pointer_cast<NodeRecord>(r))->swap(
-                    *std::dynamic_pointer_cast<NodeRecord>(result));
-            } else {  // No doc
+                (std::dynamic_pointer_cast<NodeRecord>(r))->swap(*std::dynamic_pointer_cast<NodeRecord>(result));
+            } else { // No doc
                 NodePtr r =
                     makeRecordNode(e, nm, nullptr, m, st, nm.ns());
                 (std::dynamic_pointer_cast<NodeRecord>(r))
                     ->swap(*std::dynamic_pointer_cast<NodeRecord>(result));
             }
         } else {
-            result = (type == "enum") ? makeEnumNode(e, nm, m) :
-                     makeFixedNode(e, nm, m);
+            result = (type == "enum") ? makeEnumNode(e, nm, m) : makeFixedNode(e, nm, m);
             st[nm] = result;
         }
     } else if (type == "array") {
@@ -455,7 +453,7 @@ static NodePtr makeNode(const Entity &e, const Object &m,
     }
 
     throw Exception(boost::format("Unknown type definition: %1%")
-                        % e.toString());
+                    % e.toString());
 }
 
 static NodePtr makeNode(const Entity &e, const Array &m,
@@ -469,17 +467,16 @@ static NodePtr makeNode(const Entity &e, const Array &m,
 
 static NodePtr makeNode(const json::Entity &e, SymbolTable &st, const string &ns) {
     switch (e.type()) {
-        case json::etString:return makeNode(e.stringValue(), st, ns);
-        case json::etObject:return makeNode(e, e.objectValue(), st, ns);
-        case json::etArray:return makeNode(e, e.arrayValue(), st, ns);
-        default:throw Exception(boost::format("Invalid Avro type: %1%") % e.toString());
+        case json::EntityType::String: return makeNode(e.stringValue(), st, ns);
+        case json::EntityType::Obj: return makeNode(e, e.objectValue(), st, ns);
+        case json::EntityType::Arr: return makeNode(e, e.arrayValue(), st, ns);
+        default: throw Exception(boost::format("Invalid Avro type: %1%") % e.toString());
     }
 }
 json::Object::const_iterator findField(const Entity &e, const Object &m, const string &fieldName) {
     auto it = m.find(fieldName);
     if (it == m.end()) {
-        throw Exception(boost::format("Missing Json field \"%1%\": %2%") %
-            fieldName % e.toString());
+        throw Exception(boost::format("Missing Json field \"%1%\": %2%") % fieldName % e.toString());
     } else {
         return it;
     }
@@ -537,7 +534,6 @@ AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, string &
         error = e.what();
         return false;
     }
-
 }
 
 } // namespace avro

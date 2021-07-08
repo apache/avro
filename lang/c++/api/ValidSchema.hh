@@ -54,10 +54,10 @@ public:
 
     void toFlatList(std::ostream &os) const;
 
-  protected:
+protected:
     NodePtr root_;
 
-  private:
+private:
     static std::string compactSchema(const std::string &schema);
 };
 

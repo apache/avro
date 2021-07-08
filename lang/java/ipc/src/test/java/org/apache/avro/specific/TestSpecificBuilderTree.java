@@ -17,18 +17,23 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.AvroMissingFieldException;
-import org.apache.avro.test.http.*;
-import org.apache.avro.test.nullable.RecordWithNullables;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Optional;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.Optional;
+import org.apache.avro.AvroMissingFieldException;
+import org.apache.avro.test.http.HttpMethod;
+import org.apache.avro.test.http.HttpRequest;
+import org.apache.avro.test.http.HttpURI;
+import org.apache.avro.test.http.NetworkType;
+import org.apache.avro.test.http.QueryParameter;
+import org.apache.avro.test.http.Request;
+import org.apache.avro.test.http.UserAgent;
+import org.apache.avro.test.nullable.RecordWithNullables;
+import org.junit.Test;
 
 public class TestSpecificBuilderTree {
 

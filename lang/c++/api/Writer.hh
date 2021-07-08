@@ -23,10 +23,10 @@
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
-#include "buffer/Buffer.hh"
-#include "Zigzag.hh"
 #include "Types.hh"
 #include "Validator.hh"
+#include "Zigzag.hh"
+#include "buffer/Buffer.hh"
 
 namespace avro {
 
@@ -36,11 +36,9 @@ template<class ValidatorType>
 class WriterImpl : private boost::noncopyable {
 
 public:
+    WriterImpl() = default;
 
-    WriterImpl() {}
-
-    explicit WriterImpl(const ValidSchema &schema) :
-        validator_(schema) {}
+    explicit WriterImpl(const ValidSchema &schema) : validator_(schema) {}
 
     void writeValue(const Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
@@ -54,6 +52,7 @@ public:
 
     void writeValue(int32_t val) {
         validator_.checkTypeExpected(AVRO_INT);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         std::array<uint8_t, 5> bytes;
         size_t size = encodeInt32(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
@@ -153,8 +152,8 @@ public:
     }
 
 private:
-
     void putLong(int64_t val) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
         std::array<uint8_t, 10> bytes;
         size_t size = encodeInt64(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
@@ -173,7 +172,6 @@ private:
 
     ValidatorType validator_;
     OutputBuffer buffer_;
-
 };
 
 using Writer = WriterImpl<NullValidator>;

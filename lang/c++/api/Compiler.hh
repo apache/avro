@@ -34,7 +34,7 @@ class AVRO_DECL InputStream;
 
 class AVRO_DECL ValidSchema;
 
-/// Given a stream comtaining a JSON schema, compiles the schema to a
+/// Given a stream containing a JSON schema, compiles the schema to a
 /// ValidSchema object.  Throws if the schema cannot be compiled to a valid
 /// schema
 

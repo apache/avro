@@ -315,7 +315,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     for (String velocityToolClassName : velocityToolsClassesNames) {
       try {
         Class klass = Class.forName(velocityToolClassName);
-        velocityTools.add(klass.newInstance());
+        velocityTools.add(klass.getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new RuntimeException(e);
       }

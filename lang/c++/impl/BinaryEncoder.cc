@@ -27,26 +27,26 @@ using std::make_shared;
 class BinaryEncoder : public Encoder {
     StreamWriter out_;
 
-    void init(OutputStream &os) override;
-    void flush() override;
-    int64_t byteCount() const override;
-    void encodeNull() override;
-    void encodeBool(bool b) override;
-    void encodeInt(int32_t i) override;
-    void encodeLong(int64_t l) override;
-    void encodeFloat(float f) override;
-    void encodeDouble(double d) override;
-    void encodeString(const std::string &s) override;
-    void encodeBytes(const uint8_t *bytes, size_t len) override;
-    void encodeFixed(const uint8_t *bytes, size_t len) override;
-    void encodeEnum(size_t e) override;
-    void arrayStart() override;
-    void arrayEnd() override;
-    void mapStart() override;
-    void mapEnd() override;
-    void setItemCount(size_t count) override;
-    void startItem() override;
-    void encodeUnionIndex(size_t e) override;
+    void init(OutputStream &os) final;
+    void flush() final;
+    int64_t byteCount() const final;
+    void encodeNull() final;
+    void encodeBool(bool b) final;
+    void encodeInt(int32_t i) final;
+    void encodeLong(int64_t l) final;
+    void encodeFloat(float f) final;
+    void encodeDouble(double d) final;
+    void encodeString(const std::string &s) final;
+    void encodeBytes(const uint8_t *bytes, size_t len) final;
+    void encodeFixed(const uint8_t *bytes, size_t len) final;
+    void encodeEnum(size_t e) final;
+    void arrayStart() final;
+    void arrayEnd() final;
+    void mapStart() final;
+    void mapEnd() final;
+    void setItemCount(size_t count) final;
+    void startItem() final;
+    void encodeUnionIndex(size_t e) final;
 
     void doEncodeLong(int64_t l);
 };
@@ -139,8 +139,9 @@ int64_t BinaryEncoder::byteCount() const {
 }
 
 void BinaryEncoder::doEncodeLong(int64_t l) {
-    std::array<uint8_t, 10> bytes{};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+    std::array<uint8_t, 10> bytes;
     auto size = encodeInt64(l, bytes);
     out_.writeBytes(bytes.data(), size);
 }
-}   // namespace avro
+} // namespace avro

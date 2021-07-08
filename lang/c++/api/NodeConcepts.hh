@@ -21,12 +21,11 @@
 
 #include "Config.hh"
 
-#include <vector>
-#include <map>
 #include "Exception.hh"
+#include <map>
+#include <vector>
 
 namespace avro {
-
 
 ///
 /// The concept classes are used to simplify NodeImpl.  Since different types
@@ -55,7 +54,7 @@ struct NoAttribute {
         return 0;
     }
 
-    void add(const Attribute &/* attr */) {
+    void add(const Attribute & /* attr */) {
         // There must be an add function for the generic NodeImpl, but the
         // Node APIs ensure that it is never called, the throw here is
         // just in case
@@ -75,7 +74,6 @@ struct NoAttribute {
         // just in case
         throw Exception("This type does not have attribute");
     }
-
 };
 
 template<typename Attribute>
@@ -86,12 +84,10 @@ struct SingleAttribute {
 
     explicit SingleAttribute(const Attribute &a) : attr_(a) {}
     // copy constructing from another single attribute is allowed
-    SingleAttribute(const SingleAttribute<Attribute> &rhs) :
-        attr_(rhs.attr_) {}
+    SingleAttribute(const SingleAttribute<Attribute> &rhs) : attr_(rhs.attr_) {}
 
     // copy constructing from a no attribute is allowed
-    explicit SingleAttribute(const NoAttribute<Attribute> &rhs) :
-        attr_() {}
+    explicit SingleAttribute(const NoAttribute<Attribute> &rhs) : attr_() {}
 
     size_t size() const {
         return 1;
@@ -116,8 +112,8 @@ struct SingleAttribute {
     }
 
 private:
-    template<typename T> friend
-    struct MultiAttribute;
+    template<typename T>
+    friend struct MultiAttribute;
     Attribute attr_;
 };
 
@@ -136,8 +132,7 @@ struct MultiAttribute {
         attrs_.push_back(rhs.attr_);
     }
 
-    MultiAttribute(const MultiAttribute<Attribute> &rhs) :
-        attrs_(rhs.attrs_) {}
+    MultiAttribute(const MultiAttribute<Attribute> &rhs) : attrs_(rhs.attrs_) {}
 
     explicit MultiAttribute(const NoAttribute<Attribute> &rhs) {}
 
@@ -158,7 +153,6 @@ struct MultiAttribute {
     }
 
 private:
-
     std::vector<Attribute> attrs_;
 };
 
@@ -175,7 +169,7 @@ struct NameIndexConcept {
 };
 
 template<>
-struct NameIndexConcept<MultiAttribute<std::string> > {
+struct NameIndexConcept<MultiAttribute<std::string>> {
     using IndexMap = std::map<std::string, size_t>;
 
     bool lookup(const std::string &name, size_t &index) const {
@@ -198,7 +192,6 @@ struct NameIndexConcept<MultiAttribute<std::string> > {
     }
 
 private:
-
     IndexMap map_;
 };
 

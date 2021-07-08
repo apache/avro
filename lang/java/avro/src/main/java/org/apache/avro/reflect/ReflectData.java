@@ -924,7 +924,7 @@ public class ReflectData extends SpecificData {
         else if (annotation instanceof Nullable) // nullable
           paramSchema = makeNullable(paramSchema);
       }
-      fields.add(new Schema.Field(parameter.getName(), paramSchema, null /* doc */, null));
+      fields.add(new Schema.Field(unmangle(parameter.getName()), paramSchema, null /* doc */, null));
     }
 
     Schema request = Schema.createRecord(fields);

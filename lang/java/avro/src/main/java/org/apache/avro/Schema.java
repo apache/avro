@@ -123,6 +123,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+
     private final String name;
 
     private Type() {
@@ -520,6 +521,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
+
       private final String name;
 
       private Order() {
@@ -1554,6 +1556,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
   private static String validateName(String name) {
     if (!validateNames.get())
       return name; // not validating names
+    if (name == null)
+      throw new SchemaParseException("Null name");
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");

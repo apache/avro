@@ -33,7 +33,7 @@ import java.util.TreeMap;
  * Note that Histogram, by itself, is not synchronized.
  * 
  * @param <B> Bucket type. Often String, since buckets are typically used for
- *        their toString() representation.
+ *            their toString() representation.
  * @param <T> Type of value
  */
 class Histogram<B, T> {

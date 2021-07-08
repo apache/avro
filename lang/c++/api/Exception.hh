@@ -20,8 +20,8 @@
 #define avro_Exception_hh__
 
 #include "Config.hh"
-#include <stdexcept>
 #include <boost/format.hpp>
+#include <stdexcept>
 
 namespace avro {
 
@@ -30,7 +30,6 @@ namespace avro {
 
 class AVRO_DECL Exception : public virtual std::runtime_error {
 public:
-
     explicit Exception(const std::string &msg) : std::runtime_error(msg) {}
 
     explicit Exception(const boost::format &msg) : std::runtime_error(boost::str(msg)) {}
