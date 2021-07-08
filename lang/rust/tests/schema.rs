@@ -1170,7 +1170,8 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
     if let Error::ParseSchemaJson(e) = error {
         assert!(
             e.to_string().contains("expected value at line 1 column 1"),
-            "{}", e
+            "{}",
+            e
         );
         Ok(())
     } else {
