@@ -26,6 +26,10 @@ on:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
 
+defaults:
+  run:
+    working-directory: lang/rust
+
 jobs:
   ci:
     runs-on: ubuntu-latest
