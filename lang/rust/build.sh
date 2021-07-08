@@ -32,7 +32,7 @@ do
       cargo test
       ;;
     dist)
-      cargo build --release --lib
+      cargo build --release --lib --all-features
       cargo package
       mkdir -p  ../../dist/rust
       cp target/package/avro-rs-*.crate ../../dist/rust
