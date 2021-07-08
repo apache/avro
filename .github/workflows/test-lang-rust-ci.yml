@@ -53,6 +53,9 @@ jobs:
           override: true
           components: rustfmt
 
+      - name: Print PWD
+        run: pwd
+
       - name: Rust Format
         uses: actions-rs/cargo@v1
         with:
