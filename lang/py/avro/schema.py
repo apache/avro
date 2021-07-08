@@ -174,15 +174,16 @@ class FingerprintMixin:
     """
     A Mixin to generate schema fingerprints for supported algorithms
     """
+
     _FP_TABLE = None
-    _EMPTY64 = 0xc15d213aa4d7a795
+    _EMPTY64 = 0xC15D213AA4D7A795
 
     # All algorithms guaranteed by hashlib are supported
     SUPPORTED_ALGORITHMS = set(hashlib.algorithms_guaranteed)
     # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
-    SUPPORTED_ALGORITHMS.update({'CRC-64-AVRO'})
+    SUPPORTED_ALGORITHMS.update({"CRC-64-AVRO"})
 
-    def fingerprint(self, algorithm='CRC-64-AVRO'):
+    def fingerprint(self, algorithm="CRC-64-AVRO"):
         """
         Generate fingerprint for supplied algorithm.
 
@@ -193,12 +194,12 @@ class FingerprintMixin:
         `algorithm` param is used as an algorithm name, and NoSuchAlgorithmException
         will be thrown if the algorithm is not among supported.
         """
-        schema = self.canonical_form.encode('utf-8')
+        schema = self.canonical_form.encode("utf-8")
 
         if algorithm not in self.SUPPORTED_ALGORITHMS:
             raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
 
-        if algorithm == 'CRC-64-AVRO':
+        if algorithm == "CRC-64-AVRO":
             return self._crc_64_fingerprint(schema)
 
         # Generate digests with hashlib for all other algorithms
@@ -233,11 +234,11 @@ class FingerprintMixin:
         result = self._EMPTY64
 
         for b in data:
-            result = (result >> 8) ^ self._FP_TABLE[(result ^ b) & 0xff]
+            result = (result >> 8) ^ self._FP_TABLE[(result ^ b) & 0xFF]
 
         # Although not mentioned in the Avro specification, the Java
         # implementation gives fingerprint bytes in little-endian order
-        return result.to_bytes(length=8, byteorder='little', signed=False)
+        return result.to_bytes(length=8, byteorder="little", signed=False)
 
 
 class Schema(abc.ABC, CanonicalPropertiesMixin, FingerprintMixin):
