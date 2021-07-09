@@ -538,7 +538,7 @@ class TestMisc(unittest.TestCase):
         datum_read = read_datum(writer, writers_schema, readers_schema)
         self.assertEqual(datum_to_read, datum_read)
 
-    def test_type_exception(self) -> None:
+    def test_type_exception_int(self) -> None:
         writers_schema = avro.schema.parse(
             json.dumps(
                 {
@@ -552,7 +552,24 @@ class TestMisc(unittest.TestCase):
             )
         )
         datum_to_write = {"E": 5, "F": "Bad"}
-        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema)
+        with self.assertRaises(avro.errors.AvroTypeException) as exc:
+            write_datum(datum_to_write, writers_schema)
+        assert str(exc.exception) == 'The datum "Bad" provided for "F" is not an example of the schema "int"'
+
+    def test_type_exception_long(self) -> None:
+        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        datum_to_write = {"foo": 5.0}
+
+        with self.assertRaises(avro.errors.AvroTypeException) as exc:
+            write_datum(datum_to_write, writers_schema)
+        assert str(exc.exception) == 'The datum "5.0" provided for "foo" is not an example of the schema "long"'
+
+    def test_type_exception_record(self) -> None:
+        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        datum_to_write = ("foo", 5.0)
+
+        with self.assertRaisesRegex(avro.errors.AvroTypeException, r"The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*"):
+            write_datum(datum_to_write, writers_schema)
 
 
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:

@@ -144,7 +144,7 @@ def validate(expected_schema: avro.schema.Schema, datum: object, raise_on_error:
 
         if valid_node is None:
             if raise_on_error:
-                raise avro.errors.AvroTypeException(current_node.schema, current_node.datum)
+                raise avro.errors.AvroTypeException(current_node.schema, current_node.name, current_node.datum)
             return False  # preserve the prior validation behavior of returning false when there are problems.
         # if there are children of this node to append, do so.
         for child_node in _iterate_node(valid_node):

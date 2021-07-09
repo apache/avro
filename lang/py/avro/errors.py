@@ -53,10 +53,11 @@ class AvroTypeException(AvroException):
 
     def __init__(self, *args):
         try:
-            expected_schema, datum = args[:2]
+            expected_schema, name, datum = args[:3]
         except (IndexError, ValueError):
             return super().__init__(*args)
-        return super().__init__(f"The datum {datum} of the type {type(datum)} is not an example of the schema {_safe_pretty(expected_schema)}")
+        pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
+        return super().__init__(f'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}')
 
 
 class InvalidDefaultException(AvroTypeException):
