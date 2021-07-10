@@ -52,15 +52,7 @@ SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
-
-if platform.python_implementation() == "PyPy":
-    if sys.version_info <= (3, 6):
-        MAX_WRITE_SECONDS = 5
-    else:
-        MAX_WRITE_SECONDS = 3
-else:
-    MAX_WRITE_SECONDS = 1
-
+MAX_WRITE_SECONDS = 5 if platform.python_implementation() == "PyPy" else 1
 MAX_READ_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
 
 
