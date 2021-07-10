@@ -22,6 +22,7 @@ import json
 import platform
 import random
 import string
+import sys
 import tempfile
 import timeit
 import unittest
@@ -51,7 +52,15 @@ SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
-MAX_WRITE_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
+
+if platform.python_implementation() == "PyPy":
+    if sys.version_info <= (3, 6):
+        MAX_WRITE_SECONDS = 5
+    else:
+        MAX_WRITE_SECONDS = 3
+else:
+    MAX_WRITE_SECONDS = 1
+
 MAX_READ_SECONDS = 3 if platform.python_implementation() == "PyPy" else 1
 
 
