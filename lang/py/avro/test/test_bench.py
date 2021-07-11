@@ -22,7 +22,6 @@ import json
 import platform
 import random
 import string
-import sys
 import tempfile
 import timeit
 import unittest
