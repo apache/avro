@@ -713,19 +713,21 @@ class SchemaParseTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def parse_valid(self):
+    def parse_valid(self) -> None:
         """Parsing a valid schema should not error, but may contain warnings."""
-        with warnings.catch_warnings(record=True) as actual_warnings:
-            try:
-                self.test_schema.parse()
-            except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
-                self.fail(f"Valid schema failed to parse: {self.test_schema!s}")
-            actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
-            if self.test_schema.warnings:
-                expected_messages = [str(w) for w in self.test_schema.warnings]
-                self.assertEqual(actual_messages, expected_messages)
-            else:
-                self.assertEqual(actual_messages, [])
+        test_warnings = self.test_schema.warnings or []
+        try:
+            warnings.filterwarnings(action="error", category=avro.errors.IgnoredLogicalType)
+            self.test_schema.parse()
+        except (avro.errors.IgnoredLogicalType) as e:
+            self.assertIn(type(e), (type(w) for w in test_warnings))
+            self.assertIn(str(e), (str(w) for w in test_warnings))
+        except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
+            self.fail(f"Valid schema failed to parse: {self.test_schema!s}")
+        else:
+            self.assertEqual([], test_warnings)
+        finally:
+            warnings.filterwarnings(action="default", category=avro.errors.IgnoredLogicalType)
 
     def parse_invalid(self):
         """Parsing an invalid schema should error."""
