@@ -29,6 +29,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.jvm.tasks.Jar;
 import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
@@ -117,6 +118,12 @@ public class AvroPlugin implements Plugin<Project> {
         });
         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, compileJavaTask -> {
             compileJavaTask.source(javaTaskProvider);
+        });
+        // When the Gradle's JVM plugin's withSourcesJar capability is used, it automatically includes all directories listed in the SourceSet's `allSource`.
+        // However, in Gradle 7.1, they started including a warning that execution optimizations are disabled unless you explicitly declare what task produced the directory you're using.
+        // Gradle doesn't currently have a way to declare a source directory and the task that creates it, so for now we need to manually declare the task dependency.
+        project.getTasks().withType(Jar.class).matching(task -> sourceSet.getSourcesJarTaskName().equals(task.getName())).all(sourcesJarTask -> {
+            sourcesJarTask.dependsOn(javaTaskProvider);
         });
         return javaTaskProvider;
     }

@@ -3,6 +3,7 @@
 ## Unreleased
 * Built using Gradle 7.1.1
 * Updated compatibility testing through Gradle 7.1.1
+* When `sourcesJar` is used, declares dependency on `GenerateAvroJavaTask`s to avoid disabling execution optimizations introduced in Gradle 7.1. (see #167)
 
 ## 1.2.0
 * Avro 1.9.0-1.9.2 is supported again (no changed needed; just change in support policy and testing)
