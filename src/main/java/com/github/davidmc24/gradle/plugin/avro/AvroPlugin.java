@@ -123,7 +123,7 @@ public class AvroPlugin implements Plugin<Project> {
         // unless you explicitly declare what task produced the directory you're using.  Gradle doesn't currently have a way to declare a
         // source directory and the task that creates it, so for now we need to manually declare the task dependency.
         project.getTasks()
-            .matching(task -> sourceSet.getSourcesJarTaskName().equals(task.getName()))
+            .matching(task -> GradleCompatibility.getSourcesJarTaskName(sourceSet).equals(task.getName()))
             .configureEach(sourcesJarTask -> sourcesJarTask.dependsOn(javaTaskProvider));
         return javaTaskProvider;
     }

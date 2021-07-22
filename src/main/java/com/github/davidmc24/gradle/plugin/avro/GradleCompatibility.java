@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.SourceSet;
 
 class GradleCompatibility {
     static <T> T createExtensionWithObjectFactory(Project project, String extensionName, Class<T> extensionType) {
@@ -38,6 +39,14 @@ class GradleCompatibility {
             Class<?>[] parameterTypes = {Object[].class};
             Object[] args = {new Object[0]};
             return invokeMethod(project.getLayout(), "configurableFiles", parameterTypes, args);
+        }
+    }
+
+    static String getSourcesJarTaskName(SourceSet sourceSet) {
+        if (GradleFeatures.getSourcesJarTaskName.isSupported()) {
+            return sourceSet.getSourcesJarTaskName();
+        } else {
+            return sourceSet.getTaskName(null, "sourcesJar");
         }
     }
 

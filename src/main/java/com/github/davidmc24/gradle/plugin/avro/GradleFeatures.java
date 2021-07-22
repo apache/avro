@@ -36,6 +36,12 @@ enum GradleFeatures {
         boolean isSupportedBy(GradleVersion version) {
             return version.compareTo(GradleVersions.v6_6) >= 0;
         }
+    },
+    getSourcesJarTaskName() {
+        @Override
+        boolean isSupportedBy(GradleVersion version) {
+            return version.compareTo(GradleVersions.v6_0) >= 0;
+        }
     };
 
     abstract boolean isSupportedBy(GradleVersion version);

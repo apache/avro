@@ -21,5 +21,6 @@ import org.gradle.util.GradleVersion;
 class GradleVersions {
     static final GradleVersion v5_2 = GradleVersion.version("5.2");
     static final GradleVersion v5_3 = GradleVersion.version("5.3");
+    static final GradleVersion v6_0 = GradleVersion.version("6.0");
     static final GradleVersion v6_6 = GradleVersion.version("6.6");
 }
