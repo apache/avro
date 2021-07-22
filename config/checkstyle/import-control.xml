@@ -20,7 +20,6 @@
     <allow pkg="org.apache.avro.generic"/>
 
     <allow pkg="org.gradle.api"/>
-    <allow pkg="org.gradle.jvm.tasks"/>
     <allow pkg="org.gradle.plugins.ide.idea"/>
     <allow pkg="org.gradle.util"/>
 </import-control>
