@@ -1,8 +1,8 @@
 # Change Log
 
 ## Unreleased
-* Built using Gradle 7.1
-* Updated compatibility testing through Gradle 7.1
+* Built using Gradle 7.1.1
+* Updated compatibility testing through Gradle 7.1.1
 
 ## 1.2.0
 * Avro 1.9.0-1.9.2 is supported again (no changed needed; just change in support policy and testing)
