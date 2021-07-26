@@ -199,11 +199,11 @@ suite('protocols', function () {
 
     test('ok', function (done) {
       var parts = [
-        new Buffer([0, 1]),
-        new Buffer([2]),
-        new Buffer([]),
-        new Buffer([3, 4, 5]),
-        new Buffer([])
+        Buffer.from([0, 1]),
+        Buffer.from([2]),
+        Buffer.from([]),
+        Buffer.from([3, 4, 5]),
+        Buffer.from([])
       ];
       var messages = [];
       var readable = createReadableStream(parts.map(frame), true);
@@ -211,7 +211,7 @@ suite('protocols', function () {
         .on('finish', function () {
           assert.deepEqual(
             messages,
-            [new Buffer([0, 1, 2]), new Buffer([3, 4, 5])]
+            [Buffer.from([0, 1, 2]), Buffer.from([3, 4, 5])]
           );
           done();
         });
@@ -220,10 +220,10 @@ suite('protocols', function () {
 
     test('trailing data', function (done) {
       var parts = [
-        new Buffer([0, 1]),
-        new Buffer([2]),
-        new Buffer([]),
-        new Buffer([3])
+        Buffer.from([0, 1]),
+        Buffer.from([2]),
+        Buffer.from([]),
+        Buffer.from([3])
       ];
       var messages = [];
       var readable = createReadableStream(parts.map(frame), true);
@@ -231,7 +231,7 @@ suite('protocols', function () {
       readable
         .pipe(new MessageDecoder())
         .on('error', function () {
-          assert.deepEqual(messages, [new Buffer([0, 1, 2])]);
+          assert.deepEqual(messages, [Buffer.from([0, 1, 2])]);
           done();
         })
         .pipe(writable);
@@ -256,8 +256,8 @@ suite('protocols', function () {
 
     test('ok', function (done) {
       var messages = [
-        new Buffer([0, 1]),
-        new Buffer([2])
+        Buffer.from([0, 1]),
+        Buffer.from([2])
       ];
       var frames = [];
       var readable = createReadableStream(messages, true);
@@ -269,8 +269,8 @@ suite('protocols', function () {
           assert.deepEqual(
             frames,
             [
-              new Buffer([0, 0, 0, 2, 0, 1, 0, 0, 0, 0]),
-              new Buffer([0, 0, 0, 1, 2, 0, 0, 0, 0])
+              Buffer.from([0, 0, 0, 2, 0, 1, 0, 0, 0, 0]),
+              Buffer.from([0, 0, 0, 1, 2, 0, 0, 0, 0])
             ]
           );
           done();
@@ -278,7 +278,7 @@ suite('protocols', function () {
     });
 
     test('all zeros', function (done) {
-      var messages = [new Buffer([0, 0, 0, 0])];
+      var messages = [Buffer.from([0, 0, 0, 0])];
       var frames = [];
       var readable = createReadableStream(messages, true);
       var writable = createWritableStream(frames, true);
@@ -288,7 +288,7 @@ suite('protocols', function () {
         .on('finish', function () {
           assert.deepEqual(
             frames,
-            [new Buffer([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0])]
+            [Buffer.from([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0])]
           );
           done();
         });
@@ -296,8 +296,8 @@ suite('protocols', function () {
 
     test('short frame size', function (done) {
       var messages = [
-        new Buffer([0, 1, 2]),
-        new Buffer([2])
+        Buffer.from([0, 1, 2]),
+        Buffer.from([2])
       ];
       var frames = [];
       var readable = createReadableStream(messages, true);
@@ -309,8 +309,8 @@ suite('protocols', function () {
           assert.deepEqual(
             frames,
             [
-              new Buffer([0, 0, 0, 2, 0, 1, 0, 0, 0, 1, 2, 0, 0, 0, 0]),
-              new Buffer([0, 0, 0, 1, 2, 0, 0, 0, 0])
+              Buffer.from([0, 0, 0, 2, 0, 1, 0, 0, 0, 1, 2, 0, 0, 0, 0]),
+              Buffer.from([0, 0, 0, 1, 2, 0, 0, 0, 0])
             ]
           );
           done();
@@ -333,8 +333,8 @@ suite('protocols', function () {
             assert.deepEqual(
               Buffer.concat(bufs),
               HANDSHAKE_REQUEST_TYPE.toBuffer({
-                clientHash: new Buffer(ptcl._hashString, 'binary'),
-                serverHash: new Buffer(ptcl._hashString, 'binary')
+                clientHash: Buffer.from(ptcl._hashString, 'binary'),
+                serverHash: Buffer.from(ptcl._hashString, 'binary')
               })
             );
             this.destroy();
@@ -350,7 +350,7 @@ suite('protocols', function () {
       var resBufs = [
         {
           match: 'NONE',
-          serverHash: {'org.apache.avro.ipc.MD5': new Buffer(16)},
+          serverHash: {'org.apache.avro.ipc.MD5': Buffer.alloc(16)},
           serverProtocol: {string: ptcl.toString()},
         },
         {match: 'BOTH'}
@@ -374,7 +374,7 @@ suite('protocols', function () {
 
     test('incompatible protocol', function (done) {
       var ptcl = createProtocol({protocol: 'Empty'});
-      var hash = new Buffer(16); // Pretend the hash was different.
+      var hash = Buffer.alloc(16); // Pretend the hash was different.
       var resBufs = [
         {
           match: 'NONE',
@@ -385,7 +385,7 @@ suite('protocols', function () {
           match: 'NONE',
           serverHash: {'org.apache.avro.ipc.MD5': hash},
           serverProtocol: {string: ptcl.toString()},
-          meta: {map: {error: new Buffer('abcd')}}
+          meta: {map: {error: Buffer.from('abcd')}}
         }
       ].map(function (val) { return HANDSHAKE_RESPONSE_TYPE.toBuffer(val); });
       var error = false;
@@ -402,8 +402,8 @@ suite('protocols', function () {
 
     test('handshake error', function (done) {
       var resBufs = [
-        new Buffer([4, 0, 0]), // Invalid handshakes.
-        new Buffer([4, 0, 0])
+        Buffer.from([4, 0, 0]), // Invalid handshakes.
+        Buffer.from([4, 0, 0])
       ];
       var ptcl = createProtocol({protocol: 'Empty'});
       var error = false;
@@ -422,7 +422,7 @@ suite('protocols', function () {
       var ptcl = createProtocol({protocol: 'Empty'});
       var idType = protocols.IdType.createMetadataType();
       var resBufs = [
-        new Buffer([0, 0, 0]), // OK handshake.
+        Buffer.from([0, 0, 0]), // OK handshake.
         idType.toBuffer(23)
       ];
       var error = false;
@@ -455,7 +455,7 @@ suite('protocols', function () {
         }
       });
       var resBufs = [
-        new Buffer([0, 0, 0]), // OK handshake.
+        Buffer.from([0, 0, 0]), // OK handshake.
       ];
       var interrupted = 0;
       var transport = createTransport(resBufs, []);
@@ -526,7 +526,7 @@ suite('protocols', function () {
           assert(/trailing data/.test(err.message));
           done();
         });
-      transports[0].readable.end(new Buffer([2, 3]));
+      transports[0].readable.end(Buffer.from([2, 3]));
     });
 
     test('invalid metadata', function (done) {
@@ -544,8 +544,8 @@ suite('protocols', function () {
           done();
         })
         .on('handshake', function () {
-          transports[0].readable.write(frame(new Buffer([2, 3])));
-          transports[0].readable.write(frame(new Buffer(0)));
+          transports[0].readable.write(frame(Buffer.from([2, 3])));
+          transports[0].readable.write(frame(Buffer.alloc(0)));
         });
     });
 
@@ -570,10 +570,10 @@ suite('protocols', function () {
           var idType = protocols.IdType.createMetadataType();
           var bufs = [
               idType.toBuffer(1), // Metadata.
-              new Buffer([3]) // Invalid response.
+              Buffer.from([3]) // Invalid response.
           ];
           transports[0].readable.write(frame(Buffer.concat(bufs)));
-          transports[0].readable.write(frame(new Buffer(0)));
+          transports[0].readable.write(frame(Buffer.alloc(0)));
         });
     });
 
@@ -615,8 +615,8 @@ suite('protocols', function () {
       });
       ptcl.emit('ping', {}, ee, function (err) {
         assert(/interrupted/.test(err.string));
-        readable.write(frame(new Buffer(2)));
-        readable.end(frame(new Buffer(0)));
+        readable.write(frame(Buffer.alloc(2)));
+        readable.end(frame(Buffer.alloc(0)));
       });
       ee.destroy(true);
     });
@@ -650,7 +650,7 @@ suite('protocols', function () {
     test('invalid handshake', function (done) {
       var ptcl = createProtocol({protocol: 'Empty'});
       var transport = createTransport(
-        [new Buffer([4])], // Invalid handshake.
+        [Buffer.from([4])], // Invalid handshake.
         []
       );
       ptcl.createListener(transport)
@@ -667,7 +667,7 @@ suite('protocols', function () {
         protocol: 'Heartbeat',
         messages: {beat: {request: [], response: 'boolean'}}
       });
-      var hash = new Buffer(ptcl2._hashString, 'binary');
+      var hash = Buffer.from(ptcl2._hashString, 'binary');
       var req = {
         clientHash: hash,
         clientProtocol: {string: ptcl2.toString()},
@@ -702,8 +702,8 @@ suite('protocols', function () {
         .on('handshake', function () {
           // Handshake is complete now.
           var writable = transports[0].writable;
-          writable.write(frame(new Buffer([0]))); // Empty metadata.
-          writable.write(frame(new Buffer(0)));
+          writable.write(frame(Buffer.from([0]))); // Empty metadata.
+          writable.write(frame(Buffer.alloc(0)));
         });
     });
 
@@ -737,8 +737,8 @@ suite('protocols', function () {
             });
           [
             idType.toBuffer(-1),
-            new Buffer([4, 104, 105]), // `hi` message.
-            new Buffer(0) // End of frame.
+            Buffer.from([4, 104, 105]), // `hi` message.
+            Buffer.alloc(0) // End of frame.
           ].forEach(function (buf) {
             transports[0].writable.write(frame(buf));
           });
@@ -777,9 +777,9 @@ suite('protocols', function () {
             });
           [
             idType.toBuffer(-1),
-            new Buffer([8, 98, 101, 97, 116]), // `beat` message.
-            new Buffer([8]), // Invalid Avro string encoding.
-            new Buffer(0) // End of frame.
+            Buffer.from([8, 98, 101, 97, 116]), // `beat` message.
+            Buffer.from([8]), // Invalid Avro string encoding.
+            Buffer.alloc(0) // End of frame.
           ].forEach(function (buf) {
             transports[0].writable.write(frame(buf));
           });
@@ -835,7 +835,7 @@ suite('protocols', function () {
           assert(/unknown message/.test(tap.readString()));
           done();
         });
-      var hash = new Buffer(ptcl._hashString, 'binary');
+      var hash = Buffer.from(ptcl._hashString, 'binary');
       var req = {
         clientHash: hash,
         clientProtocol: null,
@@ -845,8 +845,8 @@ suite('protocols', function () {
       encoder.pipe(readable);
       encoder.end(Buffer.concat([
         HANDSHAKE_REQUEST_TYPE.toBuffer(req),
-        new Buffer([0]), // Empty metadata.
-        new Buffer([4, 104, 105]) // `id` message.
+        Buffer.from([0]), // Empty metadata.
+        Buffer.from([4, 104, 105]) // `id` message.
       ]));
     });
 
@@ -1319,7 +1319,7 @@ suite('protocols', function () {
 
 // Message framing.
 function frame(buf) {
-  var framed = new Buffer(buf.length + 4);
+  var framed = Buffer.alloc(buf.length + 4);
   framed.writeInt32BE(buf.length);
   buf.copy(framed, 4);
   return framed;
