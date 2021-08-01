@@ -355,6 +355,10 @@ static void testLogicalTypes()
         \"type\": \"string\",\n\
         \"logicalType\": \"uuid\"\n\
     }";
+    // AVRO-2923 Union with LogicalType
+    const char* unionType = "[\n\
+        {\"type\":\"string\", \"logicalType\":\"uuid\"},\"null\"\n\
+    ]";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -439,6 +443,15 @@ static void testLogicalTypes()
         BOOST_CHECK(schema.root()->type() == AVRO_STRING);
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::UUID);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(unionType);
+        ValidSchema schema = compileJsonSchemaFromString(unionType);
+        BOOST_CHECK(schema.root()->type() == AVRO_UNION);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::NONE);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
     }
