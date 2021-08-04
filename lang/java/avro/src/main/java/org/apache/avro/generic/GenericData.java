@@ -902,7 +902,7 @@ public class GenericData {
   protected String getSchemaName(Object datum) {
     if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
-    String primativeType = PRIMATIVE_DATUM_TYPES.get(datum);
+    String primativeType = PRIMATIVE_DATUM_TYPES.get(datum.getClass());
     if (primativeType != null)
       return primativeType;
     if (isRecord(datum))
