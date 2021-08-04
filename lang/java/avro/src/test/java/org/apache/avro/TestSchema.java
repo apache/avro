@@ -360,4 +360,12 @@ public class TestSchema {
   public void testEnumSymbolAsNull() {
     Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
   }
+
+  @Test
+  public void testParseUnionSchemaJsonStringWithExtraTypeProperty() {
+    String union = "{\"type\":[{\"type\":\"record\",\"name\":\"name1\",\"namespace\":\"org.apache.avro.nested\",\"fields\":[{\"name\":\"field1\",\"type\":\"int\"}]},{\"type\":\"record\",\"name\":\"name2\",\"namespace\":\"org.apache.avro.nested\",\"fields\":[{\"name\":\"field2\",\"type\":[\"string\",\"null\"]}]}]}";
+    Schema.Parser parser = new Schema.Parser();
+    Schema unionSchema = parser.parse(union);
+    assertTrue(unionSchema.isUnion());
+  }
 }

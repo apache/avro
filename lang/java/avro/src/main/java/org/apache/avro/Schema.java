@@ -1643,6 +1643,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
       return result;
     } else if (schema.isObject()) {
       Schema result;
+      JsonNode typeJsonNode = schema.get("type");
+      if (typeJsonNode != null && typeJsonNode.isArray()) {
+        return parse(typeJsonNode, names);
+      }
       String type = getRequiredText(schema, "type", "No type");
       Name name = null;
       String savedSpace = names.space();
