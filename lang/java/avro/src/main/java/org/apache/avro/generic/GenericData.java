@@ -69,6 +69,16 @@ public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
 
+  private static final Map<Class<?>, String> PRIMATIVE_DATUM_TYPES = new HashMap<>();
+  static {
+    PRIMATIVE_DATUM_TYPES.put(Integer.class, Type.INT.getName());
+    PRIMATIVE_DATUM_TYPES.put(Long.class, Type.INT.getName());
+    PRIMATIVE_DATUM_TYPES.put(Float.class, Type.FLOAT.getName());
+    PRIMATIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
+    PRIMATIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
+    PRIMATIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
+  }
+
   /** Used to specify the Java type for a string schema. */
   public enum StringType {
     CharSequence, String, Utf8
@@ -892,6 +902,9 @@ public class GenericData {
   protected String getSchemaName(Object datum) {
     if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
+    String primativeType = PRIMATIVE_DATUM_TYPES.get(datum);
+    if (primativeType != null)
+      return primativeType;
     if (isRecord(datum))
       return getRecordSchema(datum).getFullName();
     if (isEnum(datum))
