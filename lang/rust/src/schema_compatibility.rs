@@ -96,7 +96,7 @@ impl Checker {
                         symbols: r_symbols, ..
                     } = readers_schema
                     {
-                        return w_symbols.iter().find(|e| !r_symbols.contains(e)).is_none();
+                        return !w_symbols.iter().any(|e| !r_symbols.contains(e));
                     }
                 }
                 false
@@ -597,10 +597,10 @@ mod tests {
             &writer_schema(),
             &reader_schema,
         ));
-        assert_eq!(
-            SchemaCompatibility::can_read(&reader_schema, &writer_schema()),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &reader_schema,
+            &writer_schema()
+        ));
     }
 
     #[test]
@@ -617,10 +617,10 @@ mod tests {
             &writer_schema(),
             &reader_schema
         ));
-        assert_eq!(
-            SchemaCompatibility::can_read(&reader_schema, &writer_schema()),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &reader_schema,
+            &writer_schema()
+        ));
     }
 
     #[test]
@@ -659,10 +659,10 @@ mod tests {
             &writer_schema(),
             &reader_schema
         ));
-        assert_eq!(
-            SchemaCompatibility::can_read(&reader_schema, &writer_schema()),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &reader_schema,
+            &writer_schema()
+        ));
     }
 
     #[test]
@@ -676,14 +676,14 @@ mod tests {
 "#,
         )
         .unwrap();
-        assert_eq!(
-            SchemaCompatibility::can_read(&writer_schema(), &reader_schema),
-            false
-        );
-        assert_eq!(
-            SchemaCompatibility::can_read(&reader_schema, &writer_schema()),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &writer_schema(),
+            &reader_schema
+        ));
+        assert!(!SchemaCompatibility::can_read(
+            &reader_schema,
+            &writer_schema()
+        ));
     }
 
     #[test]
@@ -695,10 +695,10 @@ mod tests {
             &string_array_schema(),
             &valid_reader
         ));
-        assert_eq!(
-            SchemaCompatibility::can_read(&string_array_schema(), &invalid_reader),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &string_array_schema(),
+            &invalid_reader
+        ));
     }
 
     #[test]
@@ -708,10 +708,10 @@ mod tests {
             &Schema::String,
             &valid_reader
         ));
-        assert_eq!(
-            SchemaCompatibility::can_read(&Schema::Int, &Schema::String),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &Schema::Int,
+            &Schema::String
+        ));
     }
 
     #[test]
@@ -720,10 +720,7 @@ mod tests {
         let union_writer = union_schema(vec![Schema::Int, Schema::String]);
         let union_reader = union_schema(vec![Schema::String]);
 
-        assert_eq!(
-            SchemaCompatibility::can_read(&union_writer, &union_reader),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(&union_writer, &union_reader));
         assert!(SchemaCompatibility::can_read(&union_reader, &union_writer));
     }
 
@@ -747,10 +744,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(
-            SchemaCompatibility::can_read(&string_schema, &int_schema),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(&string_schema, &int_schema));
     }
 
     #[test]
@@ -764,10 +758,7 @@ mod tests {
         let enum_schema2 =
             Schema::parse_str(r#"{"type":"enum", "name":"MyEnum", "symbols":["A","B","C"]}"#)
                 .unwrap();
-        assert_eq!(
-            SchemaCompatibility::can_read(&enum_schema2, &enum_schema1),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(&enum_schema2, &enum_schema1));
         assert!(SchemaCompatibility::can_read(&enum_schema1, &enum_schema2));
     }
 
@@ -844,10 +835,10 @@ mod tests {
     fn test_union_resolution_no_structure_match() {
         // short name match, but no structure match
         let read_schema = union_schema(vec![Schema::Null, point_3d_no_default_schema()]);
-        assert_eq!(
-            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema),
-            false
-        );
+        assert!(!SchemaCompatibility::can_read(
+            &point_2d_fullname_schema(),
+            &read_schema
+        ));
     }
 
     // TODO(nlopes): the below require named schemas to be fully supported. See:
@@ -862,9 +853,8 @@ mod tests {
     //         point_2d_schema(),
     //         point_3d_schema(),
     //     ]);
-    //     assert_eq!(
-    //         SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema),
-    //         false
+    //     assert!(
+    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
     //     );
     // }
 
@@ -877,9 +867,8 @@ mod tests {
     //         point_3d_schema(),
     //         point_2d_schema(),
     //     ]);
-    //     assert_eq!(
-    //         SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema),
-    //         false
+    //     assert!(
+    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
     //     );
     // }
 
@@ -892,9 +881,8 @@ mod tests {
     //         point_3d_match_name_schema(),
     //         point_3d_schema(),
     //     ]);
-    //     assert_eq!(
-    //         SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema),
-    //         false
+    //     assert!(
+    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
     //     );
     // }
 
