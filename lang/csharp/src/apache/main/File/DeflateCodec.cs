@@ -41,6 +41,19 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
+        public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
+        {
+            outputStream.SetLength(0);
+            using (DeflateStream Compress =
+                        new DeflateStream(outputStream,
+                        CompressionMode.Compress,
+                        true))
+            {
+                Compress.Write(inputStream.GetBuffer(), 0, (int)inputStream.Length);
+            }
+        }
+
+        /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData)
         {
             MemoryStream inStream = new MemoryStream(compressedData);
