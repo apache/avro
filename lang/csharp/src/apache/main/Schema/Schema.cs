@@ -269,16 +269,7 @@ namespace Avro
             System.IO.StringWriter sw = new System.IO.StringWriter();
             Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw);
 
-            if (this is PrimitiveSchema)
-            {
-                writer.WriteStartObject();
-                writer.WritePropertyName("type");
-            }
-
             WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
-
-            if (this is PrimitiveSchema)
-                writer.WriteEndObject();
 
             return sw.ToString();
         }

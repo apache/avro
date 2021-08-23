@@ -133,5 +133,24 @@ namespace Avro
         {
             return 13 * Tag.GetHashCode() + getHashCode(Props);
         }
+
+        /// <summary>
+        /// Returns the canonical JSON representation of this schema.
+        /// </summary>
+        /// <returns>The canonical JSON representation of this schema.</returns>
+        public override string ToString()
+        {
+            System.IO.StringWriter sw = new System.IO.StringWriter();
+            Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw);
+
+            writer.WriteStartObject();
+            writer.WritePropertyName("type");
+
+            WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
+
+            writer.WriteEndObject();
+
+            return sw.ToString();
+        }
     }
 }
