@@ -133,8 +133,8 @@ sub next {
 
     my @objs;
 
-    $datafile->read_block_header if $datafile->eob and not $datafile->eof;
     return ()                    if $datafile->eof;
+    $datafile->read_block_header if $datafile->eob;
 
     my $block_count = $datafile->{object_count};
 
