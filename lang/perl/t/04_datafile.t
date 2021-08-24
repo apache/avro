@@ -181,9 +181,9 @@ is_deeply $all[0], $data, "Our data is intact!";
     my $write100_file = Avro::DataFileWriter->new(
         fh             => $tmpfh_write100,
         writer_schema  => $schema,
-        block_max_size => 100, # Small block size to force > 1 block
+        codec         => 'bzip2'
     );
-    foreach (0..100) {
+    foreach (1..100) {
         $write100_file->print($data);
     }
     $write100_file->flush;
@@ -196,18 +196,22 @@ is_deeply $all[0], $data, "Our data is intact!";
     # Read the first instance.
     my @next = $read100_file->next(1);
     is scalar @next, 1, "first object back";
+    is_deeply $all[0], $data, "Our data is intact!";
     is scalar $read100_file->eob, 0, "not end-of-block";
     is scalar $read100_file->eof, 0, "not end-of-file";
-    is scalar $read100_file->{object_count}, 2, "block count";
+    is scalar $read100_file->{object_count}, 99, "remainder in this block count";
 
     # Scan over the next 98
-    foreach (0..98) {
-        $read100_file->next(1);
-    }
+    @next = $read100_file->next(98);
+    is scalar @next, 98, "ninety-eigth objects back";
+    is_deeply $all[0], $data, "Our data is intact!";
+    is scalar $read100_file->eob, 0, "not end-of-block";
+    is scalar $read100_file->eof, 0, "not end-of-file";
 
     # Read the last instance.
     @next = $read100_file->next(1);
     is scalar @next, 1, "last object back";
+    is_deeply $all[0], $data, "Our data is intact!";
     is scalar $read100_file->eob, 1, "end-of-block";
     is scalar $read100_file->eof, 1, "end-of-file";
     is scalar $read100_file->{object_count}, 0, "no blocks remaining";
