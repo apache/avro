@@ -371,6 +371,8 @@
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/M.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/MOrBuilder.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/TestMultipleFiles.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/cornucopia/v1/CornucopiaTestOuterClass.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/cornucopia/v1/NestedEnumOuterClass.java</exclude>
                 <!-- data and schema files -->
                 <exclude>**/*.avro</exclude> <!-- binary format -->
                 <exclude>**/*.avro12</exclude> <!-- binary format -->

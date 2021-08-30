@@ -237,6 +237,13 @@ public class ProtobufData extends GenericData {
         outer = toCamelCase(outer);
       }
     }
+
+    // Based on Java class generation described here:
+    // https://developers.google.com/protocol-buffers/docs/reference/java-generated#invocation
+    if (containsDefinitionWithName(fd, outer)) {
+      outer = outer + "OuterClass";
+    }
+
     StringBuilder inner = new StringBuilder();
     while (containing != null) {
       if (inner.length() == 0) {
@@ -262,6 +269,27 @@ public class ProtobufData extends GenericData {
 
   private static String cap(String s) {
     return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+  }
+
+  private static Boolean containsDefinitionWithName(FileDescriptor fd, String name) {
+    if (fd.findMessageTypeByName(name) != null) {
+      return true;
+    }
+    if (fd.findEnumTypeByName(name) != null) {
+      return true;
+    }
+    if (fd.findServiceByName(name) != null) {
+      return true;
+    }
+    // Look for nested definitions:
+    for (Descriptor d : fd.getMessageTypes()) {
+      if (d.findNestedTypeByName(name) != null)
+        return true;
+      if (d.findEnumTypeByName(name) != null)
+        return true;
+    }
+
+    return false;
   }
 
   private static final Schema NULL = Schema.create(Schema.Type.NULL);

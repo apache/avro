@@ -24,6 +24,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.protobuf.cornucopia.v1.CornucopiaTestOuterClass;
+import org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass;
 import org.apache.avro.specific.SpecificData;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
@@ -128,6 +130,17 @@ public class TestProtobuf {
 
     Schema nSchema = ProtobufData.get().getSchema(org.apache.avro.protobuf.multiplefiles.M.N.class);
     assertEquals(org.apache.avro.protobuf.multiplefiles.M.class.getName(), nSchema.getNamespace());
+  }
+
+  @Test
+  public void testOuterClassNamespace() throws Exception {
+    // Message with same name as file:
+    Schema sm = ProtobufData.get().getSchema(CornucopiaTestOuterClass.CornucopiaTest.class);
+    assertEquals(org.apache.avro.protobuf.cornucopia.v1.CornucopiaTestOuterClass.class.getName(), sm.getNamespace());
+
+    // Nested Enum with same name as file
+    Schema se = ProtobufData.get().getSchema(NestedEnumOuterClass.SomeOuterMessage.class);
+    assertEquals(org.apache.avro.protobuf.cornucopia.v1.NestedEnumOuterClass.class.getName(), se.getNamespace());
   }
 
   @Test

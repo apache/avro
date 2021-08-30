@@ -1,0 +1,140 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package cornucopia.v1;
+
+option java_package = "org.apache.avro.protobuf.cornucopia.v1";
+
+import "google/protobuf/timestamp.proto";
+
+// a cornucopia of types
+message CornucopiaTest {
+  // either it is or it isn't
+  bool a_bool = 1;
+
+  // various signed integers
+  message IntTypes {
+    // varint32
+    int32 a_int32 = 1;
+    // varint64
+    int64 a_int64 = 2;
+    // varint32 zigzag
+    sint32 a_sint32 = 3;
+    // varint64 zigzag
+    sint64 a_sint64 = 4;
+    // int32
+    sfixed32 a_sfixed32 = 5;
+    // int64
+    sfixed64 a_sfixed64 = 6;
+  }
+
+  // all the ints
+  IntTypes it = 2;
+
+  // various floats
+  message FloatTypes {
+    // float32
+    float a_float = 1;
+    // float64
+    double a_double = 2;
+  }
+
+  // all the floats
+  FloatTypes ft = 3;
+
+  // various bytearrays
+  message StringTypes {
+    // unicode string
+    string a_string = 1;
+    // bytearray
+    bytes a_bytes = 2;
+  }
+
+  // all the strings
+  StringTypes st = 4;
+
+  // resons of the thaum
+  enum Reson {
+    FOO = 0;
+    BAR = 1;
+    BAZ = 2;
+  }
+
+  // the colour of magic
+  Reson a_enum = 5;
+
+  reserved 6 to 8;
+
+  // scalar arrays
+  message ArrayTypes {
+    // varint32[]
+    repeated int32 ints = 1;
+    // string[]
+    repeated string strs = 2;
+  }
+
+  // arrays in a struct
+  ArrayTypes at = 9;
+  // array of structs of arrays
+  repeated ArrayTypes ats = 10;
+
+  // possible date types
+  message DateTypes {
+    // days since the beginning of time (1970-01-01 = 0)
+    int32 date_int = 1;
+    // ISO8601 date
+    string date_str = 2;
+  }
+
+  // all the dates
+  DateTypes dt = 11;
+
+  // possible timestamp types
+  message TimestampTypes {
+    // ISO8601 timestamp
+    string timestamp_str = 1;
+    // milliseconds since 1970-01-01
+    int64 timestamp_millis = 2;
+    // microseconds since 1970-01-01
+    optional int64 timestamp_micros = 3;
+    // nanoseconds since 1970-01-01
+    int64 timestamp_nanos = 4;
+    // A google proto timestamp
+    google.protobuf.Timestamp timestamp_ts = 5;
+  }
+
+  // all the timestamps
+  TimestampTypes tt = 12;
+
+  // various scalar maps
+  message MapTypes {
+    // map(str, str)
+    map<string, string> str_str_map = 1;
+    // map(str, int)
+    map<string, int32> str_int_map = 2;
+    // map(int, str)
+    map<int32, string> int_str_map = 3;
+    // map(int, int)
+    map<int32, int32> int_int_map = 4;
+  }
+
+  // all the maps
+  MapTypes mt = 13;
+}
