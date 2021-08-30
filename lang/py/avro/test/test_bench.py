@@ -27,7 +27,7 @@ import timeit
 import unittest
 import unittest.mock
 from pathlib import Path
-from typing import List, Mapping, Sequence
+from typing import Mapping, Sequence, cast
 
 import avro.datafile
 import avro.io
@@ -35,18 +35,21 @@ import avro.schema
 from avro.utils import randbytes
 
 TYPES = ("A", "CNAME")
-SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
-    json.dumps(
-        {
-            "type": "record",
-            "name": "Query",
-            "fields": [
-                {"name": "query", "type": "string"},
-                {"name": "response", "type": "string"},
-                {"name": "type", "type": "string", "default": "A"},
-            ],
-        }
-    )
+SCHEMA = cast(
+    avro.schema.RecordSchema,
+    avro.schema.parse(
+        json.dumps(
+            {
+                "type": "record",
+                "name": "Query",
+                "fields": [
+                    {"name": "query", "type": "string"},
+                    {"name": "response", "type": "string"},
+                    {"name": "type", "type": "string", "default": "A"},
+                ],
+            }
+        )
+    ),
 )
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)

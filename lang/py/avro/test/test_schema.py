@@ -623,7 +623,7 @@ class TestMisc(unittest.TestCase):
 
     def test_exception_is_not_swallowed_on_parse_error(self):
         """A specific exception message should appear on a json parse error."""
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             avro.errors.SchemaParseException,
             r"Error parsing JSON: /not/a/real/file",
             avro.schema.parse,

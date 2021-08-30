@@ -403,7 +403,7 @@ RECORD1_WITH_ENUM_AB = parse(
         {
             "type": SchemaType.RECORD,
             "name": "Record1",
-            "fields": [{"name": "field1", "type": dict(ENUM1_AB_SCHEMA.to_json())}],
+            "fields": [{"name": "field1", "type": ENUM1_AB_SCHEMA.to_json()}],
         }
     )
 )
@@ -412,7 +412,7 @@ RECORD1_WITH_ENUM_ABC = parse(
         {
             "type": SchemaType.RECORD,
             "name": "Record1",
-            "fields": [{"name": "field1", "type": dict(ENUM1_ABC_SCHEMA.to_json())}],
+            "fields": [{"name": "field1", "type": ENUM1_ABC_SCHEMA.to_json()}],
         }
     )
 )
