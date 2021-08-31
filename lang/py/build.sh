@@ -35,12 +35,21 @@ clean() {
                  'userlogs'
 }
 
-dist() {
-  python3 setup.py sdist
-  python3 setup.py bdist_wheel
-  mkdir -p ../../dist/py
-  cp dist/*.{tar.gz,whl} ../../dist/py
-}
+dist() (
+  ##
+  # Use https://pypa-build.readthedocs.io to create the build artifacts.
+  local destination virtualenv
+  destination=$(
+    d=../../dist/py
+    mkdir -p "$d"
+    cd -P "$d"
+    pwd
+  )
+  virtualenv="$(mktemp -d)"
+  python3 -m venv "$virtualenv"
+  "$virtualenv/bin/python3" -m pip install build
+  "$virtualenv/bin/python3" -m build --outdir "$destination"
+)
 
 interop-data-generate() {
   ./setup.py generate_interop_data
