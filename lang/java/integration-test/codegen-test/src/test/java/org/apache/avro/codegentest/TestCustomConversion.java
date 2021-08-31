@@ -20,6 +20,7 @@ package org.apache.avro.codegentest;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversion;
+import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversionIdl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -35,6 +36,14 @@ public class TestCustomConversion extends AbstractSpecificRecordTest {
   @Test
   public void testNullValues() {
     LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
+        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
+        .setNonNullFixedSizeString(new FixedSizeString("test")).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
+
+  @Test
+  public void testNullValuesIdl() {
+    LogicalTypesWithCustomConversionIdl instanceOfGeneratedClass = LogicalTypesWithCustomConversionIdl.newBuilder()
         .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
         .setNonNullFixedSizeString(new FixedSizeString("test")).build();
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);
