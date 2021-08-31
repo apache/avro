@@ -54,8 +54,8 @@ SCHEMA = cast(
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
-MAX_WRITE_SECONDS = 5 if platform.python_implementation() == "PyPy" else 3
-MAX_READ_SECONDS = 5 if platform.python_implementation() == "PyPy" else 3
+MAX_WRITE_SECONDS = 10 if platform.python_implementation() == "PyPy" else 3
+MAX_READ_SECONDS = 10 if platform.python_implementation() == "PyPy" else 3
 
 
 class TestBench(unittest.TestCase):
