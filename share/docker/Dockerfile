@@ -201,6 +201,9 @@ RUN rbenv exec bundle install --gemfile=/tmp/Gemfile \
   && chgrp -R staff /usr/local/rbenv \
   && chmod -R g+rw /usr/local/rbenv
 
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.48.0
+
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8 (installed as an AdoptOpenJDK package)
 # - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
