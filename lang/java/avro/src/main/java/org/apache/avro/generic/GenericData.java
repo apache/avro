@@ -934,8 +934,8 @@ public class GenericData {
   }
 
   /**
-   * Called to obtain the primitive type cache.
-   * May be overridden for alternate record representations.
+   * Called to obtain the primitive type cache. May be overridden for alternate
+   * record representations.
    */
   protected Map<Class<?>, String> getPrimitiveTypeCache() {
     return PRIMITIVE_DATUM_TYPES;
