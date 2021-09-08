@@ -69,14 +69,15 @@ public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
 
-  private static final Map<Class<?>, String> PRIMATIVE_DATUM_TYPES = new IdentityHashMap<>();
+  private static final Map<Class<?>, String> PRIMITIVE_DATUM_TYPES = new IdentityHashMap<>();
   static {
-    PRIMATIVE_DATUM_TYPES.put(Integer.class, Type.INT.getName());
-    PRIMATIVE_DATUM_TYPES.put(Long.class, Type.LONG.getName());
-    PRIMATIVE_DATUM_TYPES.put(Float.class, Type.FLOAT.getName());
-    PRIMATIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
-    PRIMATIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
-    PRIMATIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
+    PRIMITIVE_DATUM_TYPES.put(Integer.class, Type.INT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Long.class, Type.LONG.getName());
+    PRIMITIVE_DATUM_TYPES.put(Float.class, Type.FLOAT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
+    PRIMITIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
+    PRIMITIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
+    PRIMITIVE_DATUM_TYPES.put(HashMap.class, Type.MAP.getName());
   }
 
   /** Used to specify the Java type for a string schema. */
@@ -902,7 +903,7 @@ public class GenericData {
   protected String getSchemaName(Object datum) {
     if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
-    String primativeType = PRIMATIVE_DATUM_TYPES.get(datum.getClass());
+    String primativeType = getPrimitiveTypeCache().get(datum.getClass());
     if (primativeType != null)
       return primativeType;
     if (isRecord(datum))
@@ -930,6 +931,14 @@ public class GenericData {
     if (isBoolean(datum))
       return Type.BOOLEAN.getName();
     throw new AvroRuntimeException(String.format("Unknown datum type %s: %s", datum.getClass().getName(), datum));
+  }
+
+  /**
+   * Called to obtain the primitive type cache.
+   * May be overridden for alternate record representations.
+   */
+  protected Map<Class<?>, String> getPrimitiveTypeCache() {
+    return PRIMITIVE_DATUM_TYPES;
   }
 
   /**
