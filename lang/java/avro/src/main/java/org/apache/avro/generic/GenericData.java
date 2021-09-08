@@ -77,7 +77,6 @@ public class GenericData {
     PRIMITIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
     PRIMITIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
     PRIMITIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
-    PRIMITIVE_DATUM_TYPES.put(HashMap.class, Type.MAP.getName());
   }
 
   /** Used to specify the Java type for a string schema. */
