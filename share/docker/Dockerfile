@@ -56,6 +56,7 @@ RUN apt-get -qqy update \
                                                  python3-pip \
                                                  python3-setuptools \
                                                  python3-snappy \
+                                                 python3-venv \
                                                  python3-wheel \
                                                  source-highlight \
                                                  subversion \
