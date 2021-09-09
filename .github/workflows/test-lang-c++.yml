@@ -36,8 +36,10 @@ jobs:
 
       - name: Install Dependencies
         run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
-      - name: Get specific version CMake, v3.16.3
-        uses: lukka/get-cmake@v3.16.3
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1.10
+        with:
+            cmake-version: '3.16.x'
       - name: Lint
         run: ./build.sh lint
 
