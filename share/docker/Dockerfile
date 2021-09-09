@@ -15,10 +15,9 @@
 # limitations under the License.
 
 # Dockerfile for installing the necessary dependencies for building Avro.
-# See BUILD.txt.
+# See BUILD.md.
 
-# Despite this base, JDK8 is used by default.  See below.
-FROM openjdk:11-buster
+FROM ubuntu:20.04
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
@@ -31,6 +30,7 @@ RUN apt-get -qqy update \
                                                  apt-utils \
                                                  asciidoc \
                                                  bison \
+                                                 build-essential \
                                                  bzip2 \
                                                  cmake \
                                                  cppcheck \
@@ -40,6 +40,7 @@ RUN apt-get -qqy update \
                                                  g++ \
                                                  gcc \
                                                  git \
+                                                 gnupg2 \
                                                  libboost-all-dev \
                                                  libfontconfig1-dev \
                                                  libfreetype6-dev \
@@ -51,6 +52,8 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
+                                                 openjdk-11-jdk \
+                                                 openjdk-8-jdk \
                                                  perl \
                                                  python3 \
                                                  python3-pip \
@@ -62,19 +65,21 @@ RUN apt-get -qqy update \
                                                  subversion \
                                                  valgrind \
                                                  vim \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+                                                 wget \
+ && apt-get -qqy clean
 
-RUN wget -qO- https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - \
- && echo "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb buster main" | tee /etc/apt/sources.list.d/adoptopenjdk.list \
- && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends adoptopenjdk-8-hotspot \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+# Install PHP
+RUN apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
+                                                 php \
+                                                 php-bz2 \
+                                                 php-gmp \
+                                                 php-xml \
+                                                 php-mbstring \
+                                                 php-dev
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-
 ENV MAVEN_VERSION 3.8.1
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
@@ -103,36 +108,23 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
-RUN curl -sSL https://deb.nodesource.com/setup_12.x \
+RUN curl -sSL https://deb.nodesource.com/setup_16.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists \
  && npm install -g grunt-cli \
  && npm cache clean --force
 
-# Install PHP
-ENV PHP7_VERSION=7.3
-RUN curl -sSL https://packages.sury.org/php/apt.gpg \
-  | apt-key add --no-tty - \
- && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
- && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends libzstd-dev \
-                                                 libbz2-dev \
-                                                 php${PHP7_VERSION} \
-                                                 php${PHP7_VERSION}-bz2 \
-                                                 php${PHP7_VERSION}-gmp \
-                                                 php${PHP7_VERSION}-xml \
-                                                 php${PHP7_VERSION}-mbstring \
-                                                 php${PHP7_VERSION}-dev \
- && mkdir tmp && cd tmp \
+# Install PHP-snappy and PHP-zstd
+ENV PHP7_VERSION=7.4
+RUN mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
  && cd php-ext-zstd \
  && phpize \
  && ./configure \
  && make \
  && make install \
- && echo "extension=zstd.so" > /etc/php/7.3/cli/conf.d/10-zstd.ini \
+ && echo "extension=zstd.so" > /etc/php/${PHP7_VERSION}/cli/conf.d/10-zstd.ini \
  && cd .. && rm -rf php-ext-zstd \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
  && cd php-ext-snappy \
@@ -140,17 +132,15 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && ./configure \
  && make \
  && make install \
- && echo "extension=snappy.so" > /etc/php/7.3/cli/conf.d/10-snappy.ini \
+ && echo "extension=snappy.so" > /etc/php/${PHP7_VERSION}/cli/conf.d/10-snappy.ini \
  && cd .. && rm -rf php-ext-snappy \
  && php -m \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+ && apt-get -qqy clean
 
 RUN curl -sS https://getcomposer.org/installer | php -- --version=2.0.7 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
-RUN apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
                                                  libcpan-uploader-perl \
                                                  libencode-perl \
                                                  libio-string-perl \
@@ -163,8 +153,8 @@ RUN apt-get -qqy update \
                                                  libtest-exception-perl \
                                                  libtest-pod-perl \
                                                  libtry-tiny-perl \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+ && apt-get -qqy clean
+
 RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
@@ -179,44 +169,28 @@ RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox-wheel zstandard
 
 # Install .NET SDK
-RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
+RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
  && dpkg -i packages-microsoft-prod.deb \
  && rm packages-microsoft-prod.deb \
- && apt-get -qqy update \
+ && apt-get update \
  && apt-get -qqy install --no-install-recommends dotnet-sdk-2.1 dotnet-sdk-3.1 dotnet-sdk-5.0 \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+ && apt-get -qqy clean
 
 # Install Ruby
-ENV RBENV_ROOT /usr/local/rbenv
-RUN git clone https://github.com/rbenv/rbenv.git /usr/local/rbenv \
-  && git clone https://github.com/rbenv/ruby-build.git /usr/local/rbenv/plugins/ruby-build \
-  && /usr/local/rbenv/plugins/ruby-build/install.sh \
-  && echo 'eval "$(rbenv init -)"' >> /etc/profile.d/rbenv.sh \
-  && echo 'eval "$(rbenv init -)"' >> /etc/bash.bashrc
-ENV PATH /usr/local/rbenv/bin:$PATH
-RUN rbenv install 2.6.7 && rbenv global 2.6.7 \
-  && rbenv exec gem install bundler -v 1.17.3 --no-document
-COPY lang/ruby/Gemfile /tmp
-RUN rbenv exec bundle install --gemfile=/tmp/Gemfile \
-  && chgrp -R staff /usr/local/rbenv \
-  && chmod -R g+rw /usr/local/rbenv
+RUN apt-get -qqy install ruby-full \
+ && apt-get -qqy clean
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.48.0
 
 # Note: This "ubertool" container has two JDK versions:
-# - OpenJDK 8 (installed as an AdoptOpenJDK package)
-# - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
+# - OpenJDK 8
+# - OpenJDK 11
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-# The /usr/local/openjdk-8 link is created to be consistent with the
-# openjdk:8 image.
-
-RUN ln -s /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64 /usr/local/openjdk-8
-ENV JAVA_HOME /usr/local/openjdk-8
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $JAVA_HOME/bin:$PATH
 
 CMD ["/bin/bash", "-i"]

@@ -4,13 +4,13 @@
 
 The following packages must be installed before Avro can be built:
 
- - Java: JDK 1.8, Maven 2 or better, protobuf-compile
- - PHP: php5, phpunit, php5-gmp
+ - Java: JDK 1.8, Maven 3 or better, protobuf-compile
+ - PHP: php7, phpunit, php7-gmp
  - Python 3: 3.5 or greater
  - C: gcc, cmake, asciidoc, source-highlight, Jansson, pkg-config
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
  - C#: .NET Core 2.2 SDK
- - JavaScript: Node 6.x+, nodejs, npm
+ - JavaScript: Node 12.x+, nodejs, npm
  - Ruby: Ruby 2.6 or greater, ruby-dev, gem, bundler, snappy
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
    Module::Install::ReadmeFromPod, Module::Install::Repository,

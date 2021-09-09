@@ -329,7 +329,7 @@ do
     docker-test)
       tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
         docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v "${PWD}:/avro/" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+      docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)
