@@ -36,10 +36,10 @@ jobs:
 
       - name: Install Dependencies
         run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v1.10
-        with:
-            cmake-version: '3.16.x'
+
+      - name: Clean
+        run: ./build.sh clean
+
       - name: Lint
         run: ./build.sh lint
 

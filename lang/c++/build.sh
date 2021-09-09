@@ -71,7 +71,7 @@ function do_dist() {
   fi
 }
 
-(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
+(mkdir -p build; cd build; cmake --version; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
