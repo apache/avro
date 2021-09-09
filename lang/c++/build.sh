@@ -79,7 +79,7 @@ case "$target" in
   lint)
     # some versions of cppcheck seem to require an explicit
     # "--error-exitcode" option to return non-zero code
-    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ .
+    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ api examples impl test
     ;;
 
   test)
