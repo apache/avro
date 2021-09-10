@@ -176,7 +176,7 @@ fn make_records(record: Value, count: usize) -> Vec<Value> {
 }
 
 fn write(schema: &Schema, records: &[Value]) -> Vec<u8> {
-    let mut writer = Writer::new(&schema, Vec::new());
+    let mut writer = Writer::new(schema, Vec::new());
     writer.extend_from_slice(records).unwrap();
     writer.into_inner().unwrap()
 }
