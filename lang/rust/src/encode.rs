@@ -28,7 +28,7 @@ use std::convert::TryInto;
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
 pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
-    encode_ref(&value, schema, buffer)
+    encode_ref(value, schema, buffer)
 }
 
 fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
@@ -153,7 +153,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
 
 pub fn encode_to_vec(value: &Value, schema: &Schema) -> Vec<u8> {
     let mut buffer = Vec::new();
-    encode(&value, schema, &mut buffer);
+    encode(value, schema, &mut buffer);
     buffer
 }
 

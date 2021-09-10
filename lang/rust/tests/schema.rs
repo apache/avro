@@ -707,8 +707,8 @@ fn test_parse_list_with_cross_deps_basic() {
     let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
     let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
 
-    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
-    let parsed_2 = Schema::parse_str(&schema_composite).expect("Test failed");
+    let parsed_1 = Schema::parse_str(schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(schema_composite).expect("Test failed");
     assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
     assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
 }
@@ -777,8 +777,8 @@ fn test_parse_list_with_cross_deps_and_namespaces() {
     let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
     let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
 
-    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
-    let parsed_2 = Schema::parse_str(&schema_composite).expect("Test failed");
+    let parsed_1 = Schema::parse_str(schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(schema_composite).expect("Test failed");
     assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
     assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
 }
@@ -1027,8 +1027,8 @@ fn test_namespace_prevents_collisions() {
     }"#;
 
     let parsed = Schema::parse_list(&[schema_str_1, schema_str_2]).expect("Test failed");
-    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
-    let parsed_2 = Schema::parse_str(&schema_str_2).expect("Test failed");
+    let parsed_1 = Schema::parse_str(schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(schema_str_2).expect("Test failed");
     assert_eq!(parsed, vec!(parsed_1, parsed_2));
 }
 

@@ -296,7 +296,7 @@ pub fn from_avro_datum<R: Read>(
 ) -> AvroResult<Value> {
     let value = decode(writer_schema, reader)?;
     match reader_schema {
-        Some(ref schema) => value.resolve(schema),
+        Some(schema) => value.resolve(schema),
         None => Ok(value),
     }
 }
