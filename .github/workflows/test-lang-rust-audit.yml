@@ -29,7 +29,7 @@ on:
 
 defaults:
   run:
-    working-directory: lang/rust # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
+    working-directory: lang/rust
 
 jobs:
   audit:
@@ -37,7 +37,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Rust Audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
+      #- name: Rust Audit
+      #  uses: actions-rs/audit-check@v1
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      # Install it manually
+      - name: Install Cargo Audit
+        run: cargo install cargo-audit
+      - name: Audit
+        run: cargo audit
