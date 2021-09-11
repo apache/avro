@@ -308,7 +308,7 @@ namespace Avro
             return protect(() => true, () =>
             {
                 if (!that.SchemaName.Equals(SchemaName))
-                    if (!InAliases(that.SchemaName))
+                    if (!SchemaConfiguration.UseSoftMatch && !InAliases(that.SchemaName))
                         return false;
 
                 foreach (Field f in this)
