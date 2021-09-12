@@ -45,7 +45,7 @@
     <junit.version>4.13.2</junit.version>
     <netty.version>4.1.68.Final</netty.version>
     <protobuf.version>3.17.3</protobuf.version>
-    <thrift.version>0.14.2</thrift.version>
+    <thrift.version>0.15.0</thrift.version>
     <slf4j.version>1.7.32</slf4j.version>
     <snappy.version>1.1.8.4</snappy.version>
     <velocity.version>2.3</velocity.version>
