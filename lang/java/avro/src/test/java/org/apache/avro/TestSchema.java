@@ -216,6 +216,7 @@ public class TestSchema {
     assertEquals(parent, parentWithoutInlinedChildReference);
   }
 
+  @Test
   public void testIntDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1);
     assertTrue(field.hasDefaultValue());

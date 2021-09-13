@@ -453,9 +453,9 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             // This branch can be anything...
-            Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(&fields)),
+            Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(fields)),
             // This has to be a unit Enum
-            Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(&field)),
+            Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(field)),
             _ => Err(de::Error::custom("not an enum")),
         }
     }
@@ -483,7 +483,7 @@ impl<'de> de::SeqAccess<'de> for SeqDeserializer<'de> {
         T: DeserializeSeed<'de>,
     {
         match self.input.next() {
-            Some(item) => seed.deserialize(&Deserializer::new(&item)).map(Some),
+            Some(item) => seed.deserialize(&Deserializer::new(item)).map(Some),
             None => Ok(None),
         }
     }
@@ -497,7 +497,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer<'de> {
         K: DeserializeSeed<'de>,
     {
         match self.input_keys.next() {
-            Some(ref key) => seed
+            Some(key) => seed
                 .deserialize(StringDeserializer {
                     input: (*key).clone(),
                 })
@@ -511,7 +511,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer<'de> {
         V: DeserializeSeed<'de>,
     {
         match self.input_values.next() {
-            Some(ref value) => seed.deserialize(&Deserializer::new(value)),
+            Some(value) => seed.deserialize(&Deserializer::new(value)),
             None => Err(de::Error::custom("should not happen - too many values")),
         }
     }

@@ -278,7 +278,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Append a raw Avro Value to the payload avoiding to encode it again.
     fn append_raw(&mut self, value: &Value, schema: &Schema) -> AvroResult<usize> {
-        self.append_bytes(encode_to_vec(&value, schema).as_ref())
+        self.append_bytes(encode_to_vec(value, schema).as_ref())
     }
 
     /// Append pure bytes to the payload.
@@ -433,7 +433,7 @@ mod tests {
         assert_eq!(&schema, expected_schema);
         // The serialized format should be the same as the schema.
         let ser = to_avro_datum(&schema, value.clone())?;
-        let raw_ser = to_avro_datum(&raw_schema, raw_value)?;
+        let raw_ser = to_avro_datum(raw_schema, raw_value)?;
         assert_eq!(ser, raw_ser);
 
         // Should deserialize from the schema into the logical type.

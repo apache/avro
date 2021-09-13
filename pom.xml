@@ -375,6 +375,7 @@
                 <exclude>**/*.avro</exclude> <!-- binary format -->
                 <exclude>**/*.avro12</exclude> <!-- binary format -->
                 <exclude>**/*.avsc</exclude> <!-- does not allow comments -->
+                <exclude>**/*.avdl</exclude> <!-- does not allow comments -->
                 <exclude>**/*.avpr</exclude> <!-- does not allow comments -->
                 <exclude>**/*.json</exclude> <!-- does not allow comments -->
                 <exclude>**/*.p12</exclude>  <!-- binary format, cert -->

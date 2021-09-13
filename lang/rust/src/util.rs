@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn test_overflow() {
         let causes_left_shift_overflow: &[u8] = &[0xe1, 0xe1, 0xe1, 0xe1, 0xe1];
-        assert!(decode_variable(&mut &causes_left_shift_overflow[..]).is_err());
+        assert!(decode_variable(&mut &*causes_left_shift_overflow).is_err());
     }
 
     #[test]

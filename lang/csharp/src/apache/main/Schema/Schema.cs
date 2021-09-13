@@ -266,21 +266,13 @@ namespace Avro
         /// <returns>The canonical JSON representation of this schema.</returns>
         public override string ToString()
         {
-            System.IO.StringWriter sw = new System.IO.StringWriter();
-            Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw);
-
-            if (this is PrimitiveSchema || this is UnionSchema)
+            using (System.IO.StringWriter sw = new System.IO.StringWriter())
+            using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
             {
-                writer.WriteStartObject();
-                writer.WritePropertyName("type");
+                WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
+
+                return sw.ToString();
             }
-
-            WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
-
-            if (this is PrimitiveSchema || this is UnionSchema)
-                writer.WriteEndObject();
-
-            return sw.ToString();
         }
 
         /// <summary>
