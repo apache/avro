@@ -216,7 +216,7 @@ public class FieldVisibilityTest extends org.apache.avro.specific.SpecificRecord
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -244,7 +244,7 @@ public class FieldVisibilityTest extends org.apache.avro.specific.SpecificRecord
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.FieldVisibilityTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;
