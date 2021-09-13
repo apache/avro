@@ -238,10 +238,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.underlyingStream = outs;
     this.out = new BufferedFileOutputStream(outs);
     EncoderFactory efactory = new EncoderFactory();
-    this.vout = efactory.binaryEncoder(out, null);
+    this.vout = efactory.directBinaryEncoder(out, null);
     dout.setSchema(schema);
     buffer = new NonCopyingByteArrayOutputStream(Math.min((int) (syncInterval * 1.25), Integer.MAX_VALUE / 2 - 1));
-    this.bufOut = efactory.binaryEncoder(buffer, null);
+    this.bufOut = efactory.directBinaryEncoder(buffer, null);
     if (this.codec == null) {
       this.codec = CodecFactory.nullCodec().createInstance();
     }

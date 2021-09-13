@@ -25,7 +25,9 @@ namespace Avro
     /// </summary>
     public class SchemaName
     {
-        private string fullname;
+        // cache the full name, so it won't allocate new strings on each call
+        private String fullName;
+        
         /// <summary>
         /// Name of the schema
         /// </summary>
@@ -44,7 +46,7 @@ namespace Avro
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public String Fullname { get { return fullname; } }
+        public String Fullname { get { return fullName; } }
 
         /// <summary>
         /// Namespace of the schema
@@ -79,13 +81,7 @@ namespace Avro
                 this.Name = parts[parts.Length - 1];
                 this.EncSpace = encspace;
             }
-
-            CacheFullname();
-        }
-
-        private void CacheFullname()
-        {
-            fullname = string.IsNullOrEmpty(Namespace) ? this.Name : Namespace + "." + this.Name;
+            fullName = string.IsNullOrEmpty(Namespace) ? this.Name : Namespace + "." + this.Name;
         }
 
         /// <summary>

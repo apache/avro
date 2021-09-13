@@ -464,7 +464,7 @@ impl Schema {
         for js in input {
             let schema: Value = serde_json::from_str(js).map_err(Error::ParseSchemaJson)?;
             if let Value::Object(inner) = &schema {
-                let fullname = Name::parse(&inner)?.fullname(None);
+                let fullname = Name::parse(inner)?.fullname(None);
                 let previous_value = input_schemas.insert(fullname.clone(), schema);
                 if previous_value.is_some() {
                     return Err(Error::NameCollision(fullname));

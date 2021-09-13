@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,15 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-##
-# Minimal pip build requirements:
-# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
-[build-system]
-requires = ["setuptools>=40.8.0", "wheel"]
-build-backend = "setuptools.build_meta"
+set -e
 
-[tool.black]
-line-length = 150
+cd `dirname "$0"`
 
-[tool.isort]
-profile = 'black'
+for target in "$@"
+do
+  case "$target" in
+    clean)
+      cargo clean
+      ;;
+    lint)
+      cargo clippy --all-targets --all-features -- -Dclippy::all
+      ;;
+    test)
+      cargo test
+      ;;
+    dist)
+      cargo build --release --lib --all-features
+      cargo package
+      mkdir -p  ../../dist/rust
+      cp target/package/avro-rs-*.crate ../../dist/rust
+      ;;
+    *)
+      echo "Usage: $0 {lint|test|dist|clean}" >&2
+      exit 1
+  esac
+done
