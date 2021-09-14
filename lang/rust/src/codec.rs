@@ -62,8 +62,8 @@ impl Codec {
             Codec::Snappy => {
                 use byteorder::ByteOrder;
 
-                let mut encoded: Vec<u8> = vec![0; snap::max_compress_len(stream.len())];
-                let compressed_size = snap::Encoder::new()
+                let mut encoded: Vec<u8> = vec![0; snap::raw::max_compress_len(stream.len())];
+                let compressed_size = snap::raw::Encoder::new()
                     .compress(&stream[..], &mut encoded[..])
                     .map_err(Error::SnappyCompress)?;
 
@@ -94,10 +94,10 @@ impl Codec {
             Codec::Snappy => {
                 use byteorder::ByteOrder;
 
-                let decompressed_size = snap::decompress_len(&stream[..stream.len() - 4])
+                let decompressed_size = snap::raw::decompress_len(&stream[..stream.len() - 4])
                     .map_err(Error::GetSnappyDecompressLen)?;
                 let mut decoded = vec![0; decompressed_size];
-                snap::Decoder::new()
+                snap::raw::Decoder::new()
                     .decompress(&stream[..stream.len() - 4], &mut decoded[..])
                     .map_err(Error::SnappyDecompress)?;
 
