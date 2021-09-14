@@ -61,7 +61,7 @@ strum_macros = "0.21.1"
 thiserror = "1.0.29"
 typed-builder = "0.9.1"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
-zerocopy = "0.3.0"
+zerocopy = "0.6.0"
 lazy_static = "1.1.1"
 
 [dev-dependencies]
