@@ -17,8 +17,6 @@
  */
 package org.apache.avro.specific;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -26,8 +24,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.test.Kind;
+import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestRecordWithUnion;
+import org.apache.avro.test.TestRecord;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class TestSpecificDatumWriter {
   @Test
@@ -50,4 +52,26 @@ public class TestSpecificDatumWriter {
     assertEquals(expectedJson, out.toString("UTF-8"));
   }
 
+  @Test
+  public void testIncompleteRecord() throws IOException {
+    final SpecificDatumWriter<TestRecord> writer = new SpecificDatumWriter<>();
+    Schema schema = TestRecord.SCHEMA$;
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
+
+    writer.setSchema(schema);
+
+    TestRecord testRecord = new TestRecord();
+    testRecord.setKind(Kind.BAR);
+    testRecord.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
+
+    try {
+      writer.write(testRecord, encoder);
+      fail("Exception not thrown");
+    } catch (NullPointerException e) {
+      assertTrue(e.getMessage().contains("null of string in field 'name'"));
+    } finally {
+      out.close();
+    }
+  }
 }
