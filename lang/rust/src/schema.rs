@@ -654,8 +654,16 @@ impl Parser {
                     return Ok(Schema::TimeMicros);
                 }
                 "timestamp-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimestampMillis);
+                    return match logical_verify_type(complex, &[SchemaKind::Long], self) {
+                        Ok(_) => { Ok(Schema::TimestampMillis) }
+                        Err(Error::GetLogicalTypeVariant(json_value)) => {
+                            match json_value {
+                                Value::String(_) => { Ok(Schema::String) }
+                                _ => { Err(Error::GetLogicalTypeVariant(json_value)) }
+                            }
+                        }
+                        Err(error) => { Err(error) }
+                    }
                 }
                 "timestamp-micros" => {
                     logical_verify_type(complex, &[SchemaKind::Long], self)?;
