@@ -229,20 +229,10 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testRegisterLogicalTypeThrowsIfTypeNameInconsistent() {
-    assertThrows("Should error if type name is inconsistent", IllegalArgumentException.class,
-        "Provided logicalTypeName 'name' does not match factory typeName 'different'", () -> {
-          LogicalTypes.register("name", new LogicalTypes.LogicalTypeFactory() {
-            @Override
-            public LogicalType fromSchema(Schema schema) {
-              return LogicalTypes.date();
-            }
-
-            @Override
-            public String getTypeName() {
-              return "different";
-            }
-          });
+  public void testRegisterLogicalTypeThrowsIfTypeNameNotProvided() {
+    assertThrows("Should error if type name was not provided", UnsupportedOperationException.class,
+        "LogicalTypeFactory TypeName has not been provided", () -> {
+          LogicalTypes.register(schema -> LogicalTypes.date());
           return null;
         });
   }
@@ -257,13 +247,13 @@ public class TestLogicalType {
 
       @Override
       public String getTypeName() {
-        return "same";
+        return "typename";
       }
     };
 
-    LogicalTypes.register("same", factory);
+    LogicalTypes.register("registered", factory);
 
-    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("same", factory));
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("registered", factory));
   }
 
   @Test
@@ -286,7 +276,7 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testRegisterLogicalTypeWithFactoryNameNotProvidedWithoutError() {
+  public void testRegisterLogicalTypeWithFactoryNameNotProvided() {
     final LogicalTypes.LogicalTypeFactory factory = schema -> LogicalTypes.date();
 
     LogicalTypes.register("logicalTypeName", factory);

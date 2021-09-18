@@ -40,11 +40,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
 
 #set ($schemaString = $this.javaSplit($schema.toString()))
-#set ($customLogicalTypeFactories = $this.getUsedCustomLogicalTypeFactories($schema))
+#set ($customLogicalTypeFactories = $this.getUsedCustomLogicalTypeFactories($schema).entrySet())
 #if (!$customLogicalTypeFactories.isEmpty())
   static {
 #foreach ($customLogicalTypeFactory in $customLogicalTypeFactories)
-    org.apache.avro.LogicalTypes.register(new ${customLogicalTypeFactory}());
+    org.apache.avro.LogicalTypes.register("${customLogicalTypeFactory.getKey()}", new ${customLogicalTypeFactory.getValue()}());
 #end
   }
 #end

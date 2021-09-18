@@ -34,7 +34,7 @@ public class LogicalTypes {
     LogicalType fromSchema(Schema schema);
 
     default String getTypeName() {
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException("LogicalTypeFactory TypeName has not been provided");
     }
   }
 
@@ -69,11 +69,12 @@ public class LogicalTypes {
     try {
       String factoryTypeName = factory.getTypeName();
       if (!logicalTypeName.equals(factoryTypeName)) {
-        throw new IllegalArgumentException(String.format(
-            "Provided logicalTypeName '%s' does not match factory typeName '%s'", logicalTypeName, factoryTypeName));
+        LOG.debug("Provided logicalTypeName '{}' does not match factory typeName '{}'", logicalTypeName,
+            factoryTypeName);
       }
     } catch (UnsupportedOperationException ignore) {
-      // ignore exception, as by default this value has not been provided
+      // Ignore exception, as the default interface method throws
+      // UnsupportedOperationException.
     }
 
     REGISTERED_TYPES.put(logicalTypeName, factory);

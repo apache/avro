@@ -293,17 +293,17 @@ public class SpecificCompiler {
     return result;
   }
 
-  public Set<String> getUsedCustomLogicalTypeFactories(Schema schema) {
+  public Map<String, String> getUsedCustomLogicalTypeFactories(Schema schema) {
     final Set<String> logicalTypeNames = getUsedLogicalTypes(schema).stream().map(LogicalType::getName)
         .collect(Collectors.toSet());
 
     return LogicalTypes.getCustomRegisteredTypes().entrySet().stream()
         .filter(entry -> logicalTypeNames.contains(entry.getKey()))
-        .map(entry -> entry.getValue().getClass().getCanonicalName()).collect(Collectors.toSet());
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getClass().getCanonicalName()));
   }
 
-  private void getUsedTypes(Schema schema, Set<Conversion<?>> conversionResults, Set<LogicalType> logicalTypeResults,
-      Set<Schema> seenSchemas) {
+  private void collectUsedTypes(Schema schema, Set<Conversion<?>> conversionResults,
+      Set<LogicalType> logicalTypeResults, Set<Schema> seenSchemas) {
     if (seenSchemas.contains(schema)) {
       return;
     }
@@ -320,18 +320,18 @@ public class SpecificCompiler {
     switch (schema.getType()) {
     case RECORD:
       for (Schema.Field field : schema.getFields()) {
-        getUsedTypes(field.schema(), conversionResults, logicalTypeResults, seenSchemas);
+        collectUsedTypes(field.schema(), conversionResults, logicalTypeResults, seenSchemas);
       }
       break;
     case MAP:
-      getUsedTypes(schema.getValueType(), conversionResults, logicalTypeResults, seenSchemas);
+      collectUsedTypes(schema.getValueType(), conversionResults, logicalTypeResults, seenSchemas);
       break;
     case ARRAY:
-      getUsedTypes(schema.getElementType(), conversionResults, logicalTypeResults, seenSchemas);
+      collectUsedTypes(schema.getElementType(), conversionResults, logicalTypeResults, seenSchemas);
       break;
     case UNION:
       for (Schema s : schema.getTypes())
-        getUsedTypes(s, conversionResults, logicalTypeResults, seenSchemas);
+        collectUsedTypes(s, conversionResults, logicalTypeResults, seenSchemas);
       break;
     case NULL:
     case ENUM:
@@ -351,13 +351,13 @@ public class SpecificCompiler {
 
   private Set<Conversion<?>> getUsedConversions(Schema schema) {
     final Set<Conversion<?>> conversionResults = new HashSet<>();
-    getUsedTypes(schema, conversionResults, null, new HashSet<>());
+    collectUsedTypes(schema, conversionResults, null, new HashSet<>());
     return conversionResults;
   }
 
   private Set<LogicalType> getUsedLogicalTypes(Schema schema) {
     final Set<LogicalType> logicalTypeResults = new HashSet<>();
-    getUsedTypes(schema, null, logicalTypeResults, new HashSet<>());
+    collectUsedTypes(schema, null, logicalTypeResults, new HashSet<>());
     return logicalTypeResults;
   }
 

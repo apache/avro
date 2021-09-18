@@ -42,7 +42,8 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
-import java.util.Set;
+
+import java.util.Map;
 
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
@@ -305,8 +306,8 @@ public class TestSpecificCompiler {
     is.close(); // close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
       throw new IllegalStateException("unable to delete " + this.outputFile); // delete otherwise compiler might not
-      // overwrite because src timestamp hasn't
-      // changed.
+                                                                              // overwrite because src timestamp hasn't
+                                                                              // changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes
     // per character)
@@ -523,31 +524,41 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedCustomLogicalTypeFactories() throws Exception {
-    LogicalTypes.register("string-constant", new StringCustomLogicalTypeFactory());
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
 
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse(
-        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-constant\"}}]}");
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\"," + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},"
+        + "{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-custom\"}}]}");
 
-    final Set<String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
     Assert.assertEquals(1, usedCustomLogicalTypeFactories.size());
+    final Map.Entry<String, String> entry = usedCustomLogicalTypeFactories.entrySet().iterator().next();
+    Assert.assertEquals("string-custom", entry.getKey());
     Assert.assertEquals("org.apache.avro.compiler.specific.TestSpecificCompiler.StringCustomLogicalTypeFactory",
-        usedCustomLogicalTypeFactories.iterator().next());
+        entry.getValue());
   }
 
   @Test
   public void testEmptyGetUsedCustomLogicalTypeFactories() throws Exception {
-    LogicalTypes.register("string-constant", new StringCustomLogicalTypeFactory());
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
 
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse(
-        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\","
+        + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
 
-    final Set<String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
     Assert.assertEquals(0, usedCustomLogicalTypeFactories.size());
   }
 
@@ -898,7 +909,7 @@ public class TestSpecificCompiler {
   public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
     @Override
     public LogicalType fromSchema(Schema schema) {
-      return new LogicalType("string-constant");
+      return new LogicalType("string-custom");
     }
   }
 

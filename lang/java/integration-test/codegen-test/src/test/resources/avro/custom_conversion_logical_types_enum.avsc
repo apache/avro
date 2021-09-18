@@ -1,4 +1,5 @@
-{"namespace": "org.apache.avro.codegentest.testdata",
+{
+  "namespace": "org.apache.avro.codegentest.testdata",
   "type": "record",
   "name": "CustomConversionWithLogicalTypes",
   "doc" : "Test custom conversion and logical types in generated Java classes",
