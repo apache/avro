@@ -19,6 +19,8 @@ package org.apache.avro.io.parsing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -300,7 +302,14 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         throw new AvroTypeException("Non-string default value for fixed: " + n);
       byte[] bb = n.textValue().getBytes(StandardCharsets.ISO_8859_1);
       if (bb.length != s.getFixedSize()) {
-        bb = Arrays.copyOf(bb, s.getFixedSize());
+        int offset = s.getFixedSize() - bb.length;
+        byte signum = (byte) (new BigDecimal(new BigInteger(bb)).signum() < 0 ? 0xFF : 0x00);
+        byte[] fixedBytes = new byte[s.getFixedSize()];
+
+        // Fill the front of the array and copy remaining with unscaled values
+        Arrays.fill(fixedBytes, 0, offset, signum);
+        System.arraycopy(bb, 0, fixedBytes, offset, bb.length);
+        bb = fixedBytes;
       }
       e.writeFixed(bb);
       break;
