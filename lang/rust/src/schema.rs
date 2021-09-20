@@ -109,7 +109,11 @@ pub enum Schema {
         symbols: Vec<String>,
     },
     /// A `fixed` Avro schema.
-    Fixed { name: Name, size: usize },
+    Fixed {
+        name: Name,
+        doc: Documentation,
+        size: usize,
+    },
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     ///
@@ -797,6 +801,11 @@ impl Parser {
     fn parse_fixed(complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
+        let doc = complex.get("doc").and_then(|v| match &v {
+            Value::String(ref docstr) => Some(docstr.clone()),
+            _ => None,
+        });
+
         let size = complex
             .get("size")
             .and_then(|v| v.as_i64())
@@ -804,6 +813,7 @@ impl Parser {
 
         Ok(Schema::Fixed {
             name,
+            doc,
             size: size as usize,
         })
     }
@@ -875,10 +885,17 @@ impl Serialize for Schema {
                 map.serialize_entry("symbols", symbols)?;
                 map.end()
             }
-            Schema::Fixed { ref name, ref size } => {
+            Schema::Fixed {
+                ref name,
+                ref doc,
+                ref size,
+            } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
                 map.serialize_entry("name", &name.name)?;
+                if let Some(ref docstr) = doc {
+                    map.serialize_entry("doc", docstr)?;
+                }
                 map.serialize_entry("size", size)?;
                 map.end()
             }
@@ -937,6 +954,7 @@ impl Serialize for Schema {
                 // duration should be or typically is.
                 let inner = Schema::Fixed {
                     name: Name::new("duration"),
+                    doc: None,
                     size: 12,
                 };
                 map.serialize_entry("type", &inner)?;
@@ -1237,6 +1255,23 @@ mod tests {
 
         let expected = Schema::Fixed {
             name: Name::new("test"),
+            doc: None,
+            size: 16usize,
+        };
+
+        assert_eq!(expected, schema);
+    }
+
+    #[test]
+    fn test_fixed_schema_with_documentation() {
+        let schema = Schema::parse_str(
+            r#"{"type": "fixed", "name": "test", "size": 16, "doc": "FixedSchema documentation"}"#,
+        )
+        .unwrap();
+
+        let expected = Schema::Fixed {
+            name: Name::new("test"),
+            doc: Some(String::from("FixedSchema documentation")),
             size: 16usize,
         };
 

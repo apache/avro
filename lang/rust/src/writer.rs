@@ -503,6 +503,7 @@ mod tests {
         let size = 30;
         let inner = Schema::Fixed {
             name: Name::new("decimal"),
+            doc: None,
             size,
         };
         let value = vec![0u8; size];
@@ -540,6 +541,7 @@ mod tests {
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
             name: Name::new("duration"),
+            doc: None,
             size: 12,
         };
         let value = Value::Duration(Duration::new(

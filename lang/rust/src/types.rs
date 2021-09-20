@@ -841,6 +841,7 @@ mod tests {
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed"),
+            doc: None,
         };
 
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
@@ -1039,7 +1040,8 @@ mod tests {
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal"),
-                    size: 20
+                    size: 20,
+                    doc: None
                 })
             })
             .is_ok());
