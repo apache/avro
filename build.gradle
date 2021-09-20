@@ -57,6 +57,9 @@ dependencies {
     testImplementation "uk.co.datumedge:hamcrest-json:0.2"
     testImplementation "com.vdurmont:semver4j:3.1.0"
     testRuntimeOnly files(createClasspathManifest) // Add the classpath file to the test runtime classpath
+    // tool version specified in dependencies in order to override Groovy version for Java compatibility
+    codenarc "org.codenarc:CodeNarc:2.2.0"
+    codenarc "org.codehaus.groovy:groovy-all:3.0.9"
 }
 
 tasks.withType(AbstractCompile) {
@@ -188,7 +191,8 @@ codenarc {
     maxPriority1Violations = 0
     maxPriority2Violations = 0
     maxPriority3Violations = 0
-    toolVersion = "2.0.0"
+    // tool version specified in dependencies in order to override Groovy version for Java compatibility
+//    toolVersion = "2.2.0"
 }
 
 // Java 8+ is required due to requirements introduced in Avro 1.9.0

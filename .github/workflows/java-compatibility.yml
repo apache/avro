@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.10.2"]
-        gradle: ["7.2"] # See here for latest versions: https://services.gradle.org/versions/
+        gradle: ["7.1.1", "7.2"] # See here for latest versions: https://services.gradle.org/versions/
         java: ["16"]
     steps:
       - uses: actions/checkout@v2
