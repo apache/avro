@@ -240,7 +240,7 @@ pub enum Error {
     #[error("Must be a JSON string, object or array")]
     ParseSchemaFromValidJson,
 
-    #[error("Unknown primitiive type: {0}")]
+    #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
     #[error("invalid JSON for {key:?}: {precision:?}")]

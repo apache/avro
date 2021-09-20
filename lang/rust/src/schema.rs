@@ -608,18 +608,50 @@ impl Parser {
             match complex.get("type") {
                 Some(value) => {
                     let ty = parser.parse(value)?;
+
                     if kinds
                         .iter()
                         .any(|&kind| SchemaKind::from(ty.clone()) == kind)
                     {
                         Ok(ty)
                     } else {
-                        Err(Error::GetLogicalTypeVariant(value.clone()))
+                        match get_type_rec(value.clone()) {
+                            Ok(v) => Err(Error::GetLogicalTypeVariant(v)),
+                            Err(err) => Err(err),
+                        }
                     }
                 }
                 None => Err(Error::GetLogicalTypeField),
             }
         }
+
+        fn get_type_rec(json_value: Value) -> AvroResult<Value> {
+            match json_value {
+                typ @ Value::String(_) => Ok(typ),
+                Value::Object(ref complex) => match complex.get("type") {
+                    Some(v) => get_type_rec(v.clone()),
+                    None => Err(Error::GetComplexTypeField),
+                },
+                _ => Err(Error::GetComplexTypeField),
+            }
+        }
+
+        fn try_logical_type(
+            complex: &Map<String, Value>,
+            kinds: &[SchemaKind],
+            ok_schema: Schema,
+            parser: &mut Parser,
+        ) -> AvroResult<Schema> {
+            return match logical_verify_type(complex, kinds, parser) {
+                Ok(_) => Ok(ok_schema),
+                Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
+                    Value::String(typ) if typ == "string" => Ok(Schema::String),
+                    _ => Err(Error::GetLogicalTypeVariant(json_value)),
+                },
+                Err(error) => Err(error),
+            };
+        }
+
         match complex.get("logicalType") {
             Some(&Value::String(ref t)) => match t.as_str() {
                 "decimal" => {
@@ -642,30 +674,34 @@ impl Parser {
                     return Ok(Schema::Uuid);
                 }
                 "date" => {
-                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
-                    return Ok(Schema::Date);
+                    return try_logical_type(complex, &[SchemaKind::Int], Schema::Date, self);
                 }
                 "time-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
-                    return Ok(Schema::TimeMillis);
+                    return try_logical_type(complex, &[SchemaKind::Int], Schema::TimeMillis, self);
                 }
                 "time-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimeMicros);
+                    return try_logical_type(
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimeMicros,
+                        self,
+                    );
                 }
                 "timestamp-millis" => {
-                    return match logical_verify_type(complex, &[SchemaKind::Long], self) {
-                        Ok(_) => Ok(Schema::TimestampMillis),
-                        Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                            Value::String(typ) if typ == "string" => Ok(Schema::String),
-                            _ => Err(Error::GetLogicalTypeVariant(json_value)),
-                        },
-                        Err(error) => Err(error),
-                    }
+                    return try_logical_type(
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimestampMillis,
+                        self,
+                    );
                 }
                 "timestamp-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimestampMicros);
+                    return try_logical_type(
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimestampMicros,
+                        self,
+                    );
                 }
                 "duration" => {
                     logical_verify_type(complex, &[SchemaKind::Fixed], self)?;
