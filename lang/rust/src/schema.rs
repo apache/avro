@@ -657,7 +657,7 @@ impl Parser {
                     return match logical_verify_type(complex, &[SchemaKind::Long], self) {
                         Ok(_) => Ok(Schema::TimestampMillis),
                         Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                            Value::String(_) => Ok(Schema::String),
+                            Value::String(typ) if typ == "string" => Ok(Schema::String),
                             _ => Err(Error::GetLogicalTypeVariant(json_value)),
                         },
                         Err(error) => Err(error),
