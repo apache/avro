@@ -642,14 +642,14 @@ impl Parser {
             ok_schema: Schema,
             parser: &mut Parser,
         ) -> AvroResult<Schema> {
-            return match logical_verify_type(complex, kinds, parser) {
+            match logical_verify_type(complex, kinds, parser) {
                 Ok(_) => Ok(ok_schema),
                 Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
                     Value::String(typ) if typ == "string" => Ok(Schema::String),
                     _ => Err(Error::GetLogicalTypeVariant(json_value)),
                 },
                 Err(error) => Err(error),
-            };
+            }
         }
 
         match complex.get("logicalType") {
