@@ -42,6 +42,10 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
+
+import java.util.Map;
+
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -82,7 +86,9 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(dstDir, outputs, false);
   }
 
-  /** Uses the system's java compiler to actually compile the generated code. */
+  /**
+   * Uses the system's java compiler to actually compile the generated code.
+   */
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs,
       boolean ignoreWarnings) throws IOException {
     if (outputs.isEmpty()) {
@@ -517,6 +523,46 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\"," + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},"
+        + "{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-custom\"}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(1, usedCustomLogicalTypeFactories.size());
+    final Map.Entry<String, String> entry = usedCustomLogicalTypeFactories.entrySet().iterator().next();
+    Assert.assertEquals("string-custom", entry.getKey());
+    Assert.assertEquals("org.apache.avro.compiler.specific.TestSpecificCompiler.StringCustomLogicalTypeFactory",
+        entry.getValue());
+  }
+
+  @Test
+  public void testEmptyGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\","
+        + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(0, usedCustomLogicalTypeFactories.size());
+  }
+
+  @Test
   public void testGetUsedConversionClassesForNullableLogicalTypes() throws Exception {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
@@ -858,6 +904,13 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(1, itWorksFound);
+  }
+
+  public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new LogicalType("string-custom");
+    }
   }
 
 }
