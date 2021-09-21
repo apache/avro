@@ -636,19 +636,32 @@ impl Parser {
             }
         }
 
+        // checks whether the logicalType is supported by the type
         fn try_logical_type(
+            logical_type: &str,
             complex: &Map<String, Value>,
             kinds: &[SchemaKind],
             ok_schema: Schema,
             parser: &mut Parser,
         ) -> AvroResult<Schema> {
             match logical_verify_type(complex, kinds, parser) {
+                // type and logicalType match!
                 Ok(_) => Ok(ok_schema),
+                // the logicalType is not expected for this type!
                 Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                    Value::String(typ) if typ == "string" => Ok(Schema::String),
+                    Value::String(_) => match parser.parse(&json_value) {
+                        Ok(schema) => {
+                            warn!(
+                                "Ignoring invalid logical type '{}' for schema of type: {:?}!",
+                                logical_type, schema
+                            );
+                            Ok(schema)
+                        }
+                        Err(parse_err) => Err(parse_err),
+                    },
                     _ => Err(Error::GetLogicalTypeVariant(json_value)),
                 },
-                Err(error) => Err(error),
+                err => err,
             }
         }
 
@@ -674,13 +687,26 @@ impl Parser {
                     return Ok(Schema::Uuid);
                 }
                 "date" => {
-                    return try_logical_type(complex, &[SchemaKind::Int], Schema::Date, self);
+                    return try_logical_type(
+                        "date",
+                        complex,
+                        &[SchemaKind::Int],
+                        Schema::Date,
+                        self,
+                    );
                 }
                 "time-millis" => {
-                    return try_logical_type(complex, &[SchemaKind::Int], Schema::TimeMillis, self);
+                    return try_logical_type(
+                        "time-millis",
+                        complex,
+                        &[SchemaKind::Int],
+                        Schema::TimeMillis,
+                        self,
+                    );
                 }
                 "time-micros" => {
                     return try_logical_type(
+                        "time-micros",
                         complex,
                         &[SchemaKind::Long],
                         Schema::TimeMicros,
@@ -689,6 +715,7 @@ impl Parser {
                 }
                 "timestamp-millis" => {
                     return try_logical_type(
+                        "timestamp-millis",
                         complex,
                         &[SchemaKind::Long],
                         Schema::TimestampMillis,
@@ -697,6 +724,7 @@ impl Parser {
                 }
                 "timestamp-micros" => {
                     return try_logical_type(
+                        "timestamp-micros",
                         complex,
                         &[SchemaKind::Long],
                         Schema::TimestampMicros,

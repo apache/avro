@@ -751,6 +751,9 @@ pub use ser::to_value;
 pub use util::max_allocation_bytes;
 pub use writer::{to_avro_datum, Writer};
 
+#[macro_use]
+extern crate log;
+
 /// A convenience type alias for `Result`s with `Error`s.
 pub type AvroResult<T> = Result<T, Error>;
 
