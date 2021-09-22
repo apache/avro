@@ -830,6 +830,49 @@ fn test_parse_list_with_cross_deps_and_namespaces_error() {
     let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
 }
 
+#[test]
+// <https://issues.apache.org/jira/browse/AVRO-3216>
+// test that field's RecordSchema could be referenced by a following field by full name
+fn test_parse_reused_record_schema_by_fullname() {
+    init();
+    let schema_str = r#"
+        {
+          "type" : "record",
+          "name" : "Weather",
+          "namespace" : "test",
+          "doc" : "A weather reading.",
+          "fields" : [
+            {
+                "name" : "station",
+                "type" : {
+                  "type" : "string",
+                  "avro.java.string" : "String"
+                }
+             },
+             {
+                "name" : "max_temp",
+                "type" : {
+                  "type" : "record",
+                  "name" : "Temp",
+                  "namespace": "prefix",
+                  "doc" : "A temperature reading.",
+                  "fields" : [ {
+                    "name" : "temp",
+                    "type" : "long"
+                  } ]
+                }
+            }, {
+                "name" : "min_temp",
+                "type" : "prefix.Temp"
+            }
+        ]
+       }
+    "#;
+
+    let schema = Schema::parse_str(schema_str);
+    assert!(schema.is_ok());
+}
+
 /// Return all permutations of an input slice
 fn permutations<T>(list: &[T]) -> Vec<Vec<&T>> {
     let size = list.len();
