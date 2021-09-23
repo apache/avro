@@ -117,6 +117,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 getLogger().debug(e.getMessage());
             }
         }
-        return new URLClassLoader(urls.toArray(new URL[0]));
+        // No parent classloader; either it's in the specified classpath or it shouldn't be resolved.
+        return new URLClassLoader(urls.toArray(new URL[0]), null);
     }
 }
