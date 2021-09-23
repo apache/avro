@@ -1,3 +1,13 @@
 plugins {
     id "java"
 }
+
+// If you'd rather have the Avro schema files in `src/main/avro` (and Java classes generated),
+// you can use a block like this:
+//sourceSets {
+//    main {
+//        resources {
+//            srcDirs "src/main/avro"
+//        }
+//    }
+//}
