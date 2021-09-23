@@ -108,6 +108,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     }
 
     private ClassLoader assembleClassLoader() {
+        getLogger().debug("Using classpath: {}", classpath.getFiles());
         List<URL> urls = new LinkedList<>();
         for (File file : classpath) {
             try {
@@ -116,10 +117,6 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
                 getLogger().debug(e.getMessage());
             }
         }
-        if (urls.isEmpty()) {
-            getLogger().debug("No classpath configured; defaulting to system classloader");
-        }
-        return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
-                : new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
+        return new URLClassLoader(urls.toArray(new URL[0]));
     }
 }

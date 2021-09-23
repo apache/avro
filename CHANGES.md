@@ -3,6 +3,8 @@
 ## Unreleased
 * Built using Gradle 7.2
 * Updated compatibility testing through Gradle 7.2
+* `GenerateAvroProtocolTask` now has a debug log to output its classpath
+* `GenerateAvroProtocolTask` will no longer include a debug log to notify that it's using the system classloader if the classpath is empty
 
 ## 1.2.1
 * Built using Gradle 7.1.1
