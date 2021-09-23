@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_schema.py
-use avro_rs::{schema::Name, Error, Schema};
+use avro_rs::{
+    schema::{Name, RecordField},
+    Error, Schema,
+};
 use lazy_static::lazy_static;
 
 fn init() {
@@ -871,6 +873,43 @@ fn test_parse_reused_record_schema_by_fullname() {
 
     let schema = Schema::parse_str(schema_str);
     assert!(schema.is_ok());
+    match schema.unwrap() {
+        Schema::Record {
+            ref name,
+            doc: _,
+            ref fields,
+            lookup: _,
+        } => {
+            assert_eq!(name.fullname(None), "test.Weather", "Name does not match!");
+
+            assert_eq!(fields.len(), 3, "The number of the fields is not correct!");
+
+            let RecordField {
+                ref name,
+                doc: _,
+                default: _,
+                ref schema,
+                order: _,
+                position: _,
+            } = fields.get(2).unwrap();
+
+            assert_eq!(name, "min_temp");
+
+            match schema {
+                Schema::Record {
+                    ref name,
+                    doc: _,
+                    ref fields,
+                    lookup: _,
+                } => {
+                    assert_eq!(name.fullname(None), "prefix.Temp", "Name does not match!");
+                    assert_eq!(fields.len(), 1, "The number of the fields is not correct!");
+                }
+                unexpected => unreachable!("Unexpected schema type: {:?}", unexpected),
+            }
+        }
+        unexpected => unreachable!("Unexpected schema type: {:?}", unexpected),
+    }
 }
 
 /// Return all permutations of an input slice
