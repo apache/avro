@@ -23,8 +23,8 @@ generateAvroJava {
     }
 }
 
-tasks.named("jar") {
-    it.doFirst {
+def configureJar = tasks.register("configureJar") {
+    it.doLast {
         // Exclude classes that are already in schema.jar from this jar
         tasks.jar.exclude(
             configurations.additionalSchema
@@ -37,4 +37,11 @@ tasks.named("jar") {
                 .flatten()
         )
     }
+    // otherwise the jars of dependent projects might not have been built
+    // TODO is there a way to copy the dependencies of the jar task? classes is not part of tasks.jar.dependsOn
+    it.dependsOn(tasks.classes)
+}
+
+tasks.named("jar") {
+    it.dependsOn(configureJar)
 }
