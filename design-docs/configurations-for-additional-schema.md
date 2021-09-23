@@ -15,3 +15,4 @@ If we do this, a few gotchas:
    configurations are for and don't conflict with other plugins.
    For example, `additionalSchema` is too ambiguous.
    `additionalAvroSchema` might be better.
+3. Whether it makes sense to exclude generated classes from jars

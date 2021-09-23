@@ -1,8 +1,0 @@
-{
-    "name": "Cat",
-    "namespace": "example",
-    "type": "record",
-    "fields" : [
-        {"name": "breed", "type": "Breed"}
-    ]
-}

@@ -1,3 +1,5 @@
+import java.util.zip.ZipFile
+
 plugins {
     id "com.github.davidmc24.gradle.plugin.avro" version "1.2.1"
 }
@@ -16,6 +18,23 @@ dependencies {
 generateAvroJava {
     dependsOn configurations.additionalSchema
     source {
+        // As of Gradle 7.2, Using zipTree within source appears to disable build caching
         configurations.additionalSchema.collect { zipTree(it) }
+    }
+}
+
+tasks.named("jar") {
+    it.doFirst {
+        // Exclude classes that are already in schema.jar from this jar
+        tasks.jar.exclude(
+            configurations.additionalSchema
+                .findAll { it.name.endsWith("jar") }
+                .collect { File file ->
+                    new ZipFile(file).entries()
+                        .findAll { it.name.endsWith(".class") }
+                        .collect { it.name }
+                }
+                .flatten()
+        )
     }
 }

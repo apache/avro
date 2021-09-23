@@ -1,13 +1,18 @@
 plugins {
-    id "java"
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.2.1"
 }
 
-// If you'd rather have the Avro schema files in `src/main/avro` (and Java classes generated),
-// you can use a block like this:
-//sourceSets {
-//    main {
-//        resources {
-//            srcDirs "src/main/avro"
-//        }
-//    }
-//}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compileOnly "org.apache.avro:avro:1.10.1"
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src/main/avro"
+        }
+    }
+}
