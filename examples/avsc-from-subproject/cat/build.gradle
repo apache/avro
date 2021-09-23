@@ -1,0 +1,21 @@
+plugins {
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.2.1"
+}
+
+repositories {
+    mavenCentral()
+}
+configurations {
+    additionalSchema
+}
+dependencies {
+    implementation "org.apache.avro:avro:1.10.1"
+    additionalSchema project(":schema")
+}
+
+generateAvroJava {
+    dependsOn configurations.additionalSchema
+    source {
+        configurations.additionalSchema.collect { zipTree(it) }
+    }
+}
