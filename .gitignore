@@ -74,3 +74,6 @@ atlassian-ide-plugin.xml
 
 # Scripts for use on the local machine
 /local-*.sh
+/scripts/downloads/
+/scripts/input/
+/scripts/output/
