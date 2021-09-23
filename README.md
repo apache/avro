@@ -50,14 +50,14 @@ plugins {
 }
 ```
 
-Additionally, ensure that you have a compile dependency on Avro, such as:
+Additionally, ensure that you have an implementation dependency on Avro, such as:
 
 ```groovy
 repositories {
     mavenCentral()
 }
 dependencies {
-    compile "org.apache.avro:avro:1.10.1"
+    implementation "org.apache.avro:avro:1.10.1"
 }
 ```
 
