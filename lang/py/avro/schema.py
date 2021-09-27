@@ -1067,7 +1067,7 @@ def get_other_props(all_props: Mapping[str, object], reserved_props: Sequence[st
 
 def make_bytes_decimal_schema(other_props):
     """Make a BytesDecimalSchema from just other_props."""
-    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0))
+    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0), other_props)
 
 
 def make_logical_schema(logical_type, type_, other_props):
