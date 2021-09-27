@@ -52,7 +52,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse($schemaString);
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 #set ($usedConversions = $this.getUsedConversionClasses($schema))
 #if (!$usedConversions.isEmpty())
   static {
