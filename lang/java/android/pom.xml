@@ -23,7 +23,7 @@
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.11.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>avro-android</artifactId>
@@ -31,7 +31,7 @@
   <name>Apache Avro Android Compatibility</name>
   <url>https://avro.apache.org</url>
   <description>A subset of the Avro core utilities for the Android platform</description>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <properties>
     <main.basedir>${project.parent.parent.basedir}</main.basedir>
@@ -52,7 +52,7 @@
               <createDependencyReducedPom>true</createDependencyReducedPom>
               <artifactSet>
                 <includes>
-                  <exclude>org.apache.avro:*</exclude>
+                  <include>org.apache.avro:*</include>
                 </includes>
               </artifactSet>
               <filters>
@@ -60,18 +60,12 @@
                   <artifact>org.apache.avro:avro</artifact>
                   <includes>
                     <include>org/apache/avro/**</include>
-<!--                    <include>org/apache/avro/**/MapEntry.*</include>-->
                   </includes>
                   <excludes>
+                    <exclude>org/apache/avro/avro/util/internal/ClassValueUtil**</exclude>
                     <exclude>org/apache/avro/reflect/**</exclude>
                   </excludes>
                 </filter>
-<!--                <filter>-->
-<!--                  <artifact>org.apache.avro:avro</artifact>-->
-<!--                  <includes>-->
-<!--                    <include>org/apache/avro/reflect/MapEntry.class</include>-->
-<!--                  </includes>-->
-<!--                </filter>-->
               </filters>
             </configuration>
           </execution>
