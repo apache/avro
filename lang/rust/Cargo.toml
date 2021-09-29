@@ -25,6 +25,7 @@ readme = "README.md"
 repository = "https://github.com/apache/avro"
 edition = "2018"
 keywords = ["avro", "data", "serialization"]
+categories = ["encoding"]
 documentation = "https://docs.rs/avro-rs"
 
 [features]
