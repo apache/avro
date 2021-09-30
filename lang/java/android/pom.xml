@@ -63,6 +63,7 @@
                   </includes>
                   <excludes>
                     <exclude>org/apache/avro/avro/util/internal/ClassValueUtil**</exclude>
+                    <exclude>org/apache/avro/avro/util/internal/ThreadLocalWithInitial**</exclude>
                     <exclude>org/apache/avro/reflect/**</exclude>
                   </excludes>
                 </filter>
