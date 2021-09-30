@@ -254,14 +254,30 @@ namespace Avro.Reflect
                     EnumCache.AddEnumNameMapItem(ns, objType);
                     break;
                 case UnionSchema us:
-                    if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null) && objType.IsClass)
+                    if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null))
                     {
                         // in this case objType will match the non null type in the union
                         foreach (var o in us.Schemas)
                         {
-                            if (o.Tag != Schema.Type.Null)
+                            if (o.Tag == Schema.Type.Null)
+                            {
+                                continue;
+                            }
+
+                            if (objType.IsClass)
                             {
                                 LoadClassCache(objType, o);
+                            }
+
+                            if (objType.IsGenericType)
+                            {
+                                var genericType = objType.GetGenericTypeDefinition();
+                                var isNullable = genericType == typeof(Nullable<>);
+                                var innerType = objType.GetGenericArguments()[0];
+                                if (isNullable && innerType.IsEnum)
+                                {
+                                    LoadClassCache(objType.GetGenericArguments()[0], o);
+                                }
                             }
                         }
 
