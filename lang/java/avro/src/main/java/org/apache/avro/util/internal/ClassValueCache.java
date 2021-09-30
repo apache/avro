@@ -29,16 +29,16 @@ public class ClassValueCache<R> implements Function<Class<?>, R> {
 
   private final Function<Class<?>, R> ifAbsent;
 
-  public ClassValueCache(Function<Class<?>, R> ifAbsent) {
-    this.ifAbsent = ifAbsent;
-  }
-
   private final ClassValue<R> cache = new ClassValue<R>() {
     @Override
     protected R computeValue(Class<?> c) {
       return ifAbsent.apply(c);
     }
   };
+
+  public ClassValueCache(Function<Class<?>, R> ifAbsent) {
+    this.ifAbsent = ifAbsent;
+  }
 
   @Override
   public R apply(Class<?> c) {
