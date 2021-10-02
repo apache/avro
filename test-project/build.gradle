@@ -28,6 +28,7 @@ test {
 avro {
     stringType = "CharSequence"
     fieldVisibility = "private"
+    customConversion org.apache.avro.Conversions.UUIDConversion
 }
 
 java {
