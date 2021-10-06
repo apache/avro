@@ -55,8 +55,3 @@ HERE = File.expand_path(File.dirname(__FILE__))
 SHARE = HERE + '/../../share'
 SCHEMAS = SHARE + '/test/schemas'
 BUILD = HERE + '/../../build'
-
-task :dist => [:gem] do
-  mkdir_p "../../dist/ruby"
-  cp "pkg/avro-#{VERSION}.gem", "../../dist/ruby"
-end
