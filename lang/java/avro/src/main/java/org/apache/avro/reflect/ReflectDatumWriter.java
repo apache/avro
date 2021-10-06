@@ -29,6 +29,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.util.MapEntry;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes via

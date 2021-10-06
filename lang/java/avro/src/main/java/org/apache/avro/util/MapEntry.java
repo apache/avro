@@ -15,24 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.reflect;
+package org.apache.avro.util;
 
 import java.util.Map;
 
 /**
- * Class to make Avro immune from the naming variations of key/value fields
- * among several {@link java.util.Map.Entry} implementations. If objects of this
- * class are used instead of the regular ones obtained by
- * {@link Map#entrySet()}, then we need not worry about the actual field-names
- * or any changes to them in the future.<BR>
+ * An implementation of {@link Map.Entry} with well-defined member names.
+ * <p>
+ * Using this class helps make Avro immune from the naming variations of
+ * key/value fields among several {@link Map.Entry} implementations. If objects
+ * of this class are used instead of the regular ones obtained by
+ * {@link Map#entrySet()}, then we need not worry about the actual field names
+ * or any changes to them in the future.
+ * <p>
  * Example: {@code ConcurrentHashMap.MapEntry} does not name the fields as key/
  * value in Java 1.8 while it used to do so in Java 1.7
  *
  * @param <K> Key of the map-entry
  * @param <V> Value of the map-entry
- * @deprecated Use org.apache.avro.util.MapEntry
  */
-@Deprecated
 public class MapEntry<K, V> implements Map.Entry<K, V> {
 
   K key;

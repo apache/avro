@@ -68,6 +68,7 @@
   </properties>
 
   <modules>
+    <module>android</module>
     <module>avro</module>
     <module>compiler</module>
     <module>maven-plugin</module>

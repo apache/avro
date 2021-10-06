@@ -30,6 +30,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.internal.ClassValueCache;
 
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -55,36 +57,31 @@ public class SpecificData extends GenericData {
 
   private static final Class<?>[] NO_ARG = new Class[] {};
   private static final Class<?>[] SCHEMA_ARG = new Class[] { Schema.class };
-  private static final ClassValue<Constructor> CTOR_CACHE = new ClassValue<Constructor>() {
-    @Override
-    protected Constructor computeValue(Class<?> c) {
-      boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
-      try {
-        Constructor meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
-        meth.setAccessible(true);
-        return meth;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
 
-  };
-  private static final ClassValue<SpecificData> MODEL_CACHE = new ClassValue<SpecificData>() {
-    @Override
-    protected SpecificData computeValue(Class<?> type) {
-      Field specificDataField;
-      try {
-        specificDataField = type.getDeclaredField("MODEL$");
-        specificDataField.setAccessible(true);
-        return (SpecificData) specificDataField.get(null);
-      } catch (NoSuchFieldException e) {
-        // Return default instance
-        return SpecificData.get();
-      } catch (IllegalAccessException e) {
-        throw new AvroRuntimeException("while trying to access field MODEL$ on " + type.getCanonicalName(), e);
-      }
+  private static final Function<Class<?>, Constructor<?>> CTOR_CACHE = new ClassValueCache<>(c -> {
+    boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
+    try {
+      Constructor<?> meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
+      meth.setAccessible(true);
+      return meth;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
-  };
+  });
+
+  private static final Function<Class<?>, SpecificData> MODEL_CACHE = new ClassValueCache<>(c -> {
+    Field specificDataField;
+    try {
+      specificDataField = c.getDeclaredField("MODEL$");
+      specificDataField.setAccessible(true);
+      return (SpecificData) specificDataField.get(null);
+    } catch (NoSuchFieldException e) {
+      // Return default instance
+      return SpecificData.get();
+    } catch (IllegalAccessException e) {
+      throw new AvroRuntimeException("while trying to access field MODEL$ on " + c.getCanonicalName(), e);
+    }
+  });
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
@@ -183,7 +180,7 @@ public class SpecificData extends GenericData {
    */
   public static <T> SpecificData getForClass(Class<T> c) {
     if (SpecificRecordBase.class.isAssignableFrom(c)) {
-      return MODEL_CACHE.get(c);
+      return MODEL_CACHE.apply(c);
     }
     return SpecificData.get();
   }
@@ -336,12 +333,7 @@ public class SpecificData extends GenericData {
 
   // cache for schemas created from Class objects. Use ClassValue to avoid
   // locking classloaders and is GC and thread safe.
-  private final ClassValue<Schema> schemaClassCache = new ClassValue<Schema>() {
-    @Override
-    protected Schema computeValue(Class<?> type) {
-      return createSchema(type, new HashMap<>());
-    }
-  };
+  private final ClassValueCache<Schema> schemaClassCache = new ClassValueCache<>(c -> createSchema(c, new HashMap<>()));
   // for non-class objects, use a WeakHashMap, but this needs a sync block around
   // it
   private final Map<java.lang.reflect.Type, Schema> schemaTypeCache = Collections.synchronizedMap(new WeakHashMap<>());
@@ -350,7 +342,7 @@ public class SpecificData extends GenericData {
   public Schema getSchema(java.lang.reflect.Type type) {
     try {
       if (type instanceof Class) {
-        return schemaClassCache.get((Class<?>) type);
+        return schemaClassCache.apply((Class<?>) type);
       }
       return schemaTypeCache.computeIfAbsent(type, t -> createSchema(t, new HashMap<>()));
     } catch (Exception e) {
@@ -474,7 +466,7 @@ public class SpecificData extends GenericData {
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Object result;
     try {
-      Constructor meth = CTOR_CACHE.get(c);
+      Constructor<?> meth = CTOR_CACHE.apply(c);
       result = meth.newInstance(useSchema ? new Object[] { s } : null);
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -512,7 +504,7 @@ public class SpecificData extends GenericData {
     }
 
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
-    Constructor meth = (Constructor) CTOR_CACHE.get(c);
+    Constructor<?> meth = CTOR_CACHE.apply(c);
     Object[] params = useSchema ? new Object[] { schema } : (Object[]) null;
 
     return (old, sch) -> {
