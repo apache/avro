@@ -38,6 +38,14 @@ do
       bundle exec rubocop
       ;;
 
+    interop-data-generate)
+      bundle exec rake generate_interop
+      ;;
+
+    interop-data-test)
+      bundle exec rake interop
+      ;;
+
     test)
       bundle exec rake test
       ;;
@@ -57,7 +65,7 @@ do
       ;;
 
     *)
-      echo "Usage: $0 {lint|test|dist|clean}"
+      echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
       exit 1
   esac
 done
