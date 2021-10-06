@@ -108,7 +108,7 @@ do
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/js; ./build.sh interop-data-generate)
-      (cd lang/ruby; rake generate_interop)
+      (cd lang/ruby; ./build.sh interop-data-generate)
       (cd lang/php; ./build.sh interop-data-generate)
       (cd lang/perl; ./build.sh interop-data-generate)
 
@@ -119,7 +119,7 @@ do
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/js; ./build.sh interop-data-test)
-      (cd lang/ruby; rake interop)
+      (cd lang/ruby; ./build.sh interop-data-test)
       (cd lang/php; ./build.sh test-interop)
       (cd lang/perl; ./build.sh interop-data-test)
 

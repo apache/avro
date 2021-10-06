@@ -21,6 +21,8 @@ cd "${0%/*}/../../../.."
 
 VERSION=$(<share/VERSION.txt)
 
+export GEM_HOME="$PWD/lang/ruby/.gem/"
+
 java_tool() {
   java -jar "lang/java/tools/target/avro-tools-$VERSION.jar" "$@"
 }
