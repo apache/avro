@@ -109,7 +109,7 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
-RUN curl -sSL https://deb.nodesource.com/setup_16.x \
+RUN curl -sSL https://deb.nodesource.com/setup_14.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
