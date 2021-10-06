@@ -18,9 +18,11 @@
 
 package org.apache.avro.compiler.idl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.avro.Protocol;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,11 +35,9 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.avro.Protocol;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Simple test harness for Idl. This relies on an input/ and output/ directory.
@@ -124,12 +124,7 @@ public class TestIdl {
     private String generate() throws Exception {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-      // Calculate the absolute path to src/test/resources/putOnClassPath/
-      File file = new File(".");
-      String currentWorkPath = file.toURI().toURL().toString();
-      String newPath = currentWorkPath + "src" + File.separator + "test" + File.separator + "idl" + File.separator
-          + "putOnClassPath" + File.separator;
-      URL[] newPathURL = new URL[] { new URL(newPath) };
+      URL[] newPathURL = new URL[] { cl.getResource("putOnClassPath-test-resource.jar") };
       URLClassLoader ucl = new URLClassLoader(newPathURL, cl);
 
       Idl parser = new Idl(in, ucl);

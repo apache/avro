@@ -73,6 +73,21 @@
             </manifestEntries>
           </archive>
         </configuration>
+        <executions>
+          <execution>
+            <id>prepare-test-jar</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <classifier>test-resource</classifier>
+              <testClassesDirectory>src/test/idl/putOnClassPath</testClassesDirectory>
+              <finalName>putOnClassPath</finalName>
+              <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- Avro generates a parser class with javacc. By default, this looks in src/main/javacc
         and outputs to target/generated-sources/javacc See http://mojo.codehaus.org/javacc-maven-plugin/javacc-mojo.html
@@ -114,7 +129,7 @@
             </goals>
             <configuration>
               <executable>java</executable>
-              <workingDirectory>/tmp</workingDirectory>
+              <workingDirectory>${java.io.tmpdir}</workingDirectory>
               <classpathScope>test</classpathScope>
               <arguments>
                 <argument>-classpath</argument>
