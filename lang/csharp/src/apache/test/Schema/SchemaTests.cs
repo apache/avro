@@ -369,5 +369,12 @@ namespace Avro.Test
 
             Assert.AreEqual(expectedName, schema.Name);
         }
+
+        [TestCase("[\"null\",\"string\"]", "[\"null\",\"string\"]")]
+        public void TestUnionSchemaWithoutTypeProperty(string schemaJson, string expectedSchemaJson)
+        {
+            var schema = Schema.Parse(schemaJson);
+            Assert.AreEqual(schema.ToString(), expectedSchemaJson);
+        }
     }
 }

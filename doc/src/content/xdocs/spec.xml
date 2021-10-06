@@ -86,11 +86,11 @@
         <section id="schema_record">
           <title>Records</title>
 
-	  <p>Records use the type name "record" and support three attributes:</p>
+	  <p>Records use the type name "record" and support the following attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the record (required).</li>
-	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><code>namespace</code>, a JSON string that qualifies the name;</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
@@ -254,14 +254,16 @@
         <section>
           <title>Fixed</title>
           <p>Fixed uses the type name <code>"fixed"</code> and supports
-          two attributes:</p>
+          the following attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a string naming this fixed (required).</li>
-	    <li><em>namespace</em>, a string that qualifies the name;</li>
+	    <li><code>namespace</code>, a string that qualifies the name;</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
 	      alternate names for this enum (optional).</li>
-            <li><code>size</code>: an integer, specifying the number
-            of bytes per value (required).</li>
+      <li><code>doc</code>: a JSON string providing documentation to the
+        user of this schema (optional).</li>
+      <li><code>size</code>: an integer, specifying the number
+        of bytes per value (required).</li>
 	  </ul>
 	  <p>For example, 16-byte quantity may be declared with:</p>
 	  <source>{"type": "fixed", "size": 16, "name": "md5"}</source>

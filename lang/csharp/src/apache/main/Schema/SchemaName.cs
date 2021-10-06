@@ -25,6 +25,9 @@ namespace Avro
     /// </summary>
     public class SchemaName
     {
+        // cache the full name, so it won't allocate new strings on each call
+        private String fullName;
+        
         /// <summary>
         /// Name of the schema
         /// </summary>
@@ -48,7 +51,7 @@ namespace Avro
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public String Fullname { get { return string.IsNullOrEmpty(Namespace) ? this.Name : Namespace + "." + this.Name; } }
+        public String Fullname { get { return fullName; } }
 
         /// <summary>
         /// Namespace of the schema
@@ -70,7 +73,7 @@ namespace Avro
                 this.EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
             }
 #pragma warning disable CA1307 // Specify StringComparison
-            else if (name.IndexOf('.') == -1)
+            else if (!name.Contains("."))
 #pragma warning restore CA1307 // Specify StringComparison
             {                          // unqualified name
                 this.Space = space;    // use default space
@@ -85,6 +88,7 @@ namespace Avro
                 this.EncSpace = encspace;
             }
             this.Documentation = documentation;
+            fullName = string.IsNullOrEmpty(Namespace) ? this.Name : Namespace + "." + this.Name;
         }
 
         /// <summary>

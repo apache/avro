@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,49 +18,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+import base64
+import io
+import json
 import os
-import sys
+from pathlib import Path
+from typing import IO, TextIO
 
 import avro.codecs
 import avro.datafile
 import avro.io
 import avro.schema
 
-NULL_CODEC = 'null'
-CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
+NULL_CODEC = avro.datafile.NULL_CODEC
+CODECS_TO_VALIDATE = avro.codecs.KNOWN_CODECS.keys()
 
 DATUM = {
-    'intField': 12,
-    'longField': 15234324,
-    'stringField': 'hey',
-    'boolField': True,
-    'floatField': 1234.0,
-    'doubleField': -1234.0,
-    'bytesField': b'12312adf',
-    'nullField': None,
-    'arrayField': [5.0, 0.0, 12.0],
-    'mapField': {'a': {'label': 'a'},
-                 'bee': {'label': 'cee'}},
-    'unionField': 12.0,
-    'enumField': 'C',
-    'fixedField': b'1019181716151413',
-    'recordField': {'label': 'blah',
-                    'children': [{'label': 'inner', 'children': []}]},
+    "intField": 12,
+    "longField": 15234324,
+    "stringField": "hey",
+    "boolField": True,
+    "floatField": 1234.0,
+    "doubleField": -1234.0,
+    "bytesField": b"12312adf",
+    "nullField": None,
+    "arrayField": [5.0, 0.0, 12.0],
+    "mapField": {"a": {"label": "a"}, "bee": {"label": "cee"}},
+    "unionField": 12.0,
+    "enumField": "C",
+    "fixedField": b"1019181716151413",
+    "recordField": {"label": "blah", "children": [{"label": "inner", "children": []}]},
 }
 
 
-def generate(schema_path, output_path):
-    with open(schema_path, 'r') as schema_file:
-        interop_schema = avro.schema.parse(schema_file.read())
-    for codec in CODECS_TO_VALIDATE:
-        filename = output_path
-        if codec != NULL_CODEC:
-            base, ext = os.path.splitext(output_path)
-            filename = base + "_" + codec + ext
-        with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
-                                          interop_schema, codec=codec) as dfw:
-            dfw.append(DATUM)
+def gen_data(codec: str, datum_writer: avro.io.DatumWriter, interop_schema: avro.schema.Schema) -> bytes:
+    with io.BytesIO() as file_, avro.datafile.DataFileWriter(file_, datum_writer, interop_schema, codec=codec) as dfw:
+        dfw.append(DATUM)
+        dfw.flush()
+        return file_.getvalue()
+
+
+def generate(schema_file: TextIO, output_path: IO) -> None:
+    interop_schema = avro.schema.parse(schema_file.read())
+    datum_writer = avro.io.DatumWriter()
+    output = ((codec, gen_data(codec, datum_writer, interop_schema)) for codec in CODECS_TO_VALIDATE)
+    if output_path.isatty():
+        json.dump({codec: base64.b64encode(data).decode() for codec, data in output}, output_path)
+        return
+    for codec, data in output:
+        if codec == NULL_CODEC:
+            output_path.write(data)
+            continue
+        base, ext = os.path.splitext(output_path.name)
+        Path(f"{base}_{codec}{ext}").write_bytes(data)
+
+
+def _parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("schema_path", type=argparse.FileType("r"))
+    parser.add_argument(
+        "output_path",
+        type=argparse.FileType("wb"),
+        help=(
+            "Write the different codec variants to these files. "
+            "Will append codec extensions to multiple files. "
+            "If '-', will output base64 encoded binary"
+        ),
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = _parse_args()
+    generate(args.schema_path, args.output_path)
+    return 0
 
 
 if __name__ == "__main__":
-    generate(sys.argv[1], sys.argv[2])
+    raise SystemExit(main())

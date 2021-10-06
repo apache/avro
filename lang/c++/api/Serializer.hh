@@ -31,20 +31,14 @@ namespace avro {
 /// explicit write* names instead of writeValue
 
 template<class Writer>
-class Serializer : private boost::noncopyable
-{
+class Serializer : private boost::noncopyable {
 
-  public:
-
+public:
     /// Constructor only works with Writer
-    explicit Serializer() :
-        writer_()
-    {}
+    explicit Serializer() : writer_() {}
 
     /// Constructor only works with ValidatingWriter
-    Serializer(const ValidSchema &schema) :
-        writer_(schema)
-    {}
+    explicit Serializer(const ValidSchema &schema) : writer_(schema) {}
 
     void writeNull() {
         writer_.writeValue(Null());
@@ -71,15 +65,15 @@ class Serializer : private boost::noncopyable
     }
 
     void writeBytes(const void *val, size_t size) {
-        writer_.writeBytes(val);
+        writer_.writeBytes(val, size);
     }
 
-    template <size_t N>
+    template<size_t N>
     void writeFixed(const uint8_t (&val)[N]) {
         writer_.writeFixed(val);
     }
 
-    template <size_t N>
+    template<size_t N>
     void writeFixed(const std::array<uint8_t, N> &val) {
         writer_.writeFixed(val);
     }
@@ -124,10 +118,8 @@ class Serializer : private boost::noncopyable
         return writer_.buffer();
     }
 
-  private:
-
+private:
     Writer writer_;
-
 };
 
 } // namespace avro

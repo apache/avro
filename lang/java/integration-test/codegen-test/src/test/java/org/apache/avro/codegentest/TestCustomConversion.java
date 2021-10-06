@@ -18,23 +18,26 @@
 
 package org.apache.avro.codegentest;
 
-import org.apache.avro.LogicalTypes;
+import org.apache.avro.codegentest.testdata.CustomConversionWithLogicalTypes;
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversion;
-import org.junit.BeforeClass;
+import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversionIdl;
 import org.junit.Test;
 
 import java.math.BigInteger;
 
 public class TestCustomConversion extends AbstractSpecificRecordTest {
 
-  @BeforeClass
-  public static void init() {
-    LogicalTypes.register(FixedSizeStringFactory.NAME, new FixedSizeStringFactory());
-  }
-
   @Test
   public void testNullValues() {
     LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
+        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
+        .setNonNullFixedSizeString(new FixedSizeString("test")).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
+
+  @Test
+  public void testNullValuesIdl() {
+    LogicalTypesWithCustomConversionIdl instanceOfGeneratedClass = LogicalTypesWithCustomConversionIdl.newBuilder()
         .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
         .setNonNullFixedSizeString(new FixedSizeString("test")).build();
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);
@@ -57,5 +60,12 @@ public class TestCustomConversion extends AbstractSpecificRecordTest {
         .setNonNullFixedSizeString(new FixedSizeString("")).build();
 
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
+
+  @Test
+  public void testCustomConversionWithCustomLogicalType() {
+    final CustomConversionWithLogicalTypes customConversionWithLogicalTypes = CustomConversionWithLogicalTypes
+        .newBuilder().setCustomEnum(new CustomEnumType("TWO")).build();
+    verifySerDeAndStandardMethods(customConversionWithLogicalTypes);
   }
 }

@@ -55,11 +55,11 @@ public class CatTool implements Tool {
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optParser = new OptionParser();
     OptionSpec<Long> offsetOpt = optParser.accepts("offset", "offset for reading input").withRequiredArg()
-        .ofType(Long.class).defaultsTo(new Long(0));
+        .ofType(Long.class).defaultsTo(Long.valueOf(0));
     OptionSpec<Long> limitOpt = optParser.accepts("limit", "maximum number of records in the outputfile")
         .withRequiredArg().ofType(Long.class).defaultsTo(Long.MAX_VALUE);
     OptionSpec<Double> fracOpt = optParser.accepts("samplerate", "rate at which records will be collected")
-        .withRequiredArg().ofType(Double.class).defaultsTo(new Double(1));
+        .withRequiredArg().ofType(Double.class).defaultsTo(Double.valueOf(1));
 
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
     List<String> nargs = (List<String>) opts.nonOptionArguments();

@@ -19,7 +19,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersAllFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<OptionalGettersAllFieldsTest> ENCODER =
       new BinaryMessageEncoder<OptionalGettersAllFieldsTest>(MODEL$, SCHEMA$);
@@ -239,7 +239,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -271,7 +271,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.OptionalGettersAllFieldsTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;

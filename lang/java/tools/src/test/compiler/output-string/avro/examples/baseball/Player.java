@@ -19,7 +19,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Player\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"選手 is Japanese for player.\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"first_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"position\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"enum\",\"name\":\"Position\",\"symbols\":[\"P\",\"C\",\"B1\",\"B2\",\"B3\",\"SS\",\"LF\",\"CF\",\"RF\",\"DH\"]}}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<Player> ENCODER =
       new BinaryMessageEncoder<Player>(MODEL$, SCHEMA$);
@@ -242,7 +242,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -274,7 +274,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.Player other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;

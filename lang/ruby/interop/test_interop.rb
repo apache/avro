@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -19,7 +20,7 @@ require 'rubygems'
 require 'test/unit'
 require 'avro'
 
-CODECS_TO_VALIDATE = ['deflate', 'snappy', 'zstandard']  # The 'null' codec is implicitly included
+CODECS_TO_VALIDATE = ['deflate', 'snappy', 'zstandard'].freeze  # The 'null' codec is implicitly included
 
 class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))

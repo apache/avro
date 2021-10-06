@@ -14,7 +14,6 @@
 # limitations under the License.
 
 name: Test C++
-
 on:
   workflow_dispatch:
   push:
@@ -22,6 +21,7 @@ on:
   pull_request:
     branches: [ master ]
     paths:
+    - '.github/workflows/test-lang-c\+\+.yml'
     - 'lang/c\+\+/**'
 
 defaults:
@@ -35,7 +35,10 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev
+        run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+
+      - name: Clean
+        run: ./build.sh clean
 
       - name: Lint
         run: ./build.sh lint

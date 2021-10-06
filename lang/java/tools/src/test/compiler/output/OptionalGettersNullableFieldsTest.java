@@ -19,7 +19,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<OptionalGettersNullableFieldsTest> ENCODER =
       new BinaryMessageEncoder<OptionalGettersNullableFieldsTest>(MODEL$, SCHEMA$);
@@ -239,7 +239,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -271,7 +271,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.OptionalGettersNullableFieldsTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;

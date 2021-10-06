@@ -37,37 +37,38 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <hadoop.version>3.3.0</hadoop.version>
-    <jackson.version>2.12.1</jackson.version>
+    <hadoop.version>3.3.1</hadoop.version>
+    <jackson.version>2.12.5</jackson.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.35.v20201120</jetty.version>
+    <jetty.version>9.4.43.v20210629</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
-    <netty.version>4.1.59.Final</netty.version>
-    <protobuf.version>3.14.0</protobuf.version>
-    <thrift.version>0.13.0</thrift.version>
-    <slf4j.version>1.7.30</slf4j.version>
+    <netty.version>4.1.68.Final</netty.version>
+    <protobuf.version>3.17.3</protobuf.version>
+    <thrift.version>0.15.0</thrift.version>
+    <slf4j.version>1.7.32</slf4j.version>
     <snappy.version>1.1.8.4</snappy.version>
-    <velocity.version>2.2</velocity.version>
-    <maven.version>3.6.3</maven.version>
-    <ant.version>1.10.9</ant.version>
+    <velocity.version>2.3</velocity.version>
+    <maven.version>3.8.1</maven.version>
+    <ant.version>1.10.11</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
-    <commons-compress.version>1.20</commons-compress.version>
-    <commons-lang.version>3.11</commons-lang.version>
-    <tukaani.version>1.8</tukaani.version>
-    <easymock.version>4.2</easymock.version>
+    <commons-compress.version>1.21</commons-compress.version>
+    <commons-lang.version>3.12.0</commons-lang.version>
+    <tukaani.version>1.9</tukaani.version>
+    <easymock.version>4.3</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.35.0</grpc.version>
-    <zstd-jni.version>1.4.8-4</zstd-jni.version>
+    <grpc.version>1.40.1</grpc.version>
+    <zstd-jni.version>1.5.0-4</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.0</archetype-plugin.version>
-    <bundle-plugin-version>4.1.0</bundle-plugin-version>
+    <bundle-plugin-version>5.1.2</bundle-plugin-version>
     <exec-plugin.version>3.0.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
   </properties>
 
   <modules>
+    <module>android</module>
     <module>avro</module>
     <module>compiler</module>
     <module>maven-plugin</module>
@@ -95,6 +96,18 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
           <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -249,7 +262,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${checkstyle-plugin.version}</version>
         <configuration>
           <consoleOutput>true</consoleOutput>
           <configLocation>checkstyle.xml</configLocation>
@@ -277,9 +289,14 @@
               <!-- Avro uses Sun's java code style conventions with 2 spaces, this is a modified version of
                    the eclipse formatter -->
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
-              <version>4.10.0</version>
+              <version>4.19.0</version>
             </eclipse>
             <removeUnusedImports/>
+            <replaceRegex>
+              <name>Remove wildcard imports</name>
+              <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
+              <replacement>$1</replacement>
+            </replaceRegex>
           </java>
         </configuration>
         <executions>
@@ -331,7 +348,6 @@
                       <pluginExecutionFilter>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-plugin-plugin</artifactId>
-                        <versionRange>[${plugin-plugin.version},)</versionRange>
                         <goals>
                           <goal>helpmojo</goal>
                           <goal>descriptor</goal>
@@ -442,7 +458,7 @@
     <profile>
       <id>hadoop2</id>
       <properties>
-        <hadoop.version>2.7.7</hadoop.version>
+        <hadoop.version>2.10.1</hadoop.version>
       </properties>
     </profile>
   </profiles>

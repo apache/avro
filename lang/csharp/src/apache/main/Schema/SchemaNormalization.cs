@@ -157,7 +157,7 @@ namespace Avro
                     {
                         if (!firstTime)
                         {
-                            o.Append(",");
+                            o.Append(',');
                         }
                         else
                         {
@@ -169,7 +169,7 @@ namespace Avro
 
                 case Schema.Type.Array:
                 case Schema.Type.Map:
-                    o.Append("{\"type\":\"").Append(Schema.GetTypeString(s.Tag)).Append("\"");
+                    o.Append("{\"type\":\"").Append(Schema.GetTypeString(s.Tag)).Append('\"');
                     if (st == Schema.Type.Array)
                     {
                         ArraySchema arraySchema  = s as ArraySchema;
@@ -180,7 +180,7 @@ namespace Avro
                         MapSchema mapSchema = s as MapSchema;
                         Build(env, mapSchema.ValueSchema, o.Append(",\"values\":"));
                     }
-                    return o.Append("}");
+                    return o.Append('}');
 
                 case Schema.Type.Enumeration:
                 case Schema.Type.Fixed:
@@ -194,7 +194,7 @@ namespace Avro
                     var qname = "\"" + name + "\"";
                     env.Add(name, qname);
                     o.Append("{\"name\":").Append(qname);
-                    o.Append(",\"type\":\"").Append(Schema.GetTypeString(s.Tag)).Append("\"");
+                    o.Append(",\"type\":\"").Append(Schema.GetTypeString(s.Tag)).Append('\"');
                     if (st == Schema.Type.Enumeration)
                     {
                         EnumSchema enumSchema = s as EnumSchema;
@@ -203,15 +203,15 @@ namespace Avro
                         {
                             if (!firstTime)
                             {
-                                o.Append(",");
+                                o.Append(',');
                             }
                             else
                             {
                                 firstTime = false;
                             }
-                            o.Append("\"").Append(enumSymbol).Append("\"");
+                            o.Append('\"').Append(enumSymbol).Append('\"');
                         }
-                        o.Append("]");
+                        o.Append(']');
                     }
                     else if (st == Schema.Type.Fixed)
                     {
@@ -227,21 +227,21 @@ namespace Avro
                         {
                             if (!firstTime)
                             {
-                                o.Append(",");
+                                o.Append(',');
                             }
                             else
                             {
                                 firstTime = false;
                             }
-                            o.Append("{\"name\":\"").Append(field.Name).Append("\"");
-                            Build(env, field.Schema, o.Append(",\"type\":")).Append("}");
+                            o.Append("{\"name\":\"").Append(field.Name).Append('\"');
+                            Build(env, field.Schema, o.Append(",\"type\":")).Append('}');
                         }
-                        o.Append("]");
+                        o.Append(']');
                     }
-                    return o.Append("}");
+                    return o.Append('}');
 
                 default:    //boolean, bytes, double, float, int, long, null, string
-                    return o.Append("\"").Append(s.Name).Append("\"");
+                    return o.Append('\"').Append(s.Name).Append('\"');
             }
         }
 

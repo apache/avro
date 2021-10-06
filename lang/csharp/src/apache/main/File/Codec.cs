@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System.IO;
+
 namespace Avro.File
 {
     /// <summary>
@@ -30,6 +32,13 @@ namespace Avro.File
         /// <param name="uncompressedData"></param>
         /// <returns></returns>
         abstract public byte[] Compress(byte[] uncompressedData);
+
+        /// <summary>
+        /// Compress data using implemented codec
+        /// </summary>
+        /// <param name="inputStream">The stream which contains the data to be compressed</param>
+        /// <param name="outputStream">A reusable stream which will hold the compressed data. That stream should be empty.</param>
+        abstract public void Compress(MemoryStream inputStream, MemoryStream outputStream);
 
         /// <summary>
         /// Decompress data using implemented codec

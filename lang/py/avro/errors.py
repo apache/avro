@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,6 +18,14 @@
 # limitations under the License.
 
 import json
+
+
+def _safe_pretty(schema):
+    """Try to pretty-print a schema, but never raise an exception within another exception."""
+    try:
+        return json.dumps(json.loads(str(schema)), indent=2)
+    except Exception:  # Never raise an exception within another exception.
+        return schema
 
 
 class AvroException(Exception):
@@ -44,25 +50,44 @@ class IgnoredLogicalType(AvroWarning):
 
 class AvroTypeException(AvroException):
     """Raised when datum is not an example of schema."""
-    def __init__(self, expected_schema, datum):
+
+    def __init__(self, *args):
+        try:
+            expected_schema, name, datum = args[:3]
+        except (IndexError, ValueError):
+            return super().__init__(*args)
         pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
-        fail_msg = "The datum {} is not an example of the schema {}".format(datum, pretty_expected)
-        super(AvroTypeException, self).__init__(fail_msg)
+        return super().__init__(f'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}')
+
+
+class InvalidDefaultException(AvroTypeException):
+    """Raised when a default value isn't a suitable type for the schema."""
+
+
+class AvroOutOfScaleException(AvroTypeException):
+    """Raised when attempting to write a decimal datum with an exponent too large for the decimal schema."""
+
+    def __init__(self, *args):
+        try:
+            scale, datum, exponent = args[:3]
+        except (IndexError, ValueError):
+            return super().__init__(*args)
+        return super().__init__(f"The exponent of {datum}, {exponent}, is too large for the schema scale of {scale}")
 
 
 class SchemaResolutionException(AvroException):
-    def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
-        pretty_writers = json.dumps(json.loads(str(writers_schema)), indent=2)
-        pretty_readers = json.dumps(json.loads(str(readers_schema)), indent=2)
-        if writers_schema:
-            fail_msg += "\nWriter's Schema: {}".format(pretty_writers)
-        if readers_schema:
-            fail_msg += "\nReader's Schema: {}".format(pretty_readers)
-        super(AvroException, self).__init__(fail_msg)
+    def __init__(self, fail_msg, writers_schema=None, readers_schema=None, *args):
+        writers_message = f"\nWriter's Schema: {_safe_pretty(writers_schema)}" if writers_schema else ""
+        readers_message = f"\nReader's Schema: {_safe_pretty(readers_schema)}" if readers_schema else ""
+        super().__init__((fail_msg or "") + writers_message + readers_message, *args)
 
 
 class DataFileException(AvroException):
     """Raised when there's a problem reading or writing file object containers."""
+
+
+class IONotReadyException(AvroException):
+    """Raised when attempting an avro operation on an io object that isn't fully initialized."""
 
 
 class AvroRemoteException(AvroException):
@@ -83,3 +108,7 @@ class UnsupportedCodec(NotImplementedError, AvroException):
 
 class UsageError(RuntimeError, AvroException):
     """An exception raised when incorrect arguments were passed."""
+
+
+class AvroRuntimeException(RuntimeError, AvroException):
+    """Raised when compatibility parsing encounters an unknown type"""

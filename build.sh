@@ -94,7 +94,6 @@ do
       # install java artifacts required by other builds and interop tests
       mvn -B install -DskipTests
       (cd lang/py && ./build.sh lint test)
-      (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh lint test)
       (cd lang/csharp; ./build.sh test)
@@ -102,10 +101,9 @@ do
       (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
+      (cd lang/rust; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
-      (cd lang/py3; python3 setup.py generate_interop_data \
-        --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
@@ -117,7 +115,6 @@ do
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
       (cd lang/py; ./build.sh interop-data-test)
-      (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)
@@ -164,13 +161,13 @@ do
       (mvn -N -P copy-artifacts antrun:run)
 
       (cd lang/py; ./build.sh dist)
-      (cd lang/py3; ./build.sh dist)
       (cd lang/c; ./build.sh dist)
       (cd lang/c++; ./build.sh dist)
       (cd lang/csharp; ./build.sh dist)
       (cd lang/js; ./build.sh dist)
       (cd lang/ruby; ./build.sh dist)
       (cd lang/php; ./build.sh dist)
+      (cd lang/rust; ./build.sh dist)
 
       mkdir -p dist/perl
       (cd lang/perl; ./build.sh dist)
@@ -218,15 +215,6 @@ do
       (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
-      (cd lang/py3; python3 setup.py clean)
-      rm -rf lang/py3/dist
-      rm -rf lang/py3/avro_python3.egg-info
-      rm -f  lang/py3/avro/*.avsc
-      rm -f  lang/py3/avro/VERSION.txt
-      rm -rf lang/py3/avro/__pycache__/
-      rm -f  lang/py3/avro/tests/interop.avsc
-      rm -rf lang/py3/avro/tests/__pycache__/
-
       (cd lang/c; ./build.sh clean)
 
       (cd lang/c++; ./build.sh clean)
@@ -240,6 +228,8 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
       ;;
 
     veryclean)
@@ -253,15 +243,6 @@ do
       (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
-      (cd lang/py3; python3 setup.py clean)
-      rm -rf lang/py3/dist
-      rm -rf lang/py3/avro_python3.egg-info
-      rm -f  lang/py3/avro/*.avsc
-      rm -f  lang/py3/avro/VERSION.txt
-      rm -rf lang/py3/avro/__pycache__/
-      rm -f  lang/py3/avro/tests/interop.avsc
-      rm -rf lang/py3/avro/tests/__pycache__/
-
       (cd lang/c; ./build.sh clean)
 
       (cd lang/c++; ./build.sh clean)
@@ -275,6 +256,8 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
 
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules
@@ -346,7 +329,7 @@ do
     docker-test)
       tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
         docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v "${PWD}:/avro/" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+      docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)
