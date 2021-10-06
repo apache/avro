@@ -171,10 +171,11 @@ public class Idl implements Closeable {
     URL result = null;
     if (file != null && file.exists())
       result = file.toURI().toURL();
-    else if("classpath".equals(uri.getScheme()))
-      result = this.resourceLoader.getResource(uri.getPath().substring(1));
     else if (this.resourceLoader != null)
-      result = this.resourceLoader.getResource(importFile);
+      if ("classpath".equals(uri.getScheme()))
+        result = this.resourceLoader.getResource(uri.getPath().substring(1));
+      else
+        result = this.resourceLoader.getResource(importFile);
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
