@@ -18,8 +18,6 @@
 
 package org.apache.avro.reflect;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -47,8 +45,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificData;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -645,16 +641,25 @@ public class TestReflectLogicalTypes {
 
     Schema schema = reflect.getSchema(RecordWithDates.class);
 
-    RecordWithDates expected = new RecordWithDates();
-    expected.date = Date.valueOf("2021-01-01");
-    expected.localDate = LocalDate.parse("2021-01-01");
+    RecordWithDates recordWithDates = new RecordWithDates();
+    recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.localDate = LocalDate.parse("2021-01-01");
 
-    File test = write(reflect, schema, expected);
+    File test = write(reflect, schema, recordWithDates);
 
-    RecordWithDates actual = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
-    System.out.println(actual.date.getClass());
-    System.out.println(actual.localDate.getClass());
-    Assert.assertEquals("Should convert Date and LocalDate", expected, actual);
+    RecordWithDates actualRecordWithDates = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", recordWithDates, actualRecordWithDates);
+
+    schema = reflect.getSchema(NestedDates.class);
+
+    NestedDates nestedDates = new NestedDates();
+    nestedDates.recordWithDates = recordWithDates;
+    nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+
+    test = write(reflect, schema, nestedDates);
+
+    NestedDates actualNestedDates = (NestedDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", nestedDates, actualNestedDates);
   }
 
   @Test
@@ -665,16 +670,25 @@ public class TestReflectLogicalTypes {
 
     Schema schema = reflect.getSchema(RecordWithDates.class);
 
-    RecordWithDates expected = new RecordWithDates();
-    expected.date = Date.valueOf("2021-01-01");
-    expected.localDate = LocalDate.parse("2021-01-01");
+    RecordWithDates recordWithDates = new RecordWithDates();
+    recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.localDate = LocalDate.parse("2021-01-01");
 
-    File test = write(reflect, schema, expected);
+    File test = write(reflect, schema, recordWithDates);
 
-    RecordWithDates actual = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
-    System.out.println(actual.date.getClass());
-    System.out.println(actual.localDate.getClass());
-    Assert.assertEquals("Should convert Date and LocalDate", expected, actual);
+    RecordWithDates actualRecordWithDates = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", recordWithDates, actualRecordWithDates);
+
+    schema = reflect.getSchema(NestedDates.class);
+
+    NestedDates nestedDates = new NestedDates();
+    nestedDates.recordWithDates = recordWithDates;
+    nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+
+    test = write(reflect, schema, nestedDates);
+
+    NestedDates actualNestedDates = (NestedDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", nestedDates, actualNestedDates);
   }
 
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
@@ -820,15 +834,42 @@ class RecordWithDates {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null) { return false; }
-    if (!(obj instanceof RecordWithDates)) { return false; }
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof RecordWithDates)) {
+      return false;
+    }
     RecordWithDates that = (RecordWithDates) obj;
-    return Objects.equals(this.localDate, that.localDate) && Objects.equals(this.date, that.date);
+    return Objects.equals(localDate, that.localDate) && Objects.equals(date, that.date);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(localDate, date);
+  }
+}
+
+class NestedDates {
+  RecordWithDates recordWithDates;
+  List<RecordWithDates> recordWithDatesList;
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (!(obj instanceof NestedDates)) {
+      return false;
+    }
+    NestedDates that = (NestedDates) obj;
+    return Objects.equals(recordWithDates, that.recordWithDates)
+        && Objects.equals(recordWithDatesList, that.recordWithDatesList);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(recordWithDates, recordWithDatesList);
   }
 }
 
