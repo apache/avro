@@ -229,6 +229,24 @@ namespace Avro.Test
             TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
             TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
         }
+
+        [Test]
+        public void TestInvalidInputWithNegativeStringLength()
+        {
+            using MemoryStream iostr = new MemoryStream();
+            Encoder e = new BinaryEncoder(iostr);
+
+            e.WriteLong(-1);
+
+            iostr.Flush();
+            iostr.Position = 0;
+            Decoder d = new BinaryDecoder(iostr);
+
+            var exception = Assert.Throws<AvroException>(() => d.ReadString());
+
+            Assert.AreEqual("Can not deserialize a string with negative length!", exception!.Message);
+            iostr.Close();
+        }
 #endif
 
         [TestCase(0, 1)]

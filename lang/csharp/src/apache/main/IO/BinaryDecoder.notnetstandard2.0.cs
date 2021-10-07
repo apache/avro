@@ -66,6 +66,12 @@ namespace Avro.IO
             byte[] bufferArray = null;
 
             int length = ReadInt();
+
+            if (length < 0)
+            {
+                throw new AvroException("Can not deserialize a string with negative length!");
+            }
+
             Span<byte> buffer = length <= StackallocThreshold ?
                 stackalloc byte[length] :
                 (bufferArray = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
