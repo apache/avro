@@ -106,6 +106,7 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
