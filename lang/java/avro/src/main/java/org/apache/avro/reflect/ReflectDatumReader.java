@@ -274,6 +274,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             throw new AvroRuntimeException("Failed to read Stringable", e);
           }
         }
+
         LogicalType logicalType = field.schema().getLogicalType();
         if (logicalType != null) {
           Conversion<?> conversion = getData().getConversionByClass(accessor.getField().getType(), logicalType);
@@ -287,6 +288,26 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             return;
           }
         }
+
+        if (field.schema().isUnion()) {
+          Schema innerSchema = field.schema().getTypes().get(in.readIndex());
+          LogicalType innerLogicalType = innerSchema.getLogicalType();
+
+          Object value = readWithoutConversion(oldDatum, innerSchema, in);
+          if (innerLogicalType != null) {
+            Conversion<?> conversion = getData().getConversionByClass(accessor.getField().getType(), innerLogicalType);
+            if (conversion != null)
+              value = convert(value, innerSchema, innerLogicalType, conversion);
+          }
+
+          try {
+            accessor.set(record, value);
+          } catch (IllegalAccessException e) {
+            throw new AvroRuntimeException("Failed to set " + field);
+          }
+          return;
+        }
+
         try {
           accessor.set(record, readWithoutConversion(oldDatum, field.schema(), in));
           return;
