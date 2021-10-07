@@ -18,9 +18,13 @@
 
 package org.apache.avro.reflect;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +47,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificData;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -631,6 +637,46 @@ public class TestReflectLogicalTypes {
         LogicalTypes.fromSchema(actual.getField("localDateTime").schema()));
   }
 
+  @Test
+  public void testReflectedSchemaWithMultipleDateConversions() throws IOException {
+    ReflectData reflect = ReflectData.get();
+    reflect.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    reflect.addLogicalTypeConversion(new SqlDateConversion());
+
+    Schema schema = reflect.getSchema(RecordWithDates.class);
+
+    RecordWithDates expected = new RecordWithDates();
+    expected.date = Date.valueOf("2021-01-01");
+    expected.localDate = LocalDate.parse("2021-01-01");
+
+    File test = write(reflect, schema, expected);
+
+    RecordWithDates actual = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    System.out.println(actual.date.getClass());
+    System.out.println(actual.localDate.getClass());
+    Assert.assertEquals("Should convert Date and LocalDate", expected, actual);
+  }
+
+  @Test
+  public void testReflectedSchemaAllowNullWithMultipleDateConversions() throws IOException {
+    ReflectData reflect = ReflectData.AllowNull.get();
+    reflect.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    reflect.addLogicalTypeConversion(new SqlDateConversion());
+
+    Schema schema = reflect.getSchema(RecordWithDates.class);
+
+    RecordWithDates expected = new RecordWithDates();
+    expected.date = Date.valueOf("2021-01-01");
+    expected.localDate = LocalDate.parse("2021-01-01");
+
+    File test = write(reflect, schema, expected);
+
+    RecordWithDates actual = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    System.out.println(actual.date.getClass());
+    System.out.println(actual.localDate.getClass());
+    Assert.assertEquals("Should convert Date and LocalDate", expected, actual);
+  }
+
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
     List<D> data = new ArrayList<>();
 
@@ -764,6 +810,53 @@ class RecordWithTimestamps {
       return false;
     }
     RecordWithTimestamps that = (RecordWithTimestamps) obj;
-    return Objects.equals(that.localDateTime, that.localDateTime);
+    return Objects.equals(this.localDateTime, that.localDateTime);
+  }
+}
+
+class RecordWithDates {
+  LocalDate localDate;
+  Date date;
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) { return false; }
+    if (!(obj instanceof RecordWithDates)) { return false; }
+    RecordWithDates that = (RecordWithDates) obj;
+    return Objects.equals(this.localDate, that.localDate) && Objects.equals(this.date, that.date);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(localDate, date);
+  }
+}
+
+class SqlDateConversion extends Conversion<Date> {
+
+  @Override
+  public Class<Date> getConvertedType() {
+    return Date.class;
+  }
+
+  @Override
+  public String getLogicalTypeName() {
+    return "date";
+  }
+
+  @Override
+  public Date fromInt(Integer daysFromEpoch, Schema schema, LogicalType type) {
+    return Date.valueOf(LocalDate.ofEpochDay(daysFromEpoch));
+  }
+
+  @Override
+  public Integer toInt(Date date, Schema schema, LogicalType type) {
+    long epochDays = date.toLocalDate().toEpochDay();
+    return (int) epochDays;
+  }
+
+  @Override
+  public Schema getRecommendedSchema() {
+    return LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
   }
 }
