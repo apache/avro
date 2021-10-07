@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 
 namespace Avro.File
@@ -43,9 +44,17 @@ namespace Avro.File
         /// <summary>
         /// Decompress data using implemented codec
         /// </summary>
-        /// <param name="compressedData"></param>
+        /// <param name="compressedData">The buffer holding data to decompress.</param>
         /// <returns></returns>
         abstract public byte[] Decompress(byte[] compressedData);
+        
+        /// <summary>
+        /// Decompress data using implemented codec
+        /// </summary>
+        /// <param name="compressedData">The buffer holding data to decompress.</param>
+        /// <param name="length">The actual length of bytes to decompress from the buffer.</param>
+        /// <returns></returns>
+        abstract public byte[] Decompress(byte[] compressedData, int length);
 
         /// <summary>
         /// Name of this codec type
@@ -86,6 +95,25 @@ namespace Avro.File
         };
 
         /// <summary>
+        /// Represents a function capable of resolving a codec string
+        /// with a matching codec implementation a reader can use to decompress data.
+        /// </summary>
+        /// <param name="codecMetaString">The codec string</param>
+        public delegate Codec CodecResolver(string codecMetaString);
+
+        private static readonly List<CodecResolver> _codecResolvers = new List<CodecResolver>();
+
+        /// <summary>
+        /// Registers a function that will attempt to resolve a codec identifying string
+        /// with a matching codec implementation when reading compressed Avro data.
+        /// </summary>
+        /// <param name="resolver">A function that is able to find a codec implementation for a given codec string</param>
+        public static void RegisterResolver(CodecResolver resolver)
+        {
+            _codecResolvers.Add(resolver);
+        }
+
+        /// <summary>
         /// Factory method to return child
         /// codec instance based on Codec.Type
         /// </summary>
@@ -110,6 +138,15 @@ namespace Avro.File
         /// <returns></returns>
         public static Codec CreateCodecFromString(string codecType)
         {
+            foreach (var resolver in _codecResolvers)
+            {
+                var candidateCodec = resolver(codecType);
+                if (candidateCodec != null)
+                {
+                    return candidateCodec;
+                }
+            }
+            
             switch (codecType)
             {
                 case DataFileConstants.DeflateCodec:

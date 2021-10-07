@@ -819,6 +819,57 @@ namespace Avro.Test.File
             }
         }
 
+        /// <summary>
+        /// Reading and writing using optional codecs
+        /// </summary>
+        /// <param name="schemaStr"></param>
+        /// <param name="recs"></param>
+        [TestCase("zstd", true)]
+        [TestCase("deflate", false)]
+        [TestCase("null", false)]
+        public void TestOptionalCodecs(string codecToUse, bool expectResolverProvidedCodec)
+        {
+            var resolverProvidedCodec = false;
+
+            var fakeCodec = new FakeZstdCodec();
+            Codec codecResolver(string codecString)
+            {
+                if (codecString == "zstd")
+                {
+                    resolverProvidedCodec = true;
+                    return fakeCodec;
+                }
+
+                return null;
+            }
+
+            Codec.RegisterResolver(codecResolver);
+
+            RecordSchema schema = Schema.Parse( "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"},"
+                + "{\"name\":\"f2\", \"type\":\"string\"}]}" ) as RecordSchema;
+
+            foreach(var rwFactory in GenericOptions<GenericRecord>())
+            {
+                using (MemoryStream dataFileOutputStream = new MemoryStream())
+                {
+                    using (var writer = rwFactory.CreateWriter(dataFileOutputStream, schema, fakeCodec))
+                    {
+                        writer.Append(mkRecord(new [] { "f1", "f1val", "f2", "f2val" }, schema));
+                    }
+
+                    using (var dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray()))
+                    using (IFileReader<GenericRecord> reader = rwFactory.CreateReader(dataFileInputStream, schema))
+                    {
+                        GenericRecord result = reader.Next();
+                        Assert.AreEqual("f1val", result["f1"]);
+                        Assert.AreEqual("f2val", result["f2"]);
+                    }
+                }
+            }
+
+            Assert.AreEqual(expectResolverProvidedCodec, resolverProvidedCodec);
+        }
+
         private bool CheckPrimitive<T>(Stream input, T value, ReaderWriterSet<T>.ReaderFactory createReader)
         {
             IFileReader<T> reader = createReader(input, null);
@@ -1046,6 +1097,47 @@ namespace Avro.Test.File
         public override string ToString()
         {
             return string.Format("Name: {0}, Age: {1}", name, age);
+        }
+    }
+
+    class FakeZstdCodec : Codec
+    {
+        private DeflateCodec _codec = new DeflateCodec();
+        public override byte[] Compress(byte[] uncompressedData)
+        {
+            return _codec.Compress(uncompressedData);
+        }
+
+        public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
+        {
+            _codec.Compress(inputStream, outputStream);
+        }
+
+        public override byte[] Decompress(byte[] compressedData)
+        {
+            return _codec.Decompress(compressedData);
+        }
+
+        public override byte[] Decompress(byte[] compressedData, int length)
+        {
+            return _codec.Decompress(compressedData, length);
+        }
+
+        public override bool Equals(object other)
+        {
+            if (other == null) return false;
+
+            return this == other;
+        }
+
+        public override int GetHashCode()
+        {
+            return GetName().GetHashCode();
+        }
+
+        public override string GetName()
+        {
+            return "zstd";
         }
     }
 }

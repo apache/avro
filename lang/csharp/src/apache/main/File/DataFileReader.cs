@@ -307,7 +307,7 @@ namespace Avro.File
                     if (HasNextBlock())
                     {
                         _currentBlock = NextRawBlock(_currentBlock);
-                        _currentBlock.Data = _codec.Decompress(_currentBlock.Data);
+                        _currentBlock.Data = _codec.Decompress(_currentBlock.Data, (int)this._blockSize);
                         _datumDecoder = new BinaryDecoder(_currentBlock.GetDataAsStream());
                     }
                 }

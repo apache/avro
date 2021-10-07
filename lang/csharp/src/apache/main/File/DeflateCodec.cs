@@ -68,6 +68,12 @@ namespace Avro.File
             return outStream.ToArray();
         }
 
+        /// <inheritdoc/>
+        public override byte[] Decompress(byte[] compressedData, int length)
+        {
+            return Decompress(compressedData);
+        }
+
         private static void CopyTo(Stream from, Stream to)
         {
             byte[] buffer = new byte[4096];

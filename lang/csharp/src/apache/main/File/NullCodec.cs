@@ -51,6 +51,12 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
+        public override byte[] Decompress(byte[] compressedData, int length)
+        {
+            return compressedData;
+        }
+
+        /// <inheritdoc/>
         public override string GetName()
         {
             return DataFileConstants.NullCodec;
