@@ -215,7 +215,7 @@ namespace Avro.Test
             TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
         }
 
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1_OR_GREATER
         [Test]
         public void TestStringReadIntoArrayPool()
         {
@@ -241,64 +241,78 @@ namespace Avro.Test
 
             TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), expectedStringLength + overhead);
         }
+#endif
 
         [Test]
         public void TestInvalidInputWithNegativeStringLength()
         {
-            using MemoryStream iostr = new MemoryStream();
-            Encoder e = new BinaryEncoder(iostr);
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
 
-            e.WriteLong(-1);
+                e.WriteLong(-1);
 
-            iostr.Flush();
-            iostr.Position = 0;
-            Decoder d = new BinaryDecoder(iostr);
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
 
-            var exception = Assert.Throws<AvroException>(() => d.ReadString());
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
-            Assert.AreEqual("Can not deserialize a string with negative length!", exception!.Message);
-            iostr.Close();
+                Assert.NotNull(exception);
+                Assert.AreEqual("Can not deserialize a string with negative length!", exception.Message);
+                iostr.Close();
+            }
         }
 
         [Test]
         public void TestInvalidInputWithMaxIntAsStringLength()
         {
-            using MemoryStream iostr = new MemoryStream();
-            Encoder e = new BinaryEncoder(iostr);
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
 
-            e.WriteLong(int.MaxValue);
-            e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
+                e.WriteLong(int.MaxValue);
+                e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
 
-            iostr.Flush();
-            iostr.Position = 0;
-            Decoder d = new BinaryDecoder(iostr);
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
 
-            var exception = Assert.Throws<AvroException>(() => d.ReadString());
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
-            Assert.AreEqual("String length is not supported!", exception!.Message);
-            iostr.Close();
+                Assert.NotNull(exception);
+                Assert.AreEqual("String length is not supported!", exception.Message);
+                iostr.Close();
+            }
         }
 
         [Test]
         public void TestInvalidInputWithMaxArrayLengthAsStringLength()
         {
-            using MemoryStream iostr = new MemoryStream();
-            Encoder e = new BinaryEncoder(iostr);
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
 
-            const int maximumArrayLength = 2147483591;
-            e.WriteLong(maximumArrayLength);
-            e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
-
-            iostr.Flush();
-            iostr.Position = 0;
-            Decoder d = new BinaryDecoder(iostr);
-
-            var exception = Assert.Throws<AvroException>(() => d.ReadString());
-
-            Assert.AreEqual("Could not read as many bytes from stream as expected!", exception!.Message);
-            iostr.Close();
-        }
+#if NETCOREAPP3_1_OR_GREATER
+                const int maximumArrayLength = 0x7FFFFFC7;
+#else
+                const int maximumArrayLength = 0x7FFFFFFF / 2;
 #endif
+
+                e.WriteLong(maximumArrayLength);
+                e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
+
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
+
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
+
+                Assert.NotNull(exception);
+                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
+                iostr.Close();
+            }
+        }
 
         [TestCase(0, 1)]
         [TestCase(1, 1)]
