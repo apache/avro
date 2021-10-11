@@ -192,7 +192,7 @@ public class GenericData {
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
-  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP));
+  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP, "true"));
   private FastReaderBuilder fastReaderBuilder = null;
 
   public GenericData setFastReaderEnabled(boolean flag) {

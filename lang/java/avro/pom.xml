@@ -87,14 +87,14 @@
             </configuration>
           </execution>
           <execution>
-            <id>test-with-fast-reader</id>
+            <id>test-without-fast-reader</id>
             <phase>test</phase>
             <goals>
               <goal>test</goal>
             </goals>
             <configuration>
               <systemPropertyVariables>
-                <org.apache.avro.fastread>true</org.apache.avro.fastread>
+                <org.apache.avro.fastread>false</org.apache.avro.fastread>
               </systemPropertyVariables>
             </configuration>
           </execution>
