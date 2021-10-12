@@ -170,13 +170,13 @@ class TestSchemaValidator < Test::Unit::TestCase
   def test_validate_float
     schema = hash_to_schema(type: 'float', name: 'name')
 
-    assert_valid_schema(schema, [1.1, 1, Avro::Schema::LONG_MAX_VALUE], ['string'], true)
+    assert_valid_schema(schema, [1.1, 1, BigDecimal('1.1'), Avro::Schema::LONG_MAX_VALUE], ['string'], true)
   end
 
   def test_validate_double
     schema = hash_to_schema(type: 'double', name: 'name')
 
-    assert_valid_schema(schema, [1.1, 1, Avro::Schema::LONG_MAX_VALUE], ['string'], true)
+    assert_valid_schema(schema, [1.1, 1, BigDecimal('1.1'), Avro::Schema::LONG_MAX_VALUE], ['string'], true)
   end
 
   def test_validate_fixed
