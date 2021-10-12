@@ -489,6 +489,20 @@ EOS
     assert_equal(datum_read, { 'field2' => 1 })
   end
 
+  def test_big_decimal_datum_for_float
+    writers_schema = Avro::Schema.parse('"float"')
+    writer, * = write_datum(BigDecimal('1.2'), writers_schema)
+    datum_read = read_datum(writer, writers_schema)
+    assert_in_delta(1.2, datum_read)
+  end
+
+  def test_big_decimal_datum_for_double
+    writers_schema = Avro::Schema.parse('"double"')
+    writer, * = write_datum(BigDecimal("1.2"), writers_schema)
+    datum_read = read_datum(writer, writers_schema)
+    assert_in_delta(1.2, datum_read)
+  end
+
   def test_snappy_backward_compat
     # a snappy-compressed block payload without the checksum
     # this has no back-references, just one literal so the last 9

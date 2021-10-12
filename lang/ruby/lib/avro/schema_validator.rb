@@ -132,7 +132,7 @@ module Avro
           fail TypeMismatchError unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer)
+          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer) || datum.is_a?(BigDecimal)
         when :fixed
           if datum.is_a? String
             result.add_error(path, fixed_string_message(expected_schema.size, datum)) unless datum.bytesize == expected_schema.size
