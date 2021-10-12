@@ -26,6 +26,7 @@
   <name>java-example</name>
   <url>https://maven.apache.org</url>
   <properties>
+    <avro.version>1.11.0</avro.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
@@ -38,7 +39,7 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
-      <version>1.10.2</version>
+      <version>${avro.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -55,7 +56,7 @@
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
-        <version>1.10.2</version>
+        <version>${avro.version}</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -72,7 +73,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin</artifactId>
-        <version>1.10.2</version>
+        <version>${avro.version}</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -92,7 +93,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro-maven-plugin</artifactId>
-                    <versionRange>[1.10.2,)</versionRange>
+                    <versionRange>[${avro.version},)</versionRange>
                     <goals>
                       <goal>schema</goal>
                     </goals>
