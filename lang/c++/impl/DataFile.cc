@@ -232,9 +232,8 @@ void DataFileWriterBase::flush() {
     sync();
 }
 
-boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
-
 DataFileSync DataFileWriterBase::makeSync() {
+    boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
     DataFileSync sync;
     std::generate(sync.begin(), sync.end(), random);
     return sync;
