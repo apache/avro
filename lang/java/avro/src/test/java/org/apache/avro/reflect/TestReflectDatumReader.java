@@ -19,6 +19,7 @@
 package org.apache.avro.reflect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -168,5 +169,67 @@ public class TestReflectDatumReader {
       return Arrays.equals(relatedIds, other.relatedIds);
     }
 
+  }
+
+  // https://issues.apache.org/jira/browse/AVRO-1851
+  @Test
+  public void testRead_PojoAnonymousEnum() throws IOException {
+    ObjectWithAnonymousEnum toSerialize = new ObjectWithAnonymousEnum(AnonymousEnum.A);
+    byte[] serializedBytes = serializeWithReflectDatumWriter(toSerialize, ObjectWithAnonymousEnum.class);
+    assertNotNull(serializedBytes);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+    ReflectDatumReader<ObjectWithAnonymousEnum> reflectDatumReader = new ReflectDatumReader<>(
+        ObjectWithAnonymousEnum.class);
+
+    ObjectWithAnonymousEnum deserialized = new ObjectWithAnonymousEnum();
+    reflectDatumReader.read(deserialized, decoder);
+
+    assertEquals(toSerialize, deserialized);
+    assertEquals("A is doing something", deserialized.ae.doSomething());
+  }
+
+  enum AnonymousEnum {
+    A {
+      @Override
+      public String doSomething() {
+        return "A is doing something";
+      }
+    };
+
+    public abstract String doSomething();
+  }
+
+  public static class ObjectWithAnonymousEnum {
+    private final AnonymousEnum ae;
+
+    private ObjectWithAnonymousEnum() {
+      this(null);
+    }
+
+    public ObjectWithAnonymousEnum(AnonymousEnum ae) {
+      this.ae = ae;
+    }
+
+    public AnonymousEnum getAe() {
+      return ae;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+
+      ObjectWithAnonymousEnum myObject = (ObjectWithAnonymousEnum) o;
+
+      return ae == myObject.ae;
+    }
+
+    @Override
+    public int hashCode() {
+      return ae != null ? ae.hashCode() : 0;
+    }
   }
 }
