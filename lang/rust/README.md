@@ -71,6 +71,14 @@ version = "x.y"
 features = ["snappy"]
 ```
 
+Or in case you want to leverage the **Zstandard** codec:
+
+```toml
+[dependencies.avro-rs]
+version = "x.y"
+features = ["zstandard"]
+```
+
 ## Upgrading to a newer minor version
 
 The library is still in beta, so there might be backward-incompatible changes between minor
@@ -244,6 +252,8 @@ RFC 1950) does not have a checksum.
 * **Snappy**: uses Google's [Snappy](http://google.github.io/snappy/) compression library. Each
 compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
 the block. You must enable the `snappy` feature to use this codec.
+* **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
+You must enable the `zstandard` feature to use this codec.
 
 To specify a codec to use to compress data, just specify it while creating a `Writer`:
 ```rust
