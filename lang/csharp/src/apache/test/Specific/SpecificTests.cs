@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
@@ -24,6 +25,12 @@ using Avro.Specific;
 using Avro.Test.Specific;
 using System.Collections.Generic;
 using Avro.Test.Specific.@return;
+
+#if !NETCOREAPP
+using System.CodeDom;
+using System.CodeDom.Compiler;
+using System.Reflection;
+#endif
 
 namespace Avro.Test
 {
