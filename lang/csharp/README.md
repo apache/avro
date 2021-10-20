@@ -15,6 +15,18 @@ Install-Package Apache.Avro
 1. Install [.NET SDK 5.0+](https://dotnet.microsoft.com/download/dotnet-core)
 2. `dotnet test`
 
+## Project Target Frameworks
+
+| Project         | Type       | .NET Framework 4.0 | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  |
+|:---------------:|:----------:|:------------------:|:------------------:|:-----------------:|:-------------:|:---------:|
+| Avro.codegen    | Exe        |                    |                    |                   | ✔️            |✔️        |
+| Avro.ipc        | Library    | ✔️                 | ✔️                |                   |               |           |
+| Avro.ipc.test   | Unit Tests | ✔️                 |                    |                   |               |           |
+| Avro.main       | Library    |                    | ✔️                 | ✔️               |               |           |
+| Avro.msbuild    | Library    | ✔️                | ✔️                 |                   |               |           |
+| Avro.perf       | Exe        | ✔️                |                    |                   |                |✔️        |
+| Avro.test       | Unit Tests | ✔️                |                    |                   | ✔️            |✔️         |
+
 ## Dependency package version strategy
 
 1. Use [`versions.props`](./versions.props) to specify package versions. `PackageReference` elements in `.csproj` files should use only version properties defined in [`versions.props`](./versions.props).
