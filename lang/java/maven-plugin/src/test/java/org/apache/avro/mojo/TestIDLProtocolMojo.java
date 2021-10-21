@@ -21,7 +21,10 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Test the IDL Protocol Mojo.

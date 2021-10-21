@@ -264,7 +264,7 @@ MORE :
 <DOC_COMMENT>
 SPECIAL_TOKEN :
 {
-  <"*/" > {Idl.setDoc(image.substring(0, image.length()-2));} : DEFAULT
+  <"*/" > {Idl.setDoc(matchedToken);} : DEFAULT
 }
 
 <MULTI_LINE_COMMENT>
