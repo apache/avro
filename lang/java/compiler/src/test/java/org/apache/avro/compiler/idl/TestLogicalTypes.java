@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestLogicalTypes {
-  private static final Logger LOG = LoggerFactory.getLogger(TestCycle.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestLogicalTypes.class);
 
   private Schema logicalTypeFields;
 
