@@ -68,11 +68,12 @@ import java.util.List;
 import java.util.Map;
 import java.net.URL;
 
-import org.apache.avro.Schema;
+import com.sun.tools.javac.parser.DocCommentParser;import org.apache.avro.Schema;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
+import org.apache.avro.compiler.idl.Token;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -94,12 +95,54 @@ public class Idl implements Closeable {
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 
-  private static final ThreadLocal<String> DOC = new ThreadLocal<String>();
-  static void setDoc(String doc) { DOC.set(doc.trim()); }
+  private static class DocComment {
+      private String text;
+      private int line;
+      private int column;
+      DocComment(Token token) {
+          // The token is everything after the initial '/**', including all whitespace and the ending '*/'
+          int tokenLength = token.image.length();
+          this.text = token.image.substring(0, tokenLength-2)./*replaceAll("[ \\t]*(\\r|\\r\\n|\\n)[ \\t]*\\*?[ \\t]*", "$1").*/trim();
+          this.line = token.beginLine;
+          this.column = token.beginColumn - 3; // The preceding token was "/**", and the current match includes everything since (also all whitespace).
+      }
+  }
+  // Using ThreadLocal fields because the generated IdlTokenManager has no reference to the Idl instance but needs to give us the documentation comment.
+  private static final ThreadLocal<DocComment> DOC = new ThreadLocal<DocComment>();
+  private static final ThreadLocal<List<String>> WARNINGS = new ThreadLocal<List<String>>() {
+    @Override protected List<String> initialValue() {
+      return new ArrayList<String>();
+    }};
+  public List<String> getWarningsAfterParsing() {
+    List<String> warnings = WARNINGS.get();
+    WARNINGS.remove();
+    return warnings;
+  }
+  static void setDoc(Token token) {
+    DocComment newDocComment = new DocComment(token);
+    DocComment oldDocComment = DOC.get();
+    if (oldDocComment != null) {
+      WARNINGS.get().add(String.format(
+          "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\"\n" +
+            "A common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).",
+          newDocComment.line, newDocComment.column, oldDocComment.line, oldDocComment.column, oldDocComment.text));
+    }
+    DOC.set(newDocComment);
+  }
+  static void clearDoc() {
+    DocComment oldDocComment = DOC.get();
+    if (oldDocComment != null) {
+      WARNINGS.get().add(String.format(
+          "Ignoring out-of-place documentation comment at line %d, column %d: \"%s\"\n" +
+          "A common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).",
+          oldDocComment.line, oldDocComment.column, oldDocComment.text));
+    }
+    DOC.remove();
+  }
   static String getDoc() {
-    String doc = DOC.get();
-    DOC.set(null);
-    return doc;
+    DocComment docComment = DOC.get();
+    DOC.remove();
+    return docComment == null ? null : docComment.text;
   }
 
   public Idl(File inputFile) throws IOException {
@@ -111,7 +154,7 @@ public class Idl implements Closeable {
     this(inputFile);
     this.resourceLoader = resourceLoader;
   }
-  
+
   private Idl(URL input, Idl parent) throws IOException {
     this(input.openStream(), "UTF-8");
     this.inputDir = "file".equals(input.getProtocol())
@@ -119,7 +162,7 @@ public class Idl implements Closeable {
       : parent.inputDir;
     this.resourceLoader = parent.resourceLoader;
   }
-  
+
   public void close() throws IOException {
     jj_input_stream.inputStream.close();
   }
@@ -150,7 +193,7 @@ public class Idl implements Closeable {
         throw error(key+" values must be textual: "+n, token);
     return values;
   }
-  
+
   private URL findFile(String importFile) throws IOException {
     File file = new File(this.inputDir, importFile);
     URL result = null;
@@ -201,7 +244,7 @@ MORE :
 <DOC_COMMENT>
 SPECIAL_TOKEN :
 {
-  <"*/" > {Idl.setDoc(image.substring(0, image.length()-2));} : DEFAULT
+  <"*/" > {Idl.setDoc(matchedToken);} : DEFAULT
 }
 
 <MULTI_LINE_COMMENT>
