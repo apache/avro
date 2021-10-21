@@ -113,6 +113,9 @@ public class Idl implements Closeable {
     @Override protected List<String> initialValue() {
       return new ArrayList<String>();
     }};
+  /**
+   * Return all warnings that were encountered while parsing, once. Subsequent calls before parsing again will return an empty list.
+   */
   public List<String> getWarningsAfterParsing() {
     List<String> warnings = WARNINGS.get();
     WARNINGS.remove();
