@@ -69,8 +69,12 @@ namespace Avro.Test
             typeof(SchemaParseException), Description = "No fields")]
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\", \"fields\": \"hi\"}",
             typeof(SchemaParseException), Description = "Fields not an array")]
-        [TestCase("[{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns1\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}," + 
+        [TestCase("[{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns1\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}," +
                    "{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns2\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}]")]
+
+        // Doc
+        [TestCase("{\"type\": \"record\",\"name\": \"Test\",\"doc\": \"Test Doc\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}")]
+
         // Enum
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}")]
         [TestCase("{\"type\": \"enum\", \"name\": \"Status\", \"symbols\": \"Normal Caution Critical\"}",
@@ -218,6 +222,11 @@ namespace Avro.Test
             var rs = Schema.Parse(s) as RecordSchema;
             Assert.IsNotNull(rs);
             Assert.AreEqual(expectedDoc, rs.Documentation);
+
+            var roundTrip = Schema.Parse(rs.ToString()) as RecordSchema;
+
+            Assert.IsNotNull(roundTrip);
+            Assert.AreEqual(expectedDoc, roundTrip.Documentation);
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
@@ -250,7 +259,7 @@ namespace Avro.Test
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Unknown\" }", "Unknown")]
-        public void TestEnumDefault(string s, string expectedToken) 
+        public void TestEnumDefault(string s, string expectedToken)
         {
             var es = Schema.Parse(s) as EnumSchema;
             Assert.IsNotNull(es);
@@ -348,7 +357,7 @@ namespace Avro.Test
         [TestCase("a", "o.a.h", ExpectedResult = "o.a.h.a")]
         public string testFullname(string s1, string s2)
         {
-            var name = new SchemaName(s1, s2, null);
+            var name = new SchemaName(s1, s2, null, null);
             return name.Fullname;
         }
 
@@ -359,6 +368,13 @@ namespace Avro.Test
             var schema = Schema.Parse(schemaJson);
 
             Assert.AreEqual(expectedName, schema.Name);
+        }
+
+        [TestCase("[\"null\",\"string\"]", "[\"null\",\"string\"]")]
+        public void TestUnionSchemaWithoutTypeProperty(string schemaJson, string expectedSchemaJson)
+        {
+            var schema = Schema.Parse(schemaJson);
+            Assert.AreEqual(schema.ToString(), expectedSchemaJson);
         }
     }
 }

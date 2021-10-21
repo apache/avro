@@ -19,9 +19,11 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
-static {
+  private static final SpecificData MODEL$ = new SpecificData();
+  static {
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
   }
 
@@ -77,12 +79,12 @@ static {
   }
 
   /** The number of the player */
-   private int number;
-   private java.lang.String last_name;
-   private java.time.Instant timestamp;
-   private java.time.Instant timestampMicros;
-   private java.time.LocalTime timeMillis;
-   private java.time.LocalTime timeMicros;
+  private int number;
+  private java.lang.String last_name;
+  private java.time.Instant timestamp;
+  private java.time.Instant timestampMicros;
+  private java.time.LocalTime timeMillis;
+  private java.time.LocalTime timeMicros;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -308,7 +310,7 @@ static {
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -348,7 +350,7 @@ static {
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.FieldTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;

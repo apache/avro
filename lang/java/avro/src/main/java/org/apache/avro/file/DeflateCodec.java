@@ -17,7 +17,6 @@
  */
 package org.apache.avro.file;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -25,6 +24,8 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
+
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 
 /**
  * Implements DEFLATE (RFC1951) compression and decompression.
@@ -35,6 +36,8 @@ import java.util.zip.InflaterOutputStream;
  * {@link Inflater} and {@link Deflater}, is using RFC1951.
  */
 public class DeflateCodec extends Codec {
+
+  private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
     private int compressionLevel;
@@ -49,7 +52,6 @@ public class DeflateCodec extends Codec {
     }
   }
 
-  private ByteArrayOutputStream outputBuffer;
   private Deflater deflater;
   private Inflater inflater;
   // currently only do 'nowrap' -- RFC 1951, not zlib
@@ -67,28 +69,29 @@ public class DeflateCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
-    return ByteBuffer.wrap(baos.toByteArray());
+    return baos.asByteBuffer();
   }
 
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
-    return ByteBuffer.wrap(baos.toByteArray());
+    return baos.asByteBuffer();
   }
 
   // get and initialize the inflater for use.
   private Inflater getInflater() {
     if (null == inflater) {
       inflater = new Inflater(nowrap);
+    } else {
+      inflater.reset();
     }
-    inflater.reset();
     return inflater;
   }
 
@@ -96,18 +99,10 @@ public class DeflateCodec extends Codec {
   private Deflater getDeflater() {
     if (null == deflater) {
       deflater = new Deflater(compressionLevel, nowrap);
+    } else {
+      deflater.reset();
     }
-    deflater.reset();
     return deflater;
-  }
-
-  // get and initialize the output buffer for use.
-  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-    if (null == outputBuffer) {
-      outputBuffer = new ByteArrayOutputStream(suggestedLength);
-    }
-    outputBuffer.reset();
-    return outputBuffer;
   }
 
   @Override

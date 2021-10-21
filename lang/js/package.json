@@ -1,6 +1,6 @@
 {
   "name": "avro-js",
-  "version": "1.11.0-SNAPSHOT",
+  "version": "1.12.0-SNAPSHOT",
   "author": "Avro Developers <dev@avro.apache.org>",
   "description": "JavaScript Avro implementation",
   "contributors": [
@@ -42,13 +42,13 @@
     "interop-data-test": "mocha test/interop_data_test.js"
   },
   "dependencies": {
-    "underscore": "*"
+    "underscore": "^1.12.0"
   },
   "devDependencies": {
-    "coveralls": "^3.0.7",
+    "coveralls": "^3.1.0",
     "istanbul": "^0.4.5",
-    "jshint": "^2.10.2",
-    "mocha": "^6.2.2",
+    "jshint": "^2.12.0",
+    "mocha": "^6.2.3",
     "tmp": "^0.0.28"
   },
   "noAnalyze": true,

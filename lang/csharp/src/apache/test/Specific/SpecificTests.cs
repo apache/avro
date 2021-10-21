@@ -15,17 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using Avro.IO;
-using System.CodeDom;
-using System.CodeDom.Compiler;
 using Avro.Specific;
-using System.Reflection;
 using Avro.Test.Specific;
 using System.Collections.Generic;
+using Avro.Test.Specific.@return;
+
+#if !NETCOREAPP
+using System.CodeDom;
+using System.CodeDom.Compiler;
+using System.Reflection;
+#endif
 
 namespace Avro.Test
 {
@@ -63,7 +68,7 @@ namespace Avro.Test
 	""type"" : ""record"",
 	""name"" : ""Z"",
 	""fields"" :
-			[ 	
+			[
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
 				{ ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ] },
@@ -71,7 +76,7 @@ namespace Avro.Test
 				{ ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ] },
 				{ ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ] },
 				{ ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ] },
-				
+
 				{ ""name"" : ""myInt"", ""type"" : ""int"" },
 				{ ""name"" : ""myLong"", ""type"" : ""long"" },
 				{ ""name"" : ""myBool"", ""type"" : ""boolean"" },
@@ -81,7 +86,7 @@ namespace Avro.Test
 				{ ""name"" : ""myString"", ""type"" : ""string"" },
 				{ ""name"" : ""myNull"", ""type"" : ""null"" },
 
-				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },								
+				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
 				{ ""name"" : ""myA"", ""type"" : ""A"" },
 				{ ""name"" : ""myE"", ""type"" : ""MyEnum"" },
 				{ ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
@@ -263,6 +268,36 @@ namespace Avro.Test
             // deserialize
             var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
+        }
+
+
+        [Test]
+        public void TestArrayWithReservedWords()
+        {
+            var srcRecord = new ComplexTypeWithReservedWords
+            {
+                Record = new Record
+                {
+                    name = "Name"
+                },
+                ArrayItems = new List<ArrayItem>
+                {
+                     new ArrayItem
+                    {
+                        id = 2,
+                        name = "ArrayName"
+                    }
+                }
+            };
+
+            var stream = serialize(ComplexTypeWithReservedWords._SCHEMA, srcRecord);
+            var dstRecord = deserialize<ComplexTypeWithReservedWords>(stream, ComplexTypeWithReservedWords._SCHEMA, ComplexTypeWithReservedWords._SCHEMA);
+
+            Assert.NotNull(dstRecord);
+            Assert.AreEqual("Name", dstRecord.Record.name);
+            Assert.AreEqual(1, dstRecord.ArrayItems.Count);
+            Assert.AreEqual("ArrayName", dstRecord.ArrayItems[0].name);
+            Assert.AreEqual(2, dstRecord.ArrayItems[0].id);
         }
 
         [Test]
@@ -559,7 +594,7 @@ namespace Avro.Test
         public Schema Schema
         {
             get
-            { 
+            {
                 return Schema.Parse(@"{
    ""type"":""record"",
    ""name"":""EnumRecord"",

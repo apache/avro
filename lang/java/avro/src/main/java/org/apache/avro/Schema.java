@@ -49,6 +49,11 @@ import java.util.Set;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
 
 /**
  * An abstract data type.
@@ -106,6 +111,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   static final JsonFactory FACTORY = new JsonFactory();
+  static final Logger LOG = LoggerFactory.getLogger(Schema.class);
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
@@ -118,6 +124,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+
     private final String name;
 
     private Type() {
@@ -515,6 +522,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
+
       private final String name;
 
       private Order() {
@@ -857,8 +865,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocal.withInitial(HashSet::new);
-  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocal.withInitial(IdentityHashMap::new);
+  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocalWithInitial.of(HashSet::new);
+  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocalWithInitial.of(IdentityHashMap::new);
 
   @SuppressWarnings(value = "unchecked")
   private static class RecordSchema extends NamedSchema {
@@ -1544,11 +1552,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static ThreadLocal<Boolean> validateNames = ThreadLocal.withInitial(() -> true);
+  private static ThreadLocal<Boolean> validateNames = ThreadLocalWithInitial.of(() -> true);
 
   private static String validateName(String name) {
     if (!validateNames.get())
       return name; // not validating names
+    if (name == null)
+      throw new SchemaParseException("Null name");
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");
@@ -1563,7 +1573,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return name;
   }
 
-  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocal.withInitial(() -> true);
+  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema, JsonNode defaultValue) {
     if (VALIDATE_DEFAULTS.get() && (defaultValue != null) && !isValidDefault(schema, defaultValue)) { // invalid default
@@ -1684,6 +1694,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
           }
           f.aliases = parseAliases(field);
           fields.add(f);
+          if (fieldSchema.getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
+            LOG.warn(
+                "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
+                name, fieldName, getOptionalText(field, "logicalType"));
         }
         result.setFields(fields);
       } else if (type.equals("enum")) { // enum

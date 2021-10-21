@@ -18,6 +18,7 @@
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
+using System.IO;
 using System.Text;
 
 namespace Avro.IO
@@ -28,6 +29,8 @@ namespace Avro.IO
     public partial class BinaryDecoder
     {
         private const int StackallocThreshold = 256;
+        private const int MaxFastReadLength = 4096;
+        private const int MaxDotNetArrayLength = 0x7FFFFFC7;
 
         /// <summary>
         /// A float is written as 4 bytes.
@@ -63,23 +66,54 @@ namespace Avro.IO
         /// <returns>String read from the stream.</returns>
         public string ReadString()
         {
-            byte[] bufferArray = null;
-
             int length = ReadInt();
-            Span<byte> buffer = length <= StackallocThreshold ?
-                stackalloc byte[length] :
-                (bufferArray = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
 
-            Read(buffer);
-
-            string result = Encoding.UTF8.GetString(buffer);
-
-            if (bufferArray != null)
+            if (length < 0)
             {
-                ArrayPool<byte>.Shared.Return(bufferArray);
+                throw new AvroException("Can not deserialize a string with negative length!");
             }
 
-            return result;
+            if (length <= MaxFastReadLength)
+            {
+                byte[] bufferArray = null;
+
+                try
+                {
+                    Span<byte> buffer = length <= StackallocThreshold ?
+                        stackalloc byte[length] :
+                        (bufferArray = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
+
+                    Read(buffer);
+
+                    return Encoding.UTF8.GetString(buffer);
+                }
+                finally
+                {
+                    if (bufferArray != null)
+                    {
+                        ArrayPool<byte>.Shared.Return(bufferArray);
+                    }
+                }
+            }
+            else
+            {
+                if (length > MaxDotNetArrayLength)
+                {
+                    throw new AvroException("String length is not supported!");
+                }
+
+                using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, true))
+                {
+                    var bytes = binaryReader.ReadBytes(length);
+
+                    if (bytes.Length != length)
+                    {
+                        throw new AvroException("Could not read as many bytes from stream as expected!");
+                    }
+
+                    return Encoding.UTF8.GetString(bytes);
+                }
+            }
         }
 
         private void Read(byte[] buffer, int start, int len)

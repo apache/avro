@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -184,7 +185,7 @@ EOS
   }
 }
 EOS
-]
+].freeze
 
   Protocol = Avro::Protocol
   def test_parse

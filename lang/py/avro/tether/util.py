@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,16 +18,12 @@
 # limitations under the License.
 
 import socket
+from typing import cast
 
 
-def find_port():
-    """
-    Return an unbound port
-    """
-    s = socket.socket()
-    s.bind(("127.0.0.1", 0))
-
-    port = s.getsockname()[1]
-    s.close()
-
-    return port
+def find_port() -> int:
+    """Return an unbound port"""
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    return cast(int, port)

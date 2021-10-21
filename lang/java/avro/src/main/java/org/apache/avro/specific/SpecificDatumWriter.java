@@ -19,6 +19,7 @@ package org.apache.avro.specific;
 
 import java.io.IOException;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
@@ -95,7 +96,15 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
         value = convert(fieldSchema, logicalType, conversion, value);
       }
 
-      writeWithoutConversion(fieldSchema, value, out);
+      try {
+        writeWithoutConversion(fieldSchema, value, out);
+      } catch (NullPointerException e) {
+        throw npe(e, " in field '" + f.name() + "'");
+      } catch (ClassCastException cce) {
+        throw addClassCastMsg(cce, " in field '" + f.name() + "'");
+      } catch (AvroTypeException ate) {
+        throw addAvroTypeMsg(ate, " in field '" + f.name() + "'");
+      }
 
     } else {
       super.writeField(datum, f, out, state);

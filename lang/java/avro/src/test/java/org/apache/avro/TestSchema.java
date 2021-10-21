@@ -216,6 +216,7 @@ public class TestSchema {
     assertEquals(parent, parentWithoutInlinedChildReference);
   }
 
+  @Test
   public void testIntDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1);
     assertTrue(field.hasDefaultValue());
@@ -354,5 +355,10 @@ public class TestSchema {
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
     assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test(expected = SchemaParseException.class)
+  public void testEnumSymbolAsNull() {
+    Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
   }
 }

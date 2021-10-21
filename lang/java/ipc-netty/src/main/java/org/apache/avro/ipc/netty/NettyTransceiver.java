@@ -73,7 +73,7 @@ public class NettyTransceiver extends Transceiver {
   private final Integer connectTimeoutMillis;
   private final Bootstrap bootstrap;
   private final InetSocketAddress remoteAddr;
-  private final EventLoopGroup workerGroup = new NioEventLoopGroup(new NettyTransceiverThreadFactory("avro"));
+  private final EventLoopGroup workerGroup;
 
   volatile ChannelFuture channelFuture;
   volatile boolean stopping;
@@ -92,6 +92,7 @@ public class NettyTransceiver extends Transceiver {
     bootstrap = null;
     remoteAddr = null;
     channelFuture = null;
+    workerGroup = null;
   }
 
   /**
@@ -171,6 +172,7 @@ public class NettyTransceiver extends Transceiver {
       connectTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT_MILLIS;
     }
     this.connectTimeoutMillis = connectTimeoutMillis;
+    workerGroup = new NioEventLoopGroup(new NettyTransceiverThreadFactory("avro"));
     bootstrap = new Bootstrap().group(workerGroup).channel(NioSocketChannel.class)
         .option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
         .option(ChannelOption.TCP_NODELAY, DEFAULT_TCP_NODELAY_VALUE).handler(new ChannelInitializer<SocketChannel>() {
@@ -397,7 +399,9 @@ public class NettyTransceiver extends Transceiver {
       disconnect(awaitCompletion, true, null);
     } finally {
       // Shut down all thread pools to exit.
-      workerGroup.shutdownGracefully();
+      if (workerGroup != null) {
+        workerGroup.shutdownGracefully();
+      }
     }
   }
 

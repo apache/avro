@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -39,18 +37,25 @@ _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 
 
 def _version():
-    with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+    with open(os.path.join(_AVRO_DIR, "VERSION.txt")) as v:
         # Convert it back to the java version
-        return v.read().strip().replace('+', '-')
+        return v.read().strip().replace("+", "-")
 
 
 _AVRO_VERSION = _version()
-_JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
-                         "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION))
+_JAR_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(_AVRO_DIR)),
+    "java",
+    "tools",
+    "target",
+    f"avro-tools-{_AVRO_VERSION}.jar",
+)
 
-_LINES = ("the quick brown fox jumps over the lazy dog",
-          "the cow jumps over the moon",
-          "the rain in spain falls mainly on the plains")
+_LINES = (
+    "the quick brown fox jumps over the lazy dog",
+    "the cow jumps over the moon",
+    "the rain in spain falls mainly on the plains",
+)
 _IN_SCHEMA = '"string"'
 
 # The schema for the output of the mapper and reducer
@@ -62,11 +67,10 @@ _OUT_SCHEMA = """{
              {"name": "value", "type": "long", "order": "ignore"}]
 }"""
 
-_PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)),
-                                os.path.dirname(__file__)])
+_PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)), os.path.dirname(__file__)])
 
 
-def _has_java():
+def _has_java():  # pragma: no coverage
     """Detect if this system has a usable java installed.
 
     On most systems, this is just checking if `java` is in the PATH.
@@ -81,12 +85,12 @@ def _has_java():
             output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             output = e.output
-        return (b"No Java runtime present" not in output)
+        return b"No Java runtime present" not in output
     return bool(distutils.spawn.find_executable("java"))
 
 
 @unittest.skipUnless(_has_java(), "No Java runtime present")
-@unittest.skipUnless(os.path.exists(_JAR_PATH), "{} not found".format(_JAR_PATH))
+@unittest.skipUnless(os.path.exists(_JAR_PATH), f"{_JAR_PATH} not found")
 class TestTetherWordCount(unittest.TestCase):
     """unittest for a python tethered map-reduce job."""
 
@@ -107,11 +111,11 @@ class TestTetherWordCount(unittest.TestCase):
             os.makedirs(self._input_path)
         infile = os.path.join(self._input_path, "lines.avro")
         self._write_lines(_LINES, infile)
-        self.assertTrue(os.path.exists(infile), "Missing the input file {}".format(infile))
+        self.assertTrue(os.path.exists(infile), f"Missing the input file {infile}")
 
         # ...and the output schema...
         self._output_schema_path = os.path.join(self._base_dir, "output.avsc")
-        with open(self._output_schema_path, 'w') as output_schema_handle:
+        with open(self._output_schema_path, "w") as output_schema_handle:
             output_schema_handle.write(_OUT_SCHEMA)
         self.assertTrue(os.path.exists(self._output_schema_path), "Missing the schema file")
 
@@ -136,31 +140,42 @@ class TestTetherWordCount(unittest.TestCase):
         """
         datum_writer = avro.io.DatumWriter(_IN_SCHEMA)
         writers_schema = avro.schema.parse(_IN_SCHEMA)
-        with avro.datafile.DataFileWriter(open(fname, 'wb'), datum_writer, writers_schema) as writer:
+        with avro.datafile.DataFileWriter(open(fname, "wb"), datum_writer, writers_schema) as writer:
             for datum in lines:
                 writer.append(datum)
 
     def test_tether_word_count(self):
         """Check that a tethered map-reduce job produces the output expected locally."""
         # Run the job...
-        args = ("java", "-jar", _JAR_PATH, "tether",
-                "--protocol", "http",
-                "--in", self._input_path,
-                "--out", self._output_path,
-                "--outschema", self._output_schema_path,
-                "--program", sys.executable,
-                "--exec_args", "-m avro.tether.tether_task_runner word_count_task.WordCountTask")
-        print("Command:\n\t{0}".format(" ".join(args)))
+        args = (
+            "java",
+            "-jar",
+            _JAR_PATH,
+            "tether",
+            "--protocol",
+            "http",
+            "--in",
+            self._input_path,
+            "--out",
+            self._output_path,
+            "--outschema",
+            self._output_schema_path,
+            "--program",
+            sys.executable,
+            "--exec_args",
+            "-m avro.tether.tether_task_runner word_count_task.WordCountTask",
+        )
+        print(f"Command:\n\t{' '.join(args)}")
         subprocess.check_call(args, env={"PYTHONPATH": _PYTHON_PATH, "PATH": os.environ["PATH"]})
 
         # ...and test the results.
         datum_reader = avro.io.DatumReader()
         outfile = os.path.join(self._output_path, "part-00000.avro")
-        expected_counts = collections.Counter(' '.join(_LINES).split())
-        with avro.datafile.DataFileReader(open(outfile, 'rb'), datum_reader) as reader:
+        expected_counts = collections.Counter(" ".join(_LINES).split())
+        with avro.datafile.DataFileReader(open(outfile, "rb"), datum_reader) as reader:
             actual_counts = {r["key"]: r["value"] for r in reader}
         self.assertDictEqual(actual_counts, expected_counts)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

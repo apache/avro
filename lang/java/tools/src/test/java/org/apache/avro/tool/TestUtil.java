@@ -17,16 +17,17 @@
  */
 package org.apache.avro.tool;
 
+import java.lang.reflect.Method;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.avro.file.*;
+import org.apache.avro.file.Codec;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.ZstandardCodec;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
-import java.lang.reflect.Method;
 
 public class TestUtil {
 

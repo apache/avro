@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -13,18 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source 'https://rubygems.org' 
+source 'https://rubygems.org'
+
+VERSION = File.open('../../share/VERSION.txt').read.sub('-SNAPSHOT', '.pre1').chomp
+File.write("lib/avro/VERSION.txt", VERSION)
+
+gemspec
+
+# Development and optional runtime dependencies are listed below.
+# Required runtime dependencies must be listed in avro.gemspec.
+
 gem 'rake'
-gem 'echoe'
-gem 'multi_json'
 gem 'snappy'
 gem 'zstd-ruby'
 gem 'test-unit'
-# parallel 1.20.0 requires Ruby 2.5+
-gem 'parallel', '<= 1.19.2'
+gem 'parallel'
+# webrick is no longer included with Ruby 3.0+
+gem 'webrick'
 
-# rubocop 0.82 requires Ruby 2.4+
-gem 'rubocop', '<= 0.81'
+gem 'memory_profiler'
 
-# rdoc 6.2.1 requires Ruby 2.4+
-gem 'rdoc', '<= 6.2.0'
+# next major version will enable new cops
+gem 'rubocop', '~> 1.15'
+gem 'rdoc'

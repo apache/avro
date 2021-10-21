@@ -18,19 +18,87 @@
 package org.apache.avro;
 
 import static java.util.Arrays.asList;
-import static org.apache.avro.SchemaCompatibility.*;
-import static org.apache.avro.TestSchemas.*;
-import static org.junit.Assert.*;
+import static org.apache.avro.SchemaCompatibility.Incompatibility;
+import static org.apache.avro.SchemaCompatibility.SchemaCompatibilityResult;
+import static org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
+import static org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
+import static org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
+import static org.apache.avro.SchemaCompatibility.checkReaderWriterCompatibility;
+import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_B_INT_RECORD1;
+import static org.apache.avro.TestSchemas.A_INT_RECORD1;
+import static org.apache.avro.TestSchemas.A_LONG_RECORD1;
+import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
+import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
+import static org.apache.avro.TestSchemas.DOUBLE_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
+import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD;
+import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
+import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
+import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_LIST_RECORD;
+import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_LONG_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_STRING_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.INT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_LIST_RECORD;
+import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_SCHEMA;
+import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.NS_RECORD1;
+import static org.apache.avro.TestSchemas.NS_RECORD2;
+import static org.apache.avro.TestSchemas.NULL_SCHEMA;
+import static org.apache.avro.TestSchemas.ReaderWriter;
+import static org.apache.avro.TestSchemas.STRING_ARRAY_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_INT_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_SCHEMA;
+import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
+import static org.apache.avro.TestSchemas.assertSchemaContains;
+import static org.apache.avro.TestSchemas.list;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
-
+import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.*;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,7 +116,7 @@ public class TestSchemaCompatibility {
 
   @Test
   public void testValidateSchemaPairMissingField() {
-    final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
+    final List<Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
@@ -448,7 +516,7 @@ public class TestSchemaCompatibility {
     location.put("lat", 52.995143f);
     location.put("long", -1.539054f);
 
-    HashMap<String, GenericData.Record> locations = new HashMap<>();
+    HashMap<String, Record> locations = new HashMap<>();
     locations.put("l1", location);
     record.put("location", locations);
 

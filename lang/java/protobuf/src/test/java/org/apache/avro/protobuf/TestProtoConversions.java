@@ -19,17 +19,17 @@
 package org.apache.avro.protobuf;
 
 import com.google.protobuf.Timestamp;
+import java.util.Calendar;
+import java.util.TimeZone;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.protobuf.ProtoConversions.*;
+import org.apache.avro.protobuf.ProtoConversions.TimestampMicrosConversion;
+import org.apache.avro.protobuf.ProtoConversions.TimestampMillisConversion;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.Calendar;
-import java.util.TimeZone;
 
 public class TestProtoConversions {
 

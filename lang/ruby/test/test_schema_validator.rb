@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -169,13 +170,13 @@ class TestSchemaValidator < Test::Unit::TestCase
   def test_validate_float
     schema = hash_to_schema(type: 'float', name: 'name')
 
-    assert_valid_schema(schema, [1.1, 1, Avro::Schema::LONG_MAX_VALUE], ['string'], true)
+    assert_valid_schema(schema, [1.1, 1, BigDecimal('1.1'), Avro::Schema::LONG_MAX_VALUE], ['string'], true)
   end
 
   def test_validate_double
     schema = hash_to_schema(type: 'double', name: 'name')
 
-    assert_valid_schema(schema, [1.1, 1, Avro::Schema::LONG_MAX_VALUE], ['string'], true)
+    assert_valid_schema(schema, [1.1, 1, BigDecimal('1.1'), Avro::Schema::LONG_MAX_VALUE], ['string'], true)
   end
 
   def test_validate_fixed
@@ -556,5 +557,19 @@ class TestSchemaValidator < Test::Unit::TestCase
     end
     assert_equal(1, exception.result.errors.size)
     assert_equal("at . extra field 'color' - not in schema", exception.to_s)
+  end
+
+  def test_validate_bytes_decimal
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 2)
+    assert_valid_schema(schema, [BigDecimal('1.23'), 4.2, 1], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 4)
+    assert_valid_schema(schema, [BigDecimal('0.2345'), 0.2, 0.1], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4, scale: 0)
+    assert_valid_schema(schema, [BigDecimal('123'), 2], ['4.2', BigDecimal('233.2')], true)
+
+    schema = hash_to_schema(type: 'bytes', logicalType: 'decimal', precision: 4)
+    assert_valid_schema(schema, [BigDecimal('123'), 2], ['4.2', BigDecimal('233.2')], true)
   end
 end

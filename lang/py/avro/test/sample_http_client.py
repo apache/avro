@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,76 +17,65 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import argparse
+import json
 
-import sys
-
-import avro.errors
 import avro.ipc
 import avro.protocol
 
-MAIL_PROTOCOL_JSON = """\
-{"namespace": "example.proto",
- "protocol": "Mail",
-
- "types": [
-     {"name": "Message", "type": "record",
-      "fields": [
-          {"name": "to",   "type": "string"},
-          {"name": "from", "type": "string"},
-          {"name": "body", "type": "string"}
-      ]
-     }
- ],
-
- "messages": {
-     "send": {
-         "request": [{"name": "message", "type": "Message"}],
-         "response": "string"
-     },
-     "replay": {
-         "request": [],
-         "response": "string"
-     }
- }
-}
-"""
-MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
-SERVER_HOST = 'localhost'
+MAIL_PROTOCOL = avro.protocol.parse(
+    json.dumps(
+        {
+            "namespace": "example.proto",
+            "protocol": "Mail",
+            "types": [
+                {
+                    "name": "Message",
+                    "type": "record",
+                    "fields": [{"name": "to", "type": "string"}, {"name": "from", "type": "string"}, {"name": "body", "type": "string"}],
+                }
+            ],
+            "messages": {
+                "send": {"request": [{"name": "message", "type": "Message"}], "response": "string"},
+                "replay": {"request": [], "response": "string"},
+            },
+        }
+    )
+)
+SERVER_HOST = "localhost"
 SERVER_PORT = 9090
 
 
-def make_requestor(server_host, server_port, protocol):
-    client = avro.ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
+def make_requestor(server_host: str, server_port: int, protocol: avro.protocol.Protocol) -> avro.ipc.Requestor:
+    client = avro.ipc.HTTPTransceiver(server_host, server_port)
     return avro.ipc.Requestor(protocol, client)
 
 
-if __name__ == '__main__':
-    if len(sys.argv) not in [4, 5]:
-        raise avro.errors.UsageError("Usage: <to> <from> <body> [<count>]")
+def _parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("to", help="Who the message is to")
+    parser.add_argument("from_", help="Who the message is from")
+    parser.add_argument("body", help="The message body")
+    parser.add_argument("num_messages", type=int, default=1, help="The number of messages")
+    return parser.parse_args()
 
-    # client code - attach to the server and send a message
-    # fill in the Message record
-    message = dict()
-    message['to'] = sys.argv[1]
-    message['from'] = sys.argv[2]
-    message['body'] = sys.argv[3]
 
-    try:
-        num_messages = int(sys.argv[4])
-    except IndexError:
-        num_messages = 1
-
-    # build the parameters for the request
-    params = {}
-    params['message'] = message
-
+def main() -> int:
+    # client code - attach to the server and send a message fill in the Message record
+    args = _parse_args()
+    params = {"message": {"to": args.to, "from": args.from_, "body": args.body}}
     # send the requests and print the result
-    for msg_count in range(num_messages):
+    for msg_count in range(args.num_messages):
         requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-        result = requestor.request('send', params)
-        print("Result: " + result)
-
+        result = requestor.request("send", params)
+        print(f"Result: {result}")
     # try out a replay message
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-    result = requestor.request('replay', dict())
-    print("Replay Result: " + result)
+    result = requestor.request("replay", dict())
+    print(f"Replay Result: {result}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

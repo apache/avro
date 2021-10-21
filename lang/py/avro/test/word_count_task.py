@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -34,8 +32,7 @@ class WordCountTask(avro.tether.tether_task.TetherTask):
     """
 
     def __init__(self):
-        """
-        """
+        """ """
 
         inschema = """{"type":"string"}"""
         midschema = """{"type":"record", "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
@@ -60,7 +57,7 @@ class WordCountTask(avro.tether.tether_task.TetherTask):
         words = record.split()
 
         for w in words:
-            logging.info("WordCountTask.Map: word={0}".format(w))
+            logging.info("WordCountTask.Map: word=%s", w)
             collector.collect({"key": w, "value": 1})
 
     def reduce(self, record, collector):
@@ -90,7 +87,7 @@ class WordCountTask(avro.tether.tether_task.TetherTask):
         """
 
         # collect the current record
-        logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"], self.psum))
+        logging.info("WordCountTask.reduceFlush key=%s value=%s", record["key"], self.psum)
 
         collector.collect({"key": record["key"], "value": self.psum})
 

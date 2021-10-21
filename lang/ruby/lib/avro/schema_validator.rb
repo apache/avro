@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,19 +17,19 @@
 
 module Avro
   class SchemaValidator
-    ROOT_IDENTIFIER = '.'.freeze
-    PATH_SEPARATOR = '.'.freeze
-    INT_RANGE = Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE
-    LONG_RANGE = Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE
+    ROOT_IDENTIFIER = '.'
+    PATH_SEPARATOR = '.'
+    INT_RANGE = (Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE).freeze
+    LONG_RANGE = (Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE).freeze
     COMPLEX_TYPES = [:array, :error, :map, :record, :request].freeze
     BOOLEAN_VALUES = [true, false].freeze
     DEFAULT_VALIDATION_OPTIONS = { recursive: true, encoded: false, fail_on_extra_fields: false }.freeze
     RECURSIVE_SIMPLE_VALIDATION_OPTIONS = { encoded: true }.freeze
     RUBY_CLASS_TO_AVRO_TYPE = {
-      NilClass => 'null'.freeze,
-      String => 'string'.freeze,
-      Float => 'float'.freeze,
-      Hash => 'record'.freeze
+      NilClass => 'null',
+      String => 'string',
+      Float => 'float',
+      Hash => 'record'
     }.freeze
 
     class Result
@@ -132,7 +133,7 @@ module Avro
           fail TypeMismatchError unless datum.is_a?(Integer)
           result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer)
+          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer) || datum.is_a?(BigDecimal)
         when :fixed
           if datum.is_a? String
             result.add_error(path, fixed_string_message(expected_schema.size, datum)) unless datum.bytesize == expected_schema.size
@@ -217,9 +218,9 @@ module Avro
       end
 
       def deeper_path_for_hash(sub_key, path)
-        deeper_path = "#{path}#{PATH_SEPARATOR}#{sub_key}"
+        deeper_path = +"#{path}#{PATH_SEPARATOR}#{sub_key}"
         deeper_path.squeeze!(PATH_SEPARATOR)
-        deeper_path
+        deeper_path.freeze
       end
 
       def actual_value_message(value)
@@ -240,7 +241,7 @@ module Avro
       end
 
       def ruby_integer_to_avro_type(value)
-        INT_RANGE.cover?(value) ? 'int'.freeze : 'long'.freeze
+        INT_RANGE.cover?(value) ? 'int' : 'long'
       end
     end
   end

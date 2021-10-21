@@ -42,8 +42,11 @@ import org.apache.avro.hadoop.file.HadoopCodecFactory;
 import static org.apache.avro.file.DataFileConstants.DEFAULT_SYNC_INTERVAL;
 import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 import static org.apache.avro.file.DataFileConstants.XZ_CODEC;
+import static org.apache.avro.file.DataFileConstants.ZSTANDARD_CODEC;
 import static org.apache.avro.file.CodecFactory.DEFAULT_DEFLATE_LEVEL;
 import static org.apache.avro.file.CodecFactory.DEFAULT_XZ_LEVEL;
+import static org.apache.avro.file.CodecFactory.DEFAULT_ZSTANDARD_LEVEL;
+import static org.apache.avro.file.CodecFactory.DEFAULT_ZSTANDARD_BUFFERPOOL;
 
 /**
  * An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files.
@@ -62,6 +65,12 @@ public class AvroOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, NullWr
 
   /** The configuration key for Avro XZ level. */
   public static final String XZ_LEVEL_KEY = "avro.mapred.xz.level";
+
+  /** The configuration key for Avro ZSTD level. */
+  public static final String ZSTD_LEVEL_KEY = "avro.mapred.zstd.level";
+
+  /** The configuration key for Avro ZSTD buffer pool. */
+  public static final String ZSTD_BUFFERPOOL_KEY = "avro.mapred.zstd.bufferpool";
 
   /** The configuration key for Avro sync interval. */
   public static final String SYNC_INTERVAL_KEY = "avro.mapred.sync.interval";
@@ -116,6 +125,8 @@ public class AvroOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, NullWr
     if (FileOutputFormat.getCompressOutput(job)) {
       int deflateLevel = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
       int xzLevel = job.getInt(XZ_LEVEL_KEY, DEFAULT_XZ_LEVEL);
+      int zstdLevel = job.getInt(ZSTD_LEVEL_KEY, DEFAULT_ZSTANDARD_LEVEL);
+      boolean zstdBufferPool = job.getBoolean(ZSTD_BUFFERPOOL_KEY, DEFAULT_ZSTANDARD_BUFFERPOOL);
       String codecName = job.get(AvroJob.OUTPUT_CODEC);
 
       if (codecName == null) {
@@ -133,6 +144,8 @@ public class AvroOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, NullWr
           factory = CodecFactory.deflateCodec(deflateLevel);
         } else if (codecName.equals(XZ_CODEC)) {
           factory = CodecFactory.xzCodec(xzLevel);
+        } else if (codecName.equals(ZSTANDARD_CODEC)) {
+          factory = CodecFactory.zstandardCodec(zstdLevel, false, zstdBufferPool);
         } else {
           factory = CodecFactory.fromString(codecName);
         }

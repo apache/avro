@@ -19,6 +19,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>23</version>
+  </parent>
+
   <groupId>\${groupId}</groupId>
   <artifactId>\${artifactId}</artifactId>
   <version>\${version}</version>
@@ -27,13 +33,10 @@
   <name>Simple Avro Ordering Service</name>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
     <avro.version>${project.version}</avro.version>
     <jackson.version>${jackson.version}</jackson.version>
-    <jackson.databind.version>${jackson.databind.version}</jackson.databind.version>
     <junit.version>${junit.version}</junit.version>
-    <logback.version>1.0.0</logback.version>
+    <logback.version>1.2.3</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
 
@@ -61,7 +64,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>\${jackson.databind.version}</version>
+      <version>\${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -107,7 +110,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
         <configuration>
           <excludes>
             <exclude>%regex[.*.integration.*]</exclude>
@@ -116,7 +118,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -134,11 +135,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
       </plugin>
     </plugins>
   </build>

@@ -17,32 +17,31 @@
  */
 package org.apache.avro.specific;
 
-import java.io.IOException;
-import java.util.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import org.apache.avro.FooBarSpecificRecord;
-import org.apache.avro.TypeEnum;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
-import org.junit.Assert;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-
 import org.apache.avro.TestSchema;
-import org.apache.avro.test.TestRecord;
-import org.apache.avro.test.MD5;
-import org.apache.avro.test.Kind;
-import org.apache.avro.test.Reserved;
-
+import org.apache.avro.TypeEnum;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.test.Kind;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Reserved;
+import org.apache.avro.test.TestRecord;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TestSpecificData {
 
