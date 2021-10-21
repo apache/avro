@@ -29,15 +29,15 @@ class AvroDebug
     /**
      * @var int high debug level
      */
-    const DEBUG5 = 5;
+    public const DEBUG5 = 5;
     /**
      * @var int low debug level
      */
-    const DEBUG1 = 1;
+    public const DEBUG1 = 1;
     /**
      * @var int current debug level
      */
-    const DEBUG_LEVEL = self::DEBUG1;
+    public const DEBUG_LEVEL = self::DEBUG1;
 
     /**
      * @param string $format format string for the given arguments. Passed as is

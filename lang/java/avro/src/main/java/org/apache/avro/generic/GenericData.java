@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +68,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class GenericData {
 
   private static final GenericData INSTANCE = new GenericData();
+
+  private static final Map<Class<?>, String> PRIMITIVE_DATUM_TYPES = new IdentityHashMap<>();
+  static {
+    PRIMITIVE_DATUM_TYPES.put(Integer.class, Type.INT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Long.class, Type.LONG.getName());
+    PRIMITIVE_DATUM_TYPES.put(Float.class, Type.FLOAT.getName());
+    PRIMITIVE_DATUM_TYPES.put(Double.class, Type.DOUBLE.getName());
+    PRIMITIVE_DATUM_TYPES.put(Boolean.class, Type.BOOLEAN.getName());
+    PRIMITIVE_DATUM_TYPES.put(String.class, Type.STRING.getName());
+    PRIMITIVE_DATUM_TYPES.put(Utf8.class, Type.STRING.getName());
+  }
 
   /** Used to specify the Java type for a string schema. */
   public enum StringType {
@@ -692,9 +704,7 @@ public class GenericData {
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"");
-    } else if (((datum instanceof Float) && // quote Nan & Infinity
-        (((Float) datum).isInfinite() || ((Float) datum).isNaN()))
-        || ((datum instanceof Double) && (((Double) datum).isInfinite() || ((Double) datum).isNaN()))) {
+    } else if (isNanOrInfinity(datum) || isTemporal(datum)) {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
@@ -709,6 +719,15 @@ public class GenericData {
     } else {
       buffer.append(datum);
     }
+  }
+
+  private boolean isTemporal(Object datum) {
+    return datum instanceof Temporal;
+  }
+
+  private boolean isNanOrInfinity(Object datum) {
+    return ((datum instanceof Float) && (((Float) datum).isInfinite() || ((Float) datum).isNaN()))
+        || ((datum instanceof Double) && (((Double) datum).isInfinite() || ((Double) datum).isNaN()));
   }
 
   /* Adapted from https://code.google.com/p/json-simple */
@@ -884,6 +903,9 @@ public class GenericData {
   protected String getSchemaName(Object datum) {
     if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
+    String primativeType = getPrimitiveTypeCache().get(datum.getClass());
+    if (primativeType != null)
+      return primativeType;
     if (isRecord(datum))
       return getRecordSchema(datum).getFullName();
     if (isEnum(datum))
@@ -909,6 +931,14 @@ public class GenericData {
     if (isBoolean(datum))
       return Type.BOOLEAN.getName();
     throw new AvroRuntimeException(String.format("Unknown datum type %s: %s", datum.getClass().getName(), datum));
+  }
+
+  /**
+   * Called to obtain the primitive type cache. May be overridden for alternate
+   * record representations.
+   */
+  protected Map<Class<?>, String> getPrimitiveTypeCache() {
+    return PRIMITIVE_DATUM_TYPES;
   }
 
   /**

@@ -22,7 +22,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     return SCHEMA$;
   }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<TestRecordWithLogicalTypes> ENCODER = new BinaryMessageEncoder<TestRecordWithLogicalTypes>(
       MODEL$, SCHEMA$);

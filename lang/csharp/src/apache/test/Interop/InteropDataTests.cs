@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.IO;
 using NUnit.Framework;
 using Avro.File;
@@ -40,6 +41,7 @@ namespace Avro.Test.Interop
                 var codec = Path.GetFileNameWithoutExtension(avroFile).Split('_');
                 if (1 < codec.Length && !InteropDataConstants.SupportedCodecNames.Contains(codec[1]))
                 {
+                    Console.WriteLine($"Skipped: {avroFile}");
                     continue;
                 }
 
@@ -53,6 +55,8 @@ namespace Avro.Test.Interop
                     }
                     Assert.AreNotEqual(0, i);
                 }
+
+                Console.WriteLine($"Succeeded: {avroFile}");
             }
         }
     }

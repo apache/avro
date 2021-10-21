@@ -29,32 +29,32 @@ class AvroField extends AvroSchema
     /**
      * @var string fields name attribute name
      */
-    const FIELD_NAME_ATTR = 'name';
+    public const FIELD_NAME_ATTR = 'name';
 
     /**
      * @var string
      */
-    const DEFAULT_ATTR = 'default';
+    public const DEFAULT_ATTR = 'default';
 
     /**
      * @var string
      */
-    const ORDER_ATTR = 'order';
+    public const ORDER_ATTR = 'order';
 
     /**
      * @var string
      */
-    const ASC_SORT_ORDER = 'ascending';
+    public const ASC_SORT_ORDER = 'ascending';
 
     /**
      * @var string
      */
-    const DESC_SORT_ORDER = 'descending';
+    public const DESC_SORT_ORDER = 'descending';
 
     /**
      * @var string
      */
-    const IGNORE_SORT_ORDER = 'ignore';
+    public const IGNORE_SORT_ORDER = 'ignore';
 
     /**
      * @var array list of valid field sort order values

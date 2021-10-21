@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,11 +34,24 @@ public class LogicalTypes {
     LogicalType fromSchema(Schema schema);
 
     default String getTypeName() {
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException("LogicalTypeFactory TypeName has not been provided");
     }
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
+
+  /**
+   * Register a logical type.
+   *
+   * @param factory The logical type factory
+   *
+   * @throws NullPointerException if {@code factory} or
+   *                              {@code factory.getTypedName()} is {@code null}
+   */
+  public static void register(LogicalTypeFactory factory) {
+    Objects.requireNonNull(factory, "Logical type factory cannot be null");
+    register(factory.getTypeName(), factory);
+  }
 
   /**
    * Register a logical type.
@@ -51,7 +65,26 @@ public class LogicalTypes {
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
     Objects.requireNonNull(logicalTypeName, "Logical type name cannot be null");
     Objects.requireNonNull(factory, "Logical type factory cannot be null");
+
+    try {
+      String factoryTypeName = factory.getTypeName();
+      if (!logicalTypeName.equals(factoryTypeName)) {
+        LOG.debug("Provided logicalTypeName '{}' does not match factory typeName '{}'", logicalTypeName,
+            factoryTypeName);
+      }
+    } catch (UnsupportedOperationException ignore) {
+      // Ignore exception, as the default interface method throws
+      // UnsupportedOperationException.
+    }
+
     REGISTERED_TYPES.put(logicalTypeName, factory);
+  }
+
+  /**
+   * Return an unmodifiable map of any registered custom {@link LogicalType}
+   */
+  public static Map<String, LogicalTypes.LogicalTypeFactory> getCustomRegisteredTypes() {
+    return Collections.unmodifiableMap(REGISTERED_TYPES);
   }
 
   /**

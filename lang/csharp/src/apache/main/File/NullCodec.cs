@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System.IO;
+
 namespace Avro.File
 {
     /// <summary>
@@ -33,6 +35,13 @@ namespace Avro.File
         public override byte[] Compress(byte[] uncompressedData)
         {
             return uncompressedData;
+        }
+
+        /// <inheritdoc/>
+        public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
+        {
+            outputStream.SetLength(0);
+            outputStream.Write(inputStream.GetBuffer(), 0, (int)inputStream.Length);
         }
 
         /// <inheritdoc/>

@@ -36,6 +36,16 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord> extend
   }
 
   /**
+   * Creates a SpecificRecordBuilderBase for building records of the given type.
+   * 
+   * @param schema the schema associated with the record class.
+   * @param model  the SpecificData associated with the specific record class
+   */
+  protected SpecificRecordBuilderBase(Schema schema, SpecificData model) {
+    super(schema, model);
+  }
+
+  /**
    * SpecificRecordBuilderBase copy constructor.
    * 
    * @param other SpecificRecordBuilderBase instance to copy.

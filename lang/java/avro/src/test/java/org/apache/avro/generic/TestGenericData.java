@@ -19,17 +19,32 @@ package org.apache.avro.generic;
 
 import static org.apache.avro.TestCircularReferences.Reference;
 import static org.apache.avro.TestCircularReferences.Referenceable;
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -406,6 +421,15 @@ public class TestGenericData {
     assertEquals("\"Infinity\"", data.toString(Double.POSITIVE_INFINITY));
     assertEquals("\"-Infinity\"", data.toString(Double.NEGATIVE_INFINITY));
     assertEquals("\"NaN\"", data.toString(Double.NaN));
+  }
+
+  @Test
+  public void testToStringConvertsDatesAsStrings() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("\"1961-04-12T06:07:10Z\"", data.toString(Instant.parse("1961-04-12T06:07:10Z")));
+    assertEquals("\"1961-04-12\"", data.toString(LocalDate.parse("1961-04-12")));
+    assertEquals("\"1961-04-12T06:07:10\"", data.toString(LocalDateTime.parse("1961-04-12T06:07:10")));
+    assertEquals("\"10:10:10\"", data.toString(LocalTime.parse("10:10:10")));
   }
 
   @Test

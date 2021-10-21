@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -43,8 +44,6 @@ public class TestSpecificCompilerTool {
   private static final File TEST_EXPECTED_OUTPUT_DIR = new File(TEST_DIR, "output");
   private static final File TEST_EXPECTED_POSITION = new File(TEST_EXPECTED_OUTPUT_DIR, "Position.java");
   private static final File TEST_EXPECTED_PLAYER = new File(TEST_EXPECTED_OUTPUT_DIR, "Player.java");
-  private static final File TEST_EXPECTED_FIELDVISIBILITYTEST = new File(TEST_EXPECTED_OUTPUT_DIR,
-      "FieldVisibilityTest.java");
   private static final File TEST_EXPECTED_NO_SETTERS = new File(TEST_EXPECTED_OUTPUT_DIR, "NoSettersTest.java");
   private static final File TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS = new File(TEST_EXPECTED_OUTPUT_DIR,
       "OptionalGettersNullableFieldsTest.java");
@@ -60,13 +59,13 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Player.java");
   private static final File TEST_EXPECTED_STRING_FIELDTEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/FieldTest.java");
+  private static final File TEST_EXPECTED_STRING_PROTO = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
+      "avro/examples/baseball/Proto.java");
 
   // where test output goes
   private static final File TEST_OUTPUT_DIR = new File("target/compiler/output");
   private static final File TEST_OUTPUT_PLAYER = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Player.java");
   private static final File TEST_OUTPUT_POSITION = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
-  private static final File TEST_OUTPUT_FIELDVISIBILITYTEST = new File(TEST_OUTPUT_DIR,
-      "avro/examples/baseball/FieldVisibilityTest.java");
   private static final File TEST_OUTPUT_NO_SETTERS = new File(TEST_OUTPUT_DIR,
       "avro/examples/baseball/NoSettersTest.java");
   private static final File TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS = new File(TEST_OUTPUT_DIR,
@@ -83,19 +82,12 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Position.java");
   private static final File TEST_OUTPUT_STRING_FIELDTEST = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/FieldTest.java");
+  private static final File TEST_OUTPUT_STRING_PROTO = new File(TEST_OUTPUT_STRING_DIR,
+      "avro/examples/baseball/Proto.java");
 
   @Before
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
-  }
-
-  @Test
-  public void testCompileSchemaWithFieldVisibility() throws Exception {
-
-    TEST_OUTPUT_FIELDVISIBILITYTEST.delete();
-    doCompile(new String[] { "-encoding", "UTF-8", "-fieldVisibility", "public_deprecated", "schema",
-        TEST_INPUT_DIR.toString() + "/fieldvisibilitytest.avsc", TEST_OUTPUT_DIR.getPath() });
-    assertFileMatch(TEST_EXPECTED_FIELDVISIBILITYTEST, TEST_OUTPUT_FIELDVISIBILITYTEST);
   }
 
   @Test
@@ -205,6 +197,15 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
   }
 
+  @Test
+  public void testCompileProtocol() throws Exception {
+
+    doCompile(new String[] { "-encoding", "UTF-8", "protocol", TEST_INPUT_DIR.toString() + "/proto.avpr",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+
+    assertFileMatch(TEST_EXPECTED_STRING_PROTO, TEST_OUTPUT_STRING_PROTO);
+  }
+
   // Runs the actual compiler tool with the given input args
   private void doCompile(String[] args) throws Exception {
     SpecificCompilerTool tool = new SpecificCompilerTool();
@@ -231,7 +232,8 @@ public class TestSpecificCompilerTool {
    * file content and comparing provides nice diffs via JUnit when failures occur.
    */
   private static String readFile(File file) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
     StringBuilder sb = new StringBuilder();
     String line = null;
     boolean first = true;

@@ -18,8 +18,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netcoreapp3.1</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">net5.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;net5.0</TargetFrameworks>
     <AssemblyName>Avro.perf</AssemblyName>
     <RootNamespace>Avro.perf</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -28,6 +28,8 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
+    <!-- Suppress error NU5104: A stable release of a package should not have a prerelease dependency, if Avro.main is a prerelease version -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -21,6 +21,8 @@ package org.apache.avro;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.collection.IsMapContaining;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -224,6 +226,63 @@ public class TestLogicalType {
 
     LogicalTypes.decimal(9, 2).addToSchema(schema3);
     assertEqualsFalse("Different logical type", schema1, schema3);
+  }
+
+  @Test
+  public void testRegisterLogicalTypeThrowsIfTypeNameNotProvided() {
+    assertThrows("Should error if type name was not provided", UnsupportedOperationException.class,
+        "LogicalTypeFactory TypeName has not been provided", () -> {
+          LogicalTypes.register(schema -> LogicalTypes.date());
+          return null;
+        });
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithName() {
+    final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
+      @Override
+      public LogicalType fromSchema(Schema schema) {
+        return LogicalTypes.date();
+      }
+
+      @Override
+      public String getTypeName() {
+        return "typename";
+      }
+    };
+
+    LogicalTypes.register("registered", factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("registered", factory));
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithFactoryName() {
+    final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
+      @Override
+      public LogicalType fromSchema(Schema schema) {
+        return LogicalTypes.date();
+      }
+
+      @Override
+      public String getTypeName() {
+        return "factory";
+      }
+    };
+
+    LogicalTypes.register(factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("factory", factory));
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithFactoryNameNotProvided() {
+    final LogicalTypes.LogicalTypeFactory factory = schema -> LogicalTypes.date();
+
+    LogicalTypes.register("logicalTypeName", factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
+        IsMapContaining.hasEntry("logicalTypeName", factory));
   }
 
   public static void assertEqualsTrue(String message, Object o1, Object o2) {

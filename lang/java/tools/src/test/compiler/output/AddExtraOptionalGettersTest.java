@@ -19,7 +19,7 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AddExtraOptionalGettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that extra optional getters are added\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<AddExtraOptionalGettersTest> ENCODER =
       new BinaryMessageEncoder<AddExtraOptionalGettersTest>(MODEL$, SCHEMA$);
@@ -72,8 +72,8 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
     return DECODER.decode(b);
   }
 
-   private java.lang.CharSequence name;
-   private java.lang.Integer favorite_number;
+  private java.lang.CharSequence name;
+  private java.lang.Integer favorite_number;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -207,7 +207,7 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -231,7 +231,7 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.AddExtraOptionalGettersTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;

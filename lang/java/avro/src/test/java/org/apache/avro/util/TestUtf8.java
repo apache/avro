@@ -17,10 +17,17 @@
  */
 package org.apache.avro.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
@@ -90,4 +97,28 @@ public class TestUtf8 {
     u.setByteLength(4);
     assertEquals(3198781, u.hashCode());
   }
+
+  @Test
+  public void testSerialization() throws IOException, ClassNotFoundException {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+      Utf8 originalEmpty = new Utf8();
+      Utf8 originalBytes = new Utf8("originalBytes".getBytes(StandardCharsets.UTF_8));
+      Utf8 originalString = new Utf8("originalString");
+
+      oos.writeObject(originalEmpty);
+      oos.writeObject(originalBytes);
+      oos.writeObject(originalString);
+      oos.flush();
+
+      try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+          ObjectInputStream ois = new ObjectInputStream(bis)) {
+        assertThat(ois.readObject(), is(originalEmpty));
+        assertThat(ois.readObject(), is(originalBytes));
+        assertThat(ois.readObject(), is(originalString));
+      }
+    }
+  }
+
 }

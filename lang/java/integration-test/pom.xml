@@ -23,7 +23,7 @@
   <parent>
       <artifactId>avro-parent</artifactId>
       <groupId>org.apache.avro</groupId>
-      <version>1.11.0-SNAPSHOT</version>
+      <version>1.12.0-SNAPSHOT</version>
       <relativePath>../</relativePath>
   </parent>
 
@@ -48,7 +48,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire-plugin.version}</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
           </configuration>
@@ -56,16 +55,10 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>${compiler-plugin.version}</version>
-          <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>${checkstyle-plugin.version}</version>
           <configuration>
             <consoleOutput>true</consoleOutput>
             <configLocation>checkstyle.xml</configLocation>

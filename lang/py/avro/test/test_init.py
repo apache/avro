@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
-# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -25,11 +23,10 @@ import avro
 
 
 class TestVersion(unittest.TestCase):
-
     def test_import_version(self):
         # make sure we have __version__ attribute in avro module
-        self.assertTrue(hasattr(avro, '__version__'))
+        self.assertTrue(hasattr(avro, "__version__"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":  # pragma: no coverage
     unittest.main()

@@ -68,6 +68,15 @@ namespace Avro.IO
         void WriteBytes(byte[] value);
 
         /// <summary>
+        /// Writes a byte string.
+        /// </summary>
+        /// <param name="value">The byte[] to be read (fully or partially)</param>
+        /// <param name="offset">The offset from the beginning of the byte[] to start writing</param>
+        /// <param name="length">The length of the data to be read from the byte[].</param>
+
+        void WriteBytes(byte[] value, int offset, int length);
+
+        /// <summary>
         /// Writes an Unicode string.
         /// </summary>
         /// <param name="value">Value to write.</param>

@@ -19,7 +19,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NoSettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that setters are omitted\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
+  private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<NoSettersTest> ENCODER =
       new BinaryMessageEncoder<NoSettersTest>(MODEL$, SCHEMA$);
@@ -72,8 +72,8 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
     return DECODER.decode(b);
   }
 
-   private java.lang.CharSequence name;
-   private java.lang.Integer favorite_number;
+  private java.lang.CharSequence name;
+  private java.lang.Integer favorite_number;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -179,7 +179,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -203,7 +203,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.NoSettersTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;

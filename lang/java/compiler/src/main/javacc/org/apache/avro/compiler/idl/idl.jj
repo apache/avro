@@ -61,6 +61,7 @@ PARSER_BEGIN(Idl)
 package org.apache.avro.compiler.idl;
 
 import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -68,12 +69,11 @@ import java.util.List;
 import java.util.Map;
 import java.net.URL;
 
-import com.sun.tools.javac.parser.DocCommentParser;import org.apache.avro.Schema;
+import org.apache.avro.Schema;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
-import org.apache.avro.compiler.idl.Token;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -90,7 +90,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
 
-  File inputDir = new File(".");
+  URI inputDir;
   ClassLoader resourceLoader = null;
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
@@ -150,7 +150,7 @@ public class Idl implements Closeable {
 
   public Idl(File inputFile) throws IOException {
     this(new FileInputStream(inputFile), "UTF-8");
-    this.inputDir = inputFile.getParentFile();
+    this.inputDir = inputFile.getParentFile().toURI();
   }
 
   public Idl(File inputFile, ClassLoader resourceLoader) throws IOException {
@@ -158,10 +158,23 @@ public class Idl implements Closeable {
     this.resourceLoader = resourceLoader;
   }
 
+  private static URI resourceParent(URL jar) throws IOException {
+    String path = jar.toExternalForm();
+    String name = path.substring(path.indexOf("!/") + 1);
+    try {
+      URI uri = new URI("classpath", null, name, null);
+      return uri.resolve(".");
+    } catch (URISyntaxException e) {
+      throw new IOException("Could not handle resource import in " + jar, e);
+    }
+  }
+
   private Idl(URL input, Idl parent) throws IOException {
     this(input.openStream(), "UTF-8");
     this.inputDir = "file".equals(input.getProtocol())
-      ? new File(input.getPath()).getParentFile()
+      ? new File(input.getPath()).getParentFile().toURI()
+      : "jar".equals(input.getProtocol())
+      ?  resourceParent(input)
       : parent.inputDir;
     this.resourceLoader = parent.resourceLoader;
   }
@@ -198,12 +211,16 @@ public class Idl implements Closeable {
   }
 
   private URL findFile(String importFile) throws IOException {
-    File file = new File(this.inputDir, importFile);
+    URI uri = this.inputDir.resolve(importFile);
+    File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
-    if (file.exists())
-      result = file.toURL();
+    if (file != null && file.exists())
+      result = file.toURI().toURL();
     else if (this.resourceLoader != null)
-      result = this.resourceLoader.getResource(importFile);
+      if ("classpath".equals(uri.getScheme()))
+        result = this.resourceLoader.getResource(uri.getPath().substring(1));
+      else
+        result = this.resourceLoader.getResource(importFile);
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
@@ -247,7 +264,7 @@ MORE :
 <DOC_COMMENT>
 SPECIAL_TOKEN :
 {
-  <"*/" > {Idl.setDoc(matchedToken);} : DEFAULT
+  <"*/" > {Idl.setDoc(image.substring(0, image.length()-2));} : DEFAULT
 }
 
 <MULTI_LINE_COMMENT>
@@ -1579,7 +1596,7 @@ Schema ResultType():
 String PropertyName():
 {
   Token t;
-  StringBuffer name = new StringBuffer();
+  StringBuilder name = new StringBuilder();
 }
 {
   t = <IDENTIFIER>   { name.append(t.image); }
