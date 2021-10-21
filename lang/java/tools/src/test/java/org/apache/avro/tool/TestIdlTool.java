@@ -17,7 +17,7 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -25,21 +25,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-public class TestIdlToSchemataTool {
+public class TestIdlTool {
 
   @Test
-  public void testSplitIdlIntoSchemata() throws Exception {
+  public void testWriteIdlAsProtocol() throws Exception {
     String idl = "src/test/idl/protocol.avdl";
-    String outdir = "target/test-split";
+    String protocol = "src/test/idl/protocol.avpr";
+    String outfile = "target/test-protocol.avpr";
 
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    List<String> arglist = Arrays.asList(idl, outdir);
-    new IdlToSchemataTool().run(null, null, new PrintStream(buffer), arglist);
+    List<String> arglist = Arrays.asList(idl, outfile);
+    new IdlTool().run(null, null, new PrintStream(buffer), arglist);
 
-    String[] files = new File(outdir).list();
-    assertEquals(4, files.length);
+    assertEquals(readFileAsString(protocol), readFileAsString(outfile));
 
     String warnings = readPrintStreamBuffer(buffer);
     assertEquals(
@@ -59,6 +59,12 @@ public class TestIdlToSchemataTool {
             + " * limitations under the License."
             + "\"\nA common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).",
         warnings);
+  }
+
+  private String readFileAsString(String filePath) throws IOException {
+    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+      return reader.lines().collect(Collectors.joining("\n"));
+    }
   }
 
   private String readPrintStreamBuffer(ByteArrayOutputStream buffer) {
