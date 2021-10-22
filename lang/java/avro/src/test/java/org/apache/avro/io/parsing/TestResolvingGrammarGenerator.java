@@ -83,6 +83,21 @@ public class TestResolvingGrammarGenerator {
     }
   }
 
+  @Test
+  public void testDifferingEnumNamespaces() throws Exception {
+    Schema enumSchema1 = SchemaBuilder.builder().enumeration("Enum").namespace("namespace1").symbols("Symbol1",
+        "Symbol2");
+    Schema enumSchema2 = SchemaBuilder.builder().enumeration("Enum").namespace("namespace2").symbols("Symbol1",
+        "Symbol2");
+    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(enumSchema1).noDefault().endRecord();
+    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(enumSchema2).noDefault().endRecord();
+    GenericData.EnumSymbol genericEnumSymbol = new GenericData.EnumSymbol(enumSchema1, "Symbol1");
+    GenericData.Record record = new GenericRecordBuilder(schema1).set("field", genericEnumSymbol).build();
+    byte[] data = writeRecord(schema1, record);
+    Assert.assertEquals(genericEnumSymbol, readRecord(schema1, data).get("field"));
+    Assert.assertEquals(genericEnumSymbol, readRecord(schema2, data).get("field"));
+  }
+
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     Collection<Object[]> ret = Arrays.asList(new Object[][] {
