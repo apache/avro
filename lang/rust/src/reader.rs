@@ -304,8 +304,10 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::from_value;
     use crate::{types::Record, Reader};
     use std::io::Cursor;
+    use serde::Deserialize;
 
     const SCHEMA: &str = r#"
     {
@@ -341,6 +343,40 @@ mod tests {
         6u8, 102u8, 111u8, 111u8, 84u8, 6u8, 98u8, 97u8, 114u8, 94u8, 61u8, 54u8, 221u8, 190u8,
         207u8, 108u8, 180u8, 158u8, 57u8, 114u8, 40u8, 173u8, 199u8, 228u8, 239u8,
     ];
+    const TEST_RECORD_SCHEMA: &str = r#"
+    {
+      "type": "record",
+      "name": "test",
+      "fields": [
+        {
+          "name": "a",
+          "type": "long",
+          "default": 42
+        },
+        {
+          "name": "b",
+          "type": "string"
+        },
+        {
+            "name": "a_nullable_array",
+            "type": ["null", {"type": "array", "items": {"type": "string"}}],
+            "default": null
+        },
+        {
+            "name": "a_nullable_boolean",
+            "type": ["null", {"type": "boolean"}],
+            "default": null
+        }
+      ]
+    }
+    "#;
+    #[derive(Default, Debug, Deserialize, PartialEq)]
+    struct TestRecord {
+        a: i64,
+        b: String,
+        a_nullable_array: Option<String>,
+        // we are missing a_nullable_boolean on purpose
+    }
 
     #[test]
     fn test_from_avro_datum() {
@@ -355,6 +391,23 @@ mod tests {
         assert_eq!(
             from_avro_datum(&schema, &mut encoded, None).unwrap(),
             expected
+        );
+    }
+
+    #[test]
+    fn test_from_avro_datum_with_union_to_struct() {
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA).unwrap();
+        let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
+
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let test_record: TestRecord = match &avro_datum {
+            Value::Record(_) => from_value::<TestRecord>(&avro_datum).unwrap(),
+            _ => panic!("could not map avro data to struct"),
+        };
+
+        assert_eq!(
+            test_record.a_nullable_array,
+            None
         );
     }
 
