@@ -23,7 +23,7 @@ use crate::{
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
 };
-use std::{collections::HashMap, convert::TryFrom, io::{ErrorKind,Read}, str::FromStr};
+use std::{collections::HashMap, convert::TryFrom, io::{ErrorKind, Read}, str::FromStr};
 use uuid::Uuid;
 
 #[inline]
@@ -134,11 +134,20 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
         Schema::String => {
             let len = decode_len(reader)?;
             let mut buf = vec![0u8; len];
-            reader.read_exact(&mut buf).map_err(Error::ReadString)?;
-
-            Ok(Value::String(
-                String::from_utf8(buf).map_err(Error::ConvertToUtf8)?,
-            ))
+            match reader.read_exact(&mut buf) {
+                Ok(_) => {
+                    Ok(Value::String(
+                        String::from_utf8(buf).map_err(Error::ConvertToUtf8)?,
+                    ))
+                },
+                Err(io_err) => {
+                    if let ErrorKind::UnexpectedEof = io_err.kind() {
+                        Ok(Value::Null)
+                    } else {
+                        Err(Error::ReadString(io_err))
+                    }
+                },
+            }
         }
         Schema::Fixed { size, .. } => {
             let mut buf = vec![0u8; size];

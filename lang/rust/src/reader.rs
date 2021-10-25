@@ -343,7 +343,7 @@ mod tests {
         6u8, 102u8, 111u8, 111u8, 84u8, 6u8, 98u8, 97u8, 114u8, 94u8, 61u8, 54u8, 221u8, 190u8,
         207u8, 108u8, 180u8, 158u8, 57u8, 114u8, 40u8, 173u8, 199u8, 228u8, 239u8,
     ];
-    const TEST_RECORD_SCHEMA: &str = r#"
+    const TEST_RECORD_SCHEMA_3240: &str = r#"
     {
       "type": "record",
       "name": "test",
@@ -366,6 +366,11 @@ mod tests {
             "name": "a_nullable_boolean",
             "type": ["null", {"type": "boolean"}],
             "default": null
+        },
+        {
+            "name": "a_nullable_string",
+            "type": ["null", {"type": "string"}],
+            "default": null
         }
       ]
     }
@@ -374,8 +379,10 @@ mod tests {
     struct TestRecord {
         a: i64,
         b: String,
-        a_nullable_array: Option<String>,
-        // we are missing a_nullable_boolean on purpose
+        a_nullable_array: Option<Vec<String>>,
+        // we are missing the 'a_nullable_boolean' field to simulate missing keys
+        // a_nullable_boolean: Option<bool>,
+        a_nullable_string: Option<String>,
     }
 
     #[test]
@@ -396,19 +403,23 @@ mod tests {
 
     #[test]
     fn test_from_avro_datum_with_union_to_struct() {
-        let schema = Schema::parse_str(TEST_RECORD_SCHEMA).unwrap();
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
-        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
-        let test_record: TestRecord = match &avro_datum {
-            Value::Record(_) => from_value::<TestRecord>(&avro_datum).unwrap(),
-            _ => panic!("could not map avro data to struct"),
+        let expected_record: TestRecord = TestRecord {
+            a: 27i64,
+            b: String::from("foo"),
+            a_nullable_array: None,
+            a_nullable_string: None,
         };
 
-        assert_eq!(
-            test_record.a_nullable_array,
-            None
-        );
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let parsed_record: TestRecord = match &avro_datum {
+            Value::Record(_) => from_value::<TestRecord>(&avro_datum).unwrap(),
+            unexpected => panic!("could not map avro data to struct, found unexpected: {:?}", unexpected),
+        };
+
+        assert_eq!(parsed_record, expected_record);
     }
 
     #[test]
