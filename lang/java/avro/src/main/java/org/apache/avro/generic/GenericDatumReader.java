@@ -211,7 +211,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   /**
-   * Convert a underlying representation of a logical type (such as a ByteBuffer)
+   * Convert an underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
    *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in

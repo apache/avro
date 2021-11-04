@@ -569,7 +569,7 @@ public class ReflectData extends SpecificData {
       Package pkg2 = valueClass.getPackage();
 
       if (pkg1 != null && pkg1.getName().startsWith("java") && pkg2 != null && pkg2.getName().startsWith("java")) {
-        return NS_MAP_ARRAY_RECORD + keyClass.getSimpleName() + valueClass.getSimpleName();
+        return NS_MAP_ARRAY_RECORD + simpleName(keyClass) + simpleName(valueClass);
       }
     }
 
@@ -666,6 +666,9 @@ public class ReflectData extends SpecificData {
       return result;
     } else if (type instanceof Class) { // Class
       Class<?> c = (Class<?>) type;
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
       if (c.isPrimitive() || // primitives
           c == Void.class || c == Boolean.class || c == Integer.class || c == Long.class || c == Float.class
           || c == Double.class || c == Byte.class || c == Short.class || c == Character.class)
@@ -785,6 +788,18 @@ public class ReflectData extends SpecificData {
     return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
   }
 
+  private String simpleName(Class<?> c) {
+    String simpleName = null;
+    if (c != null) {
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
+      simpleName = c.getSimpleName();
+    }
+
+    return simpleName;
+  }
+
   private static final Schema THROWABLE_MESSAGE = makeNullable(Schema.create(Schema.Type.STRING));
 
   // if array element type is a class with a union annotation, note it
@@ -888,8 +903,7 @@ public class ReflectData extends SpecificData {
    */
   @Override
   public Protocol getProtocol(Class iface) {
-    Protocol protocol = new Protocol(iface.getSimpleName(),
-        iface.getPackage() == null ? "" : iface.getPackage().getName());
+    Protocol protocol = new Protocol(simpleName(iface), iface.getPackage() == null ? "" : iface.getPackage().getName());
     Map<String, Schema> names = new LinkedHashMap<>();
     Map<String, Message> messages = protocol.getMessages();
     Map<TypeVariable<?>, Type> genericTypeVariableMap = ReflectionUtil.resolveTypeVariables(iface);
