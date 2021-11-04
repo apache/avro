@@ -651,11 +651,11 @@ public class BinaryDecoder extends Decoder {
    * <p/>
    * {@link #skipSourceBytes} and {@link #readRaw} are guaranteed to have read or
    * skipped as many bytes as possible, or throw EOFException.
-   * {@link #trySkipBytes} and {@link #tryReadRaw} are guaranteed to attempt to read or
-   * skip as many bytes as possible and never throw EOFException, while returning
-   * the exact number of bytes skipped or read. {@link #isEof} returns true if all
-   * the source bytes have been read or skipped. This condition can also be
-   * detected by a client if an EOFException is thrown from
+   * {@link #trySkipBytes} and {@link #tryReadRaw} are guaranteed to attempt to
+   * read or skip as many bytes as possible and never throw EOFException, while
+   * returning the exact number of bytes skipped or read. {@link #isEof} returns
+   * true if all the source bytes have been read or skipped. This condition can
+   * also be detected by a client if an EOFException is thrown from
    * {@link #skipSourceBytes} or {@link #readRaw}, or if {@link #trySkipBytes} or
    * {@link #tryReadRaw} return 0;
    * <p/>

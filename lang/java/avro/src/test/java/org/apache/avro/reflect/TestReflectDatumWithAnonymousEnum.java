@@ -29,7 +29,8 @@ public class TestReflectDatumWithAnonymousEnum {
     pojo.setPerson(person);
   }
 
-  // Properly serializes and deserializes a POJO with an enum instance (TestEnum#V)
+  // Properly serializes and deserializes a POJO with an enum instance
+  // (TestEnum#V)
   @Test
   public void handleProperlyEnumInstances() throws IOException {
     byte[] output = serialize(pojo);
@@ -37,7 +38,8 @@ public class TestReflectDatumWithAnonymousEnum {
     assertEquals(pojo, deserializedPojo);
   }
 
-  // The test fails because the Schema doesn't support null value for the Person's name
+  // The test fails because the Schema doesn't support null value for the Person's
+  // name
   @Test(expected = NullPointerException.class)
   public void avroEnumWithNotNullTest() throws IOException {
     byte[] output = serializeWithoutNulls(pojo);
@@ -98,12 +100,15 @@ public class TestReflectDatumWithAnonymousEnum {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
 
       Pojo pojo = (Pojo) o;
 
-      if (testEnum != pojo.testEnum) return false;
+      if (testEnum != pojo.testEnum)
+        return false;
       return person != null ? person.equals(pojo.person) : pojo.person == null;
     }
 
@@ -116,10 +121,7 @@ public class TestReflectDatumWithAnonymousEnum {
 
     @Override
     public String toString() {
-      return "Pojo{" +
-        "testEnum=" + testEnum +
-        ", person=" + person +
-        '}';
+      return "Pojo{" + "testEnum=" + testEnum + ", person=" + person + '}';
     }
   }
 
@@ -145,12 +147,15 @@ public class TestReflectDatumWithAnonymousEnum {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
 
       Person person = (Person) o;
 
-      if (name != null ? !name.equals(person.name) : person.name != null) return false;
+      if (name != null ? !name.equals(person.name) : person.name != null)
+        return false;
       return address != null ? address.equals(person.address) : person.address == null;
     }
 
@@ -163,10 +168,7 @@ public class TestReflectDatumWithAnonymousEnum {
 
     @Override
     public String toString() {
-      return "Person{" +
-        "name='" + name + '\'' +
-        ", address='" + address + '\'' +
-        '}';
+      return "Person{" + "name='" + name + '\'' + ", address='" + address + '\'' + '}';
     }
   }
 
