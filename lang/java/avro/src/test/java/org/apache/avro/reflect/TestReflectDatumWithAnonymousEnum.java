@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -14,8 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests that demonstrates the issue with anonymous enums with AVRO
- * serialization.
+ * https://issues.apache.org/jira/browse/AVRO-1851
  */
 public class TestReflectDatumWithAnonymousEnum {
   private static Pojo pojo;
@@ -29,33 +29,34 @@ public class TestReflectDatumWithAnonymousEnum {
     pojo.setPerson(person);
   }
 
-  // Test fails with "empty name"
+  // Properly serializes and deserializes a POJO with an enum instance (TestEnum#V)
   @Test
-  public void avroEnumWithNullTest() throws IOException {
+  public void handleProperlyEnumInstances() throws IOException {
     byte[] output = serialize(pojo);
-    Pojo desePojo = deserialize(output);
-    // TODO the deserialized pojo's address is set into its "name" field
-    assertEquals(desePojo, pojo);
+    Pojo deserializedPojo = deserialize(output);
+    assertEquals(pojo, deserializedPojo);
   }
 
-  // Test fails when null value is encountered in Pojo for any field
-  @Test
+  // The test fails because the Schema doesn't support null value for the Person's name
+  @Test(expected = NullPointerException.class)
   public void avroEnumWithNotNullTest() throws IOException {
     byte[] output = serializeWithoutNulls(pojo);
-    Pojo desePojo = deserialize(output);
+    deserialize(output);
   }
 
   private Pojo deserialize(byte[] input) throws IOException {
     ByteArrayInputStream inputStream = new ByteArrayInputStream(input);
     Decoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
-    ReflectDatumReader<Pojo> reflectDatumReader = new ReflectDatumReader<>(Pojo.class);
+    ReflectData reflectData = ReflectData.AllowNull.get();
+    ReflectDatumReader<Pojo> reflectDatumReader = new ReflectDatumReader<>(reflectData);
+    Schema schema = reflectData.getSchema(Pojo.class);
+    reflectDatumReader.setSchema(schema);
     return reflectDatumReader.read(null, decoder);
   }
 
   private byte[] serializeWithoutNulls(Pojo input) throws IOException {
     // Reflect data that doesn't support nulls
     ReflectData reflectData = ReflectData.get();
-    System.out.println("Schema: " + reflectData.getSchema(input.getClass()));
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
     ReflectDatumWriter<Pojo> datumWriter = new ReflectDatumWriter<>(Pojo.class, reflectData);
@@ -67,7 +68,6 @@ public class TestReflectDatumWithAnonymousEnum {
   private byte[] serialize(Pojo input) throws IOException {
     // Reflect data that supports nulls
     ReflectData reflectData = ReflectData.AllowNull.get();
-    System.out.println("Schema: " + reflectData.getSchema(input.getClass()));
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
     ReflectDatumWriter<Pojo> datumWriter = new ReflectDatumWriter<>(Pojo.class, reflectData);
@@ -113,6 +113,14 @@ public class TestReflectDatumWithAnonymousEnum {
       result = 31 * result + (person != null ? person.hashCode() : 0);
       return result;
     }
+
+    @Override
+    public String toString() {
+      return "Pojo{" +
+        "testEnum=" + testEnum +
+        ", person=" + person +
+        '}';
+    }
   }
 
   public static class Person {
@@ -151,6 +159,14 @@ public class TestReflectDatumWithAnonymousEnum {
       int result = name != null ? name.hashCode() : 0;
       result = 31 * result + (address != null ? address.hashCode() : 0);
       return result;
+    }
+
+    @Override
+    public String toString() {
+      return "Person{" +
+        "name='" + name + '\'' +
+        ", address='" + address + '\'' +
+        '}';
     }
   }
 
