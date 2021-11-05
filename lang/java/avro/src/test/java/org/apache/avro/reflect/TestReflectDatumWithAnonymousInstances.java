@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,16 +35,25 @@ import org.junit.Test;
 /**
  * https://issues.apache.org/jira/browse/AVRO-1851
  */
-public class TestReflectDatumWithAnonymousEnum {
+public class TestReflectDatumWithAnonymousInstances {
   private static Pojo pojo;
 
   @BeforeClass
   public static void init() {
-    pojo = new Pojo();
-    Person person = new Person();
-    person.setAddress("Address");
-    pojo.setTestEnum(TestEnum.V);
-    pojo.setPerson(person);
+    // 1. Anonymous instance
+    pojo = new Pojo() {
+      {
+        // 2. Anonymous instance
+        Person person = new Person() {
+          {
+            setAddress("Address");
+          }
+        };
+        setPerson(person);
+        // 3. Anonymous instance
+        setTestEnum(TestEnum.V);
+      }
+    };
   }
 
   // Properly serializes and deserializes a POJO with an enum instance
@@ -53,14 +63,7 @@ public class TestReflectDatumWithAnonymousEnum {
     byte[] output = serialize(pojo);
     Pojo deserializedPojo = deserialize(output);
     assertEquals(pojo, deserializedPojo);
-  }
-
-  // The test fails because the Schema doesn't support null value for the Person's
-  // name
-  @Test(expected = NullPointerException.class)
-  public void avroEnumWithNotNullTest() throws IOException {
-    byte[] output = serializeWithoutNulls(pojo);
-    deserialize(output);
+    assertTrue(deserializedPojo.getTestEnum().is_V());
   }
 
   private Pojo deserialize(byte[] input) throws IOException {
@@ -71,17 +74,6 @@ public class TestReflectDatumWithAnonymousEnum {
     Schema schema = reflectData.getSchema(Pojo.class);
     reflectDatumReader.setSchema(schema);
     return reflectDatumReader.read(null, decoder);
-  }
-
-  private byte[] serializeWithoutNulls(Pojo input) throws IOException {
-    // Reflect data that doesn't support nulls
-    ReflectData reflectData = ReflectData.get();
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-    ReflectDatumWriter<Pojo> datumWriter = new ReflectDatumWriter<>(Pojo.class, reflectData);
-    datumWriter.write(input, encoder);
-    encoder.flush();
-    return outputStream.toByteArray();
   }
 
   private byte[] serialize(Pojo input) throws IOException {
@@ -95,7 +87,7 @@ public class TestReflectDatumWithAnonymousEnum {
     return outputStream.toByteArray();
   }
 
-  public static class Pojo {
+  private static class Pojo {
     private TestEnum testEnum;
     private Person person;
 
@@ -119,7 +111,21 @@ public class TestReflectDatumWithAnonymousEnum {
     public boolean equals(Object o) {
       if (this == o)
         return true;
-      if (o == null || getClass() != o.getClass())
+
+      if (o == null)
+        return false;
+
+      Class<?> thisClass = getClass();
+      while (thisClass.isAnonymousClass()) {
+        thisClass = thisClass.getSuperclass();
+      }
+
+      Class<?> oClass = o.getClass();
+      while (oClass.isAnonymousClass()) {
+        oClass = oClass.getSuperclass();
+      }
+
+      if (thisClass != oClass)
         return false;
 
       Pojo pojo = (Pojo) o;
@@ -142,7 +148,7 @@ public class TestReflectDatumWithAnonymousEnum {
     }
   }
 
-  public static class Person {
+  private static class Person {
     private String name;
     private String address;
 
@@ -166,7 +172,21 @@ public class TestReflectDatumWithAnonymousEnum {
     public boolean equals(Object o) {
       if (this == o)
         return true;
-      if (o == null || getClass() != o.getClass())
+
+      if (o == null)
+        return false;
+
+      Class<?> thisClass = getClass();
+      while (thisClass.isAnonymousClass()) {
+        thisClass = thisClass.getSuperclass();
+      }
+
+      Class<?> oClass = o.getClass();
+      while (oClass.isAnonymousClass()) {
+        oClass = oClass.getSuperclass();
+      }
+
+      if (thisClass != oClass)
         return false;
 
       Person person = (Person) o;
