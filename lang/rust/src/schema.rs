@@ -332,29 +332,21 @@ impl RecordField {
 #[derive(Debug, Clone)]
 pub struct UnionSchema {
     pub(crate) schemas: Vec<Schema>,
-    // Used to ensure uniqueness of schema inputs, and provide constant time finding of the
-    // schema index given a value.
-    // **NOTE** that this approach does not work for named types, and will have to be modified
-    // to support that. A simple solution is to also keep a mapping of the names used.
-    variant_index: HashMap<SchemaKind, usize>,
 }
 
 impl UnionSchema {
     pub(crate) fn new(schemas: Vec<Schema>) -> AvroResult<Self> {
-        let mut vindex = HashMap::new();
-        for (i, schema) in schemas.iter().enumerate() {
+        let mut kinds = HashSet::new();
+        for schema in schemas.iter() {
             if let Schema::Union(_) = schema {
                 return Err(Error::GetNestedUnion);
             }
             let kind = SchemaKind::from(schema);
-            if vindex.insert(kind, i).is_some() {
+            if !kinds.insert(kind) && kind != SchemaKind::Record {
                 return Err(Error::GetUnionDuplicate);
             }
         }
-        Ok(UnionSchema {
-            schemas,
-            variant_index: vindex,
-        })
+        Ok(UnionSchema { schemas })
     }
 
     /// Returns a slice to all variants of this schema.
@@ -370,17 +362,10 @@ impl UnionSchema {
     /// Optionally returns a reference to the schema matched by this value, as well as its position
     /// within this union.
     pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
-        let type_index = &SchemaKind::from(value);
-        if let Some(&i) = self.variant_index.get(type_index) {
-            // fast path
-            Some((i, &self.schemas[i]))
-        } else {
-            // slow path (required for matching logical types)
-            self.schemas
-                .iter()
-                .enumerate()
-                .find(|(_, schema)| value.validate(schema))
-        }
+        self.schemas
+            .iter()
+            .enumerate()
+            .find(|(_, schema)| value.validate(schema))
     }
 }
 
@@ -1109,6 +1094,93 @@ mod tests {
             Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
             schema
         );
+    }
+
+    // <https://issues.apache.org/jira/browse/AVRO-3248>
+    #[test]
+    fn test_union_schema_with_two_records() {
+        let schema = Schema::parse_str(
+            r#"[
+            {
+                "type": "record",
+                "name": "rec1",
+                "fields": [
+                    {"name": "l", "type": "long", "default": 42}
+                ]
+            },
+            {
+                "type": "record",
+                "name": "rec2",
+                "fields": [
+                    {"name": "i", "type": "int", "default": 42}
+                ]
+            }
+        ]"#,
+        )
+        .unwrap();
+
+        let rec1 = Schema::Record {
+            name: Name::new("rec1"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "l".to_string(),
+                doc: None,
+                default: Some(Value::Number(42i64.into())),
+                schema: Schema::Long,
+                order: RecordFieldOrder::Ascending,
+                position: 0,
+            }],
+            lookup: HashMap::new(),
+        };
+        let rec2 = Schema::Record {
+            name: Name::new("rec2"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "i".to_string(),
+                doc: None,
+                default: Some(Value::Number(42i64.into())),
+                schema: Schema::Int,
+                order: RecordFieldOrder::Ascending,
+                position: 1,
+            }],
+            lookup: HashMap::new(),
+        };
+
+        assert_eq!(
+            Schema::Union(UnionSchema::new(vec![rec1, rec2]).unwrap()),
+            schema
+        );
+
+        // the tuple's .0 is the expected index. -1 means that it shouldn't be found
+        let to_look_for = vec![
+            (
+                1,
+                types::Value::Record(vec![("i".to_string(), types::Value::Int(42i32))]),
+            ),
+            (
+                0,
+                types::Value::Record(vec![("l".to_string(), types::Value::Long(42i64))]),
+            ),
+            (
+                -1,
+                types::Value::Record(vec![("unknown".to_string(), types::Value::Boolean(false))]),
+            ),
+        ];
+
+        match schema {
+            Schema::Union(u) => {
+                for json_union in to_look_for.iter() {
+                    let found = u.find_schema(&json_union.1);
+                    match found {
+                        Some(f) => {
+                            assert_eq!(f.0 as i32, json_union.0);
+                        }
+                        _ => assert_eq!(-1, json_union.0),
+                    }
+                }
+            }
+            _ => unreachable!("Unexpected schema type: {:?}", schema),
+        }
     }
 
     #[test]
