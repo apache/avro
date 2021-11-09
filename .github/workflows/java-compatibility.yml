@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["5.1", "6.8.3"]
+        gradle: ["5.1", "7.2"]
         java: ["8", "9", "10", "11", "12"]
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.0", "6.8.3"]
+        gradle: ["6.0", "7.2"]
         java: ["13"]
     steps:
       - uses: actions/checkout@v2
@@ -46,7 +46,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.3", "6.8.3"]
+        gradle: ["6.3", "7.2"]
         java: ["14"]
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +65,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.7", "6.8.3"]
+        gradle: ["6.7", "7.2"]
         java: ["15"]
     steps:
       - uses: actions/checkout@v2
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["7.1.1", "7.2"] # See here for latest versions: https://services.gradle.org/versions/
+        gradle: ["7.0", "7.2"] # See here for latest versions: https://services.gradle.org/versions/
         java: ["16"]
     steps:
       - uses: actions/checkout@v2
@@ -103,7 +103,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["7.2"] # See here for latest versions: https://services.gradle.org/versions/
+        gradle: ["7.3-rc-5"] # See here for latest versions: https://services.gradle.org/versions/
         java: ["17", "18-ea"]
       fail-fast: false
     steps:
