@@ -44,8 +44,8 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         and: "the stringType is string"
         content.contains("public java.lang.String getName()")
 
-        and: "the fieldVisibility is PUBLIC_DEPRECATED"
-        content.contains("@Deprecated public java.lang.String name;")
+        and: "the fieldVisibility is PRIVATE"
+        content.contains("private java.lang.String name;")
 
         and: "the default template is used"
         !content.contains("Custom template")
@@ -122,7 +122,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         FieldVisibility.PRIVATE.name().toLowerCase() | "private java.lang.String name;"
         FieldVisibility.PRIVATE.name()               | "private java.lang.String name;"
         FieldVisibility.PUBLIC.name()                | "public java.lang.String name;"
-        FieldVisibility.PUBLIC_DEPRECATED.name()     | "@Deprecated public java.lang.String name;"
     }
 
     @Unroll
@@ -300,7 +299,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then:
         result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
+        result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PRIVATE]")
     }
 
     @Unroll

@@ -9,7 +9,7 @@ repositories {
 }
 
 ext {
-    avroVersion = "1.10.1"
+    avroVersion = "1.11.0"
 }
 
 dependencies {

@@ -44,7 +44,7 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |    isCreateOptionalGetters.set(false)
         |    isGettersReturnOptional.set(false)
         |    isOptionalGettersForNullableFieldsOnly.set(false)
-        |    fieldVisibility.set("PUBLIC_DEPRECATED")
+        |    fieldVisibility.set("PUBLIC")
         |    outputCharacterEncoding.set("UTF-8")
         |    stringType.set("String")
         |    templateDirectory.set(null as String?)

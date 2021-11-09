@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+* Built using Avro 1.11.0
+* Default field visibility is now "PRIVATE" to match Avro's new default, as "PUBLIC_DEPRECATED" is no longer supported in Avro 1.11.0
 * Built using Gradle 7.2
 * Updated compatibility testing through Gradle 7.2
 * `GenerateAvroProtocolTask` now has a debug log to output its classpath

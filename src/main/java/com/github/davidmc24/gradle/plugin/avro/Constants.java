@@ -34,7 +34,7 @@ class Constants {
     static final String UTF8_ENCODING = "UTF-8";
 
     static final String DEFAULT_STRING_TYPE = StringType.String.name();
-    static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
+    static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PRIVATE.name();
     static final boolean DEFAULT_CREATE_SETTERS = true;
     static final boolean DEFAULT_CREATE_OPTIONAL_GETTERS = false;
     static final boolean DEFAULT_GETTERS_RETURN_OPTIONAL = false;
