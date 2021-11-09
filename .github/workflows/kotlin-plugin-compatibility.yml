@@ -82,12 +82,13 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"] # Latest version that this plugin supports
-        gradle: ["6.8.3"] # Latest version that this plugin supports
+        gradle: ["7.2"] # Latest version that this plugin supports
         java: ["11"] # Latest LTS version that this plugin supports
         kotlin: [
             # Earlier versions lack support for either Java 10+ or Gradle 6+
             "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
-            "1.4.0", "1.4.10", "1.4.20", "1.4.21", "1.4.30", "1.4.31", "1.4.32"
+            "1.4.0", "1.4.10", "1.4.20", "1.4.21", "1.4.30", "1.4.31", "1.4.32",
+            "1.5.0", "1.5.10", "1.5.20", "1.5.21", "1.5.30", "1.5.31"
         ]
     steps:
       - uses: actions/checkout@v2
