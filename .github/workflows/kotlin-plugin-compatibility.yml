@@ -6,7 +6,7 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.9.0"] # Minimum version that this plugin supports
+        avro: ["1.11.0"] # Minimum version that this plugin supports
         gradle: ["5.1"] # Minimum version that this plugin supports
         java: ["8"] # Minimum version that this plugin supports
         kotlin: [
@@ -32,7 +32,7 @@ jobs:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        avro: ["1.9.0"] # Minimum version that this plugin supports
+        avro: ["1.11.0"] # Minimum version that this plugin supports
         gradle: ["5.3"] # Minimum version supported by these versions of the Kotlin plugin
         java: ["8"] # Minimum version that this plugin supports
         kotlin: [
