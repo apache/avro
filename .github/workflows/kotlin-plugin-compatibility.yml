@@ -22,11 +22,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
   java8-gradle5_3:
     name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
@@ -45,11 +43,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
   java11-gradle5_6_4:
     name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
@@ -70,11 +66,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
   java11_gradle_6_9_1: # This version breaks on Gradle 7.0 or later
     name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
@@ -90,11 +84,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
   java11-gradle_latest: # These versions breaks on Java 17 or later; see https://youtrack.jetbrains.com/issue/KT-43704
     name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
@@ -112,11 +104,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
   modern:
     name: "Compatibility: kotlin ${{ matrix.kotlin }}/gradle ${{ matrix.gradle }}/java ${{ matrix.java }}"
     runs-on: "ubuntu-latest"
@@ -137,8 +127,6 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testKotlinPluginCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }} -PkotlinPluginVersion=${{ matrix.kotlin }}

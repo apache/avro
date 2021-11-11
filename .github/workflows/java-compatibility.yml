@@ -16,11 +16,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java13:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -35,11 +33,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java14:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -54,11 +50,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java15:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -73,11 +67,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java16:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -92,11 +84,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java17:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -111,11 +101,9 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
   java-ea:
     name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
     runs-on: "ubuntu-latest"
@@ -131,9 +119,7 @@ jobs:
         with:
           distribution: "zulu"
           java-version: ${{ matrix.java }}
-      - uses: eskatos/gradle-command-action@v1
+      - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
-          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+          arguments: testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
