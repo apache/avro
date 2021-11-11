@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 1.3.0
 * Built using Avro 1.11.0
 * Dropped support for Avro 1.9.0-1.10.2 due to use of new SpecificRecordBuilderBase constructor in Avro 1.11.0
 * Default field visibility is now "PRIVATE" to match Avro's new default, as "PUBLIC_DEPRECATED" is no longer supported in Avro 1.11.0
