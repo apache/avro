@@ -162,7 +162,7 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
         self.input.first().map_or(
             Err(de::Error::custom("A record must have a least one field")),
             |item| match (item.0.as_ref(), &item.1) {
-                ("type", Value::String(x)) => Ok((
+                ("type", Value::String(x)) | ("type", Value::Enum(_, x)) => Ok((
                     seed.deserialize(StringDeserializer {
                         input: x.to_owned(),
                     })?,
@@ -173,7 +173,7 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
                     field
                 ))),
                 (_, _) => Err(de::Error::custom(
-                    "Expected first field of type String for the type name".to_string(),
+                    "Expected first field of type String or Enum for the type name".to_string(),
                 )),
             },
         )
@@ -250,7 +250,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             | Value::TimestampMicros(i) => visitor.visit_i64(*i),
             &Value::Float(f) => visitor.visit_f32(f),
             &Value::Double(d) => visitor.visit_f64(d),
-            Value::Union(u) => match **u {
+            Value::Union(_i, u) => match **u {
                 Value::Null => visitor.visit_unit(),
                 Value::Boolean(b) => visitor.visit_bool(b),
                 Value::Int(i) => visitor.visit_i32(i),
@@ -316,7 +316,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                     .map_err(|e| de::Error::custom(e.to_string()))
                     .and_then(|s| visitor.visit_string(s))
             }
-            Value::Union(ref x) => match **x {
+            Value::Union(_i, ref x) => match **x {
                 Value::String(ref s) => visitor.visit_string(s.to_owned()),
                 _ => Err(de::Error::custom("not a string|bytes|fixed")),
             },
@@ -354,8 +354,8 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::Union(ref inner) if inner.as_ref() == &Value::Null => visitor.visit_none(),
-            Value::Union(ref inner) => visitor.visit_some(&Deserializer::new(inner)),
+            Value::Union(_i, ref inner) if inner.as_ref() == &Value::Null => visitor.visit_none(),
+            Value::Union(_i, ref inner) => visitor.visit_some(&Deserializer::new(inner)),
             _ => Err(de::Error::custom("not a union")),
         }
     }
@@ -398,7 +398,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-            Value::Union(ref inner) => match **inner {
+            Value::Union(_i, ref inner) => match **inner {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
                 _ => Err(de::Error::custom("not an array")),
             },
@@ -446,7 +446,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
-            Value::Union(ref inner) => match **inner {
+            Value::Union(_i, ref inner) => match **inner {
                 Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
                 _ => Err(de::Error::custom("not a record")),
             },
@@ -781,7 +781,7 @@ mod tests {
                 ("type".to_owned(), Value::String("Double".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(Box::new(Value::Double(64.0))),
+                    Value::Union(1, Box::new(Value::Double(64.0))),
                 ),
             ]),
         )]);
@@ -804,7 +804,7 @@ mod tests {
                 ("type".to_owned(), Value::String("Val1".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(Box::new(Value::Record(vec![
+                    Value::Union(0, Box::new(Value::Record(vec![
                         ("x".to_owned(), Value::Float(1.0)),
                         ("y".to_owned(), Value::Float(2.0)),
                     ]))),
@@ -830,7 +830,7 @@ mod tests {
                 ("type".to_owned(), Value::String("Val1".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(Box::new(Value::Array(vec![
+                    Value::Union(0, Box::new(Value::Array(vec![
                         Value::Float(1.0),
                         Value::Float(2.0),
                     ]))),

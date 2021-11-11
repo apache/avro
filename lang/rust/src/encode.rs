@@ -124,12 +124,13 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             },
             Value::Fixed(_, bytes) => buffer.extend(bytes),
             Value::Enum(i, _) => encode_int(*i, buffer),
-            Value::Union(item) => {
+            Value::Union(i, item) => {
                 if let Schema::Union(ref inner) = *schema {
                     // Find the schema that is matched here. Due to validation, this should always
                     // return a value.
-                    let (idx, inner_schema) = inner
-                        .find_schema(item)
+                    let inner_schema = inner
+                        .schemas
+                        .get(*i as usize)
                         .expect("Invalid Union validation occurred");
                     encode_long(idx as i64, buffer);
                     encode_ref0(&*item, inner_schema, buffer, schemas_by_name);
