@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["5.1", "7.2"]
+        gradle: ["5.1", "7.3"]
         java: ["8", "9", "10", "11", "12"]
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.0", "7.2"]
+        gradle: ["6.0", "7.3"]
         java: ["13"]
     steps:
       - uses: actions/checkout@v2
@@ -46,7 +46,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.3", "7.2"]
+        gradle: ["6.3", "7.3"]
         java: ["14"]
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +65,7 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["6.7", "7.2"]
+        gradle: ["6.7", "7.3"]
         java: ["15"]
     steps:
       - uses: actions/checkout@v2
@@ -84,8 +84,27 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["7.0", "7.2"] # See here for latest versions: https://services.gradle.org/versions/
+        gradle: ["7.0", "7.3"] # See here for latest versions: https://services.gradle.org/versions/
         java: ["16"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "zulu"
+          java-version: ${{ matrix.java }}
+      - uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: --no-daemon --info --stacktrace testCompatibility -PavroVersion=${{ matrix.avro }} -PgradleVersion=${{ matrix.gradle }}
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+  java17:
+    name: "Compatibility: java ${{ matrix.java }}/gradle ${{ matrix.gradle }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        avro: ["1.11.0"]
+        gradle: ["7.3"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["17"]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v2
@@ -103,8 +122,8 @@ jobs:
     strategy:
       matrix:
         avro: ["1.11.0"]
-        gradle: ["7.3-rc-5"] # See here for latest versions: https://services.gradle.org/versions/
-        java: ["17", "18-ea"]
+        gradle: ["7.3"] # See here for latest versions: https://services.gradle.org/versions/
+        java: ["18-ea"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2

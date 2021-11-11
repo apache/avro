@@ -205,7 +205,7 @@ if (JavaVersion.current().java10Compatible) {
     sourceCompatibility = 8
 }
 
-def latestKotlinVersion = "1.4.21"
+def latestKotlinVersion = "1.5.31"
 
 test {
     useJUnitPlatform()

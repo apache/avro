@@ -4,9 +4,10 @@
 * Built using Avro 1.11.0
 * Dropped support for Avro 1.9.0-1.10.2 due to use of new SpecificRecordBuilderBase constructor in Avro 1.11.0
 * Default field visibility is now "PRIVATE" to match Avro's new default, as "PUBLIC_DEPRECATED" is no longer supported in Avro 1.11.0
-* Built using Gradle 7.2
-* Updated compatibility testing through Gradle 7.2
+* Built using Gradle 7.3
+* Updated compatibility testing through Gradle 7.3
 * Updated compatibility testing through Kotlin 1.5.31
+* Added compatibility with Java 17
 * `GenerateAvroProtocolTask` now has a debug log to output its classpath
 * `GenerateAvroProtocolTask` will no longer delegate to the system classloader
 
