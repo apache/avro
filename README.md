@@ -24,6 +24,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 * Support for Kotlin
     * Currently tested against Kotlin plugin versions 1.3.20-1.3.72 and 1.4.0-1.4.32 and 1.5.0-1.5.31 using the latest compatible version of Gradle
     * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
+    * Kotlin plugin version 1.3.30 is not compatible with Gradle 7.0+
     * Kotlin plugin versions starting with 1.4.0 require Gradle 5.3+
     * Kotlin plugin versions prior to 1.3.20 do not support Gradle 6.0+
     * Kotlin plugin versions prior to 1.2.30 do not support Java 10+
