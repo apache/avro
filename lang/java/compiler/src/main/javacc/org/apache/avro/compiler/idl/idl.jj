@@ -1587,11 +1587,15 @@ Token AnyIdentifier():
    t = <FALSE> |
    t = <FIXED> |
    t = <FLOAT> |
+   t = <IDL> |
+   t = <IMPORT> |
    t = <INT> |
    t = <LONG> |
    t = <MAP> |
+   t = <ONEWAY> |
    t = <BYTES> |
    t = <STRING> |
+   t = <NULL> |
    t = <PROTOCOL> |
    t = <RECORD> |
    t = <SCHEMA> |

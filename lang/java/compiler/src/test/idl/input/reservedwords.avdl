@@ -19,4 +19,9 @@
 protocol Foo {
   void `error`();
   void `void`();
+  void `idl`();
+  void `import`();
+  void `oneway`();
+  void `null`();
+  void `local_timestamp_ms`();
 }
