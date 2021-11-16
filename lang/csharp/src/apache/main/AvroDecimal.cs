@@ -159,7 +159,7 @@ namespace Avro
         {
             if (newScale < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(newScale), "Must be greater than or queal to 0");
+                throw new ArgumentOutOfRangeException(nameof(newScale), "Must be greater than or equal to 0");
             }
 
             if (this.Scale == newScale)
