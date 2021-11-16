@@ -70,6 +70,42 @@ namespace Avro.Test
             Assert.Throws<ArgumentOutOfRangeException>(() => avroDecimal.ConvertToBaseValue(decimalVal, schema));
         }
 
+        [TestCase]
+        public void TestDecimalScalesDown()
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }");
+
+            var avroDecimal = new Avro.Util.Decimal();
+            var decimalVal = (AvroDecimal)1234.500M; // scale is 1 and should re-scale to 2
+
+            var convertedDecimalVal = (AvroDecimal)avroDecimal.ConvertToLogicalValue(avroDecimal.ConvertToBaseValue(decimalVal, schema), schema);
+            Assert.AreEqual((decimal)decimalVal, (decimal)convertedDecimalVal);
+        }
+
+        [TestCase]
+        public void TestDecimalScalesDownToZero()
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 0 }");
+
+            var avroDecimal = new Avro.Util.Decimal();
+            var decimalVal = (AvroDecimal)1234.0000M; // scale is 1 and should re-scale to 2
+
+            var convertedDecimalVal = (AvroDecimal)avroDecimal.ConvertToLogicalValue(avroDecimal.ConvertToBaseValue(decimalVal, schema), schema);
+            Assert.AreEqual((decimal)decimalVal, (decimal)convertedDecimalVal);
+        }
+
+        [TestCase]
+        public void TestDecimalScalesUp()
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }");
+
+            var avroDecimal = new Avro.Util.Decimal();
+            var decimalVal = (AvroDecimal)1234.5M; // scale is 1 and should re-scale to 2
+
+            var convertedDecimalVal = (AvroDecimal)avroDecimal.ConvertToLogicalValue(avroDecimal.ConvertToBaseValue(decimalVal, schema), schema);
+            Assert.AreEqual((decimal)decimalVal, (decimal)convertedDecimalVal);
+        }
+
         [TestCase("01/01/2019")]
         [TestCase("05/05/2019")]
         [TestCase("05/05/2019 00:00:00Z")]

@@ -66,16 +66,22 @@ namespace Avro.Util
         {
             var decimalValue = (AvroDecimal)logicalValue;
             var logicalScale = GetScalePropertyValueFromSchema(schema);
-            var scale = decimalValue.Scale;
 
-            if (scale != logicalScale)
-                throw new ArgumentOutOfRangeException(nameof(logicalValue), $"The decimal value has a scale of {scale} which cannot be encoded against a logical 'decimal' with a scale of {logicalScale}");
+            // Re-scale if necessary and possible
+            try
+            {
+                decimalValue = decimalValue.ReScale(logicalScale);
+            }
+            catch (OverflowException ex)
+            {
+                throw new ArgumentOutOfRangeException("Failed to re-scale decimal to desired logical scale.", ex);
+            }
 
             var buffer = decimalValue.UnscaledValue.ToByteArray();
 
             Array.Reverse(buffer);
 
-            return Schema.Type.Bytes == schema.BaseSchema.Tag
+            return schema.BaseSchema.Tag == Schema.Type.Bytes
                 ? (object)buffer
                 : (object)new GenericFixed(
                     (FixedSchema)schema.BaseSchema,

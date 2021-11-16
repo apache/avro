@@ -140,6 +140,55 @@ namespace Avro
             return number;
         }
 
+        /// <summary>
+        /// Returns a new <see cref="AvroDecimal"/> which represents the same underlying real number as this instance but
+        /// with a scale specified by <paramref name="newScale"/> and <see cref="UnscaledValue"/> adjusted accordingly.
+        /// </summary>
+        /// <param name="newScale">The new scale to use</param>
+        /// <returns>
+        /// A new <see cref="AvroDecimal"/> which represents the same value as this instance but
+        /// whose <see cref="Scale"/> is set to <paramref name="newScale"/> and whose <see cref="UnscaledValue"/>
+        /// is adjusted accordingly.
+        /// </returns>
+        /// <exception cref="OverflowException">
+        /// When <paramref name="newScale"/> is less than the existing <see cref="Scale"/>
+        /// but reducing the scale of <see cref="UnscaledValue"/> would result in data loss.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="newScale"/> was negative</exception>
+        public AvroDecimal ReScale(int newScale)
+        {
+            if (newScale < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(newScale), "Must be greater than or queal to 0");
+            }
+
+            if (this.Scale == newScale)
+            {
+                return this;
+            }
+
+            var scaleDifference = Math.Abs(this.Scale - newScale);
+            var adjustment = BigInteger.Pow(10, scaleDifference);
+
+            if (newScale > this.Scale)
+            {
+                // to scale up, simply multiply the unscaled value by a power of 10
+                var newValue = BigInteger.Multiply(this.UnscaledValue, adjustment);
+
+                return new AvroDecimal(newValue, newScale);
+            }
+
+            // to scale-down, divide the unscaled value by that power of 10
+            // And then we need to make sure there is no data loss
+            var reducedValue = BigInteger.DivRem(this.UnscaledValue, adjustment, out var remainder);
+            if (!remainder.IsZero)
+            {
+                throw new OverflowException($"Scaling this {nameof(AvroDecimal)} down to {newScale} from {this.Scale} would result in the loss of precision.  Value: {this}");
+            }
+
+            return new AvroDecimal(reducedValue, newScale);
+        }
+
         public static bool operator ==(AvroDecimal left, AvroDecimal right)
         {
             return left.Equals(right);
