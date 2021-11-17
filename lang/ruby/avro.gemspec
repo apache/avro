@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   s.metadata["bug_tracker_uri"] = "https://issues.apache.org/jira/browse/AVRO"
   s.metadata["source_code_uri"] = "https://github.com/apache/avro"
   s.metadata["documentation_uri"] = "https://avro.apache.org/docs/#{s.version}/"
+  s.metadata["rubygems_mfa_required"] = "true"
 
   files = File.read("Manifest").split("\n")
   s.files = files.reject { |f| f.start_with?("test/") }
