@@ -50,7 +50,7 @@ protocol Simple {
     /** The status of the record. */
     Status status = "A";
 
-    @foo("bar") MD5 hash = "0000000000000000";
+    MD5 hash = "0000000000000000";
 
     union {null, MD5} @aliases(["hash", "hsh"]) nullableHash = null;
 

@@ -63,6 +63,7 @@ package org.apache.avro.compiler.idl;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1068,8 +1069,7 @@ Schema UnionDefinition():
   List<Schema> schemata = new ArrayList<Schema>();
 }
 {
- // TODO should probably disallow other unions here in the parser?
-
+  // Don't disallow unions here: its constructor disallows nested unions and throws a descriptive exception.
   "union"
   "{"
   s = Type()
@@ -1141,7 +1141,7 @@ List<String> EnumBody():
 }
 {
   "{"
-  [ EnumConstant(symbols) ( LOOKAHEAD(2) "," EnumConstant(symbols) )* ]
+  [ EnumConstant(symbols) ( "," EnumConstant(symbols) )* ]
   "}"
   {
     return symbols;
@@ -1317,17 +1317,9 @@ void FieldDeclaration(List<Field> fields):
   Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-  // TODO should we be able to specify properties on any Type?
-  // or just on field declarations as done here
-
-  ( SchemaProperty(props) )*
   type = Type()
   VariableDeclarator(type, fields) ( "," VariableDeclarator(type, fields) )*
   ";"
-  {
-    for (String key : props.keySet())
-      Accessor.addProp(type, key, props.get(key));
-  }
 }
 
 void VariableDeclarator(Schema type, List<Field> fields):
@@ -1440,16 +1432,27 @@ Schema Type():
 {
 
     ( SchemaProperty(props) )*
+  s = UnannotatedType(props)
+  {
+    for (String key : props.keySet())
+      Accessor.addProp(s, key, props.get(key));
+    return s;
+  }
+}
+
+Schema UnannotatedType(Map<String, JsonNode> props):
+{
+  Schema s;
+}
+{
   (
-      LOOKAHEAD(2) s = ReferenceType()
+      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
     | s = PrimitiveType()
     | s = UnionDefinition()
     | s = ArrayType()
     | s = MapType()
   )
   {
-    for (String key : props.keySet())
-      Accessor.addProp(s, key, props.get(key));
     return s;
   }
 }
@@ -1543,9 +1546,8 @@ Schema ResultType():
   Schema schema;
 }
 {
-  LOOKAHEAD(2)
     "void"          { return Schema.create(Type.NULL); }
-  | schema = Type() { return schema; }
+  | schema = UnannotatedType(Collections.emptyMap()) { return schema; }
 }
 
 String PropertyName():
