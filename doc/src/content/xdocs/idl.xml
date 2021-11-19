@@ -301,17 +301,32 @@ record Card {
         <section id="unions">
           <title>Unions</title>
           <p>Union types are denoted as <code>union { typeA, typeB, typeC, ... }</code>. For example,
-          this record contains a string field that is optional (unioned with <code>null</code>):
+          this record contains a string field that is optional (unioned with <code>null</code>), and
+          a field containing either a precise or a imprecise number:
           </p>
           <source>
 record RecordWithUnion {
   union { null, string } optionalString;
+  union { decimal(12, 6), float } number;
 }
           </source>
           <p>
             Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the
-            JSON format; namely, a record may not contain multiple elements of the same type.
+            JSON format; namely, a record may not contain multiple elements of the same type. Also,
+            fields/parameters that use the union type and have a default parameter must specify a
+            default value of the same type as the <em>first</em>em> union type.
           </p>
+          <p>Because it occurs so often, there is a special shorthand to denote a union of
+            <code>null</code> with another type. The following two fields have identical types:
+          </p>
+          <source>
+record RecordWithUnion {
+  union { null, string } optionalString1;
+  string? optionalString2;
+}
+          </source>
+          <p>Note that the union contains the <code>null</code> type first, so the only allowed default
+            value is <code>null</code>.</p>
         </section> <!-- unions -->
       </section> <!-- complex types -->
     </section> <!-- how to define records -->

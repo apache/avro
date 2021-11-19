@@ -999,6 +999,7 @@ TOKEN :
 | < EQUALS: "=" >
 | < DOT: "." >
 | < DASH: "-" >
+| < QUESTION_MARK: "?" >
 }
 
 TOKEN :
@@ -1434,8 +1435,6 @@ Schema Type():
     ( SchemaProperty(props) )*
   s = UnannotatedType(props)
   {
-    for (String key : props.keySet())
-      Accessor.addProp(s, key, props.get(key));
     return s;
   }
 }
@@ -1446,13 +1445,40 @@ Schema UnannotatedType(Map<String, JsonNode> props):
 }
 {
   (
-      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
-    | s = PrimitiveType()
-    | s = UnionDefinition()
-    | s = ArrayType()
-    | s = MapType()
+    s = NullableType(props)
+    | (
+        s = UnionDefinition()
+        | s = ArrayType()
+        | s = MapType()
+      )
+      {
+        // NullableType also applies properties, inside any union with null it may create.
+        for (String key : props.keySet())
+          Accessor.addProp(s, key, props.get(key));
+      }
   )
   {
+    return s;
+  }
+}
+
+Schema NullableType(Map<String, JsonNode> props):
+{
+  Schema s;
+  boolean optional = false;
+}
+{
+  (
+      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
+    | s = PrimitiveType()
+  ) [ <QUESTION_MARK> { optional = true; } ]
+  {
+    // By applying the properties here (before creating the union), type annotations modify the optional type instead of the union.
+    for (String key : props.keySet())
+      Accessor.addProp(s, key, props.get(key));
+    if (optional) {
+      s = Schema.createUnion(Schema.create(Schema.Type.NULL), s);
+    }
     return s;
   }
 }
