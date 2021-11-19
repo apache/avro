@@ -8,7 +8,7 @@
       "fields": [
         { "name":"name", "type": "string", "doc":"the name" },
         { "name": "value", "type": "string", "doc": "the value" },
-        { "name": "type", "type": { "type": "enum", "name":"ValueType", "symbols": ["JSON","BASE64BIN","PLAIN"] } }
+        { "name": "type", "type": { "type": "enum", "name":"ValueType", "symbols": ["JSON","BASE64BIN","PLAIN"] }, "default": "PLAIN" }
       ]
     }
   ],

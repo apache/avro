@@ -1349,7 +1349,7 @@ void VariableDeclarator(Schema type, List<Field> fields):
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
-    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    boolean validate = SchemaResolver.isFullyResolvedSchema(type);
     Field field = Accessor.createField(name, type, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore

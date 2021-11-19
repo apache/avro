@@ -36,9 +36,6 @@ protocol Simple {
     C
   } = C;
 
-  /** An MD5 hash. */
-  fixed MD5(16);
-
   /** A TestRecord. */
   @my-property({"key":3})
   record TestRecord {
@@ -62,6 +59,9 @@ protocol Simple {
     @foo.bar("bar.foo") long l = 0;
     union {null, @foo.foo.bar(42) @foo.foo.foo("3foo") string} prop = null;
   }
+
+  /** An MD5 hash. */
+  fixed MD5(16);
 
   error TestError {
     string message;
