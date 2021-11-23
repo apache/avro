@@ -1315,7 +1315,6 @@ private void SchemaProperty(Map<String, JsonNode> properties):
 void FieldDeclaration(List<Field> fields):
 {
   Schema type;
-  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
   type = Type()
