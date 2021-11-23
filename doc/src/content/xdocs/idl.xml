@@ -254,6 +254,14 @@ record Job {
   decimal(9,2) finishRatio;
 }
         </source>
+        <p>Logical types can also be specified via an annotation, which is useful for logical types for which a keyword does not exist:</p>
+        <source>
+record Job {
+  string jobid;
+  @logicalType("timestamp-micros")
+  long finishTime;
+}
+        </source>
       </section>
 
       <section id="schema_references">
