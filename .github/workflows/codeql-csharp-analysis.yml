@@ -56,18 +56,13 @@ jobs:
         fetch-depth: 2
 
     # Install .NET SDKs
-    - name: Setup .NET Core 3.1
+    - name: Setup .NET SDKs
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.x
-    - name: Setup .NET 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.x
-    - name: Setup .NET 6.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          3.1.x
+          5.0.x
+          6.0.x
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
