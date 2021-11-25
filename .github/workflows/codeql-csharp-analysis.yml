@@ -56,7 +56,7 @@ jobs:
         fetch-depth: 2
 
     # Install .NET SDKs
-    - name: Setup .NET SDKs
+    - name: Install .NET SDKs
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: |
