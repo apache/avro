@@ -235,6 +235,39 @@ class TestLogicalTypes < Test::Unit::TestCase
     end
   end
 
+  def test_uuid
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "string", "logicalType": "uuid" }
+    SCHEMA
+
+    assert_equal 'uuid', schema.logical_type
+    uuid = '123e4567-e89b-12d3-a456-426614174000'
+    assert_encode_and_decode uuid, schema
+    assert_preencoded Avro::LogicalTypes::UUIDString.encode(uuid), schema, uuid
+  end
+
+  def test_uuid_empty_string_error
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "string", "logicalType": "uuid" }
+    SCHEMA
+
+    assert_equal 'uuid', schema.logical_type
+    assert_raise ArgumentError do
+      encode('', schema)
+    end
+  end
+
+  def test_uuid_invalid_format_error
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "string", "logicalType": "uuid" }
+    SCHEMA
+
+    assert_equal 'uuid', schema.logical_type
+    assert_raise ArgumentError do
+      encode('invalid-uuid-format', schema)
+    end
+  end
+
   def encode(datum, schema)
     buffer = StringIO.new
     encoder = Avro::IO::BinaryEncoder.new(buffer)
