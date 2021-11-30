@@ -85,7 +85,7 @@ module Avro
       private
 
       def validate_recursive(expected_schema, logical_datum, path, result, options)
-        datum = resolve_datum(expected_schema, logical_datum, options[:encoded])
+        datum = resolve_datum(expected_schema, logical_datum, RECURSIVE_SIMPLE_VALIDATION_OPTIONS)
 
         validate_simple(expected_schema, datum, path, result, RECURSIVE_SIMPLE_VALIDATION_OPTIONS)
 
