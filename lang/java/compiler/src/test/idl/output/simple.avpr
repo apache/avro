@@ -18,8 +18,7 @@
     "type" : "fixed",
     "name" : "MD5",
     "doc" : "An MD5 hash.",
-    "size" : 16,
-    "foo" : "bar"
+    "size" : 16
   }, {
     "type" : "record",
     "name" : "TestRecord",
