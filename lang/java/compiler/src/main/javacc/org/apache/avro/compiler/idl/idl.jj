@@ -1551,14 +1551,15 @@ Schema ResultType():
 String PropertyName():
 {
   Token t;
+  String s;
   StringBuilder name = new StringBuilder();
 }
 {
-  t = <IDENTIFIER>   { name.append(t.image); }
+  s = Identifier()   { name.append(s); }
   ( t = <DASH>       { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); } |
+    s = Identifier() { name.append(s); } |
     t = <DOT>        { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); }
+    s = Identifier() { name.append(s); }
   ) *
   { return name.toString(); }
 }
