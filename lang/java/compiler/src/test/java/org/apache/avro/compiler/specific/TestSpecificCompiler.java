@@ -350,7 +350,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use LocalDateTime for local-timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaType(localTimestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -374,7 +375,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use ByteBuffer type", "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -765,8 +767,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -789,8 +791,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -904,6 +906,24 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(1, itWorksFound);
+  }
+
+  @Test
+  public void testPojoWithUUID() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    File avsc = new File("src/main/resources/logical-uuid.avsc");
+    compiler.compileToDestination(avsc, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("guid")) {
+          assertTrue(line.contains("java.util.UUID"));
+        }
+      }
+    }
   }
 
   public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
