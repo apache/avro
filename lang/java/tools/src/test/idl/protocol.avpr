@@ -1,7 +1,7 @@
 {
   "protocol" : "Simple",
   "namespace" : "org.apache.avro.test",
-  "doc" : "* An example protocol in Avro IDL",
+  "doc" : "An example protocol in Avro IDL",
   "types" : [ {
     "type" : "enum",
     "name" : "Kind",

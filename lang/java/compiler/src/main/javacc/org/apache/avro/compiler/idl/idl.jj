@@ -96,57 +96,12 @@ public class Idl implements Closeable {
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 
-  private static class DocComment {
-      private String text;
-      private int line;
-      private int column;
-      DocComment(Token token) {
-          // The token is everything after the initial '/**', including all whitespace and the ending '*/'
-          int tokenLength = token.image.length();
-          this.text = token.image.substring(0, tokenLength-2)./*replaceAll("[ \\t]*(\\r|\\r\\n|\\n)[ \\t]*\\*?[ \\t]*", "$1").*/trim();
-          this.line = token.beginLine;
-          this.column = token.beginColumn - 3; // The preceding token was "/**", and the current match includes everything since (also all whitespace).
-      }
-  }
-  // Using ThreadLocal fields because the generated IdlTokenManager has no reference to the Idl instance but needs to give us the documentation comment.
-  private static final ThreadLocal<DocComment> DOC = new ThreadLocal<DocComment>();
-  private static final ThreadLocal<List<String>> WARNINGS = new ThreadLocal<List<String>>() {
-    @Override protected List<String> initialValue() {
-      return new ArrayList<String>();
-    }};
+  private List<String> parserWarnings = Collections.emptyList();
   /**
    * Return all warnings that were encountered while parsing, once. Subsequent calls before parsing again will return an empty list.
    */
   public List<String> getWarningsAfterParsing() {
-    List<String> warnings = WARNINGS.get();
-    WARNINGS.remove();
-    return warnings;
-  }
-  static void setDoc(Token token) {
-    DocComment newDocComment = new DocComment(token);
-    DocComment oldDocComment = DOC.get();
-    if (oldDocComment != null) {
-      WARNINGS.get().add(String.format(
-          "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\"\n" +
-            "A common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).",
-          newDocComment.line, newDocComment.column, oldDocComment.line, oldDocComment.column, oldDocComment.text));
-    }
-    DOC.set(newDocComment);
-  }
-  static void clearDoc() {
-    DocComment oldDocComment = DOC.get();
-    if (oldDocComment != null) {
-      WARNINGS.get().add(String.format(
-          "Ignoring out-of-place documentation comment at line %d, column %d: \"%s\"\n" +
-          "A common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).",
-          oldDocComment.line, oldDocComment.column, oldDocComment.text));
-    }
-    DOC.remove();
-  }
-  static String getDoc() {
-    DocComment docComment = DOC.get();
-    DOC.remove();
-    return docComment == null ? null : docComment.text;
+    return parserWarnings;
   }
 
   public Idl(File inputFile) throws IOException {
@@ -265,7 +220,7 @@ MORE :
 <DOC_COMMENT>
 SPECIAL_TOKEN :
 {
-  <"*/" > {Idl.setDoc(matchedToken);} : DEFAULT
+  <"*/" > {DocCommentHelper.setDoc(matchedToken);} : DEFAULT
 }
 
 <MULTI_LINE_COMMENT>
@@ -1065,13 +1020,17 @@ TOKEN :
 Protocol CompilationUnit():
 {
   Protocol p;
+  DocCommentHelper.getAndClearWarnings(); // Throw away previous results.
 }
 {
   p = ProtocolDeclaration()
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return SchemaResolver.resolve(p); }
+  {
+    parserWarnings = DocCommentHelper.getAndClearWarnings();
+    return SchemaResolver.resolve(p);
+  }
 }
 
 /*
@@ -1100,7 +1059,7 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
      } else if ("aliases".equals(key)) {          // aliases
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
-     } else {                                     // add all other props
+     } else {                                     // add all other properties
        Accessor.addProp(s, key, props.get(key));
      }
 
@@ -1147,10 +1106,10 @@ Protocol ProtocolDeclaration():
  "protocol"
    name = Identifier()
  {
-   p = new Protocol(name, getDoc(), namespace);
+   p = new Protocol(name, DocCommentHelper.getDoc(), namespace);
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
-     } else {                                     // add all other props
+     } else {                                     // add all other properties
        Accessor.addProp(p, key, props.get(key));
      }
  }
@@ -1168,7 +1127,7 @@ Schema EnumDeclaration():
   String defaultSymbol = null;
 }
 {
-  "enum" {   String doc = getDoc(); }
+  "enum" {   String doc = DocCommentHelper.getDoc(); }
   name = Identifier()
   symbols = EnumBody()
       [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
@@ -1308,7 +1267,7 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, getDoc(), this.namespace,
+    Schema s = Schema.createFixed(name, DocCommentHelper.getDoc(), this.namespace,
                                   Integer.parseInt(sizeTok.image));
     names.put(s.getFullName(), s);
     return s;
@@ -1329,7 +1288,7 @@ Schema RecordDeclaration():
   name = Identifier()
   {
     Schema result = Schema.createRecord(
-      name, getDoc(), this.namespace, isError);
+      name, DocCommentHelper.getDoc(), this.namespace, isError);
     names.put(result.getFullName(), result);
   }
   "{"
@@ -1387,13 +1346,13 @@ void VariableDeclarator(Schema type, List<Field> fields):
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
     boolean validate = !SchemaResolver.isUnresolvedSchema(type);
-    Field field = Accessor.createField(name, type, getDoc(), defaultValue, validate, order);
+    Field field = Accessor.createField(name, type, DocCommentHelper.getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
-      } else {                                    // add all other props
+      } else {                                    // add all other properties
         Accessor.addProp(field, key, props.get(key));
       }
     fields.add(field);
@@ -1406,7 +1365,7 @@ String MessageDocumentation():
 {
    // Don't parse anything, just return the doc string
    {
-       return getDoc();
+       return DocCommentHelper.getDoc();
    }
 }
 
