@@ -39,7 +39,7 @@ protocol Simple {
   /** A TestRecord. */
   @my-property({"key":3})
   record TestRecord {
-    string @order("ignore") name = "foo";
+    @avro.java.`string`("String") string @order("ignore") name = "foo";
 
     /** The kind of record. */
     Kind @order("descending") kind;
@@ -47,7 +47,7 @@ protocol Simple {
     /** The status of the record. */
     Status status = "A";
 
-    @foo("bar") MD5 hash = "0000000000000000";
+    MD5 hash = "0000000000000000";
 
     union {null, MD5} @aliases(["hash", "hsh"]) nullableHash = null;
 

@@ -20,7 +20,10 @@
     "doc" : "A TestRecord.",
     "fields" : [ {
       "name" : "name",
-      "type" : "string",
+      "type" : {
+        "type": "string",
+        "avro.java.string": "String"
+      },
       "default" : "foo",
       "order" : "ignore"
     }, {
