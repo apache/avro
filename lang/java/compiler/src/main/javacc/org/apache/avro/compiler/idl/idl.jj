@@ -98,7 +98,7 @@ public class Idl implements Closeable {
 
   private List<String> parserWarnings = Collections.emptyList();
   /**
-   * Return all warnings that were encountered while parsing, once. Subsequent calls before parsing again will return an empty list.
+   * Return all warnings that were encountered while parsing.
    */
   public List<String> getWarningsAfterParsing() {
     return parserWarnings;
