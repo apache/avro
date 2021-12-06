@@ -6,7 +6,6 @@
     "type" : "enum",
     "name" : "Kind",
     "symbols" : [ "FOO", "BAR", "BAZ" ],
-    "order" : "descending",
     "aliases" : [ "org.foo.KindOf" ]
   }, {
     "type" : "fixed",
@@ -17,13 +16,12 @@
     "name" : "TestRecord",
     "fields" : [ {
       "name" : "name",
-      "type" : {
-        "type" : "string",
-        "order" : "ignore"
-      }
+      "type" : "string",
+      "order" : "ignore"
     }, {
       "name" : "kind",
-      "type" : "Kind"
+      "type" : "Kind",
+      "order" : "descending"
     }, {
       "name" : "hash",
       "type" : "MD5"
