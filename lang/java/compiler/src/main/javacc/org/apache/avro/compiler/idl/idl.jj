@@ -63,6 +63,7 @@ package org.apache.avro.compiler.idl;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1072,8 +1073,7 @@ Schema UnionDefinition():
   List<Schema> schemata = new ArrayList<Schema>();
 }
 {
- // TODO should probably disallow other unions here in the parser?
-
+  // Don't disallow unions here: its constructor disallows nested unions and throws a descriptive exception.
   "union"
   "{"
   s = Type()
@@ -1145,7 +1145,7 @@ List<String> EnumBody():
 }
 {
   "{"
-  [ EnumConstant(symbols) ( LOOKAHEAD(2) "," EnumConstant(symbols) )* ]
+  [ EnumConstant(symbols) ( "," EnumConstant(symbols) )* ]
   "}"
   {
     return symbols;
@@ -1434,19 +1434,30 @@ Schema Type():
 }
 {
     ( SchemaProperty(props) )*
-  (
-      LOOKAHEAD(2) s = ReferenceType()
-    | s = PrimitiveType()
-    | s = UnionDefinition()
-    | s = ArrayType()
-    | s = MapType()
-  )
+  s = UnannotatedType(props)
   {
     for (String key : props.keySet())
       Accessor.addProp(s, key, props.get(key));
     LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
     if (logicalType != null)
       logicalType.addToSchema(s);
+    return s;
+  }
+}
+
+Schema UnannotatedType(Map<String, JsonNode> props):
+{
+  Schema s;
+}
+{
+  (
+      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
+    | s = PrimitiveType()
+    | s = UnionDefinition()
+    | s = ArrayType()
+    | s = MapType()
+  )
+  {
     return s;
   }
 }
@@ -1540,22 +1551,22 @@ Schema ResultType():
   Schema schema;
 }
 {
-  LOOKAHEAD(2)
     "void"          { return Schema.create(Type.NULL); }
-  | schema = Type() { return schema; }
+  | schema = UnannotatedType(Collections.emptyMap()) { return schema; }
 }
 
 String PropertyName():
 {
   Token t;
+  String s;
   StringBuilder name = new StringBuilder();
 }
 {
-  t = <IDENTIFIER>   { name.append(t.image); }
+  s = Identifier()   { name.append(s); }
   ( t = <DASH>       { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); } |
+    s = Identifier() { name.append(s); } |
     t = <DOT>        { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); }
+    s = Identifier() { name.append(s); }
   ) *
   { return name.toString(); }
 }
