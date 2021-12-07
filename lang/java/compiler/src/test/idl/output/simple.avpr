@@ -64,7 +64,7 @@
       "default": 0
     }, {
       "name": "t",
-      "type": {"type": "int", "logicalType": "time-millis"},
+      "type": [ {"type": "int", "logicalType": "time-millis"}, "null" ],
       "default": 0
     } , {
       "name": "l",

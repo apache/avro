@@ -90,6 +90,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+  private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";
 
   URI inputDir;
   ClassLoader resourceLoader = null;
@@ -180,6 +181,32 @@ public class Idl implements Closeable {
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
+  }
+
+  /**
+   * For "optional schemas" (recognized by the marker property the NullableType
+   * production adds), ensure the null schema is in the right place.
+   *
+   * @param schema       a schema
+   * @param defaultValue the intended default value
+   * @return the schema, or an optional schema with null in the right place
+   */
+  private static Schema fixOptionalSchema(Schema schema, JsonNode defaultValue) {
+    final Object optionalType = schema.getObjectProp(OPTIONAL_NULLABLE_TYPE_PROPERTY);
+    if (optionalType != null) {
+      // The schema is a union schema with 2 types: "null" and a non-"null" schema
+      Schema nullSchema = schema.getTypes().get(0);
+      Schema nonNullSchema = schema.getTypes().get(1);
+      boolean nonNullDefault = defaultValue != null && !defaultValue.isNull();
+
+      // Always return a new schema: this drops the marker property.
+      if (nonNullDefault) {
+        return Schema.createUnion(nonNullSchema, nullSchema);
+      } else {
+        return Schema.createUnion(nullSchema, nonNullSchema);
+      }
+    }
+    return schema;
   }
 
 }
@@ -1342,7 +1369,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
     boolean validate = !SchemaResolver.isUnresolvedSchema(type);
-    Field field = Accessor.createField(name, type, getDoc(), defaultValue, validate, order);
+    Schema fieldType = fixOptionalSchema(type, defaultValue);
+    Field field = Accessor.createField(name, fieldType, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
@@ -1477,6 +1505,8 @@ Schema NullableType(Map<String, JsonNode> props):
       Accessor.addProp(s, key, props.get(key));
     if (optional) {
       s = Schema.createUnion(Schema.create(Schema.Type.NULL), s);
+      // Add a marker property to the union (it will be removed when creating fields)
+      Accessor.addProp(s, OPTIONAL_NULLABLE_TYPE_PROPERTY, BooleanNode.TRUE);
     }
     return s;
   }

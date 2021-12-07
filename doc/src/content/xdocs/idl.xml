@@ -317,16 +317,20 @@ record RecordWithUnion {
             default value of the same type as the <em>first</em>em> union type.
           </p>
           <p>Because it occurs so often, there is a special shorthand to denote a union of
-            <code>null</code> with another type. The following two fields have identical types:
+            <code>null</code> with another type. In the following snippet, the first three fields have
+            identical types:
           </p>
           <source>
 record RecordWithUnion {
-  union { null, string } optionalString1;
-  string? optionalString2;
+  union { null, string } optionalString1 = null;
+  string? optionalString2 = null;
+  string? optionalString3; // No default value
+  string? optionalString4 = "something";
 }
           </source>
-          <p>Note that the union contains the <code>null</code> type first, so the only allowed default
-            value is <code>null</code>.</p>
+          <p>Note that unlike explicit unions, the position of the <code>null</code> type is fluid; it will be
+            the first or last type depending on the default value (if any). So in the example above, all fields
+            are valid.</p>
         </section> <!-- unions -->
       </section> <!-- complex types -->
     </section> <!-- how to define records -->

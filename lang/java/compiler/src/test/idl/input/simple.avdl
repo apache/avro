@@ -57,7 +57,7 @@ protocol Simple {
     double value = NaN;
     float average = -Infinity;
     date d = 0;
-    time_ms t = 0;
+    time_ms? t = 0;
 
     @foo.bar("bar.foo") long l = 0;
     @foo.foo.bar(42) @foo.foo.foo("3foo") string? prop = null;
