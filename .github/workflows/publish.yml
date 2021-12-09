@@ -13,8 +13,7 @@ jobs:
           java-version: 8
       - uses: gradle/gradle-build-action@v2
         with:
-          # For now, release manually; closeAndReleaseSonatypeStagingRepository when I have confidence
-          arguments: publishToSonatype closeSonatypeStagingRepository -PsonatypeUsername=${{ secrets.SONATYPE_USERNAME }} -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }}
+          arguments: publishToSonatype closeAndReleaseSonatypeStagingRepository -PsonatypeUsername=${{ secrets.SONATYPE_USERNAME }} -PsonatypePassword=${{ secrets.SONATYPE_PASSWORD }}
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
