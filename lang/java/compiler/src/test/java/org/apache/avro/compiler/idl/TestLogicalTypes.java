@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestLogicalTypes {
-  private static final Logger LOG = LoggerFactory.getLogger(TestLogicalTypes.class);
-
   private Schema logicalTypeFields;
 
   @Before
@@ -37,8 +35,6 @@ public class TestLogicalTypes {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Idl idl = new Idl(cl.getResourceAsStream("logicalTypes.avdl"), "UTF-8");
     Protocol protocol = idl.CompilationUnit();
-    String json = protocol.toString();
-    LOG.info(json);
 
     logicalTypeFields = protocol.getType("LogicalTypeFields");
   }
