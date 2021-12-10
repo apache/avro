@@ -24,8 +24,6 @@ import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestLogicalTypes {
   private Schema logicalTypeFields;
