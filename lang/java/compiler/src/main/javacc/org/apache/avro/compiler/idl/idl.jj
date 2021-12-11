@@ -1485,9 +1485,9 @@ Schema UnannotatedType(Map<String, JsonNode> props):
         // NullableType also applies properties, inside any union with null it may create.
         for (String key : props.keySet())
           Accessor.addProp(s, key, props.get(key));
-          LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
-          if (logicalType != null)
-            logicalType.addToSchema(s);
+        LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+        if (logicalType != null)
+          logicalType.addToSchema(s);
       }
   )
   {
