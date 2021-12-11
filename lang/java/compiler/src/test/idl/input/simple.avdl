@@ -57,6 +57,7 @@ protocol Simple {
     time_ms t = 0;
 
     @foo.bar("bar.foo") long l = 0;
+    @foo.bar.bar("foo.bar2") array<string> a = [];
     union {null, @foo.foo.bar(42) @foo.foo.foo("3foo") string} prop = null;
   }
 
