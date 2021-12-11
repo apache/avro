@@ -135,7 +135,7 @@ public class TestIdl {
 
       assertEquals(23, warnings.size());
       final String pattern = "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\""
-          + "\nA common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ ).";
+          + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?";
       assertEquals(String.format(pattern, 21, 47, 21, 10, "Dangling Enum1"), warnings.get(0));
       assertEquals(String.format(pattern, 22, 9, 21, 47, "Dangling Enum2"), warnings.get(1));
       assertEquals(String.format(pattern, 23, 9, 22, 9, "Dangling Enum3"), warnings.get(2));

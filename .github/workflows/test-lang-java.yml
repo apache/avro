@@ -103,7 +103,7 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B clean install -DskipTests
+        run: mvn -B install -DskipTests
 
       - name: Create Interop Data Directory
         working-directory: .

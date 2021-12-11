@@ -54,7 +54,7 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     assertEquals(Collections.singletonList(
         "[WARN] Found documentation comment at line 23, column 5. Ignoring previous one at line 22, column 5: \"Ignored Doc Comment\""
-            + "\nA common cause is to use documentation comments ( /** ... */ ) instead of multiline comments ( /* ... */ )."),
+            + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?"),
         log.getLogEntries());
   }
 
