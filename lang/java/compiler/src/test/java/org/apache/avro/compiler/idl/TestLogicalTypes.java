@@ -34,7 +34,7 @@ public class TestLogicalTypes {
     Idl idl = new Idl(cl.getResourceAsStream("logicalTypes.avdl"), "UTF-8");
     Protocol protocol = idl.CompilationUnit();
 
-    logicalTypeFields = protocol.getType("LogicalTypeFields");
+    logicalTypeFields = protocol.getType("org.apache.avro.test.LogicalTypeFields");
   }
 
   @Test
