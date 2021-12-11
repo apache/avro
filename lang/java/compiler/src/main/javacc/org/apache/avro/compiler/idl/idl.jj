@@ -71,6 +71,7 @@ import java.util.Map;
 import java.net.URL;
 
 import org.apache.avro.Schema;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
@@ -1086,6 +1087,9 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
      } else {                                     // add all other props
        Accessor.addProp(s, key, props.get(key));
      }
+   LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+   if (logicalType != null)
+     logicalType.addToSchema(s);
 
    return s;
  }
@@ -1458,7 +1462,6 @@ Schema Type():
   Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-
     ( SchemaProperty(props) )*
   s = UnannotatedType(props)
   {
@@ -1482,6 +1485,9 @@ Schema UnannotatedType(Map<String, JsonNode> props):
         // NullableType also applies properties, inside any union with null it may create.
         for (String key : props.keySet())
           Accessor.addProp(s, key, props.get(key));
+          LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+          if (logicalType != null)
+            logicalType.addToSchema(s);
       }
   )
   {
@@ -1503,6 +1509,9 @@ Schema NullableType(Map<String, JsonNode> props):
     // By applying the properties here (before creating the union), type annotations modify the optional type instead of the union.
     for (String key : props.keySet())
       Accessor.addProp(s, key, props.get(key));
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+    if (logicalType != null)
+      logicalType.addToSchema(s);
     if (optional) {
       s = Schema.createUnion(Schema.create(Schema.Type.NULL), s);
       // Add a marker property to the union (it will be removed when creating fields)
@@ -1672,7 +1681,14 @@ private JsonNode Json() :
 { String s; Token t; JsonNode n; }
 { 
 ( s = JsonString() { n = new TextNode(s); }
-| (t=<INTEGER_LITERAL> { n = new LongNode(Long.parseLong(t.image)); })
+| (t=<INTEGER_LITERAL> {
+  long longValue = Long.parseLong(t.image);
+  int intValue = (int)longValue;
+  if (intValue == longValue)
+    n = new IntNode(intValue);
+  else
+    n = new LongNode(longValue);
+})
 | (t=<FLOATING_POINT_LITERAL> {n=new DoubleNode(Double.parseDouble(t.image));})
 | n=JsonObject()
 | n=JsonArray()
