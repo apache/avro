@@ -1,7 +1,7 @@
 {
   "protocol" : "Simple",
   "namespace" : "org.apache.avro.test",
-  "doc" : "* A simple test case.",
+  "doc" : "A simple test case.",
   "version" : "1.0.5",
   "types" : [ {
     "type" : "enum",

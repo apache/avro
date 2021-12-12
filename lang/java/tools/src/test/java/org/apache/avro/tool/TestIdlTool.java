@@ -17,12 +17,13 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
@@ -30,21 +31,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-public class TestIdlToSchemataTool {
+public class TestIdlTool {
 
   @Test
-  public void testSplitIdlIntoSchemata() throws Exception {
+  public void testWriteIdlAsProtocol() throws Exception {
     String idl = "src/test/idl/protocol.avdl";
-    String outdir = "target/test-split";
+    String protocol = "src/test/idl/protocol.avpr";
+    String outfile = "target/test-protocol.avpr";
 
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    List<String> arglist = Arrays.asList(idl, outdir);
-    new IdlToSchemataTool().run(null, null, new PrintStream(buffer), arglist);
+    List<String> arglist = Arrays.asList(idl, outfile);
+    new IdlTool().run(null, null, new PrintStream(buffer), arglist);
 
-    String[] files = new File(outdir).list();
-    assertEquals(4, files.length);
+    assertEquals(readFileAsString(protocol), readFileAsString(outfile));
 
     String warnings = readPrintStreamBuffer(buffer);
     assertEquals(
@@ -63,6 +64,12 @@ public class TestIdlToSchemataTool {
             + "See the License for the specific language governing permissions and\n" + "limitations under the License."
             + "\"\nDid you mean to use a multiline comment ( /* ... */ ) instead?",
         warnings);
+  }
+
+  private String readFileAsString(String filePath) throws IOException {
+    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+      return reader.lines().collect(Collectors.joining("\n"));
+    }
   }
 
   private String readPrintStreamBuffer(ByteArrayOutputStream buffer) {
