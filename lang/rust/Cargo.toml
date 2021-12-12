@@ -48,7 +48,7 @@ harness = false
 [dependencies]
 byteorder = "1.4.3"
 crc = { version = "1.8.1", optional = true }
-digest = "0.9"
+digest = "0.10"
 libflate = "1.1.1"
 num-bigint = "0.4.2"
 rand = "0.8.4"
