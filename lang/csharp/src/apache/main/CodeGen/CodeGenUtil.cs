@@ -60,8 +60,8 @@ namespace Avro
                 new CodeNamespaceImport("System"),
                 new CodeNamespaceImport("System.Collections.Generic"),
                 new CodeNamespaceImport("System.Text"),
-                new CodeNamespaceImport("Avro"),
-                new CodeNamespaceImport("Avro.Specific") };
+                new CodeNamespaceImport("global::Avro"),
+                new CodeNamespaceImport("global::Avro.Specific") };
 
             FileComment = new CodeCommentStatement(
 @"------------------------------------------------------------------------------
