@@ -19,6 +19,8 @@
 protocol IdlClasspathImportTest {
     import idl "avro/User.avdl";
 
+    /** Ignored Doc Comment */
+    /** IDL User */
     record IdlUserWrapper {
       union { null, test.IdlUser } wrapped;
     }

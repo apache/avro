@@ -85,6 +85,9 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
 
         Protocol p = parser.CompilationUnit();
+        for (String warning : parser.getWarningsAfterParsing()) {
+          getLog().warn(warning);
+        }
         String json = p.toString(true);
         Protocol protocol = Protocol.parse(json);
         final SpecificCompiler compiler = new SpecificCompiler(protocol);

@@ -11,14 +11,14 @@
         "type" : "string",
         "logicalType" : "uuid"
       },
-      "doc" : "* Documentation must be provided for each attribute"
+      "doc" : "Documentation must be provided for each attribute"
     }, {
       "name" : "optionalString",
       "type" : [ "null", {
         "type" : "string",
         "logicalType" : "uuid"
       } ],
-      "doc" : "* a nullable uuid field"
+      "doc" : "a nullable uuid field"
     } ]
   } ],
   "messages" : { }
