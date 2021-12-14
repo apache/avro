@@ -20,7 +20,7 @@ package org.apache.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
+import org.apache.hadoop.mapreduce.lib.output.PathOutputCommitter;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
