@@ -93,7 +93,7 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
    * @return The target output stream.
    */
   protected OutputStream getAvroFileOutputStream(TaskAttemptContext context) throws IOException {
-    Path path = new Path(((FileOutputCommitter) getOutputCommitter(context)).getWorkPath(),
+    Path path = new Path(((PathOutputCommitter) getOutputCommitter(context)).getWorkPath(),
         getUniqueFile(context, context.getConfiguration().get("avro.mo.config.namedOutput", "part"),
             org.apache.avro.mapred.AvroOutputFormat.EXT));
     return path.getFileSystem(context.getConfiguration()).create(path);
