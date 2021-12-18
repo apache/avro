@@ -85,6 +85,7 @@ FIXED_EXAMPLES = [
 ENUM_EXAMPLES = [
     ValidTestSchema({"type": "enum", "name": "Test", "symbols": ["A", "B"]}),
     ValidTestSchema({"type": "enum", "name": "AVRO2174", "symbols": ["nowhitespace"]}),
+    InvalidTestSchema({"type": "enum", "name": "bad_default", "symbols": ["A"], "default": "B"}, comment="AVRO-3229"),
     InvalidTestSchema({"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}),
     InvalidTestSchema({"type": "enum", "name": [0, 1, 1, 2, 3, 5, 8], "symbols": ["Golden", "Mean"]}),
     InvalidTestSchema({"type": "enum", "symbols": ["I", "will", "fail", "no", "name"]}),
