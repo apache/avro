@@ -642,16 +642,16 @@ class TestMisc(unittest.TestCase):
             }
         )
 
-        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
-
         fixed_decimal = fixed_decimal_schema.parse()
         self.assertEqual(4, fixed_decimal.get_prop("precision"))
         self.assertEqual(2, fixed_decimal.get_prop("scale"))
         self.assertEqual(2, fixed_decimal.get_prop("size"))
 
+        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
         bytes_decimal = bytes_decimal_schema.parse()
         self.assertEqual(4, bytes_decimal.get_prop("precision"))
         self.assertEqual(0, bytes_decimal.get_prop("scale"))
+        self.assertEqual("decimal", bytes_decimal.get_prop("logicalType"))
 
     def test_fixed_decimal_valid_max_precision(self):
         # An 8 byte number can represent any 18 digit number.
