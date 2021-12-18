@@ -66,7 +66,11 @@ RUN apt-get -qqy update \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 python3.7 python3.8 python3.9 \
+                                                 python3.6 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
+                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -193,8 +197,5 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $JAVA_HOME/bin:$PATH
-
-
-RUN apt-get -qqy install python3.6 python3.7 python3.9
 
 CMD ["/bin/bash", "-i"]
