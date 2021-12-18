@@ -36,6 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         python:
+        - '3.10'
         - '3.9'
         - '3.8'
         - '3.7'
@@ -64,11 +65,11 @@ jobs:
           python3 -m pip install --upgrade pip setuptools tox-wheel
 
       - name: Lint
-        if: ${{ matrix.python == '3.9' }}
+        if: ${{ matrix.python == '3.10' }}
         run: python3 -m tox -e lint
 
       - name: Typechecks
-        if: ${{ matrix.python == '3.9' }}
+        if: ${{ matrix.python == '3.10' }}
         run: python3 -m tox -e typechecks
 
       - name: Test
@@ -81,6 +82,7 @@ jobs:
       fail-fast: false
       matrix:
         python:
+        - '3.10'
         - '3.9'
         - '3.8'
         - '3.7'
