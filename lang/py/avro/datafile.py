@@ -315,7 +315,7 @@ class DataFileReader(_DataFileMetadata):
     # TODO(hammer): allow user to specify the encoder
 
     def __init__(self, reader: IO[AnyStr], datum_reader: avro.io.DatumReader) -> None:
-        if "b" not in reader.mode:
+        if hasattr(reader, "mode") and "b" not in reader.mode:
             warnings.warn(avro.errors.AvroWarning(f"Reader binary data from a reader {reader!r} that's opened for text"))
         bytes_reader = getattr(reader, "buffer", reader)
         self._reader = bytes_reader
