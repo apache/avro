@@ -36,6 +36,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -63,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -826,11 +828,11 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  private static final Map<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
-    return FIELDS_CACHE.computeIfAbsent(recordClass, rc -> getFields(rc, true));
+    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
