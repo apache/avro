@@ -68,7 +68,7 @@ static const unsigned int count = 10;
  * promote data type, convert from union to plain data type and vice versa,
  * insert or remove fields in records or reorder fields in a record.
  *
- * To test Json encoder and decoder, we use the same technqiue with only
+ * To test Json encoder and decoder, we use the same technique with only
  * one difference - we use JsonEncoder and JsonDecoder.
  *
  * We also use the same infrastructure to test GenericReader and GenericWriter.
