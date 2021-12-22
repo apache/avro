@@ -91,6 +91,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+  private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";
 
   URI inputDir;
   ClassLoader resourceLoader = null;
@@ -181,6 +182,32 @@ public class Idl implements Closeable {
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
+  }
+
+  /**
+   * For "optional schemas" (recognized by the marker property the NullableType
+   * production adds), ensure the null schema is in the right place.
+   *
+   * @param schema       a schema
+   * @param defaultValue the intended default value
+   * @return the schema, or an optional schema with null in the right place
+   */
+  private static Schema fixOptionalSchema(Schema schema, JsonNode defaultValue) {
+    final Object optionalType = schema.getObjectProp(OPTIONAL_NULLABLE_TYPE_PROPERTY);
+    if (optionalType != null) {
+      // The schema is a union schema with 2 types: "null" and a non-"null" schema
+      Schema nullSchema = schema.getTypes().get(0);
+      Schema nonNullSchema = schema.getTypes().get(1);
+      boolean nonNullDefault = defaultValue != null && !defaultValue.isNull();
+
+      // Always return a new schema: this drops the marker property.
+      if (nonNullDefault) {
+        return Schema.createUnion(nonNullSchema, nullSchema);
+      } else {
+        return Schema.createUnion(nullSchema, nonNullSchema);
+      }
+    }
+    return schema;
   }
 
 }
@@ -1000,6 +1027,7 @@ TOKEN :
 | < EQUALS: "=" >
 | < DOT: "." >
 | < DASH: "-" >
+| < QUESTION_MARK: "?" >
 }
 
 TOKEN :
@@ -1349,7 +1377,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
     boolean validate = SchemaResolver.isFullyResolvedSchema(type);
-    Field field = Accessor.createField(name, type, DocCommentHelper.getDoc(), defaultValue, validate, order);
+    Schema fieldType = fixOptionalSchema(type, defaultValue);
+    Field field = Accessor.createField(name, fieldType, DocCommentHelper.getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
@@ -1440,11 +1469,6 @@ Schema Type():
     ( SchemaProperty(props) )*
   s = UnannotatedType(props)
   {
-    for (String key : props.keySet())
-      Accessor.addProp(s, key, props.get(key));
-    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
-    if (logicalType != null)
-      logicalType.addToSchema(s);
     return s;
   }
 }
@@ -1455,13 +1479,48 @@ Schema UnannotatedType(Map<String, JsonNode> props):
 }
 {
   (
-      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
-    | s = PrimitiveType()
-    | s = UnionDefinition()
-    | s = ArrayType()
-    | s = MapType()
+    s = NullableType(props)
+    | (
+        s = UnionDefinition()
+        | s = ArrayType()
+        | s = MapType()
+      )
+      {
+        // NullableType also applies properties, inside any union with null it may create.
+        for (String key : props.keySet())
+          Accessor.addProp(s, key, props.get(key));
+        LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+        if (logicalType != null)
+          logicalType.addToSchema(s);
+      }
   )
   {
+    return s;
+  }
+}
+
+Schema NullableType(Map<String, JsonNode> props):
+{
+  Schema s;
+  boolean optional = false;
+}
+{
+  (
+      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
+    | s = PrimitiveType()
+  ) [ <QUESTION_MARK> { optional = true; } ]
+  {
+    // By applying the properties here (before creating the union), type annotations modify the optional type instead of the union.
+    for (String key : props.keySet())
+      Accessor.addProp(s, key, props.get(key));
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+    if (logicalType != null)
+      logicalType.addToSchema(s);
+    if (optional) {
+      s = Schema.createUnion(Schema.create(Schema.Type.NULL), s);
+      // Add a marker property to the union (it will be removed when creating fields)
+      Accessor.addProp(s, OPTIONAL_NULLABLE_TYPE_PROPERTY, BooleanNode.TRUE);
+    }
     return s;
   }
 }
