@@ -282,6 +282,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   /**
+   * If this is a record, returns whether the fields have been set.
+   */
+  public boolean hasFields() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  /**
    * If this is a record, set its fields. The fields can be set only once in a
    * schema.
    */
@@ -902,6 +909,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (fields == null)
         throw new AvroRuntimeException("Schema fields not set yet");
       return fields;
+    }
+
+    @Override
+    public boolean hasFields() {
+      return fields != null;
     }
 
     @Override
