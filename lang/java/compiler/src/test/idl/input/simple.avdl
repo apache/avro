@@ -36,9 +36,6 @@ protocol Simple {
     C
   } = C; // C is the default value used when reading unknown values from another schema version (without it, reading throws an exception).
 
-  /** An MD5 hash. */
-  fixed MD5(16);
-
   /** A TestRecord. */
   @my-property({"key":3})
   record TestRecord {
@@ -69,6 +66,9 @@ protocol Simple {
     // An optional type with a null default value (results in a union with null first).
     @foo.foo.bar(42) @foo.foo.foo("3foo") string? prop = null;
   }
+
+  /** An MD5 hash. */
+  fixed MD5(16);
 
   error TestError {
     string message;

@@ -1376,7 +1376,7 @@ void VariableDeclarator(Schema type, List<Field> fields):
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
-    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    boolean validate = SchemaResolver.isFullyResolvedSchema(type);
     Schema fieldType = fixOptionalSchema(type, defaultValue);
     Field field = Accessor.createField(name, fieldType, DocCommentHelper.getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())

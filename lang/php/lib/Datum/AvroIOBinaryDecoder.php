@@ -34,7 +34,6 @@ use Apache\Avro\AvroIO;
  */
 class AvroIOBinaryDecoder
 {
-
     /**
      * @var AvroIO
      */

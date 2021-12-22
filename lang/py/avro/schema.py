@@ -583,6 +583,11 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         if doc is not None:
             self.set_prop("doc", doc)
 
+        if other_props and "default" in other_props:
+            default = other_props["default"]
+            if default not in symbols:
+                raise avro.errors.InvalidDefault(f"Enum default '{default}' is not a valid member of symbols '{symbols}'")
+
     @property
     def symbols(self) -> Sequence[str]:
         symbols = self.get_prop("symbols")
@@ -1067,7 +1072,7 @@ def get_other_props(all_props: Mapping[str, object], reserved_props: Sequence[st
 
 def make_bytes_decimal_schema(other_props):
     """Make a BytesDecimalSchema from just other_props."""
-    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0))
+    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0), other_props)
 
 
 def make_logical_schema(logical_type, type_, other_props):
