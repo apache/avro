@@ -15,11 +15,6 @@
    "symbols" : [ "A", "B", "C" ],
    "default" : "C"
   }, {
-    "type" : "fixed",
-    "name" : "MD5",
-    "doc" : "An MD5 hash.",
-    "size" : 16
-  }, {
     "type" : "record",
     "name" : "TestRecord",
     "doc" : "A TestRecord.",
@@ -43,7 +38,12 @@
       "default" : "A"
     }, {
       "name" : "hash",
-      "type" : "MD5",
+      "type" : {
+        "type" : "fixed",
+        "name" : "MD5",
+        "doc" : "An MD5 hash.",
+        "size" : 16
+      },
       "default" : "0000000000000000"
     }, {
       "name" : "nullableHash",
