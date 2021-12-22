@@ -558,7 +558,10 @@ namespace Avro
 
             // declare the class
             var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchema.Name));
-            ctd.BaseTypes.Add(isError ? "SpecificException" : "ISpecificRecord");
+            var baseTypeReference = new CodeTypeReference(
+                isError ? typeof(Specific.SpecificException) : typeof(Specific.ISpecificRecord),
+                CodeTypeReferenceOptions.GlobalReference);
+            ctd.BaseTypes.Add(baseTypeReference);
 
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
@@ -675,14 +678,14 @@ namespace Avro
             }
 
             // end switch block for Get()
-            getFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
+            getFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
                 .Append("\t\t\t}");
             var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
             cmmGet.Statements.Add(cseGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
-            putFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
+            putFieldStmt.AppendLine("\t\t\tdefault: throw new global::Avro.AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
                 .Append("\t\t\t}");
             var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
             cmmPut.Statements.Add(csePut);
@@ -831,14 +834,14 @@ namespace Avro
         protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag)
         {
             // create schema field
-            var ctrfield = new CodeTypeReference("Schema");
+            var ctrfield = new CodeTypeReference(typeof(Schema), CodeTypeReferenceOptions.GlobalReference);
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);
             codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static;
             // create function call Schema.Parse(json)
             var cpe = new CodePrimitiveExpression(schema.ToString());
             var cmie = new CodeMethodInvokeExpression(
-                new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(typeof(Schema)), "Parse"),
+                new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(ctrfield), "Parse"),
                 new CodeExpression[] { cpe });
             codeField.InitExpression = cmie;
             ctd.Members.Add(codeField);
