@@ -90,6 +90,26 @@
       "request" : [ ],
       "response" : "null"
     },
+    "idl" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "import" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "oneway" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "null" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "local_timestamp_ms" : {
+      "request" : [ ],
+      "response" : "null"
+    },
     "bar" : {
       "request" : [ ],
       "response" : "null"
