@@ -15,7 +15,7 @@
     }, {
       "name" : "uuid",
       "type" : "string",
-      "doc" : "* A string field with a special name"
+      "doc" : "A string field with a special name"
     }, {
       "name" : "optionalString",
       "type" : [ "null", {
