@@ -38,7 +38,7 @@
 
     <!-- version properties for dependencies -->
     <hadoop.version>3.3.1</hadoop.version>
-    <jackson.version>2.12.5</jackson.version>
+    <jackson.version>2.13.1</jackson.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.43.v20210629</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
