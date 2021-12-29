@@ -167,6 +167,48 @@ namespace Avro.Test
             }
         }
 
+        [TestCase("{ \"type\": \"null\", \"metafield\": \"abc\" }", Schema.Type.Null)]
+        [TestCase("{ \"type\": \"boolean\", \"metafield\": \"abc\" }", Schema.Type.Boolean)]
+        [TestCase("{ \"type\": \"int\", \"metafield\": \"abc\" }", Schema.Type.Int)]
+        [TestCase("{ \"type\": \"long\", \"metafield\": \"abc\" }", Schema.Type.Long)]
+        [TestCase("{ \"type\": \"float\", \"metafield\": \"abc\" }", Schema.Type.Float)]
+        [TestCase("{ \"type\": \"double\", \"metafield\": \"abc\" }", Schema.Type.Double)]
+        [TestCase("{ \"type\": \"bytes\", \"metafield\": \"abc\" }", Schema.Type.Bytes)]
+        [TestCase("{ \"type\": \"string\", \"metafield\": \"abc\" }", Schema.Type.String)]
+        public void TestPrimitiveWithMetadata(string s, Schema.Type type)
+        {
+            Schema sc1 = Schema.Parse(s);
+            Assert.IsTrue(sc1 is PrimitiveSchema);
+            Assert.AreEqual(type.ToString().ToLower(), sc1.Name);
+            Assert.AreEqual(type, sc1.Tag);
+
+            testEquality(s, sc1);
+            testToString(sc1);
+
+            Assert.True(sc1.ToString().Contains("metafield"));
+
+            var recordSchemaString = "{\"type\":\"record\",\"name\":\"Foo\"," +
+                "\"fields\":[{\"name\":\"f1\",\"type\":" + s +
+                "}]}";
+            Schema sc2 = Schema.Parse(recordSchemaString);
+            Assert.AreEqual(Schema.Type.Record, sc2.Tag);
+            RecordSchema rs = sc2 as RecordSchema;
+            Assert.AreEqual(1, rs.Count);
+
+            Assert.IsTrue(rs["f1"].Schema is PrimitiveSchema);
+            Assert.AreEqual(type.ToString().ToLower(), rs["f1"].Schema.Name);
+            Assert.AreEqual(type, rs["f1"].Schema.Tag);
+
+            testEquality(recordSchemaString, sc2);
+            testToString(rs["f1"].Schema);
+
+            Assert.True(sc2.ToString().Contains("metafield"));
+            Assert.True(rs["f1"].Schema.ToString().Contains("metafield"));
+
+            Assert.True(sc1.Equals(rs["f1"].Schema));
+            Assert.AreEqual(sc1.GetHashCode(),rs["f1"].Schema.GetHashCode());
+        }
+
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
             "\"fields\":[{\"name\":\"f1\",\"type\":\"long\"}," +
             "{\"name\":\"f2\",\"type\": \"int\"}]}",

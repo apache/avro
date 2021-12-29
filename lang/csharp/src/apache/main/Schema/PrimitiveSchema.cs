@@ -82,7 +82,19 @@ namespace Avro
         /// <param name="encspace"></param>
         protected internal override void WriteJson(JsonTextWriter w, SchemaNames names, string encspace)
         {
-            w.WriteValue(Name);
+            if(this.Props != null && this.Props.Count > 0)
+            {
+                w.WriteStartObject();
+                w.WritePropertyName("type");
+                w.WriteValue(Name);
+                foreach(var prop in Props)
+                {
+                    w.WritePropertyName(prop.Key);
+                    w.WriteRawValue(prop.Value);
+                }
+                w.WriteEndObject();
+            }
+            else w.WriteValue(Name);
         }
 
         /// <summary>
