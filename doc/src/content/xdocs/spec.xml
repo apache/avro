@@ -307,7 +307,8 @@
 	  fullname <code>org.foo.X</code>.</li>
 	  <li>A name only is specified, i.e., a name that contains no
 	  dots.  In this case the namespace is taken from the most
-	  tightly enclosing schema or protocol.  For example,
+	  tightly enclosing schema or protocol, and the fullname is
+    constructed from that namespace and the name.  For example,
 	  if <code>"name": "X"</code> is specified, and this occurs
 	  within a field of the record definition
 	  of <code>org.foo.Y</code>, then the fullname
