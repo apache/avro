@@ -90,7 +90,7 @@
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the record (required).</li>
-	    <li><code>namespace</code>, a JSON string that qualifies the name;</li>
+	    <li><code>namespace</code>, a JSON string that qualifies the name (optional);</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
@@ -165,7 +165,7 @@
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the enum (required).</li>
-	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><em>namespace</em>, a JSON string that qualifies the name (optional);</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
 	      alternate names for this enum (optional).</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
@@ -257,7 +257,7 @@
           the following attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a string naming this fixed (required).</li>
-	    <li><code>namespace</code>, a string that qualifies the name;</li>
+	    <li><code>namespace</code>, a string that qualifies the name (optional);</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
 	      alternate names for this enum (optional).</li>
       <li><code>doc</code>: a JSON string providing documentation to the
@@ -273,61 +273,125 @@
       </section> <!-- end complex types -->
 
       <section id="names">
-	<title>Names</title>
-        <p>Record, enums and fixed are named types.  Each has
+        <title>Names</title>
+        <p>Record, enums and fixed are named types. Each has
           a <em>fullname</em> that is composed of two parts;
-          a <em>name</em> and a <em>namespace</em>.  Equality of names
-          is defined on the fullname.</p>
-	<p>The name portion of a fullname, record field names, and
-	  enum symbols must:</p>
-	<ul>
-          <li>start with <code>[A-Za-z_]</code></li>
-          <li>subsequently contain only <code>[A-Za-z0-9_]</code></li>
-	</ul>
+          a <em>name</em> and a <em>namespace</em>. Equality of names
+          is defined on the fullname.
+        </p>
+        <p>The name portion of a fullname, record field names, and
+          enum symbols must:
+        </p>
+        <ul>
+          <li>start with
+            <code>[A-Za-z_]</code>
+          </li>
+          <li>subsequently contain only
+            <code>[A-Za-z0-9_]</code>
+          </li>
+        </ul>
         <p>A namespace is a dot-separated sequence of such names.
-        The empty string may also be used as a namespace to indicate the
-        null namespace.
-        Equality of names (including field names and enum symbols)
-        as well as fullnames is case-sensitive.</p>
-        <p> The null namespace may not be used in a dot-separated
-        sequence of names.  So the grammar for a namespace
-        is:</p>
-        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code></p>
+          The empty string may also be used as a namespace to indicate the
+          null namespace.
+          Equality of names (including field names and enum symbols)
+          as well as fullnames is case-sensitive.
+        </p>
+        <p>The null namespace may not be used in a dot-separated
+          sequence of names. So the grammar for a namespace
+          is:
+        </p>
+        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code>
+        </p>
+
         <p>In record, enum and fixed definitions, the fullname is
-        determined in one of the following ways:</p>
-	<ul>
-	  <li>A name and namespace are both specified.  For example,
-	  one might use <code>"name": "X", "namespace":
-	  "org.foo"</code> to indicate the
-	  fullname <code>org.foo.X</code>.</li>
-	  <li>A fullname is specified.  If the name specified contains
-	  a dot, then it is assumed to be a fullname, and any
-	  namespace also specified is ignored.  For example,
-	  use <code>"name": "org.foo.X"</code> to indicate the
-	  fullname <code>org.foo.X</code>.</li>
-	  <li>A name only is specified, i.e., a name that contains no
-	  dots.  In this case the namespace is taken from the most
-	  tightly enclosing schema or protocol, and the fullname is
-    constructed from that namespace and the name.  For example,
-	  if <code>"name": "X"</code> is specified, and this occurs
-	  within a field of the record definition
-	  of <code>org.foo.Y</code>, then the fullname
-	  is <code>org.foo.X</code>. If there is no enclosing
-	  namespace then the null namespace is used.</li>
-	</ul>
-	<p>References to previously defined names are as in the latter
-	two cases above: if they contain a dot they are a fullname, if
-	they do not contain a dot, the namespace is the namespace of
-	the enclosing definition.</p>
-	<p>Primitive type names have no namespace and their names may
-	not be defined in any namespace.</p>
-	<p> A schema or protocol may not contain multiple definitions
-	of a fullname.  Further, a name must be defined before it is
-	used ("before" in the depth-first, left-to-right traversal of
-	the JSON parse tree, where the <code>types</code> attribute of
-	a protocol is always deemed to come "before" the
-	<code>messages</code> attribute.)
-	</p>
+          determined according to the algorithm below the example:
+        </p>
+        <source>
+{
+  "type": "record",
+  "name": "Example",
+  "doc": "A simple name (attribute) and no namespace attribute: use the null namespace (\"\"); the fullname is 'Example'.",
+  "fields": [
+    {
+      "name": "inheritNull",
+      "type": {
+        "type": "enum",
+        "name": "Simple",
+        "doc": "A simple name (attribute) and no namespace attribute: inherit the null namespace of the enclosing type 'Example'. The fullname is 'Simple'.",
+        "symbols": ["a", "b"]
+      }
+    }, {
+      "name": "explicitNamespace",
+      "type": {
+        "type": "fixed",
+        "name": "simple",
+        "namespace": "explicit",
+        "doc": "A simple name (attribute) and a namespace (attribute); the fullname is 'explicit.Simple' (this is a different type than of the 'inheritNull' field)",
+        "size": 12
+      }
+    }, {
+      "name": "fullName",
+      "type": {
+        "type": "record",
+        "name": "a.full.Name",
+        "namespace": "ignored",
+        "doc": "A name attribute with a fullname, so the namespace attribute is ignored. The fullname is 'a.full.Name', and the namespace is 'a.full'.",
+        "fields": [
+          {
+            "name": "inheritNamespace",
+            "type": {
+              "type": "enum",
+              "name": "Understanding",
+              "doc": "A simple name (attribute) and no namespace attribute: inherit the namespace of the enclosing type 'a.full.Name'. The fullname is 'a.full.Understanding'.",
+              "symbols": ["d", "e"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+        </source>
+        <p>The fullname of a record, enum or fixed definition is determined by
+          the required `name` and optional `namespace` attributes like this:</p>
+        <ul>
+          <li>A fullname is specified. If the name specified contains
+            a dot, then it is assumed to be a fullname, and <em>any
+              namespace also specified is ignored</em>. For example,
+            use <code>"name": "org.foo.X"</code> to indicate the
+            fullname <code>org.foo.X</code>.
+          </li>
+          <li>A simple name (a name that contains no dots) and namespace are
+            both specified. For example, one might use
+            <code>"name": "X", "namespace": "org.foo"</code> to indicate the
+            fullname <code>org.foo.X</code>.
+          </li>
+          <li>A simple name only is specified (a name that contains no dots).
+            In this case the namespace is taken from the most tightly enclosing
+            schema or protocol, and the fullname is constructed from that
+            namespace and the name. For example, if <code>"name": "X"</code> is
+            specified, and this occurs within a field of the record definition
+            of <code>org.foo.Y</code>, then the fullname is <code>org.foo.X</code>.
+            This also happens if there is no enclosing namespace (i.e., the
+            enclosing record definition has the null namespace).
+          </li>
+        </ul>
+        <p>References to previously defined names are as in the latter
+          two cases above: if they contain a dot they are a fullname, if
+          they do not contain a dot, the namespace is the namespace of
+          the enclosing definition.
+        </p>
+        <p>Primitive type names have no namespace and their names may
+          not be defined in any namespace.
+        </p>
+        <p>A schema or protocol may not contain multiple definitions
+          of a fullname. Further, a name must be defined before it is
+          used ("before" in the depth-first, left-to-right traversal of
+          the JSON parse tree, where the <code>types</code> attribute of
+          a protocol is always deemed to come "before" the
+          <code>messages</code>
+          attribute.)
+        </p>
       </section>
 
       <section>
@@ -834,9 +898,8 @@
 
       <p>A protocol is a JSON object with the following attributes:</p>
       <ul>
-        <li><em>protocol</em>, a string, the name of the protocol
-        (required);</li>
-        <li><em>namespace</em>, an optional string that qualifies the name;</li>
+        <li><em>protocol</em>, a string, the name of the protocol (required);</li>
+        <li><em>namespace</em>, an optional string that qualifies the name (optional);</li>
         <li><em>doc</em>, an optional string describing this protocol;</li>
         <li><em>types</em>, an optional list of definitions of named types
           (records, enums, fixed and errors).  An error definition is
