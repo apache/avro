@@ -22,10 +22,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<Player> ENCODER =
-      new BinaryMessageEncoder<Player>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<Player> DECODER =
-      new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -49,7 +49,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<Player> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**

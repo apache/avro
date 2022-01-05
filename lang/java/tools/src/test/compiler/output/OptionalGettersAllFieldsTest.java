@@ -22,10 +22,10 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
   private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<OptionalGettersAllFieldsTest> ENCODER =
-      new BinaryMessageEncoder<OptionalGettersAllFieldsTest>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<OptionalGettersAllFieldsTest> DECODER =
-      new BinaryMessageDecoder<OptionalGettersAllFieldsTest>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -49,7 +49,7 @@ public class OptionalGettersAllFieldsTest extends org.apache.avro.specific.Speci
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<OptionalGettersAllFieldsTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<OptionalGettersAllFieldsTest>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**
