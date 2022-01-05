@@ -52,7 +52,6 @@ public class TestGenericDatumWriter {
     GenericRecord r = new GenericData.Record(s);
     r.put("f", 100);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    EncoderFactory.get().jsonEncoder(s, bao);
     try {
       new GenericDatumWriter<>(s).write(r, EncoderFactory.get().jsonEncoder(s, bao));
       fail();

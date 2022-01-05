@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -2720,10 +2719,10 @@ public class SchemaBuilder {
         // special case since GenericData.toString() is incorrect for bytes
         // note that this does not handle the case of a default value with nested bytes
         ByteBuffer bytes = ((ByteBuffer) o);
-        ((Buffer) bytes).mark();
+        bytes.mark();
         byte[] data = new byte[bytes.remaining()];
         bytes.get(data);
-        ((Buffer) bytes).reset(); // put the buffer back the way we got it
+        bytes.reset(); // put the buffer back the way we got it
         s = new String(data, StandardCharsets.ISO_8859_1);
         char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";
