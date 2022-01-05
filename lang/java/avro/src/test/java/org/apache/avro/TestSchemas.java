@@ -45,6 +45,7 @@ public class TestSchemas {
   static final Schema STRING_MAP_SCHEMA = Schema.createMap(STRING_SCHEMA);
 
   static final Schema ENUM1_AB_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B"));
+  static final Schema ENUM1_AB_SCHEMA_DEFAULT = Schema.createEnum("Enum1", null, null, list("A", "B"), "A");
   static final Schema ENUM1_AB_SCHEMA_NAMESPACE_1 = Schema.createEnum("Enum1", null, "namespace1", list("A", "B"));
   static final Schema ENUM1_AB_SCHEMA_NAMESPACE_2 = Schema.createEnum("Enum1", null, "namespace2", list("A", "B"));
   static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B", "C"));

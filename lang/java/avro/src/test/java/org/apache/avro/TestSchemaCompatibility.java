@@ -39,6 +39,7 @@ import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
 import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_DEFAULT;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
 import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
@@ -261,7 +262,7 @@ public class TestSchemaCompatibility {
       new ReaderWriter(INT_MAP_SCHEMA, INT_MAP_SCHEMA), new ReaderWriter(LONG_MAP_SCHEMA, INT_MAP_SCHEMA),
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA), new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
-
+      new ReaderWriter(ENUM1_AB_SCHEMA_DEFAULT, ENUM1_ABC_SCHEMA),
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA_NAMESPACE_1),
       new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA),
       new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA_NAMESPACE_2),
