@@ -44,7 +44,7 @@ matrix:
             - wget
       install:
         - export MAVEN_VERSION="3.8.3"
-        - wget https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+        - wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
         - tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
         - export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
         - export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64"
@@ -96,8 +96,9 @@ matrix:
             - wget
       install:
         - wget https://dot.net/v1/dotnet-install.sh
-        - bash dotnet-install.sh                   # 3.1
-        - bash dotnet-install.sh --channel Current # 5.0
+        - bash ./dotnet-install.sh --version "3.1.402" --install-dir "/home/ubuntu/.dotnet" --architecture "arm64" --os "linux"   # 3.1
+        - bash ./dotnet-install.sh --version "5.0.101" --install-dir "/home/ubuntu/.dotnet" --architecture "arm64" --os "linux" # 5.0
+        - bash ./dotnet-install.sh --channel Current # 6.0
       before_script:
         - export PATH=$HOME/.dotnet:$PATH
         - dotnet --list-sdks
