@@ -1291,6 +1291,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Sha256 uses an inline assembly instructions which is not supported by miri
     fn test_schema_fingerprint() {
         use crate::rabin::Rabin;
         use md5::Md5;
