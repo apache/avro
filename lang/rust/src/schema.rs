@@ -714,14 +714,13 @@ impl Parser {
                     );
                 }
                 "timestamp-millis" => {
-                    return match logical_verify_type(complex, &[SchemaKind::Long], self) {
-                        Ok(_) => Ok(Schema::TimestampMillis),
-                        Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                            Value::String(typ) if typ == "string" => Ok(Schema::String),
-                            _ => Err(Error::GetLogicalTypeVariant(json_value)),
-                        },
-                        Err(error) => Err(error),
-                    }
+                    return try_logical_type(
+                        "timestamp-millis",
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimestampMillis,
+                        self,
+                    );
                 }
                 "timestamp-micros" => {
                     return try_logical_type(
