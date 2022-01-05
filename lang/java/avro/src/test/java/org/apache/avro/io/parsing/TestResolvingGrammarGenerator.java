@@ -43,6 +43,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
+
 @RunWith(Parameterized.class)
 public class TestResolvingGrammarGenerator {
   private final Schema schema;
@@ -85,13 +88,9 @@ public class TestResolvingGrammarGenerator {
 
   @Test
   public void testDifferingEnumNamespaces() throws Exception {
-    Schema enumSchema1 = SchemaBuilder.builder().enumeration("Enum").namespace("namespace1").symbols("Symbol1",
-        "Symbol2");
-    Schema enumSchema2 = SchemaBuilder.builder().enumeration("Enum").namespace("namespace2").symbols("Symbol1",
-        "Symbol2");
-    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(enumSchema1).noDefault().endRecord();
-    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(enumSchema2).noDefault().endRecord();
-    GenericData.EnumSymbol genericEnumSymbol = new GenericData.EnumSymbol(enumSchema1, "Symbol1");
+    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_1).noDefault().endRecord();
+    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_2).noDefault().endRecord();
+    GenericData.EnumSymbol genericEnumSymbol = new GenericData.EnumSymbol(ENUM1_AB_SCHEMA_NAMESPACE_1, "A");
     GenericData.Record record = new GenericRecordBuilder(schema1).set("field", genericEnumSymbol).build();
     byte[] data = writeRecord(schema1, record);
     Assert.assertEquals(genericEnumSymbol, readRecord(schema1, data).get("field"));
