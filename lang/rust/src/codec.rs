@@ -26,6 +26,10 @@ use bzip2::{
     read::{BzDecoder, BzEncoder},
     Compression,
 };
+#[cfg(feature = "snappy")]
+extern crate crc32fast;
+#[cfg(feature = "snappy")]
+use crc32fast::Hasher;
 
 /// The compression codec used to compress blocks.
 #[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
@@ -79,8 +83,10 @@ impl Codec {
                     .compress(&stream[..], &mut encoded[..])
                     .map_err(Error::SnappyCompress)?;
 
-                let crc = crc::crc32::checksum_ieee(&stream[..]);
-                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], crc);
+                let mut hasher = Hasher::new();
+                hasher.update(&stream[..]);
+                let checksum = hasher.finalize();
+                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], checksum);
                 encoded.truncate(compressed_size + 4);
 
                 *stream = encoded;
@@ -127,7 +133,9 @@ impl Codec {
                     .map_err(Error::SnappyDecompress)?;
 
                 let expected = byteorder::BigEndian::read_u32(&stream[stream.len() - 4..]);
-                let actual = crc::crc32::checksum_ieee(&decoded);
+                let mut hasher = Hasher::new();
+                hasher.update(&decoded);
+                let actual = hasher.finalize();
 
                 if expected != actual {
                     return Err(Error::SnappyCrc32 { expected, actual });
