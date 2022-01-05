@@ -22,10 +22,10 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   private static final SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<OptionalGettersNullableFieldsTest> ENCODER =
-      new BinaryMessageEncoder<OptionalGettersNullableFieldsTest>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<OptionalGettersNullableFieldsTest> DECODER =
-      new BinaryMessageDecoder<OptionalGettersNullableFieldsTest>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -49,7 +49,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<OptionalGettersNullableFieldsTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<OptionalGettersNullableFieldsTest>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**
