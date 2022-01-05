@@ -309,6 +309,12 @@ pub enum Error {
     #[error("Failed to decompress with snappy")]
     SnappyDecompress(#[source] snap::Error),
 
+    #[error("Failed to compress with zstd")]
+    ZstdCompress(#[source] std::io::Error),
+
+    #[error("Failed to decompress with zstd")]
+    ZstdDecompress(#[source] std::io::Error),
+
     #[error("Failed to read header")]
     ReadHeader(#[source] std::io::Error),
 
