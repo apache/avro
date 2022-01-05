@@ -21,6 +21,12 @@ use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
 use strum_macros::{EnumString, IntoStaticStr};
 
+#[cfg(feature = "bzip")]
+use bzip2::{
+    read::{BzDecoder, BzEncoder},
+    Compression,
+};
+
 /// The compression codec used to compress blocks.
 #[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
@@ -38,6 +44,10 @@ pub enum Codec {
     Snappy,
     #[cfg(feature = "zstandard")]
     Zstd,
+    #[cfg(feature = "bzip")]
+    /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
+    /// compression library.
+    Bzip2,
 }
 
 impl From<Codec> for Value {
@@ -81,6 +91,13 @@ impl Codec {
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
             }
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => {
+                let mut encoder = BzEncoder::new(&stream[..], Compression::best());
+                let mut buffer = Vec::new();
+                encoder.read_to_end(&mut buffer).unwrap();
+                *stream = buffer;
+            }
         };
 
         Ok(())
@@ -122,6 +139,13 @@ impl Codec {
                 let mut decoded = Vec::new();
                 let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
+                decoded
+            }
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => {
+                let mut decoder = BzDecoder::new(&stream[..]);
+                let mut decoded = Vec::new();
+                decoder.read_to_end(&mut decoded).unwrap();
                 decoded
             }
         };
@@ -180,6 +204,18 @@ mod tests {
         assert_eq!(INPUT, stream.as_slice());
     }
 
+    #[cfg(feature = "bzip")]
+    #[test]
+    fn bzip_compress_and_decompress() {
+        let codec = Codec::Bzip2;
+        let mut stream = INPUT.to_vec();
+        codec.compress(&mut stream).unwrap();
+        assert_ne!(INPUT, stream.as_slice());
+        assert!(INPUT.len() > stream.len());
+        codec.decompress(&mut stream).unwrap();
+        assert_eq!(INPUT, stream.as_slice());
+    }
+
     #[test]
     fn codec_to_str() {
         assert_eq!(<&str>::from(Codec::Null), "null");
@@ -190,6 +226,9 @@ mod tests {
 
         #[cfg(feature = "zstandard")]
         assert_eq!(<&str>::from(Codec::Zstd), "zstd");
+
+        #[cfg(feature = "bzip")]
+        assert_eq!(<&str>::from(Codec::Bzip2), "bzip2");
     }
 
     #[test]
@@ -204,6 +243,9 @@ mod tests {
 
         #[cfg(feature = "zstandard")]
         assert_eq!(Codec::from_str("zstd").unwrap(), Codec::Zstd);
+
+        #[cfg(feature = "bzip")]
+        assert_eq!(Codec::from_str("bzip2").unwrap(), Codec::Bzip2);
 
         assert!(Codec::from_str("not a codec").is_err());
     }

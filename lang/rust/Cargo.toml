@@ -31,6 +31,7 @@ documentation = "https://docs.rs/avro-rs"
 [features]
 snappy = ["crc", "snap"]
 zstandard = ["zstd"]
+bzip = ["bzip2"]
 
 [lib]
 path = "src/lib.rs"
@@ -51,6 +52,7 @@ harness = false
 
 [dependencies]
 byteorder = "1.4.3"
+bzip2 = { version = "0.4.3", optional = true }
 crc = { version = "1.8.1", optional = true }
 digest = "0.9"
 libflate = "1.1.1"
