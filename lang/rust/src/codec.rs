@@ -36,6 +36,8 @@ pub enum Codec {
     /// compression library. Each compressed block is followed by the 4-byte, big-endian
     /// CRC32 checksum of the uncompressed data in the block.
     Snappy,
+    #[cfg(feature = "zstandard")]
+    Zstd,
 }
 
 impl From<Codec> for Value {
@@ -73,6 +75,12 @@ impl Codec {
 
                 *stream = encoded;
             }
+            #[cfg(feature = "zstandard")]
+            Codec::Zstd => {
+                let mut encoder = zstd::Encoder::new(Vec::new(), 0).unwrap();
+                encoder.write_all(stream).map_err(Error::ZstdCompress)?;
+                *stream = encoder.finish().unwrap();
+            }
         };
 
         Ok(())
@@ -107,6 +115,13 @@ impl Codec {
                 if expected != actual {
                     return Err(Error::SnappyCrc32 { expected, actual });
                 }
+                decoded
+            }
+            #[cfg(feature = "zstandard")]
+            Codec::Zstd => {
+                let mut decoded = Vec::new();
+                let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
+                std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
                 decoded
             }
         };
@@ -153,6 +168,18 @@ mod tests {
         assert_eq!(INPUT, stream.as_slice());
     }
 
+    #[cfg(feature = "zstandard")]
+    #[test]
+    fn zstd_compress_and_decompress() {
+        let codec = Codec::Zstd;
+        let mut stream = INPUT.to_vec();
+        codec.compress(&mut stream).unwrap();
+        assert_ne!(INPUT, stream.as_slice());
+        assert!(INPUT.len() > stream.len());
+        codec.decompress(&mut stream).unwrap();
+        assert_eq!(INPUT, stream.as_slice());
+    }
+
     #[test]
     fn codec_to_str() {
         assert_eq!(<&str>::from(Codec::Null), "null");
@@ -160,6 +187,9 @@ mod tests {
 
         #[cfg(feature = "snappy")]
         assert_eq!(<&str>::from(Codec::Snappy), "snappy");
+
+        #[cfg(feature = "zstandard")]
+        assert_eq!(<&str>::from(Codec::Zstd), "zstd");
     }
 
     #[test]
@@ -171,6 +201,9 @@ mod tests {
 
         #[cfg(feature = "snappy")]
         assert_eq!(Codec::from_str("snappy").unwrap(), Codec::Snappy);
+
+        #[cfg(feature = "zstandard")]
+        assert_eq!(Codec::from_str("zstd").unwrap(), Codec::Zstd);
 
         assert!(Codec::from_str("not a codec").is_err());
     }
