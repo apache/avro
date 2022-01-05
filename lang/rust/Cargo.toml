@@ -63,7 +63,7 @@ serde_json = "1.0.67"
 serde = { version = "1.0.130", features = ["derive"] }
 snap = { version = "1.0.5", optional = true }
 strum = "0.23.0"
-strum_macros = "0.21.1"
+strum_macros = "0.23.1"
 thiserror = "1.0.29"
 typed-builder = "0.9.1"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
