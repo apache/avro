@@ -79,6 +79,14 @@ version = "x.y"
 features = ["zstandard"]
 ```
 
+Or in case you want to leverage the **Bzip2** codec:
+
+```toml
+[dependencies.avro-rs]
+version = "x.y"
+features = ["bzip"]
+```
+
 ## Upgrading to a newer minor version
 
 The library is still in beta, so there might be backward-incompatible changes between minor
@@ -254,6 +262,8 @@ compressed block is followed by the 4-byte, big-endianCRC32 checksum of the unco
 the block. You must enable the `snappy` feature to use this codec.
 * **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
 You must enable the `zstandard` feature to use this codec.
+* **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
+You must enable the `bzip` feature to use this codec.
 
 To specify a codec to use to compress data, just specify it while creating a `Writer`:
 ```rust
