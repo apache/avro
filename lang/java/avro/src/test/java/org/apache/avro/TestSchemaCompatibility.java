@@ -261,8 +261,6 @@ public class TestSchemaCompatibility {
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA), new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
 
-      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA),
-
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA_NAMESPACE),
 
       // String-to/from-bytes, introduced in Avro 1.7.7
