@@ -785,12 +785,16 @@ impl Parser {
             lookup.insert(field.name.clone(), field.position);
         }
 
-        Ok(Schema::Record {
-            name,
+        let schema = Schema::Record {
+            name: name.clone(),
             doc: complex.doc(),
             fields,
             lookup,
-        })
+        };
+
+        self.parsed_schemas
+            .insert(name.fullname(None), schema.clone());
+        Ok(schema)
     }
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a

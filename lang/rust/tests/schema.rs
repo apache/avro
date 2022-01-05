@@ -15,8 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_schema.py
-use avro_rs::{schema::Name, Error, Schema};
+use avro_rs::{
+    schema::{Name, RecordField},
+    Error, Schema,
+};
 use lazy_static::lazy_static;
 
 fn init() {
@@ -828,6 +830,86 @@ fn test_parse_list_with_cross_deps_and_namespaces_error() {
     let schema_strs_second = [schema_str_2, schema_str_1];
     let _ = Schema::parse_list(&schema_strs_first).expect_err("Test failed");
     let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
+}
+
+#[test]
+// <https://issues.apache.org/jira/browse/AVRO-3216>
+// test that field's RecordSchema could be referenced by a following field by full name
+fn test_parse_reused_record_schema_by_fullname() {
+    init();
+    let schema_str = r#"
+        {
+          "type" : "record",
+          "name" : "Weather",
+          "namespace" : "test",
+          "doc" : "A weather reading.",
+          "fields" : [
+            {
+                "name" : "station",
+                "type" : {
+                  "type" : "string",
+                  "avro.java.string" : "String"
+                }
+             },
+             {
+                "name" : "max_temp",
+                "type" : {
+                  "type" : "record",
+                  "name" : "Temp",
+                  "namespace": "prefix",
+                  "doc" : "A temperature reading.",
+                  "fields" : [ {
+                    "name" : "temp",
+                    "type" : "long"
+                  } ]
+                }
+            }, {
+                "name" : "min_temp",
+                "type" : "prefix.Temp"
+            }
+        ]
+       }
+    "#;
+
+    let schema = Schema::parse_str(schema_str);
+    assert!(schema.is_ok());
+    match schema.unwrap() {
+        Schema::Record {
+            ref name,
+            doc: _,
+            ref fields,
+            lookup: _,
+        } => {
+            assert_eq!(name.fullname(None), "test.Weather", "Name does not match!");
+
+            assert_eq!(fields.len(), 3, "The number of the fields is not correct!");
+
+            let RecordField {
+                ref name,
+                doc: _,
+                default: _,
+                ref schema,
+                order: _,
+                position: _,
+            } = fields.get(2).unwrap();
+
+            assert_eq!(name, "min_temp");
+
+            match schema {
+                Schema::Record {
+                    ref name,
+                    doc: _,
+                    ref fields,
+                    lookup: _,
+                } => {
+                    assert_eq!(name.fullname(None), "prefix.Temp", "Name does not match!");
+                    assert_eq!(fields.len(), 1, "The number of the fields is not correct!");
+                }
+                unexpected => unreachable!("Unexpected schema type: {:?}", unexpected),
+            }
+        }
+        unexpected => unreachable!("Unexpected schema type: {:?}", unexpected),
+    }
 }
 
 /// Return all permutations of an input slice

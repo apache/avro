@@ -319,6 +319,6 @@ fn test_type_exception() -> Result<(), String> {
     match encoded {
         Ok(_) => Err(String::from("Expected ValidationError, got Ok")),
         Err(Error::Validation) => Ok(()),
-        Err(ref e) => Err(format!("Expected ValidationError, got {}", e)),
+        Err(ref e) => Err(format!("Expected ValidationError, got {:?}", e)),
     }
 }
