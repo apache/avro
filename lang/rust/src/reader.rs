@@ -306,8 +306,8 @@ mod tests {
     use super::*;
     use crate::from_value;
     use crate::{types::Record, Reader};
-    use std::io::Cursor;
     use serde::Deserialize;
+    use std::io::Cursor;
 
     const SCHEMA: &str = r#"
     {
@@ -376,7 +376,7 @@ mod tests {
     }
     "#;
     #[derive(Default, Debug, Deserialize, PartialEq)]
-    struct TestRecord {
+    struct TestRecord3240 {
         a: i64,
         b: String,
         a_nullable_array: Option<Vec<String>>,
@@ -406,7 +406,7 @@ mod tests {
         let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
-        let expected_record: TestRecord = TestRecord {
+        let expected_record: TestRecord3240 = TestRecord3240 {
             a: 27i64,
             b: String::from("foo"),
             a_nullable_array: None,
@@ -414,9 +414,12 @@ mod tests {
         };
 
         let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
-        let parsed_record: TestRecord = match &avro_datum {
-            Value::Record(_) => from_value::<TestRecord>(&avro_datum).unwrap(),
-            unexpected => panic!("could not map avro data to struct, found unexpected: {:?}", unexpected),
+        let parsed_record: TestRecord3240 = match &avro_datum {
+            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
+            unexpected => panic!(
+                "could not map avro data to struct, found unexpected: {:?}",
+                unexpected
+            ),
         };
 
         assert_eq!(parsed_record, expected_record);
