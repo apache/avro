@@ -264,7 +264,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
                 Value::String(ref s) => visitor.visit_str(s),
                 Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
-                _ => Err(de::Error::custom(format!("unsupported union: {:?}", self.input))),
+                _ => Err(de::Error::custom(format!(
+                    "unsupported union: {:?}",
+                    self.input
+                ))),
             },
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
             Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
@@ -931,44 +934,117 @@ mod tests {
             ("time_micros_a".to_string(), 123),
             ("timestamp_millis_b".to_string(), 234),
             ("timestamp_micros_c".to_string(), 345),
-        ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
-        let value_map = raw_map.iter()
+        let value_map = raw_map
+            .iter()
             .map(|(k, v)| match k {
-                key  if key.starts_with("long_") => {(k.clone(), Value::Long(*v))}
-                key  if key.starts_with("time_micros_") => {(k.clone(), Value::TimeMicros(*v))}
-                key  if key.starts_with("timestamp_millis_") => {(k.clone(), Value::TimestampMillis(*v))}
-                key  if key.starts_with("timestamp_micros_") => {(k.clone(), Value::TimestampMicros(*v))}
-                _ => unreachable!(""),
+                key if key.starts_with("long_") => (k.clone(), Value::Long(*v)),
+                key if key.starts_with("time_micros_") => (k.clone(), Value::TimeMicros(*v)),
+                key if key.starts_with("timestamp_millis_") => {
+                    (k.clone(), Value::TimestampMillis(*v))
+                }
+                key if key.starts_with("timestamp_micros_") => {
+                    (k.clone(), Value::TimestampMicros(*v))
+                }
+                _ => unreachable!("unexpected key: {:?}", k),
             })
             .collect();
 
         let record = Value::Record(vec![
-            ("a_string".to_string(), Value::String("a valid message field".to_string())),
-            ("a_non_existing_string".to_string(), Value::String("a string".to_string())),
-            ("a_union_string".to_string(), Value::Union(Box::new(Value::String("a union string".to_string())))),
-            ("a_union_long".to_string(), Value::Union(Box::new(Value::Long(412)))),
-            ("a_union_long".to_string(), Value::Union(Box::new(Value::Long(412)))),
-            ("a_time_micros".to_string(), Value::Union(Box::new(Value::TimeMicros(123)))),
-            ("a_non_existing_time_micros".to_string(), Value::Union(Box::new(Value::TimeMicros(-123)))),
-            ("a_timestamp_millis".to_string(), Value::Union(Box::new(Value::TimestampMillis(234)))),
-            ("a_non_existing_timestamp_millis".to_string(), Value::Union(Box::new(Value::TimestampMillis(-234)))),
-            ("a_timestamp_micros".to_string(), Value::Union(Box::new(Value::TimestampMicros(345)))),
-            ("a_non_existing_timestamp_micros".to_string(), Value::Union(Box::new(Value::TimestampMicros(-345)))),
-            ("a_record".to_string(), Value::Union(Box::new(Value::Record(vec!(("record_in_union".to_string(), Value::Int(-2))))))),
-            ("a_non_existing_record".to_string(), Value::Union(Box::new(Value::Record(vec!(("blah".to_string(), Value::Int(-22))))))),
-            ("an_array".to_string(), Value::Union(Box::new(Value::Array(vec!(Value::Boolean(true), Value::Boolean(false)))))),
-            ("a_non_existing_array".to_string(), Value::Union(Box::new(Value::Array(vec!(Value::Boolean(false), Value::Boolean(true)))))),
-            ("a_union_map".to_string(), Value::Union(Box::new(Value::Map(value_map)))),
-            ("a_non_existing_union_map".to_string(), Value::Union(Box::new(Value::Map(HashMap::new())))),
+            (
+                "a_string".to_string(),
+                Value::String("a valid message field".to_string()),
+            ),
+            (
+                "a_non_existing_string".to_string(),
+                Value::String("a string".to_string()),
+            ),
+            (
+                "a_union_string".to_string(),
+                Value::Union(Box::new(Value::String("a union string".to_string()))),
+            ),
+            (
+                "a_union_long".to_string(),
+                Value::Union(Box::new(Value::Long(412))),
+            ),
+            (
+                "a_union_long".to_string(),
+                Value::Union(Box::new(Value::Long(412))),
+            ),
+            (
+                "a_time_micros".to_string(),
+                Value::Union(Box::new(Value::TimeMicros(123))),
+            ),
+            (
+                "a_non_existing_time_micros".to_string(),
+                Value::Union(Box::new(Value::TimeMicros(-123))),
+            ),
+            (
+                "a_timestamp_millis".to_string(),
+                Value::Union(Box::new(Value::TimestampMillis(234))),
+            ),
+            (
+                "a_non_existing_timestamp_millis".to_string(),
+                Value::Union(Box::new(Value::TimestampMillis(-234))),
+            ),
+            (
+                "a_timestamp_micros".to_string(),
+                Value::Union(Box::new(Value::TimestampMicros(345))),
+            ),
+            (
+                "a_non_existing_timestamp_micros".to_string(),
+                Value::Union(Box::new(Value::TimestampMicros(-345))),
+            ),
+            (
+                "a_record".to_string(),
+                Value::Union(Box::new(Value::Record(vec![(
+                    "record_in_union".to_string(),
+                    Value::Int(-2),
+                )]))),
+            ),
+            (
+                "a_non_existing_record".to_string(),
+                Value::Union(Box::new(Value::Record(vec![(
+                    "blah".to_string(),
+                    Value::Int(-22),
+                )]))),
+            ),
+            (
+                "an_array".to_string(),
+                Value::Union(Box::new(Value::Array(vec![
+                    Value::Boolean(true),
+                    Value::Boolean(false),
+                ]))),
+            ),
+            (
+                "a_non_existing_array".to_string(),
+                Value::Union(Box::new(Value::Array(vec![
+                    Value::Boolean(false),
+                    Value::Boolean(true),
+                ]))),
+            ),
+            (
+                "a_union_map".to_string(),
+                Value::Union(Box::new(Value::Map(value_map))),
+            ),
+            (
+                "a_non_existing_union_map".to_string(),
+                Value::Union(Box::new(Value::Map(HashMap::new()))),
+            ),
         ]);
 
         let deserialized: StructWithMissingFields = crate::from_value(&record)?;
-        let reference = StructWithMissingFields{
+        let reference = StructWithMissingFields {
             a_string: "a valid message field".to_string(),
-            a_record: Some(RecordInUnion { record_in_union: -2 }),
+            a_record: Some(RecordInUnion {
+                record_in_union: -2,
+            }),
             an_array: Some([true, false]),
-            a_union_map: Some(raw_map)
+            a_union_map: Some(raw_map),
         };
         assert_eq!(deserialized, reference);
         Ok(())
