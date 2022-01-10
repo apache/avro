@@ -96,7 +96,6 @@ pub enum Value {
     /// Avro Duration. An amount of time defined by months, days and milliseconds.
     Duration(Duration),
     /// Universally unique identifier.
-    /// Universally unique identifier.
     Uuid(Uuid),
 }
 /// Any structure implementing the [ToAvro](trait.ToAvro.html) trait will be usable
@@ -841,6 +840,7 @@ mod tests {
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed"),
+            doc: None,
         };
 
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
@@ -1039,7 +1039,8 @@ mod tests {
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal"),
-                    size: 20
+                    size: 20,
+                    doc: None
                 })
             })
             .is_ok());

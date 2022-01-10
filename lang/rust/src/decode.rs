@@ -23,7 +23,12 @@ use crate::{
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
 };
-use std::{collections::HashMap, convert::TryFrom, io::Read, str::FromStr};
+use std::{
+    collections::HashMap,
+    convert::TryFrom,
+    io::{ErrorKind, Read},
+    str::FromStr,
+};
 use uuid::Uuid;
 
 #[inline]
@@ -67,14 +72,19 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
         Schema::Null => Ok(Value::Null),
         Schema::Boolean => {
             let mut buf = [0u8; 1];
-            reader
-                .read_exact(&mut buf[..])
-                .map_err(Error::ReadBoolean)?;
-
-            match buf[0] {
-                0u8 => Ok(Value::Boolean(false)),
-                1u8 => Ok(Value::Boolean(true)),
-                _ => Err(Error::BoolValue(buf[0])),
+            match reader.read_exact(&mut buf[..]) {
+                Ok(_) => match buf[0] {
+                    0u8 => Ok(Value::Boolean(false)),
+                    1u8 => Ok(Value::Boolean(true)),
+                    _ => Err(Error::BoolValue(buf[0])),
+                },
+                Err(io_err) => {
+                    if let ErrorKind::UnexpectedEof = io_err.kind() {
+                        Ok(Value::Null)
+                    } else {
+                        Err(Error::ReadBoolean(io_err))
+                    }
+                }
             }
         }
         Schema::Decimal { ref inner, .. } => match &**inner {
@@ -126,11 +136,18 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
         Schema::String => {
             let len = decode_len(reader)?;
             let mut buf = vec![0u8; len];
-            reader.read_exact(&mut buf).map_err(Error::ReadString)?;
-
-            Ok(Value::String(
-                String::from_utf8(buf).map_err(Error::ConvertToUtf8)?,
-            ))
+            match reader.read_exact(&mut buf) {
+                Ok(_) => Ok(Value::String(
+                    String::from_utf8(buf).map_err(Error::ConvertToUtf8)?,
+                )),
+                Err(io_err) => {
+                    if let ErrorKind::UnexpectedEof = io_err.kind() {
+                        Ok(Value::Null)
+                    } else {
+                        Err(Error::ReadString(io_err))
+                    }
+                }
+            }
         }
         Schema::Fixed { size, .. } => {
             let mut buf = vec![0u8; size];
@@ -179,18 +196,28 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
             Ok(Value::Map(items))
         }
-        Schema::Union(ref inner) => {
-            let index = zag_i64(reader)?;
-            let variants = inner.variants();
-            let variant = variants
-                .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
-                .ok_or_else(|| Error::GetUnionVariant {
-                    index,
-                    num_variants: variants.len(),
-                })?;
-            let value = decode(variant, reader)?;
-            Ok(Value::Union(Box::new(value)))
-        }
+        Schema::Union(ref inner) => match zag_i64(reader) {
+            Ok(index) => {
+                let variants = inner.variants();
+                let variant = variants
+                    .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
+                    .ok_or_else(|| Error::GetUnionVariant {
+                        index,
+                        num_variants: variants.len(),
+                    })?;
+                let value = decode(variant, reader)?;
+                Ok(Value::Union(Box::new(value)))
+            }
+            Err(Error::ReadVariableIntegerBytes(io_err)) => {
+                if let ErrorKind::UnexpectedEof = io_err.kind() {
+                    Ok(Value::Union(Box::new(Value::Null)))
+                } else {
+                    Err(Error::ReadVariableIntegerBytes(io_err))
+                }
+            }
+            Err(io_err) => Err(io_err),
+        },
+
         Schema::Record { ref fields, .. } => {
             // Benchmarks indicate ~10% improvement using this method.
             let mut items = Vec::with_capacity(fields.len());
@@ -271,6 +298,7 @@ mod tests {
         use num_bigint::ToBigInt;
         let inner = Box::new(Schema::Fixed {
             size: 2,
+            doc: None,
             name: Name::new("decimal"),
         });
         let schema = Schema::Decimal {
@@ -296,6 +324,7 @@ mod tests {
         let inner = Box::new(Schema::Fixed {
             size: 13,
             name: Name::new("decimal"),
+            doc: None,
         });
         let schema = Schema::Decimal {
             inner,

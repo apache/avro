@@ -43,25 +43,25 @@
     <jetty.version>9.4.43.v20210629</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
-    <netty.version>4.1.68.Final</netty.version>
-    <protobuf.version>3.17.3</protobuf.version>
+    <netty.version>4.1.70.Final</netty.version>
+    <protobuf.version>3.19.1</protobuf.version>
     <thrift.version>0.15.0</thrift.version>
     <slf4j.version>1.7.32</slf4j.version>
     <snappy.version>1.1.8.4</snappy.version>
     <velocity.version>2.3</velocity.version>
-    <maven.version>3.8.3</maven.version>
-    <ant.version>1.10.11</ant.version>
+    <maven.version>3.8.4</maven.version>
+    <ant.version>1.10.12</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.21</commons-compress.version>
     <commons-lang.version>3.12.0</commons-lang.version>
     <tukaani.version>1.9</tukaani.version>
     <easymock.version>4.3</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.40.1</grpc.version>
-    <zstd-jni.version>1.5.0-4</zstd-jni.version>
+    <grpc.version>1.43.1</grpc.version>
+    <zstd-jni.version>1.5.1-1</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.0</archetype-plugin.version>
-    <bundle-plugin-version>5.1.2</bundle-plugin-version>
+    <bundle-plugin-version>5.1.4</bundle-plugin-version>
     <exec-plugin.version>3.0.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>

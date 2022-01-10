@@ -51,6 +51,16 @@ namespace Avro.Test
 ", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
         [TestCase(@"{
 ""type"" : ""record"",
+""name"" : ""AvroNamespaceType"",
+""namespace"" : ""My.Avro"",
+""fields"" :
+		[
+			{ ""name"" : ""justenum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""justenumEnum"", ""symbols"" : [ ""One"", ""Two"" ] } },
+		]
+}
+", new object[] {"My.Avro.AvroNamespaceType", "My.Avro.justenumEnum"}, TestName = "TestCodeGen3 - Avro namespace conflict")]
+        [TestCase(@"{
+""type"" : ""record"",
 ""name"" : ""SchemaObject"",
 ""namespace"" : ""schematest"",
 ""fields"" :

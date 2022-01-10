@@ -232,11 +232,13 @@ impl SchemaCompatibility {
                 SchemaKind::Fixed => {
                     if let Schema::Fixed {
                         name: w_name,
+                        doc: _w_doc,
                         size: w_size,
                     } = writers_schema
                     {
                         if let Schema::Fixed {
                             name: r_name,
+                            doc: _r_doc,
                             size: r_size,
                         } = readers_schema
                         {

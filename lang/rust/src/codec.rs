@@ -21,6 +21,16 @@ use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
 use strum_macros::{EnumString, IntoStaticStr};
 
+#[cfg(feature = "bzip")]
+use bzip2::{
+    read::{BzDecoder, BzEncoder},
+    Compression,
+};
+#[cfg(feature = "snappy")]
+extern crate crc32fast;
+#[cfg(feature = "snappy")]
+use crc32fast::Hasher;
+
 /// The compression codec used to compress blocks.
 #[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
@@ -36,6 +46,12 @@ pub enum Codec {
     /// compression library. Each compressed block is followed by the 4-byte, big-endian
     /// CRC32 checksum of the uncompressed data in the block.
     Snappy,
+    #[cfg(feature = "zstandard")]
+    Zstd,
+    #[cfg(feature = "bzip")]
+    /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
+    /// compression library.
+    Bzip2,
 }
 
 impl From<Codec> for Value {
@@ -67,11 +83,26 @@ impl Codec {
                     .compress(&stream[..], &mut encoded[..])
                     .map_err(Error::SnappyCompress)?;
 
-                let crc = crc::crc32::checksum_ieee(&stream[..]);
-                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], crc);
+                let mut hasher = Hasher::new();
+                hasher.update(&stream[..]);
+                let checksum = hasher.finalize();
+                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], checksum);
                 encoded.truncate(compressed_size + 4);
 
                 *stream = encoded;
+            }
+            #[cfg(feature = "zstandard")]
+            Codec::Zstd => {
+                let mut encoder = zstd::Encoder::new(Vec::new(), 0).unwrap();
+                encoder.write_all(stream).map_err(Error::ZstdCompress)?;
+                *stream = encoder.finish().unwrap();
+            }
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => {
+                let mut encoder = BzEncoder::new(&stream[..], Compression::best());
+                let mut buffer = Vec::new();
+                encoder.read_to_end(&mut buffer).unwrap();
+                *stream = buffer;
             }
         };
 
@@ -102,11 +133,27 @@ impl Codec {
                     .map_err(Error::SnappyDecompress)?;
 
                 let expected = byteorder::BigEndian::read_u32(&stream[stream.len() - 4..]);
-                let actual = crc::crc32::checksum_ieee(&decoded);
+                let mut hasher = Hasher::new();
+                hasher.update(&decoded);
+                let actual = hasher.finalize();
 
                 if expected != actual {
                     return Err(Error::SnappyCrc32 { expected, actual });
                 }
+                decoded
+            }
+            #[cfg(feature = "zstandard")]
+            Codec::Zstd => {
+                let mut decoded = Vec::new();
+                let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
+                std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
+                decoded
+            }
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => {
+                let mut decoder = BzDecoder::new(&stream[..]);
+                let mut decoded = Vec::new();
+                decoder.read_to_end(&mut decoded).unwrap();
                 decoded
             }
         };
@@ -153,6 +200,30 @@ mod tests {
         assert_eq!(INPUT, stream.as_slice());
     }
 
+    #[cfg(feature = "zstandard")]
+    #[test]
+    fn zstd_compress_and_decompress() {
+        let codec = Codec::Zstd;
+        let mut stream = INPUT.to_vec();
+        codec.compress(&mut stream).unwrap();
+        assert_ne!(INPUT, stream.as_slice());
+        assert!(INPUT.len() > stream.len());
+        codec.decompress(&mut stream).unwrap();
+        assert_eq!(INPUT, stream.as_slice());
+    }
+
+    #[cfg(feature = "bzip")]
+    #[test]
+    fn bzip_compress_and_decompress() {
+        let codec = Codec::Bzip2;
+        let mut stream = INPUT.to_vec();
+        codec.compress(&mut stream).unwrap();
+        assert_ne!(INPUT, stream.as_slice());
+        assert!(INPUT.len() > stream.len());
+        codec.decompress(&mut stream).unwrap();
+        assert_eq!(INPUT, stream.as_slice());
+    }
+
     #[test]
     fn codec_to_str() {
         assert_eq!(<&str>::from(Codec::Null), "null");
@@ -160,6 +231,12 @@ mod tests {
 
         #[cfg(feature = "snappy")]
         assert_eq!(<&str>::from(Codec::Snappy), "snappy");
+
+        #[cfg(feature = "zstandard")]
+        assert_eq!(<&str>::from(Codec::Zstd), "zstd");
+
+        #[cfg(feature = "bzip")]
+        assert_eq!(<&str>::from(Codec::Bzip2), "bzip2");
     }
 
     #[test]
@@ -171,6 +248,12 @@ mod tests {
 
         #[cfg(feature = "snappy")]
         assert_eq!(Codec::from_str("snappy").unwrap(), Codec::Snappy);
+
+        #[cfg(feature = "zstandard")]
+        assert_eq!(Codec::from_str("zstd").unwrap(), Codec::Zstd);
+
+        #[cfg(feature = "bzip")]
+        assert_eq!(Codec::from_str("bzip2").unwrap(), Codec::Bzip2);
 
         assert!(Codec::from_str("not a codec").is_err());
     }

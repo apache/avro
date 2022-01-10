@@ -240,7 +240,7 @@ pub enum Error {
     #[error("Must be a JSON string, object or array")]
     ParseSchemaFromValidJson,
 
-    #[error("Unknown primitiive type: {0}")]
+    #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
     #[error("invalid JSON for {key:?}: {precision:?}")]
@@ -308,6 +308,12 @@ pub enum Error {
     #[cfg(feature = "snappy")]
     #[error("Failed to decompress with snappy")]
     SnappyDecompress(#[source] snap::Error),
+
+    #[error("Failed to compress with zstd")]
+    ZstdCompress(#[source] std::io::Error),
+
+    #[error("Failed to decompress with zstd")]
+    ZstdDecompress(#[source] std::io::Error),
 
     #[error("Failed to read header")]
     ReadHeader(#[source] std::io::Error),

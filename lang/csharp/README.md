@@ -17,15 +17,15 @@ Install-Package Apache.Avro
 
 ## Project Target Frameworks
 
-| Project         | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  |
-|:---------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|
-| Avro.codegen    | Exe        |                    |                   | ✔️            |✔️        |
-| Avro.ipc        | Library    | ✔️                 | ✔️               |               |           |
-| Avro.ipc.test   | Unit Tests |                    |                   | ✔️            |✔️        |
-| Avro.main       | Library    | ✔️                 | ✔️               |               |           |
-| Avro.msbuild    | Library    | ✔️                 | ✔️               |               |           |
-| Avro.perf       | Exe        |                    |                   | ✔️            |✔️        |
-| Avro.test       | Unit Tests |                    |                   | ✔️            |✔️        |
+| Project         | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  | .NET 6.0  |
+|:---------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|:---------:|
+| Avro.codegen    | Exe        |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.ipc        | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.ipc.test   | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.main       | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.msbuild    | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.perf       | Exe        |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.test       | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
 
 ## Dependency package version strategy
 

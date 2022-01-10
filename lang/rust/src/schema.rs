@@ -109,7 +109,11 @@ pub enum Schema {
         symbols: Vec<String>,
     },
     /// A `fixed` Avro schema.
-    Fixed { name: Name, size: usize },
+    Fixed {
+        name: Name,
+        doc: Documentation,
+        size: usize,
+    },
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     ///
@@ -608,18 +612,63 @@ impl Parser {
             match complex.get("type") {
                 Some(value) => {
                     let ty = parser.parse(value)?;
+
                     if kinds
                         .iter()
                         .any(|&kind| SchemaKind::from(ty.clone()) == kind)
                     {
                         Ok(ty)
                     } else {
-                        Err(Error::GetLogicalTypeVariant(value.clone()))
+                        match get_type_rec(value.clone()) {
+                            Ok(v) => Err(Error::GetLogicalTypeVariant(v)),
+                            Err(err) => Err(err),
+                        }
                     }
                 }
                 None => Err(Error::GetLogicalTypeField),
             }
         }
+
+        fn get_type_rec(json_value: Value) -> AvroResult<Value> {
+            match json_value {
+                typ @ Value::String(_) => Ok(typ),
+                Value::Object(ref complex) => match complex.get("type") {
+                    Some(v) => get_type_rec(v.clone()),
+                    None => Err(Error::GetComplexTypeField),
+                },
+                _ => Err(Error::GetComplexTypeField),
+            }
+        }
+
+        // checks whether the logicalType is supported by the type
+        fn try_logical_type(
+            logical_type: &str,
+            complex: &Map<String, Value>,
+            kinds: &[SchemaKind],
+            ok_schema: Schema,
+            parser: &mut Parser,
+        ) -> AvroResult<Schema> {
+            match logical_verify_type(complex, kinds, parser) {
+                // type and logicalType match!
+                Ok(_) => Ok(ok_schema),
+                // the logicalType is not expected for this type!
+                Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
+                    Value::String(_) => match parser.parse(&json_value) {
+                        Ok(schema) => {
+                            warn!(
+                                "Ignoring invalid logical type '{}' for schema of type: {:?}!",
+                                logical_type, schema
+                            );
+                            Ok(schema)
+                        }
+                        Err(parse_err) => Err(parse_err),
+                    },
+                    _ => Err(Error::GetLogicalTypeVariant(json_value)),
+                },
+                err => err,
+            }
+        }
+
         match complex.get("logicalType") {
             Some(&Value::String(ref t)) => match t.as_str() {
                 "decimal" => {
@@ -642,24 +691,49 @@ impl Parser {
                     return Ok(Schema::Uuid);
                 }
                 "date" => {
-                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
-                    return Ok(Schema::Date);
+                    return try_logical_type(
+                        "date",
+                        complex,
+                        &[SchemaKind::Int],
+                        Schema::Date,
+                        self,
+                    );
                 }
                 "time-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
-                    return Ok(Schema::TimeMillis);
+                    return try_logical_type(
+                        "time-millis",
+                        complex,
+                        &[SchemaKind::Int],
+                        Schema::TimeMillis,
+                        self,
+                    );
                 }
                 "time-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimeMicros);
+                    return try_logical_type(
+                        "time-micros",
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimeMicros,
+                        self,
+                    );
                 }
                 "timestamp-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimestampMillis);
+                    return try_logical_type(
+                        "timestamp-millis",
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimestampMillis,
+                        self,
+                    );
                 }
                 "timestamp-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
-                    return Ok(Schema::TimestampMicros);
+                    return try_logical_type(
+                        "timestamp-micros",
+                        complex,
+                        &[SchemaKind::Long],
+                        Schema::TimestampMicros,
+                        self,
+                    );
                 }
                 "duration" => {
                     logical_verify_type(complex, &[SchemaKind::Fixed], self)?;
@@ -715,12 +789,16 @@ impl Parser {
             lookup.insert(field.name.clone(), field.position);
         }
 
-        Ok(Schema::Record {
-            name,
+        let schema = Schema::Record {
+            name: name.clone(),
             doc: complex.doc(),
             fields,
             lookup,
-        })
+        };
+
+        self.parsed_schemas
+            .insert(name.fullname(None), schema.clone());
+        Ok(schema)
     }
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a
@@ -797,6 +875,11 @@ impl Parser {
     fn parse_fixed(complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
+        let doc = complex.get("doc").and_then(|v| match &v {
+            Value::String(ref docstr) => Some(docstr.clone()),
+            _ => None,
+        });
+
         let size = complex
             .get("size")
             .and_then(|v| v.as_i64())
@@ -804,6 +887,7 @@ impl Parser {
 
         Ok(Schema::Fixed {
             name,
+            doc,
             size: size as usize,
         })
     }
@@ -875,10 +959,17 @@ impl Serialize for Schema {
                 map.serialize_entry("symbols", symbols)?;
                 map.end()
             }
-            Schema::Fixed { ref name, ref size } => {
+            Schema::Fixed {
+                ref name,
+                ref doc,
+                ref size,
+            } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
                 map.serialize_entry("name", &name.name)?;
+                if let Some(ref docstr) = doc {
+                    map.serialize_entry("doc", docstr)?;
+                }
                 map.serialize_entry("size", size)?;
                 map.end()
             }
@@ -937,6 +1028,7 @@ impl Serialize for Schema {
                 // duration should be or typically is.
                 let inner = Schema::Fixed {
                     name: Name::new("duration"),
+                    doc: None,
                     size: 12,
                 };
                 map.serialize_entry("type", &inner)?;
@@ -1237,6 +1329,23 @@ mod tests {
 
         let expected = Schema::Fixed {
             name: Name::new("test"),
+            doc: None,
+            size: 16usize,
+        };
+
+        assert_eq!(expected, schema);
+    }
+
+    #[test]
+    fn test_fixed_schema_with_documentation() {
+        let schema = Schema::parse_str(
+            r#"{"type": "fixed", "name": "test", "size": 16, "doc": "FixedSchema documentation"}"#,
+        )
+        .unwrap();
+
+        let expected = Schema::Fixed {
+            name: Name::new("test"),
+            doc: Some(String::from("FixedSchema documentation")),
             size: 16usize,
         };
 
@@ -1291,6 +1400,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Sha256 uses an inline assembly instructions which is not supported by miri
     fn test_schema_fingerprint() {
         use crate::rabin::Rabin;
         use md5::Md5;

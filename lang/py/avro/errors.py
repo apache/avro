@@ -40,6 +40,10 @@ class InvalidName(SchemaParseException):
     """User attempted to parse a schema with an invalid name."""
 
 
+class InvalidDefault(SchemaParseException):
+    """User attempted to parse a schema with an invalid default."""
+
+
 class AvroWarning(UserWarning):
     """Base class for warnings."""
 
