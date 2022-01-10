@@ -298,6 +298,7 @@ mod tests {
         use num_bigint::ToBigInt;
         let inner = Box::new(Schema::Fixed {
             size: 2,
+            doc: None,
             name: Name::new("decimal"),
         });
         let schema = Schema::Decimal {
@@ -323,6 +324,7 @@ mod tests {
         let inner = Box::new(Schema::Fixed {
             size: 13,
             name: Name::new("decimal"),
+            doc: None,
         });
         let schema = Schema::Decimal {
             inner,
