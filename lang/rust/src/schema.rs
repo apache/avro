@@ -1328,7 +1328,7 @@ mod tests {
         use std::iter::FromIterator;
 
         // A and B are the same except the name.
-        let schema_str_1 = r#"{
+        let schema_str_a = r#"{
             "name": "A",
             "type": "record",
             "fields": [
@@ -1336,7 +1336,7 @@ mod tests {
             ]
         }"#;
 
-        let schema_str_2 = r#"{
+        let schema_str_b = r#"{
             "name": "B",
             "type": "record",
             "fields": [
@@ -1345,7 +1345,7 @@ mod tests {
         }"#;
 
         // we get Error::GetNameField if we put ["A", "B"] directly here.
-        let schema_str_3 = r#"{
+        let schema_str_c = r#"{
             "name": "C",
             "type": "record",
             "fields": [
@@ -1353,10 +1353,10 @@ mod tests {
             ]
         }"#;
 
-        let schema_a = Schema::parse_str(schema_str_1).unwrap();
-        let schema_b = Schema::parse_str(schema_str_2).unwrap();
+        let schema_a = Schema::parse_str(schema_str_a).unwrap();
+        let schema_b = Schema::parse_str(schema_str_b).unwrap();
 
-        let schema_c = Schema::parse_list(&[schema_str_1, schema_str_2, schema_str_3])
+        let schema_c = Schema::parse_list(&[schema_str_a, schema_str_b, schema_str_c])
             .unwrap()
             .last()
             .unwrap()
