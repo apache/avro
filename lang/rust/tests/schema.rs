@@ -336,6 +336,10 @@ const DOC_EXAMPLES: &[(&str, bool)] = &[
         r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}"#,
         true,
     ),
+    (
+        r#"{"type": "fixed", "name": "Test", "size": 1, "doc": "Fixed Doc String"}"#,
+        true,
+    ),
 ];
 
 const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
@@ -1229,7 +1233,9 @@ fn test_doc_attributes() {
         match schema {
             Schema::Enum { doc, .. } => assert!(doc.is_some()),
             Schema::Record { doc, .. } => assert!(doc.is_some()),
-            _ => (),
+            Schema::Fixed { doc, .. } => assert!(doc.is_some()),
+            Schema::String => (),
+            _ => unreachable!("Unexpected schema type: {:?}", schema),
         }
     }
 
