@@ -1385,7 +1385,7 @@ mod tests {
     fn test_nullable_record() {
         use std::iter::FromIterator;
 
-        let schema_str_1 = r#"{
+        let schema_str_a = r#"{
             "name": "A",
             "type": "record",
             "fields": [
@@ -1394,7 +1394,7 @@ mod tests {
         }"#;
 
         // we get Error::GetNameField if we put ["null", "B"] directly here.
-        let schema_str_2 = r#"{
+        let schema_str_option_a = r#"{
             "name": "OptionA",
             "type": "record",
             "fields": [
@@ -1402,9 +1402,9 @@ mod tests {
             ]
         }"#;
 
-        let schema_a = Schema::parse_str(schema_str_1).unwrap();
+        let schema_a = Schema::parse_str(schema_str_a).unwrap();
 
-        let schema_option_a = Schema::parse_list(&[schema_str_1, schema_str_2])
+        let schema_option_a = Schema::parse_list(&[schema_str_a, schema_str_option_a])
             .unwrap()
             .last()
             .unwrap()
