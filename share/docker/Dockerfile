@@ -178,7 +178,7 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
  && dpkg -i packages-microsoft-prod.deb \
  && rm packages-microsoft-prod.deb \
  && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 \
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
  && apt-get -qqy clean
 
 # Install Ruby
