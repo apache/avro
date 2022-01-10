@@ -35,7 +35,7 @@
 
   <PropertyGroup Label="Target Frameworks">
     <!-- Exe -->
-    <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0</DefaultExeTargetFrameworks>
+    <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0;net6.0</DefaultExeTargetFrameworks>
     <!-- Library -->
     <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
     <!-- Unit Tests -->
