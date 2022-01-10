@@ -49,7 +49,7 @@
     "istanbul": "^0.4.5",
     "jshint": "^2.12.0",
     "mocha": "^6.2.3",
-    "tmp": "^0.0.28"
+    "tmp": "^0.2.1"
   },
   "noAnalyze": true,
   "license": "Apache-2.0",
