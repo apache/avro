@@ -29,11 +29,9 @@ protocol TestService {
   fixed MD5(4);
 
   record TestRecord {
-    @order("ignore")
-    string name;
+    string @order("ignore") name;
 
-    @order("descending")
-    Kind kind;
+    Kind @order("descending") kind;
 
     MD5 hash;
 

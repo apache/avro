@@ -73,8 +73,8 @@ public class ThriftData extends GenericData {
   }
 
   @Override
-  public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  public void setField(Object r, String n, int pos, Object value) {
+    setField(r, n, pos, value, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
@@ -83,10 +83,10 @@ public class ThriftData extends GenericData {
   }
 
   @Override
-  protected void setField(Object r, String n, int pos, Object v, Object state) {
-    if (v == null && r instanceof TUnion)
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    if (value == null && record instanceof TUnion)
       return;
-    ((TBase) r).setFieldValue(((TFieldIdEnum[]) state)[pos], v);
+    ((TBase) record).setFieldValue(((TFieldIdEnum[]) state)[position], value);
   }
 
   @Override
@@ -159,7 +159,7 @@ public class ThriftData extends GenericData {
     try {
       Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null)
-        return newRecord(old, schema); // punt to generic
+        return super.newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
         return old; // reuse instance
       return c.newInstance(); // create new instance

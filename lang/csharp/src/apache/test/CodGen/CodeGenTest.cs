@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using NUnit.Framework;
@@ -30,7 +29,7 @@ namespace Avro.Test
 
     class CodeGenTest
     {
-#if !NETCOREAPP2_2 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
+#if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""ClassKeywords"",
@@ -45,11 +44,21 @@ namespace Avro.Test
 			{ ""name"" : ""internal"", ""type"" : ""bytes"" },
 			{ ""name"" : ""while"", ""type"" : ""string"" },
 			{ ""name"" : ""return"", ""type"" : ""null"" },
-			{ ""name"" : ""enum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""class"", ""symbols"" : [ ""A"", ""B"" ] } },
+			{ ""name"" : ""enum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""class"", ""symbols"" : [ ""Unknown"", ""A"", ""B"" ], ""default"" : ""Unknown"" } },
 			{ ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
 		]
 }
 ", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
+        [TestCase(@"{
+""type"" : ""record"",
+""name"" : ""AvroNamespaceType"",
+""namespace"" : ""My.Avro"",
+""fields"" :
+		[
+			{ ""name"" : ""justenum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""justenumEnum"", ""symbols"" : [ ""One"", ""Two"" ] } },
+		]
+}
+", new object[] {"My.Avro.AvroNamespaceType", "My.Avro.justenumEnum"}, TestName = "TestCodeGen3 - Avro namespace conflict")]
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
@@ -69,6 +78,27 @@ namespace Avro.Test
 	]
 }
 ", new object[] { "schematest.SchemaObject", typeof(IList<object>) }, TestName = "TestCodeGen1")]
+        [TestCase(@"{
+	""type"" : ""record"",
+	""name"" : ""LogicalTypes"",
+	""namespace"" : ""schematest"",
+	""fields"" :
+		[ 	
+			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+		]
+}
+", new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) }, TestName = "TestCodeGen2 - Logical Types")]
         public static void TestCodeGen(string str, object[] result)
         {
             Schema schema = Schema.Parse(str);
@@ -94,6 +124,8 @@ namespace Avro.Test
                     stype = (Type)result[i];
                 if (!stype.IsValueType)
                     Assert.IsNull(field);   // can't test reference type, it will be null
+                else if (stype.IsValueType && field == null)
+                    Assert.IsNull(field); // nullable value type, so we can't get the type using GetType
                 else
                     Assert.AreEqual(stype, field.GetType());
             }

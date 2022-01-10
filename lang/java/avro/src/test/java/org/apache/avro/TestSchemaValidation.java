@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.avro.TestSchemas.*;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.Rule;

@@ -139,10 +139,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
         List<Schema.Field> fields = nt.getFields();
         List<Schema.Field> newFields = new ArrayList<>(fields.size());
         for (Schema.Field field : fields) {
-          Schema.Field newField = new Schema.Field(field.name(), replace.get(field.schema()), field.doc(),
-              field.defaultVal(), field.order());
-          copyAllProperties(field, newField);
-          newFields.add(newField);
+          newFields.add(new Field(field, replace.get(field.schema())));
         }
         newSchema.setFields(newFields);
       }

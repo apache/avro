@@ -21,7 +21,7 @@
 
 #include "BufferDetail.hh"
 
-/** 
+/**
  * \file BufferDetailIterator.hh
  *
  * \brief The implementation details for the Buffer iterators.
@@ -31,26 +31,21 @@ namespace avro {
 
 namespace detail {
 
-/** 
+/**
  * \brief Implements conversion from a chunk to asio::const_buffer
- * 
+ *
  * Iterators for an InputBuffer will iterate over the avro of chunks, so
  * internally they contain an iterator.  But the iterator needs to be
  * convertable to an asio buffer for use in boost::asio functions.  This class
  * wraps the iterator with a cast operator to do this conversion.
  **/
 
-struct InputIteratorHelper
-{
-    /// Construct a helper with an unnassigned iterator. 
-    InputIteratorHelper() :
-        iter_()
-    {}
+struct InputIteratorHelper {
+    /// Construct a helper with an unnassigned iterator.
+    InputIteratorHelper() : iter_() {}
 
     /// Construct a helper with an iterator.
-    InputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) :
-        iter_(iter)
-    {}
+    explicit InputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
 
     /// The location of valid data in this chunk.
     const data_type *data() const {
@@ -63,7 +58,7 @@ struct InputIteratorHelper
     }
 
     /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator 
+    /// the only time the chunk should be null is when it's the iterator
     /// end(), which should never be dereferenced anyway.
 #ifdef HAVE_BOOST_ASIO
     operator ConstAsioBuffer() const {
@@ -74,26 +69,21 @@ struct InputIteratorHelper
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
 
-/** 
- * \brief Implements conversion from a chunk to asio::buffer 
- * 
+/**
+ * \brief Implements conversion from a chunk to asio::buffer
+ *
  * Iterators for an OutputBuffer will iterate over the avro of chunks, so
  * internally they contain an iterator.  But the iterator needs to be
  * convertable to an asio buffer for use in boost::asio functions.  This class
  * wraps the iterator with a cast operator to do this conversion.
  */
 
-struct OutputIteratorHelper
-{
+struct OutputIteratorHelper {
     /// Construct a helper with an unnassigned iterator.
-    OutputIteratorHelper() :
-            iter_()
-    {}
+    OutputIteratorHelper() : iter_() {}
 
     /// Construct a helper with an iterator.
-    OutputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) :
-            iter_(iter)
-    {}
+    explicit OutputIteratorHelper(const BufferImpl::ChunkList::const_iterator &iter) : iter_(iter) {}
 
     /// The location of the first writable byte in this chunk.
     data_type *data() const {
@@ -106,7 +96,7 @@ struct OutputIteratorHelper
     }
 
     /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator 
+    /// the only time the chunk should be null is when it's the iterator
     /// end(), which should never be dereferenced anyway.
 #ifdef HAVE_BOOST_ASIO
     operator MutableAsioBuffer() const {
@@ -117,20 +107,18 @@ struct OutputIteratorHelper
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
 
-/** 
+/**
  * \brief Implements the iterator for Buffer, that iterates through the
  * buffer's chunks.
  **/
 
 template<typename Helper>
-class BufferIterator 
-{
+class BufferIterator {
 
-  public:
-
+public:
     typedef BufferIterator<Helper> this_type;
 
-    /** 
+    /**
      * @name Typedefs
      *
      * STL iterators define the following declarations.  According to
@@ -144,14 +132,12 @@ class BufferIterator
     typedef std::forward_iterator_tag iterator_category; // this is a lie to appease asio
     typedef Helper value_type;
     typedef std::ptrdiff_t difference_type;
-    typedef value_type* pointer;
-    typedef value_type& reference;
+    typedef value_type *pointer;
+    typedef value_type &reference;
     //@}
 
     /// Construct an unitialized iterator.
-    BufferIterator() :
-        helper_()
-    { }
+    BufferIterator() : helper_() {}
 
     /* The default implementations are good here
     /// Copy constructor.
@@ -166,17 +152,15 @@ class BufferIterator
     */
 
     /// Construct iterator at the position in the buffer's chunk list.
-    explicit BufferIterator(BufferImpl::ChunkList::const_iterator iter) :
-        helper_(iter)
-    { }
+    explicit BufferIterator(BufferImpl::ChunkList::const_iterator iter) : helper_(iter) {}
 
     /// Dereference iterator, returns InputIteratorHelper or OutputIteratorHelper wrapper.
-    reference operator *() {
+    reference operator*() {
         return helper_;
     }
 
     /// Dereference iterator, returns const InputIteratorHelper or OutputIteratorHelper wrapper.
-    const value_type &operator *() const {
+    const value_type &operator*() const {
         return helper_;
     }
 
@@ -189,17 +173,15 @@ class BufferIterator
     const value_type *operator->() const {
         return &helper_;
     }
-    
+
     /// Increment to next chunk in list, or to end() iterator.
-    this_type& operator++() 
-    {
+    this_type &operator++() {
         ++helper_.iter_;
         return *this;
     }
 
     /// Increment to next chunk in list, or to end() iterator.
-    this_type operator++(int)
-    {
+    this_type operator++(int) {
         this_type ret = *this;
         ++helper_.iter_;
         return ret;
@@ -215,16 +197,15 @@ class BufferIterator
         return (helper_.iter_ != rhs.helper_.iter_);
     }
 
-  private:
-
+private:
     Helper helper_;
 };
 
 typedef BufferIterator<InputIteratorHelper> InputBufferIterator;
 typedef BufferIterator<OutputIteratorHelper> OutputBufferIterator;
 
-} // detail namespace
+} // namespace detail
 
-} // namespace
+} // namespace avro
 
 #endif

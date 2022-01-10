@@ -15,23 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Avro.IO;
+using Avro.Specific;
+using Avro.Test.Specific;
+using System.Collections.Generic;
+using Avro.Test.Specific.@return;
+
+#if !NETCOREAPP
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using Avro.Specific;
 using System.Reflection;
+#endif
 
 namespace Avro.Test
 {
     [TestFixture]
     class SpecificTests
     {
-#if !NETCOREAPP2_2 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
+#if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         // The dynamically created assembly used in the test below can only be created
         // once otherwise repeated tests will fail as the same type name will exist in
         // multiple assemblies and so the type in the test and the type found by ObjectCreator
@@ -62,7 +68,7 @@ namespace Avro.Test
 	""type"" : ""record"",
 	""name"" : ""Z"",
 	""fields"" :
-			[ 	
+			[
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
 				{ ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ] },
@@ -70,7 +76,7 @@ namespace Avro.Test
 				{ ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ] },
 				{ ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ] },
 				{ ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ] },
-				
+
 				{ ""name"" : ""myInt"", ""type"" : ""int"" },
 				{ ""name"" : ""myLong"", ""type"" : ""long"" },
 				{ ""name"" : ""myBool"", ""type"" : ""boolean"" },
@@ -80,7 +86,7 @@ namespace Avro.Test
 				{ ""name"" : ""myString"", ""type"" : ""string"" },
 				{ ""name"" : ""myNull"", ""type"" : ""null"" },
 
-				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },								
+				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
 				{ ""name"" : ""myA"", ""type"" : ""A"" },
 				{ ""name"" : ""myE"", ""type"" : ""MyEnum"" },
 				{ ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
@@ -246,6 +252,194 @@ namespace Avro.Test
             Assert.AreEqual( EnumType.SECOND, rec2.enumType );
         }
 
+        [Test]
+        public void TestEnumDefault()
+        {
+            //writerSchema has "SECOND"
+            Schema writerSchema = Schema.Parse("{ \"type\": \"record\", \"name\": \"EnumRecord\", \"fields\": [ { \"name\": \"enumType\", \"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [ \"DEFAULT\", \"FIRST\", \"SECOND\", \"THIRD\" ], \"default\": \"DEFAULT\" } } ] }");
+            Schema readerSchema = Schema.Parse("{ \"type\": \"record\", \"name\": \"EnumRecord\", \"fields\": [ { \"name\": \"enumType\", \"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [ \"DEFAULT\", \"FIRST\", \"THIRD\" ], \"default\": \"DEFAULT\" } } ] }");
+
+            //readerSchema is missing "SECOND" so should therefore be "DEFAULT"
+            var testRecord = new EnumRecord {enumType = EnumType.SECOND};
+
+            // serialize
+            var stream = serialize(writerSchema, testRecord);
+
+            // deserialize
+            var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
+            Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
+        }
+
+
+        [Test]
+        public void TestArrayWithReservedWords()
+        {
+            var srcRecord = new ComplexTypeWithReservedWords
+            {
+                Record = new Record
+                {
+                    name = "Name"
+                },
+                ArrayItems = new List<ArrayItem>
+                {
+                     new ArrayItem
+                    {
+                        id = 2,
+                        name = "ArrayName"
+                    }
+                }
+            };
+
+            var stream = serialize(ComplexTypeWithReservedWords._SCHEMA, srcRecord);
+            var dstRecord = deserialize<ComplexTypeWithReservedWords>(stream, ComplexTypeWithReservedWords._SCHEMA, ComplexTypeWithReservedWords._SCHEMA);
+
+            Assert.NotNull(dstRecord);
+            Assert.AreEqual("Name", dstRecord.Record.name);
+            Assert.AreEqual(1, dstRecord.ArrayItems.Count);
+            Assert.AreEqual("ArrayName", dstRecord.ArrayItems[0].name);
+            Assert.AreEqual(2, dstRecord.ArrayItems[0].id);
+        }
+
+        [Test]
+        public void TestEmbeddedGenerics()
+        {
+            var srcRecord = new EmbeddedGenericsRecord
+            {
+                OptionalIntList = new List<int?> { 1, 2, null, 3, null, null },
+                OptionalUserList = new List<EmbeddedGenericRecordUser>
+                {
+                    new EmbeddedGenericRecordUser { name = "1" },
+                    new EmbeddedGenericRecordUser { name = "2" },
+                    null,
+                    new EmbeddedGenericRecordUser { name = "3" },
+                    null,
+                    null,
+                },
+                OptionalIntMatrix = new List<IList<IList<int?>>>
+                {
+                    new List<IList<int?>>
+                    {
+                        new List<int?> { null, 2, },
+                        new List<int?> { null, null },
+                    },
+                    new List<IList<int?>>
+                    {
+                        new List<int?> { 5, 6, },
+                    },
+                    new List<IList<int?>> { },
+                },
+                OptionalUserMatrix = new List<IList<IList<EmbeddedGenericRecordUser>>>
+                {
+                    new List<IList<EmbeddedGenericRecordUser>>
+                    {
+                        new List<EmbeddedGenericRecordUser>
+                        {
+                            null,
+                            new EmbeddedGenericRecordUser { name = "2" },
+                        },
+                        new List<EmbeddedGenericRecordUser> { null, null },
+                    },
+                    new List<IList<EmbeddedGenericRecordUser>>
+                    {
+                        new List<EmbeddedGenericRecordUser>
+                        {
+                            new EmbeddedGenericRecordUser { name = "5" },
+                            new EmbeddedGenericRecordUser { name = "6" },
+                        },
+                    },
+                    new List<IList<EmbeddedGenericRecordUser>> { },
+                },
+                IntMatrix = new List<IList<IList<int>>>
+                {
+                    new List<IList<int>>
+                    {
+                        new List<int> { 1, 2, },
+                        new List<int> { 3, 4, },
+                    },
+                    new List<IList<int>>
+                    {
+                        new List<int> { 5, 6, },
+                    },
+                    new List<IList<int>> { },
+                },
+                UserMatrix = new List<IList<IList<EmbeddedGenericRecordUser>>>
+                {
+                    new List<IList<EmbeddedGenericRecordUser>>
+                    {
+                        new List<EmbeddedGenericRecordUser>
+                        {
+                            new EmbeddedGenericRecordUser { name = "1" },
+                            new EmbeddedGenericRecordUser { name = "2" },
+                        },
+                        new List<EmbeddedGenericRecordUser>
+                        {
+                            new EmbeddedGenericRecordUser { name = "3" },
+                            new EmbeddedGenericRecordUser { name = "4" },
+                        },
+                    },
+                    new List<IList<EmbeddedGenericRecordUser>>
+                    {
+                        new List<EmbeddedGenericRecordUser>
+                        {
+                            new EmbeddedGenericRecordUser { name = "5" },
+                            new EmbeddedGenericRecordUser { name = "6" },
+                        },
+                    },
+                    new List<IList<EmbeddedGenericRecordUser>> { },
+                }
+            };
+            var stream = serialize(EmbeddedGenericsRecord._SCHEMA, srcRecord);
+            var dstRecord = deserialize<EmbeddedGenericsRecord>(stream,
+                EmbeddedGenericsRecord._SCHEMA, EmbeddedGenericsRecord._SCHEMA);
+
+            Assert.NotNull(dstRecord);
+            Assert.AreEqual(1, dstRecord.OptionalIntList[0]);
+            Assert.AreEqual(2, dstRecord.OptionalIntList[1]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[2]);
+            Assert.AreEqual(3, dstRecord.OptionalIntList[3]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[4]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[5]);
+
+            Assert.AreEqual("1", dstRecord.OptionalUserList[0].name);
+            Assert.AreEqual("2", dstRecord.OptionalUserList[1].name);
+            Assert.AreEqual(null, dstRecord.OptionalUserList[2]);
+            Assert.AreEqual("3", dstRecord.OptionalUserList[3].name);
+            Assert.AreEqual(null, dstRecord.OptionalUserList[4]);
+            Assert.AreEqual(null, dstRecord.OptionalUserList[5]);
+
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][0][0]);
+            Assert.AreEqual(2, dstRecord.OptionalIntMatrix[0][0][1]);
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][1][0]);
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][1][1]);
+            Assert.AreEqual(5, dstRecord.OptionalIntMatrix[1][0][0]);
+            Assert.AreEqual(6, dstRecord.OptionalIntMatrix[1][0][1]);
+            Assert.AreEqual(0, dstRecord.OptionalIntMatrix[2].Count);
+
+            Assert.AreEqual(null, dstRecord.OptionalUserMatrix[0][0][0]);
+            Assert.AreEqual("2", dstRecord.OptionalUserMatrix[0][0][1].name);
+            Assert.AreEqual(null, dstRecord.OptionalUserMatrix[0][1][0]);
+            Assert.AreEqual(null, dstRecord.OptionalUserMatrix[0][1][1]);
+            Assert.AreEqual("5", dstRecord.OptionalUserMatrix[1][0][0].name);
+            Assert.AreEqual("6", dstRecord.OptionalUserMatrix[1][0][1].name);
+            Assert.AreEqual(0, dstRecord.OptionalUserMatrix[2].Count);
+
+            Assert.AreEqual(1, dstRecord.IntMatrix[0][0][0]);
+            Assert.AreEqual(2, dstRecord.IntMatrix[0][0][1]);
+            Assert.AreEqual(3, dstRecord.IntMatrix[0][1][0]);
+            Assert.AreEqual(4, dstRecord.IntMatrix[0][1][1]);
+            Assert.AreEqual(5, dstRecord.IntMatrix[1][0][0]);
+            Assert.AreEqual(6, dstRecord.IntMatrix[1][0][1]);
+            Assert.AreEqual(0, dstRecord.IntMatrix[2].Count);
+
+            Assert.AreEqual("1", dstRecord.UserMatrix[0][0][0].name);
+            Assert.AreEqual("2", dstRecord.UserMatrix[0][0][1].name);
+            Assert.AreEqual("3", dstRecord.UserMatrix[0][1][0].name);
+            Assert.AreEqual("4", dstRecord.UserMatrix[0][1][1].name);
+            Assert.AreEqual("5", dstRecord.UserMatrix[1][0][0].name);
+            Assert.AreEqual("6", dstRecord.UserMatrix[1][0][1].name);
+            Assert.AreEqual(0, dstRecord.UserMatrix[2].Count);
+        }
+
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
         {
             long initialPos = ms.Position;
@@ -293,6 +487,12 @@ namespace Avro.Test
 
         private static void AssertSpecificRecordEqual(ISpecificRecord rec1, ISpecificRecord rec2)
         {
+            if (rec1 == null && rec2 == null)
+            {
+                // Both are null, that's equivalent.
+                return;
+            }
+
             var recordSchema = (RecordSchema) rec1.Schema;
             for (int i = 0; i < recordSchema.Count; i++)
             {
@@ -304,20 +504,7 @@ namespace Avro.Test
                 }
                 else if (rec1Val is IList)
                 {
-                    var rec1List = (IList) rec1Val;
-                    if( rec1List.Count > 0 && rec1List[0] is ISpecificRecord)
-                    {
-                        var rec2List = (IList) rec2Val;
-                        Assert.AreEqual(rec1List.Count, rec2List.Count);
-                        for (int j = 0; j < rec1List.Count; j++)
-                        {
-                            AssertSpecificRecordEqual((ISpecificRecord)rec1List[j], (ISpecificRecord)rec2List[j]);
-                        }
-                    }
-                    else
-                    {
-                        Assert.AreEqual(rec1Val, rec2Val);
-                    }
+                    AssertListEqual((IList)rec1Val, (IList)rec2Val);
                 }
                 else if (rec1Val is IDictionary)
                 {
@@ -344,13 +531,61 @@ namespace Avro.Test
                 }
             }
         }
+
+        /// <summary>
+        /// Asserts that two lists are equal, delegating the work of comapring
+        /// <see cref="ISpecificRecord"/> entries to
+        /// <see cref="AssertSpecificRecordEqual(ISpecificRecord, ISpecificRecord)"/>.
+        /// </summary>
+        /// <param name="expected">Expected list value.</param>
+        /// <param name="actual">Actual list value.</param>
+        private static void AssertListEqual(IList expected, IList actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+
+            for (var i = 0; i < expected.Count; ++i)
+            {
+                // Perform null checks first
+                if (expected[i] == null)
+                {
+                    Assert.Null(actual[i]);
+                    continue;
+                }
+                else
+                {
+                    Assert.NotNull(actual[i]);
+                }
+
+                if (expected[i] is ISpecificRecord expectedRecord)
+                {
+                    var actualRecord = actual[i] as ISpecificRecord;
+
+                    Assert.NotNull(actualRecord, "Expected entry that implements ISpecificRecord," +
+                        $" but was {actual[i].GetType().Name}");
+                    AssertSpecificRecordEqual(expectedRecord, actualRecord);
+                }
+                else if (expected[i] is IList expectedList)
+                {
+                    var actualList = actual[i] as IList;
+
+                    Assert.NotNull(actualList, "Expected entry that implements IList," +
+                        $" but was {actual[i].GetType().Name}");
+                    AssertListEqual(expectedList, actualList);
+                }
+                else
+                {
+                    Assert.AreEqual(expected, actual);
+                }
+            }
+        }
     }
 
-    enum EnumType
+    public enum EnumType
     {
-        THIRD,
+        DEFAULT, //putting the default first here so there isn't an ordinal collision for testing defaults
         FIRST,
-        SECOND
+        SECOND,
+        THIRD,
     }
 
     class EnumRecord : ISpecificRecord
@@ -360,9 +595,27 @@ namespace Avro.Test
         {
             get
             {
-                return Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
-                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
-                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
+                return Schema.Parse(@"{
+   ""type"":""record"",
+   ""name"":""EnumRecord"",
+   ""namespace"":""Avro.Test"",
+   ""fields"":[
+      {
+         ""name"":""enumType"",
+         ""type"":{
+            ""type"":""enum"",
+            ""name"":""EnumType"",
+            ""symbols"":[
+               ""DEFAULT"",
+               ""FIRST"",
+               ""SECOND"",
+               ""THIRD""
+            ]
+         },
+         ""default"": ""DEFAULT""
+      }
+   ]
+}");
             }
         }
 

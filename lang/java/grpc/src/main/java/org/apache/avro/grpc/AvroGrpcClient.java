@@ -47,7 +47,7 @@ public abstract class AvroGrpcClient {
    *
    * @param channel the channel used for gRPC {@link ClientCalls}.
    * @param iface   Avro interface for which client is built.
-   * @param         <T> type of Avro Interface.
+   * @param <T>     type of Avro Interface.
    * @return a new client proxy.
    */
   public static <T> T create(Channel channel, Class<T> iface) {
@@ -60,7 +60,7 @@ public abstract class AvroGrpcClient {
    * @param channel     the channel used for gRPC {@link ClientCalls}.
    * @param iface       Avro interface for which client is built.
    * @param callOptions client call options for gRPC.
-   * @param             <T> type of Avro Interface.
+   * @param <T>         type of Avro Interface.
    * @return a new client proxy.
    */
   public static <T> T create(Channel channel, Class<T> iface, CallOptions callOptions) {
@@ -74,14 +74,12 @@ public abstract class AvroGrpcClient {
   private static class ServiceInvocationHandler implements InvocationHandler {
     private final Channel channel;
     private final CallOptions callOptions;
-    private final Protocol protocol;
     private final ServiceDescriptor serviceDescriptor;
 
     ServiceInvocationHandler(Channel channel, CallOptions callOptions, Protocol protocol,
         ServiceDescriptor serviceDescriptor) {
       this.channel = channel;
       this.callOptions = callOptions;
-      this.protocol = protocol;
       this.serviceDescriptor = serviceDescriptor;
     }
 

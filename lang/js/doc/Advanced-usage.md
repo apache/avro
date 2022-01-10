@@ -195,7 +195,7 @@ function DecimalType(attrs, opts) {
   var type = this.getUnderlyingType();
   if (type instanceof FixedType) {
     var size = type.getSize();
-    var maxPrecision = Math.log(Math.pow(2, 8 * size - 1) - 1) / Math.log(10);
+    var maxPrecision = Math.log(2) * (8 * size - 1) / Math.log(10);
     if (precision > (maxPrecision | 0)) {
       throw new Error('fixed size too small to hold required precision');
     }

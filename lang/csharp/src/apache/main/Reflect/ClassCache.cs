@@ -1,4 +1,4 @@
-/*  
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,6 +32,7 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -214,8 +215,16 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
+                        /*              
+                        //.StackOverflowException
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
+                        */
+                        if (_previousFields.TryAdd(f.Name, f.Schema))
+                        {
+                            var t = c.GetPropertyType(f);
+                            LoadClassCache(t, f.Schema);
+                        }
                     }
 
                     break;
@@ -252,6 +261,32 @@ namespace Avro.Reflect
                     break;
                 case NamedSchema ns:
                     EnumCache.AddEnumNameMapItem(ns, objType);
+                    break;
+                case UnionSchema us:
+                    if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null) && objType.IsClass)
+                    {
+                        // in this case objType will match the non null type in the union
+                        foreach (var o in us.Schemas)
+                        {
+                            if (o.Tag != Schema.Type.Null)
+                            {
+                                LoadClassCache(objType, o);
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        // check the schema types are registered
+                        foreach (var o in us.Schemas)
+                        {
+                            if (o.Tag == Schema.Type.Record && GetClass(o as RecordSchema) == null)
+                            {
+                                throw new AvroException($"Class for union record type {o.Fullname} is not registered. Create a ClassCache object and call LoadClassCache");
+                            }
+                        }
+                    }
+
                     break;
             }
         }

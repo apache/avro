@@ -23,7 +23,6 @@ import java.util.ArrayList;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
-import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.avro.generic.GenericData.StringType;
 
 import org.apache.tools.ant.BuildException;
@@ -37,7 +36,6 @@ public class ProtocolTask extends Task {
   private File src;
   private File dest = new File(".");
   private StringType stringType = StringType.CharSequence;
-  private DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.DEFAULT;
 
   private final ArrayList<FileSet> filesets = new ArrayList<>();
 
@@ -59,17 +57,6 @@ public class ProtocolTask extends Task {
   /** Get the string type. */
   public StringType getStringType() {
     return this.stringType;
-  }
-
-  /** Sets the date/time logical type type (either JODA or JSR310) */
-  public void setDateTimeLogicalTypeImplementation(
-      DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
-  }
-
-  /** Get the date/time logical type type (either JODA or JSR310) */
-  public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    return dateTimeLogicalTypeImplementation;
   }
 
   /** Add a fileset. */
@@ -99,7 +86,7 @@ public class ProtocolTask extends Task {
 
   protected void doCompile(File src, File dir) throws IOException {
     Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+    SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setStringType(getStringType());
     compiler.compileToDestination(src, dest);
   }

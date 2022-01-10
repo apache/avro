@@ -27,6 +27,7 @@ import org.apache.avro.entities.Person;
 import org.apache.avro.protocols.Remote;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.junit.Test;
 
 public class TestInduceMojo extends AbstractMojoTestCase {
 
@@ -52,6 +53,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     assertNotNull(mojo);
   }
 
+  @Test
   public void testInduceSchema() throws Exception {
     executeMojo(schemaPom);
 
@@ -62,6 +64,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     assertEquals(ReflectData.get().getSchema(Person.class), new Schema.Parser().parse(personSchemaFile));
   }
 
+  @Test
   public void testInducedSchemasFileExtension() throws Exception {
     executeMojo(schemaPom);
 
@@ -71,6 +74,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     }
   }
 
+  @Test
   public void testInduceProtocol() throws Exception {
     executeMojo(protocolPom);
 
@@ -81,6 +85,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     assertEquals(ReflectData.get().getProtocol(Remote.class), Protocol.parse(remoteProtocolFile));
   }
 
+  @Test
   public void testInducedProtocolsFileExtension() throws Exception {
     executeMojo(protocolPom);
 

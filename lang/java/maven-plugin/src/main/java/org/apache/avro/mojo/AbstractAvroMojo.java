@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,8 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -73,7 +74,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * string values of SpecificCompiler.FieldVisibility. The text is case
    * insensitive.
    *
-   * @parameter default-value="PUBLIC_DEPRECATED"
+   * @parameter default-value="PRIVATE"
    */
   private String fieldVisibility;
 
@@ -147,6 +148,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean gettersReturnOptional = false;
 
   /**
+   * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+   * gettersReturnOptional option. If it is set, Optional getters will be
+   * generated only for fields that are nullable. If the field is mandatory,
+   * regular getter will be generated. This works ONLY on Java 8+.
+   *
+   * @parameter property="optionalGettersForNullableFieldsOnly"
+   */
+  protected boolean optionalGettersForNullableFieldsOnly = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record. The
    * default is to create setters.
    *
@@ -165,19 +176,21 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String[] customConversions = new String[0];
 
   /**
+   * A set of fully qualified class names of custom
+   * {@link org.apache.avro.LogicalTypes.LogicalTypeFactory} implementations to
+   * add to the compiler. The classes must be on the classpath at compile time and
+   * whenever the Java objects are serialized.
+   *
+   * @parameter property="customLogicalTypeFactories"
+   */
+  protected String[] customLogicalTypeFactories = new String[0];
+
+  /**
    * Determines whether or not to use Java classes for decimal types
    *
    * @parameter default-value="false"
    */
   protected boolean enableDecimalLogicalType;
-
-  /**
-   * Determines which type of classes to generate for date/time related logical
-   * types. Either 'joda' or 'jsr310'. Defaults to jsr310.
-   *
-   * @parameter default-value="jsr310"
-   */
-  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JSR310.name().toLowerCase();
 
   /**
    * The current Maven project.
@@ -230,8 +243,8 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private String[] getIncludedFiles(String absPath, String[] excludes, String[] includes) {
-    FileSetManager fileSetManager = new FileSetManager();
-    FileSet fs = new FileSet();
+    final FileSetManager fileSetManager = new FileSetManager();
+    final FileSet fs = new FileSet();
     fs.setDirectory(absPath);
     fs.setFollowSymlinks(false);
 
@@ -263,10 +276,28 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {
     for (String filename : files) {
       try {
+        // Need to register custom logical type factories before schema compilation.
+        loadLogicalTypesFactories();
         doCompile(filename, sourceDir, outDir);
       } catch (IOException e) {
         throw new MojoExecutionException("Error compiling protocol file " + filename + " to " + outDir, e);
       }
+    }
+  }
+
+  private void loadLogicalTypesFactories() throws IOException, MojoExecutionException {
+    try (URLClassLoader classLoader = createClassLoader()) {
+      for (String factory : customLogicalTypeFactories) {
+        Class<LogicalTypes.LogicalTypeFactory> logicalTypeFactoryClass = (Class<LogicalTypes.LogicalTypeFactory>) classLoader
+            .loadClass(factory);
+        LogicalTypes.LogicalTypeFactory factoryInstance = logicalTypeFactoryClass.getDeclaredConstructor()
+            .newInstance();
+        LogicalTypes.register(factoryInstance);
+      }
+    } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
+      throw new IOException(e);
+    } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+      throw new MojoExecutionException("Failed to instantiate logical type factory class", e);
     }
   }
 
@@ -279,28 +310,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
   }
 
-  protected DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    try {
-      if (this.dateTimeLogicalTypeImplementation == null || this.dateTimeLogicalTypeImplementation.isEmpty()) {
-        return DateTimeLogicalTypeImplementation.DEFAULT;
-      } else {
-        String upper = String.valueOf(this.dateTimeLogicalTypeImplementation).trim().toUpperCase();
-        return DateTimeLogicalTypeImplementation.valueOf(upper);
-      }
-    } catch (IllegalArgumentException e) {
-      getLog().warn("Unknown value '" + this.dateTimeLogicalTypeImplementation
-          + "' for property dateTimeLogicalTypeImplementation; using '"
-          + DateTimeLogicalTypeImplementation.DEFAULT.name().toLowerCase() + "' instead");
-      return DateTimeLogicalTypeImplementation.DEFAULT;
-    }
-  }
-
   protected List<Object> instantiateAdditionalVelocityTools() {
-    List<Object> velocityTools = new ArrayList<>(velocityToolsClassesNames.length);
+    final List<Object> velocityTools = new ArrayList<>(velocityToolsClassesNames.length);
     for (String velocityToolClassName : velocityToolsClassesNames) {
       try {
         Class klass = Class.forName(velocityToolClassName);
-        velocityTools.add(klass.newInstance());
+        velocityTools.add(klass.getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -311,18 +326,19 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;
 
   protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
-    List<URL> urls = appendElements(project.getRuntimeClasspathElements());
+    final List<URL> urls = appendElements(project.getRuntimeClasspathElements());
     urls.addAll(appendElements(project.getTestClasspathElements()));
     return new URLClassLoader(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
   }
 
   private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
-    List<URL> runtimeUrls = new ArrayList<>();
-    if (runtimeClasspathElements != null) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
+    if (runtimeClasspathElements == null) {
+      return new ArrayList<>();
+    }
+    List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
+    for (Object runtimeClasspathElement : runtimeClasspathElements) {
+      String element = (String) runtimeClasspathElement;
+      runtimeUrls.add(new File(element).toURI().toURL());
     }
     return runtimeUrls;
   }

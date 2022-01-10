@@ -128,6 +128,18 @@ namespace Avro.IO
         }
 
         /// <summary>
+        /// Bytes are encoded as a long followed by that many bytes of data.
+        /// </summary>
+        /// <param name="value">The byte[] to be read (fully or partially)</param>
+        /// <param name="offset">The offset from the beginning of the byte[] to start writing</param>
+        /// <param name="length">The length of the data to be read from the byte[].</param>
+        public void WriteBytes(byte[] value, int offset, int length)
+        {
+            WriteLong(length);
+            writeBytes(value, offset, length);
+        }
+
+        /// <summary>
         /// A string is encoded as a long followed by
         /// that many bytes of UTF-8 encoded character data.
         /// </summary>
@@ -197,6 +209,11 @@ namespace Avro.IO
         private void writeBytes(byte[] bytes)
         {
             Stream.Write(bytes, 0, bytes.Length);
+        }
+
+        private void writeBytes(byte[] bytes, int offset, int length)
+        {
+            Stream.Write(bytes, offset, length);
         }
 
         private void writeByte(byte b)

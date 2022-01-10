@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,6 +16,9 @@
 # limitations under the License.
 module Avro
   module SchemaCompatibility
+    INT_COERCIBLE_TYPES_SYM = [:long, :float, :double].freeze
+    LONG_COERCIBLE_TYPES_SYM = [:float, :double].freeze
+
     # Perform a full, recursive check that a datum written using the writers_schema
     # can be read using the readers_schema.
     def self.can_read?(writers_schema, readers_schema)
@@ -28,11 +32,12 @@ module Avro
     end
 
     # Perform a basic check that a datum written with the writers_schema could
-    # be read using the readers_schema. This check only includes matching the types,
-    # including schema promotion, and matching the full name for named types.
-    # Aliases for named types are not supported here, and the ruby implementation
-    # of Avro in general does not include support for aliases.
+    # be read using the readers_schema. This check includes matching the types,
+    # including schema promotion, and matching the full name (including aliases) for named types.
     def self.match_schemas(writers_schema, readers_schema)
+      # Bypass deeper checks if the schemas are the same Ruby objects
+      return true if writers_schema.equal?(readers_schema)
+
       w_type = writers_schema.type_sym
       r_type = readers_schema.type_sym
 
@@ -42,31 +47,25 @@ module Avro
       end
 
       if w_type == r_type
-        return true if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
+        return readers_schema.match_schema?(writers_schema) if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
 
         case r_type
-        when :record
-          return writers_schema.fullname == readers_schema.fullname
-        when :error
-          return writers_schema.fullname == readers_schema.fullname
         when :request
           return true
-        when :fixed
-          return writers_schema.fullname == readers_schema.fullname &&
-            writers_schema.size == readers_schema.size
-        when :enum
-          return writers_schema.fullname == readers_schema.fullname
         when :map
           return match_schemas(writers_schema.values, readers_schema.values)
         when :array
           return match_schemas(writers_schema.items, readers_schema.items)
+        else
+          return readers_schema.match_schema?(writers_schema)
         end
       end
 
       # Handle schema promotion
-      if w_type == :int && [:long, :float, :double].include?(r_type)
+      # rubocop:disable Lint/DuplicateBranch
+      if w_type == :int && INT_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
-      elsif w_type == :long && [:float, :double].include?(r_type)
+      elsif w_type == :long && LONG_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
       elsif w_type == :float && r_type == :double
         return true
@@ -75,8 +74,13 @@ module Avro
       elsif w_type == :bytes && r_type == :string
         return true
       end
+      # rubocop:enable Lint/DuplicateBranch
 
-      return false
+      if readers_schema.respond_to?(:match_schema?)
+        readers_schema.match_schema?(writers_schema)
+      else
+        false
+      end
     end
 
     class Checker
@@ -118,8 +122,8 @@ module Avro
         when :union
           match_union_schemas(writers_schema, readers_schema)
         when :enum
-          # reader's symbols must contain all writer's symbols
-          (writers_schema.symbols - readers_schema.symbols).empty?
+          # reader's symbols must contain all writer's symbols or reader has default
+          (writers_schema.symbols - readers_schema.symbols).empty? || !readers_schema.default.nil?
         else
           if writers_schema.type_sym == :union && writers_schema.schemas.size == 1
             full_match_schemas(writers_schema.schemas.first, readers_schema)
@@ -148,7 +152,14 @@ module Avro
           if writer_fields_hash.key?(field.name)
             return false unless full_match_schemas(writer_fields_hash[field.name].type, field.type)
           else
-            return false unless field.default?
+            names = writer_fields_hash.keys & field.alias_names
+            if names.size > 1
+              return false
+            elsif names.size == 1
+              return false unless full_match_schemas(writer_fields_hash[names.first].type, field.type)
+            else
+              return false unless field.default?
+            end
           end
         end
 

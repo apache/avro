@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -90,7 +91,10 @@ EOS
        "name": "Test",
        "fields": [{"name": "ts",
                    "type": {"type": "long",
-                            "logicalType": "timestamp-micros"}}]}
+                            "logicalType": "timestamp-micros"}},
+                  {"name": "ts2",
+                   "type": {"type": "long",
+                            "logicalType": "timestamp-millis"}}]}
 EOS
     check(record_schema)
   end
@@ -109,6 +113,13 @@ EOS
   def test_enum
     enum_schema = '{"type": "enum", "name": "Test","symbols": ["A", "B"]}'
     check(enum_schema)
+    check_default(enum_schema, '"B"', "B")
+  end
+
+  def test_enum_with_default
+    enum_schema = '{"type": "enum", "name": "Test", "symbols": ["A", "B"], "default": "A"}'
+    check(enum_schema)
+    # Field default is used for missing field.
     check_default(enum_schema, '"B"', "B")
   end
 
@@ -158,6 +169,17 @@ EOS
     check_default(fixed_schema, '"a"', "a")
   end
 
+  def test_record_variable_key_types
+    datum = { sym: "foo", "str"=>"bar"}
+    ret_val = { "sym"=> "foo", "str"=>"bar"}
+    schema = Schema.parse('{"type":"record", "name":"rec", "fields":[{"name":"sym", "type":"string"}, {"name":"str", "type":"string"}]}')
+
+    writer, _encoder, _datum_writer = write_datum(datum, schema)
+
+    ret_datum = read_datum(writer, schema)
+    assert_equal ret_datum, ret_val
+  end
+
   def test_record_with_nil
     schema = Avro::Schema.parse('{"type":"record", "name":"rec", "fields":[{"type":"int", "name":"i"}]}')
     assert_raise(Avro::IO::AvroTypeError) do
@@ -196,7 +218,7 @@ EOS
     [64, '80 01'],
     [8192, '80 80 01'],
     [-8193, '81 80 01'],
-  ]
+  ].freeze
 
   def avro_hexlify(reader)
     bytes = []
@@ -245,46 +267,46 @@ EOS
 
   def test_utf8_string_encoding
     [
-      "\xC3".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse('"string"'))
       datum_writer.write(value, encoder)
 
-      assert_equal "\x04\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\x04\xc3\x83", encoding: 'BINARY'), output
     end
   end
 
   def test_bytes_encoding
     [
-      "\xC3\x83".force_encoding('BINARY'),
-      "\xC3\x83".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3\x83", encoding: 'BINARY'),
+      String.new("\xC3\x83", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse('"bytes"'))
       datum_writer.write(value, encoder)
 
-      assert_equal "\x04\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\x04\xc3\x83", encoding: 'BINARY'), output
     end
   end
 
   def test_fixed_encoding
     [
-      "\xC3\x83".force_encoding('BINARY'),
-      "\xC3\x83".force_encoding('ISO-8859-1'),
-      "\xC3\x83".force_encoding('UTF-8')
+      String.new("\xC3\x83", encoding: 'BINARY'),
+      String.new("\xC3\x83", encoding: 'ISO-8859-1'),
+      String.new("\xC3\x83", encoding: 'UTF-8')
     ].each do |value|
-      output = ''.force_encoding('BINARY')
+      output = String.new('', encoding: 'BINARY')
       encoder = Avro::IO::BinaryEncoder.new(StringIO.new(output))
       schema = '{"type": "fixed", "name": "TwoBytes", "size": 2}'
       datum_writer = Avro::IO::DatumWriter.new(Avro::Schema.parse(schema))
       datum_writer.write(value, encoder)
 
-      assert_equal "\xc3\x83".force_encoding('BINARY'), output
+      assert_equal String.new("\xC3\x83", encoding: 'BINARY'), output
     end
   end
 
@@ -390,6 +412,50 @@ EOS
     assert_equal(incorrect, 0)
   end
 
+  def test_unknown_enum_symbol
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B"]
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    # Ruby implementation did not follow the spec and returns the writer's symbol here
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_unknown_enum_symbol_with_enum_default
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B", "UNKNOWN"],
+        "default": "UNKNOWN"
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, "UNKNOWN")
+  end
+
   def test_array_schema_promotion
     writers_schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
     readers_schema = Avro::Schema.parse('{"type":"array", "items":"long"}')
@@ -406,6 +472,36 @@ EOS
     writer, * = write_datum(datum_to_write, writers_schema)
     datum_read = read_datum(writer, writers_schema, readers_schema)
     assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_aliased
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec1", "fields":[
+        {"name":"field1", "type":"int"}
+      ]}
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA
+    writer, * = write_datum({ 'field1' => 1 }, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, { 'field2' => 1 })
+  end
+
+  def test_big_decimal_datum_for_float
+    writers_schema = Avro::Schema.parse('"float"')
+    writer, * = write_datum(BigDecimal('1.2'), writers_schema)
+    datum_read = read_datum(writer, writers_schema)
+    assert_in_delta(1.2, datum_read)
+  end
+
+  def test_big_decimal_datum_for_double
+    writers_schema = Avro::Schema.parse('"double"')
+    writer, * = write_datum(BigDecimal("1.2"), writers_schema)
+    datum_read = read_datum(writer, writers_schema)
+    assert_in_delta(1.2, datum_read)
   end
 
   def test_snappy_backward_compat
@@ -486,7 +582,7 @@ EOS
     datum = randomdata.next
     assert validate(schm, datum), 'datum is not valid for schema'
     w = Avro::IO::DatumWriter.new(schm)
-    writer = StringIO.new "", "w"
+    writer = StringIO.new(+"", "w")
     w.write(datum, Avro::IO::BinaryEncoder.new(writer))
     r = datum_reader(schm)
     reader = StringIO.new(writer.string)

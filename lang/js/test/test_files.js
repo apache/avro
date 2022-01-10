@@ -32,7 +32,7 @@ var files = require('../lib/files'),
 var DPATH = path.join(__dirname, 'dat');
 var Header = files.HEADER_TYPE.getRecordConstructor();
 var MAGIC_BYTES = files.MAGIC_BYTES;
-var SYNC = new Buffer('atokensyncheader');
+var SYNC = Buffer.from('atokensyncheader');
 var createType = schemas.createType;
 var streams = files.streams;
 var types = schemas.types;
@@ -96,7 +96,7 @@ suite('files', function () {
           buf = chunk;
         })
         .on('end', function () {
-          assert.deepEqual(buf, new Buffer([2, 0, 3]));
+          assert.deepEqual(buf, Buffer.from([2, 0, 3]));
           cb();
         });
       encoder.write(1);
@@ -112,7 +112,7 @@ suite('files', function () {
           bufs.push(chunk);
         })
         .on('end', function () {
-          assert.deepEqual(bufs, [new Buffer([1]), new Buffer([2])]);
+          assert.deepEqual(bufs, [Buffer.from([1]), Buffer.from([2])]);
           cb();
         });
       encoder.write(-1);
@@ -121,7 +121,7 @@ suite('files', function () {
 
     test('resize', function (cb) {
       var t = createType({type: 'fixed', name: 'A', size: 2});
-      var data = new Buffer([48, 18]);
+      var data = Buffer.from([48, 18]);
       var buf;
       var encoder = new RawEncoder(t, {batchSize: 1})
         .on('data', function (chunk) {
@@ -138,7 +138,7 @@ suite('files', function () {
 
     test('flush when full', function (cb) {
       var t = createType({type: 'fixed', name: 'A', size: 2});
-      var data = new Buffer([48, 18]);
+      var data = Buffer.from([48, 18]);
       var chunks = [];
       var encoder = new RawEncoder(t, {batchSize: 2})
         .on('data', function (chunk) { chunks.push(chunk); })
@@ -194,7 +194,7 @@ suite('files', function () {
           assert.deepEqual(objs, [0]);
           cb();
         });
-      decoder.end(new Buffer([0]));
+      decoder.end(Buffer.from([0]));
     });
 
     test('no writer type', function () {
@@ -210,13 +210,13 @@ suite('files', function () {
           assert.deepEqual(objs, [1, 2]);
           cb();
         });
-      decoder.write(new Buffer([2]));
-      decoder.end(new Buffer([4]));
+      decoder.write(Buffer.from([2]));
+      decoder.end(Buffer.from([4]));
     });
 
     test('no decoding', function (cb) {
       var t = createType('int');
-      var bufs = [new Buffer([3]), new Buffer([124])];
+      var bufs = [Buffer.from([3]), Buffer.from([124])];
       var objs = [];
       var decoder = new RawDecoder(t, {decode: false})
         .on('data', function (obj) { objs.push(obj); })
@@ -234,12 +234,12 @@ suite('files', function () {
       var decoder = new RawDecoder(t)
         .on('data', function (obj) { objs.push(obj); })
         .on('end', function () {
-          assert.deepEqual(objs, [new Buffer([6])]);
+          assert.deepEqual(objs, [Buffer.from([6])]);
           cb();
         });
-      decoder.write(new Buffer([2]));
+      decoder.write(Buffer.from([2]));
       // Let the first read go through (and return null).
-      process.nextTick(function () { decoder.end(new Buffer([6])); });
+      process.nextTick(function () { decoder.end(Buffer.from([6])); });
     });
 
   });
@@ -271,7 +271,7 @@ suite('files', function () {
       var chunks = [];
       var encoder = new BlockEncoder(t)
         .on('data', function (chunk) { chunks.push(chunk); })
-        .on('end', function () {
+        .on('finish', function () {
           assert.equal(chunks.length, 0);
           cb();
         });
@@ -287,9 +287,9 @@ suite('files', function () {
       }).on('data', function (chunk) { chunks.push(chunk); })
         .on('end', function () {
           assert.deepEqual(chunks, [
-            new Buffer([6]),
-            new Buffer([6]),
-            new Buffer([24, 0, 8]),
+            Buffer.from([6]),
+            Buffer.from([6]),
+            Buffer.from([24, 0, 8]),
             SYNC
           ]);
           cb();
@@ -310,8 +310,8 @@ suite('files', function () {
           assert.deepEqual(
             chunks,
             [
-              new Buffer([2]), new Buffer([2]), new Buffer([2]), SYNC,
-              new Buffer([2]), new Buffer([4]), new Buffer([128, 1]), SYNC
+              Buffer.from([2]), Buffer.from([2]), Buffer.from([2]), SYNC,
+              Buffer.from([2]), Buffer.from([4]), Buffer.from([128, 1]), SYNC
             ]
           );
           cb();
@@ -322,7 +322,7 @@ suite('files', function () {
 
     test('resize', function (cb) {
       var t = createType({type: 'fixed', size: 8, name: 'Eight'});
-      var buf = new Buffer('abcdefgh');
+      var buf = Buffer.from('abcdefgh');
       var chunks = [];
       var encoder = new BlockEncoder(t, {
         omitHeader: true,
@@ -330,8 +330,8 @@ suite('files', function () {
         blockSize: 4
       }).on('data', function (chunk) { chunks.push(chunk); })
         .on('end', function () {
-          var b1 = new Buffer([4]);
-          var b2 = new Buffer([32]);
+          var b1 = Buffer.from([4]);
+          var b2 = Buffer.from([32]);
           assert.deepEqual(chunks, [b1, b2, Buffer.concat([buf, buf]), SYNC]);
           cb();
         });
@@ -351,7 +351,7 @@ suite('files', function () {
 
     test('write non-canonical schema', function (cb) {
       var obj = {type: 'fixed', size: 2, name: 'Id', doc: 'An id.'};
-      var id = new Buffer([1, 2]);
+      var id = Buffer.from([1, 2]);
       var ids = [];
       var encoder = new BlockEncoder(obj);
       var decoder = new streams.BlockDecoder()
@@ -378,8 +378,8 @@ suite('files', function () {
       var decoder = new BlockDecoder()
         .on('data', function () {})
         .on('error', function () { cb(); });
-      decoder.write(new Buffer([0, 3, 2, 1])); // !== MAGIC_BYTES
-      decoder.write(new Buffer([0]));
+      decoder.write(Buffer.from([0, 3, 2, 1])); // !== MAGIC_BYTES
+      decoder.write(Buffer.from([0]));
       decoder.end(SYNC);
     });
 
@@ -390,14 +390,14 @@ suite('files', function () {
       var header = new Header(
         MAGIC_BYTES,
         {
-          'avro.schema': new Buffer('"int"'),
-          'avro.codec': new Buffer('null')
+          'avro.schema': Buffer.from('"int"'),
+          'avro.codec': Buffer.from('null')
         },
         SYNC
       );
       decoder.write(header.$toBuffer());
-      decoder.write(new Buffer([0, 0])); // Empty block.
-      decoder.end(new Buffer('alongerstringthansixteenbytes'));
+      decoder.write(Buffer.from([0, 0])); // Empty block.
+      decoder.end(Buffer.from('alongerstringthansixteenbytes'));
     });
 
     test('missing codec', function (cb) {
@@ -406,7 +406,7 @@ suite('files', function () {
         .on('end', function () { cb(); });
       var header = new Header(
         MAGIC_BYTES,
-        {'avro.schema': new Buffer('"int"')},
+        {'avro.schema': Buffer.from('"int"')},
         SYNC
       );
       decoder.end(header.$toBuffer());
@@ -419,8 +419,8 @@ suite('files', function () {
       var header = new Header(
         MAGIC_BYTES,
         {
-          'avro.schema': new Buffer('"int"'),
-          'avro.codec': new Buffer('"foo"')
+          'avro.schema': Buffer.from('"int"'),
+          'avro.codec': Buffer.from('"foo"')
         },
         SYNC
       );
@@ -434,8 +434,8 @@ suite('files', function () {
       var header = new Header(
         MAGIC_BYTES,
         {
-          'avro.schema': new Buffer('"int2"'),
-          'avro.codec': new Buffer('null')
+          'avro.schema': Buffer.from('"int2"'),
+          'avro.codec': Buffer.from('null')
         },
         SYNC
       );
@@ -469,7 +469,7 @@ suite('files', function () {
       var decoder = new streams.BlockDecoder({decode: false})
         .on('data', function (obj) { objs.push(obj); })
         .on('end', function () {
-          assert.deepEqual(objs, [new Buffer([96])]);
+          assert.deepEqual(objs, [Buffer.from([96])]);
           cb();
         });
       encoder.pipe(decoder);
@@ -564,7 +564,7 @@ suite('files', function () {
     encoder.write({name: 'Ann', age: 32});
     encoder.end({name: 'Bob', age: 33});
     var n = 0;
-    encoder.on('finish', function () {
+    encoder.getDownstream().on('finish', function () {
       files.createFileDecoder(path)
         .on('data', function (obj) {
           n++;

@@ -16,8 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required(VERSION 2.4)
-project(AvroC)
+cmake_minimum_required(VERSION 3.1)
+project(AvroC C)
 enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})

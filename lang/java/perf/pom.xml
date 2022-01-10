@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -34,7 +34,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <jmh.version>1.21</jmh.version>
+    <jmh.version>1.33</jmh.version>
     <main.basedir>${project.parent.parent.basedir}</main.basedir>
   </properties>
 

@@ -104,7 +104,12 @@ namespace Avro
             /// <summary>
             /// A protocol error.
             /// </summary>
-            Error
+            Error,
+
+            /// <summary>
+            /// A logical type.
+            /// </summary>
+            Logical
         }
 
         /// <summary>
@@ -161,7 +166,7 @@ namespace Avro
                 if (null != ps) return ps;
 
                 NamedSchema schema = null;
-                if (names.TryGetValue(value, null, encspace, out schema)) return schema;
+                if (names.TryGetValue(value, null, encspace, null, out schema)) return schema;
 
                 throw new SchemaParseException($"Undefined name: {value} at '{jtok.Path}'");
             }
@@ -187,6 +192,8 @@ namespace Avro
                         return ArraySchema.NewInstance(jtok, props, names, encspace);
                     if (type.Equals("map", StringComparison.Ordinal))
                         return MapSchema.NewInstance(jtok, props, names, encspace);
+                    if (null != jo["logicalType"]) // logical type based on a primitive
+                        return LogicalSchema.NewInstance(jtok, props, names, encspace);
 
                     Schema schema = PrimitiveSchema.NewInstance((string)type, props);
                     if (null != schema) return schema;
@@ -195,6 +202,8 @@ namespace Avro
                 }
                 else if (jtype.Type == JTokenType.Array)
                     return UnionSchema.NewInstance(jtype as JArray, props, names, encspace);
+                else if (jtype.Type == JTokenType.Object && null != jo["logicalType"]) // logical type based on a complex type
+                    return LogicalSchema.NewInstance(jtok, props, names, encspace);
             }
             throw new AvroTypeException($"Invalid JSON for schema: {jtok} at '{jtok.Path}'");
         }
@@ -257,21 +266,13 @@ namespace Avro
         /// <returns>The canonical JSON representation of this schema.</returns>
         public override string ToString()
         {
-            System.IO.StringWriter sw = new System.IO.StringWriter();
-            Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw);
-
-            if (this is PrimitiveSchema || this is UnionSchema)
+            using (System.IO.StringWriter sw = new System.IO.StringWriter())
+            using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
             {
-                writer.WriteStartObject();
-                writer.WritePropertyName("type");
+                WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
+
+                return sw.ToString();
             }
-
-            WriteJson(writer, new SchemaNames(), null); // stand alone schema, so no enclosing name space
-
-            if (this is PrimitiveSchema || this is UnionSchema)
-                writer.WriteEndObject();
-
-            return sw.ToString();
         }
 
         /// <summary>

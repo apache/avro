@@ -18,6 +18,9 @@
 
 package org.apache.avro.generic;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,9 +28,16 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
-
-import org.apache.avro.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -142,6 +152,44 @@ public class TestGenericLogicalTypes {
     File test = write(GENERIC, decimalSchema, d1, d2);
     Assert.assertEquals("Should read BigDecimals as fixed", expected,
         read(GenericData.get().createDatumReader(fixedSchema), test));
+  }
+
+  @Test
+  public void testDecimalToFromBytes() throws IOException {
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
+    Schema bytesSchema = Schema.create(Schema.Type.BYTES);
+
+    // Check that the round trip to and from bytes
+    BigDecimal d1 = new BigDecimal("-34.34");
+    BigDecimal d2 = new BigDecimal("117230.00");
+
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
+
+    ByteBuffer d1bytes = conversion.toBytes(d1, bytesSchema, decimal);
+    ByteBuffer d2bytes = conversion.toBytes(d2, bytesSchema, decimal);
+
+    assertThat(conversion.fromBytes(d1bytes, bytesSchema, decimal), is(d1));
+    assertThat(conversion.fromBytes(d2bytes, bytesSchema, decimal), is(d2));
+
+    assertThat("Ensure ByteBuffer not consumed by conversion", conversion.fromBytes(d1bytes, bytesSchema, decimal),
+        is(d1));
+  }
+
+  @Test
+  public void testDecimalToFromFixed() throws IOException {
+    LogicalType decimal = LogicalTypes.decimal(9, 2);
+    Schema fixedSchema = Schema.createFixed("aFixed", null, null, 4);
+
+    // Check that the round trip to and from fixed data.
+    BigDecimal d1 = new BigDecimal("-34.34");
+    BigDecimal d2 = new BigDecimal("117230.00");
+
+    Conversion<BigDecimal> conversion = new Conversions.DecimalConversion();
+
+    GenericFixed d1fixed = conversion.toFixed(d1, fixedSchema, decimal);
+    GenericFixed d2fixed = conversion.toFixed(d2, fixedSchema, decimal);
+    assertThat(conversion.fromFixed(d1fixed, fixedSchema, decimal), is(d1));
+    assertThat(conversion.fromFixed(d2fixed, fixedSchema, decimal), is(d2));
   }
 
   @Test

@@ -44,6 +44,11 @@ namespace Avro.Specific
         private readonly Type GenericListType = typeof(List<>);
 
         /// <summary>
+        /// Static generic list type used for creating new IList instances
+        /// </summary>
+        private readonly Type GenericIListType = typeof(IList<>);
+
+        /// <summary>
         /// Static generic nullable type used for creating new nullable instances
         /// </summary>
         private readonly Type GenericNullableType = typeof(Nullable<>);
@@ -106,7 +111,9 @@ namespace Avro.Specific
             {
                 unchecked
                 {
+#pragma warning disable CA1307 // Specify StringComparison
                     return ((name != null ? name.GetHashCode() : 0) * 397) ^ type.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
                 }
             }
             public static bool operator ==(NameCtorKey left, NameCtorKey right)
@@ -136,12 +143,15 @@ namespace Avro.Specific
             {
                 Type type = null;
 
-                // Modify provided type to ensure it can be discovered.
-                // This is mainly for Generics, and Nullables.
-                name = name.Replace("Nullable", "Nullable`1");
-                name = name.Replace("IList", "System.Collections.Generic.IList`1");
-                name = name.Replace("<", "[");
-                name = name.Replace(">", "]");
+                if (TryGetIListItemTypeName(name, out var itemTypeName))
+                {
+                    return GenericIListType.MakeGenericType(FindType(itemTypeName));
+                }
+
+                if (TryGetNullableItemTypeName(name, out itemTypeName))
+                {
+                    return GenericNullableType.MakeGenericType(FindType(itemTypeName));
+                }
 
                 // if entry assembly different from current assembly, try entry assembly first
                 if (diffAssembly)
@@ -167,7 +177,7 @@ namespace Avro.Specific
                             // Change the search to look for Types by both NAME and FULLNAME
                             foreach (Type t in assembly.GetTypes())
                             {
-                                if (name == t.Name || name == t.FullName)
+                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
                                 {
                                     type = t;
                                     break;
@@ -185,6 +195,58 @@ namespace Avro.Specific
                     ?? throw new AvroException($"Unable to find type '{name}' in all loaded " +
                     $"assemblies");
             });
+        }
+
+        private bool TryGetIListItemTypeName(string name, out string itemTypeName)
+        {
+            const string listPrefix = "IList<";
+            const string fullListPrefix = "System.Collections.Generic.IList<";
+
+            if (!name.EndsWith(">", StringComparison.Ordinal))
+            {
+                itemTypeName = null;
+                return false;
+            }
+
+            if (name.StartsWith(fullListPrefix, StringComparison.Ordinal))
+            {
+                itemTypeName = name.Substring(
+                    fullListPrefix.Length, name.Length - fullListPrefix.Length - 1);
+                return true;
+            }
+
+            if (name.StartsWith(listPrefix, StringComparison.Ordinal))
+            {
+                itemTypeName = name.Substring(
+                    listPrefix.Length, name.Length - listPrefix.Length - 1);
+                return true;
+            }
+
+            itemTypeName = null;
+            return false;
+        }
+
+        private bool TryGetNullableItemTypeName(string name, out string itemTypeName)
+        {
+            const string nullablePrefix = "Nullable<";
+            const string fullNullablePrefix = "System.Nullable<";
+
+            if (name.StartsWith(fullNullablePrefix, StringComparison.Ordinal))
+            {
+                itemTypeName = name.Substring(
+                    fullNullablePrefix.Length, name.Length - fullNullablePrefix.Length - 1);
+                return true;
+            }
+
+            if (name.StartsWith(nullablePrefix, StringComparison.Ordinal))
+            {
+                itemTypeName = name.Substring(
+                    nullablePrefix.Length, name.Length - nullablePrefix.Length - 1);
+                return true;
+            }
+
+            itemTypeName = null;
+            return false;
         }
 
         /// <summary>

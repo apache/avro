@@ -18,9 +18,12 @@
 
 package org.apache.avro.compiler.idl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,14 +33,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.avro.Protocol;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Simple test harness for Idl. This relies on an input/ and output/ directory.
@@ -83,12 +87,11 @@ public class TestIdl {
     if (!"run".equals(TEST_MODE))
       return;
 
-    int passed = 0, failed = 0;
+    int failed = 0;
 
     for (GenTest t : tests) {
       try {
         t.run();
-        passed++;
       } catch (Exception e) {
         failed++;
         System.err.println("Failed: " + t.testName());
@@ -111,6 +114,54 @@ public class TestIdl {
     }
   }
 
+  @Test
+  public void testDocCommentsAndWarnings() throws Exception {
+    try (Idl parser = new Idl(new File(TEST_INPUT_DIR, "comments.avdl"))) {
+      final Protocol protocol = parser.CompilationUnit();
+      final List<String> warnings = parser.getWarningsAfterParsing();
+
+      assertEquals("Documented Enum", protocol.getType("testing.DocumentedEnum").getDoc());
+      assertEquals("Dangling Enum9", protocol.getType("testing.NotUndocumentedEnum").getDoc()); // Arguably a bug
+      assertEquals("Documented Fixed Type", protocol.getType("testing.DocumentedFixed").getDoc());
+      assertNull(protocol.getType("testing.UndocumentedFixed").getDoc());
+      final Schema documentedError = protocol.getType("testing.DocumentedError");
+      assertEquals("Documented Error", documentedError.getDoc());
+      assertEquals("Documented Field", documentedError.getField("reason").doc());
+      assertEquals("Dangling Error2", protocol.getType("testing.NotUndocumentedRecord").getDoc()); // Arguably a bug
+      final Map<String, Protocol.Message> messages = protocol.getMessages();
+      assertEquals("Documented Method", messages.get("documentedMethod").getDoc());
+      assertEquals("Documented Parameter", messages.get("documentedMethod").getRequest().getField("message").doc());
+      assertEquals("Dangling Method3", messages.get("notUndocumentedMethod").getDoc()); // Arguably a bug
+
+      assertEquals(23, warnings.size());
+      final String pattern = "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\""
+          + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?";
+      assertEquals(String.format(pattern, 21, 47, 21, 10, "Dangling Enum1"), warnings.get(0));
+      assertEquals(String.format(pattern, 22, 9, 21, 47, "Dangling Enum2"), warnings.get(1));
+      assertEquals(String.format(pattern, 23, 9, 22, 9, "Dangling Enum3"), warnings.get(2));
+      assertEquals(String.format(pattern, 24, 9, 23, 9, "Dangling Enum4"), warnings.get(3));
+      assertEquals(String.format(pattern, 25, 5, 24, 9, "Dangling Enum5"), warnings.get(4));
+      assertEquals(String.format(pattern, 26, 5, 25, 5, "Dangling Enum6"), warnings.get(5));
+      assertEquals(String.format(pattern, 27, 5, 26, 5, "Dangling Enum7"), warnings.get(6));
+      assertEquals(String.format(pattern, 28, 5, 27, 5, "Dangling Enum8"), warnings.get(7));
+      assertEquals(String.format(pattern, 34, 5, 33, 5, "Dangling Fixed1"), warnings.get(8));
+      assertEquals(String.format(pattern, 35, 5, 34, 5, "Dangling Fixed2"), warnings.get(9));
+      assertEquals(String.format(pattern, 36, 5, 35, 5, "Dangling Fixed3"), warnings.get(10));
+      assertEquals(String.format(pattern, 37, 5, 36, 5, "Dangling Fixed4"), warnings.get(11));
+      assertEquals(String.format(pattern, 38, 5, 37, 5, "Dangling Fixed5"), warnings.get(12));
+      assertEquals(String.format(pattern, 43, 5, 42, 5, "Dangling Error1"), warnings.get(13));
+      assertEquals(String.format(pattern, 45, 5, 44, 5, "Dangling Field1"), warnings.get(14));
+      assertEquals(String.format(pattern, 46, 5, 45, 5, "Dangling Field2"), warnings.get(15));
+      assertEquals(String.format(pattern, 47, 5, 46, 5, "Dangling Field3"), warnings.get(16));
+      assertEquals(String.format(pattern, 57, 5, 56, 5, "Dangling Param1"), warnings.get(17));
+      assertEquals(String.format(pattern, 58, 9, 57, 5, "Dangling Param2"), warnings.get(18));
+      assertEquals(String.format(pattern, 59, 9, 58, 9, "Dangling Param3"), warnings.get(19));
+      assertEquals(String.format(pattern, 60, 5, 59, 9, "Dangling Param4"), warnings.get(20));
+      assertEquals(String.format(pattern, 62, 5, 61, 5, "Dangling Method1"), warnings.get(21));
+      assertEquals(String.format(pattern, 63, 5, 62, 5, "Dangling Method2"), warnings.get(22));
+    }
+  }
+
   /**
    * An individual comparison test
    */
@@ -125,12 +176,7 @@ public class TestIdl {
     private String generate() throws Exception {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-      // Calculate the absolute path to src/test/resources/putOnClassPath/
-      File file = new File(".");
-      String currentWorkPath = file.toURI().toURL().toString();
-      String newPath = currentWorkPath + "src" + File.separator + "test" + File.separator + "idl" + File.separator
-          + "putOnClassPath" + File.separator;
-      URL[] newPathURL = new URL[] { new URL(newPath) };
+      URL[] newPathURL = new URL[] { cl.getResource("putOnClassPath-test-resource.jar") };
       URLClassLoader ucl = new URLClassLoader(newPathURL, cl);
 
       Idl parser = new Idl(in, ucl);
@@ -154,9 +200,9 @@ public class TestIdl {
     }
 
     private static String slurp(File f) throws IOException {
-      BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+      BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 
-      String line = null;
+      String line;
       StringBuilder builder = new StringBuilder();
       while ((line = in.readLine()) != null) {
         builder.append(line);

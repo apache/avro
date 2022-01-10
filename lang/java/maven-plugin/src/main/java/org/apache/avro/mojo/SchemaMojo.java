@@ -64,7 +64,7 @@ public class SchemaMojo extends AbstractAvroMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
-    Schema schema;
+    final Schema schema;
 
     // This is necessary to maintain backward-compatibility. If there are
     // no imported files then isolate the schemas from each other, otherwise
@@ -76,12 +76,13 @@ public class SchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
-    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
+    final SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateOptionalGetters(createOptionalGetters);
     compiler.setGettersReturnOptional(gettersReturnOptional);
+    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {

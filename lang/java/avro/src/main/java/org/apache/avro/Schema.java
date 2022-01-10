@@ -49,6 +49,11 @@ import java.util.Set;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
 
 /**
  * An abstract data type.
@@ -106,6 +111,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   static final JsonFactory FACTORY = new JsonFactory();
+  static final Logger LOG = LoggerFactory.getLogger(Schema.class);
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
@@ -118,6 +124,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+
     private final String name;
 
     private Type() {
@@ -275,6 +282,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   /**
+   * If this is a record, returns whether the fields have been set.
+   */
+  public boolean hasFields() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  /**
    * If this is a record, set its fields. The fields can be set only once in a
    * schema.
    */
@@ -388,12 +402,35 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
+    return toString(new Names(), pretty);
+  }
+
+  /**
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
+   *
+   * @param referencedSchemas referenced schemas
+   * @param pretty            if true, pretty-print JSON.
+   */
+  // Use at your own risk. This method should be removed with AVRO-2832.
+  @Deprecated
+  public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
+    Schema.Names names = new Schema.Names();
+    if (referencedSchemas != null) {
+      for (Schema s : referencedSchemas) {
+        names.add(s);
+      }
+    }
+    return toString(names, pretty);
+  }
+
+  String toString(Names names, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(new Names(), gen);
+      toJson(names, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -492,6 +529,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
+
       private final String name;
 
       private Order() {
@@ -834,8 +872,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocal.withInitial(HashSet::new);
-  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocal.withInitial(IdentityHashMap::new);
+  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocalWithInitial.of(HashSet::new);
+  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocalWithInitial.of(IdentityHashMap::new);
 
   @SuppressWarnings(value = "unchecked")
   private static class RecordSchema extends NamedSchema {
@@ -874,16 +912,22 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    public boolean hasFields() {
+      return fields != null;
+    }
+
+    @Override
     public void setFields(List<Field> fields) {
       if (this.fields != null) {
         throw new AvroRuntimeException("Fields are already set");
       }
       int i = 0;
-      fieldMap = new HashMap<>();
-      LockableArrayList ff = new LockableArrayList();
+      fieldMap = new HashMap<>(Math.multiplyExact(2, fields.size()));
+      LockableArrayList<Field> ff = new LockableArrayList<>(fields.size());
       for (Field f : fields) {
-        if (f.position != -1)
+        if (f.position != -1) {
           throw new AvroRuntimeException("Field already used: " + f);
+        }
         f.position = i++;
         final Field existingField = fieldMap.put(f.name(), f);
         if (existingField != null) {
@@ -999,15 +1043,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public EnumSchema(Name name, String doc, LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
-      this.ordinals = new HashMap<>();
+      this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
       this.enumDefault = enumDefault;
       int i = 0;
-      for (String symbol : symbols)
-        if (ordinals.put(validateName(symbol), i++) != null)
+      for (String symbol : symbols) {
+        if (ordinals.put(validateName(symbol), i++) != null) {
           throw new SchemaParseException("Duplicate enum symbol: " + symbol);
-      if (enumDefault != null && !symbols.contains(enumDefault))
+        }
+      }
+      if (enumDefault != null && !symbols.contains(enumDefault)) {
         throw new SchemaParseException(
             "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
+      }
     }
 
     @Override
@@ -1146,20 +1193,24 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
-    private final Map<String, Integer> indexByName = new HashMap<>();
+    private final Map<String, Integer> indexByName;
 
     public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
+      this.indexByName = new HashMap<>(Math.multiplyExact(2, types.size()));
       this.types = types.lock();
       int index = 0;
       for (Schema type : types) {
-        if (type.getType() == Type.UNION)
+        if (type.getType() == Type.UNION) {
           throw new AvroRuntimeException("Nested union: " + this);
+        }
         String name = type.getFullName();
-        if (name == null)
+        if (name == null) {
           throw new AvroRuntimeException("Nameless in union:" + this);
-        if (indexByName.put(name, index++) != null)
+        }
+        if (indexByName.put(name, index++) != null) {
           throw new AvroRuntimeException("Duplicate in union:" + name);
+        }
       }
     }
 
@@ -1513,11 +1564,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static ThreadLocal<Boolean> validateNames = ThreadLocal.withInitial(() -> true);
+  private static ThreadLocal<Boolean> validateNames = ThreadLocalWithInitial.of(() -> true);
 
   private static String validateName(String name) {
     if (!validateNames.get())
       return name; // not validating names
+    if (name == null)
+      throw new SchemaParseException("Null name");
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");
@@ -1532,7 +1585,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return name;
   }
 
-  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocal.withInitial(() -> true);
+  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema, JsonNode defaultValue) {
     if (VALIDATE_DEFAULTS.get() && (defaultValue != null) && !isValidDefault(schema, defaultValue)) { // invalid default
@@ -1552,7 +1605,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
     case FIXED:
       return defaultValue.isTextual();
     case INT:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToInt();
     case LONG:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToLong();
     case FLOAT:
     case DOUBLE:
       return defaultValue.isNumber();
@@ -1611,9 +1666,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (space == null)
           space = names.space();
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-        if (name.space != null) { // set default namespace
-          names.space(name.space);
-        }
+        names.space(name.space); // set default namespace
       }
       if (PRIMITIVES.containsKey(type)) { // primitive
         result = create(PRIMITIVES.get(type));
@@ -1653,6 +1706,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
           }
           f.aliases = parseAliases(field);
           fields.add(f);
+          if (fieldSchema.getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
+            LOG.warn(
+                "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
+                name, fieldName, getOptionalText(field, "logicalType"));
         }
         result.setFields(fields);
       } else if (type.equals("enum")) { // enum

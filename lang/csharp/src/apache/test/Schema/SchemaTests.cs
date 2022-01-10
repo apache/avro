@@ -69,8 +69,12 @@ namespace Avro.Test
             typeof(SchemaParseException), Description = "No fields")]
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\", \"fields\": \"hi\"}",
             typeof(SchemaParseException), Description = "Fields not an array")]
-        [TestCase("[{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns1\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}," + 
+        [TestCase("[{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns1\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}," +
                    "{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns2\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}]")]
+
+        // Doc
+        [TestCase("{\"type\": \"record\",\"name\": \"Test\",\"doc\": \"Test Doc\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}")]
+
         // Enum
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}")]
         [TestCase("{\"type\": \"enum\", \"name\": \"Status\", \"symbols\": \"Normal Caution Critical\"}",
@@ -218,6 +222,11 @@ namespace Avro.Test
             var rs = Schema.Parse(s) as RecordSchema;
             Assert.IsNotNull(rs);
             Assert.AreEqual(expectedDoc, rs.Documentation);
+
+            var roundTrip = Schema.Parse(rs.ToString()) as RecordSchema;
+
+            Assert.IsNotNull(roundTrip);
+            Assert.AreEqual(expectedDoc, roundTrip.Documentation);
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
@@ -249,6 +258,20 @@ namespace Avro.Test
             Assert.AreEqual(expectedDoc, es.Documentation);
         }
 
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Unknown\" }", "Unknown")]
+        public void TestEnumDefault(string s, string expectedToken)
+        {
+            var es = Schema.Parse(s) as EnumSchema;
+            Assert.IsNotNull(es);
+            Assert.AreEqual(es.Default, expectedToken);
+        }
+
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Something\" }")]
+        public void TestEnumDefaultSymbolDoesntExist(string s)
+        {
+            Assert.Throws<SchemaParseException>(() => Schema.Parse(s));
+        }
+
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}", "long")]
         public void TestArray(string s, string item)
         {
@@ -259,6 +282,27 @@ namespace Avro.Test
 
             testEquality(s, sc);
             testToString(sc);
+        }
+
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"date\"}", "int", "date")]
+        public void TestLogicalPrimitive(string s, string baseType, string logicalType)
+        {
+            Schema sc = Schema.Parse(s);
+            Assert.AreEqual(Schema.Type.Logical, sc.Tag);
+            LogicalSchema logsc = sc as LogicalSchema;
+            Assert.AreEqual(baseType, logsc.BaseSchema.Name);
+            Assert.AreEqual(logicalType, logsc.LogicalType.Name);
+
+            testEquality(s, sc);
+            testToString(sc);
+        }
+
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
+        public void TestUnknownLogical(string s, string unknownType)
+        {
+            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+
+            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
         }
 
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]
@@ -313,7 +357,7 @@ namespace Avro.Test
         [TestCase("a", "o.a.h", ExpectedResult = "o.a.h.a")]
         public string testFullname(string s1, string s2)
         {
-            var name = new SchemaName(s1, s2, null);
+            var name = new SchemaName(s1, s2, null, null);
             return name.Fullname;
         }
 
@@ -324,6 +368,13 @@ namespace Avro.Test
             var schema = Schema.Parse(schemaJson);
 
             Assert.AreEqual(expectedName, schema.Name);
+        }
+
+        [TestCase("[\"null\",\"string\"]", "[\"null\",\"string\"]")]
+        public void TestUnionSchemaWithoutTypeProperty(string schemaJson, string expectedSchemaJson)
+        {
+            var schema = Schema.Parse(schemaJson);
+            Assert.AreEqual(schema.ToString(), expectedSchemaJson);
         }
     }
 }

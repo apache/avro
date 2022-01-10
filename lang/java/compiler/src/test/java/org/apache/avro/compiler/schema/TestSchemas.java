@@ -38,36 +38,9 @@ public class TestSchemas {
       + "                     {\"name\":\"methodName\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}\n"
       + "                  ]}},\n" + "              {\"name\":\"node\",\"type\":\"SampleNode\"}]}}}" + "]}";
 
-  private static class PrintingVisitor implements SchemaVisitor {
-
-    @Override
-    public SchemaVisitorAction visitTerminal(Schema terminal) {
-      System.out.println("Terminal: " + terminal.getFullName());
-      return SchemaVisitorAction.CONTINUE;
-    }
-
-    @Override
-    public SchemaVisitorAction visitNonTerminal(Schema terminal) {
-      System.out.println("NONTerminal start: " + terminal.getFullName());
-      return SchemaVisitorAction.CONTINUE;
-    }
-
-    @Override
-    public SchemaVisitorAction afterVisitNonTerminal(Schema terminal) {
-      System.out.println("NONTerminal end: " + terminal.getFullName());
-      return SchemaVisitorAction.CONTINUE;
-    }
-
-    @Override
-    public Object get() {
-      return null;
-    }
-  }
-
   @Test
   public void textCloning() {
     Schema recSchema = new Schema.Parser().parse(SCHEMA);
-    Schemas.visit(recSchema, new PrintingVisitor());
 
     CloningVisitor cv = new CloningVisitor(recSchema);
     Schema trimmed = Schemas.visit(recSchema, cv);
@@ -85,7 +58,6 @@ public class TestSchemas {
   @Test
   public void textCloningCopyDocs() {
     Schema recSchema = new Schema.Parser().parse(SCHEMA);
-    Schemas.visit(recSchema, new PrintingVisitor());
 
     Schema trimmed = Schemas.visit(recSchema, new CloningVisitor(new CloningVisitor.PropertyCopier() {
       @Override

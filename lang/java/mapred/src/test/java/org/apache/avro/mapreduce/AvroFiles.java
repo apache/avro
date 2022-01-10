@@ -39,7 +39,7 @@ public final class AvroFiles {
    * @param file    The file to create.
    * @param schema  The schema for the records the file should contain.
    * @param records The records to put in the file.
-   * @param         <T> The (java) type of the avro records.
+   * @param <T>     The (java) type of the avro records.
    * @return The created file.
    */
   public static <T> File createFile(File file, Schema schema, T... records) throws IOException {

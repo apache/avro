@@ -33,35 +33,65 @@
       RPC Quick Start</a> for a good introduction to using Avro for RPC.
     </p>
 
-    <section id="download_install">
-      <title>Download</title>
+    <section id="notice_python3">
+      <title>Notice for Python 3 users</title>
       <p>
-        Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be
-        downloaded from the <a
-        href="https://avro.apache.org/releases.html">Apache Avro&#153;
-        Releases</a> page.  This guide uses Avro &AvroVersion;, the latest
-        version at the time of writing.  Download and unzip
-        <em>avro-&AvroVersion;.tar.gz</em>, and install via <code>python
-        setup.py</code> (this will probably require root privileges).  Ensure
-        that you can <code>import avro</code> from a Python prompt.
+        A package called "avro-python3" had been provided to support
+        Python 3 previously, but the codebase was consolidated into
+        the "avro" package that supports Python 3 now.
+
+        The avro-python3 package will be removed in the near future,
+        so users should use the "avro" package instead.
+        They are mostly API compatible, but there's a few minor difference
+        (e.g., function name capitalization,
+        such as avro.schema.Parse vs avro.schema.parse).
+      </p>
+    </section>
+
+    <section id="download_install">
+      <title>Download and Install</title>
+      <p>
+        The easiest way to get started in Python is to install <a href="https://pypi.org/project/avro/">avro from PyPI</a>
+        using <a href="https://pip.pypa.io/en/stable/">pip</a>, the Python Package Installer.
       </p>
       <source>
-$ tar xvf avro-&AvroVersion;.tar.gz
-$ cd avro-&AvroVersion;
-$ sudo python setup.py install
-$ python
->>> import avro # should not raise ImportError
+$ python3 -m pip install avro
+      </source>
+      <p>Consider doing a local install or using a virtualenv to avoid permissions problems and interfering with system packages:</p>
+      <source>
+$ python3 -m pip install --user install avro
+      </source>
+      <p>or</p>
+      <source>
+        $ python3 -m venv avro-venv
+        $ avro-venv/bin/pip install avro
       </source>
       <p>
-        Alternatively, you may build the Avro Python library from source.  From
+        The official releases of the Avro implementations for C, C++, C#, Java,
+        PHP, Python, and Ruby can be downloaded from the <a
+        href="https://avro.apache.org/releases.html">Apache Avro&#153;
+        Releases</a> page. This guide uses Avro &AvroVersion;, the latest
+        version at the time of writing. Download and install
+        <em>avro-&AvroVersion;-py2.py3-none-any.whl</em> or
+        <em>avro-&AvroVersion;.tar.gz</em> via
+        <code>python -m pip avro-&AvroVersion;-py2.py3-none-any.whl</code>
+        or
+        <code>python -m pip avro-&AvroVersion;.tar.gz</code>.
+        (As above, consider using a virtualenv or user-local install.)
+      </p>
+      <p>Check that you can import avro from a Python prompt.</p>
+      <source>
+$ python3 -c 'import avro; print(avro.__version__)'
+      </source>
+      <p>The above should print &AvroVersion;. It should not raise an <code>ImportError</code>.</p>
+      <p>
+        Alternatively, you may build the Avro Python library from source. From
         your the root Avro directory, run the commands
       </p>
       <source>
 $ cd lang/py/
-$ ant
-$ sudo python setup.py install
-$ python
->>> import avro # should not raise ImportError
+$ python3 -m pip install -e .
+$ python3
       </source>
     </section>
 
@@ -187,8 +217,7 @@ writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
           <li>A <code>DatumWriter</code>, which is responsible for actually
           serializing the items to Avro's binary format
           (<code>DatumWriter</code>s can be used separately from
-          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro
-          <strong>TODO: is this true??</strong>).</li>
+          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro).</li>
           <li>The schema we're using.  The <code>DataFileWriter</code> needs the
           schema both to write the schema to the data file, and to verify that
           the items we write are valid items and write the appropriate

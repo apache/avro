@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import io.grpc.MethodDescriptor;
+import org.apache.avro.util.MapUtil;
 
 import static io.grpc.MethodDescriptor.generateFullMethodName;
 
@@ -38,7 +39,6 @@ class ServiceDescriptor {
   private final ConcurrentMap<String, MethodDescriptor<Object[], Object>> methods = new ConcurrentHashMap<>();
 
   private ServiceDescriptor(Class iface, String serviceName) {
-    Class iface1 = iface;
     this.serviceName = serviceName;
     this.protocol = AvroGrpcUtils.getProtocol(iface);
   }
@@ -50,7 +50,7 @@ class ServiceDescriptor {
    */
   public static ServiceDescriptor create(Class iface) {
     String serviceName = AvroGrpcUtils.getServiceName(iface);
-    return SERVICE_DESCRIPTORS.computeIfAbsent(serviceName, key -> new ServiceDescriptor(iface, serviceName));
+    return MapUtil.computeIfAbsent(SERVICE_DESCRIPTORS, serviceName, key -> new ServiceDescriptor(iface, serviceName));
   }
 
   /**
@@ -68,7 +68,7 @@ class ServiceDescriptor {
    * @return a {@link MethodDescriptor}
    */
   public MethodDescriptor<Object[], Object> getMethod(String methodName, MethodDescriptor.MethodType methodType) {
-    return methods.computeIfAbsent(methodName,
+    return MapUtil.computeIfAbsent(methods, methodName,
         key -> MethodDescriptor.<Object[], Object>newBuilder()
             .setFullMethodName(generateFullMethodName(serviceName, methodName)).setType(methodType)
             .setRequestMarshaller(new AvroRequestMarshaller(protocol.getMessages().get(methodName)))

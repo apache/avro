@@ -581,7 +581,7 @@ public class TestSpecificCompiler {
     assertNotNull(Kind.class.getAnnotation(TestAnnotation.class));
 
     // a field
-    assertNotNull(TestRecord.class.getField("name").getAnnotation(TestAnnotation.class));
+    assertNotNull(TestRecord.class.getDeclaredField("name").getAnnotation(TestAnnotation.class));
     // a method
     assertNotNull(Simple.class.getMethod("ack").getAnnotation(TestAnnotation.class));
   }
@@ -641,5 +641,21 @@ public class TestSpecificCompiler {
     CompilationTask cTask = compiler.getTask(null, fileManager, null, null, null,
         fileManager.getJavaFileObjects(javaFiles.toArray(new File[0])));
     assertTrue(cTask.call());
+  }
+
+  private static String SCHEMA1 = "{ \"name\": \"volatile\", \"type\": \"record\", "
+      + "  \"fields\": [{\"name\": \"ownerAddress\", \"type\": [\"null\",{ \"type\": \"string\",\"java-class\": \"java.net.URI\"}], \"default\": null},"
+      + "                {\"name\": \"ownerURL\", \"type\": [\"null\",{ \"type\": \"string\",\"java-class\": \"java.net.URL\"}], \"default\": null}]}";
+
+  @Test
+  public void testGenerateExceptionCodeBlock() throws IOException {
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA1)).compile();
+    assertEquals(1, outputs.size());
+    String contents = outputs.iterator().next().contents;
+
+    assertTrue(contents.contains("private java.net.URI"));
+    assertTrue(contents.contains("catch (java.net.URISyntaxException e)"));
+    assertTrue(contents.contains("private java.net.URL"));
+    assertTrue(contents.contains("catch (java.net.MalformedURLException e)"));
   }
 }

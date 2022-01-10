@@ -37,48 +37,48 @@ function dist {
     mkdir -p "$build_dir/$libname" "$lib_dir/examples"
     cp -pr lib "$lib_dir"
     cp -pr examples/*.php "$lib_dir/examples"
-    cp README.txt LICENSE NOTICE "$lib_dir"
+    cp README.md LICENSE NOTICE "$lib_dir"
     cd "$build_dir"
     tar -cjf "$tarball" "$libname"
     mkdir -p "../$dist_dir"
     cp "$tarball" "../$dist_dir"
 }
 
-case "$1" in
-     interop-data-generate)
-       php test/generate_interop_data.php
-       ;;
+for target in "$@"
+do
+  case "$target" in
+    interop-data-generate)
+      composer install -d "../.."
+      php test/generate_interop_data.php
+      ;;
 
-     test-interop)
-       phpunit test/InterOpTest.php
-       ;;
+    test-interop)
+      composer install -d "../.."
+      vendor/bin/phpunit test/InterOpTest.php
+      ;;
 
-     lint)
-       echo 'This is a stub where someone can provide linting.'
-       ;;
+    lint)
+      composer install -d "../.."
+      find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
+      vendor/bin/phpcs --standard=PSR12 lib
+      ;;
 
-     test)
-       phpunit -v test/AllTests.php
+    test)
+      composer install -d "../.."
+      vendor/bin/phpunit -v
+      ;;
 
-       # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
-       # TODO: remove this check when we drop PHP 5.x support in the future
-       if command -v php5.6 > /dev/null && phpunit --version | grep -q 'PHPUnit 5.7'; then
-         echo 'Checking backward compatibility with PHP 5.x'
-         php5.6 $(which phpunit) -v test/AllTests.php
-       fi
-       ;;
+    dist)
+      dist
+      ;;
 
-     dist)
-       dist
-       ;;
+    clean)
+      clean
+      ;;
 
-     clean)
-       clean
-       ;;
-
-     *)
-       echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
-esac
-
+    *)
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
+  esac
+done
 
 exit 0

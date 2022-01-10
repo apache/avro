@@ -21,6 +21,8 @@ package org.apache.avro;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.collection.IsMapContaining;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -98,6 +100,16 @@ public class TestLogicalType {
           return null;
         });
     Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+
+    // 129 bytes can hold up to 310 digits of precision
+    final Schema schema129 = Schema.createFixed("aDecimal", null, null, 129);
+    assertThrows("Should reject precision", IllegalArgumentException.class,
+        "fixed(129) cannot store 311 digits (max 310)", () -> {
+          LogicalTypes.decimal(311).addToSchema(schema129);
+          return null;
+        });
+    Assert.assertNull("Invalid logical type should not be set on schema",
+        LogicalTypes.fromSchemaIgnoreInvalid(schema129));
   }
 
   @Test
@@ -216,6 +228,63 @@ public class TestLogicalType {
     assertEqualsFalse("Different logical type", schema1, schema3);
   }
 
+  @Test
+  public void testRegisterLogicalTypeThrowsIfTypeNameNotProvided() {
+    assertThrows("Should error if type name was not provided", UnsupportedOperationException.class,
+        "LogicalTypeFactory TypeName has not been provided", () -> {
+          LogicalTypes.register(schema -> LogicalTypes.date());
+          return null;
+        });
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithName() {
+    final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
+      @Override
+      public LogicalType fromSchema(Schema schema) {
+        return LogicalTypes.date();
+      }
+
+      @Override
+      public String getTypeName() {
+        return "typename";
+      }
+    };
+
+    LogicalTypes.register("registered", factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("registered", factory));
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithFactoryName() {
+    final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
+      @Override
+      public LogicalType fromSchema(Schema schema) {
+        return LogicalTypes.date();
+      }
+
+      @Override
+      public String getTypeName() {
+        return "factory";
+      }
+    };
+
+    LogicalTypes.register(factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("factory", factory));
+  }
+
+  @Test
+  public void testRegisterLogicalTypeWithFactoryNameNotProvided() {
+    final LogicalTypes.LogicalTypeFactory factory = schema -> LogicalTypes.date();
+
+    LogicalTypes.register("logicalTypeName", factory);
+
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
+        IsMapContaining.hasEntry("logicalTypeName", factory));
+  }
+
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
     Assert.assertTrue("Should be equal (forward): " + message, o1.equals(o2));
     Assert.assertTrue("Should be equal (reverse): " + message, o2.equals(o1));
@@ -228,7 +297,7 @@ public class TestLogicalType {
 
   /**
    * A convenience method to avoid a large number of @Test(expected=...) tests
-   * 
+   *
    * @param message            A String message to describe this assertion
    * @param expected           An Exception class that the Runnable should throw
    * @param containedInMessage A String that should be contained by the thrown

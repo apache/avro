@@ -32,20 +32,14 @@ namespace avro {
 ///
 
 template<class Reader>
-class Parser : private boost::noncopyable
-{
+class Parser : private boost::noncopyable {
 
-  public:
-
+public:
     // Constructor only works with Writer
-    explicit Parser(const InputBuffer &in) :
-        reader_(in)
-    {}
+    explicit Parser(const InputBuffer &in) : reader_(in) {}
 
     /// Constructor only works with ValidatingWriter
-    Parser(const ValidSchema &schema, const InputBuffer &in) :
-        reader_(schema, in)
-    {}
+    Parser(const ValidSchema &schema, const InputBuffer &in) : reader_(schema, in) {}
 
     void readNull() {
         Null null;
@@ -90,7 +84,7 @@ class Parser : private boost::noncopyable
         reader_.readBytes(val);
     }
 
-    template <size_t N>
+    template<size_t N>
     void readFixed(uint8_t (&val)[N]) {
         reader_.readFixed(val);
     }
@@ -100,11 +94,11 @@ class Parser : private boost::noncopyable
         reader_.readFixed(val);
     }
 
-    void readRecord() { 
+    void readRecord() {
         reader_.readRecord();
     }
 
-    void readRecordEnd() { 
+    void readRecordEnd() {
         reader_.readRecordEnd();
     }
 
@@ -112,7 +106,7 @@ class Parser : private boost::noncopyable
         return reader_.readArrayBlockSize();
     }
 
-    int64_t readUnion() { 
+    int64_t readUnion() {
         return reader_.readUnion();
     }
 
@@ -124,14 +118,12 @@ class Parser : private boost::noncopyable
         return reader_.readMapBlockSize();
     }
 
-  private:
-
+private:
     friend Type nextType(Parser<ValidatingReader> &p);
     friend bool currentRecordName(Parser<ValidatingReader> &p, std::string &name);
     friend bool nextFieldName(Parser<ValidatingReader> &p, std::string &name);
 
     Reader reader_;
-
 };
 
 inline Type nextType(Parser<ValidatingReader> &p) {

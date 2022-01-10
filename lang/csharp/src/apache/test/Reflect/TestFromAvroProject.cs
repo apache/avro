@@ -79,6 +79,8 @@ namespace Avro.Test
 
         public A myA { get; set; }
 
+        public A myNullableA { get; set; }
+
         public MyEnum myE { get; set; }
 
         public List<byte[]> myArray { get; set; }
@@ -138,6 +140,7 @@ namespace Avro.Test
                     { ""name"" : ""myNull"", ""type"" : ""null"" },
                     { ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
                     { ""name"" : ""myA"", ""type"" : ""A"" },
+                    { ""name"" : ""myNullableA"", ""type"" : [ ""null"", ""A"" ] },
                     { ""name"" : ""myE"", ""type"" : ""MyEnum"" },
                     { ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
                     { ""name"" : ""myArray2"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""record"", ""name"" : ""newRec"", ""fields"" : [ { ""name"" : ""f1"", ""type"" : ""long""} ] } } },
@@ -186,7 +189,7 @@ namespace Avro.Test
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                throw ex;
+                throw;
             }
         }
 
@@ -263,6 +266,15 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myA);
                 Assert.AreEqual(z.myA.f1, zz.myA.f1);
+            }
+            if (z.myNullableA == null)
+            {
+                Assert.IsNull(zz.myNullableA);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myNullableA);
+                Assert.AreEqual(z.myNullableA.f1, zz.myNullableA.f1);
             }
             Assert.AreEqual(z.myE, zz.myE);
             if (z.myArray == null)
@@ -347,6 +359,7 @@ namespace Avro.Test
                 myNull = null,
                 myFixed = new byte[16] { 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04 },
                 myA = new A() { f1 = 3L },
+                myNullableA = new A() { f1 = 4L },
                 myE = MyEnum.B,
                 myArray = new List<byte[]>() { new byte[] { 0x01, 0x02, 0x03, 0x04 } },
                 myArray2 = new List<newRec>() { new newRec() { f1 = 4L } },

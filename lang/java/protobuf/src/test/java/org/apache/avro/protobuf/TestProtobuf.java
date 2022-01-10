@@ -25,7 +25,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificData;
-
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -85,6 +85,28 @@ public class TestProtobuf {
         DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(foo, o);
+  }
+
+  @Test
+  public void testMessageWithEmptyArray() throws Exception {
+    Foo foo = Foo.newBuilder().setInt32(5).setBool(true).build();
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    ProtobufDatumWriter<Foo> w = new ProtobufDatumWriter<>(Foo.class);
+    Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
+    w.write(foo, e);
+    e.flush();
+    Foo o = new ProtobufDatumReader<>(Foo.class).read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
+
+    assertEquals(foo.getInt32(), o.getInt32());
+    assertEquals(foo.getBool(), o.getBool());
+    assertEquals(0, o.getFooArrayCount());
+  }
+
+  @Test
+  public void testEmptyArray() throws Exception {
+    Schema s = ProtobufData.get().getSchema(Foo.class);
+    assertEquals(s.getField("fooArray").defaultVal(), Lists.newArrayList());
   }
 
   @Test

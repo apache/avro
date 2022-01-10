@@ -36,8 +36,11 @@ use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
 use Compress::Zstd;
+use IO::Uncompress::Bunzip2 qw(bunzip2);
 use IO::Uncompress::RawInflate ;
 use Fcntl();
+
+our $VERSION = '++MODULE_VERSION++';
 
 sub new {
     my $class = shift;
@@ -130,12 +133,12 @@ sub next {
 
     my @objs;
 
-    $datafile->read_block_header if $datafile->eob;
     return ()                    if $datafile->eof;
+    $datafile->read_block_header if $datafile->eob;
 
     my $block_count = $datafile->{object_count};
 
-    if ($block_count <= $count) {
+    if ($block_count < $count) {
         push @objs, $datafile->read_to_block_end;
         croak "Didn't read as many objects than expected"
             unless scalar @objs == $block_count;
@@ -213,9 +216,19 @@ sub read_block_header {
     $datafile->{block_marker} = $marker;
 
     ## this is our new reader
-    $datafile->{reader} = $codec eq 'deflate' ?
-        IO::Uncompress::RawInflate->new(\$block) :
-        do { open $fh, '<', \(decompress(\$block)); $fh };
+    $datafile->{reader} = do {
+        if ($codec eq 'deflate') {
+            IO::Uncompress::RawInflate->new(\$block);
+        }
+        elsif ($codec eq 'bzip2') {
+            my $uncompressed;
+            bunzip2 \$block => \$uncompressed;
+            do { open $fh, '<', \$uncompressed; $fh };
+        }
+        elsif ($codec eq 'zstandard') {
+            do { open $fh, '<', \(decompress(\$block)); $fh };
+        }
+    };
 
     return;
 }

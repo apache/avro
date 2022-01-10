@@ -14,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Dockerfile for installing the necessary dependencies for building Avro.
-# See BUILD.txt.
+# Dockerfile for installing the Apache Forrest tools for building the
+# Avro site.
+
 FROM avro-build-ci
 
 # Install Forrest in /usr/local/apache-forrest
-RUN curl -L -s "https://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
-    curl -L -s "https://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
+RUN curl -L -s "https://archive.apache.org/dist/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
+    curl -L -s "https://archive.apache.org/dist/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
     mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
     cd /usr/local/apache-forrest/main && \
     ./build.sh

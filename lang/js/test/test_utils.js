@@ -153,7 +153,7 @@ suite('utils', function () {
 
         var tap = newTap(6);
         tap.writeLong(1440756011948);
-        var buf = new Buffer(['0xd8', '0xce', '0x80', '0xbc', '0xee', '0x53']);
+        var buf = Buffer.from(['0xd8', '0xce', '0x80', '0xbc', '0xee', '0x53']);
         assert(tap.isValid());
         assert(buf.equals(tap.buf));
 
@@ -161,7 +161,7 @@ suite('utils', function () {
 
       test('read', function () {
 
-        var buf = new Buffer(['0xd8', '0xce', '0x80', '0xbc', '0xee', '0x53']);
+        var buf = Buffer.from(['0xd8', '0xce', '0x80', '0xbc', '0xee', '0x53']);
         assert.equal((new Tap(buf)).readLong(), 1440756011948);
 
       });
@@ -215,7 +215,7 @@ suite('utils', function () {
     suite('bytes', function () {
 
       testWriterReader({
-        elems: [new Buffer('abc'), new Buffer(0), new Buffer([1, 5, 255])],
+        elems: [Buffer.from('abc'), Buffer.alloc(0), Buffer.from([1, 5, 255])],
         reader: function () { return this.readBytes(); },
         skipper: function () { this.skipBytes(); },
         writer: function (b) { this.writeBytes(b); }
@@ -226,7 +226,7 @@ suite('utils', function () {
     suite('fixed', function () {
 
       testWriterReader({
-        elems: [new Buffer([1, 5, 255])],
+        elems: [Buffer.from([1, 5, 255])],
         reader: function () { return this.readFixed(3); },
         skipper: function () { this.skipFixed(3); },
         writer: function (b) { this.writeFixed(b, 3); }
@@ -240,14 +240,14 @@ suite('utils', function () {
         var tap = newTap(3);
         var s = '\x01\x02';
         tap.writeBinary(s, 2);
-        assert.deepEqual(tap.buf, new Buffer([1,2,0]));
+        assert.deepEqual(tap.buf, Buffer.from([1,2,0]));
       });
 
       test('write invalid', function () {
         var tap = newTap(1);
         var s = '\x01\x02';
         tap.writeBinary(s, 2);
-        assert.deepEqual(tap.buf, new Buffer([0]));
+        assert.deepEqual(tap.buf, Buffer.from([0]));
       });
 
     });
@@ -260,14 +260,14 @@ suite('utils', function () {
         t.pos = 0;
         assert.deepEqual(
           t.unpackLongBytes(),
-          new Buffer([5, 0, 0, 0, 0, 0, 0, 0])
+          Buffer.from([5, 0, 0, 0, 0, 0, 0, 0])
         );
         t.pos = 0;
         t.writeLong(-5);
         t.pos = 0;
         assert.deepEqual(
           t.unpackLongBytes(),
-          new Buffer([-5, -1, -1, -1, -1, -1, -1, -1])
+          Buffer.from([-5, -1, -1, -1, -1, -1, -1, -1])
         );
         t.pos = 0;
       });
@@ -288,7 +288,7 @@ suite('utils', function () {
 
       test('pack single byte', function () {
         var t = newTap(10);
-        var b = new Buffer(8);
+        var b = Buffer.alloc(8);
         b.fill(0);
         b.writeInt32LE(12);
         t.packLongBytes(b);
@@ -306,7 +306,7 @@ suite('utils', function () {
         b.writeInt32LE(-1);
         b.writeInt32LE(-1, 4);
         t.packLongBytes(b);
-        assert.deepEqual(t.buf.slice(0, t.pos), new Buffer([1]));
+        assert.deepEqual(t.buf.slice(0, t.pos), Buffer.from([1]));
         t.pos = 0;
         assert.deepEqual(t.readLong(), -1);
       });
@@ -335,7 +335,7 @@ suite('utils', function () {
 
     function newTap(n) {
 
-      var buf = new Buffer(n);
+      var buf = Buffer.alloc(n);
       buf.fill(0);
       return new Tap(buf);
 
@@ -364,13 +364,13 @@ suite('utils', function () {
       });
 
       test('read over ' + name, function () {
-        var tap = new Tap(new Buffer(0));
+        var tap = new Tap(Buffer.alloc(0));
         readFn.call(tap); // Shouldn't throw.
         assert(!tap.isValid());
       });
 
       test('write over ' + name, function () {
-        var tap = new Tap(new Buffer(0));
+        var tap = new Tap(Buffer.alloc(0));
         writeFn.call(tap, elems[0]); // Shouldn't throw.
         assert(!tap.isValid());
       });

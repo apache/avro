@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -25,7 +26,9 @@ class TestSchemaCompatibility < Test::Unit::TestCase
   end
 
   def test_compatible_reader_writer_pairs
+    cached_schema = a_int_record1_schema
     [
+      cached_schema, cached_schema,
       long_schema, int_schema,
       float_schema, int_schema,
       float_schema, long_schema,
@@ -39,7 +42,12 @@ class TestSchemaCompatibility < Test::Unit::TestCase
       long_map_schema, int_map_schema,
 
       enum1_ab_schema, enum1_ab_schema,
+      enum1_ab_aliased_schema, enum1_ab_schema,
       enum1_abc_schema, enum1_ab_schema,
+      enum1_ab_default_schema, enum1_abc_schema,
+
+      fixed1_schema, fixed1_schema,
+      fixed1_aliased_schema, fixed1_schema,
 
       string_schema, bytes_schema,
       bytes_schema, string_schema,
@@ -55,6 +63,7 @@ class TestSchemaCompatibility < Test::Unit::TestCase
 
       empty_record1_schema, empty_record1_schema,
       empty_record1_schema, a_int_record1_schema,
+      empty_record1_aliased_schema, empty_record1_schema,
 
       a_int_record1_schema, a_int_record1_schema,
       a_dint_record1_schema, a_int_record1_schema,
@@ -117,16 +126,22 @@ class TestSchemaCompatibility < Test::Unit::TestCase
       int_map_schema, long_map_schema,
 
       enum1_ab_schema, enum1_abc_schema,
+      enum1_ab_schema, enum1_ab_aliased_schema,
       enum1_bc_schema, enum1_abc_schema,
 
       enum1_ab_schema, enum2_ab_schema,
       int_schema, enum2_ab_schema,
       enum2_ab_schema, int_schema,
 
+      fixed1_schema, fixed2_schema,
+      fixed1_schema, fixed1_size3_schema,
+      fixed1_schema, fixed1_aliased_schema,
+
       int_union_schema, int_string_union_schema,
       string_union_schema, int_string_union_schema,
 
       empty_record2_schema, empty_record1_schema,
+      empty_record1_schema, empty_record1_aliased_schema,
       a_int_record1_schema, empty_record1_schema,
       a_int_b_dint_record1_schema, empty_record1_schema,
 
@@ -162,6 +177,17 @@ class TestSchemaCompatibility < Test::Unit::TestCase
   def test_missing_second_field
     reader_schema = Avro::Schema.parse <<-SCHEMA
       {"type":"record", "name":"Record", "fields":[
+        {"name":"oldfield2", "type":"string"}
+      ]}
+    SCHEMA
+    assert_true(can_read?(writer_schema, reader_schema))
+    assert_false(can_read?(reader_schema, writer_schema))
+  end
+
+  def test_aliased_field
+    reader_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"newname1", "aliases":["oldfield1"], "type":"int"},
         {"name":"oldfield2", "type":"string"}
       ]}
     SCHEMA
@@ -248,6 +274,128 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     SCHEMA
     assert_false(can_read?(enum_schema2, enum_schema1))
     assert_true(can_read?(enum_schema1, enum_schema2))
+  end
+
+  def test_crossed_aliases
+    writer_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"field1", "type": "int"},
+        {"name":"field2", "type": "string"}
+      ]}
+    SCHEMA
+    reader_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"field1", "aliases":["field2"], "type":"string"},
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA
+    # Not supported; alias is not used if there is a redirect match
+    assert_false(can_read?(writer_schema, reader_schema))
+  end
+
+  def test_bytes_decimal
+    bytes_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes2_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes_decimal_different_precision_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":5, "scale":4}')
+    bytes_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes2_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":0}')
+    bytes_unknown_logical_type_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"unknown"}')
+
+    # decimal bytes and non-decimal bytes can be mixed
+    assert_true(can_read?(bytes_schema, bytes_decimal_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_unknown_logical_type_schema))
+
+    # decimal bytes match even if precision and scale differ
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_different_precision_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_no_scale_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes_decimal_zero_scale_schema))
+    # - zero and no scale are equivalent
+    assert_true(can_read?(bytes_decimal_zero_scale_schema, bytes_decimal_no_scale_schema))
+    # - different schemas with the same attributes match
+    assert_true(can_read?(bytes_decimal_schema, bytes2_decimal_schema))
+    # - different schemas with the same no scale match
+    assert_true(can_read?(bytes2_decimal_no_scale_schema, bytes_decimal_no_scale_schema))
+  end
+
+  def test_fixed_decimal
+    fixed_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed2_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed2", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_different_precision_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":3, "scale":2}')
+    fixed_decimal_size3_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":3, "name":"FixedS3", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_unknown_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"unknown"}')
+    fixed_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":0}')
+    fixed_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4}')
+
+    # decimal fixed and non-decimal can be mixed if fixed name matches
+    assert_true(can_read?(fixed_decimal_schema, fixed1_schema))
+    assert_true(can_read?(fixed1_schema, fixed_decimal_schema))
+    assert_false(can_read?(fixed2_schema, fixed_decimal_schema))
+
+    # decimal logical types match even if fixed name differs
+    assert_true(can_read?(fixed_decimal_schema, fixed2_decimal_schema))
+
+    # fixed with the same name & size match even if decimal precision and scale differ
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_different_precision_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_size3_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_unknown_schema))
+    # - zero and no scale are equivalent but these match anyway due to same name & size
+    assert_true(can_read?(fixed_decimal_no_scale_schema, fixed_decimal_zero_scale_schema))
+    # - scale does not match
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_no_scale_schema))
+    assert_true(can_read?(fixed_decimal_schema, fixed_decimal_zero_scale_schema))
+  end
+
+  def test_decimal_different_types
+    fixed_decimal_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_scale4_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":2}')
+    fixed_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4, "scale":0}')
+    fixed_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"fixed", "size":2, "name":"Fixed1", "logicalType":"decimal", "precision":4}')
+    bytes_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":0}')
+    bytes_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+
+    # decimal logical types can be read
+    assert_true(can_read?(fixed_decimal_schema, bytes_decimal_schema))
+    assert_true(can_read?(bytes_decimal_schema, fixed_decimal_schema))
+
+    # non-decimal bytes and fixed cannot be mixed
+    assert_false(can_read?(fixed_decimal_schema, bytes_schema))
+    assert_false(can_read?(bytes_schema, fixed_decimal_schema))
+    assert_false(can_read?(fixed1_schema, bytes_decimal_schema))
+    assert_false(can_read?(bytes_decimal_schema, fixed1_schema))
+
+    # decimal precision and scale must match
+    assert_false(can_read?(fixed_decimal_scale4_schema, bytes_decimal_schema))
+    assert_false(can_read?(bytes_decimal_schema, fixed_decimal_scale4_schema))
+
+    # zero scale and no scale are equivalent
+    assert_true(can_read?(bytes_decimal_no_scale_schema, fixed_decimal_zero_scale_schema))
+    assert_true(can_read?(fixed_decimal_zero_scale_schema, bytes_decimal_no_scale_schema))
+    assert_true(can_read?(bytes_decimal_zero_scale_schema, fixed_decimal_no_scale_schema))
+    assert_true(can_read?(fixed_decimal_no_scale_schema, bytes_decimal_zero_scale_schema))
   end
 
   # Tests from lang/java/avro/src/test/java/org/apache/avro/io/parsing/TestResolvingGrammarGenerator2.java
@@ -373,6 +521,14 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B"]}')
   end
 
+  def enum1_ab_default_schema
+    Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B"], "default":"A"}')
+  end
+
+  def enum1_ab_aliased_schema
+    Avro::Schema.parse('{"type":"enum", "name":"Enum2", "aliases":["Enum1"], "symbols":["A","B"]}')
+  end
+
   def enum1_abc_schema
     Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B","C"]}')
   end
@@ -385,8 +541,28 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     Avro::Schema.parse('{"type":"enum", "name":"Enum2", "symbols":["A","B"]}')
   end
 
+  def fixed1_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed1", "size": 2}')
+  end
+
+  def fixed1_aliased_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed2", "aliases":["Fixed1"], "size": 2}')
+  end
+
+  def fixed2_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed2", "size": 2}')
+  end
+
+  def fixed1_size3_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed1", "size": 3}')
+  end
+
   def empty_record1_schema
     Avro::Schema.parse('{"type":"record", "name":"Record1"}')
+  end
+
+  def empty_record1_aliased_schema
+    Avro::Schema.parse('{"type":"record", "name":"Record2", "aliases":["Record1"]}')
   end
 
   def empty_record2_schema

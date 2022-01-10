@@ -38,7 +38,7 @@
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/schema-inject</outputDirectory>
           <imports>
             <import>${basedir}/src/test/avro/imports</import>
             <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
@@ -64,8 +64,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.databind.version}</version>
+      <version>${jackson.version}</version>
     </dependency>
   </dependencies>
-
 </project>

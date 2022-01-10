@@ -56,7 +56,7 @@
           <code>idl</code> tool. For example:
         </p>
         <source>
-$ java -jar avroj-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+$ java -jar avro-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
 $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",
@@ -101,7 +101,7 @@ protocol MyProtocol {
       <p>
         This is equivalent to (and generates) the following JSON protocol definition:
       </p>
-  <!--  "namespace" : null, TODO: this is generated but shouldnt be - AVRO-263 -->
+  <!--  "namespace" : null, TODO: this is generated but shouldn't be - AVRO-263 -->
       <source>
 {
 "protocol" : "MyProtocol",
@@ -254,6 +254,14 @@ record Job {
   decimal(9,2) finishRatio;
 }
         </source>
+        <p>Logical types can also be specified via an annotation, which is useful for logical types for which a keyword does not exist:</p>
+        <source>
+record Job {
+  string jobid;
+  @logicalType("timestamp-micros")
+  long finishTime;
+}
+        </source>
       </section>
 
       <section id="schema_references">
@@ -301,17 +309,36 @@ record Card {
         <section id="unions">
           <title>Unions</title>
           <p>Union types are denoted as <code>union { typeA, typeB, typeC, ... }</code>. For example,
-          this record contains a string field that is optional (unioned with <code>null</code>):
+          this record contains a string field that is optional (unioned with <code>null</code>), and
+          a field containing either a precise or a imprecise number:
           </p>
           <source>
 record RecordWithUnion {
   union { null, string } optionalString;
+  union { decimal(12, 6), float } number;
 }
           </source>
           <p>
             Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the
-            JSON format; namely, a record may not contain multiple elements of the same type.
+            JSON format; namely, a record may not contain multiple elements of the same type. Also,
+            fields/parameters that use the union type and have a default parameter must specify a
+            default value of the same type as the <em>first</em> union type.
           </p>
+          <p>Because it occurs so often, there is a special shorthand to denote a union of
+            <code>null</code> with another type. In the following snippet, the first three fields have
+            identical types:
+          </p>
+          <source>
+record RecordWithUnion {
+  union { null, string } optionalString1 = null;
+  string? optionalString2 = null;
+  string? optionalString3; // No default value
+  string? optionalString4 = "something";
+}
+          </source>
+          <p>Note that unlike explicit unions, the position of the <code>null</code> type is fluid; it will be
+            the first or last type depending on the default value (if any). So in the example above, all fields
+            are valid.</p>
         </section> <!-- unions -->
       </section> <!-- complex types -->
     </section> <!-- how to define records -->
@@ -384,7 +411,7 @@ record MyRecord {
   string @order("ignore") myIgnoredField;
 }
         </source>
-        <p>A field's type may also be preceded by annotations, e.g.: </p>
+        <p>A field's type (with the exception of type references) may also be preceded by annotations, e.g.: </p>
         <source>
 record MyRecord {
   @java-class("java.util.ArrayList") array&lt;string&gt; myStrings;
@@ -429,50 +456,62 @@ record MyRecord {
         <p>Some annotations like those listed above are handled
         specially.  All other annotations are added as properties to
         the protocol, message, schema or field.</p>
+        <p>Note that for named types, annotations should be added to
+        the type definition; they cannot be added to the type references.</p>
       </section>
     </section>
     <section id="example">
       <title>Complete Example</title>
-      <p>The following is a complete example of a Avro IDL file that shows most of the above features:</p>
+      <p>The following is an example of an Avro IDL file that shows most of the above features:</p>
       <source>
+/*
+* Header with license information.
+*/
+
 /**
  * An example protocol in Avro IDL
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
-
+  /** Documentation for the enum type Kind */
   @aliases(["org.foo.KindOf"])
   enum Kind {
     FOO,
     BAR, // the bar enum value
     BAZ
-  }
+  } = FOO; // For schema evolution purposes, unmatched values do not throw an error, but are resolved to FOO.
 
+  /** MD5 hash; good enough to avoid most collisions, and smaller than (for example) SHA256. */
   fixed MD5(16);
 
   record TestRecord {
-    @order("ignore")
-    string name;
+    /** Record name; has no intrinsic order */
+    string @order("ignore") name;
 
-    @order("descending")
-    Kind kind;
+    Kind @order("descending") kind;
 
     MD5 hash;
 
-    union { MD5, null} @aliases(["hash"]) nullableHash;
+    /*
+    Note that 'null' is the first union type. Just like .avsc / .avpr files, the default value must be of the first union type.
+    */
+    union { null, MD5 } /** Optional field */ @aliases(["hash"]) nullableHash = null;
 
     array&lt;long&gt; arrayOfLongs;
   }
 
+  /** Errors are records that can be thrown from a method */
   error TestError {
     string message;
   }
 
   string hello(string greeting);
+  /** Return what was given. Demonstrates the use of backticks to name types/fields/messages/parameters after keywords */
   TestRecord echo(TestRecord `record`);
   int add(int arg1, int arg2);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;
+  // The oneway keyword forces the method to return null.
   void ping() oneway;
 }
       </source>

@@ -17,14 +17,13 @@
  */
 package org.apache.avro.compiler.specific;
 
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JODA;
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,25 +35,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+import org.apache.avro.AvroTypeException;
+
+import java.util.Map;
+
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
@@ -80,7 +86,9 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(dstDir, outputs, false);
   }
 
-  /** Uses the system's java compiler to actually compile the generated code. */
+  /**
+   * Uses the system's java compiler to actually compile the generated code.
+   */
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs,
       boolean ignoreWarnings) throws IOException {
     if (outputs.isEmpty()) {
@@ -134,14 +142,9 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
-    return createCompiler(JSR310);
-  }
-
-  private SpecificCompiler createCompiler(
-      SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(this.src);
-    SpecificCompiler compiler = new SpecificCompiler(schema, dateTimeLogicalTypeImplementation);
+    SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
     compiler.setTemplateDir(velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
@@ -159,7 +162,6 @@ public class TestSpecificCompiler {
   public void testPublicFieldVisibility() throws IOException {
     SpecificCompiler compiler = createCompiler();
     compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PUBLIC);
-    assertFalse(compiler.deprecatedFields());
     assertTrue(compiler.publicFields());
     assertFalse(compiler.privateFields());
     compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
@@ -198,7 +200,7 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "1"),
         new SpecificCompiler(validSchema1).compile());
 
-    Schema validSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
+    createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "2"),
         new SpecificCompiler(validSchema1).compile());
   }
@@ -236,29 +238,9 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testPublicDeprecatedFieldVisibility() throws IOException {
-    SpecificCompiler compiler = createCompiler();
-    compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED);
-    assertTrue(compiler.deprecatedFields());
-    assertTrue(compiler.publicFields());
-    assertFalse(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
-    assertTrue(this.outputFile.exists());
-    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        // No line, once trimmed, should start with a public field declaration
-        line = line.trim();
-        assertFalse("Line started with a public field declaration: " + line, line.startsWith("public int value"));
-      }
-    }
-  }
-
-  @Test
   public void testPrivateFieldVisibility() throws IOException {
     SpecificCompiler compiler = createCompiler();
     compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PRIVATE);
-    assertFalse(compiler.deprecatedFields());
     assertFalse(compiler.publicFields());
     assertTrue(compiler.privateFields());
     compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
@@ -346,12 +328,13 @@ public class TestSpecificCompiler {
 
   @Test
   public void testJavaTypeWithDecimalLogicalTypeEnabled() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema localTimestampSchema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
@@ -359,19 +342,21 @@ public class TestSpecificCompiler {
     // Decimal type target class depends on configuration
     // UUID should always be CharSequence since we haven't added its
     // support in SpecificRecord
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
-        compiler.javaType(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
+    Assert.assertEquals("Should use LocalDate for date type", "java.time.LocalDate", compiler.javaType(dateSchema));
+    Assert.assertEquals("Should use LocalTime for time-millis type", "java.time.LocalTime",
         compiler.javaType(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+    Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
+    Assert.assertEquals("Should use LocalDateTime for local-timestamp-millis type", "java.time.LocalDateTime",
+        compiler.javaType(localTimestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
   public void testJavaTypeWithDecimalLogicalTypeDisabled() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
@@ -384,19 +369,19 @@ public class TestSpecificCompiler {
     // Decimal type target class depends on configuration
     // UUID should always be CharSequence since we haven't added its
     // support in SpecificRecord
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
-        compiler.javaType(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
+    Assert.assertEquals("Should use LocalDate for date type", "java.time.LocalDate", compiler.javaType(dateSchema));
+    Assert.assertEquals("Should use LocalTime for time-millis type", "java.time.LocalTime",
         compiler.javaType(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+    Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use ByteBuffer type", "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
-  public void testJavaTypeWithJsr310DateTimeTypes() throws Exception {
-    SpecificCompiler compiler = createCompiler(JSR310);
+  public void testJavaTypeWithDateTimeTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler();
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
@@ -419,7 +404,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testJavaUnbox() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
 
     Schema intSchema = Schema.create(Schema.Type.INT);
@@ -427,28 +412,32 @@ public class TestSpecificCompiler {
     Schema floatSchema = Schema.create(Schema.Type.FLOAT);
     Schema doubleSchema = Schema.create(Schema.Type.DOUBLE);
     Schema boolSchema = Schema.create(Schema.Type.BOOLEAN);
-    Assert.assertEquals("Should use int for Type.INT", "int", compiler.javaUnbox(intSchema));
-    Assert.assertEquals("Should use long for Type.LONG", "long", compiler.javaUnbox(longSchema));
-    Assert.assertEquals("Should use float for Type.FLOAT", "float", compiler.javaUnbox(floatSchema));
-    Assert.assertEquals("Should use double for Type.DOUBLE", "double", compiler.javaUnbox(doubleSchema));
-    Assert.assertEquals("Should use boolean for Type.BOOLEAN", "boolean", compiler.javaUnbox(boolSchema));
+    Assert.assertEquals("Should use int for Type.INT", "int", compiler.javaUnbox(intSchema, false));
+    Assert.assertEquals("Should use long for Type.LONG", "long", compiler.javaUnbox(longSchema, false));
+    Assert.assertEquals("Should use float for Type.FLOAT", "float", compiler.javaUnbox(floatSchema, false));
+    Assert.assertEquals("Should use double for Type.DOUBLE", "double", compiler.javaUnbox(doubleSchema, false));
+    Assert.assertEquals("Should use boolean for Type.BOOLEAN", "boolean", compiler.javaUnbox(boolSchema, false));
+
+    // see AVRO-2569
+    Schema nullSchema = Schema.create(Schema.Type.NULL);
+    Assert.assertEquals("Should use void for Type.NULL", "void", compiler.javaUnbox(nullSchema, true));
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     // Date/time types should always use upper level java classes, even though
     // their underlying representations are primitive types
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
-        compiler.javaUnbox(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
-        compiler.javaUnbox(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
-        compiler.javaUnbox(timestampSchema));
+    Assert.assertEquals("Should use LocalDate for date type", "java.time.LocalDate",
+        compiler.javaUnbox(dateSchema, false));
+    Assert.assertEquals("Should use LocalTime for time-millis type", "java.time.LocalTime",
+        compiler.javaUnbox(timeSchema, false));
+    Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
+        compiler.javaUnbox(timestampSchema, false));
   }
 
   @Test
-  public void testJavaUnboxJsr310DateTime() throws Exception {
-    SpecificCompiler compiler = createCompiler(JSR310);
+  public void testJavaUnboxDateTime() throws Exception {
+    SpecificCompiler compiler = createCompiler();
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
@@ -456,11 +445,11 @@ public class TestSpecificCompiler {
     // Date/time types should always use upper level java classes, even though
     // their underlying representations are primitive types
     Assert.assertEquals("Should use java.time.LocalDate for date type", "java.time.LocalDate",
-        compiler.javaUnbox(dateSchema));
+        compiler.javaUnbox(dateSchema, false));
     Assert.assertEquals("Should use java.time.LocalTime for time-millis type", "java.time.LocalTime",
-        compiler.javaUnbox(timeSchema));
+        compiler.javaUnbox(timeSchema, false));
     Assert.assertEquals("Should use java.time.Instant for timestamp-millis type", "java.time.Instant",
-        compiler.javaUnbox(timestampSchema));
+        compiler.javaUnbox(timestampSchema, false));
   }
 
   @Test
@@ -473,8 +462,10 @@ public class TestSpecificCompiler {
         LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)));
     Schema nullableDecimalSchema2 = Schema.createUnion(
         LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)), Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema1), "java.math.BigDecimal");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema2), "java.math.BigDecimal");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema1, false),
+        "java.math.BigDecimal");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema2, false),
+        "java.math.BigDecimal");
   }
 
   @Test
@@ -487,8 +478,10 @@ public class TestSpecificCompiler {
         LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)));
     Schema nullableDecimalSchema2 = Schema.createUnion(
         LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)), Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema1), "java.nio.ByteBuffer");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema2), "java.nio.ByteBuffer");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema1, false),
+        "java.nio.ByteBuffer");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDecimalSchema2, false),
+        "java.nio.ByteBuffer");
   }
 
   @Test
@@ -499,32 +492,76 @@ public class TestSpecificCompiler {
     // Nullable types should return boxed types instead of primitive types
     Schema nullableIntSchema1 = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT));
     Schema nullableIntSchema2 = Schema.createUnion(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableIntSchema1), "java.lang.Integer");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableIntSchema2), "java.lang.Integer");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableIntSchema1, false), "java.lang.Integer");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableIntSchema2, false), "java.lang.Integer");
 
     Schema nullableLongSchema1 = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG));
     Schema nullableLongSchema2 = Schema.createUnion(Schema.create(Schema.Type.LONG), Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableLongSchema1), "java.lang.Long");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableLongSchema2), "java.lang.Long");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableLongSchema1, false), "java.lang.Long");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableLongSchema2, false), "java.lang.Long");
 
     Schema nullableFloatSchema1 = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.FLOAT));
     Schema nullableFloatSchema2 = Schema.createUnion(Schema.create(Schema.Type.FLOAT), Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableFloatSchema1), "java.lang.Float");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableFloatSchema2), "java.lang.Float");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableFloatSchema1, false), "java.lang.Float");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableFloatSchema2, false), "java.lang.Float");
 
     Schema nullableDoubleSchema1 = Schema.createUnion(Schema.create(Schema.Type.NULL),
         Schema.create(Schema.Type.DOUBLE));
     Schema nullableDoubleSchema2 = Schema.createUnion(Schema.create(Schema.Type.DOUBLE),
         Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDoubleSchema1), "java.lang.Double");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDoubleSchema2), "java.lang.Double");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDoubleSchema1, false),
+        "java.lang.Double");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableDoubleSchema2, false),
+        "java.lang.Double");
 
     Schema nullableBooleanSchema1 = Schema.createUnion(Schema.create(Schema.Type.NULL),
         Schema.create(Schema.Type.BOOLEAN));
     Schema nullableBooleanSchema2 = Schema.createUnion(Schema.create(Schema.Type.BOOLEAN),
         Schema.create(Schema.Type.NULL));
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableBooleanSchema1), "java.lang.Boolean");
-    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableBooleanSchema2), "java.lang.Boolean");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableBooleanSchema1, false),
+        "java.lang.Boolean");
+    Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableBooleanSchema2, false),
+        "java.lang.Boolean");
+  }
+
+  @Test
+  public void testGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\"," + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},"
+        + "{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-custom\"}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(1, usedCustomLogicalTypeFactories.size());
+    final Map.Entry<String, String> entry = usedCustomLogicalTypeFactories.entrySet().iterator().next();
+    Assert.assertEquals("string-custom", entry.getKey());
+    Assert.assertEquals("org.apache.avro.compiler.specific.TestSpecificCompiler.StringCustomLogicalTypeFactory",
+        entry.getValue());
+  }
+
+  @Test
+  public void testEmptyGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\","
+        + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(0, usedCustomLogicalTypeFactories.size());
   }
 
   @Test
@@ -543,68 +580,147 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testGetUsedConversionClassesForNullableTimestamps() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    // timestamp-millis and timestamp-micros used to cause collisions when both were
+    // present or added as converters (AVRO-2481).
+    final Schema tsMillis = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    final Schema tsMicros = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+
+    final Collection<String> conversions = compiler.getUsedConversionClasses(SchemaBuilder.record("WithTimestamps")
+        .fields().name("tsMillis").type(tsMillis).noDefault().name("tsMillisOpt").type().unionOf().nullType().and()
+        .type(tsMillis).endUnion().noDefault().name("tsMicros").type(tsMicros).noDefault().name("tsMicrosOpt").type()
+        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().endRecord());
+
+    Assert.assertEquals(2, conversions.size());
+    assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMillisConversion"));
+    assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMicrosConversion"));
+  }
+
+  @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
-        usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
   }
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
-        usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
   }
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
-        usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
   }
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
-        usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
   }
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
-        usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  /**
+   * Checks that identifiers that may cause problems in Java code will compile
+   * correctly when used in a generated specific record.
+   *
+   * @param schema                         A schema with an identifier __test__
+   *                                       that will be replaced.
+   * @param throwsTypeExceptionOnPrimitive If true, using a reserved word that is
+   *                                       also an Avro primitive type name must
+   *                                       throw an exception instead of
+   *                                       generating code.
+   * @param dstDirPrefix                   Where to generate the java code before
+   *                                       compiling.
+   */
+  public void testManglingReservedIdentifiers(String schema, boolean throwsTypeExceptionOnPrimitive,
+      String dstDirPrefix) throws IOException {
+    for (String reserved : SpecificData.RESERVED_WORDS) {
+      try {
+        Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
+        assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), dstDirPrefix + "_" + reserved),
+            new SpecificCompiler(s).compile());
+      } catch (AvroTypeException e) {
+        if (!(throwsTypeExceptionOnPrimitive && e.getMessage().contains("Schemas may not be named after primitives")))
+          throw e;
+      }
+    }
+  }
+
+  @Test
+  public void testMangleRecordName() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("__test__").fields().requiredInt("field").endRecord().toString(), true,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleRecordNamespace() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("__test__.Record").fields().requiredInt("field").endRecord().toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleField() throws Exception {
+    testManglingReservedIdentifiers(
+        SchemaBuilder.record("Record").fields().requiredInt("__test__").endRecord().toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleEnumName() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.enumeration("__test__").symbols("reserved").toString(), true,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleEnumSymbol() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.enumeration("Enum").symbols("__test__").toString(), false,
+        name.getMethodName());
+  }
+
+  @Test
+  public void testMangleFixedName() throws Exception {
+    testManglingReservedIdentifiers(SchemaBuilder.fixed("__test__").size(2).toString(), true, name.getMethodName());
   }
 
   @Test
@@ -612,7 +728,7 @@ public class TestSpecificCompiler {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()),
-        new SpecificCompiler(logicalTypesWithMultipleFields, JODA).compile(), true);
+        new SpecificCompiler(logicalTypesWithMultipleFields).compile(), true);
   }
 
   @Test
@@ -624,40 +740,40 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testLogicalTypesWithMultipleFieldsJsr310DateTime() throws Exception {
+  public void testLogicalTypesWithMultipleFieldsDateTime() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
-        new SpecificCompiler(logicalTypesWithMultipleFields, JSR310).compile());
+        new SpecificCompiler(logicalTypesWithMultipleFields).compile());
   }
 
   @Test
   public void testConversionInstanceWithDecimalLogicalTypeDisabled() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    final SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
 
-    Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
-    Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
-    Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
-    Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
-    Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
+    final Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+    final Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    final Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    final Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
+    final Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
     Assert.assertEquals("Should use date conversion for date type",
-        "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
-        "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+        "new org.apache.avro.data.TimeConversions.TimeMillisConversion()", compiler.conversionInstance(timeSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
-        "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
+        "new org.apache.avro.data.TimeConversions.TimestampMillisConversion()",
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
   public void testConversionInstanceWithDecimalLogicalTypeEnabled() throws Exception {
-    SpecificCompiler compiler = createCompiler(JODA);
+    SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
@@ -667,16 +783,16 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
     Assert.assertEquals("Should use date conversion for date type",
-        "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
-        "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+        "new org.apache.avro.data.TimeConversions.TimeMillisConversion()", compiler.conversionInstance(timeSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
-        "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
+        "new org.apache.avro.data.TimeConversions.TimestampMillisConversion()",
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -714,6 +830,26 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testPojoWithOptionalCreateForNullableFieldsWhenOptionTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptional(true);
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    }
+    assertEquals(5, optionalFound);
+  }
+
+  @Test
   public void testPojoWithOptionalCreatedWhenOptionalForEverythingTurnedOn() throws IOException {
     SpecificCompiler compiler = createCompiler();
     // compiler.setGettersReturnOptional(true);
@@ -731,6 +867,23 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(17, optionalFound);
+  }
+
+  @Test
+  public void testPojoWithOptionalOnlyWhenNullableCreatedTurnedOnAndGettersReturnOptionalTurnedOff()
+      throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        // no optionals since gettersReturnOptionalOnlyForNullable is false
+        assertFalse(line.contains("Optional"));
+      }
+    }
   }
 
   @Test
@@ -754,4 +907,30 @@ public class TestSpecificCompiler {
     }
     assertEquals(1, itWorksFound);
   }
+
+  @Test
+  public void testPojoWithUUID() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    File avsc = new File("src/main/resources/logical-uuid.avsc");
+    compiler.compileToDestination(avsc, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("guid")) {
+          assertTrue(line.contains("java.util.UUID"));
+        }
+      }
+    }
+  }
+
+  public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new LogicalType("string-custom");
+    }
+  }
+
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -19,7 +20,7 @@ require 'rubygems'
 require 'test/unit'
 require 'avro'
 
-CODECS_TO_VALIDATE = ['deflate']  # The 'null' codec is implicitly included
+CODECS_TO_VALIDATE = ['deflate', 'snappy', 'zstandard'].freeze  # The 'null' codec is implicitly included
 
 class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))
@@ -27,12 +28,14 @@ class TestInterop < Test::Unit::TestCase
   SCHEMAS = SHARE + '/test/schemas'
 
   files = Dir[HERE + '/../../../build/interop/data/*.avro'].select do |fn|
-    sep, codec = File.basename(fn, 'avro').rpartition('_')[1, 2]
+    sep, codec = File.basename(fn, '.avro').rpartition('_')[1, 2]
     sep.empty? || CODECS_TO_VALIDATE.include?(codec)
   end
+  puts "The following files will be tested:"
+  puts files
 
   files.each do |fn|
-    define_method("test_read_#{File.basename(fn, 'avro')}") do
+    define_method("test_read_#{File.basename(fn, '.avro')}") do
       projection = Avro::Schema.parse(File.read(SCHEMAS+'/interop.avsc'))
 
       File.open(fn) do |f|

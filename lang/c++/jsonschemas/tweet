@@ -97,7 +97,7 @@
             {
                 "name": "links",
                 "type": "com.bifflabs.grok.model.common.avro.AvroKnowableListString"
-            },            
+            },
             {
                 "name": "hashtags",
                 "type": "com.bifflabs.grok.model.common.avro.AvroKnowableListString"

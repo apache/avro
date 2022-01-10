@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.ObjectOutput;
 import java.io.ObjectInput;
 import java.io.IOException;
+import org.apache.avro.AvroRuntimeException;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
@@ -33,15 +34,6 @@ import org.apache.avro.message.MessageEncoder;
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
     implements SpecificRecord, Comparable<SpecificRecord>, GenericRecord, Externalizable {
-
-  @Override
-  public abstract Schema getSchema();
-
-  @Override
-  public abstract Object get(int field);
-
-  @Override
-  public abstract void put(int field, Object value);
 
   public SpecificData getSpecificData() {
     // Default implementation for backwards compatibility, overridden in generated
@@ -56,12 +48,20 @@ public abstract class SpecificRecordBase
 
   @Override
   public void put(String fieldName, Object value) {
-    put(getSchema().getField(fieldName).pos(), value);
+    Schema.Field field = getSchema().getField(fieldName);
+    if (field == null) {
+      throw new AvroRuntimeException("Not a valid schema field: " + fieldName);
+    }
+    put(field.pos(), value);
   }
 
   @Override
   public Object get(String fieldName) {
-    return get(getSchema().getField(fieldName).pos());
+    Schema.Field field = getSchema().getField(fieldName);
+    if (field == null) {
+      throw new AvroRuntimeException("Not a valid schema field: " + fieldName);
+    }
+    return get(field.pos());
   }
 
   public Conversion<?> getConversion(String fieldName) {
@@ -96,12 +96,12 @@ public abstract class SpecificRecordBase
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    new SpecificDatumWriter(getSchema()).write(this, SpecificData.getEncoder(out));
+    new SpecificDatumWriter<>(getSchema()).write(this, SpecificData.getEncoder(out));
   }
 
   @Override
   public void readExternal(ObjectInput in) throws IOException {
-    new SpecificDatumReader(getSchema()).read(this, SpecificData.getDecoder(in));
+    new SpecificDatumReader<>(getSchema()).read(this, SpecificData.getDecoder(in));
   }
 
   /**

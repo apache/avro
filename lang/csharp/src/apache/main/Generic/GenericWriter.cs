@@ -160,6 +160,9 @@ namespace Avro.Generic
                 case Schema.Type.Union:
                     WriteUnion(schema as UnionSchema, value, encoder);
                     break;
+                case Schema.Type.Logical:
+                    WriteLogical(schema as LogicalSchema, value, encoder);
+                    break;
                 default:
                     Error(schema, value);
                     break;
@@ -239,7 +242,7 @@ namespace Avro.Generic
         protected virtual object GetField(object value, string fieldName, int fieldPos)
         {
             GenericRecord d = value as GenericRecord;
-            return d[fieldName];
+            return d.GetValue(fieldPos);
         }
 
         /// <summary>
@@ -404,6 +407,18 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Serializes a logical value object by using the underlying logical type to convert the value
+        /// to its base value.
+        /// </summary>
+        /// <param name="ls">The schema for serialization</param>
+        /// <param name="value">The value to be serialized</param>
+        /// <param name="encoder">The encoder for serialization</param>
+        protected virtual void WriteLogical(LogicalSchema ls, object value, Encoder encoder)
+        {
+            Write(ls.BaseSchema, ls.LogicalType.ConvertToBaseValue(value, ls), encoder);
+        }
+
+        /// <summary>
         /// Serialized a fixed object. The default implementation requires that the value is
         /// a GenericFixed object with an identical schema as es.
         /// </summary>
@@ -486,6 +501,8 @@ namespace Avro.Generic
                 case Schema.Type.Fixed:
                     //return obj is GenericFixed && (obj as GenericFixed).Schema.Equals(s);
                     return obj is GenericFixed && (obj as GenericFixed).Schema.SchemaName.Equals((sc as FixedSchema).SchemaName);
+                case Schema.Type.Logical:
+                    return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

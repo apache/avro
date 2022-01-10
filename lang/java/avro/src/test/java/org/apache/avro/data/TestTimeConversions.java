@@ -18,11 +18,20 @@
 
 package org.apache.avro.data;
 
-import java.time.*;
-
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.data.TimeConversions.*;
+import org.apache.avro.data.TimeConversions.DateConversion;
+import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
+import org.apache.avro.data.TimeConversions.TimeMillisConversion;
+import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
+import org.apache.avro.data.TimeConversions.TimestampMillisConversion;
+import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,7 +76,7 @@ public class TestTimeConversions {
   }
 
   @Test
-  public void testTimeMillisConversion() throws Exception {
+  public void testTimeMillisConversion() {
     TimeMillisConversion conversion = new TimeMillisConversion();
     LocalTime oneAM = LocalTime.of(1, 0);
     LocalTime afternoon = LocalTime.of(15, 14, 15, 926_000_000);
@@ -179,5 +188,45 @@ public class TestTimeConversions {
         .fromLong(Jul_01_1969_12_00_00_000_123_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
     Assert.assertEquals("Pre 1970 date should be correct", Jul_01_1969_12_00_00_000_123_instant, (long) conversion
         .toLong(Jul_01_1969_12_00_00_000_123, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+  }
+
+  @Test
+  public void testDynamicSchemaWithDateConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.LocalDate", new TimeConversions.DateConversion());
+    Assert.assertEquals("Reflected schema should be logicalType date", DATE_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithTimeConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.LocalTime", new TimeConversions.TimeMillisConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timeMillis", TIME_MILLIS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithTimeMicrosConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.LocalTime", new TimeConversions.TimeMicrosConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timeMicros", TIME_MICROS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.Instant", new TimeConversions.TimestampMillisConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
+  }
+
+  @Test
+  public void testDynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
+    Schema schema = getReflectedSchemaByName("java.time.Instant", new TimeConversions.TimestampMicrosConversion());
+    Assert.assertEquals("Reflected schema should be logicalType timestampMicros", TIMESTAMP_MICROS_SCHEMA, schema);
+  }
+
+  private Schema getReflectedSchemaByName(String className, Conversion<?> conversion) throws ClassNotFoundException {
+    // one argument: a fully qualified class name
+    Class<?> cls = Class.forName(className);
+
+    // get the reflected schema for the given class
+    ReflectData model = new ReflectData();
+    model.addLogicalTypeConversion(conversion);
+    return model.getSchema(cls);
   }
 }

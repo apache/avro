@@ -177,6 +177,8 @@ namespace Avro.Generic
                     return ResolveMap((MapSchema)writerSchema, (MapSchema)readerSchema);
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)writerSchema, readerSchema);
+                case Schema.Type.Logical:
+                    return ResolveLogical((LogicalSchema)writerSchema, (LogicalSchema)readerSchema);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -193,8 +195,10 @@ namespace Avro.Generic
 
             var translator = new int[writerSchema.Symbols.Count];
 
+            var readerDefaultOrdinal = null != readerSchema.Default ? readerSchema.Ordinal(readerSchema.Default) : -1;
+
             foreach (var symbol in writerSchema.Symbols)
-            {
+            { 
                 var writerOrdinal = writerSchema.Ordinal(symbol);
                 if (readerSchema.Contains(symbol))
                 {
@@ -210,6 +214,11 @@ namespace Avro.Generic
                         {
                             var writerOrdinal = d.ReadEnum();
                             var readerOrdinal = translator[writerOrdinal];
+                            if (readerOrdinal == -1 && readerDefaultOrdinal != -1) //the symbol doesn't exist, but the default does
+                            {
+                                return enumAccess.CreateEnum(r, readerDefaultOrdinal);
+                            }
+
                             if (readerOrdinal == -1)
                             {
                                 throw new AvroException("No such symbol: " + writerSchema[writerOrdinal]);
@@ -390,6 +399,12 @@ namespace Avro.Generic
             return array;
         }
 
+        private ReadItem ResolveLogical(LogicalSchema writerSchema, LogicalSchema readerSchema)
+        {
+            var baseReader = ResolveReader(writerSchema.BaseSchema, readerSchema.BaseSchema);
+            return (r, d) => readerSchema.LogicalType.ConvertToLogicalValue(baseReader(r, d), readerSchema);
+        }
+
         private ReadItem ResolveFixed(FixedSchema writerSchema, FixedSchema readerSchema)
         {
             if (readerSchema.Size != writerSchema.Size)
@@ -496,6 +511,9 @@ namespace Avro.Generic
                         lookup[i] = GetSkip( unionSchema[i] );
                     }
                     return d => lookup[d.ReadUnionIndex()](d);
+                case Schema.Type.Logical:
+                    var logicalSchema = (LogicalSchema)writerSchema;
+                    return GetSkip(logicalSchema.BaseSchema);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }

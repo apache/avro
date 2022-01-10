@@ -86,11 +86,11 @@
         <section id="schema_record">
           <title>Records</title>
 
-	  <p>Records use the type name "record" and support three attributes:</p>
+	  <p>Records use the type name "record" and support the following attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a JSON string providing the name
 	    of the record (required).</li>
-	    <li><em>namespace</em>, a JSON string that qualifies the name;</li>
+	    <li><code>namespace</code>, a JSON string that qualifies the name;</li>
 	    <li><code>doc</code>: a JSON string providing documentation to the
 	    user of this schema (optional).</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
@@ -104,14 +104,17 @@
                   for users (optional).</li>
 		<li><code>type:</code> a <a href="#schemas">schema</a>, as defined above</li>
 		<li><code>default:</code> A default value for this
-		  field, used when reading instances that lack this
-		  field (optional).  Permitted values depend on the
-		  field's schema type, according to the table below.
-		  Default values for union fields correspond to the
-		  first schema in the union. Default values for bytes
-		  and fixed fields are JSON strings, where Unicode
-		  code points 0-255 are mapped to unsigned 8-bit byte
-		  values 0-255.
+      field, only used when reading instances that lack
+      the field for schema evolution purposes. The
+      presence of a default value does not make the
+      field optional at encoding time. Permitted values
+      depend on the field's schema type, according to the
+      table below. Default values for union fields correspond
+      to the first schema in the union. Default values for bytes
+      and fixed fields are JSON strings, where Unicode
+      code points 0-255 are mapped to unsigned 8-bit byte
+      values 0-255. Avro encodes a field even if its
+      value is equal to its default.
 		  <table class="right">
 		    <caption>field default values</caption>
 		    <tr><th>avro type</th><th>json type</th><th>example</th></tr>
@@ -132,7 +135,7 @@
 		  impacts sort ordering of this record (optional).
 		  Valid values are "ascending" (the default),
 		  "descending", or "ignore".  For more details on how
-		  this is used, see the the <a href="#order">sort
+		  this is used, see the <a href="#order">sort
 		  order</a> section below.</li>
 		<li><code>aliases:</code> a JSON array of strings, providing
 		  alternate names for this field (optional).</li>
@@ -183,7 +186,8 @@
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
-{ "type": "enum",
+{
+  "type": "enum",
   "name": "Suit",
   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
 }
@@ -199,7 +203,13 @@
 	  </ul>
 	  <p>For example, an array of strings is declared
 	  with:</p>
-	  <source>{"type": "array", "items": "string"}</source>
+    <source>
+{
+  "type": "array",
+  "items" : "string",
+  "default": []
+}
+    </source>
 	</section>
 
         <section>
@@ -212,7 +222,13 @@
 	  <p>Map keys are assumed to be strings.</p>
 	  <p>For example, a map from string to long is declared
 	  with:</p>
-	  <source>{"type": "map", "values": "long"}</source>
+    <source>
+{
+  "type": "map",
+  "values" : "long",
+  "default": {}
+}
+    </source>
 	</section>
 
         <section>
@@ -238,14 +254,16 @@
         <section>
           <title>Fixed</title>
           <p>Fixed uses the type name <code>"fixed"</code> and supports
-          two attributes:</p>
+          the following attributes:</p>
 	  <ul>
 	    <li><code>name</code>: a string naming this fixed (required).</li>
-	    <li><em>namespace</em>, a string that qualifies the name;</li>
+	    <li><code>namespace</code>, a string that qualifies the name;</li>
 	    <li><code>aliases:</code> a JSON array of strings, providing
 	      alternate names for this enum (optional).</li>
-            <li><code>size</code>: an integer, specifying the number
-            of bytes per value (required).</li>
+      <li><code>doc</code>: a JSON string providing documentation to the
+        user of this schema (optional).</li>
+      <li><code>size</code>: an integer, specifying the number
+        of bytes per value (required).</li>
 	  </ul>
 	  <p>For example, 16-byte quantity may be declared with:</p>
 	  <source>{"type": "fixed", "size": 16, "name": "md5"}</source>
@@ -271,6 +289,10 @@
         null namespace.
         Equality of names (including field names and enum symbols)
         as well as fullnames is case-sensitive.</p>
+        <p> The null namespace may not be used in a dot-separated
+        sequence of names.  So the grammar for a namespace
+        is:</p>
+        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code></p>
         <p>In record, enum and fixed definitions, the fullname is
         determined in one of the following ways:</p>
 	<ul>
@@ -533,7 +555,7 @@
 
           <section id="union_encoding">
             <title>Unions</title>
-            <p>A union is encoded by first writing a <code>long</code>
+            <p>A union is encoded by first writing an <code>int</code>
               value indicating the zero-based position within the
               union of the schema of its value.  The value is then
               encoded per the indicated schema within the union.</p>
@@ -547,6 +569,8 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
+            <p><em>NOTE</em>: Currently for C/C++ implementations, the positions are practically an int, but theoretically a long.
+            In reality, we don't expect unions with 215M members </p>
           </section>
 
           <section id="fixed_encoding">
@@ -773,12 +797,31 @@
       <section>
 	<title>Optional Codecs</title>
         <section>
+          <title>bzip2</title>
+          <p>The "bzip2" codec uses the <a href="https://sourceware.org/bzip2/">bzip2</a>
+            compression library.</p>
+        </section>
+
+        <section>
           <title>snappy</title>
           <p>The "snappy" codec uses
             Google's <a href="https://code.google.com/p/snappy/">Snappy</a>
             compression library.  Each compressed block is followed
             by the 4-byte, big-endian CRC32 checksum of the
             uncompressed data in the block.</p>
+        </section>
+
+        <section>
+          <title>xz</title>
+          <p>The "xz" codec uses the <a href="https://tukaani.org/xz/">XZ</a>
+            compression library.</p>
+        </section>
+
+        <section>
+          <title>zstandard</title>
+          <p>The "zstandard" codec uses
+            Facebook's <a href="https://facebook.github.io/zstd/">Zstandard</a>
+            compression library.</p>
         </section>
       </section>
     </section>
@@ -1391,10 +1434,11 @@ void initFPTable() {
 }
         </source>
 
-        <p> Readers interested in the mathematics behind this
-        algorithm may want to read <a
-        href="https://www.scribd.com/fb-6001967/d/84795-Crc">this book
-        chapter.</a> (Unlike RFC-1952 and the book chapter, we prepend
+        <p>Readers interested in the mathematics behind this
+          algorithm may want to read
+        <a href="https://books.google.com/books?id=XD9iAwAAQBAJ&amp;pg=PA319"
+          >Chapter 14 of the Second Edition of <em>Hacker's Delight</em></a>.
+        (Unlike RFC-1952 and the book chapter, we prepend
         a single one bit to messages.  We do this because CRCs ignore
         leading zero bits, which can be problematic.  Our code
         prepends a one-bit by initializing fingerprints using
@@ -1488,6 +1532,13 @@ void initFPTable() {
         <p>
           A <code>date</code> logical type annotates an Avro <code>int</code>, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
         </p>
+        <p>The following schema represents a date:</p>
+        <source>
+{
+  "type": "int",
+  "logicalType": "date"
+}
+        </source>
       </section>
 
       <section>

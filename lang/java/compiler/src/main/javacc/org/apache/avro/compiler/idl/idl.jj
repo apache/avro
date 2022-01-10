@@ -61,7 +61,9 @@ PARSER_BEGIN(Idl)
 package org.apache.avro.compiler.idl;
 
 import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,6 +71,7 @@ import java.util.Map;
 import java.net.URL;
 
 import org.apache.avro.Schema;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
@@ -88,38 +91,52 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
+  private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";
 
-  File inputDir = new File(".");
+  URI inputDir;
   ClassLoader resourceLoader = null;
   String namespace;
   Map<String,Schema> names = new LinkedHashMap<String,Schema>();
 
-  private static final ThreadLocal<String> DOC = new ThreadLocal<String>();
-  static void setDoc(String doc) { DOC.set(doc.trim()); }
-  static String getDoc() {
-    String doc = DOC.get();
-    DOC.set(null);
-    return doc;
+  private List<String> parserWarnings = Collections.emptyList();
+  /**
+   * Return all warnings that were encountered while parsing.
+   */
+  public List<String> getWarningsAfterParsing() {
+    return parserWarnings;
   }
 
   public Idl(File inputFile) throws IOException {
     this(new FileInputStream(inputFile), "UTF-8");
-    this.inputDir = inputFile.getParentFile();
+    this.inputDir = inputFile.getParentFile().toURI();
   }
 
   public Idl(File inputFile, ClassLoader resourceLoader) throws IOException {
     this(inputFile);
     this.resourceLoader = resourceLoader;
   }
-  
+
+  private static URI resourceParent(URL jar) throws IOException {
+    String path = jar.toExternalForm();
+    String name = path.substring(path.indexOf("!/") + 1);
+    try {
+      URI uri = new URI("classpath", null, name, null);
+      return uri.resolve(".");
+    } catch (URISyntaxException e) {
+      throw new IOException("Could not handle resource import in " + jar, e);
+    }
+  }
+
   private Idl(URL input, Idl parent) throws IOException {
     this(input.openStream(), "UTF-8");
     this.inputDir = "file".equals(input.getProtocol())
-      ? new File(input.getPath()).getParentFile()
+      ? new File(input.getPath()).getParentFile().toURI()
+      : "jar".equals(input.getProtocol())
+      ?  resourceParent(input)
       : parent.inputDir;
     this.resourceLoader = parent.resourceLoader;
   }
-  
+
   public void close() throws IOException {
     jj_input_stream.inputStream.close();
   }
@@ -150,17 +167,47 @@ public class Idl implements Closeable {
         throw error(key+" values must be textual: "+n, token);
     return values;
   }
-  
+
   private URL findFile(String importFile) throws IOException {
-    File file = new File(this.inputDir, importFile);
+    URI uri = this.inputDir.resolve(importFile);
+    File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
-    if (file.exists())
-      result = file.toURL();
+    if (file != null && file.exists())
+      result = file.toURI().toURL();
     else if (this.resourceLoader != null)
-      result = this.resourceLoader.getResource(importFile);
+      if ("classpath".equals(uri.getScheme()))
+        result = this.resourceLoader.getResource(uri.getPath().substring(1));
+      else
+        result = this.resourceLoader.getResource(importFile);
     if (result == null)
       throw new FileNotFoundException(importFile);
     return result;
+  }
+
+  /**
+   * For "optional schemas" (recognized by the marker property the NullableType
+   * production adds), ensure the null schema is in the right place.
+   *
+   * @param schema       a schema
+   * @param defaultValue the intended default value
+   * @return the schema, or an optional schema with null in the right place
+   */
+  private static Schema fixOptionalSchema(Schema schema, JsonNode defaultValue) {
+    final Object optionalType = schema.getObjectProp(OPTIONAL_NULLABLE_TYPE_PROPERTY);
+    if (optionalType != null) {
+      // The schema is a union schema with 2 types: "null" and a non-"null" schema
+      Schema nullSchema = schema.getTypes().get(0);
+      Schema nonNullSchema = schema.getTypes().get(1);
+      boolean nonNullDefault = defaultValue != null && !defaultValue.isNull();
+
+      // Always return a new schema: this drops the marker property.
+      if (nonNullDefault) {
+        return Schema.createUnion(nonNullSchema, nullSchema);
+      } else {
+        return Schema.createUnion(nullSchema, nonNullSchema);
+      }
+    }
+    return schema;
   }
 
 }
@@ -201,7 +248,7 @@ MORE :
 <DOC_COMMENT>
 SPECIAL_TOKEN :
 {
-  <"*/" > {Idl.setDoc(image.substring(0, image.length()-2));} : DEFAULT
+  <"*/" > {DocCommentHelper.setDoc(matchedToken);} : DEFAULT
 }
 
 <MULTI_LINE_COMMENT>
@@ -243,6 +290,7 @@ TOKEN :
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
 | < LOCAL_TIMESTAMP: "local_timestamp_ms" >
+| < UUID: "uuid" >
 }
 
 /* LITERALS */
@@ -254,7 +302,7 @@ TOKEN :
     (   <DECIMAL_LITERAL> (["l","L"])?
       | <HEX_LITERAL> (["l","L"])?
       | <OCTAL_LITERAL> (["l","L"])?
-        )  
+        )
   >
 |
   < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
@@ -979,6 +1027,7 @@ TOKEN :
 | < EQUALS: "=" >
 | < DOT: "." >
 | < DASH: "-" >
+| < QUESTION_MARK: "?" >
 }
 
 TOKEN :
@@ -1000,13 +1049,17 @@ TOKEN :
 Protocol CompilationUnit():
 {
   Protocol p;
+  DocCommentHelper.getAndClearWarnings(); // Throw away previous results.
 }
 {
   p = ProtocolDeclaration()
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return SchemaResolver.resolve(p); }
+  {
+    parserWarnings = DocCommentHelper.getAndClearWarnings();
+    return SchemaResolver.resolve(p);
+  }
 }
 
 /*
@@ -1035,9 +1088,12 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
      } else if ("aliases".equals(key)) {          // aliases
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
-     } else {                                     // add all other props
+     } else {                                     // add all other properties
        Accessor.addProp(s, key, props.get(key));
      }
+   LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+   if (logicalType != null)
+     logicalType.addToSchema(s);
 
    return s;
  }
@@ -1049,8 +1105,7 @@ Schema UnionDefinition():
   List<Schema> schemata = new ArrayList<Schema>();
 }
 {
- // TODO should probably disallow other unions here in the parser?
-
+  // Don't disallow unions here: its constructor disallows nested unions and throws a descriptive exception.
   "union"
   "{"
   s = Type()
@@ -1083,10 +1138,10 @@ Protocol ProtocolDeclaration():
  "protocol"
    name = Identifier()
  {
-   p = new Protocol(name, getDoc(), namespace);
+   p = new Protocol(name, DocCommentHelper.getDoc(), namespace);
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
-     } else {                                     // add all other props
+     } else {                                     // add all other properties
        Accessor.addProp(p, key, props.get(key));
      }
  }
@@ -1104,7 +1159,7 @@ Schema EnumDeclaration():
   String defaultSymbol = null;
 }
 {
-  "enum" {   String doc = getDoc(); }
+  "enum" {   String doc = DocCommentHelper.getDoc(); }
   name = Identifier()
   symbols = EnumBody()
       [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
@@ -1122,7 +1177,7 @@ List<String> EnumBody():
 }
 {
   "{"
-  [ EnumConstant(symbols) ( LOOKAHEAD(2) "," EnumConstant(symbols) )* ]
+  [ EnumConstant(symbols) ( "," EnumConstant(symbols) )* ]
   "}"
   {
     return symbols;
@@ -1180,7 +1235,7 @@ Protocol ImportIdl() : {
   <IDL> importFile = JsonString() ";"
     {
       try {
-        Idl idl = new Idl(findFile(importFile), this); 
+        Idl idl = new Idl(findFile(importFile), this);
         try {
           return idl.CompilationUnit();
         } finally {
@@ -1188,7 +1243,7 @@ Protocol ImportIdl() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1208,7 +1263,7 @@ Protocol ImportProtocol() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1231,7 +1286,7 @@ Schema ImportSchema() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1244,7 +1299,7 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, getDoc(), this.namespace,
+    Schema s = Schema.createFixed(name, DocCommentHelper.getDoc(), this.namespace,
                                   Integer.parseInt(sizeTok.image));
     names.put(s.getFullName(), s);
     return s;
@@ -1265,7 +1320,7 @@ Schema RecordDeclaration():
   name = Identifier()
   {
     Schema result = Schema.createRecord(
-      name, getDoc(), this.namespace, isError);
+      name, DocCommentHelper.getDoc(), this.namespace, isError);
     names.put(result.getFullName(), result);
   }
   "{"
@@ -1295,20 +1350,11 @@ private void SchemaProperty(Map<String, JsonNode> properties):
 void FieldDeclaration(List<Field> fields):
 {
   Schema type;
-  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-  // TODO should we be able to specify properties on any Type?
-  // or just on field declarations as done here
-
-  ( SchemaProperty(props) )*
   type = Type()
   VariableDeclarator(type, fields) ( "," VariableDeclarator(type, fields) )*
   ";"
-  {
-    for (String key : props.keySet())
-      Accessor.addProp(type, key, props.get(key));
-  }
 }
 
 void VariableDeclarator(Schema type, List<Field> fields):
@@ -1319,25 +1365,26 @@ void VariableDeclarator(Schema type, List<Field> fields):
 }
 {
     ( SchemaProperty(props) )*
-    
+
   name = Identifier()
 
     [ <EQUALS> defaultValue=Json() ]
-    
+
   {
     Field.Order order = Field.Order.ASCENDING;
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
 
-    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
-    Field field = Accessor.createField(name, type, getDoc(), defaultValue, validate, order);
+    boolean validate = SchemaResolver.isFullyResolvedSchema(type);
+    Schema fieldType = fixOptionalSchema(type, defaultValue);
+    Field field = Accessor.createField(name, fieldType, DocCommentHelper.getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
-      } else {                                    // add all other props
+      } else {                                    // add all other properties
         Accessor.addProp(field, key, props.get(key));
       }
     fields.add(field);
@@ -1350,7 +1397,7 @@ String MessageDocumentation():
 {
    // Don't parse anything, just return the doc string
    {
-       return getDoc();
+       return DocCommentHelper.getDoc();
    }
 }
 
@@ -1378,7 +1425,7 @@ private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
     return oneWay
     ? p.createMessage(name, msgDoc, props, request)
     : p.createMessage(name, msgDoc, props, request, response, errors);
-    
+
   }
 }
 
@@ -1419,18 +1466,61 @@ Schema Type():
   Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-
     ( SchemaProperty(props) )*
+  s = UnannotatedType(props)
+  {
+    return s;
+  }
+}
+
+Schema UnannotatedType(Map<String, JsonNode> props):
+{
+  Schema s;
+}
+{
   (
-      LOOKAHEAD(2) s = ReferenceType()
-    | s = PrimitiveType()
-    | s = UnionDefinition()
-    | s = ArrayType()
-    | s = MapType()
+    s = NullableType(props)
+    | (
+        s = UnionDefinition()
+        | s = ArrayType()
+        | s = MapType()
+      )
+      {
+        // NullableType also applies properties, inside any union with null it may create.
+        for (String key : props.keySet())
+          Accessor.addProp(s, key, props.get(key));
+        LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+        if (logicalType != null)
+          logicalType.addToSchema(s);
+      }
   )
   {
+    return s;
+  }
+}
+
+Schema NullableType(Map<String, JsonNode> props):
+{
+  Schema s;
+  boolean optional = false;
+}
+{
+  (
+      s = ReferenceType() { if (!props.isEmpty()) { throw error("Type references may not be annotated", token); } }
+    | s = PrimitiveType()
+  ) [ <QUESTION_MARK> { optional = true; } ]
+  {
+    // By applying the properties here (before creating the union), type annotations modify the optional type instead of the union.
     for (String key : props.keySet())
       Accessor.addProp(s, key, props.get(key));
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+    if (logicalType != null)
+      logicalType.addToSchema(s);
+    if (optional) {
+      s = Schema.createUnion(Schema.create(Schema.Type.NULL), s);
+      // Add a marker property to the union (it will be removed when creating fields)
+      Accessor.addProp(s, OPTIONAL_NULLABLE_TYPE_PROPERTY, BooleanNode.TRUE);
+    }
     return s;
   }
 }
@@ -1500,6 +1590,7 @@ Schema PrimitiveType():
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" { return DecimalTypeProperties(); }
+| "uuid" {return LogicalTypes.uuid().addToSchema(Schema.create(Type.STRING));}
 }
 
 Schema DecimalTypeProperties():
@@ -1523,22 +1614,22 @@ Schema ResultType():
   Schema schema;
 }
 {
-  LOOKAHEAD(2)
     "void"          { return Schema.create(Type.NULL); }
-  | schema = Type() { return schema; }
+  | schema = UnannotatedType(Collections.emptyMap()) { return schema; }
 }
 
 String PropertyName():
 {
   Token t;
-  StringBuffer name = new StringBuffer();
+  String s;
+  StringBuilder name = new StringBuilder();
 }
 {
-  t = <IDENTIFIER>   { name.append(t.image); }
+  s = Identifier()   { name.append(s); }
   ( t = <DASH>       { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); } |
+    s = Identifier() { name.append(s); } |
     t = <DOT>        { name.append(t.image); }
-    t = <IDENTIFIER> { name.append(t.image); }
+    s = Identifier() { name.append(s); }
   ) *
   { return name.toString(); }
 }
@@ -1567,17 +1658,22 @@ Token AnyIdentifier():
    t = <FALSE> |
    t = <FIXED> |
    t = <FLOAT> |
+   t = <IDL> |
+   t = <IMPORT> |
    t = <INT> |
    t = <LONG> |
    t = <MAP> |
+   t = <ONEWAY> |
    t = <BYTES> |
    t = <STRING> |
+   t = <NULL> |
    t = <PROTOCOL> |
    t = <RECORD> |
    t = <SCHEMA> |
    t = <THROWS> |
    t = <TRUE> |
    t = <UNION> |
+   t = <UUID> |
    t = <VOID> |
    t = <DATE> |
    t = <TIME> |
@@ -1594,7 +1690,14 @@ private JsonNode Json() :
 { String s; Token t; JsonNode n; }
 { 
 ( s = JsonString() { n = new TextNode(s); }
-| (t=<INTEGER_LITERAL> { n = new LongNode(Long.parseLong(t.image)); })
+| (t=<INTEGER_LITERAL> {
+  long longValue = Long.parseLong(t.image);
+  int intValue = (int)longValue;
+  if (intValue == longValue)
+    n = new IntNode(intValue);
+  else
+    n = new LongNode(longValue);
+})
 | (t=<FLOATING_POINT_LITERAL> {n=new DoubleNode(Double.parseDouble(t.image));})
 | n=JsonObject()
 | n=JsonArray()
