@@ -16,10 +16,12 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../../../common.props" />
+  <Import Project="../../../versions.props" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">net6.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;net6.0</TargetFrameworks>
+    <TargetFrameworks>$(DefaultExeTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Avro.perf</AssemblyName>
     <RootNamespace>Avro.perf</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
