@@ -304,8 +304,7 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::from_value;
-    use crate::{types::Record, Reader};
+    use crate::{from_value, types::Record, Reader};
     use serde::Deserialize;
     use std::io::Cursor;
 
