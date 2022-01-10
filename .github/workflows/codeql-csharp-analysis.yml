@@ -55,6 +55,15 @@ jobs:
         # a pull request then we can checkout the head.
         fetch-depth: 2
 
+    # Install .NET SDKs
+    - name: Install .NET SDKs
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: |
+          3.1.x
+          5.0.x
+          6.0.x
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
