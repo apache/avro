@@ -45,7 +45,7 @@
     <SystemCodeDomMinimumVersion>4.4.0</SystemCodeDomMinimumVersion>
     <SystemReflectionMinimumVersion>4.3.0</SystemReflectionMinimumVersion>
     <SystemReflectionEmitILGenerationMinimumVersion>4.7.0</SystemReflectionEmitILGenerationMinimumVersion>
-    <SystemReflectionEmitLightweightMinimumVersion>4.3.0</SystemReflectionEmitLightweightMinimumVersion>
+    <SystemReflectionEmitLightweightMinimumVersion>4.7.0</SystemReflectionEmitLightweightMinimumVersion>
   </PropertyGroup>
 
   <!--
