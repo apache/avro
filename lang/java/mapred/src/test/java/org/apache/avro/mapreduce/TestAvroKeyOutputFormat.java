@@ -18,8 +18,8 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,16 +29,17 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.mapred.AvroKey;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.easymock.Capture;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentCaptor;
 
 public class TestAvroKeyOutputFormat {
   private static final String SYNC_INTERVAL_KEY = org.apache.avro.mapred.AvroOutputFormat.SYNC_INTERVAL_KEY;
@@ -125,41 +126,34 @@ public class TestAvroKeyOutputFormat {
     job.getConfiguration().set("mapred.output.dir", mTempDir.getRoot().getPath());
     Schema writerSchema = Schema.create(Schema.Type.INT);
     AvroJob.setOutputKeySchema(job, writerSchema);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    expect(context.getConfiguration()).andReturn(job.getConfiguration()).anyTimes();
-    expect(context.getTaskAttemptID()).andReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"))
-        .anyTimes();
-    expect(context.getNumReduceTasks()).andReturn(1);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
+    when(context.getConfiguration()).thenReturn(job.getConfiguration());
+    when(context.getTaskAttemptID()).thenReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"));
+    when(context.getNumReduceTasks()).thenReturn(1);
 
     // Create a mock record writer.
     @SuppressWarnings("unchecked")
-    RecordWriter<AvroKey<Integer>, NullWritable> expectedRecordWriter = createMock(RecordWriter.class);
-    AvroKeyOutputFormat.RecordWriterFactory recordWriterFactory = createMock(
-        AvroKeyOutputFormat.RecordWriterFactory.class);
+    RecordWriter<AvroKey<Integer>, NullWritable> expectedRecordWriter = mock(RecordWriter.class);
+    AvroKeyOutputFormat.RecordWriterFactory recordWriterFactory = mock(AvroKeyOutputFormat.RecordWriterFactory.class);
 
-    // Expect the record writer factory to be called with appropriate parameters.
-    Capture<CodecFactory> capturedCodecFactory = Capture.newInstance();
-    expect(recordWriterFactory.create(eq(writerSchema), anyObject(GenericData.class), capture(capturedCodecFactory), // Capture
-                                                                                                                     // for
-                                                                                                                     // comparison
-                                                                                                                     // later.
-        anyObject(OutputStream.class), eq(expectedSyncInterval))).andReturn(expectedRecordWriter);
-
-    replay(context);
-    replay(expectedRecordWriter);
-    replay(recordWriterFactory);
+    // when the record writer factory to be called with appropriate parameters.
+    ArgumentCaptor<CodecFactory> capturedCodecFactory = ArgumentCaptor.forClass(CodecFactory.class);
+    when(recordWriterFactory.create(eq(writerSchema), any(GenericData.class), capturedCodecFactory.capture(), // Capture
+                                                                                                              // for
+                                                                                                              // comparison
+                                                                                                              // later.
+        any(OutputStream.class), eq(expectedSyncInterval))).thenReturn(expectedRecordWriter);
 
     AvroKeyOutputFormat<Integer> outputFormat = new AvroKeyOutputFormat<>(recordWriterFactory);
     RecordWriter<AvroKey<Integer>, NullWritable> recordWriter = outputFormat.getRecordWriter(context);
     // Make sure the expected codec was used.
-    assertTrue(capturedCodecFactory.hasCaptured());
+    assertNotNull(capturedCodecFactory.getValue());
     assertEquals(expectedCodec.toString(), capturedCodecFactory.getValue().toString());
 
-    verify(context);
-    verify(expectedRecordWriter);
-    verify(recordWriterFactory);
+    verify(context, atLeastOnce()).getConfiguration();
+    verify(recordWriterFactory).create(eq(writerSchema), any(ReflectData.class), any(CodecFactory.class), any(OutputStream.class), anyInt());
 
     assertNotNull(recordWriter);
-    assertTrue(expectedRecordWriter == recordWriter);
+    assertSame(expectedRecordWriter, recordWriter);
   }
 }
