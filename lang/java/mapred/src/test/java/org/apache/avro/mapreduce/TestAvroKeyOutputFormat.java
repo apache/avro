@@ -151,7 +151,8 @@ public class TestAvroKeyOutputFormat {
     assertEquals(expectedCodec.toString(), capturedCodecFactory.getValue().toString());
 
     verify(context, atLeastOnce()).getConfiguration();
-    verify(recordWriterFactory).create(eq(writerSchema), any(ReflectData.class), any(CodecFactory.class), any(OutputStream.class), anyInt());
+    verify(recordWriterFactory).create(eq(writerSchema), any(ReflectData.class), any(CodecFactory.class),
+        any(OutputStream.class), anyInt());
 
     assertNotNull(recordWriter);
     assertSame(expectedRecordWriter, recordWriter);
