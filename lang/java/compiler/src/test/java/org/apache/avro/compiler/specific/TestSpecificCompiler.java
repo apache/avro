@@ -34,6 +34,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -44,6 +45,7 @@ import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
@@ -673,7 +675,12 @@ public class TestSpecificCompiler {
    */
   public void testManglingReservedIdentifiers(String schema, boolean throwsTypeExceptionOnPrimitive,
       String dstDirPrefix) throws IOException {
-    for (String reserved : SpecificData.RESERVED_WORDS) {
+    Set<String> reservedIdentifiers = new HashSet<>();
+    reservedIdentifiers.addAll(SpecificData.RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.TYPE_IDENTIFIER_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.ACCESSOR_MUTATOR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
+    for (String reserved : reservedIdentifiers) {
       try {
         Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), dstDirPrefix + "_" + reserved),

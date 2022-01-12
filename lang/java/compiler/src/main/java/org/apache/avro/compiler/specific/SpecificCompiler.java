@@ -135,7 +135,7 @@ public class SpecificCompiler {
   }
 
   /* Reserved words for accessor/mutator methods */
-  private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
+  protected static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
       Arrays.asList("class", "schema", "classSchema"));
 
   static {
@@ -144,7 +144,7 @@ public class SpecificCompiler {
   }
 
   /* Reserved words for type identifiers */
-  private static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
+  protected static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
       Arrays.asList("var", "yield", "record"));
 
   static {
@@ -153,7 +153,7 @@ public class SpecificCompiler {
   }
 
   /* Reserved words for error types */
-  private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
+  protected static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
 
   static {
     // Add accessor/mutator reserved words to error reserved words
