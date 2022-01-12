@@ -86,7 +86,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-ENV MAVEN_VERSION 3.8.1
+ENV MAVEN_VERSION 3.8.4
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -187,7 +187,7 @@ RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.48.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
