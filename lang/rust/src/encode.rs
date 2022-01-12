@@ -144,7 +144,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             } = *schema
             {
                 for (i, &(_, ref value)) in fields.iter().enumerate() {
-                    encode_ref(value, &schema_fields[i].schema, buffer);
+                    encode_ref(value, &schema_fields[i].schema(), buffer);
                 }
             }
         }

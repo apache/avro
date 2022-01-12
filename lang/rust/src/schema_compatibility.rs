@@ -133,7 +133,7 @@ impl Checker {
             {
                 for field in r_fields.iter() {
                     if let Some(pos) = w_lookup.get(&field.name) {
-                        if !self.full_match_schemas(&w_fields[*pos].schema, &field.schema) {
+                        if !self.full_match_schemas(&w_fields[*pos].schema(), &field.schema()) {
                             return false;
                         }
                     } else if field.default.is_none() {

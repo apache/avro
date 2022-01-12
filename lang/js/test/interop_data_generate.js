@@ -61,6 +61,7 @@ for (var codec in files.streams.BlockEncoder.getDefaultCodecs()) {
     filePath += "_" + codec;
   }
   filePath += ".avro";
+  console.log('file path: ' + filePath);
   var encoder = files.createFileEncoder(filePath, schema, {codec: codec});
   encoder.end(datum);
 }

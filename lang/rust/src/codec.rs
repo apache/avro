@@ -19,7 +19,7 @@
 use crate::{types::Value, AvroResult, Error};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
-use strum_macros::{EnumString, IntoStaticStr};
+use strum_macros::{EnumString, EnumIter, IntoStaticStr};
 
 #[cfg(feature = "bzip")]
 use bzip2::{
@@ -34,7 +34,7 @@ use crc32fast::Hasher;
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, PartialEq, EnumIter, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
@@ -67,6 +67,19 @@ impl From<Codec> for Value {
 }
 
 impl Codec {
+    pub fn name(self) -> &'static str {
+        match self {
+            Codec::Null => "null",
+            Codec::Deflate => "deflate",
+            #[cfg(feature = "snappy")]
+            Codec::Snappy => "snappy",
+            #[cfg(feature = "zstandard")]
+            Codec::Zstd => "zstandard",
+            #[cfg(feature = "bzip")]
+            Codec::Bzip2 => "bzip2",
+        }
+    }
+
     /// Compress a stream of bytes in-place.
     pub fn compress(self, stream: &mut Vec<u8>) -> AvroResult<()> {
         match self {

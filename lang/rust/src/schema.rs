@@ -32,6 +32,8 @@ use std::{
     fmt,
     str::FromStr,
 };
+use std::cell::RefCell;
+use std::ops::Deref;
 use strum_macros::{EnumDiscriminants, EnumString};
 
 lazy_static! {
@@ -234,6 +236,13 @@ impl Name {
     fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let name = complex.name().ok_or(Error::GetNameField)?;
 
+        let type_name = match complex.get("type") {
+            Some(Value::Object(complex_type)) => {
+                complex_type.name().or_else(|| None)
+            }
+            _ => None
+        };
+
         let namespace = complex.string("namespace");
 
         let aliases: Option<Vec<String>> = complex
@@ -248,7 +257,7 @@ impl Name {
             });
 
         Ok(Name {
-            name,
+            name: type_name.unwrap_or(name),
             namespace,
             aliases,
         })
@@ -288,7 +297,7 @@ pub struct RecordField {
     /// is enabled.
     pub default: Option<Value>,
     /// Schema of the field.
-    pub schema: Schema,
+    pub schema: RefCell<Schema>,
     /// Order of the field.
     ///
     /// **NOTE** This currently has no effect.
@@ -314,6 +323,8 @@ impl RecordField {
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field)?;
 
+        parser.parsed_schemas.insert(name.clone(), schema.clone());
+
         let default = field.get("default").cloned();
 
         let order = field
@@ -326,10 +337,14 @@ impl RecordField {
             name,
             doc: field.doc(),
             default,
-            schema,
+            schema: RefCell::new(schema),
             order,
             position,
         })
+    }
+
+    pub fn schema(&self) -> Schema {
+        self.schema.borrow().deref().clone()
     }
 }
 
@@ -420,6 +435,7 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 #[derive(Default)]
 struct Parser {
     input_schemas: HashMap<String, Value>,
+    resolving_schemas: HashMap<String, Schema>,
     input_order: Vec<String>,
     parsed_schemas: HashMap<String, Schema>,
 }
@@ -480,6 +496,7 @@ impl Schema {
         }
         let mut parser = Parser {
             input_schemas,
+            resolving_schemas: HashMap::default(),
             input_order,
             parsed_schemas: HashMap::with_capacity(input.len()),
         };
@@ -515,7 +532,7 @@ impl Parser {
                 .remove_entry(&next_name)
                 .expect("Key unexpectedly missing");
             let parsed = self.parse(&value)?;
-            self.parsed_schemas.insert(name, parsed);
+            self.parsed_schemas.insert(get_schema_type_name(name, value), parsed);
         }
 
         let mut parsed_schemas = Vec::with_capacity(self.parsed_schemas.len());
@@ -532,12 +549,14 @@ impl Parser {
     /// Create a `Schema` from a `serde_json::Value` representing a JSON Avro
     /// schema.
     fn parse(&mut self, value: &Value) -> AvroResult<Schema> {
-        match *value {
+        let schema = match *value {
             Value::String(ref t) => self.parse_known_schema(t.as_str()),
             Value::Object(ref data) => self.parse_complex(data),
             Value::Array(ref data) => self.parse_union(data),
             _ => Err(Error::ParseSchemaFromValidJson),
-        }
+        };
+
+        schema
     }
 
     /// Parse a `serde_json::Value` representing an Avro type whose Schema is known into a
@@ -558,8 +577,8 @@ impl Parser {
     }
 
     /// Given a name, tries to retrieve the parsed schema from `parsed_schemas`.
-    /// If a parsed schema is not found, it checks if a json  with that name exists
-    /// in `input_schemas` and then parses it  (removing it from `input_schemas`)
+    /// If a parsed schema is not found, it checks if a json with that name exists
+    /// in `input_schemas` and then parses it (removing it from `input_schemas`)
     /// and adds the parsed schema to `parsed_schemas`
     ///
     /// This method allows schemas definitions that depend on other types to
@@ -570,11 +589,19 @@ impl Parser {
         }
         let value = self
             .input_schemas
-            .remove(name)
-            .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
-        let parsed = self.parse(&value)?;
-        self.parsed_schemas.insert(name.to_string(), parsed.clone());
-        Ok(parsed)
+            .remove(name);
+        if let Some(value) = value {
+            let parsed = self.parse(&value)?;
+            self.parsed_schemas.insert(get_schema_type_name(name.into(), value), parsed.clone());
+            Ok(parsed)
+        } else {
+            let resolving_schema = self
+                .resolving_schemas
+                .get(name)
+                .map(|v| v.clone())
+                .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
+            Ok(resolving_schema)
+        }
     }
 
     fn parse_precision_and_scale(
@@ -769,8 +796,15 @@ impl Parser {
     /// `Schema`.
     fn parse_record(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
-
         let mut lookup = HashMap::new();
+
+        let resolving_schema = Schema::Record {
+            name: name.clone(),
+            doc: complex.doc(),
+            fields: vec![],
+            lookup: HashMap::new(),
+        };
+        self.resolving_schemas.insert(name.fullname(None), resolving_schema.clone());
 
         let fields: Vec<RecordField> = complex
             .get("fields")
@@ -796,8 +830,25 @@ impl Parser {
             lookup,
         };
 
+        match schema {
+            Schema::Record {
+                name: _,
+                doc: _,
+                ref fields,
+                lookup: _,
+            } => {
+                for field in fields {
+                    if field.schema() == resolving_schema {
+                        field.schema.replace(schema.clone());
+                    }
+                }
+            }
+            _ => unreachable!(),
+        }
+
         self.parsed_schemas
             .insert(name.fullname(None), schema.clone());
+        self.resolving_schemas.remove(name.fullname(None).as_str());
         Ok(schema)
     }
 
@@ -890,6 +941,16 @@ impl Parser {
             doc,
             size: size as usize,
         })
+    }
+}
+
+fn get_schema_type_name(name: String, value: Value) -> String {
+    match value.get("type") {
+        Some(Value::Object(complext_type)) => match complext_type.get("name") {
+            Some(Value::String(name)) => name.to_string(),
+            _ => name,
+        },
+        _ => name,
     }
 }
 
@@ -1046,7 +1107,7 @@ impl Serialize for RecordField {
     {
         let mut map = serializer.serialize_map(None)?;
         map.serialize_entry("name", &self.name)?;
-        map.serialize_entry("type", &self.schema)?;
+        map.serialize_entry("type", &self.schema())?;
 
         if let Some(ref default) = self.default {
             map.serialize_entry("default", default)?;
@@ -1266,7 +1327,7 @@ mod tests {
                     name: "a".to_string(),
                     doc: None,
                     default: Some(Value::Number(42i64.into())),
-                    schema: Schema::Long,
+                    schema: RefCell::new(Schema::Long),
                     order: RecordFieldOrder::Ascending,
                     position: 0,
                 },
@@ -1274,7 +1335,7 @@ mod tests {
                     name: "b".to_string(),
                     doc: None,
                     default: None,
-                    schema: Schema::String,
+                    schema: RefCell::new(Schema::String),
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                 },

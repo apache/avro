@@ -1244,7 +1244,7 @@ fn test_doc_attributes() {
         assert_doc(&original_schema);
         if let Schema::Record { fields, .. } = original_schema {
             for f in fields {
-                assert_doc(&f.schema)
+                assert_doc(f.schema())
             }
         }
     }

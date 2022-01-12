@@ -367,23 +367,28 @@ impl Value {
                 items.iter().all(|(_, value)| value.validate(inner))
             }
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
+                // eprintln!("\n\n--- record_fields: {:?}", &record_fields);
+                // eprintln!("\n\n--- fields: {:?}", &fields);
                 fields.len() == record_fields.len()
                     && fields.iter().zip(record_fields.iter()).all(
                         |(field, &(ref name, ref value))| {
-                            field.name == *name && value.validate(&field.schema)
+                            field.name == *name && value.validate(&field.schema())
                         },
                     )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().all(|field| {
                     if let Some(item) = items.get(&field.name) {
-                        item.validate(&field.schema)
+                        item.validate(&field.schema())
                     } else {
                         false
                     }
                 })
             }
-            _ => false,
+            (a, b) => {
+                eprintln!("--- ERROR: {:?} {:?}", a, b);
+                false
+            },
         }
     }
 
@@ -711,7 +716,7 @@ impl Value {
             other => Err(Error::GetRecord {
                 expected: fields
                     .iter()
-                    .map(|field| (field.name.clone(), field.schema.clone().into()))
+                    .map(|field| (field.name.clone(), field.schema().clone().into()))
                     .collect(),
                 other: other.into(),
             }),
@@ -723,7 +728,7 @@ impl Value {
                 let value = match items.remove(&field.name) {
                     Some(value) => value,
                     None => match field.default {
-                        Some(ref value) => match field.schema {
+                        Some(ref value) => match field.schema() {
                             Schema::Enum { ref symbols, .. } => {
                                 Value::from(value.clone()).resolve_enum(symbols)?
                             }
@@ -746,7 +751,7 @@ impl Value {
                     },
                 };
                 value
-                    .resolve(&field.schema)
+                    .resolve(&field.schema())
                     .map(|value| (field.name.clone(), value))
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -768,6 +773,7 @@ impl Value {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::RefCell;
     use super::*;
     use crate::{
         decimal::Decimal,
@@ -900,7 +906,7 @@ mod tests {
                     name: "a".to_string(),
                     doc: None,
                     default: None,
-                    schema: Schema::Long,
+                    schema: RefCell::new(Schema::Long),
                     order: RecordFieldOrder::Ascending,
                     position: 0,
                 },
@@ -908,7 +914,7 @@ mod tests {
                     name: "b".to_string(),
                     doc: None,
                     default: None,
-                    schema: Schema::String,
+                    schema: RefCell::new(Schema::String),
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                 },
