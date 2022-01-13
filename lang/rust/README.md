@@ -87,6 +87,15 @@ version = "x.y"
 features = ["bzip"]
 ```
 
+Or in case you want to leverage the **Xz** codec:
+
+```toml
+[dependencies.avro-rs]
+version = "x.y"
+features = ["xz"]
+```
+
+
 ## Upgrading to a newer minor version
 
 The library is still in beta, so there might be backward-incompatible changes between minor
@@ -264,6 +273,9 @@ the block. You must enable the `snappy` feature to use this codec.
 You must enable the `zstandard` feature to use this codec.
 * **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
 You must enable the `bzip` feature to use this codec.
+* **Xz**: uses [xz2](https://github.com/alexcrichton/xz2-rs) compression library.
+  You must enable the `xz` feature to use this codec.
+
 
 To specify a codec to use to compress data, just specify it while creating a `Writer`:
 ```rust
