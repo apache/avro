@@ -30,6 +30,8 @@ use bzip2::{
 extern crate crc32fast;
 #[cfg(feature = "snappy")]
 use crc32fast::Hasher;
+#[cfg(feature = "xz")]
+use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
 #[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
@@ -52,6 +54,10 @@ pub enum Codec {
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
     Bzip2,
+    #[cfg(feature = "xz")]
+    /// The `Xz` codec uses [Xz utils](https://tukaani.org/xz/)
+    /// compression library.
+    Xz,
 }
 
 impl From<Codec> for Value {
@@ -100,6 +106,14 @@ impl Codec {
             #[cfg(feature = "bzip")]
             Codec::Bzip2 => {
                 let mut encoder = BzEncoder::new(&stream[..], Compression::best());
+                let mut buffer = Vec::new();
+                encoder.read_to_end(&mut buffer).unwrap();
+                *stream = buffer;
+            }
+            #[cfg(feature = "xz")]
+            Codec::Xz => {
+                let compression_level = 9;
+                let mut encoder = XzEncoder::new(&stream[..], compression_level);
                 let mut buffer = Vec::new();
                 encoder.read_to_end(&mut buffer).unwrap();
                 *stream = buffer;
@@ -156,6 +170,13 @@ impl Codec {
                 decoder.read_to_end(&mut decoded).unwrap();
                 decoded
             }
+            #[cfg(feature = "xz")]
+            Codec::Xz => {
+                let mut decoder = XzDecoder::new(&stream[..]);
+                let mut decoded: Vec<u8> = Vec::new();
+                decoder.read_to_end(&mut decoded).unwrap();
+                decoded
+            }
         };
         Ok(())
     }
@@ -179,43 +200,34 @@ mod tests {
 
     #[test]
     fn deflate_compress_and_decompress() {
-        let codec = Codec::Deflate;
-        let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
-        assert_ne!(INPUT, stream.as_slice());
-        assert!(INPUT.len() > stream.len());
-        codec.decompress(&mut stream).unwrap();
-        assert_eq!(INPUT, stream.as_slice());
+        compress_and_decompress(Codec::Deflate);
     }
 
     #[cfg(feature = "snappy")]
     #[test]
     fn snappy_compress_and_decompress() {
-        let codec = Codec::Snappy;
-        let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
-        assert_ne!(INPUT, stream.as_slice());
-        assert!(INPUT.len() > stream.len());
-        codec.decompress(&mut stream).unwrap();
-        assert_eq!(INPUT, stream.as_slice());
+        compress_and_decompress(Codec::Snappy);
     }
 
     #[cfg(feature = "zstandard")]
     #[test]
     fn zstd_compress_and_decompress() {
-        let codec = Codec::Zstd;
-        let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
-        assert_ne!(INPUT, stream.as_slice());
-        assert!(INPUT.len() > stream.len());
-        codec.decompress(&mut stream).unwrap();
-        assert_eq!(INPUT, stream.as_slice());
+        compress_and_decompress(Codec::Zstd);
     }
 
     #[cfg(feature = "bzip")]
     #[test]
     fn bzip_compress_and_decompress() {
-        let codec = Codec::Bzip2;
+        compress_and_decompress(Codec::Bzip2);
+    }
+
+    #[cfg(feature = "xz")]
+    #[test]
+    fn xz_compress_and_decompress() {
+        compress_and_decompress(Codec::Xz);
+    }
+
+    fn compress_and_decompress(codec: Codec) {
         let mut stream = INPUT.to_vec();
         codec.compress(&mut stream).unwrap();
         assert_ne!(INPUT, stream.as_slice());
@@ -237,6 +249,9 @@ mod tests {
 
         #[cfg(feature = "bzip")]
         assert_eq!(<&str>::from(Codec::Bzip2), "bzip2");
+
+        #[cfg(feature = "xz")]
+        assert_eq!(<&str>::from(Codec::Xz), "xz");
     }
 
     #[test]
@@ -254,6 +269,9 @@ mod tests {
 
         #[cfg(feature = "bzip")]
         assert_eq!(Codec::from_str("bzip2").unwrap(), Codec::Bzip2);
+
+        #[cfg(feature = "xz")]
+        assert_eq!(Codec::from_str("xz").unwrap(), Codec::Xz);
 
         assert!(Codec::from_str("not a codec").is_err());
     }

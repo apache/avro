@@ -32,6 +32,7 @@ documentation = "https://docs.rs/avro-rs"
 snappy = ["crc32fast", "snap"]
 zstandard = ["zstd"]
 bzip = ["bzip2"]
+xz = ["xz2"]
 
 [lib]
 path = "src/lib.rs"
@@ -56,6 +57,7 @@ bzip2 = { version = "0.4.3", optional = true }
 crc32fast = { version = "1.2.1", optional = true }
 digest = "0.10.1"
 libflate = "1.1.1"
+xz2 = { version = "0.1.6", optional = true }
 num-bigint = "0.4.2"
 rand = "0.8.4"
 regex = "1.5.4"
