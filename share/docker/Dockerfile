@@ -52,6 +52,7 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
+                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
@@ -191,6 +192,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
 # - OpenJDK 11
+# - OpenJDK 17
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
