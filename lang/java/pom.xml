@@ -55,7 +55,7 @@
     <commons-compress.version>1.21</commons-compress.version>
     <commons-lang.version>3.12.0</commons-lang.version>
     <tukaani.version>1.9</tukaani.version>
-    <easymock.version>4.3</easymock.version>
+    <mockito.version>4.2.0</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.43.1</grpc.version>
     <zstd-jni.version>1.5.1-1</zstd-jni.version>
@@ -291,7 +291,8 @@
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
               <version>4.19.0</version>
             </eclipse>
-            <removeUnusedImports/>
+            <!-- Temporarily disabled for JDK 16+ builds -->
+            <!--<removeUnusedImports/>-->
             <replaceRegex>
               <name>Remove wildcard imports</name>
               <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
@@ -522,9 +523,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.easymock</groupId>
-        <artifactId>easymock</artifactId>
-        <version>${easymock.version}</version>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
