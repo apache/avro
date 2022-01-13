@@ -104,7 +104,9 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: mvn -B install -DskipTests
+        run: |
+          ls -la
+          mvn -B install -DskipTests
 
       - name: Create Interop Data Directory
         working-directory: .
@@ -121,5 +123,5 @@ jobs:
         run: ./build.sh interop-data-test
 
       - name: JavaScript reads interop files created by Java and Rust
-        working-directory: lang/java/js
+        working-directory: lang/js
         run: ./build.sh interop-data-test
