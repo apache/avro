@@ -367,8 +367,6 @@ impl Value {
                 items.iter().all(|(_, value)| value.validate(inner))
             }
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
-                // eprintln!("\n\n--- record_fields: {:?}", &record_fields);
-                // eprintln!("\n\n--- fields: {:?}", &fields);
                 fields.len() == record_fields.len()
                     && fields.iter().zip(record_fields.iter()).all(
                         |(field, &(ref name, ref value))| {
@@ -386,7 +384,7 @@ impl Value {
                 })
             }
             (v, s) => {
-                error!("Unsupported value-schema combination: {:?} {:?}", v, s);
+                error!("Unsupported value-schema combination:\n{:?}\n{:?}", v, s);
                 false
             }
         }

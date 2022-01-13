@@ -328,7 +328,6 @@ fn write_avro_datum<T: Into<Value>>(
 }
 
 fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> AvroResult<()> {
-    println!("=== value: {:?}", value);
     if !value.validate(schema) {
         return Err(Error::Validation);
     }

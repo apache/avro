@@ -82,6 +82,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
         with:
@@ -102,8 +114,12 @@ jobs:
         working-directory: lang/java/avro
         run: mvn -B -P interop-data-generate generate-resources
 
-      - name: Generate Interop Data
+      - name: Generate interop data
         run: ./build.sh interop-data-generate
 
-      - name: Run Interop Tests
+      - name: Rust reads interop files created by Java and Rust
+        run: ./build.sh interop-data-test
+
+      - name: JavaScript reads interop files created by Java and Rust
+        working-directory: lang/java/js
         run: ./build.sh interop-data-test

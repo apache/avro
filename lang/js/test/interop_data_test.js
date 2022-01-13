@@ -42,7 +42,6 @@ suite('interop', function() {
       // so it can contain values outside the range that double can represent.
       // As a workaround, we skip these languages to avoid random test failure.
       if (!base.startsWith("java") && !base.startsWith("ruby") && codec in codecs) {
-        console.log("Reading " + file);
         var n = 0;
         files.createFileDecoder(path.join(dir, file))
           .on("data", function () {

@@ -31,11 +31,7 @@ fn main() -> anyhow::Result<()> {
             let ext = path.extension().and_then(OsStr::to_str).unwrap();
 
             if ext == "avro" {
-                // let file_name = path.file_name().unwrap();
-                // let _codec = get_codec(&file_name)?;
-
                 let content = std::fs::File::open(path)?;
-
                 let reader = Reader::new(&content)?;
                 for value in reader {
                     if let Err(e) = value {
@@ -51,23 +47,3 @@ fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-// fn get_codec(file_name: &OsStr) -> Result<Codec, anyhow::Error> {
-//     let file_name = file_name.to_str().unwrap();
-//     println!("filename: {}", file_name);
-//     if file_name.ends_with("-deflate.avro") {
-//         Ok(Codec::Deflate)
-//     } else if file_name.ends_with("-snappy.avro") {
-//         Ok(Codec::Snappy)
-//     } else if file_name.ends_with("-bzip2.avro") {
-//         Ok(Codec::Bzip2)
-//     } else if file_name.ends_with("-zstandard.avro") {
-//         Ok(Codec::Zstd)
-//     // } else if (file_name.ends_with("-xz.avro")) {
-//     //     Ok(Codec::Xz)
-//     } else if file_name.ends_with(".avro") {
-//         Ok(Codec::Null)
-//     } else {
-//         Err(anyhow::anyhow!("Unable to determine the codec for {}", file_name))
-//     }
-// }
