@@ -19,7 +19,7 @@
 use crate::{types::Value, AvroResult, Error};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
-use strum_macros::{EnumString, EnumIter, IntoStaticStr};
+use strum_macros::{EnumIter, EnumString, IntoStaticStr};
 
 #[cfg(feature = "bzip")]
 use bzip2::{
@@ -67,19 +67,6 @@ impl From<Codec> for Value {
 }
 
 impl Codec {
-    pub fn name(self) -> &'static str {
-        match self {
-            Codec::Null => "null",
-            Codec::Deflate => "deflate",
-            #[cfg(feature = "snappy")]
-            Codec::Snappy => "snappy",
-            #[cfg(feature = "zstandard")]
-            Codec::Zstd => "zstandard",
-            #[cfg(feature = "bzip")]
-            Codec::Bzip2 => "bzip2",
-        }
-    }
-
     /// Compress a stream of bytes in-place.
     pub fn compress(self, stream: &mut Vec<u8>) -> AvroResult<()> {
         match self {

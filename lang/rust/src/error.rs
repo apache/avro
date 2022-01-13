@@ -324,9 +324,6 @@ pub enum Error {
     #[error("Failed to get JSON from avro.schema key in map")]
     GetAvroSchemaFromMap,
 
-    #[error("Cannot resolve the schema for {0}")]
-    InnerSchemaUnresolved(String),
-
     #[error("no metadata in header")]
     GetHeaderMetadata,
 

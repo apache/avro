@@ -64,8 +64,7 @@ do
 
     interop-data-test)
       prepare_build
-      cargo build
-      $build_dir/tests/test_interop_data "../../build/interop/data"
+      cargo run --all-features --example test_interop_data
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2

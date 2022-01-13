@@ -223,7 +223,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             let mut items = Vec::with_capacity(fields.len());
             for field in fields {
                 // TODO: This clone is also expensive. See if we can do away with it...
-                items.push((field.name.clone(), decode(&field.schema(), reader)?));
+                items.push((field.name.clone(), decode(&field.schema, reader)?));
             }
             Ok(Value::Record(items))
         }
