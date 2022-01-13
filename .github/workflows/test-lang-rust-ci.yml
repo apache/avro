@@ -82,17 +82,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node }}
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - uses: actions/cache@v2
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          profile: minimal
+          toolchain: stable
+          override: true
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
@@ -104,9 +102,7 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
-        run: |
-          ls -la
-          mvn -B install -DskipTests
+        run: mvn -B install -DskipTests
 
       - name: Create Interop Data Directory
         working-directory: .
@@ -121,6 +117,18 @@ jobs:
 
       - name: Rust reads interop files created by Java and Rust
         run: ./build.sh interop-data-test
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: JavaScript reads interop files created by Java and Rust
         working-directory: lang/js
