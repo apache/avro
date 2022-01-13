@@ -60,12 +60,10 @@ fn create_datum(schema: &Schema) -> Record {
             ("label".into(), Value::String("outer".into())),
             (
                 "children".into(),
-                Value::Array(vec![
-                    Value::Record(vec![
-                      ("label".into(), Value::String("inner".into())),
-                      ("children".into(), Value::Array(vec![])),
-                    ]),
-                ]),
+                Value::Array(vec![Value::Record(vec![
+                    ("label".into(), Value::String("inner".into())),
+                    ("children".into(), Value::Array(vec![])),
+                ])]),
             ),
         ]),
     );
