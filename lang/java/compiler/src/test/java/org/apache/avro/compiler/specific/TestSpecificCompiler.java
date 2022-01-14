@@ -43,6 +43,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.avro.LogicalType;
@@ -65,6 +66,13 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
+  /**
+   * JDK 18+ generates a warning for each member field which does not implement
+   * java.io.Serializable. Since Avro is an alternative serialization format, we
+   * can just ignore this warning.
+   */
+  private static final String NON_TRANSIENT_INSTANCE_FIELD_MESSAGE = "non-transient instance field of a serializable class declared with a non-serializable type";
 
   @Rule
   public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
@@ -107,13 +115,16 @@ public class TestSpecificCompiler {
     DiagnosticListener<JavaFileObject> diagnosticListener = diagnostic -> {
       switch (diagnostic.getKind()) {
       case ERROR:
-        // Do not add these to warnings because they will fail the compile, anyway.
+        // Do not add these to warnings because they will fail the compilation, anyway.
         LOG.error("{}", diagnostic);
         break;
       case WARNING:
       case MANDATORY_WARNING:
-        LOG.warn("{}", diagnostic);
-        warnings.add(diagnostic);
+        String message = diagnostic.getMessage(Locale.ROOT);
+        if (!NON_TRANSIENT_INSTANCE_FIELD_MESSAGE.equals(message)) {
+          LOG.warn("{}", diagnostic);
+          warnings.add(diagnostic);
+        }
         break;
       case NOTE:
       case OTHER:
