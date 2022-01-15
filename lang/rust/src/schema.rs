@@ -319,8 +319,6 @@ impl RecordField {
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field)?;
 
-        parser.parsed_schemas.insert(name.clone(), schema.clone());
-
         let default = field.get("default").cloned();
 
         let order = field
@@ -427,8 +425,15 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 #[derive(Default)]
 struct Parser {
     input_schemas: HashMap<String, Value>,
+    // A map of [namespace.]name -> temporary RecordSchema
+    // Used to resolve backtracking references, i.e. when a
+    // field's type is a reference to its record's type
+    // Once all the fields have been parsed, their temporary
+    // schema is replaced with the final RecordSchema
     resolving_schemas: HashMap<String, Schema>,
     input_order: Vec<String>,
+    // A map of [namespace.]name -> fully parsed Schema
+    // Used to avoid parsing the same schema twice
     parsed_schemas: HashMap<String, Schema>,
 }
 
@@ -568,9 +573,11 @@ impl Parser {
     }
 
     /// Given a name, tries to retrieve the parsed schema from `parsed_schemas`.
-    /// If a parsed schema is not found, it checks if a json with that name exists
+    /// If a parsed schema is not found, it checks if a currently resolving
+    /// schema with that name exists.
+    /// If a resolving schema is not found, it checks if a json with that name exists
     /// in `input_schemas` and then parses it (removing it from `input_schemas`)
-    /// and adds the parsed schema to `parsed_schemas`
+    /// and adds the parsed schema to `parsed_schemas`.
     ///
     /// This method allows schemas definitions that depend on other types to
     /// parse their dependencies (or look them up if already parsed).
@@ -578,22 +585,21 @@ impl Parser {
         if let Some(parsed) = self.parsed_schemas.get(name) {
             return Ok(parsed.clone());
         }
-        let value = self.input_schemas.remove(name);
-        if let Some(value) = value {
-            let parsed = self.parse(&value)?;
-            self.parsed_schemas.insert(
-                get_schema_type_name(name.to_string(), value),
-                parsed.clone(),
-            );
-            Ok(parsed)
-        } else {
-            let resolving_schema = self
-                .resolving_schemas
-                .get(name)
-                .cloned()
-                .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
-            Ok(resolving_schema)
+        if let Some(resolving_schema) = self.resolving_schemas.get(name) {
+            return Ok(resolving_schema.clone());
         }
+
+        let value = self
+            .input_schemas
+            .remove(name)
+            .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
+
+        let parsed = self.parse(&value)?;
+        self.parsed_schemas.insert(
+            get_schema_type_name(name.to_string(), value),
+            parsed.clone(),
+        );
+        Ok(parsed)
     }
 
     fn parse_precision_and_scale(

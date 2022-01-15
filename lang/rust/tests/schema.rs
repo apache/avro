@@ -746,22 +746,26 @@ fn test_parse_list_recursive_type_error() {
     init();
     let schema_str_1 = r#"{
         "name": "A",
+        "doc": "A's schema",
         "type": "record",
         "fields": [
-            {"name": "field_one", "type": "B"}
+            {"name": "a_field_one", "type": "B"}
         ]
     }"#;
     let schema_str_2 = r#"{
         "name": "B",
+        "doc": "B's schema",
         "type": "record",
         "fields": [
-            {"name": "field_one", "type": "A"}
+            {"name": "b_field_one", "type": "A"}
         ]
     }"#;
     let schema_strs_first = [schema_str_1, schema_str_2];
     let schema_strs_second = [schema_str_2, schema_str_1];
-    let _ = Schema::parse_list(&schema_strs_first).expect_err("Test failed");
-    let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
+    let _result_one = Schema::parse_list(&schema_strs_first).expect("Test failed");
+    let _result_two = Schema::parse_list(&schema_strs_second).expect("Test failed");
+    // dbg!(_result_one);
+    // dbg!(_result_two);
 }
 
 #[test]
