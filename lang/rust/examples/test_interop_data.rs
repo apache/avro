@@ -34,11 +34,12 @@ fn main() -> anyhow::Result<()> {
                 let content = std::fs::File::open(path)?;
                 let reader = Reader::new(&content)?;
                 for value in reader {
-                    if let Err(e) = value {
-                        eprintln!(
+                    match value {
+                        Ok(_) => println!("Successfully read an entry from {:?}", &content),
+                        Err(e) => eprintln!(
                             "There is a problem with reading of '{:?}', \n {:?}\n",
                             &content, e
-                        );
+                        ),
                     }
                 }
             }
