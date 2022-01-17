@@ -218,7 +218,6 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     Ok(Value::Union(Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {
-                    dbg!(&io_err);
                     if let ErrorKind::UnexpectedEof = io_err.kind() {
                         Ok(Value::Union(Box::new(Value::Null)))
                     } else {
@@ -269,7 +268,6 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             }
             Schema::Ref { ref name } => {
                 let name = &name.name;
-                // println!("decoding {}, schemas: {:?}", name, schemas_by_name);
                 if let Some(resolved) = schemas_by_name.get(name.as_str()) {
                     decode0(resolved, reader, &mut schemas_by_name.clone())
                 } else {
@@ -280,7 +278,6 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
     }
 
     let mut schemas_by_name: HashMap<String, Schema> = HashMap::new();
-    // dbg!(schema);
     decode0(schema, reader, &mut schemas_by_name)
 }
 

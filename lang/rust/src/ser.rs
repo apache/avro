@@ -170,7 +170,6 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        println!("--- SERIALIZING A STRING {} !!!", v);
         Ok(Value::String(v.to_owned()))
     }
 
@@ -482,7 +481,6 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
 /// e.g: HashMap with non-string keys
 pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
     let mut serializer = Serializer::default();
-    println!("======= ser.rs to_value");
     value.serialize(&mut serializer)
 }
 

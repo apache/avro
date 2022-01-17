@@ -58,8 +58,6 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
         buffer: &mut Vec<u8>,
         schemas_by_name: &mut HashMap<String, Schema>,
     ) {
-        println!("encode_ref0: {:?}", &schema);
-        println!("\nschemas 1: {:?}", &schemas_by_name);
         match &schema {
             Schema::Ref { ref name } => {
                 let resolved = schemas_by_name.get(name.name.as_str()).unwrap();
@@ -72,7 +70,6 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             }
             _ => (),
         }
-        println!("\nschemas 2: {:?}", &schemas_by_name);
 
         match value {
             Value::Null => (),

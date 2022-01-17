@@ -322,7 +322,6 @@ impl Value {
     /// See the [Avro specification](https://avro.apache.org/docs/current/spec.html)
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
-        println!("------ validating: {:?}", &schema);
         match (self, schema) {
             (_, &Schema::Ref { name: _ }) => true,
             (&Value::Null, &Schema::Null) => true,
@@ -421,7 +420,6 @@ impl Value {
                     if let Some(resolved) = schemas_by_name.get(name.name.as_str()) {
                         resolve0(value, resolved, &mut schemas_by_name.clone())
                     } else {
-                        println!("resolvinging {}", name.name);
                         Err(Error::SchemaResolutionError(name.name.clone()))
                     }
                 }

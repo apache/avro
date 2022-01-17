@@ -433,7 +433,6 @@ mod tests {
             .map(|s| s.canonical_form())
             .collect::<Vec<String>>()
             .join(",");
-        dbg!(&schema_string);
         Schema::parse_str(&format!("[{}]", schema_string)).unwrap()
     }
 
