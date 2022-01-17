@@ -20,6 +20,7 @@ use crate::{
     types::Value,
     util::{zig_i32, zig_i64},
 };
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 /// Encode a `Value` into avro format.
@@ -51,104 +52,132 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
 pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
-    match value {
-        Value::Null => (),
-        Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
-        // Pattern | Pattern here to signify that these _must_ have the same encoding.
-        Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
-        Value::Long(i)
-        | Value::TimestampMillis(i)
-        | Value::TimestampMicros(i)
-        | Value::TimeMicros(i) => encode_long(*i, buffer),
-        Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
-        Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
-        Value::Decimal(decimal) => match schema {
-            Schema::Decimal { inner, .. } => match *inner.clone() {
-                Schema::Fixed { size, .. } => {
-                    let bytes = decimal.to_sign_extended_bytes_with_len(size).unwrap();
-                    let num_bytes = bytes.len();
-                    if num_bytes != size {
-                        panic!(
-                            "signed decimal bytes length {} not equal to fixed schema size {}",
-                            num_bytes, size
-                        );
+    fn encode_ref0(
+        value: &Value,
+        schema: &Schema,
+        buffer: &mut Vec<u8>,
+        schemas_by_name: &mut HashMap<String, Schema>,
+    ) {
+        println!("encode_ref0: {:?}", &schema);
+        println!("\nschemas 1: {:?}", &schemas_by_name);
+        match &schema {
+            Schema::Ref { ref name } => {
+                let resolved = schemas_by_name.get(name.name.as_str()).unwrap();
+                return encode_ref0(value, resolved, buffer, &mut schemas_by_name.clone());
+            }
+            Schema::Record { ref name, .. }
+            | Schema::Enum { ref name, .. }
+            | Schema::Fixed { ref name, .. } => {
+                schemas_by_name.insert(name.name.clone(), schema.clone());
+            }
+            _ => (),
+        }
+        println!("\nschemas 2: {:?}", &schemas_by_name);
+
+        match value {
+            Value::Null => (),
+            Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
+            // Pattern | Pattern here to signify that these _must_ have the same encoding.
+            Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
+            Value::Long(i)
+            | Value::TimestampMillis(i)
+            | Value::TimestampMicros(i)
+            | Value::TimeMicros(i) => encode_long(*i, buffer),
+            Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
+            Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
+            Value::Decimal(decimal) => match schema {
+                Schema::Decimal { inner, .. } => match *inner.clone() {
+                    Schema::Fixed { size, .. } => {
+                        let bytes = decimal.to_sign_extended_bytes_with_len(size).unwrap();
+                        let num_bytes = bytes.len();
+                        if num_bytes != size {
+                            panic!(
+                                "signed decimal bytes length {} not equal to fixed schema size {}",
+                                num_bytes, size
+                            );
+                        }
+                        encode(&Value::Fixed(size, bytes), inner, buffer)
                     }
-                    encode(&Value::Fixed(size, bytes), inner, buffer)
-                }
-                Schema::Bytes => encode(&Value::Bytes(decimal.try_into().unwrap()), inner, buffer),
-                _ => panic!("invalid inner type for decimal: {:?}", inner),
+                    Schema::Bytes => {
+                        encode(&Value::Bytes(decimal.try_into().unwrap()), inner, buffer)
+                    }
+                    _ => panic!("invalid inner type for decimal: {:?}", inner),
+                },
+                _ => panic!("invalid type for decimal: {:?}", schema),
             },
-            _ => panic!("invalid type for decimal: {:?}", schema),
-        },
-        &Value::Duration(duration) => {
-            let slice: [u8; 12] = duration.into();
-            buffer.extend_from_slice(&slice);
-        }
-        Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
-        Value::Bytes(bytes) => match *schema {
-            Schema::Bytes => encode_bytes(bytes, buffer),
-            Schema::Fixed { .. } => buffer.extend(bytes),
-            _ => (),
-        },
-        Value::String(s) => match *schema {
-            Schema::String => {
-                encode_bytes(s, buffer);
+            &Value::Duration(duration) => {
+                let slice: [u8; 12] = duration.into();
+                buffer.extend_from_slice(&slice);
             }
-            Schema::Enum { ref symbols, .. } => {
-                if let Some(index) = symbols.iter().position(|item| item == s) {
-                    encode_int(index as i32, buffer);
+            Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
+            Value::Bytes(bytes) => match *schema {
+                Schema::Bytes => encode_bytes(bytes, buffer),
+                Schema::Fixed { .. } => buffer.extend(bytes),
+                _ => panic!("invalid type for bytes: {:?}", schema),
+            },
+            Value::String(s) => match *schema {
+                Schema::String => {
+                    encode_bytes(s, buffer);
                 }
-            }
-            _ => (),
-        },
-        Value::Fixed(_, bytes) => buffer.extend(bytes),
-        Value::Enum(i, _) => encode_int(*i, buffer),
-        Value::Union(item) => {
-            if let Schema::Union(ref inner) = *schema {
-                // Find the schema that is matched here. Due to validation, this should always
-                // return a value.
-                let (idx, inner_schema) = inner
-                    .find_schema(item)
-                    .expect("Invalid Union validation occurred");
-                encode_long(idx as i64, buffer);
-                encode_ref(&*item, inner_schema, buffer);
-            }
-        }
-        Value::Array(items) => {
-            if let Schema::Array(ref inner) = *schema {
-                if !items.is_empty() {
-                    encode_long(items.len() as i64, buffer);
-                    for item in items.iter() {
-                        encode_ref(item, inner, buffer);
+                Schema::Enum { ref symbols, .. } => {
+                    if let Some(index) = symbols.iter().position(|item| item == s) {
+                        encode_int(index as i32, buffer);
                     }
                 }
-                buffer.push(0u8);
-            }
-        }
-        Value::Map(items) => {
-            if let Schema::Map(ref inner) = *schema {
-                if !items.is_empty() {
-                    encode_long(items.len() as i64, buffer);
-                    for (key, value) in items {
-                        encode_bytes(key, buffer);
-                        encode_ref(value, inner, buffer);
-                    }
+                _ => panic!("invalid type for String: {:?}", schema),
+            },
+            Value::Fixed(_, bytes) => buffer.extend(bytes),
+            Value::Enum(i, _) => encode_int(*i, buffer),
+            Value::Union(item) => {
+                if let Schema::Union(ref inner) = *schema {
+                    // Find the schema that is matched here. Due to validation, this should always
+                    // return a value.
+                    let (idx, inner_schema) = inner
+                        .find_schema(item)
+                        .expect("Invalid Union validation occurred");
+                    encode_long(idx as i64, buffer);
+                    encode_ref0(&*item, inner_schema, buffer, schemas_by_name);
                 }
-                buffer.push(0u8);
             }
-        }
-        Value::Record(fields) => {
-            if let Schema::Record {
-                fields: ref schema_fields,
-                ..
-            } = *schema
-            {
-                for (i, &(_, ref value)) in fields.iter().enumerate() {
-                    encode_ref(value, &schema_fields[i].schema, buffer);
+            Value::Array(items) => {
+                if let Schema::Array(ref inner) = *schema {
+                    if !items.is_empty() {
+                        encode_long(items.len() as i64, buffer);
+                        for item in items.iter() {
+                            encode_ref0(item, inner, buffer, schemas_by_name);
+                        }
+                    }
+                    buffer.push(0u8);
+                }
+            }
+            Value::Map(items) => {
+                if let Schema::Map(ref inner) = *schema {
+                    if !items.is_empty() {
+                        encode_long(items.len() as i64, buffer);
+                        for (key, value) in items {
+                            encode_bytes(key, buffer);
+                            encode_ref0(value, inner, buffer, schemas_by_name);
+                        }
+                    }
+                    buffer.push(0u8);
+                }
+            }
+            Value::Record(fields) => {
+                if let Schema::Record {
+                    fields: ref schema_fields,
+                    ..
+                } = *schema
+                {
+                    for (i, &(_, ref value)) in fields.iter().enumerate() {
+                        encode_ref0(value, &schema_fields[i].schema, buffer, schemas_by_name);
+                    }
                 }
             }
         }
     }
+
+    let mut schemas_by_name = HashMap::new();
+    encode_ref0(value, schema, buffer, &mut schemas_by_name)
 }
 
 pub fn encode_to_vec(value: &Value, schema: &Schema) -> Vec<u8> {

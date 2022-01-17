@@ -17,7 +17,8 @@
 
 use avro_rs::{
     schema::{Name, RecordField},
-    Error, Schema,
+    types::{Record, Value},
+    Codec, Error, Reader, Schema, Writer,
 };
 use lazy_static::lazy_static;
 
@@ -1307,6 +1308,73 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
             "Expected serde_json::error::Error, got {:?}",
             error
         ))
+    }
+}
+
+// AVRO-3302
+#[test]
+fn test_record_schema_with_currently_parsing_schema() {
+    let schema = Schema::parse_str(
+        r#"
+            {
+                "type": "record",
+                "name": "test",
+                "fields": [{
+                    "name": "recordField",
+                    "type": {
+                        "type": "record",
+                        "name": "Node",
+                        "fields": [
+                            {"name": "label", "type": "string"},
+                            {"name": "children", "type": {"type": "array", "items": "Node"}}
+                        ]
+                    }
+                }]
+            }
+        "#,
+    )
+    .unwrap();
+
+    let mut datum = Record::new(&schema).unwrap();
+    datum.put(
+        "recordField",
+        Value::Record(vec![
+            ("label".into(), Value::String("level_1".into())),
+            (
+                "children".into(),
+                Value::Array(vec![Value::Record(vec![
+                    ("label".into(), Value::String("level_2".into())),
+                    (
+                        "children".into(),
+                        Value::Array(vec![Value::Record(vec![
+                            ("label".into(), Value::String("level_3".into())),
+                            (
+                                "children".into(),
+                                Value::Array(vec![Value::Record(vec![
+                                    ("label".into(), Value::String("level_4".into())),
+                                    ("children".into(), Value::Array(vec![])),
+                                ])]),
+                            ),
+                        ])]),
+                    ),
+                ])]),
+            ),
+        ]),
+    );
+
+    let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Null);
+    if let Err(err) = writer.append(datum) {
+        panic!("An error occurred while writing datum: {:?}", err)
+    }
+    let bytes = writer.into_inner().unwrap();
+    assert_eq!(316, bytes.len());
+
+    match Reader::new(&mut bytes.as_slice()) {
+        Ok(mut reader) => match reader.next() {
+            Some(value) => println!("{:?}", value.unwrap()),
+            None => panic!("No value was read!"),
+        },
+        Err(err) => panic!("An error occurred while reading datum: {:?}", err),
     }
 }
 

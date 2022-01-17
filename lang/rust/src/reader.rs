@@ -150,6 +150,7 @@ impl<R: Read> Block<R> {
                 self.codec.decompress(&mut self.buf)
             }
             Err(Error::ReadVariableIntegerBytes(io_err)) => {
+                dbg!(&io_err);
                 if let ErrorKind::UnexpectedEof = io_err.kind() {
                     // to not return any error in case we only finished to read cleanly from the stream
                     Ok(())

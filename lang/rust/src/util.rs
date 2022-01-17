@@ -89,6 +89,7 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
     let mut buf = [0u8; 1];
 
     let mut j = 0;
+
     loop {
         if j > 9 {
             // if j * 7 > 64
@@ -153,19 +154,40 @@ mod tests {
     #[test]
     fn test_zig_i64() {
         let mut s = Vec::new();
-        zig_i64(std::i32::MAX as i64, &mut s);
+
+        zig_i64(0, &mut s);
+        assert_eq!(s, [0]);
+
+        s.clear();
+        zig_i64(-1, &mut s);
+        assert_eq!(s, [1]);
+
+        s.clear();
+        zig_i64(1, &mut s);
+        assert_eq!(s, [2]);
+
+        s.clear();
+        zig_i64(-64, &mut s);
+        assert_eq!(s, [127]);
+
+        s.clear();
+        zig_i64(64, &mut s);
+        assert_eq!(s, [128, 1]);
+
+        s.clear();
+        zig_i64(i32::MAX as i64, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i64(std::i32::MAX as i64 + 1, &mut s);
+        zig_i64(i32::MAX as i64 + 1, &mut s);
         assert_eq!(s, [128, 128, 128, 128, 16]);
 
         s.clear();
-        zig_i64(std::i32::MIN as i64, &mut s);
+        zig_i64(i32::MIN as i64, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i64(std::i32::MIN as i64 - 1, &mut s);
+        zig_i64(i32::MIN as i64 - 1, &mut s);
         assert_eq!(s, [129, 128, 128, 128, 16]);
 
         s.clear();
@@ -180,27 +202,27 @@ mod tests {
     #[test]
     fn test_zig_i32() {
         let mut s = Vec::new();
-        zig_i32(std::i32::MAX / 2, &mut s);
+        zig_i32(i32::MAX / 2, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 7]);
 
         s.clear();
-        zig_i32(std::i32::MIN / 2, &mut s);
+        zig_i32(i32::MIN / 2, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 7]);
 
         s.clear();
-        zig_i32(-(std::i32::MIN / 2), &mut s);
+        zig_i32(-(i32::MIN / 2), &mut s);
         assert_eq!(s, [128, 128, 128, 128, 8]);
 
         s.clear();
-        zig_i32(std::i32::MIN / 2 - 1, &mut s);
+        zig_i32(i32::MIN / 2 - 1, &mut s);
         assert_eq!(s, [129, 128, 128, 128, 8]);
 
         s.clear();
-        zig_i32(std::i32::MAX, &mut s);
+        zig_i32(i32::MAX, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i32(std::i32::MIN, &mut s);
+        zig_i32(i32::MIN, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 15]);
     }
 

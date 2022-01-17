@@ -421,6 +421,7 @@ impl Value {
                     if let Some(resolved) = schemas_by_name.get(name.name.as_str()) {
                         resolve0(value, resolved, &mut schemas_by_name.clone())
                     } else {
+                        println!("resolvinging {}", name.name);
                         Err(Error::SchemaResolutionError(name.name.clone()))
                     }
                 }
