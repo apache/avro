@@ -324,7 +324,7 @@ impl Value {
     pub fn validate(&self, schema: &Schema) -> bool {
         println!("------ validating: {:?}", &schema);
         match (self, schema) {
-            (_, &Schema::Ref { ref name }) => true,
+            (_, &Schema::Ref { name: _ }) => true,
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
@@ -363,24 +363,18 @@ impl Value {
                 inner.find_schema(value).is_some()
             }
             (&Value::Array(ref items), &Schema::Array(ref inner)) => {
-                items.iter().all(|item| {
-                    let res = item.validate(inner);
-                    println!("{} --- items: {:?}, schema: {:?}", res, item, inner);
-                    res
-                })
+                items.iter().all(|item| item.validate(inner))
             }
             (&Value::Map(ref items), &Schema::Map(ref inner)) => {
                 items.iter().all(|(_, value)| value.validate(inner))
             }
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
-                dbg!(&record_fields);
-                dbg!(&fields);
                 fields.len() == record_fields.len()
                     && fields.iter().zip(record_fields.iter()).all(
-                    |(field, &(ref name, ref value))| {
-                        field.name == *name && value.validate(&field.schema)
-                    },
-                )
+                        |(field, &(ref name, ref value))| {
+                            field.name == *name && value.validate(&field.schema)
+                        },
+                    )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().all(|field| {
@@ -405,8 +399,11 @@ impl Value {
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(mut self, schema: &Schema) -> AvroResult<Self> {
-println!("------ resolving: {:?}", &schema);
-        pub fn resolve0(value: &mut Value, schema: &Schema, schemas_by_name: &mut HashMap<String, Schema>) -> AvroResult<Value> {
+        pub fn resolve0(
+            value: &mut Value,
+            schema: &Schema,
+            schemas_by_name: &mut HashMap<String, Schema>,
+        ) -> AvroResult<Value> {
             // Check if this schema is a union, and if the reader schema is not.
             if SchemaKind::from(&value.clone()) == SchemaKind::Union
                 && SchemaKind::from(schema) != SchemaKind::Union
@@ -420,13 +417,13 @@ println!("------ resolving: {:?}", &schema);
             }
             let val: Value = value.clone();
             match *schema {
-                Schema::Ref { ref name} => {
+                Schema::Ref { ref name } => {
                     if let Some(resolved) = schemas_by_name.get(name.name.as_str()) {
                         resolve0(value, resolved, &mut schemas_by_name.clone())
                     } else {
                         Err(Error::SchemaResolutionError(name.name.clone()))
                     }
-                },
+                }
                 Schema::Null => val.resolve_null(),
                 Schema::Boolean => val.resolve_boolean(),
                 Schema::Int => val.resolve_int(),
@@ -438,18 +435,26 @@ println!("------ resolving: {:?}", &schema);
                 Schema::Fixed { ref name, size, .. } => {
                     schemas_by_name.insert(name.name.clone(), schema.clone());
                     val.resolve_fixed(size)
-                },
+                }
                 Schema::Union(ref inner) => val.resolve_union(inner),
-                Schema::Enum { ref name, ref symbols, .. } => {
+                Schema::Enum {
+                    ref name,
+                    ref symbols,
+                    ..
+                } => {
                     schemas_by_name.insert(name.name.clone(), schema.clone());
                     val.resolve_enum(symbols)
-                },
+                }
                 Schema::Array(ref inner) => val.resolve_array(inner),
                 Schema::Map(ref inner) => val.resolve_map(inner),
-                Schema::Record { ref name, ref fields, .. } => {
+                Schema::Record {
+                    ref name,
+                    ref fields,
+                    ..
+                } => {
                     schemas_by_name.insert(name.name.clone(), schema.clone());
                     val.resolve_record(fields)
-                },
+                }
                 Schema::Decimal {
                     scale,
                     precision,

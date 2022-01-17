@@ -68,8 +68,11 @@ fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
 
 /// Decode a `Value` from avro format given its `Schema`.
 pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
-
-    fn decode0<R: Read>(schema: &Schema, reader: &mut R, schemas_by_name: &mut HashMap<String, Schema>) -> AvroResult<Value> {
+    fn decode0<R: Read>(
+        schema: &Schema,
+        reader: &mut R,
+        schemas_by_name: &mut HashMap<String, Schema>,
+    ) -> AvroResult<Value> {
         match *schema {
             Schema::Null => Ok(Value::Null),
             Schema::Boolean => {
@@ -105,7 +108,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     Value::String(ref s) => s,
                     value => return Err(Error::GetUuidFromStringValue(value.into())),
                 })
-                    .map_err(Error::ConvertStrToUuid)?,
+                .map_err(Error::ConvertStrToUuid)?,
             )),
             Schema::Int => decode_int(reader),
             Schema::Date => zag_i32(reader).map(Value::Date),
@@ -203,7 +206,10 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 Ok(index) => {
                     let variants = inner.variants();
                     let variant = variants
-                        .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
+                        .get(
+                            usize::try_from(index)
+                                .map_err(|e| Error::ConvertI64ToUsize(e, index))?,
+                        )
                         .ok_or_else(|| Error::GetUnionVariant {
                             index,
                             num_variants: variants.len(),
@@ -221,7 +227,11 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 Err(io_err) => Err(io_err),
             },
 
-            Schema::Record { ref name, ref fields, .. } => {
+            Schema::Record {
+                ref name,
+                ref fields,
+                ..
+            } => {
                 schemas_by_name.insert(name.name.clone(), schema.clone());
                 // Benchmarks indicate ~10% improvement using this method.
                 let mut items = Vec::with_capacity(fields.len());
@@ -231,7 +241,11 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 }
                 Ok(Value::Record(items))
             }
-            Schema::Enum { ref name, ref symbols, .. } => {
+            Schema::Enum {
+                ref name,
+                ref symbols,
+                ..
+            } => {
                 schemas_by_name.insert(name.name.clone(), schema.clone());
                 Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                     let index = usize::try_from(raw_index)
@@ -249,7 +263,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     return Err(Error::GetEnumSymbol);
                 })
             }
-            Schema::Ref { ref name} => {
+            Schema::Ref { ref name } => {
                 let name = &name.name;
                 if let Some(resolved) = schemas_by_name.get(name.as_str()) {
                     decode0(resolved, reader, &mut schemas_by_name.clone())

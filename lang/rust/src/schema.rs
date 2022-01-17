@@ -20,8 +20,13 @@ use crate::{error::Error, types, util::MapHelper, AvroResult};
 use digest::Digest;
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::{ser::{SerializeMap, SerializeSeq}, Deserialize, Serialize, Serializer, ser};
+use serde::{
+    ser,
+    ser::{SerializeMap, SerializeSeq},
+    Deserialize, Serialize, Serializer,
+};
 use serde_json::{Map, Value};
+use std::sync::{Arc, Mutex};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
@@ -29,8 +34,6 @@ use std::{
     fmt,
     str::FromStr,
 };
-use std::borrow::Borrow;
-use std::sync::{Arc, Mutex, MutexGuard};
 use strum_macros::{EnumDiscriminants, EnumString};
 
 lazy_static! {
@@ -440,9 +443,7 @@ struct Parser {
     parsed_schemas: HashMap<String, Schema>,
 }
 
-
 impl Schema {
-
     thread_local!(static SCHEMAS_BY_NAME: Arc<Mutex<HashMap<String, Schema>>> = Arc::new(Mutex::new(HashMap::new())));
 
     /// Converts `self` into its [Parsing Canonical Form].
@@ -450,7 +451,6 @@ impl Schema {
     /// [Parsing Canonical Form]:
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     pub fn canonical_form(&self) -> String {
-
         let json = serde_json::to_value(self)
             .unwrap_or_else(|e| panic!("cannot parse Schema from JSON: {0}", e));
         parsing_canonical_form(&json)
@@ -811,14 +811,12 @@ impl Parser {
     /// `Schema`.
     fn parse_record(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
-// dbg!("--- name: {:?}", &name);
+
         let mut lookup = HashMap::new();
 
-        let resolving_schema = Schema::Ref {
-            name: name.clone(),
-        };
+        let resolving_schema = Schema::Ref { name: name.clone() };
         self.resolving_schemas
-            .insert(name.name.clone(), resolving_schema.clone());
+            .insert(name.name.clone(), resolving_schema);
 
         let fields: Vec<RecordField> = complex
             .get("fields")
@@ -958,26 +956,21 @@ impl Serialize for Schema {
         S: Serializer,
     {
         fn serialize0<S>(schema: &Schema, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
+        where
+            S: Serializer,
         {
             match *schema {
-                Schema::Ref { ref name} => {
+                Schema::Ref { ref name } => {
                     let name = &name.name;
                     Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        println!("\n====== Resolving Ref: {}", &name);
                         let schemas = schemas_by_name.lock().unwrap();
-                        println!("\n====== name: {}, schemas: {:?}", &name, schemas);
-                        let res = if let Some(resolved) = schemas.get(name.as_str()) {
-                        println!("\n====== resolved: {:?}", &resolved);
-                            serializer.serialize_str(&name)
+                        if schemas.contains_key(name.as_str()) {
+                            serializer.serialize_str(name)
                         } else {
                             // mgrigorov FIXME: Use S::Error::custom
                             Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in {}",
                                                            name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
-                        };
-                        drop(schemas);
-                        res
+                        }
                     })
                 }
                 Schema::Null => serializer.serialize_str("null"),
@@ -1014,44 +1007,30 @@ impl Serialize for Schema {
                     ref fields,
                     ..
                 } => {
-                    // println!("------ SCHEMA {:?}", &schema);
                     Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        println!("\n------ SCHEMA 1.1 {:?}", &schema);
                         match schemas_by_name.try_lock() {
                             Ok(mut schemas) => {
-                                println!("\n------ SCHEMA 1.2 {:?}", &schema);
                                 schemas.insert((&name.name).clone(), schema.clone());
-                                println!("\n====== Record name: {}, schemas: {:?}", &name.name, schemas);
                             }
                             Err(poisoned) => {
                                 println!("\n------ SCHEMA 1.4 {:?}", &poisoned);
-                                // poisoned.into_inner().unwrap().insert(name.clone(), schema.clone());
-                                // println!("\n------ SCHEMA 1.5 {:?}", &schema);
                             }
                         }
                     });
 
-                    println!("\n------ SCHEMA 2 {:?}", &schema);
                     let mut map = serializer.serialize_map(None)?;
-                    println!("\n------ SCHEMA 22.1 {:?}", &schema);
                     map.serialize_entry("type", "record")?;
-                    println!("\n------ SCHEMA 22.2 {:?}", &schema);
                     if let Some(ref n) = name.namespace {
                         map.serialize_entry("namespace", n)?;
                     }
-                    println!("\n------ SCHEMA 22.3 {:?}", &schema);
                     map.serialize_entry("name", &name.name)?;
-                    println!("\n------ SCHEMA 22.4 {:?}", &schema);
                     if let Some(ref docstr) = doc {
                         map.serialize_entry("doc", docstr)?;
                     }
-                    println!("\n------ SCHEMA 22.5 {:?}", &schema);
                     if let Some(ref aliases) = name.aliases {
                         map.serialize_entry("aliases", aliases)?;
                     }
-                    println!("\n------ SCHEMA 22.6 {:?}", &schema);
                     map.serialize_entry("fields", fields)?;
-                    println!("------ SCHEMA END {:?}", &schema);
                     map.end()
                 }
                 Schema::Enum {
@@ -1060,23 +1039,14 @@ impl Serialize for Schema {
                     ..
                 } => {
                     Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-
-                        println!("\n------ ENUM SCHEMA 2.1 {:?}", &schema);
                         match schemas_by_name.try_lock() {
                             Ok(mut schemas) => {
-                                println!("\n------ SCHEMA 2.2 {:?}", &schema);
                                 schemas.insert((&name.name).clone(), schema.clone());
-                                println!("\n====== Enum name: {}, schemas: {:?}", &name.name, schemas);
                             }
                             Err(poisoned) => {
                                 println!("\n------ SCHEMA 2.4 {:?}", &poisoned);
-                                // poisoned.into_inner().unwrap().insert(name.clone(), schema.clone());
-                                // println!("\n------ SCHEMA 1.5 {:?}", &schema);
                             }
                         }
-
-                        // let mut schemas = schemas_by_name.lock().unwrap();
-                        // schemas.insert((&name.name).clone(), schema.clone());
                     });
                     let mut map = serializer.serialize_map(None)?;
                     map.serialize_entry("type", "enum")?;
@@ -1090,17 +1060,12 @@ impl Serialize for Schema {
                     ref size,
                 } => {
                     Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        println!("\n------ SCHEMA 3.1 {:?}", &schema);
                         match schemas_by_name.try_lock() {
                             Ok(mut schemas) => {
-                                println!("\n------ SCHEMA 3.2 {:?}", &schema);
                                 schemas.insert((&name.name).clone(), schema.clone());
-                                println!("\n====== Fixed name: {}, schemas: {:?}", &name.name, schemas);
                             }
                             Err(poisoned) => {
                                 println!("\n------ SCHEMA 3.4 {:?}", &poisoned);
-                                // poisoned.into_inner().unwrap().insert(name.clone(), schema.clone());
-                                // println!("\n------ SCHEMA 1.5 {:?}", &schema);
                             }
                         }
                     });
@@ -1482,9 +1447,9 @@ mod tests {
                             name: "children".to_string(),
                             doc: None,
                             default: None,
-                            schema: Schema::Array(
-                                Box::new(Schema::Ref {name: Name::new("Node")}),
-                            ) ,
+                            schema: Schema::Array(Box::new(Schema::Ref {
+                                name: Name::new("Node"),
+                            })),
                             order: RecordFieldOrder::Ascending,
                             position: 1,
                         },
@@ -1496,8 +1461,6 @@ mod tests {
             }],
             lookup,
         };
-// dbg!(&schema);
-// dbg!(&expected);
         assert_eq!(schema, expected);
     }
 
