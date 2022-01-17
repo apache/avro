@@ -202,7 +202,7 @@ impl<'a> Record<'a> {
     /// Create a `Record` given a `Schema`.
     ///
     /// If the `Schema` is not a `Schema::Record` variant, `None` will be returned.
-    pub fn new(schema: &Schema) -> Option<Record> {
+    pub fn new(schema: &'a Schema) -> Option<Record<'a>> {
         match *schema {
             Schema::Record {
                 fields: ref schema_fields,
@@ -322,7 +322,9 @@ impl Value {
     /// See the [Avro specification](https://avro.apache.org/docs/current/spec.html)
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
+        println!("------ validating: {:?}", &schema);
         match (self, schema) {
+            (_, &Schema::Ref { ref name }) => true,
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
@@ -361,18 +363,24 @@ impl Value {
                 inner.find_schema(value).is_some()
             }
             (&Value::Array(ref items), &Schema::Array(ref inner)) => {
-                items.iter().all(|item| item.validate(inner))
+                items.iter().all(|item| {
+                    let res = item.validate(inner);
+                    println!("{} --- items: {:?}, schema: {:?}", res, item, inner);
+                    res
+                })
             }
             (&Value::Map(ref items), &Schema::Map(ref inner)) => {
                 items.iter().all(|(_, value)| value.validate(inner))
             }
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
+                dbg!(&record_fields);
+                dbg!(&fields);
                 fields.len() == record_fields.len()
                     && fields.iter().zip(record_fields.iter()).all(
-                        |(field, &(ref name, ref value))| {
-                            field.name == *name && value.validate(&field.schema)
-                        },
-                    )
+                    |(field, &(ref name, ref value))| {
+                        field.name == *name && value.validate(&field.schema)
+                    },
+                )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().all(|field| {
@@ -397,45 +405,68 @@ impl Value {
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(mut self, schema: &Schema) -> AvroResult<Self> {
-        // Check if this schema is a union, and if the reader schema is not.
-        if SchemaKind::from(&self) == SchemaKind::Union
-            && SchemaKind::from(schema) != SchemaKind::Union
-        {
-            // Pull out the Union, and attempt to resolve against it.
-            let v = match self {
-                Value::Union(b) => *b,
-                _ => unreachable!(),
-            };
-            self = v;
+println!("------ resolving: {:?}", &schema);
+        pub fn resolve0(value: &mut Value, schema: &Schema, schemas_by_name: &mut HashMap<String, Schema>) -> AvroResult<Value> {
+            // Check if this schema is a union, and if the reader schema is not.
+            if SchemaKind::from(&value.clone()) == SchemaKind::Union
+                && SchemaKind::from(schema) != SchemaKind::Union
+            {
+                // Pull out the Union, and attempt to resolve against it.
+                let v = match value {
+                    Value::Union(b) => &**b,
+                    _ => unreachable!(),
+                };
+                *value = v.clone();
+            }
+            let val: Value = value.clone();
+            match *schema {
+                Schema::Ref { ref name} => {
+                    if let Some(resolved) = schemas_by_name.get(name.name.as_str()) {
+                        resolve0(value, resolved, &mut schemas_by_name.clone())
+                    } else {
+                        Err(Error::SchemaResolutionError(name.name.clone()))
+                    }
+                },
+                Schema::Null => val.resolve_null(),
+                Schema::Boolean => val.resolve_boolean(),
+                Schema::Int => val.resolve_int(),
+                Schema::Long => val.resolve_long(),
+                Schema::Float => val.resolve_float(),
+                Schema::Double => val.resolve_double(),
+                Schema::Bytes => val.resolve_bytes(),
+                Schema::String => val.resolve_string(),
+                Schema::Fixed { ref name, size, .. } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_fixed(size)
+                },
+                Schema::Union(ref inner) => val.resolve_union(inner),
+                Schema::Enum { ref name, ref symbols, .. } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_enum(symbols)
+                },
+                Schema::Array(ref inner) => val.resolve_array(inner),
+                Schema::Map(ref inner) => val.resolve_map(inner),
+                Schema::Record { ref name, ref fields, .. } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_record(fields)
+                },
+                Schema::Decimal {
+                    scale,
+                    precision,
+                    ref inner,
+                } => val.resolve_decimal(precision, scale, inner),
+                Schema::Date => val.resolve_date(),
+                Schema::TimeMillis => val.resolve_time_millis(),
+                Schema::TimeMicros => val.resolve_time_micros(),
+                Schema::TimestampMillis => val.resolve_timestamp_millis(),
+                Schema::TimestampMicros => val.resolve_timestamp_micros(),
+                Schema::Duration => val.resolve_duration(),
+                Schema::Uuid => val.resolve_uuid(),
+            }
         }
-        match *schema {
-            Schema::Null => self.resolve_null(),
-            Schema::Boolean => self.resolve_boolean(),
-            Schema::Int => self.resolve_int(),
-            Schema::Long => self.resolve_long(),
-            Schema::Float => self.resolve_float(),
-            Schema::Double => self.resolve_double(),
-            Schema::Bytes => self.resolve_bytes(),
-            Schema::String => self.resolve_string(),
-            Schema::Fixed { size, .. } => self.resolve_fixed(size),
-            Schema::Union(ref inner) => self.resolve_union(inner),
-            Schema::Enum { ref symbols, .. } => self.resolve_enum(symbols),
-            Schema::Array(ref inner) => self.resolve_array(inner),
-            Schema::Map(ref inner) => self.resolve_map(inner),
-            Schema::Record { ref fields, .. } => self.resolve_record(fields),
-            Schema::Decimal {
-                scale,
-                precision,
-                ref inner,
-            } => self.resolve_decimal(precision, scale, inner),
-            Schema::Date => self.resolve_date(),
-            Schema::TimeMillis => self.resolve_time_millis(),
-            Schema::TimeMicros => self.resolve_time_micros(),
-            Schema::TimestampMillis => self.resolve_timestamp_millis(),
-            Schema::TimestampMicros => self.resolve_timestamp_micros(),
-            Schema::Duration => self.resolve_duration(),
-            Schema::Uuid => self.resolve_uuid(),
-        }
+
+        let mut schemas_by_name: HashMap<String, Schema> = HashMap::new();
+        resolve0(&mut self, schema, &mut schemas_by_name)
     }
 
     fn resolve_uuid(self) -> Result<Self, Error> {

@@ -369,6 +369,9 @@ pub enum Error {
     /// Error while converting float to json value
     #[error("failed to convert avro float to json: {0}")]
     ConvertF64ToJson(f64),
+
+    #[error("Unresolved schema reference: {0}")]
+    SchemaResolutionError(String),
 }
 
 impl serde::ser::Error for Error {
