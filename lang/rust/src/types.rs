@@ -202,7 +202,7 @@ impl<'a> Record<'a> {
     /// Create a `Record` given a `Schema`.
     ///
     /// If the `Schema` is not a `Schema::Record` variant, `None` will be returned.
-    pub fn new(schema: &'a Schema) -> Option<Record<'a>> {
+    pub fn new(schema: &Schema) -> Option<Record> {
         match *schema {
             Schema::Record {
                 fields: ref schema_fields,

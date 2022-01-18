@@ -32,9 +32,8 @@ fn main() -> anyhow::Result<()> {
         if path.is_file() {
             let ext = path.extension().and_then(OsStr::to_str).unwrap();
 
-            println!("Checking {:?}", &path);
-
             if ext == "avro" {
+                println!("Checking {:?}", &path);
                 let content = std::fs::File::open(&path)?;
                 let reader = Reader::new(&content)?;
                 for value in reader {

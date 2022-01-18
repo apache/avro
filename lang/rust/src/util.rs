@@ -89,7 +89,6 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
     let mut buf = [0u8; 1];
 
     let mut j = 0;
-
     loop {
         if j > 9 {
             // if j * 7 > 64

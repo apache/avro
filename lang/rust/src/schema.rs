@@ -175,8 +175,8 @@ impl SchemaKind {
     }
 }
 
-impl From<&types::Value> for SchemaKind {
-    fn from(value: &types::Value) -> Self {
+impl<'a> From<&'a types::Value> for SchemaKind {
+    fn from(value: &'a types::Value) -> Self {
         use crate::types::Value;
         match value {
             Value::Null => Self::Null,
@@ -431,19 +431,22 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 #[derive(Default)]
 struct Parser {
     input_schemas: HashMap<String, Value>,
-    // A map of [namespace.]name -> temporary Schema::Record
-    // Used to resolve backtracking references, i.e. when a
+    // A map of name -> Schema::Ref
+    // Used to resolve cyclic references, i.e. when a
     // field's type is a reference to its record's type
-    // Once all the fields have been parsed, their temporary
-    // schema is replaced with the final Schema::Record
     resolving_schemas: HashMap<String, Schema>,
     input_order: Vec<String>,
-    // A map of [namespace.]name -> fully parsed Schema
+    // A map of name -> fully parsed Schema
     // Used to avoid parsing the same schema twice
     parsed_schemas: HashMap<String, Schema>,
 }
 
 impl Schema {
+    // Used to help resolve cyclic references while serializing Schema to JSON.
+    // Needed because serde[_json] does not support using contexts.
+    // TODO: See whether alternatives like
+    // https://users.rust-lang.org/t/serde-question-access-to-a-shared-context-data-within-serialize-and-deserialize/39546
+    // can be used
     thread_local!(static SCHEMAS_BY_NAME: Arc<Mutex<HashMap<String, Schema>>> = Arc::new(Mutex::new(HashMap::new())));
 
     /// Converts `self` into its [Parsing Canonical Form].
@@ -454,15 +457,6 @@ impl Schema {
         let json = serde_json::to_value(self)
             .unwrap_or_else(|e| panic!("cannot parse Schema from JSON: {0}", e));
         parsing_canonical_form(&json)
-    }
-
-    pub fn fullname(&self) -> Option<String> {
-        match &self {
-            Schema::Enum { ref name, .. } => Some(name.fullname(None)),
-            Schema::Fixed { ref name, .. } => Some(name.fullname(None)),
-            Schema::Record { ref name, .. } => Some(name.fullname(None)),
-            _ => None,
-        }
     }
 
     /// Generate [fingerprint] of Schema's [Parsing Canonical Form].
@@ -955,195 +949,171 @@ impl Serialize for Schema {
     where
         S: Serializer,
     {
-        fn serialize0<S>(schema: &Schema, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            match *schema {
-                Schema::Ref { ref name } => {
-                    let name = &name.name;
-                    Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        let schemas = schemas_by_name.lock().unwrap();
-                        if schemas.contains_key(name.as_str()) {
-                            serializer.serialize_str(name)
-                        } else {
-                            // mgrigorov FIXME: Use S::Error::custom
-                            Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in {}",
-                                                           name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
-                        }
-                    })
+        fn remember_schema(name: &Name, schema: &Schema) {
+            Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| match schemas_by_name.try_lock() {
+                Ok(mut schemas) => {
+                    schemas.insert((&name.name).clone(), schema.clone());
                 }
-                Schema::Null => serializer.serialize_str("null"),
-                Schema::Boolean => serializer.serialize_str("boolean"),
-                Schema::Int => serializer.serialize_str("int"),
-                Schema::Long => serializer.serialize_str("long"),
-                Schema::Float => serializer.serialize_str("float"),
-                Schema::Double => serializer.serialize_str("double"),
-                Schema::Bytes => serializer.serialize_str("bytes"),
-                Schema::String => serializer.serialize_str("string"),
-                Schema::Array(ref inner) => {
-                    let mut map = serializer.serialize_map(Some(2))?;
-                    map.serialize_entry("type", "array")?;
-                    map.serialize_entry("items", &*inner.clone())?;
-                    map.end()
+                Err(poisoned) => {
+                    error!("Wasn't able to lock schemas_by_name {:?}", poisoned);
                 }
-                Schema::Map(ref inner) => {
-                    let mut map = serializer.serialize_map(Some(2))?;
-                    map.serialize_entry("type", "map")?;
-                    map.serialize_entry("values", &*inner.clone())?;
-                    map.end()
-                }
-                Schema::Union(ref inner) => {
-                    let variants = inner.variants();
-                    let mut seq = serializer.serialize_seq(Some(variants.len()))?;
-                    for v in variants {
-                        seq.serialize_element(v)?;
-                    }
-                    seq.end()
-                }
-                Schema::Record {
-                    ref name,
-                    ref doc,
-                    ref fields,
-                    ..
-                } => {
-                    Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        match schemas_by_name.try_lock() {
-                            Ok(mut schemas) => {
-                                schemas.insert((&name.name).clone(), schema.clone());
-                            }
-                            Err(poisoned) => {
-                                println!("\n------ SCHEMA 1.4 {:?}", &poisoned);
-                            }
-                        }
-                    });
-
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "record")?;
-                    if let Some(ref n) = name.namespace {
-                        map.serialize_entry("namespace", n)?;
-                    }
-                    map.serialize_entry("name", &name.name)?;
-                    if let Some(ref docstr) = doc {
-                        map.serialize_entry("doc", docstr)?;
-                    }
-                    if let Some(ref aliases) = name.aliases {
-                        map.serialize_entry("aliases", aliases)?;
-                    }
-                    map.serialize_entry("fields", fields)?;
-                    map.end()
-                }
-                Schema::Enum {
-                    ref name,
-                    ref symbols,
-                    ..
-                } => {
-                    Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        match schemas_by_name.try_lock() {
-                            Ok(mut schemas) => {
-                                schemas.insert((&name.name).clone(), schema.clone());
-                            }
-                            Err(poisoned) => {
-                                println!("\n------ SCHEMA 2.4 {:?}", &poisoned);
-                            }
-                        }
-                    });
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "enum")?;
-                    map.serialize_entry("name", &name.name)?;
-                    map.serialize_entry("symbols", symbols)?;
-                    map.end()
-                }
-                Schema::Fixed {
-                    ref name,
-                    ref doc,
-                    ref size,
-                } => {
-                    Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                        match schemas_by_name.try_lock() {
-                            Ok(mut schemas) => {
-                                schemas.insert((&name.name).clone(), schema.clone());
-                            }
-                            Err(poisoned) => {
-                                println!("\n------ SCHEMA 3.4 {:?}", &poisoned);
-                            }
-                        }
-                    });
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "fixed")?;
-                    map.serialize_entry("name", &name.name)?;
-                    if let Some(ref docstr) = doc {
-                        map.serialize_entry("doc", docstr)?;
-                    }
-                    map.serialize_entry("size", size)?;
-                    map.end()
-                }
-                Schema::Decimal {
-                    ref scale,
-                    ref precision,
-                    ref inner,
-                } => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", &*inner.clone())?;
-                    map.serialize_entry("logicalType", "decimal")?;
-                    map.serialize_entry("scale", scale)?;
-                    map.serialize_entry("precision", precision)?;
-                    map.end()
-                }
-                Schema::Uuid => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "string")?;
-                    map.serialize_entry("logicalType", "uuid")?;
-                    map.end()
-                }
-                Schema::Date => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "int")?;
-                    map.serialize_entry("logicalType", "date")?;
-                    map.end()
-                }
-                Schema::TimeMillis => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "int")?;
-                    map.serialize_entry("logicalType", "time-millis")?;
-                    map.end()
-                }
-                Schema::TimeMicros => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "long")?;
-                    map.serialize_entry("logicalType", "time-micros")?;
-                    map.end()
-                }
-                Schema::TimestampMillis => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "long")?;
-                    map.serialize_entry("logicalType", "timestamp-millis")?;
-                    map.end()
-                }
-                Schema::TimestampMicros => {
-                    let mut map = serializer.serialize_map(None)?;
-                    map.serialize_entry("type", "long")?;
-                    map.serialize_entry("logicalType", "timestamp-micros")?;
-                    map.end()
-                }
-                Schema::Duration => {
-                    let mut map = serializer.serialize_map(None)?;
-
-                    // the Avro doesn't indicate what the name of the underlying fixed type of a
-                    // duration should be or typically is.
-                    let inner = Schema::Fixed {
-                        name: Name::new("duration"),
-                        doc: None,
-                        size: 12,
-                    };
-                    map.serialize_entry("type", &inner)?;
-                    map.serialize_entry("logicalType", "duration")?;
-                    map.end()
-                }
-            }
+            });
         }
 
-        serialize0(self, serializer)
+        match *self {
+            Schema::Ref { ref name } => {
+                let name = &name.name;
+                Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
+                    let schemas = schemas_by_name.lock().unwrap();
+                    if schemas.contains_key(name.as_str()) {
+                        serializer.serialize_str(name)
+                    } else {
+                        // mgrigorov FIXME: Use S::Error::custom
+                        Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in {}",
+                                                       name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
+                    }
+                })
+            }
+            Schema::Null => serializer.serialize_str("null"),
+            Schema::Boolean => serializer.serialize_str("boolean"),
+            Schema::Int => serializer.serialize_str("int"),
+            Schema::Long => serializer.serialize_str("long"),
+            Schema::Float => serializer.serialize_str("float"),
+            Schema::Double => serializer.serialize_str("double"),
+            Schema::Bytes => serializer.serialize_str("bytes"),
+            Schema::String => serializer.serialize_str("string"),
+            Schema::Array(ref inner) => {
+                let mut map = serializer.serialize_map(Some(2))?;
+                map.serialize_entry("type", "array")?;
+                map.serialize_entry("items", &*inner.clone())?;
+                map.end()
+            }
+            Schema::Map(ref inner) => {
+                let mut map = serializer.serialize_map(Some(2))?;
+                map.serialize_entry("type", "map")?;
+                map.serialize_entry("values", &*inner.clone())?;
+                map.end()
+            }
+            Schema::Union(ref inner) => {
+                let variants = inner.variants();
+                let mut seq = serializer.serialize_seq(Some(variants.len()))?;
+                for v in variants {
+                    seq.serialize_element(v)?;
+                }
+                seq.end()
+            }
+            Schema::Record {
+                ref name,
+                ref doc,
+                ref fields,
+                ..
+            } => {
+                remember_schema(name, self);
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "record")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
+                map.serialize_entry("name", &name.name)?;
+                if let Some(ref docstr) = doc {
+                    map.serialize_entry("doc", docstr)?;
+                }
+                if let Some(ref aliases) = name.aliases {
+                    map.serialize_entry("aliases", aliases)?;
+                }
+                map.serialize_entry("fields", fields)?;
+                map.end()
+            }
+            Schema::Enum {
+                ref name,
+                ref symbols,
+                ..
+            } => {
+                remember_schema(name, self);
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "enum")?;
+                map.serialize_entry("name", &name.name)?;
+                map.serialize_entry("symbols", symbols)?;
+                map.end()
+            }
+            Schema::Fixed {
+                ref name,
+                ref doc,
+                ref size,
+            } => {
+                remember_schema(name, self);
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "fixed")?;
+                map.serialize_entry("name", &name.name)?;
+                if let Some(ref docstr) = doc {
+                    map.serialize_entry("doc", docstr)?;
+                }
+                map.serialize_entry("size", size)?;
+                map.end()
+            }
+            Schema::Decimal {
+                ref scale,
+                ref precision,
+                ref inner,
+            } => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", &*inner.clone())?;
+                map.serialize_entry("logicalType", "decimal")?;
+                map.serialize_entry("scale", scale)?;
+                map.serialize_entry("precision", precision)?;
+                map.end()
+            }
+            Schema::Uuid => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "string")?;
+                map.serialize_entry("logicalType", "uuid")?;
+                map.end()
+            }
+            Schema::Date => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "int")?;
+                map.serialize_entry("logicalType", "date")?;
+                map.end()
+            }
+            Schema::TimeMillis => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "int")?;
+                map.serialize_entry("logicalType", "time-millis")?;
+                map.end()
+            }
+            Schema::TimeMicros => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "time-micros")?;
+                map.end()
+            }
+            Schema::TimestampMillis => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "timestamp-millis")?;
+                map.end()
+            }
+            Schema::TimestampMicros => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "timestamp-micros")?;
+                map.end()
+            }
+            Schema::Duration => {
+                let mut map = serializer.serialize_map(None)?;
+
+                // the Avro doesn't indicate what the name of the underlying fixed type of a
+                // duration should be or typically is.
+                let inner = Schema::Fixed {
+                    name: Name::new("duration"),
+                    doc: None,
+                    size: 12,
+                };
+                map.serialize_entry("type", &inner)?;
+                map.serialize_entry("logicalType", "duration")?;
+                map.end()
+            }
+        }
     }
 }
 

@@ -21,6 +21,7 @@ use avro_rs::{
     Codec, Error, Reader, Schema, Writer,
 };
 use lazy_static::lazy_static;
+use log::debug;
 
 fn init() {
     let _ = env_logger::builder()
@@ -740,10 +741,7 @@ fn test_parse_list_with_cross_deps_basic() {
 }
 
 #[test]
-/// Test that if a cycle of dependencies occurs in the input schema jsons, the algorithm terminates
-/// and returns an error. N.B. In the future, when recursive types are supported, this should be
-/// revisited.
-fn test_parse_list_recursive_type_error() {
+fn test_parse_list_recursive_type() {
     init();
     let schema_str_1 = r#"{
         "name": "A",
@@ -763,10 +761,8 @@ fn test_parse_list_recursive_type_error() {
     }"#;
     let schema_strs_first = [schema_str_1, schema_str_2];
     let schema_strs_second = [schema_str_2, schema_str_1];
-    let _result_one = Schema::parse_list(&schema_strs_first).expect("Test failed");
-    let _result_two = Schema::parse_list(&schema_strs_second).expect("Test failed");
-    // dbg!(_result_one);
-    // dbg!(_result_two);
+    let _ = Schema::parse_list(&schema_strs_first).expect("Test failed");
+    let _ = Schema::parse_list(&schema_strs_second).expect("Test failed");
 }
 
 #[test]
@@ -1313,7 +1309,7 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
 
 // AVRO-3302
 #[test]
-fn test_record_schema_with_currently_parsing_schema() {
+fn test_record_schema_with_cyclic_references() {
     let schema = Schema::parse_str(
         r#"
             {
@@ -1371,7 +1367,7 @@ fn test_record_schema_with_currently_parsing_schema() {
 
     match Reader::new(&mut bytes.as_slice()) {
         Ok(mut reader) => match reader.next() {
-            Some(value) => println!("{:?}", value.unwrap()),
+            Some(value) => debug!("{:?}", value.unwrap()),
             None => panic!("No value was read!"),
         },
         Err(err) => panic!("An error occurred while reading datum: {:?}", err),

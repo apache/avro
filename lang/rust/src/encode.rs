@@ -99,7 +99,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                     }
                     _ => panic!("invalid inner type for decimal: {:?}", inner),
                 },
-                _ => panic!("invalid type for decimal: {:?}", schema),
+                _ => panic!("invalid schema type for decimal: {:?}", schema),
             },
             &Value::Duration(duration) => {
                 let slice: [u8; 12] = duration.into();
@@ -109,7 +109,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             Value::Bytes(bytes) => match *schema {
                 Schema::Bytes => encode_bytes(bytes, buffer),
                 Schema::Fixed { .. } => buffer.extend(bytes),
-                _ => panic!("invalid type for bytes: {:?}", schema),
+                _ => error!("invalid schema type for bytes: {:?}", schema),
             },
             Value::String(s) => match *schema {
                 Schema::String => {
@@ -120,7 +120,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                         encode_int(index as i32, buffer);
                     }
                 }
-                _ => panic!("invalid type for String: {:?}", schema),
+                _ => error!("invalid schema type for String: {:?}", schema),
             },
             Value::Fixed(_, bytes) => buffer.extend(bytes),
             Value::Enum(i, _) => encode_int(*i, buffer),
@@ -133,6 +133,8 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                         .expect("Invalid Union validation occurred");
                     encode_long(idx as i64, buffer);
                     encode_ref0(&*item, inner_schema, buffer, schemas_by_name);
+                } else {
+                    error!("invalid schema type for Union: {:?}", schema);
                 }
             }
             Value::Array(items) => {
@@ -144,6 +146,8 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                         }
                     }
                     buffer.push(0u8);
+                } else {
+                    error!("invalid schema type for Array: {:?}", schema);
                 }
             }
             Value::Map(items) => {
@@ -156,6 +160,8 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                         }
                     }
                     buffer.push(0u8);
+                } else {
+                    error!("invalid schema type for Map: {:?}", schema);
                 }
             }
             Value::Record(fields) => {

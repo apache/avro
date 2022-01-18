@@ -370,6 +370,7 @@ pub enum Error {
     #[error("failed to convert avro float to json: {0}")]
     ConvertF64ToJson(f64),
 
+    /// Error while resolving Schema::Ref
     #[error("Unresolved schema reference: {0}")]
     SchemaResolutionError(String),
 }
