@@ -968,8 +968,7 @@ impl Serialize for Schema {
                     if schemas.contains_key(name.as_str()) {
                         serializer.serialize_str(name)
                     } else {
-                        // mgrigorov FIXME: Use S::Error::custom
-                        Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in {}",
+                        Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in ({})",
                                                        name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
                     }
                 })
