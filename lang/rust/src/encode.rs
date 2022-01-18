@@ -20,8 +20,7 @@ use crate::{
     types::Value,
     util::{zig_i32, zig_i64},
 };
-use std::collections::HashMap;
-use std::convert::TryInto;
+use std::{collections::HashMap, convert::TryInto};
 
 /// Encode a `Value` into avro format.
 ///
