@@ -26,13 +26,13 @@ use serde::{
     Deserialize, Serialize, Serializer,
 };
 use serde_json::{Map, Value};
-use std::sync::{Arc, Mutex};
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
     convert::TryInto,
     fmt,
     str::FromStr,
+    sync::{Arc, Mutex},
 };
 use strum_macros::{EnumDiscriminants, EnumString};
 
