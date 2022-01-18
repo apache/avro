@@ -118,18 +118,33 @@ jobs:
       - name: Rust reads interop files created by Java and Rust
         run: ./build.sh interop-data-test
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
+      - uses: shogo82148/actions-setup-perl@v1
         with:
-          node-version: 16
+          perl-version: 5.32
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                            libcpan-uploader-perl \
+                                                            libencode-perl \
+                                                            libio-string-perl \
+                                                            libjansson-dev \
+                                                            libjson-xs-perl \
+                                                            libmodule-install-perl \
+                                                            libmodule-install-readmefrompod-perl \
+                                                            libobject-tiny-perl \
+                                                            libsnappy-dev \
+                                                            libtest-exception-perl \
+                                                            libtest-pod-perl
+          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+                                                       Error::Simple \
+                                                       Module::Install::Repository \
+                                                       Object::Tiny \
+                                                       Regexp::Common \
+                                                       Try::Tiny \
+                                                       inc::Module::Install
 
-      - name: JavaScript reads interop files created by Java and Rust
-        working-directory: lang/js
+
+      - name: Perl reads interop files created by Java and Rust
+        working-directory: lang/perl
         run: ./build.sh interop-data-test
