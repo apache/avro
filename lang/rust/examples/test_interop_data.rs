@@ -22,6 +22,8 @@ fn main() -> anyhow::Result<()> {
     let data_dir = std::fs::read_dir("../../build/interop/data/")
         .expect("Unable to list the interop data directory");
 
+    let mut errors = Vec::new();
+
     for entry in data_dir {
         let path = entry
             .expect("Unable to read the interop data directory's files")
@@ -30,21 +32,29 @@ fn main() -> anyhow::Result<()> {
         if path.is_file() {
             let ext = path.extension().and_then(OsStr::to_str).unwrap();
 
+            println!("Checking {:?}", &path);
+
             if ext == "avro" {
-                let content = std::fs::File::open(path)?;
+                let content = std::fs::File::open(&path)?;
                 let reader = Reader::new(&content)?;
                 for value in reader {
-                    match value {
-                        Ok(_) => println!("Successfully read an entry from {:?}", &content),
-                        Err(e) => eprintln!(
+                    if let Err(e) = value {
+                        errors.push(format!(
                             "There is a problem with reading of '{:?}', \n {:?}\n",
-                            &content, e
-                        ),
+                            &path, e
+                        ));
                     }
                 }
             }
         }
     }
 
-    Ok(())
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        panic!(
+            "There were errors reading some .avro files:\n{}",
+            errors.join(", ")
+        );
+    }
 }
