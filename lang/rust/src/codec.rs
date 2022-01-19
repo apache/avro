@@ -19,7 +19,7 @@
 use crate::{types::Value, AvroResult, Error};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
-use strum_macros::{EnumString, IntoStaticStr};
+use strum_macros::{EnumIter, EnumString, IntoStaticStr};
 
 #[cfg(feature = "bzip")]
 use bzip2::{
@@ -34,7 +34,7 @@ use crc32fast::Hasher;
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, PartialEq, EnumIter, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
@@ -49,7 +49,7 @@ pub enum Codec {
     /// CRC32 checksum of the uncompressed data in the block.
     Snappy,
     #[cfg(feature = "zstandard")]
-    Zstd,
+    Zstandard,
     #[cfg(feature = "bzip")]
     /// The `BZip2` codec uses [BZip2](https://sourceware.org/bzip2/)
     /// compression library.
@@ -98,7 +98,7 @@ impl Codec {
                 *stream = encoded;
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstd => {
+            Codec::Zstandard => {
                 let mut encoder = zstd::Encoder::new(Vec::new(), 0).unwrap();
                 encoder.write_all(stream).map_err(Error::ZstdCompress)?;
                 *stream = encoder.finish().unwrap();
@@ -157,7 +157,7 @@ impl Codec {
                 decoded
             }
             #[cfg(feature = "zstandard")]
-            Codec::Zstd => {
+            Codec::Zstandard => {
                 let mut decoded = Vec::new();
                 let mut decoder = zstd::Decoder::new(&stream[..]).unwrap();
                 std::io::copy(&mut decoder, &mut decoded).map_err(Error::ZstdDecompress)?;
@@ -212,7 +212,7 @@ mod tests {
     #[cfg(feature = "zstandard")]
     #[test]
     fn zstd_compress_and_decompress() {
-        compress_and_decompress(Codec::Zstd);
+        compress_and_decompress(Codec::Zstandard);
     }
 
     #[cfg(feature = "bzip")]
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(<&str>::from(Codec::Snappy), "snappy");
 
         #[cfg(feature = "zstandard")]
-        assert_eq!(<&str>::from(Codec::Zstd), "zstd");
+        assert_eq!(<&str>::from(Codec::Zstandard), "zstandard");
 
         #[cfg(feature = "bzip")]
         assert_eq!(<&str>::from(Codec::Bzip2), "bzip2");
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(Codec::from_str("snappy").unwrap(), Codec::Snappy);
 
         #[cfg(feature = "zstandard")]
-        assert_eq!(Codec::from_str("zstd").unwrap(), Codec::Zstd);
+        assert_eq!(Codec::from_str("zstandard").unwrap(), Codec::Zstandard);
 
         #[cfg(feature = "bzip")]
         assert_eq!(Codec::from_str("bzip2").unwrap(), Codec::Bzip2);
