@@ -234,7 +234,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
             ),
             (
                 "value".to_owned(),
-                Value::Union(Box::new(value.serialize(self)?)),
+                Value::Union(index as i32, Box::new(value.serialize(self)?)),
             ),
         ]))
     }
@@ -346,9 +346,10 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
     where
         T: Serialize,
     {
-        self.items.push(Value::Union(Box::new(
-            value.serialize(&mut Serializer::default())?,
-        )));
+        self.items.push(Value::Union(
+            self.index as i32,
+            Box::new(value.serialize(&mut Serializer::default())?),
+        ));
         Ok(())
     }
 
@@ -469,7 +470,7 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
             ),
             (
                 "value".to_owned(),
-                Value::Union(Box::new(Value::Record(self.fields))),
+                Value::Union(self.index as i32, Box::new(Value::Record(self.fields))),
             ),
         ]))
     }
@@ -776,7 +777,7 @@ mod tests {
                 ("type".to_owned(), Value::Enum(0, "Double".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(Box::new(Value::Double(64.0))),
+                    Value::Union(0, Box::new(Value::Double(64.0))),
                 ),
             ]),
         )]);
@@ -836,10 +837,13 @@ mod tests {
                 ("type".to_owned(), Value::Enum(0, "Val1".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(Box::new(Value::Record(vec![
-                        ("x".to_owned(), Value::Float(1.0)),
-                        ("y".to_owned(), Value::Float(2.0)),
-                    ]))),
+                    Value::Union(
+                        0,
+                        Box::new(Value::Record(vec![
+                            ("x".to_owned(), Value::Float(1.0)),
+                            ("y".to_owned(), Value::Float(2.0)),
+                        ])),
+                    ),
                 ),
             ]),
         )]);
@@ -946,9 +950,9 @@ mod tests {
                 (
                     "value".to_owned(),
                     Value::Array(vec![
-                        Value::Union(Box::new(Value::Float(1.0))),
-                        Value::Union(Box::new(Value::Float(2.0))),
-                        Value::Union(Box::new(Value::Float(3.0))),
+                        Value::Union(1, Box::new(Value::Float(1.0))),
+                        Value::Union(1, Box::new(Value::Float(2.0))),
+                        Value::Union(1, Box::new(Value::Float(3.0))),
                     ]),
                 ),
             ]),

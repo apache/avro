@@ -66,7 +66,12 @@ pub enum Value {
     /// reading values.
     Enum(i32, String),
     /// An `union` Avro value.
-    Union(Box<Value>),
+    ///
+    /// A Union is represented by the value it holds and its position in the type list
+    /// of its corresponding schema
+    /// This allows schema-less encoding, as well as schema resolution while
+    /// reading values.
+    Union(i32, Box<Value>),
     /// An `array` Avro value.
     Array(Vec<Value>),
     /// A `map` Avro value.
@@ -168,7 +173,11 @@ where
     T: Into<Self>,
 {
     fn from(value: Option<T>) -> Self {
-        Self::Union(Box::new(value.map_or_else(|| Self::Null, Into::into)))
+        // FIXME: this is incorrect in case first type in union is not "none"
+        Self::Union(
+            value.is_some() as i32,
+            Box::new(value.map_or_else(|| Self::Null, Into::into)),
+        )
     }
 }
 
@@ -285,7 +294,7 @@ impl std::convert::TryFrom<Value> for JsonValue {
                 Ok(Self::Array(items.into_iter().map(|v| v.into()).collect()))
             }
             Value::Enum(_i, s) => Ok(Self::String(s)),
-            Value::Union(b) => Self::try_from(*b),
+            Value::Union(_i, b) => Self::try_from(*b),
             Value::Array(items) => items
                 .into_iter()
                 .map(Self::try_from)
@@ -358,9 +367,11 @@ impl Value {
                 .map(|ref symbol| symbol == &s)
                 .unwrap_or(false),
             // (&Value::Union(None), &Schema::Union(_)) => true,
-            (&Value::Union(ref value), &Schema::Union(ref inner)) => {
-                inner.find_schema(value).is_some()
-            }
+            (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
+                .variants()
+                .get(i as usize)
+                .map(|schema| value.validate(schema))
+                .unwrap_or(false),
             (&Value::Array(ref items), &Schema::Array(ref inner)) => {
                 items.iter().all(|item| item.validate(inner))
             }
@@ -409,7 +420,7 @@ impl Value {
             {
                 // Pull out the Union, and attempt to resolve against it.
                 let v = match value {
-                    Value::Union(b) => &**b,
+                    Value::Union(_i, b) => &**b,
                     _ => unreachable!(),
                 };
                 *value = v.clone();
@@ -703,13 +714,14 @@ impl Value {
     fn resolve_union(self, schema: &UnionSchema) -> Result<Self, Error> {
         let v = match self {
             // Both are unions case.
-            Value::Union(v) => *v,
+            Value::Union(_i, v) => *v,
             // Reader is a union, but writer is not.
             v => v,
         };
         // Find the first match in the reader schema.
-        let (_, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
-        Ok(Value::Union(Box::new(v.resolve(inner)?)))
+        // FIXME: this might be wrong when the union consists of multiple same records that have different names
+        let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
+        Ok(Value::Union(i as i32, Box::new(v.resolve(inner)?)))
     }
 
     fn resolve_array(self, schema: &Schema) -> Result<Self, Error> {
@@ -770,10 +782,11 @@ impl Value {
                                 // NOTE: this match exists only to optimize null defaults for large
                                 // backward-compatible schemas with many nullable fields
                                 match first {
-                                    Schema::Null => Value::Union(Box::new(Value::Null)),
-                                    _ => Value::Union(Box::new(
-                                        Value::from(value.clone()).resolve(first)?,
-                                    )),
+                                    Schema::Null => Value::Union(0, Box::new(Value::Null)),
+                                    _ => Value::Union(
+                                        0,
+                                        Box::new(Value::from(value.clone()).resolve(first)?),
+                                    ),
                                 }
                             }
                             _ => Value::from(value.clone()),
@@ -821,22 +834,22 @@ mod tests {
             (Value::Int(42), Schema::Int, true),
             (Value::Int(42), Schema::Boolean, false),
             (
-                Value::Union(Box::new(Value::Null)),
+                Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Int(42))),
+                Value::Union(1, Box::new(Value::Int(42))),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Null)),
+                Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int]).unwrap()),
                 false,
             ),
             (
-                Value::Union(Box::new(Value::Int(42))),
+                Value::Union(3, Box::new(Value::Int(42))),
                 Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Null,
@@ -849,7 +862,7 @@ mod tests {
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Long(42i64))),
+                Value::Union(1, Box::new(Value::Long(42i64))),
                 Schema::Union(
                     UnionSchema::new(vec![Schema::Null, Schema::TimestampMillis]).unwrap(),
                 ),
@@ -997,20 +1010,26 @@ mod tests {
 
         let union_schema = Schema::Union(UnionSchema::new(vec![Schema::Null, schema]).unwrap());
 
-        assert!(Value::Union(Box::new(Value::Record(vec![
-            ("a".to_string(), Value::Long(42i64)),
-            ("b".to_string(), Value::String("foo".to_string())),
-        ])))
-        .validate(&union_schema));
-
-        assert!(Value::Union(Box::new(Value::Map(
-            vec![
+        assert!(Value::Union(
+            1,
+            Box::new(Value::Record(vec![
                 ("a".to_string(), Value::Long(42i64)),
                 ("b".to_string(), Value::String("foo".to_string())),
-            ]
-            .into_iter()
-            .collect()
-        )))
+            ]))
+        )
+        .validate(&union_schema));
+
+        assert!(Value::Union(
+            1,
+            Box::new(Value::Map(
+                vec![
+                    ("a".to_string(), Value::Long(42i64)),
+                    ("b".to_string(), Value::String("foo".to_string())),
+                ]
+                .into_iter()
+                .collect()
+            ))
+        )
         .validate(&union_schema));
     }
 
@@ -1193,7 +1212,8 @@ mod tests {
             JsonValue::String("test_enum".into())
         );
         assert_eq!(
-            JsonValue::try_from(Value::Union(Box::new(Value::String("test_enum".into())))).unwrap(),
+            JsonValue::try_from(Value::Union(1, Box::new(Value::String("test_enum".into()))))
+                .unwrap(),
             JsonValue::String("test_enum".into())
         );
         assert_eq!(
