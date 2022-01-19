@@ -206,7 +206,10 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 Ok(index) => {
                     let variants = inner.variants();
                     let variant = variants
-                        .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
+                        .get(
+                            usize::try_from(index)
+                                .map_err(|e| Error::ConvertI64ToUsize(e, index))?,
+                        )
                         .ok_or_else(|| Error::GetUnionVariant {
                             index,
                             num_variants: variants.len(),
@@ -222,7 +225,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     }
                 }
                 Err(io_err) => Err(io_err),
-            }
+            },
             Schema::Record {
                 ref name,
                 ref fields,

@@ -51,7 +51,7 @@ fn create_datum(schema: &Schema) -> Record {
         Value::Record(vec![("label".into(), Value::String("cee".into()))]),
     );
     datum.put("mapField", Value::Map(map));
-    datum.put("unionField", Value::Union(Box::new(Value::Double(12.0))));
+    datum.put("unionField", Value::Union(0, Box::new(Value::Double(12.0))));
     datum.put("enumField", Value::Enum(2, "C".to_owned()));
     datum.put("fixedField", Value::Fixed(16, b"1019181716151413".to_vec()));
     datum.put(
