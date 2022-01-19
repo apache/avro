@@ -34,6 +34,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
       - uses: actions/cache@v2
         with:
           path: ~/.nuget/packages
@@ -51,6 +59,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2

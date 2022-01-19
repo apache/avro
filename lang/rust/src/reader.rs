@@ -304,7 +304,8 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{types::Record, Reader};
+    use crate::{from_value, types::Record, Reader};
+    use serde::Deserialize;
     use std::io::Cursor;
 
     const SCHEMA: &str = r#"
@@ -356,6 +357,72 @@ mod tests {
             from_avro_datum(&schema, &mut encoded, None).unwrap(),
             expected
         );
+    }
+
+    #[test]
+    fn test_from_avro_datum_with_union_to_struct() {
+        const TEST_RECORD_SCHEMA_3240: &str = r#"
+    {
+      "type": "record",
+      "name": "test",
+      "fields": [
+        {
+          "name": "a",
+          "type": "long",
+          "default": 42
+        },
+        {
+          "name": "b",
+          "type": "string"
+        },
+        {
+            "name": "a_nullable_array",
+            "type": ["null", {"type": "array", "items": {"type": "string"}}],
+            "default": null
+        },
+        {
+            "name": "a_nullable_boolean",
+            "type": ["null", {"type": "boolean"}],
+            "default": null
+        },
+        {
+            "name": "a_nullable_string",
+            "type": ["null", {"type": "string"}],
+            "default": null
+        }
+      ]
+    }
+    "#;
+        #[derive(Default, Debug, Deserialize, PartialEq)]
+        struct TestRecord3240 {
+            a: i64,
+            b: String,
+            a_nullable_array: Option<Vec<String>>,
+            // we are missing the 'a_nullable_boolean' field to simulate missing keys
+            // a_nullable_boolean: Option<bool>,
+            a_nullable_string: Option<String>,
+        }
+
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
+        let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
+
+        let expected_record: TestRecord3240 = TestRecord3240 {
+            a: 27i64,
+            b: String::from("foo"),
+            a_nullable_array: None,
+            a_nullable_string: None,
+        };
+
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let parsed_record: TestRecord3240 = match &avro_datum {
+            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
+            unexpected => panic!(
+                "could not map avro data to struct, found unexpected: {:?}",
+                unexpected
+            ),
+        };
+
+        assert_eq!(parsed_record, expected_record);
     }
 
     #[test]

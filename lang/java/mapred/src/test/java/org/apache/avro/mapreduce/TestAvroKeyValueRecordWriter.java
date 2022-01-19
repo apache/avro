@@ -18,13 +18,11 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -59,9 +57,7 @@ public class TestAvroKeyValueRecordWriter {
   public void testWriteRecords() throws IOException {
     Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-
-    replay(context);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());
     AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
@@ -85,8 +81,6 @@ public class TestAvroKeyValueRecordWriter {
     writer.write(new Text("banana"), new AvroValue<>(bananaStats));
     writer.close(context);
 
-    verify(context);
-
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
     Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), TextStats.SCHEMA$);
     DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(readerSchema);
@@ -109,6 +103,7 @@ public class TestAvroKeyValueRecordWriter {
     // That's all, folks.
     assertFalse(avroFileReader.hasNext());
     avroFileReader.close();
+    verify(context, never()).getConfiguration();
   }
 
   public static class R1 {
@@ -120,8 +115,7 @@ public class TestAvroKeyValueRecordWriter {
     Job job = Job.getInstance();
     Schema schema = ReflectData.get().getSchema(R1.class);
     AvroJob.setOutputValueSchema(job, schema);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    replay(context);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     R1 record = new R1();
     record.attribute = "test";
@@ -141,8 +135,6 @@ public class TestAvroKeyValueRecordWriter {
     writer.write(new Text("reflectionData"), avroValue);
     writer.close(context);
 
-    verify(context);
-
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
     Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), schema);
     DatumReader<GenericRecord> datumReader = new ReflectDatumReader<>(readerSchema);
@@ -157,15 +149,14 @@ public class TestAvroKeyValueRecordWriter {
     assertEquals("reflectionData", firstRecord.getKey().toString());
     assertEquals(record.attribute, firstRecord.getValue().attribute);
     avroFileReader.close();
+    verify(context, never()).getConfiguration();
   }
 
   @Test
   public void testSyncableWriteRecords() throws IOException {
     Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-
-    replay(context);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
 
     AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());
     AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
@@ -189,8 +180,6 @@ public class TestAvroKeyValueRecordWriter {
     long pointTwo = writer.sync();
     writer.write(new Text("banana"), new AvroValue<>(bananaStats));
     writer.close(context);
-
-    verify(context);
 
     Configuration conf = new Configuration();
     conf.set("fs.default.name", "file:///");
@@ -216,5 +205,6 @@ public class TestAvroKeyValueRecordWriter {
 
     // That's all, folks.
     avroFileReader.close();
+    verify(context, never()).getConfiguration();
   }
 }

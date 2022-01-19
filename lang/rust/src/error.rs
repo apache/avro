@@ -240,7 +240,7 @@ pub enum Error {
     #[error("Must be a JSON string, object or array")]
     ParseSchemaFromValidJson,
 
-    #[error("Unknown primitiive type: {0}")]
+    #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
     #[error("invalid JSON for {key:?}: {precision:?}")]
@@ -309,6 +309,12 @@ pub enum Error {
     #[error("Failed to decompress with snappy")]
     SnappyDecompress(#[source] snap::Error),
 
+    #[error("Failed to compress with zstd")]
+    ZstdCompress(#[source] std::io::Error),
+
+    #[error("Failed to decompress with zstd")]
+    ZstdDecompress(#[source] std::io::Error),
+
     #[error("Failed to read header")]
     ReadHeader(#[source] std::io::Error),
 
@@ -363,6 +369,10 @@ pub enum Error {
     /// Error while converting float to json value
     #[error("failed to convert avro float to json: {0}")]
     ConvertF64ToJson(f64),
+
+    /// Error while resolving Schema::Ref
+    #[error("Unresolved schema reference: {0}")]
+    SchemaResolutionError(String),
 }
 
 impl serde::ser::Error for Error {

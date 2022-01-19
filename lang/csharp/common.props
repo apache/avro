@@ -33,6 +33,15 @@
     <FileVersion>$(MajorVersion).$(MinorVersion).$(BuildNumber).0</FileVersion>
   </PropertyGroup>
 
+  <PropertyGroup Label="Target Frameworks">
+    <!-- Exe -->
+    <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0;net6.0</DefaultExeTargetFrameworks>
+    <!-- Library -->
+    <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
+    <!-- Unit Tests -->
+    <DefaultUnitTestTargetFrameworks>$(DefaultExeTargetFrameworks)</DefaultUnitTestTargetFrameworks>
+  </PropertyGroup>
+
   <PropertyGroup Label="Common NuGet Properties">
     <!-- Reference: https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target -->
     <Copyright>Copyright © 2019 The Apache Software Foundation.</Copyright>
