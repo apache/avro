@@ -64,14 +64,14 @@ pub enum Value {
     /// of its corresponding schema.
     /// This allows schema-less encoding, as well as schema resolution while
     /// reading values.
-    Enum(i32, String),
+    Enum(u32, String),
     /// An `union` Avro value.
     ///
     /// A Union is represented by the value it holds and its position in the type list
     /// of its corresponding schema
     /// This allows schema-less encoding, as well as schema resolution while
     /// reading values.
-    Union(i32, Box<Value>),
+    Union(u32, Box<Value>),
     /// An `array` Avro value.
     Array(Vec<Value>),
     /// A `map` Avro value.
@@ -175,7 +175,7 @@ where
     fn from(value: Option<T>) -> Self {
         // FIXME: this is incorrect in case first type in union is not "none"
         Self::Union(
-            value.is_some() as i32,
+            value.is_some() as u32,
             Box::new(value.map_or_else(|| Self::Null, Into::into)),
         )
     }
@@ -684,7 +684,7 @@ impl Value {
     fn resolve_enum(self, symbols: &[String]) -> Result<Self, Error> {
         let validate_symbol = |symbol: String, symbols: &[String]| {
             if let Some(index) = symbols.iter().position(|item| item == &symbol) {
-                Ok(Value::Enum(index as i32, symbol))
+                Ok(Value::Enum(index as u32, symbol))
             } else {
                 Err(Error::GetEnumDefault {
                     symbol,
@@ -696,7 +696,7 @@ impl Value {
         match self {
             Value::Enum(raw_index, s) => {
                 let index = usize::try_from(raw_index)
-                    .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
+                    .map_err(|e| Error::ConvertU32ToUsize(e, raw_index))?;
                 if (0..=symbols.len()).contains(&index) {
                     validate_symbol(s, symbols)
                 } else {
@@ -721,7 +721,7 @@ impl Value {
         // Find the first match in the reader schema.
         // FIXME: this might be wrong when the union consists of multiple same records that have different names
         let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
-        Ok(Value::Union(i as i32, Box::new(v.resolve(inner)?)))
+        Ok(Value::Union(i as u32, Box::new(v.resolve(inner)?)))
     }
 
     fn resolve_array(self, schema: &Schema) -> Result<Self, Error> {

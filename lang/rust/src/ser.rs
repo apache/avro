@@ -142,7 +142,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
-        if v <= i32::max_value() as u32 {
+        if v <= i32::MAX as u32 {
             self.serialize_i32(v as i32)
         } else {
             self.serialize_i64(i64::from(v))
@@ -150,7 +150,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        if v <= i64::max_value() as u64 {
+        if v <= i64::MAX as u64 {
             self.serialize_i64(v as i64)
         } else {
             Err(ser::Error::custom("u64 is too large"))
@@ -203,7 +203,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Enum(index as i32, variant.to_string()))
+        Ok(Value::Enum(index, variant.to_string()))
     }
 
     fn serialize_newtype_struct<T: ?Sized>(
@@ -228,13 +228,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         T: Serialize,
     {
         Ok(Value::Record(vec![
-            (
-                "type".to_owned(),
-                Value::Enum(index as i32, variant.to_owned()),
-            ),
+            ("type".to_owned(), Value::Enum(index, variant.to_owned())),
             (
                 "value".to_owned(),
-                Value::Union(index as i32, Box::new(value.serialize(self)?)),
+                Value::Union(index, Box::new(value.serialize(self)?)),
             ),
         ]))
     }
@@ -347,7 +344,7 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
         T: Serialize,
     {
         self.items.push(Value::Union(
-            self.index as i32,
+            self.index,
             Box::new(value.serialize(&mut Serializer::default())?),
         ));
         Ok(())
@@ -357,7 +354,7 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
         Ok(Value::Record(vec![
             (
                 "type".to_owned(),
-                Value::Enum(self.index as i32, self.variant.to_owned()),
+                Value::Enum(self.index, self.variant.to_owned()),
             ),
             ("value".to_owned(), Value::Array(self.items)),
         ]))
@@ -466,11 +463,11 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
         Ok(Value::Record(vec![
             (
                 "type".to_owned(),
-                Value::Enum(self.index as i32, self.variant.to_owned()),
+                Value::Enum(self.index, self.variant.to_owned()),
             ),
             (
                 "value".to_owned(),
-                Value::Union(self.index as i32, Box::new(Value::Record(self.fields))),
+                Value::Union(self.index, Box::new(Value::Record(self.fields))),
             ),
         ]))
     }
