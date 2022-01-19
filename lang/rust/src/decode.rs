@@ -202,17 +202,26 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
                 Ok(Value::Map(items))
             }
-            Schema::Union(ref inner) => {
-                let index = zag_i64(reader)?;
-                let variants = inner.variants();
-                let variant = variants
-                    .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
-                    .ok_or_else(|| Error::GetUnionVariant {
-                        index,
-                        num_variants: variants.len(),
-                    })?;
-                let value = decode(variant, reader)?;
-                Ok(Value::Union(index as i32, Box::new(value)))
+            Schema::Union(ref inner) => match zag_i64(reader) {
+                Ok(index) => {
+                    let variants = inner.variants();
+                    let variant = variants
+                        .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
+                        .ok_or_else(|| Error::GetUnionVariant {
+                            index,
+                            num_variants: variants.len(),
+                        })?;
+                    let value = decode(variant, reader)?;
+                    Ok(Value::Union(index as i32, Box::new(value)))
+                }
+                Err(Error::ReadVariableIntegerBytes(io_err)) => {
+                    if let ErrorKind::UnexpectedEof = io_err.kind() {
+                        Ok(Value::Union(0, Box::new(Value::Null)))
+                    } else {
+                        Err(Error::ReadVariableIntegerBytes(io_err))
+                    }
+                }
+                Err(io_err) => Err(io_err),
             }
             Schema::Record {
                 ref name,

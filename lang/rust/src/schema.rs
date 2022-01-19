@@ -1322,7 +1322,6 @@ mod tests {
         assert_eq!(variants.next(), None);
     }
 
-
     #[test]
     fn test_union_of_records() {
         use std::iter::FromIterator;
@@ -1365,16 +1364,14 @@ mod tests {
         let schema_c_expected = Schema::Record {
             name: Name::new("C"),
             doc: None,
-            fields: vec![
-                RecordField {
-                    name: "field_one".to_string(),
-                    doc: None,
-                    default: None,
-                    schema: Schema::Union(UnionSchema::new(vec![schema_a, schema_b]).unwrap()),
-                    order: RecordFieldOrder::Ignore,
-                    position: 0,
-                },
-            ],
+            fields: vec![RecordField {
+                name: "field_one".to_string(),
+                doc: None,
+                default: None,
+                schema: Schema::Union(UnionSchema::new(vec![schema_a, schema_b]).unwrap()),
+                order: RecordFieldOrder::Ignore,
+                position: 0,
+            }],
             lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 
@@ -1413,16 +1410,14 @@ mod tests {
         let schema_option_a_expected = Schema::Record {
             name: Name::new("OptionA"),
             doc: None,
-            fields: vec![
-                RecordField {
-                    name: "field_one".to_string(),
-                    doc: None,
-                    default: Some(Value::Null),
-                    schema: Schema::Union(UnionSchema::new(vec![Schema::Null, schema_a]).unwrap()),
-                    order: RecordFieldOrder::Ignore,
-                    position: 0,
-                },
-            ],
+            fields: vec![RecordField {
+                name: "field_one".to_string(),
+                doc: None,
+                default: Some(Value::Null),
+                schema: Schema::Union(UnionSchema::new(vec![Schema::Null, schema_a]).unwrap()),
+                order: RecordFieldOrder::Ignore,
+                position: 0,
+            }],
             lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 

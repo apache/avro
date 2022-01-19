@@ -804,10 +804,13 @@ mod tests {
                 ("type".to_owned(), Value::String("Val1".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(0, Box::new(Value::Record(vec![
-                        ("x".to_owned(), Value::Float(1.0)),
-                        ("y".to_owned(), Value::Float(2.0)),
-                    ]))),
+                    Value::Union(
+                        0,
+                        Box::new(Value::Record(vec![
+                            ("x".to_owned(), Value::Float(1.0)),
+                            ("y".to_owned(), Value::Float(2.0)),
+                        ])),
+                    ),
                 ),
             ]),
         )]);
@@ -830,10 +833,10 @@ mod tests {
                 ("type".to_owned(), Value::String("Val1".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Union(0, Box::new(Value::Array(vec![
-                        Value::Float(1.0),
-                        Value::Float(2.0),
-                    ]))),
+                    Value::Union(
+                        0,
+                        Box::new(Value::Array(vec![Value::Float(1.0), Value::Float(2.0)])),
+                    ),
                 ),
             ]),
         )]);
@@ -965,75 +968,84 @@ mod tests {
             ),
             (
                 "a_union_string".to_string(),
-                Value::Union(Box::new(Value::String("a union string".to_string()))),
+                Value::Union(0, Box::new(Value::String("a union string".to_string()))),
             ),
             (
                 "a_union_long".to_string(),
-                Value::Union(Box::new(Value::Long(412))),
+                Value::Union(0, Box::new(Value::Long(412))),
             ),
             (
                 "a_union_long".to_string(),
-                Value::Union(Box::new(Value::Long(412))),
+                Value::Union(0, Box::new(Value::Long(412))),
             ),
             (
                 "a_time_micros".to_string(),
-                Value::Union(Box::new(Value::TimeMicros(123))),
+                Value::Union(0, Box::new(Value::TimeMicros(123))),
             ),
             (
                 "a_non_existing_time_micros".to_string(),
-                Value::Union(Box::new(Value::TimeMicros(-123))),
+                Value::Union(0, Box::new(Value::TimeMicros(-123))),
             ),
             (
                 "a_timestamp_millis".to_string(),
-                Value::Union(Box::new(Value::TimestampMillis(234))),
+                Value::Union(0, Box::new(Value::TimestampMillis(234))),
             ),
             (
                 "a_non_existing_timestamp_millis".to_string(),
-                Value::Union(Box::new(Value::TimestampMillis(-234))),
+                Value::Union(0, Box::new(Value::TimestampMillis(-234))),
             ),
             (
                 "a_timestamp_micros".to_string(),
-                Value::Union(Box::new(Value::TimestampMicros(345))),
+                Value::Union(0, Box::new(Value::TimestampMicros(345))),
             ),
             (
                 "a_non_existing_timestamp_micros".to_string(),
-                Value::Union(Box::new(Value::TimestampMicros(-345))),
+                Value::Union(0, Box::new(Value::TimestampMicros(-345))),
             ),
             (
                 "a_record".to_string(),
-                Value::Union(Box::new(Value::Record(vec![(
-                    "record_in_union".to_string(),
-                    Value::Int(-2),
-                )]))),
+                Value::Union(
+                    0,
+                    Box::new(Value::Record(vec![(
+                        "record_in_union".to_string(),
+                        Value::Int(-2),
+                    )])),
+                ),
             ),
             (
                 "a_non_existing_record".to_string(),
-                Value::Union(Box::new(Value::Record(vec![(
-                    "blah".to_string(),
-                    Value::Int(-22),
-                )]))),
+                Value::Union(
+                    0,
+                    Box::new(Value::Record(vec![("blah".to_string(), Value::Int(-22))])),
+                ),
             ),
             (
                 "an_array".to_string(),
-                Value::Union(Box::new(Value::Array(vec![
-                    Value::Boolean(true),
-                    Value::Boolean(false),
-                ]))),
+                Value::Union(
+                    0,
+                    Box::new(Value::Array(vec![
+                        Value::Boolean(true),
+                        Value::Boolean(false),
+                    ])),
+                ),
             ),
             (
                 "a_non_existing_array".to_string(),
-                Value::Union(Box::new(Value::Array(vec![
-                    Value::Boolean(false),
-                    Value::Boolean(true),
-                ]))),
+                Value::Union(
+                    0,
+                    Box::new(Value::Array(vec![
+                        Value::Boolean(false),
+                        Value::Boolean(true),
+                    ])),
+                ),
             ),
             (
                 "a_union_map".to_string(),
-                Value::Union(Box::new(Value::Map(value_map))),
+                Value::Union(0, Box::new(Value::Map(value_map))),
             ),
             (
                 "a_non_existing_union_map".to_string(),
-                Value::Union(Box::new(Value::Map(HashMap::new()))),
+                Value::Union(0, Box::new(Value::Map(HashMap::new()))),
             ),
         ]);
 

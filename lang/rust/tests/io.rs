@@ -65,7 +65,7 @@ lazy_static! {
         (r#"{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}"#, r#""FOO""#, Value::Enum(0, "FOO".to_string())),
         (r#"{"type": "array", "items": "int"}"#, "[1, 2, 3]", Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)])),
         (r#"{"type": "map", "values": "int"}"#, r#"{"a": 1, "b": 2}"#, Value::Map([("a".to_string(), Value::Int(1)), ("b".to_string(), Value::Int(2))].iter().cloned().collect())),
-        (r#"["int", "null"]"#, "5", Value::Union(0, Box::new(Value::Int(5)))), 
+        (r#"["int", "null"]"#, "5", Value::Union(0, Box::new(Value::Int(5)))),
         (r#"{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}"#, r#"{"A": 5}"#,Value::Record(vec![("A".to_string(), Value::Int(5))])),
         (r#"["null", "int"]"#, "null", Value::Union(0, Box::new(Value::Null))),
     ];
