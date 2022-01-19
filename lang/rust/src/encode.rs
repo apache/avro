@@ -124,16 +124,16 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             },
             Value::Fixed(_, bytes) => buffer.extend(bytes),
             Value::Enum(i, _) => encode_int(*i, buffer),
-            Value::Union(i, item) => {
+            Value::Union(idx, item) => {
                 if let Schema::Union(ref inner) = *schema {
                     let inner_schema = inner
                         .schemas
-                        .get(*i as usize)
+                        .get(*idx as usize)
                         .expect("Invalid Union validation occurred");
-                    encode_long(*i as i64, buffer);
-                    encode_ref(&*item, inner_schema, buffer);
+                    encode_long(*idx as i64, buffer);
+                    encode_ref0(&*item, inner_schema, buffer, schemas_by_name);
                 } else {
-                    error!("invalid schema type for Array: {:?}", schema);
+                    error!("invalid schema type for Union: {:?}", schema);
                 }
             }
             Value::Array(items) => {

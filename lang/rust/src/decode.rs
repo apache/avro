@@ -214,7 +214,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                             index,
                             num_variants: variants.len(),
                         })?;
-                    let value = decode(variant, reader)?;
+                    let value = decode0(variant, reader, schemas_by_name)?;
                     Ok(Value::Union(index as i32, Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {

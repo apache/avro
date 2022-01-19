@@ -173,7 +173,7 @@ where
     T: Into<Self>,
 {
     fn from(value: Option<T>) -> Self {
-        // NOTE: this is incorrect in case first type in union is not "none"
+        // FIXME: this is incorrect in case first type in union is not "none"
         Self::Union(
             value.is_some() as i32,
             Box::new(value.map_or_else(|| Self::Null, Into::into)),
@@ -719,7 +719,7 @@ impl Value {
             v => v,
         };
         // Find the first match in the reader schema.
-        // FIXME: this is wrong when the union consists of multiple same records that have different names
+        // FIXME: this might be wrong when the union consists of multiple same records that have different names
         let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
         Ok(Value::Union(i as i32, Box::new(v.resolve(inner)?)))
     }

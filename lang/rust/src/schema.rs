@@ -392,8 +392,8 @@ impl UnionSchema {
     /// Optionally returns a reference to the schema matched by this value, as well as its position
     /// within this union.
     pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
-        let type_index = &SchemaKind::from(value);
-        if let Some(&i) = self.variant_index.get(type_index) {
+        let schema_kind = SchemaKind::from(value);
+        if let Some(&i) = self.variant_index.get(&schema_kind) {
             // fast path
             Some((i, &self.schemas[i]))
         } else {
@@ -1322,6 +1322,7 @@ mod tests {
         assert_eq!(variants.next(), None);
     }
 
+    // AVRO-3248
     #[test]
     fn test_union_of_records() {
         use std::iter::FromIterator;
@@ -1378,6 +1379,7 @@ mod tests {
         assert_eq!(schema_c, schema_c_expected);
     }
 
+    // AVRO-3248
     #[test]
     fn test_nullable_record() {
         use std::iter::FromIterator;
