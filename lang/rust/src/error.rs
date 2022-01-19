@@ -225,6 +225,9 @@ pub enum Error {
     #[error("Cannot convert u64 to usize: {1}")]
     ConvertU64ToUsize(#[source] std::num::TryFromIntError, u64),
 
+    #[error("Cannot convert u32 to usize: {1}")]
+    ConvertU32ToUsize(#[source] std::num::TryFromIntError, u32),
+
     #[error("Cannot convert i64 to usize: {1}")]
     ConvertI64ToUsize(#[source] std::num::TryFromIntError, i64),
 

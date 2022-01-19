@@ -215,7 +215,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                             num_variants: variants.len(),
                         })?;
                     let value = decode0(variant, reader, schemas_by_name)?;
-                    Ok(Value::Union(index as i32, Box::new(value)))
+                    Ok(Value::Union(index as u32, Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {
                     if let ErrorKind::UnexpectedEof = io_err.kind() {
@@ -254,7 +254,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                         .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
                     if (0..=symbols.len()).contains(&index) {
                         let symbol = symbols[index].clone();
-                        Value::Enum(raw_index, symbol)
+                        Value::Enum(raw_index as u32, symbol)
                     } else {
                         return Err(Error::GetEnumValue {
                             index,
