@@ -173,6 +173,13 @@ impl SchemaKind {
                 | SchemaKind::String,
         )
     }
+
+    pub fn is_named(self) -> bool {
+        matches!(
+            self,
+            SchemaKind::Record | SchemaKind::Enum | SchemaKind::Fixed
+        )
+    }
 }
 
 impl<'a> From<&'a types::Value> for SchemaKind {
@@ -189,7 +196,7 @@ impl<'a> From<&'a types::Value> for SchemaKind {
             Value::String(_) => Self::String,
             Value::Array(_) => Self::Array,
             Value::Map(_) => Self::Map,
-            Value::Union(_) => Self::Union,
+            Value::Union(_, _) => Self::Union,
             Value::Record(_) => Self::Record,
             Value::Enum(_, _) => Self::Enum,
             Value::Fixed(_, _) => Self::Fixed,
@@ -362,7 +369,7 @@ impl UnionSchema {
                 return Err(Error::GetNestedUnion);
             }
             let kind = SchemaKind::from(schema);
-            if vindex.insert(kind, i).is_some() {
+            if !kind.is_named() && vindex.insert(kind, i).is_some() {
                 return Err(Error::GetUnionDuplicate);
             }
         }
@@ -385,12 +392,12 @@ impl UnionSchema {
     /// Optionally returns a reference to the schema matched by this value, as well as its position
     /// within this union.
     pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
-        let type_index = &SchemaKind::from(value);
-        if let Some(&i) = self.variant_index.get(type_index) {
+        let schema_kind = SchemaKind::from(value);
+        if let Some(&i) = self.variant_index.get(&schema_kind) {
             // fast path
             Some((i, &self.schemas[i]))
         } else {
-            // slow path (required for matching logical types)
+            // slow path (required for matching logical or named types)
             self.schemas
                 .iter()
                 .enumerate()
@@ -1313,6 +1320,110 @@ mod tests {
             SchemaKind::Bytes
         );
         assert_eq!(variants.next(), None);
+    }
+
+    // AVRO-3248
+    #[test]
+    fn test_union_of_records() {
+        use std::iter::FromIterator;
+
+        // A and B are the same except the name.
+        let schema_str_a = r#"{
+            "name": "A",
+            "type": "record",
+            "fields": [
+                {"name": "field_one", "type": "float"}
+            ]
+        }"#;
+
+        let schema_str_b = r#"{
+            "name": "B",
+            "type": "record",
+            "fields": [
+                {"name": "field_one", "type": "float"}
+            ]
+        }"#;
+
+        // we get Error::GetNameField if we put ["A", "B"] directly here.
+        let schema_str_c = r#"{
+            "name": "C",
+            "type": "record",
+            "fields": [
+                {"name": "field_one",  "type": ["A", "B"]}
+            ]
+        }"#;
+
+        let schema_a = Schema::parse_str(schema_str_a).unwrap();
+        let schema_b = Schema::parse_str(schema_str_b).unwrap();
+
+        let schema_c = Schema::parse_list(&[schema_str_a, schema_str_b, schema_str_c])
+            .unwrap()
+            .last()
+            .unwrap()
+            .clone();
+
+        let schema_c_expected = Schema::Record {
+            name: Name::new("C"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "field_one".to_string(),
+                doc: None,
+                default: None,
+                schema: Schema::Union(UnionSchema::new(vec![schema_a, schema_b]).unwrap()),
+                order: RecordFieldOrder::Ignore,
+                position: 0,
+            }],
+            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+        };
+
+        assert_eq!(schema_c, schema_c_expected);
+    }
+
+    // AVRO-3248
+    #[test]
+    fn test_nullable_record() {
+        use std::iter::FromIterator;
+
+        let schema_str_a = r#"{
+            "name": "A",
+            "type": "record",
+            "fields": [
+                {"name": "field_one", "type": "float"}
+            ]
+        }"#;
+
+        // we get Error::GetNameField if we put ["null", "B"] directly here.
+        let schema_str_option_a = r#"{
+            "name": "OptionA",
+            "type": "record",
+            "fields": [
+                {"name": "field_one",  "type": ["null", "A"], "default": "null"}
+            ]
+        }"#;
+
+        let schema_a = Schema::parse_str(schema_str_a).unwrap();
+
+        let schema_option_a = Schema::parse_list(&[schema_str_a, schema_str_option_a])
+            .unwrap()
+            .last()
+            .unwrap()
+            .clone();
+
+        let schema_option_a_expected = Schema::Record {
+            name: Name::new("OptionA"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "field_one".to_string(),
+                doc: None,
+                default: Some(Value::Null),
+                schema: Schema::Union(UnionSchema::new(vec![Schema::Null, schema_a]).unwrap()),
+                order: RecordFieldOrder::Ignore,
+                position: 0,
+            }],
+            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+        };
+
+        assert_eq!(schema_option_a, schema_option_a_expected);
     }
 
     #[test]

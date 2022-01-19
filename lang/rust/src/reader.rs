@@ -432,7 +432,7 @@ mod tests {
 
         assert_eq!(
             from_avro_datum(&schema, &mut encoded, None).unwrap(),
-            Value::Union(Box::new(Value::Long(0)))
+            Value::Union(1, Box::new(Value::Long(0)))
         );
     }
 

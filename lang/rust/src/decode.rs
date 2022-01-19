@@ -215,18 +215,17 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                             num_variants: variants.len(),
                         })?;
                     let value = decode0(variant, reader, schemas_by_name)?;
-                    Ok(Value::Union(Box::new(value)))
+                    Ok(Value::Union(index as i32, Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {
                     if let ErrorKind::UnexpectedEof = io_err.kind() {
-                        Ok(Value::Union(Box::new(Value::Null)))
+                        Ok(Value::Union(0, Box::new(Value::Null)))
                     } else {
                         Err(Error::ReadVariableIntegerBytes(io_err))
                     }
                 }
                 Err(io_err) => Err(io_err),
             },
-
             Schema::Record {
                 ref name,
                 ref fields,
