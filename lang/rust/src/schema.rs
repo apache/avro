@@ -21,6 +21,7 @@ use digest::Digest;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{
+    ser,
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
 };
@@ -31,6 +32,7 @@ use std::{
     convert::TryInto,
     fmt,
     str::FromStr,
+    sync::{Arc, Mutex},
 };
 use strum_macros::{EnumDiscriminants, EnumString};
 
@@ -141,6 +143,10 @@ pub enum Schema {
     TimestampMicros,
     /// An amount of time defined by a number of months, days and milliseconds.
     Duration,
+    // A reference to another schema.
+    Ref {
+        name: Name,
+    },
 }
 
 impl PartialEq for Schema {
@@ -234,6 +240,11 @@ impl Name {
     fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let name = complex.name().ok_or(Error::GetNameField)?;
 
+        let type_name = match complex.get("type") {
+            Some(Value::Object(complex_type)) => complex_type.name().or(None),
+            _ => None,
+        };
+
         let namespace = complex.string("namespace");
 
         let aliases: Option<Vec<String>> = complex
@@ -248,7 +259,7 @@ impl Name {
             });
 
         Ok(Name {
-            name,
+            name: type_name.unwrap_or(name),
             namespace,
             aliases,
         })
@@ -420,11 +431,24 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 #[derive(Default)]
 struct Parser {
     input_schemas: HashMap<String, Value>,
+    // A map of name -> Schema::Ref
+    // Used to resolve cyclic references, i.e. when a
+    // field's type is a reference to its record's type
+    resolving_schemas: HashMap<String, Schema>,
     input_order: Vec<String>,
+    // A map of name -> fully parsed Schema
+    // Used to avoid parsing the same schema twice
     parsed_schemas: HashMap<String, Schema>,
 }
 
 impl Schema {
+    // Used to help resolve cyclic references while serializing Schema to JSON.
+    // Needed because serde[_json] does not support using contexts.
+    // TODO: See whether alternatives like
+    // https://users.rust-lang.org/t/serde-question-access-to-a-shared-context-data-within-serialize-and-deserialize/39546
+    // can be used
+    thread_local!(static SCHEMAS_BY_NAME: Arc<Mutex<HashMap<String, Schema>>> = Arc::new(Mutex::new(HashMap::new())));
+
     /// Converts `self` into its [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
@@ -480,6 +504,7 @@ impl Schema {
         }
         let mut parser = Parser {
             input_schemas,
+            resolving_schemas: HashMap::default(),
             input_order,
             parsed_schemas: HashMap::with_capacity(input.len()),
         };
@@ -515,7 +540,8 @@ impl Parser {
                 .remove_entry(&next_name)
                 .expect("Key unexpectedly missing");
             let parsed = self.parse(&value)?;
-            self.parsed_schemas.insert(name, parsed);
+            self.parsed_schemas
+                .insert(get_schema_type_name(name, value), parsed);
         }
 
         let mut parsed_schemas = Vec::with_capacity(self.parsed_schemas.len());
@@ -558,9 +584,11 @@ impl Parser {
     }
 
     /// Given a name, tries to retrieve the parsed schema from `parsed_schemas`.
-    /// If a parsed schema is not found, it checks if a json  with that name exists
-    /// in `input_schemas` and then parses it  (removing it from `input_schemas`)
-    /// and adds the parsed schema to `parsed_schemas`
+    /// If a parsed schema is not found, it checks if a currently resolving
+    /// schema with that name exists.
+    /// If a resolving schema is not found, it checks if a json with that name exists
+    /// in `input_schemas` and then parses it (removing it from `input_schemas`)
+    /// and adds the parsed schema to `parsed_schemas`.
     ///
     /// This method allows schemas definitions that depend on other types to
     /// parse their dependencies (or look them up if already parsed).
@@ -568,12 +596,20 @@ impl Parser {
         if let Some(parsed) = self.parsed_schemas.get(name) {
             return Ok(parsed.clone());
         }
+        if let Some(resolving_schema) = self.resolving_schemas.get(name) {
+            return Ok(resolving_schema.clone());
+        }
+
         let value = self
             .input_schemas
             .remove(name)
             .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
+
         let parsed = self.parse(&value)?;
-        self.parsed_schemas.insert(name.to_string(), parsed.clone());
+        self.parsed_schemas.insert(
+            get_schema_type_name(name.to_string(), value),
+            parsed.clone(),
+        );
         Ok(parsed)
     }
 
@@ -772,6 +808,10 @@ impl Parser {
 
         let mut lookup = HashMap::new();
 
+        let resolving_schema = Schema::Ref { name: name.clone() };
+        self.resolving_schemas
+            .insert(name.name.clone(), resolving_schema);
+
         let fields: Vec<RecordField> = complex
             .get("fields")
             .and_then(|fields| fields.as_array())
@@ -798,6 +838,7 @@ impl Parser {
 
         self.parsed_schemas
             .insert(name.fullname(None), schema.clone());
+        self.resolving_schemas.remove(name.name.as_str());
         Ok(schema)
     }
 
@@ -893,12 +934,45 @@ impl Parser {
     }
 }
 
+fn get_schema_type_name(name: String, value: Value) -> String {
+    match value.get("type") {
+        Some(Value::Object(complex_type)) => match complex_type.name() {
+            Some(name) => name,
+            _ => name,
+        },
+        _ => name,
+    }
+}
+
 impl Serialize for Schema {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
+        fn remember_schema(name: &Name, schema: &Schema) {
+            Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| match schemas_by_name.try_lock() {
+                Ok(mut schemas) => {
+                    schemas.insert((&name.name).clone(), schema.clone());
+                }
+                Err(poisoned) => {
+                    error!("Wasn't able to lock schemas_by_name {:?}", poisoned);
+                }
+            });
+        }
+
         match *self {
+            Schema::Ref { ref name } => {
+                let name = &name.name;
+                Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
+                    let schemas = schemas_by_name.lock().unwrap();
+                    if schemas.contains_key(name.as_str()) {
+                        serializer.serialize_str(name)
+                    } else {
+                        Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in ({})",
+                                                       name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
+                    }
+                })
+            }
             Schema::Null => serializer.serialize_str("null"),
             Schema::Boolean => serializer.serialize_str("boolean"),
             Schema::Int => serializer.serialize_str("int"),
@@ -933,6 +1007,7 @@ impl Serialize for Schema {
                 ref fields,
                 ..
             } => {
+                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "record")?;
                 if let Some(ref n) = name.namespace {
@@ -953,6 +1028,7 @@ impl Serialize for Schema {
                 ref symbols,
                 ..
             } => {
+                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
                 map.serialize_entry("name", &name.name)?;
@@ -964,6 +1040,7 @@ impl Serialize for Schema {
                 ref doc,
                 ref size,
             } => {
+                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
                 map.serialize_entry("name", &name.name)?;
@@ -1240,7 +1317,7 @@ mod tests {
 
     #[test]
     fn test_record_schema() {
-        let schema = Schema::parse_str(
+        let parsed = Schema::parse_str(
             r#"
             {
                 "type": "record",
@@ -1282,7 +1359,78 @@ mod tests {
             lookup,
         };
 
-        assert_eq!(expected, schema);
+        assert_eq!(parsed, expected);
+    }
+
+    // AVRO-3302
+    #[test]
+    fn test_record_schema_with_currently_parsing_schema() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+                "type": "record",
+                "name": "test",
+                "fields": [{
+                    "name": "recordField",
+                    "type": {
+                        "type": "record",
+                        "name": "Node",
+                        "fields": [
+                            {"name": "label", "type": "string"},
+                            {"name": "children", "type": {"type": "array", "items": "Node"}}
+                        ]
+                    }
+                }]
+            }
+        "#,
+        )
+        .unwrap();
+
+        let mut lookup = HashMap::new();
+        lookup.insert("recordField".to_owned(), 0);
+
+        let mut node_lookup = HashMap::new();
+        node_lookup.insert("children".to_owned(), 1);
+        node_lookup.insert("label".to_owned(), 0);
+
+        let expected = Schema::Record {
+            name: Name::new("test"),
+            doc: None,
+            fields: vec![RecordField {
+                name: "recordField".to_string(),
+                doc: None,
+                default: None,
+                schema: Schema::Record {
+                    name: Name::new("Node"),
+                    doc: None,
+                    fields: vec![
+                        RecordField {
+                            name: "label".to_string(),
+                            doc: None,
+                            default: None,
+                            schema: Schema::String,
+                            order: RecordFieldOrder::Ascending,
+                            position: 0,
+                        },
+                        RecordField {
+                            name: "children".to_string(),
+                            doc: None,
+                            default: None,
+                            schema: Schema::Array(Box::new(Schema::Ref {
+                                name: Name::new("Node"),
+                            })),
+                            order: RecordFieldOrder::Ascending,
+                            position: 1,
+                        },
+                    ],
+                    lookup: node_lookup,
+                },
+                order: RecordFieldOrder::Ascending,
+                position: 0,
+            }],
+            lookup,
+        };
+        assert_eq!(schema, expected);
     }
 
     #[test]
