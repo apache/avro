@@ -123,7 +123,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                 _ => error!("invalid schema type for String: {:?}", schema),
             },
             Value::Fixed(_, bytes) => buffer.extend(bytes),
-            Value::Enum(i, _) => encode_int(*i, buffer),
+            Value::Enum(i, _) => encode_int(*i as i32, buffer),
             Value::Union(idx, item) => {
                 if let Schema::Union(ref inner) = *schema {
                     let inner_schema = inner
