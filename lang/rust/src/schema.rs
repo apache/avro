@@ -799,6 +799,45 @@ impl Parser {
         }
     }
 
+    fn register_resolving_schema(&mut self, name: &Name) {
+        let resolving_schema = Schema::Ref { name: name.clone() };
+        self.resolving_schemas
+            .insert(name.fullname(None), resolving_schema.clone());
+
+        let namespace = &name.namespace;
+
+        if let Some(ref aliases) = name.aliases {
+            aliases.iter().for_each(|alias| {
+                let alias_fullname = match namespace {
+                    Some(ref ns) => format!("{}.{}", ns, alias),
+                    None => alias.clone(),
+                };
+                self.resolving_schemas
+                    .insert(alias_fullname, resolving_schema.clone());
+            });
+        }
+    }
+
+    fn register_parsed_schema(&mut self, name: &Name, schema: &Schema) {
+        self.parsed_schemas
+            .insert(name.fullname(None), schema.clone());
+        self.resolving_schemas.remove(name.fullname(None).as_str());
+
+        let namespace = &name.namespace;
+
+        if let Some(ref aliases) = name.aliases {
+            aliases.iter().for_each(|alias| {
+                let alias_fullname = match namespace {
+                    Some(ref ns) => format!("{}.{}", ns, alias),
+                    None => alias.clone(),
+                };
+                self.parsed_schemas
+                    .insert(alias_fullname.clone(), schema.clone());
+                self.resolving_schemas.remove(alias_fullname.as_str());
+            });
+        }
+    }
+
     /// Parse a `serde_json::Value` representing a Avro record type into a
     /// `Schema`.
     fn parse_record(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
@@ -806,9 +845,7 @@ impl Parser {
 
         let mut lookup = HashMap::new();
 
-        let resolving_schema = Schema::Ref { name: name.clone() };
-        self.resolving_schemas
-            .insert(name.name.clone(), resolving_schema);
+        self.register_resolving_schema(&name);
 
         let fields: Vec<RecordField> = complex
             .get("fields")
@@ -834,9 +871,7 @@ impl Parser {
             lookup,
         };
 
-        self.parsed_schemas
-            .insert(name.fullname(None), schema.clone());
-        self.resolving_schemas.remove(name.name.as_str());
+        self.register_parsed_schema(&name, &schema);
         Ok(schema)
     }
 
@@ -877,8 +912,9 @@ impl Parser {
             doc: complex.doc(),
             symbols,
         };
-        self.parsed_schemas
-            .insert(name.fullname(None), schema.clone());
+
+        self.register_parsed_schema(&name, &schema);
+
         Ok(schema)
     }
 
@@ -932,8 +968,9 @@ impl Parser {
             doc,
             size: size as usize,
         };
-        self.parsed_schemas
-            .insert(name.fullname(None), schema.clone());
+
+        self.register_parsed_schema(&name, &schema);
+
         Ok(schema)
     }
 }
@@ -1618,6 +1655,74 @@ mod tests {
         let schema_str = schema.canonical_form();
         let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]},{"name":"Manager","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]}]}]}"#;
         assert_eq!(schema_str, expected);
+    }
+
+    // AVRO-3302
+    #[test]
+    fn test_record_schema_with_currently_parsing_schema_aliases() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type": "record",
+              "name": "LongList",
+              "aliases": ["LinkedLongs"],
+              "fields" : [
+                {"name": "value", "type": "long"},
+                {"name": "next", "type": ["null", "LinkedLongs"]}
+              ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        let mut lookup = HashMap::new();
+        lookup.insert("value".to_owned(), 0);
+        lookup.insert("next".to_owned(), 1);
+
+        let expected = Schema::Record {
+            name: Name {
+                name: "LongList".to_owned(),
+                namespace: None,
+                aliases: Some(vec!["LinkedLongs".to_owned()]),
+            },
+            doc: None,
+            fields: vec![
+                RecordField {
+                    name: "value".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Long,
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                },
+                RecordField {
+                    name: "next".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Union(
+                        UnionSchema::new(vec![
+                            Schema::Null,
+                            Schema::Ref {
+                                name: Name {
+                                    name: "LongList".to_owned(),
+                                    namespace: None,
+                                    aliases: Some(vec!["LinkedLongs".to_owned()]),
+                                },
+                            },
+                        ])
+                        .unwrap(),
+                    ),
+                    order: RecordFieldOrder::Ascending,
+                    position: 1,
+                },
+            ],
+            lookup,
+        };
+        assert_eq!(schema, expected);
+
+        let canonical_form = &schema.canonical_form();
+        let expected = r#"{"name":"LongList","type":"record","fields":[{"name":"value","type":"long"},{"name":"next","type":["null","LongList"]}]}"#;
+        assert_eq!(canonical_form, &expected);
     }
 
     #[test]
