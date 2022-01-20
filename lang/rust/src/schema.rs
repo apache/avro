@@ -21,7 +21,6 @@ use digest::Digest;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{
-    ser,
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
 };
@@ -32,7 +31,6 @@ use std::{
     convert::TryInto,
     fmt,
     str::FromStr,
-    sync::{Arc, Mutex},
 };
 use strum_macros::{EnumDiscriminants, EnumString};
 
@@ -449,13 +447,6 @@ struct Parser {
 }
 
 impl Schema {
-    // Used to help resolve cyclic references while serializing Schema to JSON.
-    // Needed because serde[_json] does not support using contexts.
-    // TODO: See whether alternatives like
-    // https://users.rust-lang.org/t/serde-question-access-to-a-shared-context-data-within-serialize-and-deserialize/39546
-    // can be used
-    thread_local!(static SCHEMAS_BY_NAME: Arc<Mutex<HashMap<String, Schema>>> = Arc::new(Mutex::new(HashMap::new())));
-
     /// Converts `self` into its [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
@@ -956,30 +947,8 @@ impl Serialize for Schema {
     where
         S: Serializer,
     {
-        fn remember_schema(name: &Name, schema: &Schema) {
-            Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| match schemas_by_name.try_lock() {
-                Ok(mut schemas) => {
-                    schemas.insert((&name.name).clone(), schema.clone());
-                }
-                Err(poisoned) => {
-                    error!("Wasn't able to lock schemas_by_name {:?}", poisoned);
-                }
-            });
-        }
-
         match *self {
-            Schema::Ref { ref name } => {
-                let name = &name.name;
-                Schema::SCHEMAS_BY_NAME.with(|schemas_by_name| {
-                    let schemas = schemas_by_name.lock().unwrap();
-                    if schemas.contains_key(name.as_str()) {
-                        serializer.serialize_str(name)
-                    } else {
-                        Err(ser::Error::custom(format!("Could not serialize Schema::Ref('{}') because it cannot be found in ({})",
-                                                       name, schemas.keys().cloned().collect::<Vec<_>>().join(", "))))
-                    }
-                })
-            }
+            Schema::Ref { ref name } => serializer.serialize_str(&name.name),
             Schema::Null => serializer.serialize_str("null"),
             Schema::Boolean => serializer.serialize_str("boolean"),
             Schema::Int => serializer.serialize_str("int"),
@@ -1014,7 +983,6 @@ impl Serialize for Schema {
                 ref fields,
                 ..
             } => {
-                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "record")?;
                 if let Some(ref n) = name.namespace {
@@ -1035,7 +1003,6 @@ impl Serialize for Schema {
                 ref symbols,
                 ..
             } => {
-                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
                 map.serialize_entry("name", &name.name)?;
@@ -1047,7 +1014,6 @@ impl Serialize for Schema {
                 ref doc,
                 ref size,
             } => {
-                remember_schema(name, self);
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
                 map.serialize_entry("name", &name.name)?;
@@ -1542,6 +1508,10 @@ mod tests {
             lookup,
         };
         assert_eq!(schema, expected);
+
+        let canonical_form = &schema.canonical_form();
+        let expected = r#"{"name":"test","type":"record","fields":[{"name":"recordField","type":{"name":"Node","type":"record","fields":[{"name":"label","type":"string"},{"name":"children","type":{"type":"array","items":"Node"}}]}}]}"#;
+        assert_eq!(canonical_form, &expected);
     }
 
     #[test]
