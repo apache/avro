@@ -218,7 +218,7 @@ fn test_default_value() {
 }
 
 #[test]
-fn test_no_default_value() -> Result<(), Error> {
+fn test_no_default_value() {
     let reader_schema = Schema::parse_str(
         r#"{
             "type": "record",
@@ -236,7 +236,6 @@ fn test_no_default_value() -> Result<(), Error> {
         Some(&reader_schema),
     );
     assert!(result.is_err());
-    Ok(())
 }
 
 #[test]
