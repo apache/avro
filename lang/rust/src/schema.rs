@@ -789,7 +789,7 @@ impl Parser {
                 "enum" => self.parse_enum(complex),
                 "array" => self.parse_array(complex),
                 "map" => self.parse_map(complex),
-                "fixed" => Self::parse_fixed(complex),
+                "fixed" => self.parse_fixed(complex),
                 other => self.parse_known_schema(other),
             },
             Some(&Value::Object(ref data)) => self.parse_complex(data),
@@ -914,7 +914,7 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro fixed type into a
     /// `Schema`.
-    fn parse_fixed(complex: &Map<String, Value>) -> AvroResult<Schema> {
+    fn parse_fixed(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
         let doc = complex.get("doc").and_then(|v| match &v {
@@ -927,11 +927,14 @@ impl Parser {
             .and_then(|v| v.as_i64())
             .ok_or(Error::GetFixedSizeField)?;
 
-        Ok(Schema::Fixed {
-            name,
+        let schema = Schema::Fixed {
+            name: name.clone(),
             doc,
             size: size as usize,
-        })
+        };
+        self.parsed_schemas
+            .insert(name.fullname(None), schema.clone());
+        Ok(schema)
     }
 }
 
@@ -1560,12 +1563,60 @@ mod tests {
               ]
             }
           ]
-}
-"#;
+        }
+        "#;
 
         let schema = Schema::parse_str(schema).unwrap();
         let schema_str = schema.canonical_form();
         let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]},{"name":"Manager","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]}]}]}"#;
+        assert_eq!(schema_str, expected);
+    }
+
+    #[test]
+    fn test_parsing_of_recursive_type_fixed() {
+        let schema = r#"
+    {
+        "type": "record",
+        "name": "User",
+        "namespace": "office",
+        "fields": [
+            {
+              "name": "details",
+              "type": [
+                {
+                  "type": "record",
+                  "name": "Employee",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": {
+                        "type": "fixed",
+                        "name": "EmployeeId",
+                        "size": 16
+                      },
+                      "default": "female"
+                    }
+                  ]
+                },
+                {
+                  "type": "record",
+                  "name": "Manager",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": "EmployeeId"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let schema_str = schema.canonical_form();
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]},{"name":"Manager","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]}]}]}"#;
         assert_eq!(schema_str, expected);
     }
 
