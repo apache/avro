@@ -786,7 +786,7 @@ impl Parser {
         match complex.get("type") {
             Some(&Value::String(ref t)) => match t.as_str() {
                 "record" => self.parse_record(complex),
-                "enum" => Self::parse_enum(complex),
+                "enum" => self.parse_enum(complex),
                 "array" => self.parse_array(complex),
                 "map" => self.parse_map(complex),
                 "fixed" => Self::parse_fixed(complex),
@@ -842,7 +842,7 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a
     /// `Schema`.
-    fn parse_enum(complex: &Map<String, Value>) -> AvroResult<Schema> {
+    fn parse_enum(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
         let symbols: Vec<String> = complex
@@ -872,11 +872,14 @@ impl Parser {
             existing_symbols.insert(symbol);
         }
 
-        Ok(Schema::Enum {
-            name,
+        let schema = Schema::Enum {
+            name: name.clone(),
             doc: complex.doc(),
             symbols,
-        })
+        };
+        self.parsed_schemas
+            .insert(name.fullname(None), schema.clone());
+        Ok(schema)
     }
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
@@ -1512,6 +1515,58 @@ mod tests {
         let canonical_form = &schema.canonical_form();
         let expected = r#"{"name":"test","type":"record","fields":[{"name":"recordField","type":{"name":"Node","type":"record","fields":[{"name":"label","type":"string"},{"name":"children","type":{"type":"array","items":"Node"}}]}}]}"#;
         assert_eq!(canonical_form, &expected);
+    }
+
+    // https://github.com/flavray/avro-rs/pull/99#issuecomment-1016948451
+    #[test]
+    fn test_parsing_of_recursive_type_enum() {
+        let schema = r#"
+    {
+        "type": "record",
+        "name": "User",
+        "namespace": "office",
+        "fields": [
+            {
+              "name": "details",
+              "type": [
+                {
+                  "type": "record",
+                  "name": "Employee",
+                  "fields": [
+                    {
+                      "name": "gender",
+                      "type": {
+                        "type": "enum",
+                        "name": "Gender",
+                        "symbols": [
+                          "male",
+                          "female"
+                        ]
+                      },
+                      "default": "female"
+                    }
+                  ]
+                },
+                {
+                  "type": "record",
+                  "name": "Manager",
+                  "fields": [
+                    {
+                      "name": "gender",
+                      "type": "Gender"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+}
+"#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let schema_str = schema.canonical_form();
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]},{"name":"Manager","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]}]}]}"#;
+        assert_eq!(schema_str, expected);
     }
 
     #[test]
