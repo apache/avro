@@ -193,6 +193,7 @@ namespace Avro.Test
             Schema sc2 = Schema.Parse(recordSchemaString);
             Assert.AreEqual(Schema.Type.Record, sc2.Tag);
             RecordSchema rs = sc2 as RecordSchema;
+            Assert.IsNotNull(rs);
             Assert.AreEqual(1, rs.Count);
 
             Assert.IsTrue(rs["f1"].Schema is PrimitiveSchema);
