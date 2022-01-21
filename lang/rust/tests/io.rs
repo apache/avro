@@ -34,7 +34,7 @@ lazy_static! {
         (r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"]}"#, Value::Enum(1, "B".to_string())),
         (r#"{"type": "array", "items": "long"}"#, Value::Array(vec![Value::Long(1), Value::Long(3), Value::Long(2)])),
         (r#"{"type": "map", "values": "long"}"#, Value::Map([("a".to_string(), Value::Long(1i64)), ("b".to_string(), Value::Long(3i64)), ("c".to_string(), Value::Long(2i64))].iter().cloned().collect())),
-        (r#"["string", "null", "long"]"#, Value::Union(Box::new(Value::Null))),
+        (r#"["string", "null", "long"]"#, Value::Union(1, Box::new(Value::Null))),
         (r#"{"type": "record", "name": "Test", "fields": [{"name": "f", "type": "long"}]}"#, Value::Record(vec![("f".to_string(), Value::Long(1))]))
     ];
 
@@ -65,8 +65,9 @@ lazy_static! {
         (r#"{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}"#, r#""FOO""#, Value::Enum(0, "FOO".to_string())),
         (r#"{"type": "array", "items": "int"}"#, "[1, 2, 3]", Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)])),
         (r#"{"type": "map", "values": "int"}"#, r#"{"a": 1, "b": 2}"#, Value::Map([("a".to_string(), Value::Int(1)), ("b".to_string(), Value::Int(2))].iter().cloned().collect())),
-        (r#"["int", "null"]"#, "5", Value::Union(Box::new(Value::Int(5)))),
+        (r#"["int", "null"]"#, "5", Value::Union(0, Box::new(Value::Int(5)))),
         (r#"{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}"#, r#"{"A": 5}"#,Value::Record(vec![("A".to_string(), Value::Int(5))])),
+        (r#"["null", "int"]"#, "null", Value::Union(0, Box::new(Value::Null))),
     ];
 
     static ref LONG_RECORD_SCHEMA: Schema = Schema::parse_str(r#"
@@ -217,7 +218,7 @@ fn test_default_value() {
 }
 
 #[test]
-fn test_no_default_value() -> Result<(), Error> {
+fn test_no_default_value() {
     let reader_schema = Schema::parse_str(
         r#"{
             "type": "record",
@@ -235,7 +236,6 @@ fn test_no_default_value() -> Result<(), Error> {
         Some(&reader_schema),
     );
     assert!(result.is_err());
-    Ok(())
 }
 
 #[test]
@@ -319,6 +319,6 @@ fn test_type_exception() -> Result<(), String> {
     match encoded {
         Ok(_) => Err(String::from("Expected ValidationError, got Ok")),
         Err(Error::Validation) => Ok(()),
-        Err(ref e) => Err(format!("Expected ValidationError, got {}", e)),
+        Err(ref e) => Err(format!("Expected ValidationError, got {:?}", e)),
     }
 }
