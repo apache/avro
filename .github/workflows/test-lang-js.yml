@@ -81,25 +81,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Cache Local Maven Repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      - name: Setup Python for Generating Input Data
+        uses: actions/setup-python@v2
 
-      - name: Install Java Avro for Interop Test
-        working-directory: .
-        run: mvn -B install -DskipTests
+      - name: Apt Install Compression Libs Required by Python
+        run: |
+          sudo apt-get install -qqy --no-install-recommends libbz2-dev \
+                                                            liblzma-dev \
+                                                            libsnappy-dev \
+                                                            libzstd-dev
+      - name: Install Python Dependencies
+        run: |
+          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install python-snappy zstandard
 
       - name: Create Interop Data Directory
         working-directory: .
         run: mkdir -p build/interop/data
 
-      - name: Generate Interop Resources
-        working-directory: lang/java/avro
-        run: mvn -B -P interop-data-generate generate-resources
+      - name: Generate Interop Data using Python
+        working-directory: lang/py
+        run: ./build.sh interop-data-generate
 
       - name: Generate Interop Data
         run: ./build.sh interop-data-generate
