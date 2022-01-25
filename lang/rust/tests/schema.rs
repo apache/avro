@@ -17,9 +17,11 @@
 
 use avro_rs::{
     schema::{Name, RecordField},
-    Error, Schema,
+    types::{Record, Value},
+    Codec, Error, Reader, Schema, Writer,
 };
 use lazy_static::lazy_static;
+use log::debug;
 
 fn init() {
     let _ = env_logger::builder()
@@ -334,6 +336,10 @@ const DOC_EXAMPLES: &[(&str, bool)] = &[
     ),
     (
         r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}"#,
+        true,
+    ),
+    (
+        r#"{"type": "fixed", "name": "Test", "size": 1, "doc": "Fixed Doc String"}"#,
         true,
     ),
 ];
@@ -735,29 +741,28 @@ fn test_parse_list_with_cross_deps_basic() {
 }
 
 #[test]
-/// Test that if a cycle of dependencies occurs in the input schema jsons, the algorithm terminates
-/// and returns an error. N.B. In the future, when recursive types are supported, this should be
-/// revisited.
-fn test_parse_list_recursive_type_error() {
+fn test_parse_list_recursive_type() {
     init();
     let schema_str_1 = r#"{
         "name": "A",
+        "doc": "A's schema",
         "type": "record",
         "fields": [
-            {"name": "field_one", "type": "B"}
+            {"name": "a_field_one", "type": "B"}
         ]
     }"#;
     let schema_str_2 = r#"{
         "name": "B",
+        "doc": "B's schema",
         "type": "record",
         "fields": [
-            {"name": "field_one", "type": "A"}
+            {"name": "b_field_one", "type": "A"}
         ]
     }"#;
     let schema_strs_first = [schema_str_1, schema_str_2];
     let schema_strs_second = [schema_str_2, schema_str_1];
-    let _ = Schema::parse_list(&schema_strs_first).expect_err("Test failed");
-    let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
+    let _ = Schema::parse_list(&schema_strs_first).expect("Test failed");
+    let _ = Schema::parse_list(&schema_strs_second).expect("Test failed");
 }
 
 #[test]
@@ -1229,7 +1234,9 @@ fn test_doc_attributes() {
         match schema {
             Schema::Enum { doc, .. } => assert!(doc.is_some()),
             Schema::Record { doc, .. } => assert!(doc.is_some()),
-            _ => (),
+            Schema::Fixed { doc, .. } => assert!(doc.is_some()),
+            Schema::String => (),
+            _ => unreachable!("Unexpected schema type: {:?}", schema),
         }
     }
 
@@ -1297,6 +1304,73 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
             "Expected serde_json::error::Error, got {:?}",
             error
         ))
+    }
+}
+
+// AVRO-3302
+#[test]
+fn test_record_schema_with_cyclic_references() {
+    let schema = Schema::parse_str(
+        r#"
+            {
+                "type": "record",
+                "name": "test",
+                "fields": [{
+                    "name": "recordField",
+                    "type": {
+                        "type": "record",
+                        "name": "Node",
+                        "fields": [
+                            {"name": "label", "type": "string"},
+                            {"name": "children", "type": {"type": "array", "items": "Node"}}
+                        ]
+                    }
+                }]
+            }
+        "#,
+    )
+    .unwrap();
+
+    let mut datum = Record::new(&schema).unwrap();
+    datum.put(
+        "recordField",
+        Value::Record(vec![
+            ("label".into(), Value::String("level_1".into())),
+            (
+                "children".into(),
+                Value::Array(vec![Value::Record(vec![
+                    ("label".into(), Value::String("level_2".into())),
+                    (
+                        "children".into(),
+                        Value::Array(vec![Value::Record(vec![
+                            ("label".into(), Value::String("level_3".into())),
+                            (
+                                "children".into(),
+                                Value::Array(vec![Value::Record(vec![
+                                    ("label".into(), Value::String("level_4".into())),
+                                    ("children".into(), Value::Array(vec![])),
+                                ])]),
+                            ),
+                        ])]),
+                    ),
+                ])]),
+            ),
+        ]),
+    );
+
+    let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Null);
+    if let Err(err) = writer.append(datum) {
+        panic!("An error occurred while writing datum: {:?}", err)
+    }
+    let bytes = writer.into_inner().unwrap();
+    assert_eq!(316, bytes.len());
+
+    match Reader::new(&mut bytes.as_slice()) {
+        Ok(mut reader) => match reader.next() {
+            Some(value) => debug!("{:?}", value.unwrap()),
+            None => panic!("No value was read!"),
+        },
+        Err(err) => panic!("An error occurred while reading datum: {:?}", err),
     }
 }
 

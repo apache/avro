@@ -27,7 +27,7 @@
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>5.0.0</SystemCodeDomVersion>
+    <SystemCodeDomVersion>6.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
@@ -42,9 +42,9 @@
   -->
   <PropertyGroup Label="Minimum Package Versions">
     <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
-    <SystemCodeDomMinimumVersion>4.4.0</SystemCodeDomMinimumVersion>
+    <SystemCodeDomMinimumVersion>6.0.0</SystemCodeDomMinimumVersion>
     <SystemReflectionMinimumVersion>4.3.0</SystemReflectionMinimumVersion>
-    <SystemReflectionEmitILGenerationMinimumVersion>4.3.0</SystemReflectionEmitILGenerationMinimumVersion>
+    <SystemReflectionEmitILGenerationMinimumVersion>4.7.0</SystemReflectionEmitILGenerationMinimumVersion>
     <SystemReflectionEmitLightweightMinimumVersion>4.3.0</SystemReflectionEmitLightweightMinimumVersion>
   </PropertyGroup>
 
@@ -52,13 +52,13 @@
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
   -->
   <PropertyGroup Label="Build, Test, Code Analysis Package Versions">
-    <MicrosoftBuildFrameworkVersion>16.8.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>16.8.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.11.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.12.0</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>3.17.0</NUnit3TestAdapterVersion>
+    <NUnitConsoleRunnerVersion>3.14.0</NUnitConsoleRunnerVersion>
+    <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>

@@ -25,8 +25,8 @@ namespace Avro
     /// <summary>
     /// Represents a big decimal.
     /// </summary>
-    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    #pragma warning disable CA2225 // Operator overloads have named alternates
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CA2225 // Operator overloads have named alternates
     public struct AvroDecimal : IConvertible, IFormattable, IComparable, IComparable<AvroDecimal>, IEquatable<AvroDecimal>
     {
         /// <summary>
@@ -470,7 +470,7 @@ namespace Avro
         public static implicit operator AvroDecimal(BigInteger value)
         {
             return new AvroDecimal(value, 0);
-        } 
+        }
 
         /// <summary>
         /// Converts the numeric value of the current <see cref="AvroDecimal"/> to a given type.
@@ -484,19 +484,24 @@ namespace Avro
         }
 
         /// <summary>
-        /// Converts the numeric value of the current <see cref="AvroDecimal"/> to a given type.
+        /// Converts the numeric value of the current <see cref="AvroDecimal" /> to a given type.
         /// </summary>
-        /// <param name="conversionType">The type to which the value of the current <see cref="AvroDecimal"/> should be converted.</param>
+        /// <param name="conversionType">The type to which the value of the current <see cref="AvroDecimal" /> should be converted.</param>
         /// <param name="provider">An System.IFormatProvider interface implementation that supplies culture-specific formatting information.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// An <see cref="T:System.Object"></see> instance of type <paramref name="conversionType">conversionType</paramref> whose value is equivalent to the value of this instance.
+        /// </returns>
+        /// <exception cref="System.OverflowException">The value {UnscaledValue} cannot fit into {conversionType.Name}.</exception>
         object IConvertible.ToType(Type conversionType, IFormatProvider provider)
         {
             var scaleDivisor = BigInteger.Pow(new BigInteger(10), Scale);
             var remainder = BigInteger.Remainder(UnscaledValue, scaleDivisor);
             var scaledValue = BigInteger.Divide(UnscaledValue, scaleDivisor);
 
-            if (scaledValue > new BigInteger(Decimal.MaxValue))
-                throw new ArgumentOutOfRangeException("value", "The value " + UnscaledValue + " cannot fit into " + conversionType.Name + ".");
+            if (scaledValue > new BigInteger(decimal.MaxValue))
+            {
+                throw new OverflowException($"The value {UnscaledValue} cannot fit into {conversionType.Name}.");
+            }
 
             var leftOfDecimal = (decimal)scaledValue;
             var rightOfDecimal = ((decimal)remainder) / ((decimal)scaleDivisor);
@@ -781,6 +786,6 @@ namespace Avro
             return bytes;
         }
     }
-    #pragma warning restore CA2225 // Operator overloads have named alternates
-    #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore CA2225 // Operator overloads have named alternates
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

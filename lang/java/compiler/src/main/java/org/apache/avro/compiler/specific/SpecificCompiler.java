@@ -857,7 +857,7 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibility
    *             of custom templates
    */
   @Deprecated

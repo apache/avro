@@ -225,6 +225,9 @@ pub enum Error {
     #[error("Cannot convert u64 to usize: {1}")]
     ConvertU64ToUsize(#[source] std::num::TryFromIntError, u64),
 
+    #[error("Cannot convert u32 to usize: {1}")]
+    ConvertU32ToUsize(#[source] std::num::TryFromIntError, u32),
+
     #[error("Cannot convert i64 to usize: {1}")]
     ConvertI64ToUsize(#[source] std::num::TryFromIntError, i64),
 
@@ -369,6 +372,10 @@ pub enum Error {
     /// Error while converting float to json value
     #[error("failed to convert avro float to json: {0}")]
     ConvertF64ToJson(f64),
+
+    /// Error while resolving Schema::Ref
+    #[error("Unresolved schema reference: {0}")]
+    SchemaResolutionError(String),
 }
 
 impl serde::ser::Error for Error {
