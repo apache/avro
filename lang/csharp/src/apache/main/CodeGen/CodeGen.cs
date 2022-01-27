@@ -879,7 +879,7 @@ namespace Avro
         /// </summary>
         /// <param name="schema">union schema.</param>
         /// <returns>
-        /// schema that is nullable. 
+        /// schema that is nullable.
         /// </returns>
         public static Schema getNullableType(UnionSchema schema)
         {
