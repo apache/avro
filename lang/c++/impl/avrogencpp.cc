@@ -819,7 +819,8 @@ int main(int argc, char **argv) {
 
     if (vm.count("help") || vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
         std::cout << desc << std::endl;
-        return 1;
+        // Return success if help requested
+        return vm.count("help") ? 0 : 1;
     }
 
     string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
