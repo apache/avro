@@ -205,11 +205,15 @@ namespace Avro
                 else if (jtype.Type == JTokenType.Object)
                 {
                     if (null != jo["logicalType"]) // logical type based on a complex type
+                    {
                         return LogicalSchema.NewInstance(jtok, props, names, encspace);
+                    }
 
                     var schema = ParseJson(jtype, names, encspace); // primitive schemas are allowed to have additional metadata properties
                     if (schema is PrimitiveSchema)
+                    {
                         return schema;
+                    }
                 }
             }
             throw new AvroTypeException($"Invalid JSON for schema: {jtok} at '{jtok.Path}'");

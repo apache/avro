@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace Avro
@@ -82,7 +81,7 @@ namespace Avro
         /// <param name="encspace"></param>
         protected internal override void WriteJson(JsonTextWriter w, SchemaNames names, string encspace)
         {
-            if(this.Props != null && this.Props.Count > 0)
+            if(this.Props?.Any() == true)
             {
                 w.WriteStartObject();
                 w.WritePropertyName("type");
@@ -94,7 +93,10 @@ namespace Avro
                 }
                 w.WriteEndObject();
             }
-            else w.WriteValue(Name);
+            else
+            {
+                w.WriteValue(Name);
+            }
         }
 
         /// <summary>
