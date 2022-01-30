@@ -73,28 +73,36 @@ namespace Avro
         /// </summary>
         /// <param name="value">The int value.</param>
         public AvroDecimal(int value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given long.
         /// </summary>
         /// <param name="value">The long value.</param>
         public AvroDecimal(long value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given unsigned int.
         /// </summary>
         /// <param name="value">The unsigned int value.</param>
         public AvroDecimal(uint value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given unsigned long.
         /// </summary>
         /// <param name="value">The unsigned long value.</param>
         public AvroDecimal(ulong value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given <see cref="BigInteger"/>
