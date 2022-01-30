@@ -253,7 +253,7 @@ namespace Avro
         protected virtual void addName(Schema schema, SchemaNames names)
         {
             NamedSchema ns = schema as NamedSchema;
-            if (ns != null && names?.Contains(ns.SchemaName) == true)
+            if (ns != null && names.Contains(ns.SchemaName))
             {
                 return;
             }
