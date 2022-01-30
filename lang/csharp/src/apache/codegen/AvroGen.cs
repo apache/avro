@@ -25,11 +25,18 @@ namespace Avro
     {
         static int Main(string[] args)
         {
-            // Print usage if no arguments provided or help requested
-            if (args.Length == 0 || args[0] == "-h" || args[0] == "--help")
+            // Print usage if no arguments provided
+            if (args.Length == 0)
             {
                 Usage();
                 return 1;
+            }
+
+            // Print usage if help requested
+            if (args[0] == "-h" || args[0] == "--help")
+            {
+                Usage();
+                return 0;
             }
 
             // Parse command line arguments

@@ -25,7 +25,6 @@ namespace Avro
     /// <summary>
     /// Represents a big decimal.
     /// </summary>
-#pragma warning disable CA2225 // Operator overloads have named alternates
     public struct AvroDecimal : IConvertible, IFormattable, IComparable, IComparable<AvroDecimal>, IEquatable<AvroDecimal>
     {
         /// <summary>
@@ -61,7 +60,9 @@ namespace Avro
             var scale = bytes[14];
 
             if (bytes[15] == 128)
+            {
                 unscaledValue *= BigInteger.MinusOne;
+            }
 
             UnscaledValue = unscaledValue;
             Scale = scale;
@@ -72,28 +73,36 @@ namespace Avro
         /// </summary>
         /// <param name="value">The int value.</param>
         public AvroDecimal(int value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal" /> struct from a given long.
         /// </summary>
         /// <param name="value">The long value.</param>
         public AvroDecimal(long value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal" /> struct from a given unsigned int.
         /// </summary>
         /// <param name="value">The unsigned int value.</param>
         public AvroDecimal(uint value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal" /> struct from a given unsigned long.
         /// </summary>
         /// <param name="value">The unsigned long value.</param>
         public AvroDecimal(ulong value)
-            : this(new BigInteger(value), 0) { }
+            : this(new BigInteger(value), 0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal" /> struct from a given <see cref="BigInteger" />
@@ -145,7 +154,9 @@ namespace Avro
             var number = UnscaledValue.ToString($"D{Scale + 1}", CultureInfo.CurrentCulture);
 
             if (Scale > 0)
+            {
                 return number.Insert(number.Length - Scale, CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            }
 
             return number;
         }
@@ -869,7 +880,7 @@ namespace Avro
         /// </returns>
         public override bool Equals(object obj)
         {
-            return (obj is AvroDecimal) && Equals((AvroDecimal)obj);
+            return (obj is AvroDecimal @decimal) && Equals(@decimal);
         }
 
         /// <summary>
@@ -1100,10 +1111,14 @@ namespace Avro
         public int CompareTo(object obj)
         {
             if (obj == null)
+            {
                 return 1;
+            }
 
             if (!(obj is AvroDecimal))
+            {
                 throw new ArgumentException("Compare to object must be a BigDecimal", nameof(obj));
+            }
 
             return CompareTo((AvroDecimal)obj);
         }
@@ -1124,11 +1139,15 @@ namespace Avro
 
             // if both are the same value, return the value
             if (unscaledValueCompare == scaleCompare)
+            {
                 return unscaledValueCompare;
+            }
 
             // if the scales are both the same return unscaled value
             if (scaleCompare == 0)
+            {
                 return unscaledValueCompare;
+            }
 
             var scaledValue = BigInteger.Divide(UnscaledValue, BigInteger.Pow(new BigInteger(10), Scale));
             var otherScaledValue = BigInteger.Divide(other.UnscaledValue, BigInteger.Pow(new BigInteger(10), other.Scale));
@@ -1187,5 +1206,4 @@ namespace Avro
             return bytes;
         }
     }
-#pragma warning restore CA2225 // Operator overloads have named alternates
 }
