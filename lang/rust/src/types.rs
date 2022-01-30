@@ -549,7 +549,7 @@ impl Value {
                     })
                 } else {
                     // precision and scale match, can we assume the underlying type can hold the data?
-                    Ok(Value::Decimal(Decimal::from(bytes)))
+                    Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
                 }
             }
             other => Err(Error::ResolveDecimal(other.into())),
@@ -1050,12 +1050,14 @@ mod tests {
 
     #[test]
     fn resolve_decimal_bytes() {
-        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        let precision = 10;
+        let scale = 4;
+        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale));
         value
             .clone()
             .resolve(&Schema::Decimal {
-                precision: 10,
-                scale: 4,
+                precision,
+                scale,
                 inner: Box::new(Schema::Bytes),
             })
             .unwrap();
@@ -1064,11 +1066,13 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_scale() {
-        let value = Value::Decimal(Decimal::from(vec![1]));
+        let precision = 2;
+        let scale = 3;
+        let value = Value::Decimal(Decimal::from_bytes(vec![1], precision, scale));
         assert!(value
             .resolve(&Schema::Decimal {
-                precision: 2,
-                scale: 3,
+                precision,
+                scale,
                 inner: Box::new(Schema::Bytes),
             })
             .is_err());
@@ -1076,11 +1080,17 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_precision_for_length() {
-        let value = Value::Decimal(Decimal::from((1u8..=8u8).rev().collect::<Vec<_>>()));
+        let precision = 1;
+        let scale = 0;
+        let value = Value::Decimal(Decimal::from_bytes(
+            (1u8..=8u8).rev().collect::<Vec<_>>(),
+            precision,
+            scale,
+        ));
         assert!(value
             .resolve(&Schema::Decimal {
-                precision: 1,
-                scale: 0,
+                precision,
+                scale,
                 inner: Box::new(Schema::Bytes),
             })
             .is_err());
@@ -1088,12 +1098,14 @@ mod tests {
 
     #[test]
     fn resolve_decimal_fixed() {
-        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        let precision = 10;
+        let scale = 1;
+        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale));
         assert!(value
             .clone()
             .resolve(&Schema::Decimal {
-                precision: 10,
-                scale: 1,
+                precision,
+                scale,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal"),
                     size: 20,
@@ -1173,11 +1185,11 @@ mod tests {
         );
         assert_eq!(
             JsonValue::try_from(Value::Int(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::Long(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::Float(1.0)).unwrap(),
@@ -1190,9 +1202,9 @@ mod tests {
         assert_eq!(
             JsonValue::try_from(Value::Bytes(vec![1, 2, 3])).unwrap(),
             JsonValue::Array(vec![
-                JsonValue::Number(1.into()),
-                JsonValue::Number(2.into()),
-                JsonValue::Number(3.into())
+                JsonValue::Number(1_i32.into()),
+                JsonValue::Number(2_i32.into()),
+                JsonValue::Number(3_i32.into())
             ])
         );
         assert_eq!(
@@ -1202,9 +1214,9 @@ mod tests {
         assert_eq!(
             JsonValue::try_from(Value::Fixed(3, vec![1, 2, 3])).unwrap(),
             JsonValue::Array(vec![
-                JsonValue::Number(1.into()),
-                JsonValue::Number(2.into()),
-                JsonValue::Number(3.into())
+                JsonValue::Number(1_i32.into()),
+                JsonValue::Number(2_i32.into()),
+                JsonValue::Number(3_i32.into())
             ])
         );
         assert_eq!(
@@ -1224,9 +1236,9 @@ mod tests {
             ]))
             .unwrap(),
             JsonValue::Array(vec![
-                JsonValue::Number(1.into()),
-                JsonValue::Number(2.into()),
-                JsonValue::Number(3.into())
+                JsonValue::Number(1_i32.into()),
+                JsonValue::Number(2_i32.into()),
+                JsonValue::Number(3_i32.into())
             ])
         );
         assert_eq!(
@@ -1242,9 +1254,9 @@ mod tests {
             .unwrap(),
             JsonValue::Object(
                 vec![
-                    ("v1".to_string(), JsonValue::Number(1.into())),
-                    ("v2".to_string(), JsonValue::Number(2.into())),
-                    ("v3".to_string(), JsonValue::Number(3.into()))
+                    ("v1".to_string(), JsonValue::Number(1_i32.into())),
+                    ("v2".to_string(), JsonValue::Number(2_i32.into())),
+                    ("v3".to_string(), JsonValue::Number(3_i32.into()))
                 ]
                 .into_iter()
                 .collect()
@@ -1259,9 +1271,9 @@ mod tests {
             .unwrap(),
             JsonValue::Object(
                 vec![
-                    ("v1".to_string(), JsonValue::Number(1.into())),
-                    ("v2".to_string(), JsonValue::Number(2.into())),
-                    ("v3".to_string(), JsonValue::Number(3.into()))
+                    ("v1".to_string(), JsonValue::Number(1_i32.into())),
+                    ("v2".to_string(), JsonValue::Number(2_i32.into())),
+                    ("v3".to_string(), JsonValue::Number(3_i32.into()))
                 ]
                 .into_iter()
                 .collect()
@@ -1269,31 +1281,31 @@ mod tests {
         );
         assert_eq!(
             JsonValue::try_from(Value::Date(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
-            JsonValue::try_from(Value::Decimal(vec![1, 2, 3].into())).unwrap(),
+            JsonValue::try_from(Value::Decimal(Decimal::from_bytes(vec![1, 2, 3], 3, 0))).unwrap(),
             JsonValue::Array(vec![
-                JsonValue::Number(1.into()),
-                JsonValue::Number(2.into()),
-                JsonValue::Number(3.into())
+                JsonValue::Number(1_i32.into()),
+                JsonValue::Number(2_i32.into()),
+                JsonValue::Number(3_i32.into())
             ])
         );
         assert_eq!(
             JsonValue::try_from(Value::TimeMillis(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::TimeMicros(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::TimestampMillis(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::TimestampMicros(1)).unwrap(),
-            JsonValue::Number(1.into())
+            JsonValue::Number(1_i32.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::Duration(
@@ -1301,18 +1313,18 @@ mod tests {
             ))
             .unwrap(),
             JsonValue::Array(vec![
-                JsonValue::Number(1.into()),
-                JsonValue::Number(2.into()),
-                JsonValue::Number(3.into()),
-                JsonValue::Number(4.into()),
-                JsonValue::Number(5.into()),
-                JsonValue::Number(6.into()),
-                JsonValue::Number(7.into()),
-                JsonValue::Number(8.into()),
-                JsonValue::Number(9.into()),
-                JsonValue::Number(10.into()),
-                JsonValue::Number(11.into()),
-                JsonValue::Number(12.into()),
+                JsonValue::Number(1_i32.into()),
+                JsonValue::Number(2_i32.into()),
+                JsonValue::Number(3_i32.into()),
+                JsonValue::Number(4_i32.into()),
+                JsonValue::Number(5_i32.into()),
+                JsonValue::Number(6_i32.into()),
+                JsonValue::Number(7_i32.into()),
+                JsonValue::Number(8_i32.into()),
+                JsonValue::Number(9_i32.into()),
+                JsonValue::Number(10_i32.into()),
+                JsonValue::Number(11_i32.into()),
+                JsonValue::Number(12_i32.into()),
             ])
         );
         assert_eq!(

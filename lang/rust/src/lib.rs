@@ -602,8 +602,8 @@
 //!     let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
 //!
 //!     let mut record = Record::new(writer.schema()).unwrap();
-//!     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
-//!     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
+//!     record.put("decimal_fixed", Decimal::from_f64(36.12).unwrap());
+//!     record.put("decimal_var", Decimal::from_f64(-32442.23).unwrap());
 //!     record.put("uuid", uuid::Uuid::new_v4());
 //!     record.put("date", Value::Date(1));
 //!     record.put("time_millis", Value::TimeMillis(2));

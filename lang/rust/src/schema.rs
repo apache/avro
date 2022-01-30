@@ -120,8 +120,8 @@ pub enum Schema {
     /// `scale` defaults to 0 and is an integer greater than or equal to 0 and `precision` is an
     /// integer greater than 0.
     Decimal {
-        precision: DecimalMetadata,
-        scale: DecimalMetadata,
+        precision: Precision,
+        scale: Scale,
         inner: Box<Schema>,
     },
     /// A universally unique identifier, annotating a string.

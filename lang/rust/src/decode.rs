@@ -92,13 +92,21 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     }
                 }
             }
-            Schema::Decimal { ref inner, .. } => match &**inner {
+            Schema::Decimal {
+                ref inner,
+                precision,
+                scale,
+            } => match &**inner {
                 Schema::Fixed { .. } => match decode0(inner, reader, schemas_by_name)? {
-                    Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
+                    Value::Fixed(_, bytes) => {
+                        Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
+                    }
                     value => Err(Error::FixedValue(value.into())),
                 },
                 Schema::Bytes => match decode0(inner, reader, schemas_by_name)? {
-                    Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
+                    Value::Bytes(bytes) => {
+                        Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
+                    }
                     value => Err(Error::BytesValue(value.into())),
                 },
                 schema => Err(Error::ResolveDecimalSchema(schema.into())),
@@ -329,18 +337,25 @@ mod tests {
     fn test_negative_decimal_value() {
         use crate::{encode::encode, schema::Name};
         use num_bigint::ToBigInt;
+
         let inner = Box::new(Schema::Fixed {
             size: 2,
             doc: None,
             name: Name::new("decimal"),
         });
+        let precision = 4;
+        let scale = 2;
         let schema = Schema::Decimal {
             inner,
-            precision: 4,
-            scale: 2,
+            precision,
+            scale,
         };
         let bigint = (-423).to_bigint().unwrap();
-        let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
+        let value = Value::Decimal(Decimal::from_bytes(
+            bigint.to_signed_bytes_be(),
+            precision,
+            scale,
+        ));
 
         let mut buffer = Vec::new();
         encode(&value, &schema, &mut buffer);
@@ -359,13 +374,17 @@ mod tests {
             name: Name::new("decimal"),
             doc: None,
         });
+        let precision = 4;
+        let scale = 2;
         let schema = Schema::Decimal {
             inner,
-            precision: 4,
-            scale: 2,
+            precision,
+            scale,
         };
-        let value = Value::Decimal(Decimal::from(
+        let value = Value::Decimal(Decimal::from_bytes(
             ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
+            precision,
+            scale,
         ));
         let mut buffer = Vec::<u8>::new();
 

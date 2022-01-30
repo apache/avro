@@ -507,14 +507,16 @@ mod tests {
             size,
         };
         let value = vec![0u8; size];
+        let precision = 20;
+        let scale = 5;
         logical_type_test(
             r#"{"type": {"type": "fixed", "size": 30, "name": "decimal"}, "logicalType": "decimal", "precision": 20, "scale": 5}"#,
             &Schema::Decimal {
-                precision: 20,
-                scale: 5,
+                precision,
+                scale,
                 inner: Box::new(inner.clone()),
             },
-            Value::Decimal(Decimal::from(value.clone())),
+            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale)),
             &inner,
             Value::Fixed(size, value),
         )
@@ -524,14 +526,16 @@ mod tests {
     fn decimal_bytes() -> TestResult<()> {
         let inner = Schema::Bytes;
         let value = vec![0u8; 10];
+        let precision = 4;
+        let scale = 3;
         logical_type_test(
             r#"{"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 3}"#,
             &Schema::Decimal {
-                precision: 4,
-                scale: 3,
+                precision,
+                scale,
                 inner: Box::new(inner.clone()),
             },
-            Value::Decimal(Decimal::from(value.clone())),
+            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale)),
             &inner,
             value,
         )
