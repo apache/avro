@@ -817,9 +817,14 @@ int main(int argc, char **argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help") || vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
+    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
         std::cout << desc << std::endl;
         return 1;
+    }
+
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
     }
 
     string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
