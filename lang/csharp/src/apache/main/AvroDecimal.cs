@@ -520,7 +520,7 @@ namespace Avro
         /// </returns>
         public override bool Equals(object obj)
         {
-            return (obj is AvroDecimal) && Equals((AvroDecimal)obj);
+            return (obj is AvroDecimal @decimal) && Equals(@decimal);
         }
 
         /// <summary>
