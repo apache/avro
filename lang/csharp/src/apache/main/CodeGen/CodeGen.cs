@@ -144,6 +144,7 @@ namespace Avro
                 CompileUnit.Namespaces.Add(ns);
                 NamespaceLookup.Add(name, ns);
             }
+
             return ns;
         }
 
@@ -464,14 +465,13 @@ namespace Avro
             property.Type = new CodeTypeReference("Avro.Protocol");
             property.HasGet = true;
 
-
             property.GetStatements.Add(new CodeTypeReferenceExpression("return protocol"));
             ctd.Members.Add(property);
 
             // var requestMethod = CreateRequestMethod();
             // ctd.Members.Add(requestMethod);
-
             var requestMethod = CreateRequestMethod();
+
             // requestMethod.Attributes |= MemberAttributes.Override;
             var builder = new StringBuilder();
 
@@ -495,6 +495,7 @@ namespace Avro
 
                 builder.Append("\t\t\t}");
             }
+
             var cseGet = new CodeSnippetExpression(builder.ToString());
 
             requestMethod.Statements.Add(cseGet);
@@ -519,9 +520,6 @@ namespace Avro
             ctd.BaseTypes.Add(protocolNameMangled);
 
             // Need to override
-
-
-
             AddProtocolDocumentation(protocol, ctd);
 
             AddMethods(protocol, true, ctd);
@@ -553,6 +551,7 @@ namespace Avro
                 var callback = new CodeParameterDeclarationExpression(typeof(object), "callback");
                 requestMethod.Parameters.Add(callback);
             }
+
             return requestMethod;
         }
 
@@ -614,7 +613,6 @@ namespace Avro
                                                                            "callback");
                     messageMember.Parameters.Add(parameter);
                 }
-
 
                 ctd.Members.Add(messageMember);
             }
@@ -977,8 +975,8 @@ namespace Avro
                     {
                         return csharpType.ToString();
                     }
-
             }
+
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
 
@@ -1006,11 +1004,13 @@ namespace Avro
                         ret = childSchema;
                     }
                 }
+
                 if (!nullable)
                 {
                     ret = null;
                 }
             }
+
             return ret;
         }
 
@@ -1028,6 +1028,7 @@ namespace Avro
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);
             codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static;
+
             // create function call Schema.Parse(json)
             var cpe = new CodePrimitiveExpression(schema.ToString());
             var cmie = new CodeMethodInvokeExpression(
@@ -1107,6 +1108,7 @@ namespace Avro
                 {
                     dir = Path.Combine(dir, name);
                 }
+
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
