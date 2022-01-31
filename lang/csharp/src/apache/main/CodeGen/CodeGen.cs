@@ -80,7 +80,7 @@ namespace Avro
             this.Schemas = new List<Schema>();
             this.Protocols = new List<Protocol>();
             this.NamespaceMapping = new Dictionary<string, string>();
-            this.NamespaceLookup = new Dictionary<string, CodeNamespace>();
+            this.NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         }
 
         /// <summary>
