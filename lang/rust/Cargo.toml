@@ -16,7 +16,7 @@
 # under the License.
 
 [package]
-name = "avro-rs"
+name = "apache-avro"
 version = "0.14.0"
 authors = ["Apache Avro team <dev@avro.apache.org>"]
 description = "A library for working with Apache Avro in Rust"
@@ -26,7 +26,7 @@ repository = "https://github.com/apache/avro"
 edition = "2018"
 keywords = ["avro", "data", "serialization"]
 categories = ["encoding"]
-documentation = "https://docs.rs/avro-rs"
+documentation = "https://docs.rs/apache-avro"
 
 [features]
 snappy = ["crc32fast", "snap"]

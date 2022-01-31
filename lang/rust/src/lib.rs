@@ -17,7 +17,7 @@
 
 //! A library for working with [Apache Avro](https://avro.apache.org/) in Rust.
 //!
-//! Please check our [documentation](https://docs.rs/avro-rs) for examples, tutorials and API reference.
+//! Please check our [documentation](https://docs.rs/apache-avro) for examples, tutorials and API reference.
 //!
 //! **[Apache Avro](https://avro.apache.org/)** is a data serialization system which provides rich
 //! data structures and a compact, fast, binary data format.
@@ -41,7 +41,7 @@
 //! * **as generic Rust serde-compatible types** implementing/deriving `Serialize` and
 //! `Deserialize`;
 //!
-//! **avro-rs** provides a way to read and write both these data representations easily and
+//! **apache-avro** provides a way to read and write both these data representations easily and
 //! efficiently.
 //!
 //! # Installing the library
@@ -51,13 +51,13 @@
 //!
 //! ```toml
 //! [dependencies]
-//! avro-rs = "x.y"
+//! apache-avro = "x.y"
 //! ```
 //!
 //! Or in case you want to leverage the **Snappy** codec:
 //!
 //! ```toml
-//! [dependencies.avro-rs]
+//! [dependencies.apache-avro]
 //! version = "x.y"
 //! features = ["snappy"]
 //! ```
@@ -509,7 +509,7 @@
 //! }
 //! ```
 //!
-//! `avro-rs` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
+//! `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 //!
 //! 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
 //! 1. UUID using the [`uuid`](https://docs.rs/uuid/0.8.1/uuid) crate
@@ -668,7 +668,7 @@
 //! the bytes meant to contain the length of data are bogus and could result
 //! in extravagant memory allocation.
 //!
-//! To shield users from ill-formed data, `avro-rs` sets a limit (default: 512MB)
+//! To shield users from ill-formed data, `apache-avro` sets a limit (default: 512MB)
 //! to any allocation it will perform when decoding data.
 //!
 //! If you expect some of your data fields to be larger than this limit, be sure

@@ -53,7 +53,7 @@ do
       cargo build --release --lib --all-features
       cargo package
       mkdir -p  ../../dist/rust
-      cp target/package/avro-rs-*.crate $dist_dir
+      cp target/package/apache-avro-*.crate $dist_dir
       ;;
     interop-data-generate)
       prepare_build
