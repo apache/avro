@@ -991,6 +991,20 @@ namespace Avro
         /// schema that is nullable.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
+        [Obsolete("Use GetNullableType. This method will be deprecated in a future release.")]
+        public static Schema getNullableType(UnionSchema schema)
+        {
+            return GetNullableType(schema);
+        }
+
+        /// <summary>
+        /// Gets the schema of a union with null.
+        /// </summary>
+        /// <param name="schema">union schema.</param>
+        /// <returns>
+        /// schema that is nullable.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
         public static Schema GetNullableType(UnionSchema schema)
         {
             if (schema == null)
