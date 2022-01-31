@@ -76,7 +76,7 @@
 //! Avro schemas are defined in **JSON** format and can just be parsed out of a raw string:
 //!
 //! ```
-//! use avro_rs::Schema;
+//! use apache_avro::Schema;
 //!
 //! let raw_schema = r#"
 //!     {
@@ -100,7 +100,7 @@
 //! them will be parsed into the corresponding schemas.
 //!
 //! ```
-//! use avro_rs::Schema;
+//! use apache_avro::Schema;
 //!
 //! let raw_schema_1 = r#"{
 //!         "name": "A",
@@ -153,9 +153,9 @@
 //! associated type provided by the library to specify the data we want to serialize:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! use avro_rs::types::Record;
-//! use avro_rs::Writer;
+//! # use apache_avro::Schema;
+//! use apache_avro::types::Record;
+//! use apache_avro::Writer;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -191,7 +191,7 @@
 //! `Value` interface.
 //!
 //! ```
-//! use avro_rs::types::Value;
+//! use apache_avro::types::Value;
 //!
 //! let mut value = Value::String("foo".to_string());
 //! ```
@@ -202,9 +202,9 @@
 //! deriving `Serialize` to model our data:
 //!
 //! ```
-//! # use avro_rs::Schema;
+//! # use apache_avro::Schema;
 //! # use serde::Serialize;
-//! use avro_rs::Writer;
+//! use apache_avro::Writer;
 //!
 //! #[derive(Debug, Serialize)]
 //! struct Test {
@@ -263,9 +263,9 @@
 //!
 //! To specify a codec to use to compress data, just specify it while creating a `Writer`:
 //! ```
-//! # use avro_rs::Schema;
-//! use avro_rs::Writer;
-//! use avro_rs::Codec;
+//! # use apache_avro::Schema;
+//! use apache_avro::Writer;
+//! use apache_avro::Codec;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -288,10 +288,10 @@
 //! codec:
 //!
 //! ```
-//! use avro_rs::Reader;
-//! # use avro_rs::Schema;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
+//! use apache_avro::Reader;
+//! # use apache_avro::Schema;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -317,10 +317,10 @@
 //! In case, instead, we want to specify a different (but compatible) reader schema from the schema
 //! the data has been written with, we can just do as the following:
 //! ```
-//! use avro_rs::Schema;
-//! use avro_rs::Reader;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
+//! use apache_avro::Schema;
+//! use apache_avro::Reader;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
 //! #
 //! # let writer_raw_schema = r#"
 //! #     {
@@ -376,10 +376,10 @@
 //! We can just read directly instances of `Value` out of the `Reader` iterator:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
-//! use avro_rs::Reader;
+//! # use apache_avro::Schema;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
+//! use apache_avro::Reader;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -414,11 +414,11 @@
 //! read the data into:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! # use avro_rs::Writer;
+//! # use apache_avro::Schema;
+//! # use apache_avro::Writer;
 //! # use serde::{Deserialize, Serialize};
-//! use avro_rs::Reader;
-//! use avro_rs::from_value;
+//! use apache_avro::Reader;
+//! use apache_avro::from_value;
 //!
 //! # #[derive(Serialize)]
 //! #[derive(Debug, Deserialize)]
@@ -459,7 +459,7 @@
 //! quick reference of the library interface:
 //!
 //! ```
-//! use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
+//! use apache_avro::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 //! use serde::{Deserialize, Serialize};
 //!
 //! #[derive(Debug, Deserialize, Serialize)]
@@ -522,7 +522,7 @@
 //! ### Read and write logical types
 //!
 //! ```rust
-//! use avro_rs::{
+//! use apache_avro::{
 //!     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
 //!     Writer, Error,
 //! };
@@ -635,8 +635,8 @@
 //! An example of fingerprinting for the supported fingerprints:
 //!
 //! ```rust
-//! use avro_rs::rabin::Rabin;
-//! use avro_rs::{Schema, Error};
+//! use apache_avro::rabin::Rabin;
+//! use apache_avro::{Schema, Error};
 //! use md5::Md5;
 //! use sha2::Sha256;
 //!
@@ -680,7 +680,7 @@
 //!
 //!
 //! ```rust
-//! use avro_rs::max_allocation_bytes;
+//! use apache_avro::max_allocation_bytes;
 //!
 //! max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 //!
@@ -703,7 +703,7 @@
 //! (32bit signed integer) fits into a long (64bit signed integer)
 //!
 //! ```rust
-//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//! use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 //!
 //! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 //! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
@@ -716,7 +716,7 @@
 //! long (64bit signed integer) does not fit into an int (32bit signed integer)
 //!
 //! ```rust
-//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//! use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 //!
 //! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 //! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();

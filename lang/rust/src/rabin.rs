@@ -45,7 +45,7 @@ lazy_static! {
 /// This is what is used for avro [single object encoding](https://avro.apache.org/docs/current/spec.html#single_object_encoding)
 ///
 /// ```rust
-/// use avro_rs::rabin::Rabin;
+/// use apache_avro::rabin::Rabin;
 /// use digest::Digest;
 /// use hex_literal::hex;
 ///
@@ -64,7 +64,7 @@ lazy_static! {
 /// To convert the digest to the commonly used 64-bit integer value, you can use the byteorder crate:
 ///
 /// ```rust
-/// # use avro_rs::rabin::Rabin;
+/// # use apache_avro::rabin::Rabin;
 /// # use digest::Digest;
 /// # use hex_literal::hex;
 ///

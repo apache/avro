@@ -57,7 +57,7 @@ do
       ;;
     interop-data-generate)
       prepare_build
-      export RUST_LOG=avro_rs=debug
+      export RUST_LOG=apache_avro=debug
       export RUST_BACKTRACE=1
       cargo run --all-features --example generate_interop_data
       ;;

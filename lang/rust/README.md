@@ -110,7 +110,7 @@ handling. Avro schemas are used for both schema validation and resolution of Avr
 Avro schemas are defined in **JSON** format and can just be parsed out of a raw string:
 
 ```rust
-use avro_rs::Schema;
+use apache_avro::Schema;
 
 let raw_schema = r#"
     {
@@ -134,7 +134,7 @@ Additionally, a list of of definitions (which may depend on each other) can be g
 them will be parsed into the corresponding schemas.
 
 ```rust
-use avro_rs::Schema;
+use apache_avro::Schema;
 
 let raw_schema_1 = r#"{
         "name": "A",
@@ -187,8 +187,8 @@ Given that the schema we defined above is that of an Avro *Record*, we are going
 associated type provided by the library to specify the data we want to serialize:
 
 ```rust
-use avro_rs::types::Record;
-use avro_rs::Writer;
+use apache_avro::types::Record;
+use apache_avro::Writer;
 #
 // a writer needs a schema and something to write to
 let mut writer = Writer::new(&schema, Vec::new());
@@ -213,7 +213,7 @@ case we want to directly define an Avro value, the library offers that capabilit
 `Value` interface.
 
 ```rust
-use avro_rs::types::Value;
+use apache_avro::types::Value;
 
 let mut value = Value::String("foo".to_string());
 ```
@@ -224,7 +224,7 @@ Given that the schema we defined above is an Avro *Record*, we can directly use 
 deriving `Serialize` to model our data:
 
 ```rust
-use avro_rs::Writer;
+use apache_avro::Writer;
 
 #[derive(Debug, Serialize)]
 struct Test {
@@ -279,8 +279,8 @@ You must enable the `bzip` feature to use this codec.
 
 To specify a codec to use to compress data, just specify it while creating a `Writer`:
 ```rust
-use avro_rs::Writer;
-use avro_rs::Codec;
+use apache_avro::Writer;
+use apache_avro::Codec;
 #
 let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
 ```
@@ -292,7 +292,7 @@ read them. The library will do it automatically for us, as it already does for t
 codec:
 
 ```rust
-use avro_rs::Reader;
+use apache_avro::Reader;
 #
 // reader creation can fail in case the input to read from is not Avro-compatible or malformed
 let reader = Reader::new(&input[..]).unwrap();
@@ -301,8 +301,8 @@ let reader = Reader::new(&input[..]).unwrap();
 In case, instead, we want to specify a different (but compatible) reader schema from the schema
 the data has been written with, we can just do as the following:
 ```rust
-use avro_rs::Schema;
-use avro_rs::Reader;
+use apache_avro::Schema;
+use apache_avro::Reader;
 #
 
 let reader_raw_schema = r#"
@@ -341,7 +341,7 @@ interested.
 We can just read directly instances of `Value` out of the `Reader` iterator:
 
 ```rust
-use avro_rs::Reader;
+use apache_avro::Reader;
 #
 let reader = Reader::new(&input[..]).unwrap();
 
@@ -358,8 +358,8 @@ Alternatively, we can use a Rust type implementing `Deserialize` and representin
 read the data into:
 
 ```rust
-use avro_rs::Reader;
-use avro_rs::from_value;
+use apache_avro::Reader;
+use apache_avro::from_value;
 
 #[derive(Debug, Deserialize)]
 struct Test {
@@ -381,7 +381,7 @@ The following is an example of how to combine everything showed so far and it is
 quick reference of the library interface:
 
 ```rust
-use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
+use apache_avro::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -444,7 +444,7 @@ Note that the on-disk representation is identical to the underlying primitive/co
 #### Read and write logical types
 
 ```rust
-use avro_rs::{
+use apache_avro::{
     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
     Writer, Error,
 };
@@ -557,8 +557,8 @@ This library supports calculating the following fingerprints:
 An example of fingerprinting for the supported fingerprints:
 
 ```rust
-use avro_rs::rabin::Rabin;
-use avro_rs::{Schema, Error};
+use apache_avro::rabin::Rabin;
+use apache_avro::{Schema, Error};
 use md5::Md5;
 use sha2::Sha256;
 
@@ -602,7 +602,7 @@ will be 512MB throughout the lifetime of the program).
 
 
 ```rust
-use avro_rs::max_allocation_bytes;
+use apache_avro::max_allocation_bytes;
 
 max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 
@@ -625,7 +625,7 @@ Explanation: an int array schema can be read by a long array schema- an int
 (32bit signed integer) fits into a long (64bit signed integer)
 
 ```rust
-use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
@@ -638,7 +638,7 @@ Explanation: a long array schema cannot be read by an int array schema- a
 long (64bit signed integer) does not fit into an int (32bit signed integer)
 
 ```rust
-use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
