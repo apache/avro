@@ -65,24 +65,12 @@ namespace Avro
         public IDictionary<string, string> NamespaceMapping { get; private set; }
 
         /// <summary>
-        /// List of generated namespaces.
-        /// </summary>
-        [Obsolete("Use NamespaceLookup instead. This will be removed from the public API in a future version.")]
-        protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
-
-        /// <summary>
-        /// Gets or sets list of generated namespaces.
+        /// Gets list of generated namespaces.
         /// </summary>
         /// <value>
         /// The namespace lookup.
         /// </value>
-        protected Dictionary<string, CodeNamespace> NamespaceLookup
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            get => namespaceLookup;
-            set => namespaceLookup = value;
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
+        protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodeGen"/> class.
@@ -92,6 +80,16 @@ namespace Avro
             this.Schemas = new List<Schema>();
             this.Protocols = new List<Protocol>();
             this.NamespaceMapping = new Dictionary<string, string>();
+            this.NamespaceLookup = new Dictionary<string, CodeNamespace>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CodeGen"/> class.
+        /// </summary>
+        /// <param name="namespaceLookup">The namespace lookup.</param>
+        public CodeGen(Dictionary<string, CodeNamespace> namespaceLookup)
+        {
+            NamespaceLookup = namespaceLookup;
         }
 
         /// <summary>
