@@ -171,7 +171,7 @@ namespace Avro
         {
             foreach (Schema schema in this.Schemas)
             {
-                SchemaNames names = generateNames(schema);
+                SchemaNames names = GenerateNames(schema);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
                 {
                     switch (sn.Value.Tag)
@@ -194,7 +194,7 @@ namespace Avro
         {
             foreach (Protocol protocol in Protocols)
             {
-                SchemaNames names = generateNames(protocol);
+                SchemaNames names = GenerateNames(protocol);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
                 {
                     switch (sn.Value.Tag)
@@ -219,8 +219,14 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
-        protected virtual SchemaNames generateNames(Protocol protocol)
+        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        protected virtual SchemaNames GenerateNames(Protocol protocol)
         {
+            if (protocol == null)
+            {
+                throw new ArgumentNullException(nameof(protocol), "Protocol can not be null");
+            }
+
             var names = new SchemaNames();
             foreach (Schema schema in protocol.Types)
             {
@@ -237,7 +243,7 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
-        protected virtual SchemaNames generateNames(Schema schema)
+        protected virtual SchemaNames GenerateNames(Schema schema)
         {
             var names = new SchemaNames();
             addName(schema, names);
