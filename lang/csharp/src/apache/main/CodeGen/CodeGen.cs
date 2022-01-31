@@ -21,6 +21,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.CSharp;
@@ -951,7 +952,7 @@ namespace Avro
                         throw new CodeGenException("Unable to cast schema into a union schema");
                     }
 
-                    Schema nullibleType = getNullableType(unionSchema);
+                    Schema nullibleType = GetNullableType(unionSchema);
                     if (nullibleType == null)
                     {
                         return CodeGenUtil.Object;
@@ -989,29 +990,19 @@ namespace Avro
         /// <returns>
         /// schema that is nullable.
         /// </returns>
-        public static Schema getNullableType(UnionSchema schema)
+        public static Schema GetNullableType(UnionSchema schema)
         {
-            Schema ret = null;
-            if (schema.Count == 2)
+            if (schema == null)
             {
-                bool nullable = false;
-                foreach (Schema childSchema in schema.Schemas)
-                {
-                    if (childSchema.Tag == Schema.Type.Null)
-                    {
-                        nullable = true;
-                    }
-                    else
-                    {
-                        ret = childSchema;
-                    }
-                }
-                if (!nullable)
-                {
-                    ret = null;
-                }
+                throw new ArgumentNullException(nameof(schema), "UnionSchema can not be null");
             }
-            return ret;
+
+            if (schema.Count != 2 || schema.Schemas.All(x => x.Tag != Schema.Type.Null))
+            {
+                return null;
+            }
+
+            return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
         }
 
         /// <summary>
