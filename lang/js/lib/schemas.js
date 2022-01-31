@@ -28,6 +28,7 @@ var utils = require('./utils'),
 // Convenience imports.
 var Tap = utils.Tap;
 var f = util.format;
+var Buffer = buffer.Buffer;
 
 // All Avro types.
 var TYPES = {
