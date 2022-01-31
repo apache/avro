@@ -53,11 +53,11 @@ do
       cargo build --release --lib --all-features
       cargo package
       mkdir -p  ../../dist/rust
-      cp target/package/avro-rs-*.crate $dist_dir
+      cp target/package/apache-avro-*.crate $dist_dir
       ;;
     interop-data-generate)
       prepare_build
-      export RUST_LOG=avro_rs=debug
+      export RUST_LOG=apache_avro=debug
       export RUST_BACKTRACE=1
       cargo run --all-features --example generate_interop_data
       ;;
