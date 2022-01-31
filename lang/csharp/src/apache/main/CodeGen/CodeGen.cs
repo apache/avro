@@ -84,10 +84,11 @@ namespace Avro
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodeGen"/> class.
+        /// Initializes a new instance of the <see cref="CodeGen" /> class.
         /// </summary>
         /// <param name="namespaceLookup">The namespace lookup.</param>
         public CodeGen(Dictionary<string, CodeNamespace> namespaceLookup)
+            : this()
         {
             NamespaceLookup = namespaceLookup;
         }
