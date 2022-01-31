@@ -414,18 +414,15 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
         @arg writer: the schema to match against
         @return bool
         """
-        return (
-            self.type == writer.type
-            or {
-                "float": self.type == "double",
-                "int": self.type in {"double", "float", "long"},
-                "long": self.type
-                in {
-                    "double",
-                    "float",
-                },
-            }.get(writer.type, False)
-        )
+        return self.type == writer.type or {
+            "float": self.type == "double",
+            "int": self.type in {"double", "float", "long"},
+            "long": self.type
+            in {
+                "double",
+                "float",
+            },
+        }.get(writer.type, False)
 
     def to_json(self, names=None):
         if len(self.props) == 1:
