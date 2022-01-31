@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Original: https://github.com/dotnet/runtime/blob/main/eng/CodeAnalysis.src.globalconfig
+# !!! Original: https://github.com/dotnet/runtime/blob/main/eng/CodeAnalysis.src.globalconfig
+# !!! Any overrides should be added to the end of the file
 
 is_global = true
 
@@ -1576,3 +1577,9 @@ dotnet_diagnostic.IDE2003.severity = silent
 
 # IDE2004: Blank line not allowed after constructor initializer colon
 dotnet_diagnostic.IDE2004.severity = silent
+
+# !!! OVERRIDES
+# !!! Note: It is preferred to minimize the overrides if possible (just to follow the MS dotnet convention as much as possible)
+
+# IDE0008: Use explicit type
+dotnet_diagnostic.IDE0008.severity = none
