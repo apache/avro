@@ -990,6 +990,7 @@ namespace Avro
         /// <returns>
         /// schema that is nullable.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
         public static Schema GetNullableType(UnionSchema schema)
         {
             if (schema == null)
