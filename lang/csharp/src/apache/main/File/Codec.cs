@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -46,7 +47,11 @@ namespace Avro.File
         /// </summary>
         /// <param name="compressedData">The buffer holding data to decompress.</param>
         /// <returns></returns>
-        abstract public byte[] Decompress(byte[] compressedData);
+        [Obsolete]
+        public virtual byte[] Decompress(byte[] compressedData)
+        {
+            return Decompress(compressedData, compressedData.Length);
+        }
         
         /// <summary>
         /// Decompress data using implemented codec

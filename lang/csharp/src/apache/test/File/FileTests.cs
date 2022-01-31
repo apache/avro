@@ -1113,11 +1113,6 @@ namespace Avro.Test.File
             _codec.Compress(inputStream, outputStream);
         }
 
-        public override byte[] Decompress(byte[] compressedData)
-        {
-            return _codec.Decompress(compressedData);
-        }
-
         public override byte[] Decompress(byte[] compressedData, int length)
         {
             return _codec.Decompress(compressedData, length);

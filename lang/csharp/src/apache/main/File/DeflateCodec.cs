@@ -54,8 +54,9 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override byte[] Decompress(byte[] compressedData)
+        public override byte[] Decompress(byte[] compressedData, int length)
         {
+            
             MemoryStream inStream = new MemoryStream(compressedData);
             MemoryStream outStream = new MemoryStream();
 
@@ -66,12 +67,6 @@ namespace Avro.File
                 CopyTo(Decompress, outStream);
             }
             return outStream.ToArray();
-        }
-
-        /// <inheritdoc/>
-        public override byte[] Decompress(byte[] compressedData, int length)
-        {
-            return Decompress(compressedData);
         }
 
         private static void CopyTo(Stream from, Stream to)
