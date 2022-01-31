@@ -54,6 +54,7 @@
   <PropertyGroup Label="Build, Test, Code Analysis Package Versions">
     <MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.0.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
