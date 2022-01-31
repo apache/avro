@@ -220,6 +220,20 @@ namespace Avro
         /// List of named schemas.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        [Obsolete("Use GenerateNames. This call will be deprecated in a future release.")]
+        protected virtual SchemaNames generateNames(Protocol protocol)
+        {
+            return GenerateNames(protocol);
+        }
+
+        /// <summary>
+        /// Generate list of named schemas from given protocol.
+        /// </summary>
+        /// <param name="protocol">protocol to process.</param>
+        /// <returns>
+        /// List of named schemas.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
         protected virtual SchemaNames GenerateNames(Protocol protocol)
         {
             if (protocol == null)
@@ -234,6 +248,19 @@ namespace Avro
             }
 
             return names;
+        }
+
+        /// <summary>
+        /// Generate list of named schemas from given schema.
+        /// </summary>
+        /// <param name="schema">schema to process.</param>
+        /// <returns>
+        /// List of named schemas.
+        /// </returns>
+        [Obsolete("Use GenerateNames.  This call will be deprecated in a future release.")]
+        protected virtual SchemaNames generateNames(Schema schema)
+        {
+            return GenerateNames(schema);
         }
 
         /// <summary>
