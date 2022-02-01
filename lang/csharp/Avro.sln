@@ -21,8 +21,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.ps1 = build.ps1
 		build.sh = build.sh
 		common.props = common.props
+		versions.props = versions.props
+		CodeAnalysis.src.globalconfig = CodeAnalysis.src.globalconfig
+		CodeAnalysis.test.globalconfig = CodeAnalysis.test.globalconfig
 		README.md = README.md
-		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
 Global
