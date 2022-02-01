@@ -17,7 +17,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../../../common.props" />
-  <Import Project="../../../versions.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(DefaultUnitTestTargetFrameworks)</TargetFrameworks>
