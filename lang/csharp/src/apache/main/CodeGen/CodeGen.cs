@@ -159,7 +159,7 @@ namespace Avro
             CompileUnit = new CodeCompileUnit();
 
             processSchemas();
-            processProtocols();
+            ProcessProtocols();
 
             return CompileUnit;
         }
@@ -191,7 +191,8 @@ namespace Avro
         /// <summary>
         /// Generates code for the protocol objects.
         /// </summary>
-        protected virtual void processProtocols()
+        /// <exception cref="CodeGenException">Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
+        protected virtual void ProcessProtocols()
         {
             foreach (Protocol protocol in Protocols)
             {
@@ -205,12 +206,22 @@ namespace Avro
                         case Schema.Type.Record: processRecord(sn.Value); break;
                         case Schema.Type.Error: processRecord(sn.Value); break;
                         default:
-                            throw new CodeGenException("Names in protocol should only be of type NamedSchema, type found " + sn.Value.Tag);
+                            throw new CodeGenException($"Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}");
                     }
                 }
 
                 processInterface(protocol);
             }
+        }
+
+        /// <summary>
+        /// Generates code for the protocol objects.
+        /// </summary>
+        /// <exception cref="CodeGenException">Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
+        [Obsolete("Use ProcessProtocols. This call will be deprecated in a future release.")]
+        protected virtual void processProtocols()
+        {
+            ProcessProtocols();
         }
 
         /// <summary>
