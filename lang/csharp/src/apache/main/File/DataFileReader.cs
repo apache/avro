@@ -27,18 +27,21 @@ using Avro.Specific;
 namespace Avro.File
 {
     /// <summary>
-    /// Provides access to Avro data written using the <see cref="DataFileWriter{T}"/>.
+    /// Provides access to Avro data written using the <see cref="DataFileWriter{T}" />.
     /// </summary>
     /// <typeparam name="T">Type to deserialze data objects to.</typeparam>
+    /// <seealso cref="Avro.File.IFileReader&lt;T&gt;" />
     public class DataFileReader<T> : IFileReader<T>
     {
         /// <summary>
-        /// Defines the signature for a function that returns a new <see cref="DatumReader{T}"/>
+        /// Defines the signature for a function that returns a new <see cref="DatumReader{T}" />
         /// given a writer and reader schema.
         /// </summary>
         /// <param name="writerSchema">Schema used to write the datum.</param>
         /// <param name="readerSchema">Schema used to read the datum.</param>
-        /// <returns>A datum reader.</returns>
+        /// <returns>
+        /// A datum reader.
+        /// </returns>
         public delegate DatumReader<T> CreateDatumReader(Schema writerSchema, Schema readerSchema);
 
         private DatumReader<T> _reader;
@@ -57,96 +60,119 @@ namespace Avro.File
         private readonly CreateDatumReader _datumReaderFactory;
 
         /// <summary>
-        ///  Open a reader for a file using path
+        /// Open a reader for a file using path.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">The path.</param>
+        /// <returns>
+        /// File Reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(string path)
         {
             return OpenReader(new FileStream(path, FileMode.Open), null);
         }
 
         /// <summary>
-        ///  Open a reader for a file using path and the reader's schema
+        /// Open a reader for a file using path and the reader's schema.
         /// </summary>
-        /// <param name="path">Path to the file</param>
-        /// <param name="readerSchema">Schema used to read data from the file</param>
-        /// <returns>A new file reader</returns>
+        /// <param name="path">Path to the file.</param>
+        /// <param name="readerSchema">Schema used to read data from the file.</param>
+        /// <returns>
+        /// A new file reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(string path, Schema readerSchema)
         {
             return OpenReader(new FileStream(path, FileMode.Open), readerSchema);
         }
 
         /// <summary>
-        ///  Open a reader for a stream
+        /// Open a reader for a stream.
         /// </summary>
-        /// <param name="inStream"></param>
-        /// <returns></returns>
+        /// <param name="inStream">The in stream.</param>
+        /// <returns>
+        /// File Reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream)
         {
             return OpenReader(inStream, null);
         }
 
         /// <summary>
-        ///  Open a reader for a stream
+        /// Open a reader for a stream.
         /// </summary>
-        /// <param name="inStream"></param>
-        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
-        /// <returns></returns>
+        /// <param name="inStream">The in stream.</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object.</param>
+        /// <returns>
+        /// File Reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream, bool leaveOpen)
         {
             return OpenReader(inStream, null, leaveOpen);
         }
 
         /// <summary>
-        /// Open a reader for a stream using the reader's schema
+        /// Open a reader for a stream using the reader's schema.
         /// </summary>
-        /// <param name="inStream">Stream containing the file contents</param>
-        /// <param name="readerSchema">Schema used to read the file</param>
-        /// <returns>A new file reader</returns>
+        /// <param name="inStream">Stream containing the file contents.</param>
+        /// <param name="readerSchema">Schema used to read the file.</param>
+        /// <returns>
+        /// A new file reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema)
         {
             return OpenReader(inStream, readerSchema, CreateDefaultReader);
         }
 
         /// <summary>
-        /// Open a reader for a stream using the reader's schema
+        /// Open a reader for a stream using the reader's schema.
         /// </summary>
-        /// <param name="inStream">Stream containing the file contents</param>
-        /// <param name="readerSchema">Schema used to read the file</param>
-        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
-        /// <returns>A new file reader</returns>
+        /// <param name="inStream">Stream containing the file contents.</param>
+        /// <param name="readerSchema">Schema used to read the file.</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object.</param>
+        /// <returns>
+        /// A new file reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, bool leaveOpen)
         {
             return OpenReader(inStream, readerSchema, CreateDefaultReader, leaveOpen);
         }
-       
+
         /// <summary>
-        ///  Open a reader for a stream using the reader's schema and a custom DatumReader
+        /// Open a reader for a stream using the reader's schema and a custom DatumReader.
         /// </summary>
-        /// <param name="inStream">Stream of file contents</param>
-        /// <param name="readerSchema">Schema used to read the file</param>
-        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema</param>
-        /// <returns>A new file reader</returns>
+        /// <param name="inStream">Stream of file contents.</param>
+        /// <param name="readerSchema">Schema used to read the file.</param>
+        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema.</param>
+        /// <returns>
+        /// A new file reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
             return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, false);         // (not supporting 1.2 or below, format)
         }
 
         /// <summary>
-        ///  Open a reader for a stream using the reader's schema and a custom DatumReader
+        /// Open a reader for a stream using the reader's schema and a custom DatumReader.
         /// </summary>
-        /// <param name="inStream">Stream of file contents</param>
-        /// <param name="readerSchema">Schema used to read the file</param>
-        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema</param>
-        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
-        /// <returns>A new file reader</returns>
+        /// <param name="inStream">Stream of file contents.</param>
+        /// <param name="readerSchema">Schema used to read the file.</param>
+        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema.</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object.</param>
+        /// <returns>
+        /// A new file reader.
+        /// </returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
         {
             return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, leaveOpen);         // (not supporting 1.2 or below, format)
         }
 
-        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataFileReader{T}"/> class.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <param name="readerSchema">The reader schema.</param>
+        /// <param name="datumReaderFactory">The datum reader factory.</param>
+        /// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
+        private DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
         {
             _readerSchema = readerSchema;
             _datumReaderFactory = datumReaderFactory;
@@ -228,6 +254,7 @@ namespace Avro.File
         public void Sync(long position)
         {
             Seek(position);
+
             // work around an issue where 1.5.4 C stored sync in metadata
             if ((position == 0) && (GetMeta(DataFileConstants.MetaDataSync) != null))
             {
@@ -350,6 +377,15 @@ namespace Avro.File
                 _stream.Dispose();
         }
 
+        /// <summary>
+        /// Initializes the specified stream.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <exception cref="Avro.AvroRuntimeException">
+        /// Not a valid data file!
+        /// or
+        /// Not a valid data file!.
+        /// </exception>
         private void Init(Stream stream)
         {
             _stream = stream;
@@ -394,6 +430,14 @@ namespace Avro.File
             _codec = ResolveCodec();
         }
 
+        /// <summary>
+        /// Creates the default reader.
+        /// </summary>
+        /// <param name="writerSchema">The writer schema.</param>
+        /// <param name="readerSchema">The reader schema.</param>
+        /// <returns>
+        /// Datum Reader.
+        /// </returns>
         private static DatumReader<T> CreateDefaultReader(Schema writerSchema, Schema readerSchema)
         {
             DatumReader<T> reader = null;
@@ -410,6 +454,12 @@ namespace Avro.File
             return reader;
         }
 
+        /// <summary>
+        /// Resolves the codec.
+        /// </summary>
+        /// <returns>
+        /// Resolved codec.
+        /// </returns>
         private Codec ResolveCodec()
         {
             return Codec.CreateCodecFromString(GetMetaString(DataFileConstants.MetaDataCodec));
@@ -421,6 +471,15 @@ namespace Avro.File
             return Next(default(T));
         }
 
+        /// <summary>
+        /// Reads the next datum from the file.
+        /// </summary>
+        /// <param name="reuse">The reuse.</param>
+        /// <returns>Next deserialized data entry.</returns>
+        /// <exception cref="Avro.AvroRuntimeException">No more datum objects remaining in block!
+        /// or
+        /// Error fetching next object from block: {0}.
+        /// </exception>
         private T Next(T reuse)
         {
             try
@@ -442,12 +501,25 @@ namespace Avro.File
             }
         }
 
+        /// <summary>
+        /// Ends the stream for the block.
+        /// </summary>
         private void BlockFinished()
         {
             if (_stream.CanSeek)
                 _blockStart = _stream.Position;
         }
 
+        /// <summary>
+        /// Reads the Next block from the file.
+        /// </summary>
+        /// <param name="reuse">The reuse.</param>
+        /// <returns>Data Block.</returns>
+        /// <exception cref="Avro.AvroRuntimeException">
+        /// No data remaining in block!
+        /// or
+        /// Invalid sync!.
+        /// </exception>
         private DataBlock NextRawBlock(DataBlock reuse)
         {
             if (!HasNextBlock())
@@ -473,6 +545,10 @@ namespace Avro.File
             return reuse;
         }
 
+        /// <summary>
+        /// Evaluates if there is data left in the stream.
+        /// </summary>
+        /// <returns>True if there is data left in the stream, otherwise false.</returns>
         private bool DataLeft()
         {
             long currentPosition = _stream.Position;
@@ -484,6 +560,17 @@ namespace Avro.File
             return true;
         }
 
+        /// <summary>
+        /// Determines whether [has next block].
+        /// </summary>
+        /// <returns>
+        ///   <c>true</c> if [has next block]; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="Avro.AvroRuntimeException">
+        /// Block size invalid or too large for this implementation: " + _blockSize
+        /// or
+        /// Error ascertaining if data has next block: {0}.
+        /// </exception>
         private bool HasNextBlock()
         {
             try
@@ -508,7 +595,7 @@ namespace Avro.File
                     {
                         _blockRemaining = _decoder.ReadLong();      // read block count
                     }
-                    catch(AvroException)
+                    catch (AvroException)
                     {
                         return false;
                     }
@@ -531,27 +618,37 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Encapsulates a block of data read by the <see cref="DataFileReader{T}"/>.
+        /// Encapsulates a block of data read by the <see cref="DataFileReader{T}" />.
         /// </summary>
+        /// <seealso cref="Avro.File.IFileReader&lt;T&gt;" />
         private class DataBlock
         {
             /// <summary>
-            /// Raw bytes within this block.
+            /// Gets or sets raw bytes within this block.
             /// </summary>
-            public byte[] Data { get;  set; }
+            /// <value>
+            /// The data.
+            /// </value>
+            public byte[] Data { get; set; }
 
             /// <summary>
-            /// Number of entries in this block.
+            /// Gets or sets number of entries in this block.
             /// </summary>
+            /// <value>
+            /// The number of entries.
+            /// </value>
             public long NumberOfEntries { get; set; }
 
             /// <summary>
-            /// Size of this block in bytes.
+            /// Gets or sets size of this block in bytes.
             /// </summary>
+            /// <value>
+            /// The size of the block.
+            /// </value>
             public long BlockSize { get; set; }
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="DataBlock"/> class.
+            /// Initializes a new instance of the <see cref="DataBlock" /> class.
             /// </summary>
             /// <param name="numberOfEntries">Number of entries in this block.</param>
             /// <param name="blockSize">Size of this block in bytes.</param>
@@ -562,6 +659,10 @@ namespace Avro.File
                 Data = new byte[blockSize];
             }
 
+            /// <summary>
+            /// Gets the data as stream.
+            /// </summary>
+            /// <returns>A stream.</returns>
             internal Stream GetDataAsStream()
             {
                 return new MemoryStream(Data);
