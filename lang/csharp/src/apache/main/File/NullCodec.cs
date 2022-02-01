@@ -45,7 +45,7 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override byte[] Decompress(byte[] compressedData)
+        public override byte[] Decompress(byte[] compressedData, int length)
         {
             return compressedData;
         }
