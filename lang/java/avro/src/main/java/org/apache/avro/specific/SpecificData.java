@@ -103,8 +103,6 @@ public class SpecificData extends GenericData {
       "throw", "throws", "transient", "try", "void", "volatile", "while",
       // Literals from Section 3.10 can't be used as identifiers.
       "true", "false", "null",
-      // Some keywords from Section 3.8 can't be used as type identifiers.
-      "var", "yield", "record",
       // Note that module-related restricted keywords can still be used.
       // Class names used internally by the avro code generator
       "Builder"));
