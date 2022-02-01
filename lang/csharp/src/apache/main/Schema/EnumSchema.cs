@@ -139,16 +139,24 @@ namespace Avro
         /// Throws AvroException if the symbol is not found in this enum.
         /// </summary>
         /// <param name="symbol">name of the symbol to find</param>
-        /// <returns>position of the given symbol in this enum schema</returns>
+        /// <returns>
+        /// position of the given symbol in this enum schema
+        /// </returns>
+        /// <exception cref="Avro.AvroException">No such symbol: {symbol}</exception>
         public int Ordinal(string symbol)
         {
             int result;
             if (symbolMap.TryGetValue(symbol, out result))
+            {
                 return result;
-            if (null != Default)
-                return symbolMap[Default];
+            }
 
-            throw new AvroException("No such symbol: " + symbol);
+            if (Default != null && symbolMap.TryGetValue(Default, out result))
+            {
+                return result;
+            }
+
+            throw new AvroException($"No such symbol: {symbol}");
         }
 
         /// <summary>
