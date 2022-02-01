@@ -22,38 +22,53 @@ using System.CodeDom;
 namespace Avro
 {
     /// <summary>
-    /// A singleton class containing data used by codegen
+    /// A singleton class containing data used by codegen.
     /// </summary>
     public sealed class CodeGenUtil
     {
         /// <summary>
-        /// Singleton instance of this class.
+        /// Gets singleton instance of this class.
         /// </summary>
+        /// <value>
+        /// The instance.
+        /// </value>
         public static CodeGenUtil Instance { get; } = new CodeGenUtil();
 
         /// <summary>
-        /// Namespaces to import in generated code.
+        /// Gets namespaces to import in generated code.
         /// </summary>
+        /// <value>
+        /// The namespace imports.
+        /// </value>
         public CodeNamespaceImport[] NamespaceImports { get; private set; }
 
         /// <summary>
-        /// Comment included at the top of each generated code file.
+        /// Gets comment included at the top of each generated code file.
         /// </summary>
+        /// <value>
+        /// The file comment.
+        /// </value>
         public CodeCommentStatement FileComment { get; private set; }
 
         /// <summary>
-        /// Reserved keywords in the C# language.
+        /// Gets reserved keywords in the C# language.
         /// </summary>
+        /// <value>
+        /// The reserved keywords.
+        /// </value>
         public HashSet<string> ReservedKeywords { get; private set; }
 
         private const char At = '@';
         private const char Dot = '.';
 
         /// <summary>
-        /// Fully-qualified name of a <see cref="Object"/> type.
+        /// Fully-qualified name of a <see cref="Object" /> type.
         /// </summary>
         public const string Object = "System.Object";
 
+        /// <summary>
+        /// Prevents a default instance of the <see cref="CodeGenUtil"/> class from being created.
+        /// </summary>
         private CodeGenUtil()
         {
             NamespaceImports = new CodeNamespaceImport[] {
@@ -85,10 +100,10 @@ namespace Avro
         }
 
         /// <summary>
-        /// Append @ to all reserved keywords that appear on the given name
+        /// Append @ to all reserved keywords that appear on the given name.
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
+        /// <param name="name">The name.</param>
+        /// <returns>updated string.</returns>
         public string Mangle(string name)
         {
             var builder = new StringBuilder();
@@ -105,10 +120,10 @@ namespace Avro
         }
 
         /// <summary>
-        /// Remove all the @
+        /// Remove all the @.
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
+        /// <param name="name">The name.</param>
+        /// <returns>updated string.</returns>
         public string UnMangle(string name)
         {
             var builder = new StringBuilder(name.Length);
