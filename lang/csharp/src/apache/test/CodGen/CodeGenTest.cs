@@ -29,6 +29,13 @@ namespace Avro.Test
 
     class CodeGenTest
     {
+
+        [Test]
+        public void TestGetNullableTypeException()
+        {
+            Assert.Throws<ArgumentNullException>(() => CodeGen.GetNullableType(null));
+        }
+
 #if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",

@@ -176,7 +176,7 @@ namespace Avro.Reflect
                         throw new Exception("Unable to cast schema into a union schema");
                     }
 
-                    Schema nullibleType = CodeGen.getNullableType(unionSchema);
+                    Schema nullibleType = CodeGen.GetNullableType(unionSchema);
                     if (nullibleType == null)
                     {
                         return typeof(object);
