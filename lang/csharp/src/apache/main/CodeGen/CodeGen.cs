@@ -21,6 +21,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.CSharp;
@@ -981,7 +982,7 @@ namespace Avro
                         throw new CodeGenException("Unable to cast schema into a union schema");
                     }
 
-                    Schema nullibleType = getNullableType(unionSchema);
+                    Schema nullibleType = GetNullableType(unionSchema);
                     if (nullibleType == null)
                     {
                         return CodeGenUtil.Object;
@@ -1019,31 +1020,34 @@ namespace Avro
         /// <returns>
         /// schema that is nullable.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
+        [Obsolete("Use GetNullableType. This method will be deprecated in a future release.")]
         public static Schema getNullableType(UnionSchema schema)
         {
-            Schema ret = null;
-            if (schema.Count == 2)
-            {
-                bool nullable = false;
-                foreach (Schema childSchema in schema.Schemas)
-                {
-                    if (childSchema.Tag == Schema.Type.Null)
-                    {
-                        nullable = true;
-                    }
-                    else
-                    {
-                        ret = childSchema;
-                    }
-                }
+            return GetNullableType(schema);
+        }
 
-                if (!nullable)
-                {
-                    ret = null;
-                }
+        /// <summary>
+        /// Gets the schema of a union with null.
+        /// </summary>
+        /// <param name="schema">union schema.</param>
+        /// <returns>
+        /// schema that is nullable.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
+        public static Schema GetNullableType(UnionSchema schema)
+        {
+            if (schema == null)
+            {
+                throw new ArgumentNullException(nameof(schema), "UnionSchema can not be null");
             }
 
-            return ret;
+            if (schema.Count != 2 || schema.Schemas.All(x => x.Tag != Schema.Type.Null))
+            {
+                return null;
+            }
+
+            return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
         }
 
         /// <summary>
