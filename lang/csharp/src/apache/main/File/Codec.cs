@@ -27,70 +27,75 @@ namespace Avro.File
     public abstract class Codec
     {
         /// <summary>
-        /// Compress data using implemented codec
+        /// Compress data using implemented codec.
         /// </summary>
-        /// <param name="uncompressedData"></param>
-        /// <returns></returns>
-        abstract public byte[] Compress(byte[] uncompressedData);
+        /// <param name="uncompressedData">The uncompressed data.</param>
+        /// <returns>
+        /// byte array.
+        /// </returns>
+        public abstract byte[] Compress(byte[] uncompressedData);
 
         /// <summary>
-        /// Compress data using implemented codec
+        /// Compress data using implemented codec.
         /// </summary>
-        /// <param name="inputStream">The stream which contains the data to be compressed</param>
+        /// <param name="inputStream">The stream which contains the data to be compressed.</param>
         /// <param name="outputStream">A reusable stream which will hold the compressed data. That stream should be empty.</param>
-        abstract public void Compress(MemoryStream inputStream, MemoryStream outputStream);
+        public abstract void Compress(MemoryStream inputStream, MemoryStream outputStream);
 
         /// <summary>
-        /// Decompress data using implemented codec
+        /// Decompress data using implemented codec.
         /// </summary>
-        /// <param name="compressedData"></param>
-        /// <returns></returns>
-        abstract public byte[] Decompress(byte[] compressedData);
+        /// <param name="compressedData">The compressed data.</param>
+        /// <returns>byte array.</returns>
+        public abstract byte[] Decompress(byte[] compressedData);
 
         /// <summary>
-        /// Name of this codec type
+        /// Name of this codec type.
         /// </summary>
-        /// <returns></returns>
-        abstract public string GetName();
+        /// <returns>The codec name.</returns>
+        public abstract string GetName();
 
         /// <summary>
-        ///  Codecs must implement an equals() method
+        /// Codecs must implement an equals() method.
         /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        abstract public override bool Equals(object other);
+        /// <param name="other">The <see cref="object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
+        public abstract override bool Equals(object other);
 
         /// <summary>
         /// Codecs must implement a HashCode() method that is
-        /// consistent with Equals
+        /// consistent with Equals.
         /// </summary>
-        /// <returns></returns>
-        abstract public override int GetHashCode();
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
+        /// </returns>
+        public abstract override int GetHashCode();
 
         /// <summary>
-        /// Codec types
+        /// Codec types.
         /// </summary>
         public enum Type
         {
             /// <summary>
-            /// Codec type that implments the "deflate" compression algorithm.
+            /// Codec type that implements the "deflate" compression algorithm.
             /// </summary>
             Deflate,
-
-            //Snappy
 
             /// <summary>
             /// Codec that does not perform any compression.
             /// </summary>
-            Null
-        };
+            Null,
+        }
 
         /// <summary>
-        /// Factory method to return child
-        /// codec instance based on Codec.Type
+        /// Factory method to return child codec instance based on Codec.Type.
         /// </summary>
-        /// <param name="codecType"></param>
-        /// <returns></returns>
+        /// <param name="codecType">Type of the codec.</param>
+        /// <returns>
+        /// Codec based on type.
+        /// </returns>
         public static Codec CreateCodec(Type codecType)
         {
             switch (codecType)
@@ -103,11 +108,10 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Factory method to return child
-        /// codec instance based on string type
+        /// Factory method to return child codec instance based on string type.
         /// </summary>
-        /// <param name="codecType"></param>
-        /// <returns></returns>
+        /// <param name="codecType">Type of the codec.</param>
+        /// <returns>Codec based on type.</returns>
         public static Codec CreateCodecFromString(string codecType)
         {
             switch (codecType)
@@ -120,9 +124,11 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Returns name of codec
+        /// Returns name of codec.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// A <see cref="string" /> that represents this instance.
+        /// </returns>
         public override string ToString()
         {
             return GetName();
