@@ -203,5 +203,15 @@ namespace Avro.Test
             return compres;
         }
 #endif
+        [TestFixture]
+        public class CodeGenTestClass : CodeGen
+        {
+            [Test]
+            public void TestGenerateNamesException()
+            {
+                Protocol protocol = null;
+                Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+        }
     }
 }

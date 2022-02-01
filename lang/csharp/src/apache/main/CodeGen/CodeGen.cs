@@ -66,24 +66,12 @@ namespace Avro
         public IDictionary<string, string> NamespaceMapping { get; private set; }
 
         /// <summary>
-        /// List of generated namespaces.
-        /// </summary>
-        [Obsolete("Use NamespaceLookup instead. This will be removed from the public API in a future version.")]
-        protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
-
-        /// <summary>
-        /// Gets or sets list of generated namespaces.
+        /// Gets list of generated namespaces.
         /// </summary>
         /// <value>
         /// The namespace lookup.
         /// </value>
-        protected Dictionary<string, CodeNamespace> NamespaceLookup
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            get => namespaceLookup;
-            set => namespaceLookup = value;
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
+        protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodeGen"/> class.
@@ -93,6 +81,17 @@ namespace Avro
             this.Schemas = new List<Schema>();
             this.Protocols = new List<Protocol>();
             this.NamespaceMapping = new Dictionary<string, string>();
+            this.NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CodeGen" /> class.
+        /// </summary>
+        /// <param name="namespaceLookup">The namespace lookup.</param>
+        public CodeGen(Dictionary<string, CodeNamespace> namespaceLookup)
+            : this()
+        {
+            NamespaceLookup = namespaceLookup;
         }
 
         /// <summary>
@@ -145,6 +144,7 @@ namespace Avro
                 CompileUnit.Namespaces.Add(ns);
                 NamespaceLookup.Add(name, ns);
             }
+
             return ns;
         }
 
@@ -172,7 +172,7 @@ namespace Avro
         {
             foreach (Schema schema in this.Schemas)
             {
-                SchemaNames names = generateNames(schema);
+                SchemaNames names = GenerateNames(schema);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
                 {
                     switch (sn.Value.Tag)
@@ -195,7 +195,7 @@ namespace Avro
         {
             foreach (Protocol protocol in Protocols)
             {
-                SchemaNames names = generateNames(protocol);
+                SchemaNames names = GenerateNames(protocol);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
                 {
                     switch (sn.Value.Tag)
@@ -220,8 +220,28 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        [Obsolete("Use GenerateNames. This call will be deprecated in a future release.")]
         protected virtual SchemaNames generateNames(Protocol protocol)
         {
+            return GenerateNames(protocol);
+        }
+
+        /// <summary>
+        /// Generate list of named schemas from given protocol.
+        /// </summary>
+        /// <param name="protocol">protocol to process.</param>
+        /// <returns>
+        /// List of named schemas.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        protected virtual SchemaNames GenerateNames(Protocol protocol)
+        {
+            if (protocol == null)
+            {
+                throw new ArgumentNullException(nameof(protocol), "Protocol can not be null");
+            }
+
             var names = new SchemaNames();
             foreach (Schema schema in protocol.Types)
             {
@@ -238,7 +258,20 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
+        [Obsolete("Use GenerateNames.  This call will be deprecated in a future release.")]
         protected virtual SchemaNames generateNames(Schema schema)
+        {
+            return GenerateNames(schema);
+        }
+
+        /// <summary>
+        /// Generate list of named schemas from given schema.
+        /// </summary>
+        /// <param name="schema">schema to process.</param>
+        /// <returns>
+        /// List of named schemas.
+        /// </returns>
+        protected virtual SchemaNames GenerateNames(Schema schema)
         {
             var names = new SchemaNames();
             addName(schema, names);
@@ -465,14 +498,13 @@ namespace Avro
             property.Type = new CodeTypeReference("Avro.Protocol");
             property.HasGet = true;
 
-
             property.GetStatements.Add(new CodeTypeReferenceExpression("return protocol"));
             ctd.Members.Add(property);
 
             // var requestMethod = CreateRequestMethod();
             // ctd.Members.Add(requestMethod);
-
             var requestMethod = CreateRequestMethod();
+
             // requestMethod.Attributes |= MemberAttributes.Override;
             var builder = new StringBuilder();
 
@@ -496,6 +528,7 @@ namespace Avro
 
                 builder.Append("\t\t\t}");
             }
+
             var cseGet = new CodeSnippetExpression(builder.ToString());
 
             requestMethod.Statements.Add(cseGet);
@@ -520,9 +553,6 @@ namespace Avro
             ctd.BaseTypes.Add(protocolNameMangled);
 
             // Need to override
-
-
-
             AddProtocolDocumentation(protocol, ctd);
 
             AddMethods(protocol, true, ctd);
@@ -554,6 +584,7 @@ namespace Avro
                 var callback = new CodeParameterDeclarationExpression(typeof(object), "callback");
                 requestMethod.Parameters.Add(callback);
             }
+
             return requestMethod;
         }
 
@@ -615,7 +646,6 @@ namespace Avro
                                                                            "callback");
                     messageMember.Parameters.Add(parameter);
                 }
-
 
                 ctd.Members.Add(messageMember);
             }
@@ -978,8 +1008,8 @@ namespace Avro
                     {
                         return csharpType.ToString();
                     }
-
             }
+
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
 
@@ -1034,6 +1064,7 @@ namespace Avro
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);
             codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static;
+
             // create function call Schema.Parse(json)
             var cpe = new CodePrimitiveExpression(schema.ToString());
             var cmie = new CodeMethodInvokeExpression(
@@ -1113,6 +1144,7 @@ namespace Avro
                 {
                     dir = Path.Combine(dir, name);
                 }
+
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);

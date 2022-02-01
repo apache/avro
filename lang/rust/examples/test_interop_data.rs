@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::Reader;
+use apache_avro::Reader;
 use std::ffi::OsStr;
 
 fn main() -> anyhow::Result<()> {
