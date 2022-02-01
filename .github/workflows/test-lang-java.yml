@@ -38,6 +38,8 @@ jobs:
         java:
         - '8'
         - '11'
+        - '17'
+        - '18-ea'
     steps:
       - uses: actions/checkout@v2
 
@@ -52,7 +54,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Lint
@@ -69,6 +71,7 @@ jobs:
         java:
         - '8'
         - '11'
+        - '17'
     steps:
       - uses: actions/checkout@v2
 
@@ -83,7 +86,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Setup Python for Generating Input Data

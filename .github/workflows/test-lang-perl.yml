@@ -63,7 +63,11 @@ jobs:
                                                        Module::Install::Repository \
                                                        Regexp::Common \
                                                        Try::Tiny \
-                                                       inc::Module::Install
+                                                       inc::Module::Install \
+                                                       Module::Install::ReadmeFromPod \
+                                                       Test::Exception \
+                                                       IO::String \
+                                                       Object::Tiny
 
       - name: Lint
         run: ./build.sh lint

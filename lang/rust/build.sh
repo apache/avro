@@ -15,7 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -e  # exit on error
+
+root_dir=$(pwd)
+build_dir="../../build/rust"
+dist_dir="../../dist/rust"
+
+
+function clean {
+  if [ -d $build_dir ]; then
+    find $build_dir | xargs chmod 755
+    rm -rf $build_dir
+  fi
+}
+
+
+function prepare_build {
+  clean
+  mkdir -p $build_dir
+}
 
 cd `dirname "$0"`
 
@@ -35,10 +53,21 @@ do
       cargo build --release --lib --all-features
       cargo package
       mkdir -p  ../../dist/rust
-      cp target/package/avro-rs-*.crate ../../dist/rust
+      cp target/package/apache-avro-*.crate $dist_dir
+      ;;
+    interop-data-generate)
+      prepare_build
+      export RUST_LOG=apache_avro=debug
+      export RUST_BACKTRACE=1
+      cargo run --all-features --example generate_interop_data
+      ;;
+
+    interop-data-test)
+      prepare_build
+      cargo run --all-features --example test_interop_data
       ;;
     *)
-      echo "Usage: $0 {lint|test|dist|clean}" >&2
+      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
       exit 1
   esac
 done

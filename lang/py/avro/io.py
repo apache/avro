@@ -90,7 +90,7 @@ import decimal
 import struct
 import warnings
 from typing import (
-    BinaryIO,
+    IO,
     Deque,
     Generator,
     Iterable,
@@ -206,16 +206,16 @@ _ITERATORS["error"] = _ITERATORS["request"] = _ITERATORS["record"]
 class BinaryDecoder:
     """Read leaf values."""
 
-    _reader: BinaryIO
+    _reader: IO[bytes]
 
-    def __init__(self, reader: BinaryIO) -> None:
+    def __init__(self, reader: IO[bytes]) -> None:
         """
         reader is a Python object on which we can call read, seek, and tell.
         """
         self._reader = reader
 
     @property
-    def reader(self) -> BinaryIO:
+    def reader(self) -> IO[bytes]:
         return self._reader
 
     def read(self, n: int) -> bytes:
@@ -410,16 +410,16 @@ class BinaryDecoder:
 class BinaryEncoder:
     """Write leaf values."""
 
-    _writer: BinaryIO
+    _writer: IO[bytes]
 
-    def __init__(self, writer: BinaryIO) -> None:
+    def __init__(self, writer: IO[bytes]) -> None:
         """
         writer is a Python object on which we can call write.
         """
         self._writer = writer
 
     @property
-    def writer(self) -> BinaryIO:
+    def writer(self) -> IO[bytes]:
         return self._writer
 
     def write(self, datum: bytes) -> None:
@@ -514,7 +514,7 @@ class BinaryEncoder:
         size_in_bits = size * 8
         offset_bits = size_in_bits - bits_req
 
-        mask = 2 ** size_in_bits - 1
+        mask = 2**size_in_bits - 1
         bit = 1
         for i in range(bits_req):
             mask ^= bit
@@ -579,7 +579,7 @@ class BinaryEncoder:
         self.write_long(microseconds)
 
     def _timedelta_total_microseconds(self, timedelta_: datetime.timedelta) -> int:
-        return timedelta_.microseconds + (timedelta_.seconds + timedelta_.days * 24 * 3600) * 10 ** 6
+        return timedelta_.microseconds + (timedelta_.seconds + timedelta_.days * 24 * 3600) * 10**6
 
     def write_timestamp_millis_long(self, datum: datetime.datetime) -> None:
         """

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::{
+use apache_avro::{
     schema::Schema,
     to_avro_datum,
     types::{Record, Value},

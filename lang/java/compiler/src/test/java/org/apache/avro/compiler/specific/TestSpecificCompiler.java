@@ -43,6 +43,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.avro.LogicalType;
@@ -65,6 +66,13 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
+  /**
+   * JDK 18+ generates a warning for each member field which does not implement
+   * java.io.Serializable. Since Avro is an alternative serialization format, we
+   * can just ignore this warning.
+   */
+  private static final String NON_TRANSIENT_INSTANCE_FIELD_MESSAGE = "non-transient instance field of a serializable class declared with a non-serializable type";
 
   @Rule
   public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
@@ -107,13 +115,16 @@ public class TestSpecificCompiler {
     DiagnosticListener<JavaFileObject> diagnosticListener = diagnostic -> {
       switch (diagnostic.getKind()) {
       case ERROR:
-        // Do not add these to warnings because they will fail the compile, anyway.
+        // Do not add these to warnings because they will fail the compilation, anyway.
         LOG.error("{}", diagnostic);
         break;
       case WARNING:
       case MANDATORY_WARNING:
-        LOG.warn("{}", diagnostic);
-        warnings.add(diagnostic);
+        String message = diagnostic.getMessage(Locale.ROOT);
+        if (!NON_TRANSIENT_INSTANCE_FIELD_MESSAGE.equals(message)) {
+          LOG.warn("{}", diagnostic);
+          warnings.add(diagnostic);
+        }
         break;
       case NOTE:
       case OTHER:
@@ -350,7 +361,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use LocalDateTime for local-timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaType(localTimestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -374,7 +386,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use ByteBuffer type", "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -765,8 +778,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -789,8 +802,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -904,6 +917,24 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(1, itWorksFound);
+  }
+
+  @Test
+  public void testPojoWithUUID() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    File avsc = new File("src/main/resources/logical-uuid.avsc");
+    compiler.compileToDestination(avsc, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("guid")) {
+          assertTrue(line.contains("java.util.UUID"));
+        }
+      }
+    }
   }
 
   public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {

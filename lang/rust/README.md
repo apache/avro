@@ -17,16 +17,16 @@
   under the License.
 -->
 
-# avro-rs
+# apache-avro
 
-[![Latest Version](https://img.shields.io/crates/v/avro-rs.svg)](https://crates.io/crates/avro-rs)
-[![Continuous Integration](https://github.com/flavray/avro-rs/workflows/Continuous%20Integration/badge.svg)](https://github.com/flavray/avro-rs/actions)
-[![Latest Documentation](https://docs.rs/avro-rs/badge.svg)](https://docs.rs/avro-rs)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/flavray/avro-rs/blob/main/LICENSE)
+[![Latest Version](https://img.shields.io/crates/v/apache-avro.svg)](https://crates.io/crates/apache-avro)
+[![Rust Continuous Integration](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml/badge.svg)](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml)
+[![Latest Documentation](https://docs.rs/apache-avro/badge.svg)](https://docs.rs/apache-avro)
+[![Apache License 2.0](https://img.shields.io/badge/license-Apache%202-blue.svg](https://github.com/apache/avro/blob/master/LICENSE.txt)
 
 A library for working with [Apache Avro](https://avro.apache.org/) in Rust.
 
-Please check our [documentation](https://docs.rs/avro-rs) for examples, tutorials and API reference.
+Please check our [documentation](https://docs.rs/apache-avro) for examples, tutorials and API reference.
 
 **[Apache Avro](https://avro.apache.org/)** is a data serialization system which provides rich
 data structures and a compact, fast, binary data format.
@@ -50,7 +50,7 @@ There are basically two ways of handling Avro data in Rust:
 * **as generic Rust serde-compatible types** implementing/deriving `Serialize` and
 `Deserialize`;
 
-**avro-rs** provides a way to read and write both these data representations easily and
+**apache-avro** provides a way to read and write both these data representations easily and
 efficiently.
 
 ## Installing the library
@@ -60,16 +60,41 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-avro-rs = "x.y"
+apache-avro = "x.y"
 ```
 
 Or in case you want to leverage the **Snappy** codec:
 
 ```toml
-[dependencies.avro-rs]
+[dependencies.apache-avro]
 version = "x.y"
 features = ["snappy"]
 ```
+
+Or in case you want to leverage the **Zstandard** codec:
+
+```toml
+[dependencies.apache-avro]
+version = "x.y"
+features = ["zstandard"]
+```
+
+Or in case you want to leverage the **Bzip2** codec:
+
+```toml
+[dependencies.apache-avro]
+version = "x.y"
+features = ["bzip"]
+```
+
+Or in case you want to leverage the **Xz** codec:
+
+```toml
+[dependencies.apache-avro]
+version = "x.y"
+features = ["xz"]
+```
+
 
 ## Upgrading to a newer minor version
 
@@ -85,7 +110,7 @@ handling. Avro schemas are used for both schema validation and resolution of Avr
 Avro schemas are defined in **JSON** format and can just be parsed out of a raw string:
 
 ```rust
-use avro_rs::Schema;
+use apache_avro::Schema;
 
 let raw_schema = r#"
     {
@@ -109,7 +134,7 @@ Additionally, a list of of definitions (which may depend on each other) can be g
 them will be parsed into the corresponding schemas.
 
 ```rust
-use avro_rs::Schema;
+use apache_avro::Schema;
 
 let raw_schema_1 = r#"{
         "name": "A",
@@ -162,8 +187,8 @@ Given that the schema we defined above is that of an Avro *Record*, we are going
 associated type provided by the library to specify the data we want to serialize:
 
 ```rust
-use avro_rs::types::Record;
-use avro_rs::Writer;
+use apache_avro::types::Record;
+use apache_avro::Writer;
 #
 // a writer needs a schema and something to write to
 let mut writer = Writer::new(&schema, Vec::new());
@@ -188,7 +213,7 @@ case we want to directly define an Avro value, the library offers that capabilit
 `Value` interface.
 
 ```rust
-use avro_rs::types::Value;
+use apache_avro::types::Value;
 
 let mut value = Value::String("foo".to_string());
 ```
@@ -199,7 +224,7 @@ Given that the schema we defined above is an Avro *Record*, we can directly use 
 deriving `Serialize` to model our data:
 
 ```rust
-use avro_rs::Writer;
+use apache_avro::Writer;
 
 #[derive(Debug, Serialize)]
 struct Test {
@@ -244,11 +269,18 @@ RFC 1950) does not have a checksum.
 * **Snappy**: uses Google's [Snappy](http://google.github.io/snappy/) compression library. Each
 compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
 the block. You must enable the `snappy` feature to use this codec.
+* **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
+You must enable the `zstandard` feature to use this codec.
+* **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
+You must enable the `bzip` feature to use this codec.
+* **Xz**: uses [xz2](https://github.com/alexcrichton/xz2-rs) compression library.
+  You must enable the `xz` feature to use this codec.
+
 
 To specify a codec to use to compress data, just specify it while creating a `Writer`:
 ```rust
-use avro_rs::Writer;
-use avro_rs::Codec;
+use apache_avro::Writer;
+use apache_avro::Codec;
 #
 let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
 ```
@@ -260,7 +292,7 @@ read them. The library will do it automatically for us, as it already does for t
 codec:
 
 ```rust
-use avro_rs::Reader;
+use apache_avro::Reader;
 #
 // reader creation can fail in case the input to read from is not Avro-compatible or malformed
 let reader = Reader::new(&input[..]).unwrap();
@@ -269,8 +301,8 @@ let reader = Reader::new(&input[..]).unwrap();
 In case, instead, we want to specify a different (but compatible) reader schema from the schema
 the data has been written with, we can just do as the following:
 ```rust
-use avro_rs::Schema;
-use avro_rs::Reader;
+use apache_avro::Schema;
+use apache_avro::Reader;
 #
 
 let reader_raw_schema = r#"
@@ -309,7 +341,7 @@ interested.
 We can just read directly instances of `Value` out of the `Reader` iterator:
 
 ```rust
-use avro_rs::Reader;
+use apache_avro::Reader;
 #
 let reader = Reader::new(&input[..]).unwrap();
 
@@ -326,8 +358,8 @@ Alternatively, we can use a Rust type implementing `Deserialize` and representin
 read the data into:
 
 ```rust
-use avro_rs::Reader;
-use avro_rs::from_value;
+use apache_avro::Reader;
+use apache_avro::from_value;
 
 #[derive(Debug, Deserialize)]
 struct Test {
@@ -349,7 +381,7 @@ The following is an example of how to combine everything showed so far and it is
 quick reference of the library interface:
 
 ```rust
-use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
+use apache_avro::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -399,7 +431,7 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-`avro-rs` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
+`apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 
 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
 1. UUID using the [`uuid`](https://docs.rs/uuid/0.8.1/uuid) crate
@@ -412,7 +444,7 @@ Note that the on-disk representation is identical to the underlying primitive/co
 #### Read and write logical types
 
 ```rust
-use avro_rs::{
+use apache_avro::{
     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
     Writer, Error,
 };
@@ -525,8 +557,8 @@ This library supports calculating the following fingerprints:
 An example of fingerprinting for the supported fingerprints:
 
 ```rust
-use avro_rs::rabin::Rabin;
-use avro_rs::{Schema, Error};
+use apache_avro::rabin::Rabin;
+use apache_avro::{Schema, Error};
 use md5::Md5;
 use sha2::Sha256;
 
@@ -558,7 +590,7 @@ If encoded data passed to a `Reader` has been ill-formed, it can happen that
 the bytes meant to contain the length of data are bogus and could result
 in extravagant memory allocation.
 
-To shield users from ill-formed data, `avro-rs` sets a limit (default: 512MB)
+To shield users from ill-formed data, `apache-avro` sets a limit (default: 512MB)
 to any allocation it will perform when decoding data.
 
 If you expect some of your data fields to be larger than this limit, be sure
@@ -570,7 +602,7 @@ will be 512MB throughout the lifetime of the program).
 
 
 ```rust
-use avro_rs::max_allocation_bytes;
+use apache_avro::max_allocation_bytes;
 
 max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 
@@ -583,7 +615,7 @@ max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 This library supports checking for schemas compatibility.
 
 Note: It does not yet support named schemas (more on
-https://github.com/flavray/avro-rs/pull/76).
+https://github.com/flavray/apache-avro/pull/76).
 
 Examples of checking for compatibility:
 
@@ -593,7 +625,7 @@ Explanation: an int array schema can be read by a long array schema- an int
 (32bit signed integer) fits into a long (64bit signed integer)
 
 ```rust
-use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
@@ -606,7 +638,7 @@ Explanation: a long array schema cannot be read by an int array schema- a
 long (64bit signed integer) does not fit into an int (32bit signed integer)
 
 ```rust
-use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
@@ -614,13 +646,12 @@ assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema
 ```
 
 ## License
-This project is licensed under [MIT License](https://github.com/flavray/avro-rs/blob/main/LICENSE).
-Please note that this is not an official project maintained by [Apache Avro](https://avro.apache.org/).
+This project is licensed under [Apache License 2.0](https://github.com/apache/avro/blob/master/LICENSE.txt).
 
 ## Contributing
 Everyone is encouraged to contribute! You can contribute by forking the GitHub repo and making a pull request or opening an issue.
-All contributions will be licensed under [MIT License](https://github.com/flavray/avro-rs/blob/main/LICENSE).
+All contributions will be licensed under [Apache License 2.0](https://github.com/apache/avro/blob/master/LICENSE.txt).
 
-Please consider adding documentation, tests and a line for your change under the Unreleased section in the [CHANGELOG](https://github.com/flavray/avro-rs/blob/main/CHANGELOG.md).
+Please consider adding documentation and tests!
 If you introduce a backward-incompatible change, please consider adding instruction to migrate in the [Migration Guide](migration_guide.md)
 If you modify the crate documentation in `lib.rs`, run `make readme` to sync the README file.

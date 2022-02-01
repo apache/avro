@@ -107,6 +107,7 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -856,7 +857,7 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibility
    *             of custom templates
    */
   @Deprecated

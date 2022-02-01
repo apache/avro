@@ -17,10 +17,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../../../common.props" />
-  <Import Project="../../../versions.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Avro</AssemblyName>
     <RootNamespace>Avro</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -48,21 +47,6 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="..\..\..\stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-    
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonMinimumVersion)" />

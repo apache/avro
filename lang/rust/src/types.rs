@@ -64,9 +64,14 @@ pub enum Value {
     /// of its corresponding schema.
     /// This allows schema-less encoding, as well as schema resolution while
     /// reading values.
-    Enum(i32, String),
+    Enum(u32, String),
     /// An `union` Avro value.
-    Union(Box<Value>),
+    ///
+    /// A Union is represented by the value it holds and its position in the type list
+    /// of its corresponding schema
+    /// This allows schema-less encoding, as well as schema resolution while
+    /// reading values.
+    Union(u32, Box<Value>),
     /// An `array` Avro value.
     Array(Vec<Value>),
     /// A `map` Avro value.
@@ -95,7 +100,6 @@ pub enum Value {
     TimestampMicros(i64),
     /// Avro Duration. An amount of time defined by months, days and milliseconds.
     Duration(Duration),
-    /// Universally unique identifier.
     /// Universally unique identifier.
     Uuid(Uuid),
 }
@@ -169,7 +173,11 @@ where
     T: Into<Self>,
 {
     fn from(value: Option<T>) -> Self {
-        Self::Union(Box::new(value.map_or_else(|| Self::Null, Into::into)))
+        // FIXME: this is incorrect in case first type in union is not "none"
+        Self::Union(
+            value.is_some() as u32,
+            Box::new(value.map_or_else(|| Self::Null, Into::into)),
+        )
     }
 }
 
@@ -286,7 +294,7 @@ impl std::convert::TryFrom<Value> for JsonValue {
                 Ok(Self::Array(items.into_iter().map(|v| v.into()).collect()))
             }
             Value::Enum(_i, s) => Ok(Self::String(s)),
-            Value::Union(b) => Self::try_from(*b),
+            Value::Union(_i, b) => Self::try_from(*b),
             Value::Array(items) => items
                 .into_iter()
                 .map(Self::try_from)
@@ -324,6 +332,7 @@ impl Value {
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
         match (self, schema) {
+            (_, &Schema::Ref { name: _ }) => true,
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
@@ -358,9 +367,11 @@ impl Value {
                 .map(|ref symbol| symbol == &s)
                 .unwrap_or(false),
             // (&Value::Union(None), &Schema::Union(_)) => true,
-            (&Value::Union(ref value), &Schema::Union(ref inner)) => {
-                inner.find_schema(value).is_some()
-            }
+            (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
+                .variants()
+                .get(i as usize)
+                .map(|schema| value.validate(schema))
+                .unwrap_or(false),
             (&Value::Array(ref items), &Schema::Array(ref inner)) => {
                 items.iter().all(|item| item.validate(inner))
             }
@@ -384,7 +395,10 @@ impl Value {
                     }
                 })
             }
-            _ => false,
+            (v, s) => {
+                error!("Unsupported value-schema combination:\n{:?}\n{:?}", v, s);
+                false
+            }
         }
     }
 
@@ -395,45 +409,79 @@ impl Value {
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(mut self, schema: &Schema) -> AvroResult<Self> {
-        // Check if this schema is a union, and if the reader schema is not.
-        if SchemaKind::from(&self) == SchemaKind::Union
-            && SchemaKind::from(schema) != SchemaKind::Union
-        {
-            // Pull out the Union, and attempt to resolve against it.
-            let v = match self {
-                Value::Union(b) => *b,
-                _ => unreachable!(),
-            };
-            self = v;
+        pub fn resolve0(
+            value: &mut Value,
+            schema: &Schema,
+            schemas_by_name: &mut HashMap<String, Schema>,
+        ) -> AvroResult<Value> {
+            // Check if this schema is a union, and if the reader schema is not.
+            if SchemaKind::from(&value.clone()) == SchemaKind::Union
+                && SchemaKind::from(schema) != SchemaKind::Union
+            {
+                // Pull out the Union, and attempt to resolve against it.
+                let v = match value {
+                    Value::Union(_i, b) => &**b,
+                    _ => unreachable!(),
+                };
+                *value = v.clone();
+            }
+            let val: Value = value.clone();
+            match *schema {
+                Schema::Ref { ref name } => {
+                    if let Some(resolved) = schemas_by_name.get(name.name.as_str()) {
+                        resolve0(value, resolved, &mut schemas_by_name.clone())
+                    } else {
+                        Err(Error::SchemaResolutionError(name.name.clone()))
+                    }
+                }
+                Schema::Null => val.resolve_null(),
+                Schema::Boolean => val.resolve_boolean(),
+                Schema::Int => val.resolve_int(),
+                Schema::Long => val.resolve_long(),
+                Schema::Float => val.resolve_float(),
+                Schema::Double => val.resolve_double(),
+                Schema::Bytes => val.resolve_bytes(),
+                Schema::String => val.resolve_string(),
+                Schema::Fixed { ref name, size, .. } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_fixed(size)
+                }
+                Schema::Union(ref inner) => val.resolve_union(inner),
+                Schema::Enum {
+                    ref name,
+                    ref symbols,
+                    ..
+                } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_enum(symbols)
+                }
+                Schema::Array(ref inner) => val.resolve_array(inner),
+                Schema::Map(ref inner) => val.resolve_map(inner),
+                Schema::Record {
+                    ref name,
+                    ref fields,
+                    ..
+                } => {
+                    schemas_by_name.insert(name.name.clone(), schema.clone());
+                    val.resolve_record(fields)
+                }
+                Schema::Decimal {
+                    scale,
+                    precision,
+                    ref inner,
+                } => val.resolve_decimal(precision, scale, inner),
+                Schema::Date => val.resolve_date(),
+                Schema::TimeMillis => val.resolve_time_millis(),
+                Schema::TimeMicros => val.resolve_time_micros(),
+                Schema::TimestampMillis => val.resolve_timestamp_millis(),
+                Schema::TimestampMicros => val.resolve_timestamp_micros(),
+                Schema::Duration => val.resolve_duration(),
+                Schema::Uuid => val.resolve_uuid(),
+            }
         }
-        match *schema {
-            Schema::Null => self.resolve_null(),
-            Schema::Boolean => self.resolve_boolean(),
-            Schema::Int => self.resolve_int(),
-            Schema::Long => self.resolve_long(),
-            Schema::Float => self.resolve_float(),
-            Schema::Double => self.resolve_double(),
-            Schema::Bytes => self.resolve_bytes(),
-            Schema::String => self.resolve_string(),
-            Schema::Fixed { size, .. } => self.resolve_fixed(size),
-            Schema::Union(ref inner) => self.resolve_union(inner),
-            Schema::Enum { ref symbols, .. } => self.resolve_enum(symbols),
-            Schema::Array(ref inner) => self.resolve_array(inner),
-            Schema::Map(ref inner) => self.resolve_map(inner),
-            Schema::Record { ref fields, .. } => self.resolve_record(fields),
-            Schema::Decimal {
-                scale,
-                precision,
-                ref inner,
-            } => self.resolve_decimal(precision, scale, inner),
-            Schema::Date => self.resolve_date(),
-            Schema::TimeMillis => self.resolve_time_millis(),
-            Schema::TimeMicros => self.resolve_time_micros(),
-            Schema::TimestampMillis => self.resolve_timestamp_millis(),
-            Schema::TimestampMicros => self.resolve_timestamp_micros(),
-            Schema::Duration => self.resolve_duration(),
-            Schema::Uuid => self.resolve_uuid(),
-        }
+
+        let mut schemas_by_name: HashMap<String, Schema> = HashMap::new();
+        resolve0(&mut self, schema, &mut schemas_by_name)
     }
 
     fn resolve_uuid(self) -> Result<Self, Error> {
@@ -636,7 +684,7 @@ impl Value {
     fn resolve_enum(self, symbols: &[String]) -> Result<Self, Error> {
         let validate_symbol = |symbol: String, symbols: &[String]| {
             if let Some(index) = symbols.iter().position(|item| item == &symbol) {
-                Ok(Value::Enum(index as i32, symbol))
+                Ok(Value::Enum(index as u32, symbol))
             } else {
                 Err(Error::GetEnumDefault {
                     symbol,
@@ -648,7 +696,7 @@ impl Value {
         match self {
             Value::Enum(raw_index, s) => {
                 let index = usize::try_from(raw_index)
-                    .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
+                    .map_err(|e| Error::ConvertU32ToUsize(e, raw_index))?;
                 if (0..=symbols.len()).contains(&index) {
                     validate_symbol(s, symbols)
                 } else {
@@ -666,13 +714,14 @@ impl Value {
     fn resolve_union(self, schema: &UnionSchema) -> Result<Self, Error> {
         let v = match self {
             // Both are unions case.
-            Value::Union(v) => *v,
+            Value::Union(_i, v) => *v,
             // Reader is a union, but writer is not.
             v => v,
         };
         // Find the first match in the reader schema.
-        let (_, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
-        Ok(Value::Union(Box::new(v.resolve(inner)?)))
+        // FIXME: this might be wrong when the union consists of multiple same records that have different names
+        let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
+        Ok(Value::Union(i as u32, Box::new(v.resolve(inner)?)))
     }
 
     fn resolve_array(self, schema: &Schema) -> Result<Self, Error> {
@@ -733,10 +782,11 @@ impl Value {
                                 // NOTE: this match exists only to optimize null defaults for large
                                 // backward-compatible schemas with many nullable fields
                                 match first {
-                                    Schema::Null => Value::Union(Box::new(Value::Null)),
-                                    _ => Value::Union(Box::new(
-                                        Value::from(value.clone()).resolve(first)?,
-                                    )),
+                                    Schema::Null => Value::Union(0, Box::new(Value::Null)),
+                                    _ => Value::Union(
+                                        0,
+                                        Box::new(Value::from(value.clone()).resolve(first)?),
+                                    ),
                                 }
                             }
                             _ => Value::from(value.clone()),
@@ -784,22 +834,22 @@ mod tests {
             (Value::Int(42), Schema::Int, true),
             (Value::Int(42), Schema::Boolean, false),
             (
-                Value::Union(Box::new(Value::Null)),
+                Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Int(42))),
+                Value::Union(1, Box::new(Value::Int(42))),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Null)),
+                Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int]).unwrap()),
                 false,
             ),
             (
-                Value::Union(Box::new(Value::Int(42))),
+                Value::Union(3, Box::new(Value::Int(42))),
                 Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Null,
@@ -812,7 +862,7 @@ mod tests {
                 true,
             ),
             (
-                Value::Union(Box::new(Value::Long(42i64))),
+                Value::Union(1, Box::new(Value::Long(42i64))),
                 Schema::Union(
                     UnionSchema::new(vec![Schema::Null, Schema::TimestampMillis]).unwrap(),
                 ),
@@ -841,6 +891,7 @@ mod tests {
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed"),
+            doc: None,
         };
 
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
@@ -959,20 +1010,26 @@ mod tests {
 
         let union_schema = Schema::Union(UnionSchema::new(vec![Schema::Null, schema]).unwrap());
 
-        assert!(Value::Union(Box::new(Value::Record(vec![
-            ("a".to_string(), Value::Long(42i64)),
-            ("b".to_string(), Value::String("foo".to_string())),
-        ])))
-        .validate(&union_schema));
-
-        assert!(Value::Union(Box::new(Value::Map(
-            vec![
+        assert!(Value::Union(
+            1,
+            Box::new(Value::Record(vec![
                 ("a".to_string(), Value::Long(42i64)),
                 ("b".to_string(), Value::String("foo".to_string())),
-            ]
-            .into_iter()
-            .collect()
-        )))
+            ]))
+        )
+        .validate(&union_schema));
+
+        assert!(Value::Union(
+            1,
+            Box::new(Value::Map(
+                vec![
+                    ("a".to_string(), Value::Long(42i64)),
+                    ("b".to_string(), Value::String("foo".to_string())),
+                ]
+                .into_iter()
+                .collect()
+            ))
+        )
         .validate(&union_schema));
     }
 
@@ -1039,7 +1096,8 @@ mod tests {
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal"),
-                    size: 20
+                    size: 20,
+                    doc: None
                 })
             })
             .is_ok());
@@ -1154,7 +1212,8 @@ mod tests {
             JsonValue::String("test_enum".into())
         );
         assert_eq!(
-            JsonValue::try_from(Value::Union(Box::new(Value::String("test_enum".into())))).unwrap(),
+            JsonValue::try_from(Value::Union(1, Box::new(Value::String("test_enum".into()))))
+                .unwrap(),
             JsonValue::String("test_enum".into())
         );
         assert_eq!(

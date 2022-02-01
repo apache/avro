@@ -52,6 +52,7 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
+                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
@@ -66,7 +67,11 @@ RUN apt-get -qqy update \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 python3.7 python3.8 python3.9 \
+                                                 python3.6 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
+                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -81,7 +86,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-ENV MAVEN_VERSION 3.8.1
+ENV MAVEN_VERSION 3.8.4
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -174,7 +179,7 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
  && dpkg -i packages-microsoft-prod.deb \
  && rm packages-microsoft-prod.deb \
  && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 \
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
  && apt-get -qqy clean
 
 # Install Ruby
@@ -182,19 +187,17 @@ RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.48.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
 # - OpenJDK 11
+# - OpenJDK 17
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH $JAVA_HOME/bin:$PATH
-
-
-RUN apt-get -qqy install python3.6 python3.7 python3.9
 
 CMD ["/bin/bash", "-i"]

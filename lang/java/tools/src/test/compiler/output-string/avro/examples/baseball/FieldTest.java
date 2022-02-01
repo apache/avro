@@ -28,10 +28,10 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
   private static final BinaryMessageEncoder<FieldTest> ENCODER =
-      new BinaryMessageEncoder<FieldTest>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<FieldTest> DECODER =
-      new BinaryMessageDecoder<FieldTest>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -55,7 +55,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<FieldTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<FieldTest>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**

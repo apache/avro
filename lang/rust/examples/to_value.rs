@@ -23,7 +23,7 @@ struct Test {
 
 fn main() -> anyhow::Result<()> {
     let test = Test { a: 27, b: "foo" };
-    let value = avro_rs::to_value(test)?;
+    let value = apache_avro::to_value(test)?;
     println!("{:?}", value);
     Ok(())
 }

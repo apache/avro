@@ -398,7 +398,7 @@ mod tests {
     #[test]
     fn test_union_not_null() {
         let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
-        let union = Value::Union(Box::new(Value::Long(3)));
+        let union = Value::Union(1, Box::new(Value::Long(3)));
 
         let mut expected = Vec::new();
         zig_i64(1, &mut expected);
@@ -410,7 +410,7 @@ mod tests {
     #[test]
     fn test_union_null() {
         let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
-        let union = Value::Union(Box::new(Value::Null));
+        let union = Value::Union(0, Box::new(Value::Null));
 
         let mut expected = Vec::new();
         zig_i64(0, &mut expected);
@@ -503,6 +503,7 @@ mod tests {
         let size = 30;
         let inner = Schema::Fixed {
             name: Name::new("decimal"),
+            doc: None,
             size,
         };
         let value = vec![0u8; size];
@@ -540,6 +541,7 @@ mod tests {
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
             name: Name::new("duration"),
+            doc: None,
             size: 12,
         };
         let value = Value::Duration(Duration::new(
@@ -779,11 +781,11 @@ mod tests {
         let mut record1 = Record::new(&schema).unwrap();
         record1.put(
             "a",
-            Value::Union(Box::new(Value::TimestampMicros(1234_i64))),
+            Value::Union(1, Box::new(Value::TimestampMicros(1234_i64))),
         );
 
         let mut record2 = Record::new(&schema).unwrap();
-        record2.put("a", Value::Union(Box::new(Value::Null)));
+        record2.put("a", Value::Union(0, Box::new(Value::Null)));
 
         let n1 = writer.append(record1).unwrap();
         let n2 = writer.append(record2).unwrap();

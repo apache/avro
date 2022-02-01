@@ -31,6 +31,11 @@ protocol MyProtocol {
      */
     uuid identifier;
 
+    /**
+     * A string field with a special name
+     */
+    string `uuid`;
+
 
     /**
      * a nullable uuid field

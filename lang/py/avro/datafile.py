@@ -160,7 +160,7 @@ class DataFileWriter(_DataFileMetadata):
     _datum_writer: avro.io.DatumWriter
     _encoder: avro.io.BinaryEncoder
     _header_written: bool
-    _writer: BinaryIO
+    _writer: IO[bytes]
     block_count: int
     sync_marker: bytes
 
@@ -170,7 +170,7 @@ class DataFileWriter(_DataFileMetadata):
         """If the schema is not present, presume we're appending."""
         if hasattr(writer, "mode") and "b" not in writer.mode:
             warnings.warn(avro.errors.AvroWarning(f"Writing binary data to a writer {writer!r} that's opened for text"))
-        bytes_writer = getattr(writer, "buffer", writer)
+        bytes_writer = cast(IO[bytes], getattr(writer, "buffer", writer))
         self._writer = bytes_writer
         self._encoder = avro.io.BinaryEncoder(bytes_writer)
         self._datum_writer = datum_writer
@@ -202,7 +202,7 @@ class DataFileWriter(_DataFileMetadata):
         self.datum_writer.writers_schema = writers_schema
 
     @property
-    def writer(self) -> BinaryIO:
+    def writer(self) -> IO[bytes]:
         return self._writer
 
     @property
@@ -307,7 +307,7 @@ class DataFileReader(_DataFileMetadata):
     _datum_reader: avro.io.DatumReader
     _file_length: int
     _raw_decoder: avro.io.BinaryDecoder
-    _reader: BinaryIO
+    _reader: IO[bytes]
     block_count: int
     sync_marker: bytes
 
@@ -315,9 +315,9 @@ class DataFileReader(_DataFileMetadata):
     # TODO(hammer): allow user to specify the encoder
 
     def __init__(self, reader: IO[AnyStr], datum_reader: avro.io.DatumReader) -> None:
-        if "b" not in reader.mode:
+        if hasattr(reader, "mode") and "b" not in reader.mode:
             warnings.warn(avro.errors.AvroWarning(f"Reader binary data from a reader {reader!r} that's opened for text"))
-        bytes_reader = getattr(reader, "buffer", reader)
+        bytes_reader = cast(IO[bytes], getattr(reader, "buffer", reader))
         self._reader = bytes_reader
         self._raw_decoder = avro.io.BinaryDecoder(bytes_reader)
         self._datum_decoder = None  # Maybe reset at every block.
@@ -337,7 +337,7 @@ class DataFileReader(_DataFileMetadata):
         return self
 
     @property
-    def reader(self) -> BinaryIO:
+    def reader(self) -> IO[bytes]:
         return self._reader
 
     @property
