@@ -218,7 +218,7 @@ namespace Avro
         /// Generates code for the protocol objects.
         /// </summary>
         /// <exception cref="CodeGenException">Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
-        [Obsolete("Use ProcessProtocols. This call will be deprecated in a future release.")]
+        [Obsolete("This method will be deprecated in a future release. Please change call to ProcessProtocols().")]
         protected virtual void processProtocols()
         {
             ProcessProtocols();
