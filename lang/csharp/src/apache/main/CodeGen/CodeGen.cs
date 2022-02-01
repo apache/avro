@@ -153,7 +153,7 @@ namespace Avro
         /// Code Namespace.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
-        [Obsolete("Use AddNamespace. This call will be deprecated in a future release.")]
+        [Obsolete("This method will be deprecated in a future release. Please change call to AddNamespace(string name).")]
         protected virtual CodeNamespace addNamespace(string name)
         {
             return AddNamespace(name);
