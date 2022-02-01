@@ -78,10 +78,10 @@ namespace Avro
         /// </summary>
         public CodeGen()
         {
-            this.Schemas = new List<Schema>();
-            this.Protocols = new List<Protocol>();
-            this.NamespaceMapping = new Dictionary<string, string>();
-            this.NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+            Schemas = new List<Schema>();
+            Protocols = new List<Protocol>();
+            NamespaceMapping = new Dictionary<string, string>();
+            NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Avro
         {
             CompileUnit = new CodeCompileUnit();
 
-            processSchemas();
+            ProcessSchemas();
             processProtocols();
 
             return CompileUnit;
@@ -167,8 +167,8 @@ namespace Avro
         /// <summary>
         /// Generates code for the schema objects.
         /// </summary>
-        /// <exception cref="Avro.CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
-        protected virtual void processSchemas()
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        protected virtual void ProcessSchemas()
         {
             foreach (Schema schema in this.Schemas)
             {
@@ -186,6 +186,16 @@ namespace Avro
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Generates code for the schema objects.
+        /// </summary>
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        [Obsolete("Use ProcessSchemas. This call will be deprecated in a future release.")]
+        protected virtual void processSchemas()
+        {
+            ProcessSchemas();
         }
 
         /// <summary>
