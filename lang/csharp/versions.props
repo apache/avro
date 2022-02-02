@@ -31,7 +31,6 @@
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
-    <SystemBuffersVersion>4.5.1</SystemBuffersVersion>
   </PropertyGroup>
 
   <!--
