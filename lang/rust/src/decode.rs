@@ -98,14 +98,16 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 scale,
             } => match &**inner {
                 Schema::Fixed { .. } => match decode0(inner, reader, schemas_by_name)? {
-                    Value::Fixed(_, bytes) => {
-                        Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
-                    }
+                    Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from_bytes(
+                        bytes, precision, scale,
+                    )?)),
                     value => Err(Error::FixedValue(value.into())),
                 },
                 Schema::Bytes => match decode0(inner, reader, schemas_by_name)? {
                     Value::Bytes(bytes) => {
-                        Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
+                        Ok(Value::Decimal(Decimal::from_bytes(
+                            bytes, precision, scale,
+                        )?))
                     }
                     value => Err(Error::BytesValue(value.into())),
                 },
@@ -351,11 +353,9 @@ mod tests {
             scale,
         };
         let bigint = (-423).to_bigint().unwrap();
-        let value = Value::Decimal(Decimal::from_bytes(
-            bigint.to_signed_bytes_be(),
-            precision,
-            scale,
-        ));
+        let value = Value::Decimal(
+            Decimal::from_bytes(bigint.to_signed_bytes_be(), precision, scale).unwrap(),
+        );
 
         let mut buffer = Vec::new();
         encode(&value, &schema, &mut buffer);
@@ -381,11 +381,14 @@ mod tests {
             precision,
             scale,
         };
-        let value = Value::Decimal(Decimal::from_bytes(
-            ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
-            precision,
-            scale,
-        ));
+        let value = Value::Decimal(
+            Decimal::from_bytes(
+                ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
+                precision,
+                scale,
+            )
+            .unwrap(),
+        );
         let mut buffer = Vec::<u8>::new();
 
         encode(&value, &schema, &mut buffer);

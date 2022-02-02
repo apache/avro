@@ -549,7 +549,9 @@ impl Value {
                     })
                 } else {
                     // precision and scale match, can we assume the underlying type can hold the data?
-                    Ok(Value::Decimal(Decimal::from_bytes(bytes, precision, scale)))
+                    Ok(Value::Decimal(Decimal::from_bytes(
+                        bytes, precision, scale,
+                    )?))
                 }
             }
             other => Err(Error::ResolveDecimal(other.into())),
@@ -1052,7 +1054,7 @@ mod tests {
     fn resolve_decimal_bytes() {
         let precision = 10;
         let scale = 4;
-        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale));
+        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale).unwrap());
         value
             .clone()
             .resolve(&Schema::Decimal {
@@ -1068,7 +1070,7 @@ mod tests {
     fn resolve_decimal_invalid_scale() {
         let precision = 2;
         let scale = 3;
-        let value = Value::Decimal(Decimal::from_bytes(vec![1], precision, scale));
+        let value = Value::Decimal(Decimal::from_bytes(vec![1], precision, scale).unwrap());
         assert!(value
             .resolve(&Schema::Decimal {
                 precision,
@@ -1082,11 +1084,9 @@ mod tests {
     fn resolve_decimal_invalid_precision_for_length() {
         let precision = 1;
         let scale = 0;
-        let value = Value::Decimal(Decimal::from_bytes(
-            (1u8..=8u8).rev().collect::<Vec<_>>(),
-            precision,
-            scale,
-        ));
+        let value = Value::Decimal(
+            Decimal::from_bytes((1u8..=8u8).rev().collect::<Vec<_>>(), 100, scale).unwrap(),
+        );
         assert!(value
             .resolve(&Schema::Decimal {
                 precision,
@@ -1100,7 +1100,7 @@ mod tests {
     fn resolve_decimal_fixed() {
         let precision = 10;
         let scale = 1;
-        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale));
+        let value = Value::Decimal(Decimal::from_bytes(vec![1, 2], precision, scale).unwrap());
         assert!(value
             .clone()
             .resolve(&Schema::Decimal {
@@ -1284,7 +1284,10 @@ mod tests {
             JsonValue::Number(1_i32.into())
         );
         assert_eq!(
-            JsonValue::try_from(Value::Decimal(Decimal::from_bytes(vec![1, 2, 3], 3, 0))).unwrap(),
+            JsonValue::try_from(Value::Decimal(
+                Decimal::from_bytes(vec![1, 2, 3], 5, 0).unwrap()
+            ))
+            .unwrap(),
             JsonValue::Array(vec![
                 JsonValue::Number(1_i32.into()),
                 JsonValue::Number(2_i32.into()),

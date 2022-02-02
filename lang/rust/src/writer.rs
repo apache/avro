@@ -516,7 +516,7 @@ mod tests {
                 scale,
                 inner: Box::new(inner.clone()),
             },
-            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale)),
+            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale).unwrap()),
             &inner,
             Value::Fixed(size, value),
         )
@@ -535,7 +535,7 @@ mod tests {
                 scale,
                 inner: Box::new(inner.clone()),
             },
-            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale)),
+            Value::Decimal(Decimal::from_bytes(value.clone(), precision, scale).unwrap()),
             &inner,
             value,
         )

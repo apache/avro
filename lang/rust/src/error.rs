@@ -252,7 +252,9 @@ pub enum Error {
         precision: serde_json::Value,
     },
 
-    #[error("Decimal's precision could be up to 308 (to fit in f64::MAX). Requested {precision:?}")]
+    #[error(
+        "Decimal's precision could be up to 308 (to fit in f64::MAX). Requested {precision:?}"
+    )]
     DecimalPrecisionTooLarge { precision: usize },
 
     #[error("Decimal's precision could not be NAN.")]

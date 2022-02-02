@@ -32,9 +32,9 @@ use std::str::FromStr;
 /// let decimal1 = Decimal::from_f64(9936.45).unwrap();
 /// let decimal1_as_f64 = decimal1.to_f64();
 ///
-/// let precision = 4;
+/// let precision = 9;
 /// let scale = 2;
-/// let decimal2 = Decimal::from_bytes(vec![9, 9, 3, 6], precision, scale);
+/// let decimal2 = Decimal::from_bytes(vec![9, 9, 3, 6], precision, scale).unwrap();
 /// let decimal2_as_f64 = decimal2.to_f64();
 ///
 /// ```
@@ -107,14 +107,30 @@ impl Decimal {
     }
 
     /// Create a new decimal from a signed Big-Endian encoded byte array
-    pub fn from_bytes<T: AsRef<[u8]>>(bytes: T, precision: usize, scale: usize) -> Self {
+    pub fn from_bytes<T: AsRef<[u8]>>(
+        bytes: T,
+        precision: usize,
+        scale: usize,
+    ) -> AvroResult<Self> {
         let bytes_ref = bytes.as_ref();
-        Self {
-            value: BigInt::from_signed_bytes_be(bytes_ref),
+        let big_int = BigInt::from_signed_bytes_be(bytes_ref);
+
+        let as_string = big_int.to_string();
+        let digits = as_string.len();
+
+        if digits > precision {
+            return Err(Error::ComparePrecisionAndSize {
+                precision,
+                num_bytes: digits,
+            });
+        }
+
+        Ok(Self {
+            value: big_int,
             len: bytes_ref.len(),
             precision,
             scale,
-        }
+        })
     }
 
     pub fn scale(&self) -> usize {
@@ -155,7 +171,7 @@ impl std::convert::TryFrom<&Decimal> for Vec<u8> {
 mod tests {
     use super::*;
     use crate::{schema::Schema, types::Record, Codec, Reader, Writer};
-    
+
     #[test]
     fn test_decimal_from_positive_f64() {
         let precision = 10;
@@ -248,6 +264,14 @@ mod tests {
         get_deserialized_decimal(decimal_value, precision, scale).unwrap();
     }
 
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_with_smaller_precision() {
+        let precision = 3;
+        let scale = 1;
+        get_deserialized_decimal(9936.23_f64, precision, scale).unwrap();
+    }
+
     fn assert_success(decimal_value: f64, precision: usize, scale: usize) {
         match get_deserialized_decimal(decimal_value, precision, scale) {
             Ok(decimal) => {
@@ -259,7 +283,11 @@ mod tests {
         }
     }
 
-    fn get_deserialized_decimal(number: f64, precision: usize, scale: usize) -> Result<Decimal, String> {
+    fn get_deserialized_decimal(
+        number: f64,
+        precision: usize,
+        scale: usize,
+    ) -> Result<Decimal, String> {
         let schema_str = r#"
            {
                 "type": "record",
@@ -277,8 +305,8 @@ mod tests {
                 ]
             }
         "#
-            .replace("{{PRECISION}}", &precision.to_string())
-            .replace("{{SCALE}}", &scale.to_string());
+        .replace("{{PRECISION}}", &precision.to_string())
+        .replace("{{SCALE}}", &scale.to_string());
 
         let schema = Schema::parse_str(schema_str.as_str()).unwrap();
         let mut datum = Record::new(&schema).unwrap();
