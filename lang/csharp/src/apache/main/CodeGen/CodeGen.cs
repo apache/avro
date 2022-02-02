@@ -153,7 +153,7 @@ namespace Avro
         /// Code Namespace.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
-        [Obsolete("This method will be deprecated in a future release. Please change call to AddNamespace(string name).")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to AddNamespace(string name).")]
         protected virtual CodeNamespace addNamespace(string name)
         {
             return AddNamespace(name);
@@ -203,7 +203,7 @@ namespace Avro
         /// Generates code for the schema objects.
         /// </summary>
         /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
-        [Obsolete("This method will be deprecated in a future release. Please change call to ProcessSchemas().")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to ProcessSchemas().")]
         protected virtual void processSchemas()
         {
             ProcessSchemas();
@@ -239,7 +239,7 @@ namespace Avro
         /// Generates code for the protocol objects.
         /// </summary>
         /// <exception cref="CodeGenException">Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
-        [Obsolete("This method will be deprecated in a future release. Please change call to ProcessProtocols().")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to ProcessProtocols().")]
         protected virtual void processProtocols()
         {
             ProcessProtocols();
@@ -253,7 +253,7 @@ namespace Avro
         /// List of named schemas.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
-        [Obsolete("Use GenerateNames. This call will be deprecated in a future release.")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please use GenerateNames() instead.")]
         protected virtual SchemaNames generateNames(Protocol protocol)
         {
             return GenerateNames(protocol);
@@ -290,7 +290,7 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
-        [Obsolete("Use GenerateNames.  This call will be deprecated in a future release.")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please use GenerateNames() instead.")]
         protected virtual SchemaNames generateNames(Schema schema)
         {
             return GenerateNames(schema);
@@ -1053,7 +1053,7 @@ namespace Avro
         /// schema that is nullable.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
-        [Obsolete("Use GetNullableType. This method will be deprecated in a future release.")]
+        [Obsolete("This method is deprecated and it will be removed in a future release! Please use GetNullableType() instead.")]
         public static Schema getNullableType(UnionSchema schema)
         {
             return GetNullableType(schema);
