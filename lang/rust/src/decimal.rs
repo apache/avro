@@ -55,10 +55,36 @@ impl Decimal {
     }
 }
 
+/// Gets the internal byte array representation of a referenced decimal.
+/// Usage:
+/// ```
+/// use apache_avro::Decimal;
+/// use std::convert::TryFrom;
+///
+/// let decimal = Decimal::from(vec![1, 24]);
+/// let maybe_bytes = <Vec<u8>>::try_from(&decimal);
+/// ```
 impl std::convert::TryFrom<&Decimal> for Vec<u8> {
     type Error = Error;
 
     fn try_from(decimal: &Decimal) -> Result<Self, Self::Error> {
+        decimal.to_vec()
+    }
+}
+
+/// Gets the internal byte array representation of an owned decimal.
+/// Usage:
+/// ```
+/// use apache_avro::Decimal;
+/// use std::convert::TryFrom;
+///
+/// let decimal = Decimal::from(vec![1, 24]);
+/// let maybe_bytes = <Vec<u8>>::try_from(decimal);
+/// ```
+impl std::convert::TryFrom<Decimal> for Vec<u8> {
+    type Error = Error;
+
+    fn try_from(decimal: Decimal) -> Result<Self, Self::Error> {
         decimal.to_vec()
     }
 }
@@ -70,5 +96,29 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
             value: BigInt::from_signed_bytes_be(bytes_ref),
             len: bytes_ref.len(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::convert::TryFrom;
+
+    #[test]
+    fn test_decimal_from_bytes_from_ref_decimal() {
+        let input = vec![1, 24];
+        let d = Decimal::from(&input);
+
+        let output = <Vec<u8>>::try_from(&d).unwrap();
+        assert_eq!(output, input);
+    }
+
+    #[test]
+    fn test_decimal_from_bytes_from_owned_decimal() {
+        let input = vec![1, 24];
+        let d = Decimal::from(&input);
+
+        let output = <Vec<u8>>::try_from(d).unwrap();
+        assert_eq!(output, input);
     }
 }
