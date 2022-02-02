@@ -175,39 +175,39 @@ namespace Avro.Test
         [TestCase("{ \"type\": \"double\", \"metafield\": \"abc\" }", Schema.Type.Double)]
         [TestCase("{ \"type\": \"bytes\", \"metafield\": \"abc\" }", Schema.Type.Bytes)]
         [TestCase("{ \"type\": \"string\", \"metafield\": \"abc\" }", Schema.Type.String)]
-        public void TestPrimitiveWithMetadata(string s, Schema.Type type)
+        public void TestPrimitiveWithMetadata(string rawSchema, Schema.Type type)
         {
-            Schema sc1 = Schema.Parse(s);
-            Assert.IsTrue(sc1 is PrimitiveSchema);
-            Assert.AreEqual(type.ToString().ToLower(), sc1.Name);
-            Assert.AreEqual(type, sc1.Tag);
+            Schema definedSchema = Schema.Parse(rawSchema);
+            Assert.IsTrue(definedSchema is PrimitiveSchema);
+            Assert.AreEqual(type.ToString().ToLower(), definedSchema.Name);
+            Assert.AreEqual(type, definedSchema.Tag);
 
-            testEquality(s, sc1);
-            testToString(sc1);
+            testEquality(rawSchema, definedSchema);
+            testToString(definedSchema);
 
-            Assert.True(sc1.ToString().Contains("metafield"));
+            Assert.True(definedSchema.ToString().Contains("metafield"));
 
-            var recordSchemaString = "{\"type\":\"record\",\"name\":\"Foo\"," +
-                "\"fields\":[{\"name\":\"f1\",\"type\":" + s +
+            var rawRecordSchema = "{\"type\":\"record\",\"name\":\"Foo\"," +
+                "\"fields\":[{\"name\":\"f1\",\"type\":" + rawSchema +
                 "}]}";
-            Schema sc2 = Schema.Parse(recordSchemaString);
-            Assert.AreEqual(Schema.Type.Record, sc2.Tag);
-            RecordSchema rs = sc2 as RecordSchema;
-            Assert.IsNotNull(rs);
-            Assert.AreEqual(1, rs.Count);
+            Schema baseRecordSchema = Schema.Parse(rawRecordSchema);
+            Assert.AreEqual(Schema.Type.Record, baseRecordSchema.Tag);
+            RecordSchema recordSchema = baseRecordSchema as RecordSchema;
+            Assert.IsNotNull(recordSchema);
+            Assert.AreEqual(1, recordSchema.Count);
 
-            Assert.IsTrue(rs["f1"].Schema is PrimitiveSchema);
-            Assert.AreEqual(type.ToString().ToLower(), rs["f1"].Schema.Name);
-            Assert.AreEqual(type, rs["f1"].Schema.Tag);
+            Assert.IsTrue(recordSchema["f1"].Schema is PrimitiveSchema);
+            Assert.AreEqual(type.ToString().ToLower(), recordSchema["f1"].Schema.Name);
+            Assert.AreEqual(type, recordSchema["f1"].Schema.Tag);
 
-            testEquality(recordSchemaString, sc2);
-            testToString(rs["f1"].Schema);
+            testEquality(rawRecordSchema, baseRecordSchema);
+            testToString(recordSchema["f1"].Schema);
 
-            Assert.True(sc2.ToString().Contains("metafield"));
-            Assert.True(rs["f1"].Schema.ToString().Contains("metafield"));
+            Assert.True(baseRecordSchema.ToString().Contains("metafield"));
+            Assert.True(recordSchema["f1"].Schema.ToString().Contains("metafield"));
 
-            Assert.True(sc1.Equals(rs["f1"].Schema));
-            Assert.AreEqual(sc1.GetHashCode(),rs["f1"].Schema.GetHashCode());
+            Assert.True(definedSchema.Equals(recordSchema["f1"].Schema));
+            Assert.AreEqual(definedSchema.GetHashCode(),recordSchema["f1"].Schema.GetHashCode());
         }
 
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
