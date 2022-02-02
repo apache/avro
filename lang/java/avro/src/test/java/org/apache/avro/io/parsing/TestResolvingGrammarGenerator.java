@@ -88,8 +88,10 @@ public class TestResolvingGrammarGenerator {
 
   @Test
   public void testDifferingEnumNamespaces() throws Exception {
-    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_1).noDefault().endRecord();
-    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_2).noDefault().endRecord();
+    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_1)
+        .noDefault().endRecord();
+    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_2)
+        .noDefault().endRecord();
     GenericData.EnumSymbol genericEnumSymbol = new GenericData.EnumSymbol(ENUM1_AB_SCHEMA_NAMESPACE_1, "A");
     GenericData.Record record = new GenericRecordBuilder(schema1).set("field", genericEnumSymbol).build();
     byte[] data = writeRecord(schema1, record);
