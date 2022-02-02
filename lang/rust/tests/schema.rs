@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::{
+use apache_avro::{
     schema::{Name, RecordField},
     types::{Record, Value},
     Codec, Error, Reader, Schema, Writer,

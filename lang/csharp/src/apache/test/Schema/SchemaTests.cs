@@ -167,6 +167,24 @@ namespace Avro.Test
             }
         }
 
+        private static void testToString(Schema sc, string schema)
+        {
+            try
+            {
+                //remove any excess spaces in the JSON to normalize the match with toString 
+                schema = schema.Replace("{ ", "{")
+                    .Replace("} ", "}")
+                    .Replace("\" ", "\"")
+                    .Replace(", ", ",")
+                    .Replace(": ", ":");
+                Assert.AreEqual(sc.ToString(), schema);
+            }
+            catch (Exception e)
+            {
+                throw new AvroException($"{e} : {sc}", e);
+            }
+        }
+
         [TestCase("{ \"type\": \"null\", \"metafield\": \"abc\" }", Schema.Type.Null)]
         [TestCase("{ \"type\": \"boolean\", \"metafield\": \"abc\" }", Schema.Type.Boolean)]
         [TestCase("{ \"type\": \"int\", \"metafield\": \"abc\" }", Schema.Type.Int)]
@@ -274,6 +292,8 @@ namespace Avro.Test
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
             new string[] { "A", "B" })]
+        [TestCase("{\"type\": \"enum\",\"name\":\"Market\",\"symbols\":[\"UNKNOWN\",\"A\",\"B\"],\"default\":\"UNKNOWN\"}",
+            new string[] { "UNKNOWN", "A", "B" })]
         public void TestEnum(string s, string[] symbols)
         {
             Schema sc = Schema.Parse(s);
@@ -282,13 +302,13 @@ namespace Avro.Test
             Assert.AreEqual(symbols.Length, es.Count);
 
             int i = 0;
-            foreach (String str in es)
+            foreach (string str in es)
             {
                 Assert.AreEqual(symbols[i++], str);
             }
 
             testEquality(s, sc);
-            testToString(sc);
+            testToString(sc, s);
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}", null)]

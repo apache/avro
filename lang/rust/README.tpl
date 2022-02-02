@@ -1,8 +1,8 @@
 # {{crate}}
 
-[![Latest Version](https://img.shields.io/crates/v/avro-rs.svg)](https://crates.io/crates/avro-rs)
+[![Latest Version](https://img.shields.io/crates/v/apache-avro.svg)](https://crates.io/crates/apache-avro)
 [![Rust Continuous Integration](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml/badge.svg)](https://github.com/apache/avro/actions/workflows/test-lang-rust-ci.yml)
-[![Latest Documentation](https://docs.rs/avro-rs/badge.svg)](https://docs.rs/avro-rs)
+[![Latest Documentation](https://docs.rs/apache-avro/badge.svg)](https://docs.rs/apache-avro)
 [![Apache License 2.0](https://img.shields.io/badge/license-Apache%202-blue.svg](https://github.com/apache/avro/blob/master/LICENSE.txt)
 
 {{readme}}

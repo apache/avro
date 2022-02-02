@@ -21,9 +21,6 @@ namespace Avro.File
     /// <summary>
     /// Constants used in data files.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
-        "CA1052:Static holder types should be Static or NotInheritable",
-        Justification = "Maintain public API")]
     public class DataFileConstants
     {
         /// <summary>
@@ -64,10 +61,13 @@ namespace Avro.File
         /// <summary>
         /// Magic bytes at the beginning of an Avro data file.
         /// </summary>
-        public static byte[] Magic = { (byte)'O',
-                                       (byte)'b',
-                                       (byte)'j',
-                                       Version };
+        public static readonly byte[] Magic =
+        {
+            (byte)'O',
+            (byte)'b',
+            (byte)'j',
+            Version,
+        };
 
         /// <summary>
         /// Hash code for the null codec.

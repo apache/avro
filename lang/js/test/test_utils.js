@@ -25,33 +25,33 @@ var utils = require('../lib/utils'),
     assert = require('assert');
 
 
-suite('utils', function () {
+describe('utils', function () {
 
-  test('capitalize', function () {
+  it('capitalize', function () {
     assert.equal(utils.capitalize('abc'), 'Abc');
     assert.equal(utils.capitalize(''), '');
     assert.equal(utils.capitalize('aBc'), 'ABc');
   });
 
-  test('hasDuplicates', function () {
+  it('hasDuplicates', function () {
     assert(utils.hasDuplicates([1, 3, 1]));
     assert(!utils.hasDuplicates([]));
     assert(!utils.hasDuplicates(['ab', 'cb']));
     assert(utils.hasDuplicates(['ab', 'cb'], function (s) { return s[1]; }));
   });
 
-  test('single index of', function () {
+  it('single index of', function () {
     assert.equal(utils.singleIndexOf(null, 1), -1);
     assert.equal(utils.singleIndexOf([2], 2), 0);
     assert.equal(utils.singleIndexOf([3, 3], 3), -2);
     assert.equal(utils.singleIndexOf([2, 4], 4), 1);
   });
 
-  test('abstract function', function () {
+  it('abstract function', function () {
     assert.throws(utils.abstractFunction, utils.Error);
   });
 
-  test('OrderedQueue', function () {
+  it('OrderedQueue', function () {
 
     var seqs = [
       [0],
@@ -83,15 +83,15 @@ suite('utils', function () {
 
   });
 
-  suite('Lcg', function () {
+  describe('Lcg', function () {
 
-    test('seed', function () {
+    it('seed', function () {
       var r1 = new utils.Lcg(48);
       var r2 = new utils.Lcg(48);
       assert.equal(r1.nextInt(), r2.nextInt());
     });
 
-    test('integer', function () {
+    it('integer', function () {
       var r = new utils.Lcg(48);
       var i;
       i = r.nextInt();
@@ -102,7 +102,7 @@ suite('utils', function () {
       assert.equal(i, 1);
     });
 
-    test('float', function () {
+    it('float', function () {
       var r = new utils.Lcg(48);
       var f;
       f = r.nextFloat();
@@ -113,19 +113,19 @@ suite('utils', function () {
       assert.equal(f, 1);
     });
 
-    test('boolean', function () {
+    it('boolean', function () {
       var r = new utils.Lcg(48);
       assert(typeof r.nextBoolean() == 'boolean');
     });
 
-    test('choice', function () {
+    it('choice', function () {
       var r = new utils.Lcg(48);
       var arr = ['a'];
       assert(r.choice(arr), 'a');
       assert.throws(function () { r.choice([]); });
     });
 
-    test('string', function () {
+    it('string', function () {
       var r = new utils.Lcg(48);
       var s;
       s = r.nextString(10, 'aA#!');
@@ -136,11 +136,11 @@ suite('utils', function () {
 
   });
 
-  suite('Tap', function () {
+  describe('Tap', function () {
 
     var Tap = utils.Tap;
 
-    suite('int & long', function () {
+    describe('int & long', function () {
 
       testWriterReader({
         elems: [0, -1, 109213, -1211, -1312411211, 900719925474090],
@@ -149,7 +149,7 @@ suite('utils', function () {
         writer: function (n) { this.writeLong(n); }
       });
 
-      test('write', function () {
+      it('write', function () {
 
         var tap = newTap(6);
         tap.writeLong(1440756011948);
@@ -159,7 +159,7 @@ suite('utils', function () {
 
       });
 
-      test('read', function () {
+      it('read', function () {
 
         var buf = Buffer.from(['0xd8', '0xce', '0x80', '0xbc', '0xee', '0x53']);
         assert.equal((new Tap(buf)).readLong(), 1440756011948);
@@ -168,7 +168,7 @@ suite('utils', function () {
 
     });
 
-    suite('boolean', function () {
+    describe('boolean', function () {
 
       testWriterReader({
         elems: [true, false],
@@ -179,7 +179,7 @@ suite('utils', function () {
 
     });
 
-    suite('float', function () {
+    describe('float', function () {
 
       testWriterReader({
         elems: [1, 3,1, -5, 1e9],
@@ -190,7 +190,7 @@ suite('utils', function () {
 
     });
 
-    suite('double', function () {
+    describe('double', function () {
 
       testWriterReader({
         elems: [1, 3,1, -5, 1e12],
@@ -201,7 +201,7 @@ suite('utils', function () {
 
     });
 
-    suite('string', function () {
+    describe('string', function () {
 
       testWriterReader({
         elems: ['ahierw', '', 'alh hewlii! rew'],
@@ -212,7 +212,7 @@ suite('utils', function () {
 
     });
 
-    suite('bytes', function () {
+    describe('bytes', function () {
 
       testWriterReader({
         elems: [Buffer.from('abc'), Buffer.alloc(0), Buffer.from([1, 5, 255])],
@@ -223,7 +223,7 @@ suite('utils', function () {
 
     });
 
-    suite('fixed', function () {
+    describe('fixed', function () {
 
       testWriterReader({
         elems: [Buffer.from([1, 5, 255])],
@@ -234,16 +234,16 @@ suite('utils', function () {
 
     });
 
-    suite('binary', function () {
+    describe('binary', function () {
 
-      test('write valid', function () {
+      it('write valid', function () {
         var tap = newTap(3);
         var s = '\x01\x02';
         tap.writeBinary(s, 2);
         assert.deepEqual(tap.buf, Buffer.from([1,2,0]));
       });
 
-      test('write invalid', function () {
+      it('write invalid', function () {
         var tap = newTap(1);
         var s = '\x01\x02';
         tap.writeBinary(s, 2);
@@ -252,9 +252,9 @@ suite('utils', function () {
 
     });
 
-    suite('pack & unpack longs', function () {
+    describe('pack & unpack longs', function () {
 
-      test('unpack single byte', function () {
+      it('unpack single byte', function () {
         var t = newTap(10);
         t.writeLong(5);
         t.pos = 0;
@@ -272,7 +272,7 @@ suite('utils', function () {
         t.pos = 0;
       });
 
-      test('unpack multiple bytes', function () {
+      it('unpack multiple bytes', function () {
         var t = newTap(10);
         var l;
         l = 18932;
@@ -286,7 +286,7 @@ suite('utils', function () {
         assert.deepEqual(t.unpackLongBytes().readInt32LE(), l);
       });
 
-      test('pack single byte', function () {
+      it('pack single byte', function () {
         var t = newTap(10);
         var b = Buffer.alloc(8);
         b.fill(0);
@@ -311,7 +311,7 @@ suite('utils', function () {
         assert.deepEqual(t.readLong(), -1);
       });
 
-      test('roundtrip', function () {
+      it('roundtrip', function () {
         roundtrip(1231514);
         roundtrip(-123);
         roundtrip(124124);
@@ -350,7 +350,7 @@ suite('utils', function () {
       var skipFn = opts.skipper;
       var name = opts.name || '';
 
-      test('write read ' + name, function () {
+      it('write read ' + name, function () {
         var tap = newTap(size || 1024);
         var i, l, elem;
         for (i = 0, l = elems.length; i < l; i++) {
@@ -363,19 +363,19 @@ suite('utils', function () {
         }
       });
 
-      test('read over ' + name, function () {
+      it('read over ' + name, function () {
         var tap = new Tap(Buffer.alloc(0));
         readFn.call(tap); // Shouldn't throw.
         assert(!tap.isValid());
       });
 
-      test('write over ' + name, function () {
+      it('write over ' + name, function () {
         var tap = new Tap(Buffer.alloc(0));
         writeFn.call(tap, elems[0]); // Shouldn't throw.
         assert(!tap.isValid());
       });
 
-      test('skip ' + name, function () {
+      it('skip ' + name, function () {
         var tap = newTap(size || 1024);
         var i, l, elem, pos;
         for (i = 0, l = elems.length; i < l; i++) {

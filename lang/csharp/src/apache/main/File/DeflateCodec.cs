@@ -54,8 +54,9 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override byte[] Decompress(byte[] compressedData)
+        public override byte[] Decompress(byte[] compressedData, int length)
         {
+            
             MemoryStream inStream = new MemoryStream(compressedData);
             MemoryStream outStream = new MemoryStream();
 

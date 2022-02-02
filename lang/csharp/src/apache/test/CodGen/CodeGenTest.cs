@@ -29,6 +29,13 @@ namespace Avro.Test
 
     class CodeGenTest
     {
+
+        [Test]
+        public void TestGetNullableTypeException()
+        {
+            Assert.Throws<ArgumentNullException>(() => CodeGen.GetNullableType(null));
+        }
+
 #if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
@@ -196,5 +203,15 @@ namespace Avro.Test
             return compres;
         }
 #endif
+        [TestFixture]
+        public class CodeGenTestClass : CodeGen
+        {
+            [Test]
+            public void TestGenerateNamesException()
+            {
+                Protocol protocol = null;
+                Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+        }
     }
 }
