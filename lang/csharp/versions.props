@@ -34,14 +34,13 @@
     <SystemBuffersVersion>4.5.1</SystemBuffersVersion>
   </PropertyGroup>
 
-  <!--
-    These package versions are the bare minimum requriement. Only update the version of these dependencies,
-    if functionality requires it. Leave it up to the users of the library as to whether or not they want the 
-    latest and greatest of a particularly dependency.
-    !!! ONLY UPDATE IF FUNCTIONALITY REQUIRES IT !!!
-  -->
   <PropertyGroup Label="Minimum Package Versions">
+    <!--
+    !!! ONLY UPDATE Newtonsoft JSON IF FUNCTIONALITY REQUIRES IT !!!
+    See https://github.com/apache/avro/pull/1126 & https://github.com/apache/avro/pull/981 for more details
+    -->
     <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
+    
     <SystemCodeDomMinimumVersion>6.0.0</SystemCodeDomMinimumVersion>
     <SystemReflectionMinimumVersion>4.3.0</SystemReflectionMinimumVersion>
     <SystemReflectionEmitILGenerationMinimumVersion>4.7.0</SystemReflectionEmitILGenerationMinimumVersion>
