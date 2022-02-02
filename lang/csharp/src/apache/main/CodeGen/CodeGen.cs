@@ -78,10 +78,10 @@ namespace Avro
         /// </summary>
         public CodeGen()
         {
-            this.Schemas = new List<Schema>();
-            this.Protocols = new List<Protocol>();
-            this.NamespaceMapping = new Dictionary<string, string>();
-            this.NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+            Schemas = new List<Schema>();
+            Protocols = new List<Protocol>();
+            NamespaceMapping = new Dictionary<string, string>();
+            NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -120,19 +120,16 @@ namespace Avro
         /// Code Namespace.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
-        protected virtual CodeNamespace addNamespace(string name)
+        protected virtual CodeNamespace AddNamespace(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 throw new ArgumentNullException(nameof(name), "name cannot be null.");
             }
 
-            CodeNamespace ns = null;
-
-            if (!NamespaceLookup.TryGetValue(name, out ns))
+            if (!NamespaceLookup.TryGetValue(name, out CodeNamespace ns))
             {
-                string csharpNamespace;
-                ns = NamespaceMapping.TryGetValue(name, out csharpNamespace)
+                ns = NamespaceMapping.TryGetValue(name, out string csharpNamespace)
                     ? new CodeNamespace(csharpNamespace)
                     : new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
 
@@ -149,6 +146,20 @@ namespace Avro
         }
 
         /// <summary>
+        /// Adds a namespace object for the given name into the dictionary if it doesn't exist yet.
+        /// </summary>
+        /// <param name="name">name of namespace.</param>
+        /// <returns>
+        /// Code Namespace.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
+        [Obsolete("This method will be deprecated in a future release. Please change call to AddNamespace(string name).")]
+        protected virtual CodeNamespace addNamespace(string name)
+        {
+            return AddNamespace(name);
+        }
+
+        /// <summary>
         /// Generates code for the given protocol and schema objects.
         /// </summary>
         /// <returns>
@@ -158,7 +169,7 @@ namespace Avro
         {
             CompileUnit = new CodeCompileUnit();
 
-            processSchemas();
+            ProcessSchemas();
             ProcessProtocols();
 
             return CompileUnit;
@@ -167,8 +178,8 @@ namespace Avro
         /// <summary>
         /// Generates code for the schema objects.
         /// </summary>
-        /// <exception cref="Avro.CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
-        protected virtual void processSchemas()
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        protected virtual void ProcessSchemas()
         {
             foreach (Schema schema in this.Schemas)
             {
@@ -186,6 +197,16 @@ namespace Avro
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Generates code for the schema objects.
+        /// </summary>
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        [Obsolete("This method will be deprecated in a future release. Please change call to ProcessSchemas().")]
+        protected virtual void processSchemas()
+        {
+            ProcessSchemas();
         }
 
         /// <summary>
@@ -416,7 +437,7 @@ namespace Avro
                 throw new CodeGenException("Namespace required for enum schema " + fixedSchema.Name);
             }
 
-            CodeNamespace codens = addNamespace(nspace);
+            CodeNamespace codens = AddNamespace(nspace);
             codens.Types.Add(ctd);
         }
 
@@ -465,7 +486,7 @@ namespace Avro
                 throw new CodeGenException("Namespace required for enum schema " + enumschema.Name);
             }
 
-            CodeNamespace codens = addNamespace(nspace);
+            CodeNamespace codens = AddNamespace(nspace);
 
             codens.Types.Add(ctd);
         }
@@ -553,7 +574,7 @@ namespace Avro
                 throw new CodeGenException("Namespace required for enum schema " + nspace);
             }
 
-            CodeNamespace codens = addNamespace(nspace);
+            CodeNamespace codens = AddNamespace(nspace);
 
             codens.Types.Add(ctd);
 
@@ -847,7 +868,7 @@ namespace Avro
                 throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
             }
 
-            CodeNamespace codens = addNamespace(nspace);
+            CodeNamespace codens = AddNamespace(nspace);
 
             codens.Types.Add(ctd);
 
