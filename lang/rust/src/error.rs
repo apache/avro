@@ -252,6 +252,9 @@ pub enum Error {
         precision: serde_json::Value,
     },
 
+    #[error("Decimal's precision could be up to 128. Requested {precision:?}")]
+    DecimalPrecisionTooLarge { precision: usize },
+
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
 

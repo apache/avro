@@ -89,6 +89,10 @@ impl Decimal {
             None => (as_str.clone(), as_str.len(), 0),
         };
 
+        if precision > 128 {
+            return Err(Error::DecimalPrecisionTooLarge { precision });
+        }
+
         Ok(Self {
             value: BigInt::from_str(decimal_str.as_str()).unwrap(),
             len: decimal_str.len(),
@@ -117,7 +121,7 @@ impl Decimal {
     }
 
     pub fn to_f64(&self) -> f64 {
-        let unsigned = self.value.to_u128().unwrap();
+        let unsigned = self.value.to_i128().unwrap();
 
         if self.scale == 0 {
             unsigned.to_f64().unwrap()
@@ -148,7 +152,46 @@ mod tests {
     use crate::{schema::Schema, types::Record, Codec, Reader, Writer};
 
     #[test]
-    fn test_decimal_schema() {
+    fn test_decimal_from_positive_f64() {
+        assert_success(9936.23_f64);
+    }
+
+    #[test]
+    fn test_decimal_from_negative_f64() {
+        assert_success(-9936.23_f64);
+    }
+
+    #[test]
+    fn test_decimal_from_0_f64() {
+        assert_success(0_f64);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_max_f64() {
+        let decimal_value = f64::MAX;
+        get_deserialized_decimal(decimal_value).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_min_f64() {
+        let decimal_value = f64::MIN;
+        get_deserialized_decimal(decimal_value).unwrap();
+    }
+
+    fn assert_success(decimal_value: f64) {
+        match get_deserialized_decimal(decimal_value) {
+            Ok(decimal) => {
+                assert_eq!(decimal.to_f64(), decimal_value);
+                assert_eq!(decimal.precision(), 10);
+                assert_eq!(decimal.scale(), 2);
+            }
+            Err(msg) => panic!("{}", msg),
+        }
+    }
+
+    fn get_deserialized_decimal(number: f64) -> Result<Decimal, String> {
         let schema_str = r#"
             {
                 "type": "record",
@@ -168,8 +211,8 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema_str).unwrap();
         let mut datum = Record::new(&schema).unwrap();
-        let decimal_value = 9936.23_f64;
-        datum.put("decimal", Decimal::from_f64(decimal_value).unwrap());
+
+        datum.put("decimal", Decimal::from_f64(number).unwrap());
         let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Null);
         writer.append(datum).unwrap();
         let bytes = writer.into_inner().unwrap();
@@ -182,9 +225,7 @@ mod tests {
                     let (_name, decimal) = fields.get(0).unwrap();
                     match decimal {
                         crate::types::Value::Decimal(decimal) => {
-                            assert_eq!(decimal.to_f64(), decimal_value);
-                            assert_eq!(decimal.precision(), 10);
-                            assert_eq!(decimal.scale(), 2);
+                            return Ok(decimal.clone());
                         }
                         _ => panic!("unexpected value: {:?}", decimal),
                     }
@@ -192,5 +233,6 @@ mod tests {
                 _ => panic!("unexpected type: {:?}", value),
             }
         }
+        panic!("unexpected end of reader");
     }
 }
