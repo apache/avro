@@ -77,6 +77,10 @@ impl Decimal {
     }
 
     pub fn from_f64(decimal: f64) -> AvroResult<Self> {
+        if decimal.is_nan() {
+            return Err(Error::DecimalPrecisionNAN);
+        }
+
         let as_str = format!("{}", decimal);
         let (decimal_str, precision, scale) = match as_str.find('.') {
             Some(index) => {
@@ -89,7 +93,8 @@ impl Decimal {
             None => (as_str.clone(), as_str.len(), 0),
         };
 
-        if precision > 128 {
+        // f64::MAX is 309 digits, so we can't have more than 308.
+        if precision > 308 {
             return Err(Error::DecimalPrecisionTooLarge { precision });
         }
 
@@ -121,12 +126,12 @@ impl Decimal {
     }
 
     pub fn to_f64(&self) -> f64 {
-        let unsigned = self.value.to_i128().unwrap();
+        let float = self.value.to_f64().unwrap();
 
         if self.scale == 0 {
-            unsigned.to_f64().unwrap()
+            float
         } else {
-            let mut f = unsigned.to_f64().unwrap();
+            let mut f = float;
             let mut scale = self.scale;
             while scale > 0 {
                 f /= 10.0;
@@ -150,50 +155,113 @@ impl std::convert::TryFrom<&Decimal> for Vec<u8> {
 mod tests {
     use super::*;
     use crate::{schema::Schema, types::Record, Codec, Reader, Writer};
-
+    
     #[test]
     fn test_decimal_from_positive_f64() {
-        assert_success(9936.23_f64);
+        let precision = 10;
+        let scale = 2;
+        assert_success(9936.23_f64, precision, scale);
     }
 
     #[test]
     fn test_decimal_from_negative_f64() {
-        assert_success(-9936.23_f64);
+        let precision = 10;
+        let scale = 2;
+        assert_success(-9936.23_f64, precision, scale);
     }
 
     #[test]
     fn test_decimal_from_0_f64() {
-        assert_success(0_f64);
+        let precision = 10;
+        let scale = 2;
+        assert_success(0_f64, precision, scale);
     }
 
     #[test]
     #[should_panic]
     fn test_decimal_from_max_f64() {
+        let precision = usize::MAX;
+        let scale = 2;
         let decimal_value = f64::MAX;
-        get_deserialized_decimal(decimal_value).unwrap();
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_decimal_from_min_f64() {
+        let precision = usize::MAX;
+        let scale = 2;
         let decimal_value = f64::MIN;
-        get_deserialized_decimal(decimal_value).unwrap();
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
     }
 
-    fn assert_success(decimal_value: f64) {
-        match get_deserialized_decimal(decimal_value) {
+    #[test]
+    fn test_decimal_from_f64_with_128_digits() {
+        let precision = 128;
+        let scale = 0;
+        let decimal_value = 1e+127_f64;
+        assert_success(decimal_value, precision, scale);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_with_309_digits_big() {
+        let precision = 500;
+        let scale = 2;
+        let decimal_value = 1e+308_f64;
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_with_309_digits_small() {
+        let precision = 500;
+        let scale = 2;
+        let decimal_value = 1e-308_f64;
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_nan() {
+        let precision = usize::MAX;
+        let scale = 2;
+        let decimal_value = f64::NAN;
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_negative_infinity() {
+        let precision = usize::MAX;
+        let scale = 2;
+        let decimal_value = f64::NEG_INFINITY;
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_decimal_from_f64_positive_infinity() {
+        let precision = usize::MAX;
+        let scale = 2;
+        let decimal_value = f64::INFINITY;
+        get_deserialized_decimal(decimal_value, precision, scale).unwrap();
+    }
+
+    fn assert_success(decimal_value: f64, precision: usize, scale: usize) {
+        match get_deserialized_decimal(decimal_value, precision, scale) {
             Ok(decimal) => {
                 assert_eq!(decimal.to_f64(), decimal_value);
-                assert_eq!(decimal.precision(), 10);
-                assert_eq!(decimal.scale(), 2);
+                assert_eq!(decimal.precision(), precision);
+                assert_eq!(decimal.scale(), scale);
             }
             Err(msg) => panic!("{}", msg),
         }
     }
 
-    fn get_deserialized_decimal(number: f64) -> Result<Decimal, String> {
+    fn get_deserialized_decimal(number: f64, precision: usize, scale: usize) -> Result<Decimal, String> {
         let schema_str = r#"
-            {
+           {
                 "type": "record",
                 "name":"DecimalTest",
                 "fields": [
@@ -202,14 +270,17 @@ mod tests {
                         "type": {
                             "type": "bytes",
                             "logicalType": "decimal",
-                            "precision": 10,
-                            "scale": 2
+                            "precision": {{PRECISION}},
+                            "scale": {{SCALE}}
                         }
                     }
                 ]
             }
-        "#;
-        let schema = Schema::parse_str(schema_str).unwrap();
+        "#
+            .replace("{{PRECISION}}", &precision.to_string())
+            .replace("{{SCALE}}", &scale.to_string());
+
+        let schema = Schema::parse_str(schema_str.as_str()).unwrap();
         let mut datum = Record::new(&schema).unwrap();
 
         datum.put("decimal", Decimal::from_f64(number).unwrap());
