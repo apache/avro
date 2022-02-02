@@ -104,11 +104,9 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     value => Err(Error::FixedValue(value.into())),
                 },
                 Schema::Bytes => match decode0(inner, reader, schemas_by_name)? {
-                    Value::Bytes(bytes) => {
-                        Ok(Value::Decimal(Decimal::from_bytes(
-                            bytes, precision, scale,
-                        )?))
-                    }
+                    Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from_bytes(
+                        bytes, precision, scale,
+                    )?)),
                     value => Err(Error::BytesValue(value.into())),
                 },
                 schema => Err(Error::ResolveDecimalSchema(schema.into())),
