@@ -27,11 +27,12 @@ namespace Avro.File
     /// <summary>
     /// Stores in a file a sequence of data conforming to a schema. The schema is stored in the file
     /// with the data. Each datum in a file is of the same schema. Data is written with a
-    /// <see cref="DatumWriter{T}"/>. Data is grouped into blocks. A synchronization marker is
+    /// <see cref="DatumWriter{T}" />. Data is grouped into blocks. A synchronization marker is
     /// written between blocks, so that files may be split. Blocks may be compressed. Extensible
     /// metadata is stored at the end of the file. Files may be appended to.
     /// </summary>
     /// <typeparam name="T">Type of datum to write to the file.</typeparam>
+    /// <seealso cref="IFileWriter&lt;T&gt;" />
     public class DataFileWriter<T> : IFileWriter<T>
     {
         private Schema _schema;
@@ -56,7 +57,9 @@ namespace Avro.File
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path)
         {
             return OpenWriter(writer, new FileStream(path, FileMode.Create), Codec.CreateCodec(Codec.Type.Null));
@@ -68,7 +71,9 @@ namespace Avro.File
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="outStream">Stream to write to.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream)
         {
             return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null));
@@ -81,7 +86,9 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="outStream">Stream to write to.</param>
         /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, bool leaveOpen)
         {
             return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null), leaveOpen);
@@ -94,7 +101,9 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
         /// <param name="codec">Codec to use when writing.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path, Codec codec)
         {
             return OpenWriter(writer, new FileStream(path, FileMode.Create), codec);
@@ -107,7 +116,9 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="outStream">Stream to write to.</param>
         /// <param name="codec">Codec to use when writing.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec)
         {
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, false);
@@ -121,7 +132,9 @@ namespace Avro.File
         /// <param name="outStream">Stream to write to.</param>
         /// <param name="codec">Codec to use when writing.</param>
         /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec, bool leaveOpen)
         {
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, leaveOpen);
@@ -132,7 +145,9 @@ namespace Avro.File
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
         public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path)
         {
             return new DataFileWriter<T>(writer).AppendTo(path);
@@ -145,7 +160,14 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="inStream">reading the existing file.</param>
         /// <param name="outStream">stream to write to, positioned at the end of the existing file.</param>
-        /// <returns>A new file writer.</returns>
+        /// <returns>
+        /// A new file writer.
+        /// </returns>
+        /// <exception cref="AvroRuntimeException">
+        /// {nameof(inStream)} must have Read access
+        /// or
+        /// {nameof(outStream)} must have Write access
+        /// </exception>
         public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
         {
             if (!inStream.CanRead)
@@ -161,6 +183,10 @@ namespace Avro.File
             return new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataFileWriter{T}"/> class.
+        /// </summary>
+        /// <param name="writer">The writer.</param>
         private DataFileWriter(DatumWriter<T> writer)
         {
             _writer = writer;
@@ -240,6 +266,11 @@ namespace Avro.File
             WriteIfBlockFull();
         }
 
+        /// <summary>
+        /// Appends to file.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>a file writer</returns>
         private IFileWriter<T> AppendTo(string path)
         {
             using (var inStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -252,6 +283,12 @@ namespace Avro.File
             // of this writer.
         }
 
+        /// <summary>
+        /// Appends to stream.
+        /// </summary>
+        /// <param name="inStream">The in stream.</param>
+        /// <param name="outStream">The out stream.</param>
+        /// <returns></returns>
         private IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
         {
             using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
@@ -281,6 +318,9 @@ namespace Avro.File
             return this;
         }
 
+        /// <summary>
+        /// Ensures the header.
+        /// </summary>
         private void EnsureHeader()
         {
             if (!_headerWritten)
@@ -304,6 +344,9 @@ namespace Avro.File
             return _stream.Position;
         }
 
+        /// <summary>
+        /// Synchronizes the internal.
+        /// </summary>
         private void SyncInternal()
         {
             AssertOpen();
@@ -323,6 +366,9 @@ namespace Avro.File
             _isOpen = false;
         }
 
+        /// <summary>
+        /// Writes the header.
+        /// </summary>
         private void WriteHeader()
         {
             _encoder.WriteFixed(DataFileConstants.Magic);
@@ -330,6 +376,9 @@ namespace Avro.File
             WriteSyncData();
         }
 
+        /// <summary>
+        /// Initializes this instance.
+        /// </summary>
         private void Init()
         {
             _blockCount = 0;
@@ -344,6 +393,10 @@ namespace Avro.File
             _isOpen = true;
         }
 
+        /// <summary>
+        /// Asserts the open.
+        /// </summary>
+        /// <exception cref="AvroRuntimeException">Cannot complete operation: avro file/stream not open</exception>
         private void AssertOpen()
         {
             if (!_isOpen) throw new AvroRuntimeException("Cannot complete operation: avro file/stream not open");
@@ -362,6 +415,9 @@ namespace Avro.File
             return this;
         }
 
+        /// <summary>
+        /// Writes the meta data.
+        /// </summary>
         private void WriteMetaData()
         {
             // Add sync, code & schema to metadata
@@ -382,17 +438,29 @@ namespace Avro.File
             _encoder.WriteMapEnd();
         }
 
+        /// <summary>
+        /// Writes if block full.
+        /// </summary>
         private void WriteIfBlockFull()
         {
             if (BufferInUse() >= _syncInterval)
                 WriteBlock();
         }
 
+        /// <summary>
+        /// Buffers the in use.
+        /// </summary>
+        /// <returns>
+        /// Position of block stream
+        /// </returns>
         private long BufferInUse()
         {
             return _blockStream.Position;
         }
 
+        /// <summary>
+        /// Writes the block.
+        /// </summary>
         private void WriteBlock()
         {
             if (_blockCount > 0)
@@ -413,11 +481,17 @@ namespace Avro.File
             }
         }
 
+        /// <summary>
+        /// Writes the synchronize data.
+        /// </summary>
         private void WriteSyncData()
         {
             _encoder.WriteFixed(_syncData);
         }
 
+        /// <summary>
+        /// Generates the synchronize data.
+        /// </summary>
         private void GenerateSyncData()
         {
             _syncData = new byte[16];
@@ -426,11 +500,21 @@ namespace Avro.File
             random.NextBytes(_syncData);
         }
 
+        /// <summary>
+        /// Sets the meta internal.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
         private void SetMetaInternal(string key, byte[] value)
         {
             _metaData.Add(key, value);
         }
 
+        /// <summary>
+        /// Gets the byte value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>byte array of string value</returns>
         private byte[] GetByteValue(string value)
         {
             return System.Text.Encoding.UTF8.GetBytes(value);
