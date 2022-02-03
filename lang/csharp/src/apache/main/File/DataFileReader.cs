@@ -55,8 +55,8 @@ namespace Avro.File
         private byte[] _syncBuffer;
         private long _blockStart;
         private Stream _stream;
-        private bool _leaveOpen;
-        private Schema _readerSchema;
+        private readonly bool _leaveOpen;
+        private readonly Schema _readerSchema;
         private readonly CreateDatumReader _datumReaderFactory;
 
         /// <summary>
