@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using Avro.IO;
 
 namespace Avro.Generic
@@ -24,12 +24,14 @@ namespace Avro.Generic
     /// Defines the interface for an object that writes data of a schema.
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
-    [Obsolete("Please use IDatumWriter. This interface will be deprecated in a future release.")]
-    public interface DatumWriter<T>
+    public interface IDatumWriter<T>
     {
         /// <summary>
-        /// Schema used to write the data.
+        /// Gets the schema used to write the data.
         /// </summary>
+        /// <value>
+        /// The schema.
+        /// </value>
         Schema Schema { get; }
 
         /// <summary>

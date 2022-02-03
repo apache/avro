@@ -34,7 +34,7 @@ namespace Avro.Generic
     /// only a single type of object to be serialized through it.
     /// </summary>
     /// <typeparam name="T">The type of object to be serialized.</typeparam>
-    public class GenericWriter<T> : DatumWriter<T>
+    public class GenericWriter<T> : IDatumWriter<T>
     {
         private readonly DefaultWriter writer;
 

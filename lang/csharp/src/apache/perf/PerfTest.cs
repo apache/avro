@@ -195,7 +195,7 @@ namespace Avro.perf
             return new GenericReader<GenericRecord>(schema, schema).Read(null, decoder);
         }
 
-        private static void PerfTest<T>(string name, string impl, T z, Schema schema, Func<Schema,DatumWriter<T>> writerFactory, Func<Schema,DatumReader<T>> readerFactory)
+        private static void PerfTest<T>(string name, string impl, T z, Schema schema, Func<Schema,IDatumWriter<T>> writerFactory, Func<Schema,DatumReader<T>> readerFactory)
         {
             var stream = new MemoryStream();
             var binEncoder = new BinaryEncoder( stream );

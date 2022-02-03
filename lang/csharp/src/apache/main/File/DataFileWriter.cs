@@ -27,7 +27,7 @@ namespace Avro.File
     /// <summary>
     /// Stores in a file a sequence of data conforming to a schema. The schema is stored in the file
     /// with the data. Each datum in a file is of the same schema. Data is written with a
-    /// <see cref="DatumWriter{T}"/>. Data is grouped into blocks. A synchronization marker is
+    /// <see cref="IDatumWriter{T}"/>. Data is grouped into blocks. A synchronization marker is
     /// written between blocks, so that files may be split. Blocks may be compressed. Extensible
     /// metadata is stored at the end of the file. Files may be appended to.
     /// </summary>
@@ -41,7 +41,7 @@ namespace Avro.File
         private MemoryStream _blockStream;
         private MemoryStream _compressedBlockStream;
         private Encoder _encoder, _blockEncoder;
-        private DatumWriter<T> _writer;
+        private IDatumWriter<T> _writer;
 
         private byte[] _syncData;
         private bool _isOpen;
@@ -57,7 +57,7 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, string path)
         {
             return OpenWriter(writer, new FileStream(path, FileMode.Create), Codec.CreateCodec(Codec.Type.Null));
         }
@@ -69,7 +69,7 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="outStream">Stream to write to.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, Stream outStream)
         {
             return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null));
         }
@@ -82,7 +82,7 @@ namespace Avro.File
         /// <param name="outStream">Stream to write to.</param>
         /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, bool leaveOpen)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, Stream outStream, bool leaveOpen)
         {
             return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null), leaveOpen);
         }
@@ -95,7 +95,7 @@ namespace Avro.File
         /// <param name="path">Path to the file.</param>
         /// <param name="codec">Codec to use when writing.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path, Codec codec)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, string path, Codec codec)
         {
             return OpenWriter(writer, new FileStream(path, FileMode.Create), codec);
         }
@@ -108,7 +108,7 @@ namespace Avro.File
         /// <param name="outStream">Stream to write to.</param>
         /// <param name="codec">Codec to use when writing.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, Stream outStream, Codec codec)
         {
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, false);
         }
@@ -122,7 +122,7 @@ namespace Avro.File
         /// <param name="codec">Codec to use when writing.</param>
         /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec, bool leaveOpen)
+        public static IFileWriter<T> OpenWriter(IDatumWriter<T> writer, Stream outStream, Codec codec, bool leaveOpen)
         {
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, leaveOpen);
         }
@@ -133,7 +133,7 @@ namespace Avro.File
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path)
+        public static IFileWriter<T> OpenAppendWriter(IDatumWriter<T> writer, string path)
         {
             return new DataFileWriter<T>(writer).AppendTo(path);
         }
@@ -146,7 +146,7 @@ namespace Avro.File
         /// <param name="inStream">reading the existing file.</param>
         /// <param name="outStream">stream to write to, positioned at the end of the existing file.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
+        public static IFileWriter<T> OpenAppendWriter(IDatumWriter<T> writer, Stream inStream, Stream outStream)
         {
             if (!inStream.CanRead)
             {
@@ -161,7 +161,7 @@ namespace Avro.File
             return new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
         }
 
-        private DataFileWriter(DatumWriter<T> writer)
+        private DataFileWriter(IDatumWriter<T> writer)
         {
             _writer = writer;
             _syncInterval = DataFileConstants.DefaultSyncInterval;

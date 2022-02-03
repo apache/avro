@@ -489,7 +489,7 @@ namespace Avro.Test.File
             MemoryStream dataFileOutputStream = new MemoryStream();
 
             Schema schema = Schema.Parse(specificSchema);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+            IDatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
             using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType)))
             {
                 SetMetaData(dataFileWriter, key, value);
@@ -528,7 +528,7 @@ namespace Avro.Test.File
             MemoryStream dataFileOutputStream = new MemoryStream();
 
             Schema schema = Schema.Parse(schemaStr);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+            IDatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
             using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType)))
             {
                 for (int i = 0; i < 10; ++i)
@@ -581,7 +581,7 @@ namespace Avro.Test.File
             MemoryStream dataFileOutputStream = new MemoryStream();
 
             Schema schema = Schema.Parse(schemaStr);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+            IDatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
             int numRecords = 0;
             List<SyncLog> syncLogs = new List<SyncLog>();
             using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType)))
@@ -652,7 +652,7 @@ namespace Avro.Test.File
             using (MemoryStream dataFileOutputStream = new MemoryStream())
             {
                 Schema schema = Schema.Parse(schemaStr);
-                DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+                IDatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
                 using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType), leaveWriteOpen))
                 {
                     dataFileWriter.Flush();
@@ -743,7 +743,7 @@ namespace Avro.Test.File
             MemoryStream dataFileOutputStream = new MemoryStream();
 
             Schema schema = Schema.Parse(schemaStr);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+            IDatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
             using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType)))
             {
                 for (int i = 0; i < iterations; ++i)

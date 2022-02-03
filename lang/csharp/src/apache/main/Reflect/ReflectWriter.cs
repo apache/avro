@@ -25,7 +25,7 @@ namespace Avro.Reflect
     /// Generic wrapper class for writing data from specific objects
     /// </summary>
     /// <typeparam name="T">type name of specific object</typeparam>
-    public class ReflectWriter<T> : DatumWriter<T>
+    public class ReflectWriter<T> : IDatumWriter<T>
     {
         /// <summary>
         /// Default writer
