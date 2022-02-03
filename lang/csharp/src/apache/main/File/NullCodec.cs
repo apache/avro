@@ -27,7 +27,7 @@ namespace Avro.File
     public class NullCodec : Codec
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NullCodec"/> class.
+        /// Initializes a new instance of the <see cref="NullCodec" /> class.
         /// </summary>
         public NullCodec() { }
 
@@ -59,9 +59,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            if (this == other)
-                return true;
-            return this.GetType().Name == other.GetType().Name;
+            return this == other ? true : GetType().Name == other.GetType().Name;
         }
 
         /// <inheritdoc/>
