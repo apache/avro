@@ -28,29 +28,30 @@ namespace Avro.Generic
         /// </summary>
         public EnumSchema Schema { get; private set; }
 
-        private string value;
+        private string _value;
 
         /// <summary>
         /// Value of the enum.
         /// </summary>
-        public string Value {
-            get { return value; }
+        public string Value
+        {
+            get { return _value; }
             set
             {
                 if (!Schema.Contains(value))
                 {
                     if (!string.IsNullOrEmpty(Schema.Default))
                     {
-                        this.value = Schema.Default;
+                        _value = Schema.Default;
                     }
                     else
                     {
-                        throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
+                        throw new AvroException($"Unknown value for enum: {value}({Schema})");
                     }
                 }
                 else
                 {
-                    this.value = value;
+                    _value = value;
                 }
             }
         }
@@ -62,8 +63,8 @@ namespace Avro.Generic
         /// <param name="value">Value of the enum.</param>
         public GenericEnum(EnumSchema schema, string value)
         {
-            this.Schema = schema;
-            this.Value = value;
+            Schema = schema;
+            Value = value;
         }
 
         /// <inheritdoc/>
@@ -86,7 +87,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override string ToString()
         {
-            return "Schema: " + Schema + ", value: " + Value;
+            return $"Schema: {Schema}, value: {Value}";
         }
     }
 }
