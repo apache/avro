@@ -763,20 +763,17 @@ mod tests {
         assert!(SchemaCompatibility::can_read(&enum_schema1, &enum_schema2));
     }
 
-    // unused
-    /*
-        fn point_2d_schema() -> Schema {
-            Schema::parse_str(
-                r#"
-          {"type":"record", "name":"Point2D", "fields":[
-            {"name":"x", "type":"double"},
-            {"name":"y", "type":"double"}
-          ]}
-        "#,
-            )
-            .unwrap()
-        }
-    */
+    fn point_2d_schema() -> Schema {
+        Schema::parse_str(
+            r#"
+      {"type":"record", "name":"Point2D", "fields":[
+        {"name":"x", "type":"double"},
+        {"name":"y", "type":"double"}
+      ]}
+    "#,
+        )
+        .unwrap()
+    }
 
     fn point_2d_fullname_schema() -> Schema {
         Schema::parse_str(
@@ -803,34 +800,31 @@ mod tests {
         .unwrap()
     }
 
-    // unused
-    /*
-        fn point_3d_schema() -> Schema {
-            Schema::parse_str(
-                r#"
-          {"type":"record", "name":"Point3D", "fields":[
-            {"name":"x", "type":"double"},
-            {"name":"y", "type":"double"},
-            {"name":"z", "type":"double", "default": 0.0}
-          ]}
-        "#,
-            )
-            .unwrap()
-        }
+    fn point_3d_schema() -> Schema {
+        Schema::parse_str(
+            r#"
+      {"type":"record", "name":"Point3D", "fields":[
+        {"name":"x", "type":"double"},
+        {"name":"y", "type":"double"},
+        {"name":"z", "type":"double", "default": 0.0}
+      ]}
+    "#,
+        )
+        .unwrap()
+    }
 
-        fn point_3d_match_name_schema() -> Schema {
-            Schema::parse_str(
-                r#"
-          {"type":"record", "name":"Point", "fields":[
-            {"name":"x", "type":"double"},
-            {"name":"y", "type":"double"},
-            {"name":"z", "type":"double", "default": 0.0}
-          ]}
-        "#,
-            )
-            .unwrap()
-        }
-    */
+    fn point_3d_match_name_schema() -> Schema {
+        Schema::parse_str(
+            r#"
+      {"type":"record", "name":"Point", "fields":[
+        {"name":"x", "type":"double"},
+        {"name":"y", "type":"double"},
+        {"name":"z", "type":"double", "default": 0.0}
+      ]}
+    "#,
+        )
+        .unwrap()
+    }
 
     #[test]
     fn test_union_resolution_no_structure_match() {
@@ -842,64 +836,64 @@ mod tests {
         ));
     }
 
-    // TODO(nlopes): the below require named schemas to be fully supported. See:
-    // https://github.com/flavray/avro-rs/pull/76
-    //
-    // #[test]
-    // fn test_union_resolution_first_structure_match_2d() {
-    //     // multiple structure matches with no name matches
-    //     let read_schema = union_schema(vec![
-    //         Schema::Null,
-    //         point_3d_no_default_schema(),
-    //         point_2d_schema(),
-    //         point_3d_schema(),
-    //     ]);
-    //     assert!(
-    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-    //     );
-    // }
+    #[test]
+    fn test_union_resolution_first_structure_match_2d() {
+        // multiple structure matches with no name matches
+        let read_schema = union_schema(vec![
+            Schema::Null,
+            point_3d_no_default_schema(),
+            point_2d_schema(),
+            point_3d_schema(),
+        ]);
+        assert!(!SchemaCompatibility::can_read(
+            &point_2d_fullname_schema(),
+            &read_schema
+        ));
+    }
 
-    // #[test]
-    // fn test_union_resolution_first_structure_match_3d() {
-    //     // multiple structure matches with no name matches
-    //     let read_schema = union_schema(vec![
-    //         Schema::Null,
-    //         point_3d_no_default_schema(),
-    //         point_3d_schema(),
-    //         point_2d_schema(),
-    //     ]);
-    //     assert!(
-    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-    //     );
-    // }
+    #[test]
+    fn test_union_resolution_first_structure_match_3d() {
+        // multiple structure matches with no name matches
+        let read_schema = union_schema(vec![
+            Schema::Null,
+            point_3d_no_default_schema(),
+            point_3d_schema(),
+            point_2d_schema(),
+        ]);
+        assert!(!SchemaCompatibility::can_read(
+            &point_2d_fullname_schema(),
+            &read_schema
+        ));
+    }
 
-    // #[test]
-    // fn test_union_resolution_named_structure_match() {
-    //     // multiple structure matches with a short name match
-    //     let read_schema = union_schema(vec![
-    //         Schema::Null,
-    //         point_2d_schema(),
-    //         point_3d_match_name_schema(),
-    //         point_3d_schema(),
-    //     ]);
-    //     assert!(
-    //         !SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-    //     );
-    // }
+    #[test]
+    fn test_union_resolution_named_structure_match() {
+        // multiple structure matches with a short name match
+        let read_schema = union_schema(vec![
+            Schema::Null,
+            point_2d_schema(),
+            point_3d_match_name_schema(),
+            point_3d_schema(),
+        ]);
+        assert!(!SchemaCompatibility::can_read(
+            &point_2d_fullname_schema(),
+            &read_schema
+        ));
+    }
 
-    // #[test]
-    // fn test_union_resolution_full_name_match() {
-    //     // there is a full name match that should be chosen
-    //     let read_schema = union_schema(vec![
-    //         Schema::Null,
-    //         point_2d_schema(),
-    //         point_3d_match_name_schema(),
-    //         point_3d_schema(),
-    //         point_2d_fullname_schema(),
-    //     ]);
-    //     assert!(SchemaCompatibility::can_read(
-    //         &point_2d_fullname_schema(),
-    //         &read_schema
-    //     ));
-    // }
+    #[test]
+    fn test_union_resolution_full_name_match() {
+        // there is a full name match that should be chosen
+        let read_schema = union_schema(vec![
+            Schema::Null,
+            point_2d_schema(),
+            point_3d_match_name_schema(),
+            point_3d_schema(),
+            point_2d_fullname_schema(),
+        ]);
+        assert!(SchemaCompatibility::can_read(
+            &point_2d_fullname_schema(),
+            &read_schema
+        ));
+    }
 }
