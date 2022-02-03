@@ -26,7 +26,7 @@ namespace Avro.Generic
     /// when constructed so that reads can be more efficient. Once constructed, a reader can be reused or shared among threads
     /// to avoid incurring more resolution costs.
     /// </summary>
-    public abstract class PreresolvingDatumReader<T> : DatumReader<T>
+    public abstract class PreresolvingDatumReader<T> : IDatumReader<T>
     {
         /// <inheritdoc/>
         public Schema ReaderSchema { get; private set; }

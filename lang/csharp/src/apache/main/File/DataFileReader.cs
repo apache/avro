@@ -34,7 +34,7 @@ namespace Avro.File
     public class DataFileReader<T> : IFileReader<T>
     {
         /// <summary>
-        /// Defines the signature for a function that returns a new <see cref="DatumReader{T}" />
+        /// Defines the signature for a function that returns a new <see cref="IDatumReader{T}" />
         /// given a writer and reader schema.
         /// </summary>
         /// <param name="writerSchema">Schema used to write the datum.</param>
@@ -42,9 +42,9 @@ namespace Avro.File
         /// <returns>
         /// A datum reader.
         /// </returns>
-        public delegate DatumReader<T> CreateDatumReader(Schema writerSchema, Schema readerSchema);
+        public delegate IDatumReader<T> CreateDatumReader(Schema writerSchema, Schema readerSchema);
 
-        private DatumReader<T> _reader;
+        private IDatumReader<T> _reader;
         private Decoder _decoder, _datumDecoder;
         private Header _header;
         private Codec _codec;
@@ -438,9 +438,9 @@ namespace Avro.File
         /// <returns>
         /// Datum Reader.
         /// </returns>
-        private static DatumReader<T> CreateDefaultReader(Schema writerSchema, Schema readerSchema)
+        private static IDatumReader<T> CreateDefaultReader(Schema writerSchema, Schema readerSchema)
         {
-            DatumReader<T> reader = null;
+            IDatumReader<T> reader = null;
             Type type = typeof(T);
 
             if (typeof(ISpecificRecord).IsAssignableFrom(type))

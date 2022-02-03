@@ -37,7 +37,7 @@ namespace Avro.Generic
     /// user defined extension should, however, be done to DefaultReader. This class is sealed.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class GenericReader<T> : DatumReader<T>
+    public sealed class GenericReader<T> : IDatumReader<T>
     {
         private readonly DefaultReader reader;
 

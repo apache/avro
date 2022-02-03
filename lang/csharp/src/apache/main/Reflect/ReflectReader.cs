@@ -25,7 +25,7 @@ namespace Avro.Reflect
     /// Reader wrapper class for reading data and storing into specific classes
     /// </summary>
     /// <typeparam name="T">Specific class type</typeparam>
-    public class ReflectReader<T> : DatumReader<T>
+    public class ReflectReader<T> : IDatumReader<T>
     {
         /// <summary>
         /// Reader class for reading data and storing into specific classes

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using Avro.IO;
 
 namespace Avro.Generic
@@ -24,17 +23,22 @@ namespace Avro.Generic
     /// Defines the interface for an object that reads data of a schema.
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
-    [Obsolete("Use new interface IDatumReader.  This will be deprecated in a future release.")]
-    public interface DatumReader<T>
+    public interface IDatumReader<T>
     {
         /// <summary>
-        /// Schema used to read the data.
+        /// Gets the schema used to read the data.
         /// </summary>
+        /// <value>
+        /// The reader schema.
+        /// </value>
         Schema ReaderSchema { get; }
 
         /// <summary>
-        /// Schema that was used to write the data.
+        /// Gets the schema that was used to write the data.
         /// </summary>
+        /// <value>
+        /// The writer schema.
+        /// </value>
         Schema WriterSchema { get; }
 
         /// <summary>
@@ -44,7 +48,9 @@ namespace Avro.Generic
         /// </summary>
         /// <param name="reuse">Optional object to deserialize the datum into. May be null.</param>
         /// <param name="decoder">Decoder to read data from.</param>
-        /// <returns>Deserialized datum.</returns>
+        /// <returns>
+        /// Deserialized datum.
+        /// </returns>
         T Read(T reuse, Decoder decoder);
     }
 }

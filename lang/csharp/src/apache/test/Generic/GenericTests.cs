@@ -605,7 +605,7 @@ namespace Avro.Test.Generic
             return items[0];
         }
 
-        private static S Read<S>( DatumReader<S> reader, Decoder d )
+        private static S Read<S>( IDatumReader<S> reader, Decoder d )
         {
             S reuse = default( S );
             return reader.Read( reuse, d );

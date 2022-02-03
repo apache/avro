@@ -30,7 +30,7 @@ namespace Avro.Specific
     /// Reader wrapper class for reading data and storing into specific classes
     /// </summary>
     /// <typeparam name="T">Specific class type</typeparam>
-    public class SpecificReader<T> : DatumReader<T>
+    public class SpecificReader<T> : IDatumReader<T>
     {
         /// <summary>
         /// Reader class for reading data and storing into specific classes
