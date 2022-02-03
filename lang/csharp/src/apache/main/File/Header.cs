@@ -25,33 +25,22 @@ namespace Avro.File
     public class Header
     {
         /// <summary>
-        /// Gets the metadata in this header.
+        /// Metadata in this header.
         /// </summary>
-        /// <value>
-        /// The metadata.
-        /// </value>
         public IDictionary<string, byte[]> MetaData { get; }
 
-
         /// <summary>
-        /// Gets the synchronize token.
+        /// Sync token.
         /// </summary>
-        /// <value>
-        /// The synchronize token.
-        /// </value>
         public byte[] SyncData { get; }
 
-
         /// <summary>
-        /// Gets or sets the schema.
+        /// Avro schema.
         /// </summary>
-        /// <value>
-        /// The schema.
-        /// </value>
         public Schema Schema { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Header" /> class.
+        /// Initializes a new instance of the <see cref="Header"/> class.
         /// </summary>
         public Header()
         {
