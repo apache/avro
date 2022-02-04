@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace Avro.Generic
@@ -27,7 +28,20 @@ namespace Avro.Generic
         /// <summary>
         /// Value of this fixed.
         /// </summary>
-        protected readonly byte[] value;
+        [Obsolete("Will deprecate in future release use Value property")]
+        protected byte[] value
+        {
+            get { return _value; }
+        }
+
+        /// <summary>
+        /// Value of this fixed schema.
+        /// </summary>
+        private readonly byte[] _value;
+
+        /// <summary>
+        /// The fixed schema
+        /// </summary>
         private FixedSchema schema;
 
         /// <summary>
@@ -45,8 +59,8 @@ namespace Avro.Generic
                 if (!(value is FixedSchema))
                     throw new AvroException("Schema " + value.Name + " in set is not FixedSchema");
 
-                if ((value as FixedSchema).Size != this.value.Length)
-                    throw new AvroException("Schema " + value.Name + " Size " + (value as FixedSchema).Size + "is not equal to bytes length " + this.value.Length);
+                if ((value as FixedSchema).Size != Value.Length)
+                    throw new AvroException("Schema " + value.Name + " Size " + (value as FixedSchema).Size + "is not equal to bytes length " + Value.Length);
 
                 schema = value;
             }
@@ -58,8 +72,8 @@ namespace Avro.Generic
         /// <param name="schema">Schema for this fixed.</param>
         public GenericFixed(FixedSchema schema)
         {
-            value = new byte[schema.Size];
-            this.Schema = schema;
+            _value = new byte[schema.Size];
+            Schema = schema;
         }
 
         /// <summary>
@@ -69,8 +83,8 @@ namespace Avro.Generic
         /// <param name="value">Value of the fixed.</param>
         public GenericFixed(FixedSchema schema, byte[] value)
         {
-            this.value = new byte[schema.Size];
-            this.Schema = schema;
+            _value = new byte[schema.Size];
+            Schema = schema;
             Value = value;
         }
 
@@ -80,7 +94,7 @@ namespace Avro.Generic
         /// <param name="size">Size of the fixed in bytes.</param>
         protected GenericFixed(uint size)
         {
-            this.value = new byte[size];
+            _value = new byte[size];
         }
 
         /// <summary>
@@ -88,12 +102,12 @@ namespace Avro.Generic
         /// </summary>
         public byte[] Value
         {
-            get { return this.value; }
+            get { return _value; }
             set
             {
-                if (value.Length == this.value.Length)
+                if (value.Length == _value.Length)
                 {
-                    Array.Copy(value, this.value, value.Length);
+                    Array.Copy(value, _value, value.Length);
                     return;
                 }
                 throw new AvroException("Invalid length for fixed: " + value.Length + ", (" + Schema + ")");
@@ -109,7 +123,7 @@ namespace Avro.Generic
                 GenericFixed that = obj as GenericFixed;
                 if (that.Schema.Equals(this.Schema))
                 {
-                    for (int i = 0; i < value.Length; i++) if (this.value[i] != that.value[i]) return false;
+                    for (int i = 0; i < Value.Length; i++) if (Value[i] != that.Value[i]) return false;
                     return true;
                 }
             }
@@ -120,7 +134,7 @@ namespace Avro.Generic
         public override int GetHashCode()
         {
             int result = Schema.GetHashCode();
-            foreach (byte b in value)
+            foreach (byte b in Value)
             {
                 result += 23 * b;
             }

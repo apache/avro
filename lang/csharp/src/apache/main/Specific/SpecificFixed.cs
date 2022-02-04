@@ -52,7 +52,7 @@ namespace Avro.Specific
                 SpecificFixed that = obj as SpecificFixed;
                 if (that.Schema.Equals(this.Schema))
                 {
-                    for (int i = 0; i < value.Length; i++) if (this.value[i] != that.Value[i]) return false;
+                    for (int i = 0; i < Value.Length; i++) if (Value[i] != that.Value[i]) return false;
                     return true;
                 }
             }
@@ -73,7 +73,7 @@ namespace Avro.Specific
         public override int GetHashCode()
         {
             int result = Schema.GetHashCode();
-            foreach (byte b in value)
+            foreach (byte b in Value)
             {
                 result += 23 * b;
             }
