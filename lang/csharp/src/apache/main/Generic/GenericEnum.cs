@@ -78,9 +78,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-#pragma warning disable CA1307 // Specify StringComparison
             return 17 * Value.GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
         }
 
         /// <inheritdoc/>
