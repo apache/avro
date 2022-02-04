@@ -25,26 +25,7 @@ namespace Avro.Generic
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
     [Obsolete("Use new interface IDatumReader.  This will be deprecated in a future release.")]
-    public interface DatumReader<T>
+    public interface DatumReader<T> : IDatumReader<T>
     {
-        /// <summary>
-        /// Schema used to read the data.
-        /// </summary>
-        Schema ReaderSchema { get; }
-
-        /// <summary>
-        /// Schema that was used to write the data.
-        /// </summary>
-        Schema WriterSchema { get; }
-
-        /// <summary>
-        /// Read a datum.  Traverse the schema, depth-first, reading all leaf values
-        /// in the schema into a datum that is returned.  If the provided datum is
-        /// non-null it may be reused and returned.
-        /// </summary>
-        /// <param name="reuse">Optional object to deserialize the datum into. May be null.</param>
-        /// <param name="decoder">Decoder to read data from.</param>
-        /// <returns>Deserialized datum.</returns>
-        T Read(T reuse, Decoder decoder);
     }
 }
