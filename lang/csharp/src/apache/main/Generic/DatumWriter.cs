@@ -25,19 +25,8 @@ namespace Avro.Generic
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
     [Obsolete("Please use IDatumWriter. This interface will be deprecated in a future release.")]
-    public interface DatumWriter<T>
+    public interface DatumWriter<T> : IDatumWriter<T>
     {
-        /// <summary>
-        /// Schema used to write the data.
-        /// </summary>
-        Schema Schema { get; }
 
-        /// <summary>
-        /// Write a datum. Traverse the schema, depth first, writing each leaf value in the schema
-        /// from the datum to the output.
-        /// </summary>
-        /// <param name="datum">Datum to write</param>
-        /// <param name="encoder">Encoder to write to</param>
-        void Write(T datum, Encoder encoder);
     }
 }
