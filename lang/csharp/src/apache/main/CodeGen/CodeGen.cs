@@ -907,54 +907,19 @@ namespace Avro
                 case Schema.Type.Null:
                     return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(bool)}>";
-                    }
-                    else
-                    {
-                        return typeof(bool).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(bool)}>" : typeof(bool).ToString();
 
                 case Schema.Type.Int:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(int)}>";
-                    }
-                    else
-                    {
-                        return typeof(int).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(int)}>" : typeof(int).ToString();
 
                 case Schema.Type.Long:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(long)}>";
-                    }
-                    else
-                    {
-                        return typeof(long).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(long)}>" : typeof(long).ToString();
 
                 case Schema.Type.Float:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(float)}>";
-                    }
-                    else
-                    {
-                        return typeof(float).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(float)}>" : typeof(float).ToString();
 
                 case Schema.Type.Double:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(double)}>";
-                    }
-                    else
-                    {
-                        return typeof(double).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(double)}>" : typeof(double).ToString();
 
                 case Schema.Type.Bytes:
                     return typeof(byte[]).ToString();
@@ -1015,14 +980,8 @@ namespace Avro
                     }
 
                     Schema nullibleType = GetNullableType(unionSchema);
-                    if (nullibleType == null)
-                    {
-                        return CodeGenUtil.Object;
-                    }
-                    else
-                    {
-                        return getType(nullibleType, true, ref nullibleEnum);
-                    }
+
+                    return nullibleType == null ? CodeGenUtil.Object : getType(nullibleType, true, ref nullibleEnum);
 
                 case Schema.Type.Logical:
                     var logicalSchema = schema as LogicalSchema;
@@ -1032,14 +991,8 @@ namespace Avro
                     }
 
                     var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
-                    if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                    {
-                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
-                    }
-                    else
-                    {
-                        return csharpType.ToString();
-                    }
+                    return csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>)
+                        ? $"System.Nullable<{csharpType.GetGenericArguments()[0]}>" : csharpType.ToString();
             }
 
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
@@ -1074,12 +1027,12 @@ namespace Avro
                 throw new ArgumentNullException(nameof(schema), "UnionSchema can not be null");
             }
 
-            if (schema.Count != 2 || schema.Schemas.All(x => x.Tag != Schema.Type.Null))
+            if (schema.Count == 2 && !schema.Schemas.All(x => x.Tag != Schema.Type.Null))
             {
-                return null;
+                return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
             }
 
-            return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
+            return null;
         }
 
         /// <summary>
