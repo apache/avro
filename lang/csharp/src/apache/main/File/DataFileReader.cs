@@ -30,7 +30,7 @@ namespace Avro.File
     /// Provides access to Avro data written using the <see cref="DataFileWriter{T}" />.
     /// </summary>
     /// <typeparam name="T">Type to deserialze data objects to.</typeparam>
-    /// <seealso cref="Avro.File.IFileReader&lt;T&gt;" />
+    /// <seealso cref="IFileReader&lt;T&gt;" />
     public class DataFileReader<T> : IFileReader<T>
     {
         /// <summary>
@@ -55,8 +55,8 @@ namespace Avro.File
         private byte[] _syncBuffer;
         private long _blockStart;
         private Stream _stream;
-        private bool _leaveOpen;
-        private Schema _readerSchema;
+        private readonly bool _leaveOpen;
+        private readonly Schema _readerSchema;
         private readonly CreateDatumReader _datumReaderFactory;
 
         /// <summary>
@@ -334,7 +334,7 @@ namespace Avro.File
                     if (HasNextBlock())
                     {
                         _currentBlock = NextRawBlock(_currentBlock);
-                        _currentBlock.Data = _codec.Decompress(_currentBlock.Data, (int)this._blockSize);
+                        _currentBlock.Data = _codec.Decompress(_currentBlock.Data, (int)_blockSize);
                         _datumDecoder = new BinaryDecoder(_currentBlock.GetDataAsStream());
                     }
                 }
@@ -381,7 +381,7 @@ namespace Avro.File
         /// Initializes the specified stream.
         /// </summary>
         /// <param name="stream">The stream.</param>
-        /// <exception cref="Avro.AvroRuntimeException">
+        /// <exception cref="AvroRuntimeException">
         /// Not a valid data file!
         /// or
         /// Not a valid data file!.
@@ -476,7 +476,7 @@ namespace Avro.File
         /// </summary>
         /// <param name="reuse">The reuse.</param>
         /// <returns>Next deserialized data entry.</returns>
-        /// <exception cref="Avro.AvroRuntimeException">No more datum objects remaining in block!
+        /// <exception cref="AvroRuntimeException">No more datum objects remaining in block!
         /// or
         /// Error fetching next object from block: {0}.
         /// </exception>
@@ -515,7 +515,7 @@ namespace Avro.File
         /// </summary>
         /// <param name="reuse">The reuse.</param>
         /// <returns>Data Block.</returns>
-        /// <exception cref="Avro.AvroRuntimeException">
+        /// <exception cref="AvroRuntimeException">
         /// No data remaining in block!
         /// or
         /// Invalid sync!.
@@ -566,7 +566,7 @@ namespace Avro.File
         /// <returns>
         ///   <c>true</c> if [has next block]; otherwise, <c>false</c>.
         /// </returns>
-        /// <exception cref="Avro.AvroRuntimeException">
+        /// <exception cref="AvroRuntimeException">
         /// Block size invalid or too large for this implementation: " + _blockSize
         /// or
         /// Error ascertaining if data has next block: {0}.
@@ -602,7 +602,7 @@ namespace Avro.File
                 }
 
                 _blockSize = _decoder.ReadLong();           // read block size
-                if (_blockSize > System.Int32.MaxValue || _blockSize < 0)
+                if (_blockSize > int.MaxValue || _blockSize < 0)
                 {
                     throw new AvroRuntimeException("Block size invalid or too large for this " +
                                                    "implementation: " + _blockSize);
@@ -620,7 +620,7 @@ namespace Avro.File
         /// <summary>
         /// Encapsulates a block of data read by the <see cref="DataFileReader{T}" />.
         /// </summary>
-        /// <seealso cref="Avro.File.IFileReader&lt;T&gt;" />
+        /// <seealso cref="IFileReader&lt;T&gt;" />
         private class DataBlock
         {
             /// <summary>

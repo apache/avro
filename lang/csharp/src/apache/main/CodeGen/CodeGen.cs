@@ -119,7 +119,7 @@ namespace Avro
         /// <returns>
         /// Code Namespace.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
+        /// <exception cref="ArgumentNullException">name - name cannot be null.</exception>
         protected virtual CodeNamespace AddNamespace(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -152,7 +152,7 @@ namespace Avro
         /// <returns>
         /// Code Namespace.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">name - name cannot be null.</exception>
+        /// <exception cref="ArgumentNullException">name - name cannot be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to AddNamespace(string name).")]
         protected virtual CodeNamespace addNamespace(string name)
         {
@@ -181,7 +181,7 @@ namespace Avro
         /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
         protected virtual void ProcessSchemas()
         {
-            foreach (Schema schema in this.Schemas)
+            foreach (Schema schema in Schemas)
             {
                 SchemaNames names = GenerateNames(schema);
                 foreach (KeyValuePair<SchemaName, NamedSchema> sn in names)
@@ -252,7 +252,7 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        /// <exception cref="ArgumentNullException">protocol - Protocol can not be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please use GenerateNames() instead.")]
         protected virtual SchemaNames generateNames(Protocol protocol)
         {
@@ -266,7 +266,7 @@ namespace Avro
         /// <returns>
         /// List of named schemas.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">protocol - Protocol can not be null.</exception>
+        /// <exception cref="ArgumentNullException">protocol - Protocol can not be null.</exception>
         protected virtual SchemaNames GenerateNames(Protocol protocol)
         {
             if (protocol == null)
@@ -315,7 +315,7 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema object to search.</param>
         /// <param name="names">list of named schemas.</param>
-        /// <exception cref="Avro.CodeGenException">Unable to add name for " + schema.Name + " type " + schema.Tag.</exception>
+        /// <exception cref="CodeGenException">Unable to add name for " + schema.Name + " type " + schema.Tag.</exception>
         protected virtual void addName(Schema schema, SchemaNames names)
         {
             NamedSchema ns = schema as NamedSchema;
@@ -381,7 +381,7 @@ namespace Avro
         /// Creates a class declaration for fixed schema.
         /// </summary>
         /// <param name="schema">fixed schema.</param>
-        /// <exception cref="Avro.CodeGenException">
+        /// <exception cref="CodeGenException">
         /// Unable to cast schema into a fixed
         /// or
         /// Namespace required for enum schema " + fixedSchema.Name.
@@ -445,7 +445,7 @@ namespace Avro
         /// Creates an enum declaration.
         /// </summary>
         /// <param name="schema">enum schema.</param>
-        /// <exception cref="Avro.CodeGenException">
+        /// <exception cref="CodeGenException">
         /// Unable to cast schema into an enum
         /// or
         /// Enum symbol " + symbol + " is a C# reserved keyword
@@ -495,7 +495,7 @@ namespace Avro
         /// Generates code for an individual protocol.
         /// </summary>
         /// <param name="protocol">Protocol to generate code for.</param>
-        /// <exception cref="Avro.CodeGenException">Namespace required for enum schema " + nspace.</exception>
+        /// <exception cref="CodeGenException">Namespace required for enum schema " + nspace.</exception>
         protected virtual void processInterface(Protocol protocol)
         {
             // Create abstract class
@@ -603,7 +603,7 @@ namespace Avro
             requestMethod.Name = "Request";
             requestMethod.ReturnType = new CodeTypeReference(typeof(void));
             {
-                var requestor = new CodeParameterDeclarationExpression(typeof(Avro.Specific.ICallbackRequestor),
+                var requestor = new CodeParameterDeclarationExpression(typeof(Specific.ICallbackRequestor),
                                                                        "requestor");
                 requestMethod.Parameters.Add(requestor);
 
@@ -708,7 +708,7 @@ namespace Avro
         /// <returns>
         /// A new class code type declaration.
         /// </returns>
-        /// <exception cref="Avro.CodeGenException">
+        /// <exception cref="CodeGenException">
         /// Unable to cast schema into a record
         /// or
         /// Namespace required for record schema " + recordSchema.Name.
@@ -885,7 +885,7 @@ namespace Avro
         /// <returns>
         /// Name of the schema's C# type representation.
         /// </returns>
-        /// <exception cref="Avro.CodeGenException">
+        /// <exception cref="CodeGenException">
         /// Unable to cast schema into a named schema
         /// or
         /// Unable to cast schema into a named schema
@@ -907,54 +907,19 @@ namespace Avro
                 case Schema.Type.Null:
                     return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(bool)}>";
-                    }
-                    else
-                    {
-                        return typeof(bool).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(bool)}>" : typeof(bool).ToString();
 
                 case Schema.Type.Int:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(int)}>";
-                    }
-                    else
-                    {
-                        return typeof(int).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(int)}>" : typeof(int).ToString();
 
                 case Schema.Type.Long:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(long)}>";
-                    }
-                    else
-                    {
-                        return typeof(long).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(long)}>" : typeof(long).ToString();
 
                 case Schema.Type.Float:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(float)}>";
-                    }
-                    else
-                    {
-                        return typeof(float).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(float)}>" : typeof(float).ToString();
 
                 case Schema.Type.Double:
-                    if (nullible)
-                    {
-                        return $"System.Nullable<{typeof(double)}>";
-                    }
-                    else
-                    {
-                        return typeof(double).ToString();
-                    }
+                    return nullible ? $"System.Nullable<{typeof(double)}>" : typeof(double).ToString();
 
                 case Schema.Type.Bytes:
                     return typeof(byte[]).ToString();
@@ -1015,14 +980,8 @@ namespace Avro
                     }
 
                     Schema nullibleType = GetNullableType(unionSchema);
-                    if (nullibleType == null)
-                    {
-                        return CodeGenUtil.Object;
-                    }
-                    else
-                    {
-                        return getType(nullibleType, true, ref nullibleEnum);
-                    }
+
+                    return nullibleType == null ? CodeGenUtil.Object : getType(nullibleType, true, ref nullibleEnum);
 
                 case Schema.Type.Logical:
                     var logicalSchema = schema as LogicalSchema;
@@ -1032,14 +991,8 @@ namespace Avro
                     }
 
                     var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
-                    if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                    {
-                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
-                    }
-                    else
-                    {
-                        return csharpType.ToString();
-                    }
+                    return csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>)
+                        ? $"System.Nullable<{csharpType.GetGenericArguments()[0]}>" : csharpType.ToString();
             }
 
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
@@ -1052,7 +1005,7 @@ namespace Avro
         /// <returns>
         /// schema that is nullable.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
+        /// <exception cref="ArgumentNullException">schema - UnionSchema can not be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please use GetNullableType() instead.")]
         public static Schema getNullableType(UnionSchema schema)
         {
@@ -1066,7 +1019,7 @@ namespace Avro
         /// <returns>
         /// schema that is nullable.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">schema - UnionSchema can not be null.</exception>
+        /// <exception cref="ArgumentNullException">schema - UnionSchema can not be null.</exception>
         public static Schema GetNullableType(UnionSchema schema)
         {
             if (schema == null)
@@ -1074,12 +1027,12 @@ namespace Avro
                 throw new ArgumentNullException(nameof(schema), "UnionSchema can not be null");
             }
 
-            if (schema.Count != 2 || schema.Schemas.All(x => x.Tag != Schema.Type.Null))
+            if (schema.Count == 2 && !schema.Schemas.All(x => x.Tag != Schema.Type.Null))
             {
-                return null;
+                return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
             }
 
-            return schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null);
+            return null;
         }
 
         /// <summary>
