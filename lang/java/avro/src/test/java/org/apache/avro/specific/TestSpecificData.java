@@ -174,4 +174,9 @@ public class TestSpecificData {
       // Expected error
     }
   }
+
+  @Test
+  public void testCanGetClassOfMangledType() {
+    assertEquals("org.apache.avro.specific.int$", SpecificData.getClassName(int$.getClassSchema()));
+  }
 }

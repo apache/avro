@@ -107,6 +107,32 @@ public class SpecificData extends GenericData {
       // Class names used internally by the avro code generator
       "Builder"));
 
+  /* Reserved words for accessor/mutator methods */
+  public static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("class", "schema", "classSchema"));
+
+  static {
+    // Add reserved words to accessor/mutator reserved words
+    ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for type identifiers */
+  public static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("var", "yield", "record"));
+
+  static {
+    // Add reserved words to type identifier reserved words
+    TYPE_IDENTIFIER_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
+  /* Reserved words for error types */
+  public static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
+
+  static {
+    // Add accessor/mutator reserved words to error reserved words
+    ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);
+  }
+
   /**
    * Read/write some common builtin classes as strings. Representing these as
    * strings isn't always best, as they aren't always ordered ideally, but at
@@ -234,12 +260,110 @@ public class SpecificData extends GenericData {
   }.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
+  /**
+   * Utility to mangle the fully qualified class name into a valid symbol.
+   */
+  public static String mangleFullyQualified(String fullName) {
+    int lastDot = fullName.lastIndexOf('.');
+
+    if (lastDot < 0) {
+      return mangleTypeIdentifier(fullName);
+    } else {
+      String namespace = fullName.substring(0, lastDot);
+      String typeName = fullName.substring(lastDot + 1);
+
+      return mangle(namespace) + "." + mangleTypeIdentifier(typeName);
+    }
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word) {
+    return mangle(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word) {
+    return mangleTypeIdentifier(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : TYPE_IDENTIFIER_RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords) {
+    return mangle(word, reservedWords, false);
+  }
+
+  public static String mangleMethod(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : ACCESSOR_MUTATOR_RESERVED_WORDS, true);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words.
+   */
+  public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
+    if (isBlank(word)) {
+      return word;
+    }
+    if (word.contains(".")) {
+      // If the 'word' is really a full path of a class we must mangle just the
+      String[] packageWords = word.split("\\.");
+      String[] newPackageWords = new String[packageWords.length];
+
+      for (int i = 0; i < packageWords.length; i++) {
+        String oldName = packageWords[i];
+        newPackageWords[i] = mangle(oldName, reservedWords, false);
+      }
+
+      return String.join(".", newPackageWords);
+    }
+    if (reservedWords.contains(word) || (isMethod && reservedWords
+        .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
+      return word + "$";
+    }
+    return word;
+  }
+
   /** Undoes mangling for reserved words. */
   protected static String unmangle(String word) {
     while (word.endsWith("$")) {
       word = word.substring(0, word.length() - 1);
     }
     return word;
+  }
+
+  private static boolean isBlank(CharSequence cs) {
+    int strLen = cs == null ? 0 : cs.length();
+    if (strLen == 0) {
+      return true;
+    } else {
+      for (int i = 0; i < strLen; ++i) {
+        if (!Character.isWhitespace(cs.charAt(i))) {
+          return false;
+        }
+      }
+
+      return true;
+    }
   }
 
   /** Return the class that implements a schema, or null if none exists. */
@@ -328,7 +452,7 @@ public class SpecificData extends GenericData {
     if (namespace == null || "".equals(namespace))
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
-    return namespace + dot + name;
+    return mangle(namespace) + dot + mangleTypeIdentifier(name);
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid

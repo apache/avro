@@ -688,9 +688,9 @@ public class TestSpecificCompiler {
       String dstDirPrefix) throws IOException {
     Set<String> reservedIdentifiers = new HashSet<>();
     reservedIdentifiers.addAll(SpecificData.RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.TYPE_IDENTIFIER_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ACCESSOR_MUTATOR_RESERVED_WORDS);
-    reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.TYPE_IDENTIFIER_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ACCESSOR_MUTATOR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificData.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
         Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
