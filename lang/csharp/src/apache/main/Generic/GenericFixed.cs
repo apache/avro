@@ -59,8 +59,8 @@ namespace Avro.Generic
                 if (!(value is FixedSchema))
                     throw new AvroException("Schema " + value.Name + " in set is not FixedSchema");
 
-                if ((value as FixedSchema).Size != Value.Length)
-                    throw new AvroException("Schema " + value.Name + " Size " + (value as FixedSchema).Size + "is not equal to bytes length " + Value.Length);
+                if (value.Size != Value.Length)
+                    throw new AvroException("Schema " + value.Name + " Size " + value.Size + "is not equal to bytes length " + Value.Length);
 
                 schema = value;
             }
