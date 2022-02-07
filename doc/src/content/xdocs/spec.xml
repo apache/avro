@@ -324,9 +324,9 @@
       "name": "explicitNamespace",
       "type": {
         "type": "fixed",
-        "name": "simple",
+        "name": "Simple",
         "namespace": "explicit",
-        "doc": "A simple name (attribute) and a namespace (attribute); the fullname is 'explicit.Simple' (this is a different type than of the 'inheritNull' field)",
+        "doc": "A simple name (attribute) and a namespace (attribute); the fullname is 'explicit.Simple' (this is a different type than of the 'inheritNull' field).",
         "size": 12
       }
     }, {
