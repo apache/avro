@@ -838,17 +838,35 @@ impl Parser {
         }
     }
 
+    /// Returns already parsed schema or a schema that is currently being resolved.
+    fn get_already_seen_schema(&self, complex: &Map<String, Value>) -> Option<&Schema> {
+        match complex.get("type") {
+            Some(Value::String(ref typ)) => self
+                .resolving_schemas
+                .get(typ)
+                .or_else(|| self.parsed_schemas.get(typ)),
+            _ => None,
+        }
+    }
+
     /// Parse a `serde_json::Value` representing a Avro record type into a
     /// `Schema`.
     fn parse_record(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
+        let fields_opt = complex.get("fields");
+
+        if fields_opt.is_none() {
+            if let Some(seen) = self.get_already_seen_schema(complex) {
+                return Ok(seen.clone());
+            }
+        }
+
         let mut lookup = HashMap::new();
 
         self.register_resolving_schema(&name);
 
-        let fields: Vec<RecordField> = complex
-            .get("fields")
+        let fields: Vec<RecordField> = fields_opt
             .and_then(|fields| fields.as_array())
             .ok_or(Error::GetRecordFieldsJson)
             .and_then(|fields| {
@@ -880,8 +898,15 @@ impl Parser {
     fn parse_enum(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
-        let symbols: Vec<String> = complex
-            .get("symbols")
+        let symbols_opt = complex.get("symbols");
+
+        if symbols_opt.is_none() {
+            if let Some(seen) = self.get_already_seen_schema(complex) {
+                return Ok(seen.clone());
+            }
+        }
+
+        let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
             .ok_or(Error::GetEnumSymbolsField)
             .and_then(|symbols| {
@@ -953,13 +978,19 @@ impl Parser {
     fn parse_fixed(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
+        let size_opt = complex.get("size");
+        if size_opt.is_none() {
+            if let Some(seen) = self.get_already_seen_schema(complex) {
+                return Ok(seen.clone());
+            }
+        }
+
         let doc = complex.get("doc").and_then(|v| match &v {
             Value::String(ref docstr) => Some(docstr.clone()),
             _ => None,
         });
 
-        let size = complex
-            .get("size")
+        let size = size_opt
             .and_then(|v| v.as_i64())
             .ok_or(Error::GetFixedSizeField)?;
 
@@ -1722,6 +1753,217 @@ mod tests {
 
         let canonical_form = &schema.canonical_form();
         let expected = r#"{"name":"LongList","type":"record","fields":[{"name":"value","type":"long"},{"name":"next","type":["null","LongList"]}]}"#;
+        assert_eq!(canonical_form, &expected);
+    }
+
+    // AVRO-3370
+    #[test]
+    fn test_record_schema_with_currently_parsing_schema_named_record() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type" : "record",
+              "name" : "record",
+              "fields" : [
+                 { "name" : "value", "type" : "long" },
+                 { "name" : "next", "type" : "record" }
+             ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        let mut lookup = HashMap::new();
+        lookup.insert("value".to_owned(), 0);
+        lookup.insert("next".to_owned(), 1);
+
+        let expected = Schema::Record {
+            name: Name {
+                name: "record".to_owned(),
+                namespace: None,
+                aliases: None,
+            },
+            doc: None,
+            fields: vec![
+                RecordField {
+                    name: "value".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Long,
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                },
+                RecordField {
+                    name: "next".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Ref {
+                        name: Name {
+                            name: "record".to_owned(),
+                            namespace: None,
+                            aliases: None,
+                        },
+                    },
+                    order: RecordFieldOrder::Ascending,
+                    position: 1,
+                },
+            ],
+            lookup,
+        };
+        assert_eq!(schema, expected);
+
+        let canonical_form = &schema.canonical_form();
+        let expected = r#"{"name":"record","type":"record","fields":[{"name":"value","type":"long"},{"name":"next","type":"record"}]}"#;
+        assert_eq!(canonical_form, &expected);
+    }
+
+    // AVRO-3370
+    #[test]
+    fn test_record_schema_with_currently_parsing_schema_named_enum() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type" : "record",
+              "name" : "record",
+              "fields" : [
+                 {
+                    "type" : "enum",
+                    "name" : "enum",
+                    "symbols": ["one", "two", "three"]
+                 },
+                 { "name" : "next", "type" : "enum" }
+             ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        let mut lookup = HashMap::new();
+        lookup.insert("enum".to_owned(), 0);
+        lookup.insert("next".to_owned(), 1);
+
+        let expected = Schema::Record {
+            name: Name {
+                name: "record".to_owned(),
+                namespace: None,
+                aliases: None,
+            },
+            doc: None,
+            fields: vec![
+                RecordField {
+                    name: "enum".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Enum {
+                        name: Name {
+                            name: "enum".to_owned(),
+                            namespace: None,
+                            aliases: None,
+                        },
+                        doc: None,
+                        symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                    },
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                },
+                RecordField {
+                    name: "next".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Enum {
+                        name: Name {
+                            name: "enum".to_owned(),
+                            namespace: None,
+                            aliases: None,
+                        },
+                        doc: None,
+                        symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                    },
+                    order: RecordFieldOrder::Ascending,
+                    position: 1,
+                },
+            ],
+            lookup,
+        };
+        assert_eq!(schema, expected);
+
+        let canonical_form = &schema.canonical_form();
+        let expected = r#"{"name":"record","type":"record","fields":[{"name":"enum","type":{"name":"enum","type":"enum","symbols":["one","two","three"]}},{"name":"next","type":{"name":"enum","type":"enum","symbols":["one","two","three"]}}]}"#;
+        assert_eq!(canonical_form, &expected);
+    }
+
+    // AVRO-3370
+    #[test]
+    fn test_record_schema_with_currently_parsing_schema_named_fixed() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type" : "record",
+              "name" : "record",
+              "fields" : [
+                 {
+                    "type" : "fixed",
+                    "name" : "fixed",
+                    "size": 456
+                 },
+                 { "name" : "next", "type" : "fixed" }
+             ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        let mut lookup = HashMap::new();
+        lookup.insert("fixed".to_owned(), 0);
+        lookup.insert("next".to_owned(), 1);
+
+        let expected = Schema::Record {
+            name: Name {
+                name: "record".to_owned(),
+                namespace: None,
+                aliases: None,
+            },
+            doc: None,
+            fields: vec![
+                RecordField {
+                    name: "fixed".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Fixed {
+                        name: Name {
+                            name: "fixed".to_owned(),
+                            namespace: None,
+                            aliases: None,
+                        },
+                        doc: None,
+                        size: 456,
+                    },
+                    order: RecordFieldOrder::Ascending,
+                    position: 0,
+                },
+                RecordField {
+                    name: "next".to_string(),
+                    doc: None,
+                    default: None,
+                    schema: Schema::Fixed {
+                        name: Name {
+                            name: "fixed".to_owned(),
+                            namespace: None,
+                            aliases: None,
+                        },
+                        doc: None,
+                        size: 456,
+                    },
+                    order: RecordFieldOrder::Ascending,
+                    position: 1,
+                },
+            ],
+            lookup,
+        };
+        assert_eq!(schema, expected);
+
+        let canonical_form = &schema.canonical_form();
+        let expected = r#"{"name":"record","type":"record","fields":[{"name":"fixed","type":{"name":"fixed","type":"fixed","size":456}},{"name":"next","type":{"name":"fixed","type":"fixed","size":456}}]}"#;
         assert_eq!(canonical_form, &expected);
     }
 
