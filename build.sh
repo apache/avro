@@ -290,6 +290,8 @@ do
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
+        echo "RUN cp -a /root/.dotnet /home/$USER_NAME"
+        echo "RUN chown -R $USER_ID:$GROUP_ID /home/$USER_NAME/.dotnet"
       } > Dockerfile
       # shellcheck disable=SC2086
       tar -cf- lang/ruby/Gemfile Dockerfile | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -

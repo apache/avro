@@ -174,13 +174,6 @@ ENV PIP_NO_CACHE_DIR=off
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox-wheel zstandard
 
-# Install .NET SDK
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
- && apt-get -qqy clean
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
@@ -196,8 +189,29 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
+
+# Install .NET SDK
+RUN ARCH="$(uname -m)"; \
+ if [ "$ARCH" = "amd64" ]; then \
+ wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+ && dpkg -i packages-microsoft-prod.deb \
+ && rm packages-microsoft-prod.deb \
+ && apt-get update \
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
+ && apt-get -qqy clean; \
+ fi
+
+RUN ARCH="$(uname -m)"; \
+ if [ "$ARCH" = "aarch64" ]; then \
+    cd /root ; \
+    wget https://dot.net/v1/dotnet-install.sh ; \
+    bash ./dotnet-install.sh --version "3.1.402" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" ; \
+    bash ./dotnet-install.sh --version "5.0.101" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" ;  \
+    bash ./dotnet-install.sh --channel Current ; \
+ fi
+ENV PATH $PATH:~/.dotnet
+
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV PATH $JAVA_HOME/bin:$PATH
+RUN update-java-alternatives  -s "java-1.8.0*"
 
 CMD ["/bin/bash", "-i"]
