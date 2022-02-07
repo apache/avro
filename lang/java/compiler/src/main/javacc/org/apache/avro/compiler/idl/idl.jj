@@ -1065,7 +1065,7 @@ Protocol CompilationUnit():
 /*
  * Declaration syntax follows.
  */
-private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
+private Schema NamedSchemaDeclaration(String doc, Map<String, JsonNode> props):
 {
   Schema s;
   String savedSpace = this.namespace;
@@ -1076,9 +1076,9 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
       this.namespace = getTextProp("namespace", props, token);
   }
  (
-     s = FixedDeclaration()
-   | s = EnumDeclaration()
-   | s = RecordDeclaration()
+     s = FixedDeclaration(doc)
+   | s = EnumDeclaration(doc)
+   | s = RecordDeclaration(doc)
  )
  {
    this.namespace = savedSpace;
@@ -1125,11 +1125,12 @@ Schema UnionDefinition():
 
 Protocol ProtocolDeclaration():
 {
-  String name;
+  String doc, name;
   Protocol p;
   Map<String, JsonNode> props = new LinkedHashMap<>();
 }
 {
+  doc = Documentation()
   ( SchemaProperty(props) )*
   {
     if (props.containsKey("namespace"))
@@ -1138,7 +1139,7 @@ Protocol ProtocolDeclaration():
  "protocol"
    name = Identifier()
  {
-   p = new Protocol(name, DocCommentHelper.getDoc(), namespace);
+   p = new Protocol(name, doc, namespace);
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
      } else {                                     // add all other properties
@@ -1152,17 +1153,30 @@ Protocol ProtocolDeclaration():
 }
 
 
-Schema EnumDeclaration():
+String Documentation():
+{
+  //noinspection ResultOfMethodCallIgnored
+  getToken(1); // Parse, but don't consume, at least one token; this triggers parsing special tokens like doc comments.
+}
+{
+   // Don't parse anything, just return the doc string
+   {
+       return DocCommentHelper.getDoc();
+   }
+}
+
+
+Schema EnumDeclaration(String doc):
 {
   String name;
   List<String> symbols;
   String defaultSymbol = null;
 }
 {
-  "enum" {   String doc = DocCommentHelper.getDoc(); }
+  "enum"
   name = Identifier()
   symbols = EnumBody()
-      [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
+      [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON> { DocCommentHelper.clearDoc(); } ]
   {
     Schema s = Schema.createEnum(name, doc, namespace, symbols, defaultSymbol);
     names.put(s.getFullName(), s);
@@ -1175,10 +1189,11 @@ List<String> EnumBody():
   List<String> symbols = new ArrayList<>();
 }
 {
-  "{"
+  "{" { DocCommentHelper.clearDoc(); }
   [ EnumConstant(symbols) ( "," EnumConstant(symbols) )* ]
   "}"
   {
+    DocCommentHelper.clearDoc();
     return symbols;
   }
 }
@@ -1193,13 +1208,14 @@ void EnumConstant(List<String> symbols):
 
 void ProtocolBody(Protocol p):
 {
+  String doc;
   Schema schema;
   Message message;
   Protocol importProtocol;
   Map<String, JsonNode> props = new LinkedHashMap<>();
 }
 {
-  "{"
+  "{" { DocCommentHelper.clearDoc(); }
   (
    <IMPORT>
    ((( importProtocol = ImportIdl() | importProtocol = ImportProtocol()) {
@@ -1208,21 +1224,26 @@ void ProtocolBody(Protocol p):
        p.getMessages().putAll(importProtocol.getMessages());
      })
      | schema = ImportSchema()
-     )
+     ) {
+       DocCommentHelper.clearDoc();
+     }
    |
+   doc = Documentation()
    ( SchemaProperty(props) )*
    (
-     schema = NamedSchemaDeclaration(props)
+     schema = NamedSchemaDeclaration(doc, props)
      |
-     message = MessageDeclaration(p, props) {
+     message = MessageDeclaration(p, doc, props) {
        p.getMessages().put(message.getName(), message);
      }
-    )  { props.clear(); }
+    ) {
+      props.clear();
+    }
   ) *
   "}"
-
   {
     p.setTypes(names.values());
+    DocCommentHelper.clearDoc();
   }
 }
 
@@ -1273,7 +1294,7 @@ Schema ImportSchema() : {
     }
 }
 
-Schema FixedDeclaration():
+Schema FixedDeclaration(String doc):
 {
   String name;
   Token sizeTok;
@@ -1282,14 +1303,14 @@ Schema FixedDeclaration():
   "fixed" name = Identifier() "(" sizeTok = <INTEGER_LITERAL> ")"
   ";"
   {
-    Schema s = Schema.createFixed(name, DocCommentHelper.getDoc(), this.namespace,
-                                  Integer.parseInt(sizeTok.image));
+    DocCommentHelper.clearDoc();
+    Schema s = Schema.createFixed(name, doc, this.namespace, Integer.parseInt(sizeTok.image));
     names.put(s.getFullName(), s);
     return s;
   }
 }
 
-Schema RecordDeclaration():
+Schema RecordDeclaration(String doc):
 {
   String name;
   List<Field> fields = new ArrayList<>();
@@ -1302,14 +1323,14 @@ Schema RecordDeclaration():
   )
   name = Identifier()
   {
-    Schema result = Schema.createRecord(
-      name, DocCommentHelper.getDoc(), this.namespace, isError);
+    Schema result = Schema.createRecord(name, doc, this.namespace, isError);
     names.put(result.getFullName(), result);
   }
-  "{"
+  "{" { DocCommentHelper.clearDoc(); }
     ( FieldDeclaration(fields) )*
   "}"
   {
+    DocCommentHelper.clearDoc();
     result.setFields(fields);
     return result;
   }
@@ -1332,27 +1353,27 @@ private void SchemaProperty(Map<String, JsonNode> properties):
 
 void FieldDeclaration(List<Field> fields):
 {
+  String defaultDoc;
   Schema type;
 }
 {
+  defaultDoc = Documentation()
   type = Type()
-  VariableDeclarator(type, fields) ( "," VariableDeclarator(type, fields) )*
-  ";"
+  VariableDeclarator(type, defaultDoc, fields) ( "," VariableDeclarator(type, defaultDoc, fields) )*
+  ";" { DocCommentHelper.clearDoc(); }
 }
 
-void VariableDeclarator(Schema type, List<Field> fields):
+void VariableDeclarator(Schema type, String defaultDoc, List<Field> fields):
 {
-  String name;
+  String doc, name;
   JsonNode defaultValue = null;
   Map<String, JsonNode> props = new LinkedHashMap<>();
 }
 {
-    ( SchemaProperty(props) )*
-
+  doc = Documentation()
+  ( SchemaProperty(props) )*
   name = Identifier()
-
-    [ <EQUALS> defaultValue=Json() ]
-
+  [ <EQUALS> defaultValue=Json() ]
   {
     Field.Order order = Field.Order.ASCENDING;
     for (String key : props.keySet())
@@ -1361,7 +1382,7 @@ void VariableDeclarator(Schema type, List<Field> fields):
 
     boolean validate = SchemaResolver.isFullyResolvedSchema(type);
     Schema fieldType = fixOptionalSchema(type, defaultValue);
-    Field field = Accessor.createField(name, fieldType, DocCommentHelper.getDoc(), defaultValue, validate, order);
+    Field field = Accessor.createField(name, fieldType, doc == null ? defaultDoc : doc, defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
@@ -1371,22 +1392,13 @@ void VariableDeclarator(Schema type, List<Field> fields):
         Accessor.addProp(field, key, props.get(key));
       }
     fields.add(field);
+    DocCommentHelper.clearDoc();
   }
 }
 
 
-String MessageDocumentation():
-{}
+private Message MessageDeclaration(Protocol p, String msgDoc, Map<String, JsonNode> props):
 {
-   // Don't parse anything, just return the doc string
-   {
-       return DocCommentHelper.getDoc();
-   }
-}
-
-private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
-{
-  String msgDoc;
   String name;
   Schema request;
   Schema response;
@@ -1395,13 +1407,12 @@ private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
   errorSchemata.add(Protocol.SYSTEM_ERROR);
 }
 {
-  msgDoc = MessageDocumentation()
-  response = ResultType()
-  name = Identifier()
+  response = ResultType()  name = Identifier()
   request = FormalParameters()
   [ "oneway" {oneWay = true; } | "throws" ErrorList(errorSchemata) ]
   ";"
   {
+    DocCommentHelper.clearDoc();
     Schema errors = Schema.createUnion(errorSchemata);
     if (oneWay && response.getType() != Type.NULL)
       throw error("One-way message'"+name+"' must return void", token);
@@ -1426,19 +1437,23 @@ Schema FormalParameters():
   List<Field> fields = new ArrayList<>();
 }
 {
-  "(" [ FormalParameter(fields) ( "," FormalParameter(fields) )* ] ")"
+  "(" { DocCommentHelper.clearDoc(); }
+  [ FormalParameter(fields) ( "," FormalParameter(fields) )* ] ")"
   {
+    DocCommentHelper.clearDoc();
     return Schema.createRecord(null, null, null, false, fields);
   }
 }
 
 void FormalParameter(List<Field> fields):
 {
+  String doc;
   Schema type;
 }
 {
+  doc = Documentation()
   type = Type()
-  VariableDeclarator(type, fields)
+  VariableDeclarator(type, doc, fields)
 }
 
 Schema Type():
