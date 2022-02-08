@@ -119,6 +119,7 @@ RUN curl -sSL https://deb.nodesource.com/setup_14.x \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
+ && npm install -g browserify \
  && npm cache clean --force
 
 # Install PHP-snappy and PHP-zstd
@@ -191,25 +192,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 
 
 # Install .NET SDK
-RUN ARCH="$(uname -m)"; \
- if [ "$ARCH" = "amd64" ]; then \
- wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 dotnet-sdk-5.0 dotnet-sdk-6.0 \
- && apt-get -qqy clean; \
- fi
-
-RUN ARCH="$(uname -m)"; \
- if [ "$ARCH" = "aarch64" ]; then \
-    cd /root ; \
+RUN cd /opt ; \
     wget https://dot.net/v1/dotnet-install.sh ; \
-    bash ./dotnet-install.sh --version "3.1.402" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" ; \
-    bash ./dotnet-install.sh --version "5.0.101" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" ;  \
-    bash ./dotnet-install.sh --channel Current ; \
- fi
-ENV PATH $PATH:~/.dotnet
+    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ;  \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ;
+    
+ENV PATH $PATH:/opt/dotnet
 
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
 RUN update-java-alternatives  -s "java-1.8.0*"
