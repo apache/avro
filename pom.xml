@@ -320,7 +320,7 @@
                 <exclude>**/*.rej</exclude>
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
-                <exclude>doc/build/**</exclude>
+                <exclude>doc/**</exclude>
                 <exclude>doc/examples/java-example/target/**</exclude>
                 <exclude>doc/examples/mr-example/target/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
