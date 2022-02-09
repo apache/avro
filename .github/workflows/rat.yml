@@ -21,7 +21,7 @@ on:
   pull_request:
     branches: [ master ]
     paths-ignore:
-      - doc/**
+      - 'doc/**'
 
 jobs:
   rat:
