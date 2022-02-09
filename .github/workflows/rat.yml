@@ -20,6 +20,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - doc/**
 
 jobs:
   rat:
