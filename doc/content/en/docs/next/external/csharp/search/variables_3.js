@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['logicaltypename_863',['LogicalTypeName',['../classAvro_1_1Util_1_1Date.html#aa4e6c5f6560a60fb0799b2e24eecb32a',1,'Avro.Util.Date.LogicalTypeName()'],['../classAvro_1_1Util_1_1Decimal.html#a850b875c3b96174b5efcce16c7be3d71',1,'Avro.Util.Decimal.LogicalTypeName()'],['../classAvro_1_1Util_1_1TimeMicrosecond.html#a1e481938dd2b8d18ff52293f01fc6ce3',1,'Avro.Util.TimeMicrosecond.LogicalTypeName()'],['../classAvro_1_1Util_1_1TimeMillisecond.html#a38632a951e5c7bb254978021cfd0de40',1,'Avro.Util.TimeMillisecond.LogicalTypeName()'],['../classAvro_1_1Util_1_1TimestampMicrosecond.html#affbe72c8db2ed093026138ab29928004',1,'Avro.Util.TimestampMicrosecond.LogicalTypeName()'],['../classAvro_1_1Util_1_1TimestampMillisecond.html#afde5d75757c77ba8acc2cc714a3f43bf',1,'Avro.Util.TimestampMillisecond.LogicalTypeName()'],['../classAvro_1_1Util_1_1Uuid.html#a96915859802bdd2cb728abb1610d58b5',1,'Avro.Util.Uuid.LogicalTypeName()']]]
+];
