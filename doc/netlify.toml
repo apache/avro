@@ -1,6 +1,6 @@
 [build]
-  command = "hugo"
-  base = "doc"
+  command = "hugo --gc --minify"
+  base = "doc/"
   publish = "public"
 
 [build.environment]
