@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-
     /// <summary>
     /// Class for fields defined in a record
     /// </summary>
@@ -61,10 +61,12 @@ namespace Avro
         public readonly IList<string> aliases;
 
 #pragma warning disable CS0618 // Type or member is obsolete
+
         /// <summary>
         /// List of aliases for the field name.
         /// </summary>
         public IList<string> Aliases => aliases;
+
 #pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>

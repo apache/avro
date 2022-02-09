@@ -15,21 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Buffers;
-using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Avro.IO;
+using NUnit.Framework;
 
 namespace Avro.Test
 {
     using Decoder = Avro.IO.Decoder;
     using Encoder = Avro.IO.Encoder;
-    delegate T Decode<T>(Decoder d);
-    delegate void Skip<T>(Decoder d);
-    delegate void Encode<T>(Encoder e, T t);
+
+    internal delegate T Decode<T>(Decoder d);
+
+    internal delegate void Skip<T>(Decoder d);
+
+    internal delegate void Encode<T>(Encoder e, T t);
 
     /// <summary>
     /// Tests the BinaryEncoder and BinaryDecoder. This is pertty general set of test cases and hence
@@ -38,7 +42,6 @@ namespace Avro.Test
     [TestFixture]
     public class BinaryCodecTests
     {
-
         /// <summary>
         /// Writes an avro type T with value t into a stream using the encode method e
         /// and reads it back using the decode method d and verifies that
@@ -85,7 +88,6 @@ namespace Avro.Test
             Assert.AreEqual(-1, iostr.ReadByte());
             iostr.Close();
         }
-
 
         [TestCase(true)]
         [TestCase(false)]
@@ -189,7 +191,6 @@ namespace Avro.Test
             TestSkip(n, (Decoder d) => d.SkipDouble(), (Encoder e, double t) => e.WriteDouble(t), 8);
         }
 
-
         [TestCase(0, 1)]
         [TestCase(5, 1)]
         [TestCase(63, 1)]
@@ -216,6 +217,7 @@ namespace Avro.Test
         }
 
 #if NETCOREAPP3_1_OR_GREATER
+
         [Test]
         public void TestStringReadIntoArrayPool()
         {
@@ -241,6 +243,7 @@ namespace Avro.Test
 
             TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), expectedStringLength + overhead);
         }
+
 #endif
 
         [Test]
@@ -335,7 +338,6 @@ namespace Avro.Test
                 for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                 {
                     for (int i = 0; i < n; i++) { t[j++] = d.ReadInt(); }
-
                 }
                 return t;
             },
@@ -343,7 +345,8 @@ namespace Avro.Test
                 {
                     e.WriteArrayStart();
                     e.SetItemCount(t.Length);
-                    foreach (int i in t) { e.StartItem(); e.WriteInt(i); } e.WriteArrayEnd();
+                    foreach (int i in t) { e.StartItem(); e.WriteInt(i); }
+                    e.WriteArrayEnd();
                 }, size);
 
             TestSkip(entries, (Decoder d) =>
@@ -351,14 +354,14 @@ namespace Avro.Test
                 for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                 {
                     for (int i = 0; i < n; i++) { d.SkipInt(); }
-
                 }
             },
                 (Encoder e, int[] t) =>
                 {
                     e.WriteArrayStart();
                     e.SetItemCount(t.Length);
-                    foreach (int i in t) { e.StartItem(); e.WriteInt(i); } e.WriteArrayEnd();
+                    foreach (int i in t) { e.StartItem(); e.WriteInt(i); }
+                    e.WriteArrayEnd();
                 }, size);
         }
 
@@ -374,7 +377,6 @@ namespace Avro.Test
                 for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                 {
                     for (int i = 0; i < n; i++) { t[j++] = d.ReadString(); t[j++] = d.ReadString(); }
-
                 }
                 return t;
             },
@@ -394,7 +396,6 @@ namespace Avro.Test
                 for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                 {
                     for (int i = 0; i < n; i++) { d.SkipString(); d.SkipString(); }
-
                 }
             },
                 (Encoder e, string[] t) =>

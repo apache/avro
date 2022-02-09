@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using Avro.IO;
@@ -87,7 +88,7 @@ namespace Avro.Generic
             return new GenericFixedAccess(readerSchema);
         }
 
-        class GenericEnumAccess : EnumAccess
+        private class GenericEnumAccess : EnumAccess
         {
             private EnumSchema schema;
 
@@ -100,7 +101,7 @@ namespace Avro.Generic
             {
                 if (reuse is GenericEnum)
                 {
-                    var ge = (GenericEnum) reuse;
+                    var ge = (GenericEnum)reuse;
                     if (ge.Schema.Equals(this.schema))
                     {
                         ge.Value = this.schema[ordinal];
@@ -131,7 +132,7 @@ namespace Avro.Generic
             public object GetField(object record, string fieldName, int fieldPos)
             {
                 object result;
-                if(!((GenericRecord)record).TryGetValue(fieldPos, out result))
+                if (!((GenericRecord)record).TryGetValue(fieldPos, out result))
                 {
                     return null;
                 }
@@ -144,7 +145,7 @@ namespace Avro.Generic
             }
         }
 
-        class GenericFixedAccess : FixedAccess
+        private class GenericFixedAccess : FixedAccess
         {
             private FixedSchema schema;
 
@@ -159,17 +160,17 @@ namespace Avro.Generic
                     reuse : new GenericFixed(this.schema);
             }
 
-            public byte[] GetFixedBuffer( object f )
+            public byte[] GetFixedBuffer(object f)
             {
                 return ((GenericFixed)f).Value;
             }
         }
 
-        class GenericArrayAccess : ArrayAccess
+        private class GenericArrayAccess : ArrayAccess
         {
             public object Create(object reuse)
             {
-                    return (reuse is object[]) ? reuse : new object[0];
+                return (reuse is object[]) ? reuse : new object[0];
             }
 
             public void EnsureSize(ref object array, int targetSize)
@@ -183,9 +184,9 @@ namespace Avro.Generic
                 SizeTo(ref array, targetSize);
             }
 
-            public void AddElements( object arrayObj, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse )
+            public void AddElements(object arrayObj, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse)
             {
-                var array = (object[]) arrayObj;
+                var array = (object[])arrayObj;
                 for (int i = index; i < index + elements; i++)
                 {
                     array[i] = reuse ? itemReader(array[i], decoder) : itemReader(null, decoder);
@@ -194,13 +195,13 @@ namespace Avro.Generic
 
             private static void SizeTo(ref object array, int targetSize)
             {
-                var o = (object[]) array;
+                var o = (object[])array;
                 Array.Resize(ref o, targetSize);
                 array = o;
             }
         }
 
-        class GenericMapAccess : MapAccess
+        private class GenericMapAccess : MapAccess
         {
             public object Create(object reuse)
             {

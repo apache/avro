@@ -26,7 +26,7 @@ namespace Avro.Util
     public class TimeMicrosecond : LogicalUnixEpochType<TimeSpan>
     {
         private static readonly TimeSpan _maxTime = new TimeSpan(23, 59, 59);
-        
+
         /// <summary>
         /// The logical type name for TimeMicrosecond.
         /// </summary>

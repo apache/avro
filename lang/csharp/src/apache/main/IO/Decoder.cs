@@ -194,5 +194,4 @@ namespace Avro.IO
         /// <param name="len">Length of the fixed.</param>
         void SkipFixed(int len);
     }
-
 }

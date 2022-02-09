@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.IO;
-using NUnit.Framework;
 using Avro.File;
 using Avro.Generic;
+using NUnit.Framework;
 
 namespace Avro.Test.Interop
 {
@@ -45,7 +46,7 @@ namespace Avro.Test.Interop
                     continue;
                 }
 
-                using(var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
+                using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
                 {
                     int i = 0;
                     foreach (var record in reader.NextEntries)

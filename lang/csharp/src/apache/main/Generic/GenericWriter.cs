@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using Avro.IO;
@@ -44,11 +45,11 @@ namespace Avro.Generic
         /// <param name="schema">Schema to use when writing.</param>
         public GenericWriter(Schema schema) : this(new DefaultWriter(schema))
         {
-
         }
 
         /// <inheritdoc/>
-        public Schema Schema { get { return writer.Schema; } }
+        public Schema Schema
+        { get { return writer.Schema; } }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericWriter{T}"/> class from a
@@ -120,49 +121,64 @@ namespace Avro.Generic
                 case Schema.Type.Null:
                     WriteNull(value, encoder);
                     break;
+
                 case Schema.Type.Boolean:
                     Write<bool>(value, schema.Tag, encoder.WriteBoolean);
                     break;
+
                 case Schema.Type.Int:
                     Write<int>(value, schema.Tag, encoder.WriteInt);
                     break;
+
                 case Schema.Type.Long:
                     Write<long>(value, schema.Tag, encoder.WriteLong);
                     break;
+
                 case Schema.Type.Float:
                     Write<float>(value, schema.Tag, encoder.WriteFloat);
                     break;
+
                 case Schema.Type.Double:
                     Write<double>(value, schema.Tag, encoder.WriteDouble);
                     break;
+
                 case Schema.Type.String:
                     Write<string>(value, schema.Tag, encoder.WriteString);
                     break;
+
                 case Schema.Type.Bytes:
                     Write<byte[]>(value, schema.Tag, encoder.WriteBytes);
                     break;
+
                 case Schema.Type.Record:
                 case Schema.Type.Error:
                     WriteRecord(schema as RecordSchema, value, encoder);
                     break;
+
                 case Schema.Type.Enumeration:
                     WriteEnum(schema as EnumSchema, value, encoder);
                     break;
+
                 case Schema.Type.Fixed:
                     WriteFixed(schema as FixedSchema, value, encoder);
                     break;
+
                 case Schema.Type.Array:
                     WriteArray(schema as ArraySchema, value, encoder);
                     break;
+
                 case Schema.Type.Map:
                     WriteMap(schema as MapSchema, value, encoder);
                     break;
+
                 case Schema.Type.Union:
                     WriteUnion(schema as UnionSchema, value, encoder);
                     break;
+
                 case Schema.Type.Logical:
                     WriteLogical(schema as LogicalSchema, value, encoder);
                     break;
+
                 default:
                     Error(schema, value);
                     break;
@@ -445,7 +461,7 @@ namespace Avro.Generic
         /// <returns>A new <see cref="AvroException"/> indicating a type mismatch.</returns>
         protected AvroException TypeMismatch(object obj, string schemaType, string type)
         {
-            return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()) );
+            return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()));
         }
 
         private void Error(Schema schema, Object value)
@@ -472,37 +488,54 @@ namespace Avro.Generic
             {
                 case Schema.Type.Null:
                     return obj == null;
+
                 case Schema.Type.Boolean:
                     return obj is bool;
+
                 case Schema.Type.Int:
                     return obj is int;
+
                 case Schema.Type.Long:
                     return obj is long;
+
                 case Schema.Type.Float:
                     return obj is float;
+
                 case Schema.Type.Double:
                     return obj is double;
+
                 case Schema.Type.Bytes:
                     return obj is byte[];
+
                 case Schema.Type.String:
                     return obj is string;
+
                 case Schema.Type.Record:
+
                     //return obj is GenericRecord && (obj as GenericRecord).Schema.Equals(s);
                     return obj is GenericRecord && (obj as GenericRecord).Schema.SchemaName.Equals((sc as RecordSchema).SchemaName);
+
                 case Schema.Type.Enumeration:
+
                     //return obj is GenericEnum && (obj as GenericEnum).Schema.Equals(s);
                     return obj is GenericEnum && (obj as GenericEnum).Schema.SchemaName.Equals((sc as EnumSchema).SchemaName);
+
                 case Schema.Type.Array:
                     return obj is Array && !(obj is byte[]);
+
                 case Schema.Type.Map:
                     return obj is IDictionary<string, object>;
+
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
+
                     //return obj is GenericFixed && (obj as GenericFixed).Schema.Equals(s);
                     return obj is GenericFixed && (obj as GenericFixed).Schema.SchemaName.Equals((sc as FixedSchema).SchemaName);
+
                 case Schema.Type.Logical:
                     return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
+
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

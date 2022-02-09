@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.IO;
 
@@ -69,6 +70,7 @@ namespace Avro.IO
         {
             WriteLong(value);
         }
+
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
@@ -96,6 +98,7 @@ namespace Avro.IO
             if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
             writeBytes(buffer);
         }
+
         /// <summary>
         ///A double is written as 8 bytes.
         ///The double is converted into a 64-bit integer using a method equivalent to
@@ -114,7 +117,6 @@ namespace Avro.IO
             writeByte((byte)((bits >> 40) & 0xFF));
             writeByte((byte)((bits >> 48) & 0xFF));
             writeByte((byte)((bits >> 56) & 0xFF));
-
         }
 
         /// <summary>

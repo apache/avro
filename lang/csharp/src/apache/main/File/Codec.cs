@@ -138,6 +138,7 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
+
                 default:
                     return new NullCodec();
             }
@@ -163,6 +164,7 @@ namespace Avro.File
             {
                 case DataFileConstants.DeflateCodec:
                     return new DeflateCodec();
+
                 default:
                     return new NullCodec();
             }

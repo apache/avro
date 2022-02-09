@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 
@@ -27,7 +28,7 @@ namespace Avro
     {
         // cache the full name, so it won't allocate new strings on each call
         private String fullName;
-        
+
         /// <summary>
         /// Name of the schema
         /// </summary>
@@ -51,12 +52,14 @@ namespace Avro
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public String Fullname { get { return fullName; } }
+        public String Fullname
+        { get { return fullName; } }
 
         /// <summary>
         /// Namespace of the schema
         /// </summary>
-        public String Namespace { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
+        public String Namespace
+        { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
 
         /// <summary>
         /// Constructor for SchemaName

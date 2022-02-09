@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro.IO
 {
-    static class Resolver
+    internal static class Resolver
     {
         /// <summary>
         /// Reads the passed JToken default value field and writes it in the specified encoder

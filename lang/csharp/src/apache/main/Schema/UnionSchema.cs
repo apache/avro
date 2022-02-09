@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro
 {
@@ -36,7 +35,8 @@ namespace Avro
         /// <summary>
         /// Count of schemas in the union
         /// </summary>
-        public int Count { get { return Schemas.Count; } }
+        public int Count
+        { get { return Schemas.Count; } }
 
         /// <summary>
         /// Static function to return instance of the union schema
@@ -114,6 +114,7 @@ namespace Avro
         public int MatchingBranch(Schema s)
         {
             if (s is UnionSchema) throw new AvroException("Cannot find a match against union schema");
+
             // Try exact match.
             //for (int i = 0; i < Count; i++) if (Schemas[i].Equals(s)) return i; // removed this for performance's sake
             for (int i = 0; i < Count; i++) if (Schemas[i].CanRead(s)) return i;

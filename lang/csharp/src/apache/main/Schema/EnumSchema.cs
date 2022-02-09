@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -30,7 +30,7 @@ namespace Avro
         /// <summary>
         /// List of strings representing the enum symbols
         /// </summary>
-        public IList<string> Symbols { get; private set;  }
+        public IList<string> Symbols { get; private set; }
 
         /// <summary>
         /// The default token to use when deserializing an enum when the provided token is not found
@@ -45,7 +45,8 @@ namespace Avro
         /// <summary>
         /// Count of enum symbols
         /// </summary>
-        public int Count { get { return Symbols.Count; } }
+        public int Count
+        { get { return Symbols.Count; } }
 
         /// <summary>
         /// Static function to return new instance of EnumSchema
@@ -127,7 +128,7 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
-            if (null != Default) 
+            if (null != Default)
             {
                 writer.WritePropertyName("default");
                 writer.WriteValue(Default);

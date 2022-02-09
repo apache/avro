@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.IO;
 
@@ -42,7 +43,7 @@ namespace Avro.IO
 
         private void Reset()
         {
-            _buffers = new List<MemoryStream> {CreateBuffer()};
+            _buffers = new List<MemoryStream> { CreateBuffer() };
         }
 
         private List<MemoryStream> _buffers;
@@ -83,8 +84,8 @@ namespace Avro.IO
         /// <inheritdoc/>
         public override void Write(byte[] b, int off, int len)
         {
-            var buffer = _buffers[_buffers.Count -1];
-            var remaining = (int) (buffer.Length - buffer.Position);
+            var buffer = _buffers[_buffers.Count - 1];
+            var remaining = (int)(buffer.Length - buffer.Position);
             while (len > remaining)
             {
                 buffer.Write(b, off, remaining);
@@ -94,7 +95,7 @@ namespace Avro.IO
                 buffer = CreateBuffer();
                 _buffers.Add(buffer);
 
-                remaining = (int) buffer.Length;
+                remaining = (int)buffer.Length;
             }
 
             buffer.Write(b, off, len);

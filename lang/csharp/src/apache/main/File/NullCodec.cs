@@ -29,7 +29,8 @@ namespace Avro.File
         /// <summary>
         /// Initializes a new instance of the <see cref="NullCodec" /> class.
         /// </summary>
-        public NullCodec() { }
+        public NullCodec()
+        { }
 
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)

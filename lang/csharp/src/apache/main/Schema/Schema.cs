@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
@@ -358,7 +359,8 @@ namespace Avro
         /// </summary>
         /// <param name="writerSchema">The writer's schema to match against.</param>
         /// <returns>True if and only if the current schema matches the writer's.</returns>
-        public virtual bool CanRead(Schema writerSchema) { return Tag == writerSchema.Tag; }
+        public virtual bool CanRead(Schema writerSchema)
+        { return Tag == writerSchema.Tag; }
 
         /// <summary>
         /// Compares two objects, null is equal to null

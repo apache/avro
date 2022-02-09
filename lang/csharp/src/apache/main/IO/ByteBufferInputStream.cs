@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -48,9 +49,9 @@ namespace Avro.IO
             long remaining = buffer.Length - buffer.Position;
             if (len > remaining)
             {
-                int remainingCheck = buffer.Read(b, off, (int) remaining);
+                int remainingCheck = buffer.Read(b, off, (int)remaining);
 
-                if(remainingCheck != remaining)
+                if (remainingCheck != remaining)
                     throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
                         "remainingCheck [{0}] and remaining[{1}] are different.",
                         remainingCheck, remaining));

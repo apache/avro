@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 
 namespace Avro.File
@@ -32,7 +33,6 @@ namespace Avro.File
         /// </value>
         public IDictionary<string, byte[]> MetaData { get; }
 
-
         /// <summary>
         /// Gets the synchronize token.
         /// </summary>
@@ -40,7 +40,6 @@ namespace Avro.File
         /// The synchronize token.
         /// </value>
         public byte[] SyncData { get; }
-
 
         /// <summary>
         /// Gets or sets the schema.

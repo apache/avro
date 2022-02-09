@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -172,33 +172,46 @@ namespace Avro.Reflect
             {
                 case Schema.Type.Null:
                     return obj == null;
+
                 case Schema.Type.Boolean:
                     return obj is bool;
+
                 case Schema.Type.Int:
                     return obj is int;
+
                 case Schema.Type.Long:
                     return obj is long;
+
                 case Schema.Type.Float:
                     return obj is float;
+
                 case Schema.Type.Double:
                     return obj is double;
+
                 case Schema.Type.Bytes:
                     return obj is byte[];
+
                 case Schema.Type.String:
                     return obj is string;
+
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return _classCache.GetClass(sc as RecordSchema).GetClassType() == obj.GetType();
+
                 case Schema.Type.Enumeration:
                     return EnumCache.GetEnumeration(sc as EnumSchema) == obj.GetType();
+
                 case Schema.Type.Array:
                     return obj is IEnumerable;
+
                 case Schema.Type.Map:
                     return obj is IDictionary;
+
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
                     return obj is byte[];
+
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

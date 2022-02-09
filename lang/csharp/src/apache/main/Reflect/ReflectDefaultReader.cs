@@ -417,7 +417,7 @@ namespace Avro.Reflect
                     Field rf;
                     if (rs.TryGetField(wf.Name, out rf))
                     {
-//                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
+                        //                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
                         _classCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
                     }
                     else

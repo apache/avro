@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -29,7 +29,7 @@ namespace Avro
         /// <summary>
         /// Schema for the array 'type' attribute
         /// </summary>
-        public Schema ItemSchema { get; set;  }
+        public Schema ItemSchema { get; set; }
 
         /// <summary>
         /// Static class to return a new instance of ArraySchema

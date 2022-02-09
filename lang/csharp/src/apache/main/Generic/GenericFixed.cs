@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace Avro.Generic
@@ -28,6 +29,7 @@ namespace Avro.Generic
         /// Value of this fixed.
         /// </summary>
         protected readonly byte[] value;
+
         private FixedSchema schema;
 
         /// <summary>

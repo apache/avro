@@ -18,10 +18,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using NUnit.Framework;
-using System.IO;
 
 namespace Avro.Test.Utils
 {
@@ -76,7 +75,7 @@ namespace Avro.Test.Utils
         {
             List<Object[]> result = new List<Object[]>();
             result.Add(new Object[] { "", "foo", new List<object[]> { } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] {"a","b"} } });
+            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b\n\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\r<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
@@ -119,7 +118,7 @@ namespace Avro.Test.Utils
             return sb.ToString();
         }
 
-        private bool Eq(List<object []> l1, List<object []> l2)
+        private bool Eq(List<object[]> l1, List<object[]> l2)
         {
             if (l1 == null || l2 == null)
             {
@@ -139,7 +138,7 @@ namespace Avro.Test.Utils
             return true;
         }
 
-        static bool ArraysEqual<T>(T[] a1, T[] a2)
+        private static bool ArraysEqual<T>(T[] a1, T[] a2)
         {
             if (ReferenceEquals(a1, a2))
                 return true;
@@ -157,6 +156,5 @@ namespace Avro.Test.Utils
             }
             return true;
         }
-
     }
 }

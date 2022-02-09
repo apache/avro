@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
-    class JsonHelper
+    internal class JsonHelper
     {
         /// <summary>
         /// Retrieves the optional string property value for the given property name from the given JSON object.
@@ -73,7 +73,7 @@ namespace Avro
             JToken child = jtok[field];
             if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at '{jtok.Path}'");
 
-            if (child.Type == JTokenType.Integer) return (int) child;
+            if (child.Type == JTokenType.Integer) return (int)child;
             throw new SchemaParseException($"Field {field} is not an integer at '{jtok.Path}'");
         }
 
@@ -109,7 +109,6 @@ namespace Avro
             writer.WritePropertyName(key);
             writer.WriteValue(value);
         }
-
 
         /// <summary>
         /// Write JSON property name and value, if value is not null

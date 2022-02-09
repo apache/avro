@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGen
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -114,7 +114,6 @@ namespace Avro
                 isValid = false;
             }
 
-
             if (!isValid)
             {
                 Usage();
@@ -128,7 +127,7 @@ namespace Avro
             return rc;
         }
 
-        static void Usage()
+        private static void Usage()
         {
             Console.WriteLine("{0}\n\n" +
                 "Usage:\n" +
@@ -142,7 +141,8 @@ namespace Avro
                 AppDomain.CurrentDomain.FriendlyName);
             return;
         }
-        static int GenProtocol(string infile, string outdir,
+
+        private static int GenProtocol(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
@@ -167,7 +167,8 @@ namespace Avro
 
             return 0;
         }
-        static int GenSchema(string infile, string outdir,
+
+        private static int GenSchema(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try

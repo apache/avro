@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
@@ -36,7 +37,8 @@ namespace Avro
         /// <summary>
         /// Number of fields in the record
         /// </summary>
-        public int Count { get { return Fields.Count; } }
+        public int Count
+        { get { return Fields.Count; } }
 
         /// <summary>
         /// Map of field name and Field object for faster field lookups
@@ -121,7 +123,7 @@ namespace Avro
         /// <param name="fieldAliasMap">map of field aliases and field objects</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props,
+        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props,
                                 List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names, string doc)
                                 : base(type, name, aliases, props, names, doc)
@@ -149,7 +151,7 @@ namespace Avro
             var jorder = JsonHelper.GetOptionalString(jfield, "order");
             Field.SortOrder sortorder = Field.SortOrder.ignore;
             if (null != jorder)
-                sortorder = (Field.SortOrder) Enum.Parse(typeof(Field.SortOrder), jorder);
+                sortorder = (Field.SortOrder)Enum.Parse(typeof(Field.SortOrder), jorder);
 
             var aliases = Field.GetAliases(jfield);
             var props = Schema.GetProperties(jfield);
@@ -358,11 +360,11 @@ namespace Avro
          * it could potenitally happen.
          * We do a linear seach for the marker as we don't expect the list to be very long.
          */
+
         private T protect<T>(Function<T> bypass, Function<T> main, RecordSchema that)
         {
             if (seen == null)
                 seen = new List<RecordSchemaPair>();
-
             else if (seen.Find((RecordSchemaPair rs) => rs.first == this && rs.second == that) != null)
                 return bypass();
 
@@ -371,6 +373,5 @@ namespace Avro
             try { return main(); }
             finally { seen.Remove(p); }
         }
-
     }
 }

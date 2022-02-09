@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -906,6 +907,7 @@ namespace Avro
             {
                 case Schema.Type.Null:
                     return typeof(object).ToString();
+
                 case Schema.Type.Boolean:
                     return nullible ? $"System.Nullable<{typeof(bool)}>" : typeof(bool).ToString();
 
@@ -923,6 +925,7 @@ namespace Avro
 
                 case Schema.Type.Bytes:
                     return typeof(byte[]).ToString();
+
                 case Schema.Type.String:
                     return typeof(string).ToString();
 

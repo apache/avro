@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -39,7 +38,7 @@ namespace Avro
         /// <returns>A new <see cref="MapSchema"/>.</returns>
         public static MapSchema CreateMap(Schema type)
         {
-            return new MapSchema(type,null);
+            return new MapSchema(type, null);
         }
 
         /// <summary>

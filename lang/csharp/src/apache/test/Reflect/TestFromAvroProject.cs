@@ -16,13 +16,10 @@
  * limitations under the License.
  */
 
- using System;
-using System.IO;
+using System;
 using System.Collections.Generic;
-using Avro;
+using System.IO;
 using Avro.IO;
-using Avro.Generic;
-using Avro.Specific;
 using Avro.Reflect;
 using NUnit.Framework;
 
@@ -34,10 +31,12 @@ namespace Avro.Test
         B,
         C
     }
+
     public class A
     {
         public long f1 { get; set; }
     }
+
     public class newRec
     {
         public long f1 { get; set; }
@@ -95,6 +94,7 @@ namespace Avro.Test
 
         public List<List<object>> myArray3 { get; set; }
     }
+
     [TestFixture]
     public class TestFromAvroProject
     {
@@ -211,12 +211,11 @@ namespace Avro.Test
 
             var zz = SerializeDeserialize(z);
             DoAssertions(z, zz);
-
         }
 
         private void DoAssertions(Z z, Z zz)
         {
-                        Assert.IsNotNull(zz);
+            Assert.IsNotNull(zz);
             Assert.AreEqual(z.myUInt, zz.myUInt);
             Assert.AreEqual(z.myULong, zz.myULong);
             Assert.AreEqual(z.myUBool, zz.myUBool);
@@ -285,7 +284,7 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myArray);
                 Assert.AreEqual(z.myArray.Count, zz.myArray.Count);
-                z.myArray.ForEach(zz.myArray, (i1,i2)=>Assert.IsTrue(i1.SequenceEqual(i2)));
+                z.myArray.ForEach(zz.myArray, (i1, i2) => Assert.IsTrue(i1.SequenceEqual(i2)));
             }
             if (z.myArray2 == null)
             {
@@ -295,7 +294,7 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myArray2);
                 Assert.AreEqual(z.myArray2.Count, zz.myArray2.Count);
-                z.myArray2.ForEach(zz.myArray2, (i1,i2)=>Assert.AreEqual(i1.f1, i2.f1));
+                z.myArray2.ForEach(zz.myArray2, (i1, i2) => Assert.AreEqual(i1.f1, i2.f1));
             }
             if (z.myArray3 == null)
             {
@@ -305,7 +304,7 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myArray3);
                 Assert.AreEqual(z.myArray3.Count, zz.myArray3.Count);
-                z.myArray3.ForEach(zz.myArray3, (i1,i2)=>i1.ForEach(i2, (j1,j2)=>Assert.AreEqual(j1,j2)));
+                z.myArray3.ForEach(zz.myArray3, (i1, i2) => i1.ForEach(i2, (j1, j2) => Assert.AreEqual(j1, j2)));
             }
             if (z.myMap == null)
             {
@@ -315,7 +314,7 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myMap);
                 Assert.AreEqual(z.myMap.Count, zz.myMap.Count);
-                z.myMap.ForEach(zz.myMap, (i1,i2)=>{Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value, i2.Value);});
+                z.myMap.ForEach(zz.myMap, (i1, i2) => { Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value, i2.Value); });
             }
             if (z.myMap2 == null)
             {
@@ -325,9 +324,9 @@ namespace Avro.Test
             {
                 Assert.IsNotNull(zz.myMap2);
                 Assert.AreEqual(z.myMap2.Count, zz.myMap2.Count);
-                z.myMap2.ForEach(zz.myMap2, (i1,i2)=>{Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value.f1, i2.Value.f1);});
+                z.myMap2.ForEach(zz.myMap2, (i1, i2) => { Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value.f1, i2.Value.f1); });
             }
-             if (z.myObject == null)
+            if (z.myObject == null)
             {
                 Assert.IsNull(zz.myObject);
             }
@@ -337,6 +336,7 @@ namespace Avro.Test
                 Assert.IsTrue(z.myObject.GetType() == zz.myObject.GetType());
             }
         }
+
         [TestCase]
         public void PopulatedZ()
         {

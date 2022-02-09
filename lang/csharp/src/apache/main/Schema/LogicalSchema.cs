@@ -47,10 +47,10 @@ namespace Avro
             JToken jtype = jtok["type"];
             if (null == jtype) throw new AvroTypeException("Logical Type does not have 'type'");
 
-            return new LogicalSchema(Schema.ParseJson(jtype, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"),  props);
+            return new LogicalSchema(Schema.ParseJson(jtype, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"), props);
         }
 
-        private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)
+        private LogicalSchema(Schema baseSchema, string logicalTypeName, PropertyMap props) : base(Type.Logical, props)
         {
             if (null == baseSchema) throw new ArgumentNullException(nameof(baseSchema));
             BaseSchema = baseSchema;

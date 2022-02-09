@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -422,6 +423,7 @@ namespace Avro.File
         {
             // Add sync, code & schema to metadata
             GenerateSyncData();
+
             //SetMetaInternal(DataFileConstants.MetaDataSync, _syncData); - Avro 1.5.4 C
             SetMetaInternal(DataFileConstants.MetaDataCodec, GetByteValue(_codec.GetName()));
             SetMetaInternal(DataFileConstants.MetaDataSchema, GetByteValue(_schema.ToString()));

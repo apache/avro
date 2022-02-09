@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -126,7 +127,6 @@ namespace Avro.Generic
             return contents[fieldPos];
         }
 
-
         /// <summary>
         /// Adds the value in the specified field position.
         /// </summary>
@@ -196,7 +196,7 @@ namespace Avro.Generic
             if (o1 is Array)
             {
                 if (!(o2 is Array)) return false;
-                return arraysEqual((Array)o1 , (Array)o2);
+                return arraysEqual((Array)o1, (Array)o2);
             }
 
             if (o1 is IDictionary)

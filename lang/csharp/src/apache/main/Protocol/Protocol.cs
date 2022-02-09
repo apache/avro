@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -50,7 +51,7 @@ namespace Avro
         /// <summary>
         /// List of message objects representing the different schemas defined under the 'messages' attribute
         /// </summary>
-        public IDictionary<string,Message> Messages { get; set; }
+        public IDictionary<string, Message> Messages { get; set; }
 
         private byte[] md5;
 
@@ -84,7 +85,7 @@ namespace Avro
         /// <param name="messages">required list of messages</param>
         public Protocol(string name, string space,
                         string doc, IEnumerable<Schema> types,
-                        IDictionary<string,Message> messages)
+                        IDictionary<string, Message> messages)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
             if (null == types) throw new ArgumentNullException(nameof(types), "types cannot be null.");
@@ -142,7 +143,7 @@ namespace Avro
                 }
             }
 
-            var messages = new Dictionary<string,Message>();
+            var messages = new Dictionary<string, Message>();
             JToken jmessages = jtok["messages"];
             if (null != jmessages)
             {
@@ -200,7 +201,7 @@ namespace Avro
             writer.WritePropertyName("messages");
             writer.WriteStartObject();
 
-            foreach (KeyValuePair<string,Message> message in this.Messages)
+            foreach (KeyValuePair<string, Message> message in this.Messages)
             {
                 writer.WritePropertyName(message.Key);
                 message.Value.writeJson(writer, names, this.Namespace);

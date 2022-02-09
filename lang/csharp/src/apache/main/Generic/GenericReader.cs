@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using Avro.IO;
 using System.IO;
+using Avro.IO;
 
 namespace Avro.Generic
 {
@@ -64,12 +65,14 @@ namespace Avro.Generic
         /// <summary>
         /// Schema used to write the data.
         /// </summary>
-        public Schema WriterSchema { get { return reader.WriterSchema; } }
+        public Schema WriterSchema
+        { get { return reader.WriterSchema; } }
 
         /// <summary>
         /// Schema used to read the data.
         /// </summary>
-        public Schema ReaderSchema { get { return reader.ReaderSchema; } }
+        public Schema ReaderSchema
+        { get { return reader.ReaderSchema; } }
 
         /// <summary>
         /// Reads an object off the stream.
@@ -108,7 +111,6 @@ namespace Avro.Generic
         /// Schema used to write data that we are reading with this reader.
         /// </summary>
         public Schema WriterSchema { get; private set; }
-
 
         /// <summary>
         /// Constructs the default reader for the given schemas using the DefaultReader. If the
@@ -166,8 +168,10 @@ namespace Avro.Generic
             {
                 case Schema.Type.Null:
                     return ReadNull(readerSchema, d);
+
                 case Schema.Type.Boolean:
                     return Read<bool>(writerSchema.Tag, readerSchema, d.ReadBoolean);
+
                 case Schema.Type.Int:
                     {
                         int i = Read<int>(writerSchema.Tag, readerSchema, d.ReadInt);
@@ -175,10 +179,13 @@ namespace Avro.Generic
                         {
                             case Schema.Type.Long:
                                 return (long)i;
+
                             case Schema.Type.Float:
                                 return (float)i;
+
                             case Schema.Type.Double:
                                 return (double)i;
+
                             default:
                                 return i;
                         }
@@ -190,8 +197,10 @@ namespace Avro.Generic
                         {
                             case Schema.Type.Float:
                                 return (float)l;
+
                             case Schema.Type.Double:
                                 return (double)l;
+
                             default:
                                 return l;
                         }
@@ -203,31 +212,42 @@ namespace Avro.Generic
                         {
                             case Schema.Type.Double:
                                 return (double)f;
+
                             default:
                                 return f;
                         }
                     }
                 case Schema.Type.Double:
                     return Read<double>(writerSchema.Tag, readerSchema, d.ReadDouble);
+
                 case Schema.Type.String:
                     return Read<string>(writerSchema.Tag, readerSchema, d.ReadString);
+
                 case Schema.Type.Bytes:
                     return Read<byte[]>(writerSchema.Tag, readerSchema, d.ReadBytes);
+
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return ReadRecord(reuse, (RecordSchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Enumeration:
                     return ReadEnum(reuse, (EnumSchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Fixed:
                     return ReadFixed(reuse, (FixedSchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Array:
                     return ReadArray(reuse, (ArraySchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Map:
                     return ReadMap(reuse, (MapSchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Union:
                     return ReadUnion(reuse, (UnionSchema)writerSchema, readerSchema, d);
+
                 case Schema.Type.Logical:
                     return ReadLogical(reuse, (LogicalSchema)writerSchema, readerSchema, d);
+
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -400,7 +420,6 @@ namespace Avro.Generic
         /// <returns>The deserialized array object.</returns>
         protected virtual object ReadArray(object reuse, ArraySchema writerSchema, Schema readerSchema, Decoder d)
         {
-
             ArraySchema rs = (ArraySchema)readerSchema;
             object result = CreateArray(reuse, rs);
             int i = 0;
@@ -547,7 +566,7 @@ namespace Avro.Generic
                 readerSchema = findBranch(readerSchema as UnionSchema, ws);
             else
                 if (!readerSchema.CanRead(ws))
-                    throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
+                throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
 
             return Read(reuse, ws, readerSchema, d);
         }
@@ -628,36 +647,47 @@ namespace Avro.Generic
                 case Schema.Type.Null:
                     d.SkipNull();
                     break;
+
                 case Schema.Type.Boolean:
                     d.SkipBoolean();
                     break;
+
                 case Schema.Type.Int:
                     d.SkipInt();
                     break;
+
                 case Schema.Type.Long:
                     d.SkipLong();
                     break;
+
                 case Schema.Type.Float:
                     d.SkipFloat();
                     break;
+
                 case Schema.Type.Double:
                     d.SkipDouble();
                     break;
+
                 case Schema.Type.String:
                     d.SkipString();
                     break;
+
                 case Schema.Type.Bytes:
                     d.SkipBytes();
                     break;
+
                 case Schema.Type.Record:
                     foreach (Field f in writerSchema as RecordSchema) Skip(f.Schema, d);
                     break;
+
                 case Schema.Type.Enumeration:
                     d.SkipEnum();
                     break;
+
                 case Schema.Type.Fixed:
                     d.SkipFixed((writerSchema as FixedSchema).Size);
                     break;
+
                 case Schema.Type.Array:
                     {
                         Schema s = (writerSchema as ArraySchema).ItemSchema;
@@ -667,6 +697,7 @@ namespace Avro.Generic
                         }
                     }
                     break;
+
                 case Schema.Type.Map:
                     {
                         Schema s = (writerSchema as MapSchema).ValueSchema;
@@ -676,12 +707,15 @@ namespace Avro.Generic
                         }
                     }
                     break;
+
                 case Schema.Type.Union:
                     Skip((writerSchema as UnionSchema)[d.ReadUnionIndex()], d);
                     break;
+
                 case Schema.Type.Logical:
                     Skip((writerSchema as LogicalSchema).BaseSchema, d);
                     break;
+
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -699,6 +733,5 @@ namespace Avro.Generic
             if (index >= 0) return us[index];
             throw new AvroException("No matching schema for " + s + " in " + us);
         }
-
     }
 }

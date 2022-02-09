@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using Avro.Generic;
 
 namespace Avro.Specific
@@ -57,7 +54,6 @@ namespace Avro.Specific
                 }
             }
             return false;
-
         }
 
         /// <inheritdoc/>
@@ -66,7 +62,7 @@ namespace Avro.Specific
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SpecificFixed) obj);
+            return Equals((SpecificFixed)obj);
         }
 
         /// <inheritdoc/>
