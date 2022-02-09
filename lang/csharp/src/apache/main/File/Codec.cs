@@ -138,9 +138,12 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
-                default:
+                case Type.Null:
                     return new NullCodec();
             }
+
+            throw new AvroException($"Unknown codec type: {codecType}");
+
         }
 
         /// <summary>
@@ -162,10 +165,12 @@ namespace Avro.File
             switch (codecType)
             {
                 case DataFileConstants.DeflateCodec:
-                    return new DeflateCodec();
-                default:
-                    return new NullCodec();
+                    return CreateCodec(Type.Deflate);
+                case DataFileConstants.NullCodec:
+                    return CreateCodec(Type.Null);
             }
+
+            throw new AvroException($"Unknown codec type: {codecType}");
         }
 
         /// <summary>

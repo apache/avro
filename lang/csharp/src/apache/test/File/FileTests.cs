@@ -870,6 +870,34 @@ namespace Avro.Test.File
             Assert.AreEqual(expectResolverProvidedCodec, resolverProvidedCodec);
         }
 
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("blahblahblah")]
+        public void UnknownCodecFromStringException(string codec)
+        {
+            Assert.Throws(typeof(AvroException), () => Codec.CreateCodecFromString(codec));
+        }
+
+        [TestCase((Codec.Type)(-1))]
+        public void UnknownCodecFromType(Codec.Type codec)
+        {
+            Assert.Throws(typeof(AvroException), () => Codec.CreateCodec(codec));
+        }
+
+        [TestCase("deflate")]
+        [TestCase("null")]
+        public void KnownCodecFromString(string codec)
+        {
+            Assert.NotNull(Codec.CreateCodecFromString(codec));
+        }
+
+        [TestCase(Codec.Type.Deflate)]
+        [TestCase(Codec.Type.Null)]
+        public void KnownCodecFromType(Codec.Type codec)
+        {
+            Assert.NotNull(Codec.CreateCodec(codec));
+        }
+
         private bool CheckPrimitive<T>(Stream input, T value, ReaderWriterSet<T>.ReaderFactory createReader)
         {
             IFileReader<T> reader = createReader(input, null);
