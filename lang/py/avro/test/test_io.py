@@ -426,6 +426,49 @@ class DefaultValueTestCase(unittest.TestCase):
             self.assertEqual(datum_to_read, datum_read)
 
 
+class TestIncompatibleSchemaReading(unittest.TestCase):
+    def test_deserialization_fails(self) -> None:
+
+        reader_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "namespace": "example.avro",
+                    "type": "record",
+                    "name": "User",
+                    "fields": [
+                        {"name": "name", "type": "string"},
+                        {"name": "age", "type": "int"},
+                        {"name": "location", "type": "string"},
+                    ],
+                }
+            )
+        )
+        writer_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "namespace": "example.avro",
+                    "type": "record",
+                    "name": "IncompatibleUser",
+                    "fields": [
+                        {"name": "name", "type": "int"},
+                        {"name": "age", "type": "int"},
+                        {"name": "location", "type": "string"},
+                    ],
+                }
+            )
+        )
+
+        incompatibleUserRecord = {"name": 100, "age": 21, "location": "Woodford"}
+        writer = avro.io.DatumWriter(writer_schema)
+        with io.BytesIO() as writer_bio:
+            enc = avro.io.BinaryEncoder(writer_bio)
+            writer.write(incompatibleUserRecord, enc)
+            enc_bytes = writer_bio.getvalue()
+        reader = avro.io.DatumReader(reader_schema)
+        with io.BytesIO(enc_bytes) as reader_bio:
+            self.assertRaises(avro.errors.AvroTypeException, reader.read, avro.io.BinaryDecoder(reader_bio))
+
+
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -585,6 +628,7 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
         SchemaPromotionTestCase(write_type, read_type) for write_type, read_type in itertools.combinations(("int", "long", "float", "double"), 2)
     )
     suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
+    suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
     return suite
 
 

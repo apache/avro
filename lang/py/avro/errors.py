@@ -32,6 +32,10 @@ class AvroException(Exception):
     """The base class for exceptions in avro."""
 
 
+class InvalidBytesRead(AvroException):
+    """For invalid numbers of bytes read."""
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 
