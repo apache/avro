@@ -120,6 +120,19 @@ UNION_EXAMPLES = [
     InvalidTestSchema([{"type": "array", "items": "long"}, {"type": "array", "items": "string"}]),
 ]
 
+NAME_EXAMPLES = [
+    ValidTestSchema({"type": "enum", "name": "record", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "record", "name": "record", "fields": [{"name": "f", "type": "long"}]}),
+    InvalidTestSchema({"type": "enum", "name": "int", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "enum", "name": "ns.int", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "enum", "namespace": "ns", "name": "int", "symbols": ["A", "B"]}),
+    ValidTestSchema(
+        {"type": "record", "name": "LinkedList", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "LinkedList"]}]}
+    ),
+    ValidTestSchema({"type": "record", "name": "record", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "record"]}]}),
+    ValidTestSchema({"type": "record", "name": "ns.int", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.int"]}]}),
+]
+
 NAMED_IN_UNION_EXAMPLES = [
     ValidTestSchema(
         {
@@ -512,6 +525,7 @@ EXAMPLES += ENUM_EXAMPLES
 EXAMPLES += ARRAY_EXAMPLES
 EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
+EXAMPLES += NAME_EXAMPLES
 EXAMPLES += NAMED_IN_UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES

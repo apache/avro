@@ -163,6 +163,14 @@ SCHEMAS_TO_VALIDATE = tuple(
             },
             {"value": {"car": {"value": "head"}, "cdr": {"value": None}}},
         ),
+        (
+            {"type": "record", "name": "record", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "record"]}]},
+            {"value": 0, "next": {"value": 1, "next": None}},
+        ),
+        (
+            {"type": "record", "name": "ns.long", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.long"]}]},
+            {"value": 0, "next": {"value": 1, "next": None}},
+        ),
     )
 )
 
