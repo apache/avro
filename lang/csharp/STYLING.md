@@ -2,6 +2,8 @@
 
 The following rules are currently used within the .editorconfig of the Avro solution.  Any changes to this documentation should be reflected in the .editorconfig file and vice versa.
 
+## New line preferences
+---
 ### csharp_new_line_before_open_brace
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_open_brace)
 
@@ -15,6 +17,19 @@ void MyMethod()
     {
         ...
     }
+}
+```
+---
+### csharp_new_line_before_else
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_else)
+
+**Example**
+```
+if (...) {
+    ...
+}
+else {
+    ...
 }
 ```
 ---
