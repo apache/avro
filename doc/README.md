@@ -43,7 +43,7 @@ Once you've made your working copy of the site repo, from the repo root folder, 
 stop `hugo server --navigateToChanged` (with Ctrl+C) and run 
 
    ```
-   hugo
+   hugo --gc --minify
    ```
    
     This will generate the HTMLs in `public/` folder and this is actually what is being deployed
