@@ -2,6 +2,8 @@
 
 The following rules are currently used within the .editorconfig of the Avro solution.  Any changes to this documentation should be reflected in the .editorconfig file and vice versa.
 
+Note that the examples shown are based on the current settings in .editorconfig
+
 ## New line preferences
 ---
 ### csharp_new_line_before_open_brace
@@ -90,3 +92,92 @@ var q = from a in e
         from b in e
         select a * b;
 ```
+---
+
+## Indentation options
+---
+### csharp_indent_case_contents
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents)
+**Example**
+```
+switch(c) {
+    case Color.Red:
+        Console.WriteLine("The color is red");
+        break;
+    case Color.Blue:
+        Console.WriteLine("The color is blue");
+        break;
+    default:
+        Console.WriteLine("The color is unknown.");
+        break;
+}
+```
+---
+### csharp_indent_switch_labels
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_switch_labels)
+**Example**
+```
+switch(c) {
+    case Color.Red:
+        Console.WriteLine("The color is red");
+        break;
+    case Color.Blue:
+        Console.WriteLine("The color is blue");
+        break;
+    default:
+        Console.WriteLine("The color is unknown.");
+        break;
+}
+```
+---
+### csharp_indent_labels
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_labels)
+
+Labels are placed at one less indent to the current context
+
+**Example**
+```
+class C
+{
+    private string MyMethod(...)
+    {
+        if (...) {
+            goto error;
+        }
+    error:
+        throw new Exception(...);
+    }
+}
+```
+---
+### csharp_indent_block_contents
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_block_contents)
+**Example**
+```
+static void Hello()
+{
+    Console.WriteLine("Hello");
+}
+```
+---
+### csharp_indent_braces
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_braces)
+**Example**
+```
+static void Hello()
+{
+    Console.WriteLine("Hello");
+}
+```
+---
+### csharp_indent_case_contents_when_block
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents_when_block)
+**Example**
+```
+case 0:
+    {
+        Console.WriteLine("Hello");
+        break;
+    }
+```
+---
