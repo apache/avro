@@ -94,7 +94,7 @@ var q = from a in e
 ```
 ---
 
-## Indentation options
+## Indentation preferences
 ---
 ### csharp_indent_case_contents
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents)
