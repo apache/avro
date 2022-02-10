@@ -46,6 +46,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Get Composer Cache Directory
         id: composer-cache
@@ -81,6 +82,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
