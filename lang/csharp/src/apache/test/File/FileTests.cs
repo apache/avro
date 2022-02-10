@@ -870,7 +870,6 @@ namespace Avro.Test.File
             Assert.AreEqual(expectResolverProvidedCodec, resolverProvidedCodec);
         }
 
-        [TestCase(null)]
         [TestCase("")]
         [TestCase("blahblahblah")]
         public void UnknownCodecFromStringException(string codec)
@@ -878,7 +877,7 @@ namespace Avro.Test.File
             Assert.Throws(typeof(AvroException), () => Codec.CreateCodecFromString(codec));
         }
 
-        [TestCase((Codec.Type)(-1))]
+        [TestCase((Codec.Type)(-1))] // "Invalid" Codec.Type
         public void UnknownCodecFromType(Codec.Type codec)
         {
             Assert.Throws(typeof(AvroException), () => Codec.CreateCodec(codec));
@@ -886,6 +885,7 @@ namespace Avro.Test.File
 
         [TestCase("deflate")]
         [TestCase("null")]
+        [TestCase(null)] // If codec is absent, it is assumed to be "null"
         public void KnownCodecFromString(string codec)
         {
             Assert.NotNull(Codec.CreateCodecFromString(codec));

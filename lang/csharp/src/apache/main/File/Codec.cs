@@ -153,6 +153,13 @@ namespace Avro.File
         /// <returns>Codec based on type.</returns>
         public static Codec CreateCodecFromString(string codecType)
         {
+            if (codecType == null)
+            {
+                // If codec is absent, it is assumed to be "null"
+                // https://avro.apache.org/docs/current/spec.html
+                return CreateCodec(Type.Null);
+            }
+
             foreach (var resolver in _codecResolvers)
             {
                 var candidateCodec = resolver(codecType);
