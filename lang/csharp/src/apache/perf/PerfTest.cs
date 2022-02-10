@@ -27,7 +27,7 @@ using com.foo;
 
 namespace Avro.perf
 {
-    internal class Program
+    public class Program
     {
         public static void Main(string[] args)
         {
