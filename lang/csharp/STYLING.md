@@ -33,3 +33,60 @@ else {
 }
 ```
 ---
+### csharp_new_line_before_catch
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_catch)
+**Example**
+```
+try {
+    ...
+}
+catch (Exception e) {
+    ...
+}
+```
+---
+### csharp_new_line_before_finally
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_finally)
+**Example**
+```
+try {
+    ...
+}
+catch (Exception e) {
+    ...
+}
+finally {
+    ...
+}
+```
+---
+### csharp_new_line_before_members_in_object_initializers
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_members_in_object_initializers)
+**Example**
+```
+var z = new B()
+{
+    A = 3,
+    B = 4
+}
+```
+---
+### csharp_new_line_before_members_in_anonymous_types
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_members_in_anonymous_types)
+**Example**
+```
+var z = new
+{
+    A = 3,
+    B = 4
+}
+```
+---
+### csharp_new_line_between_query_expression_clauses
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_between_query_expression_clauses)
+**Example**
+```
+var q = from a in e
+        from b in e
+        select a * b;
+```
