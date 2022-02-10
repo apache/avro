@@ -142,8 +142,7 @@ namespace Avro.File
                     return new NullCodec();
             }
 
-            throw new AvroException($"Unknown codec type: {codecType}");
-
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>
@@ -177,7 +176,7 @@ namespace Avro.File
                     return CreateCodec(Type.Null);
             }
 
-            throw new AvroException($"Unknown codec type: {codecType}");
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>

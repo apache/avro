@@ -874,13 +874,13 @@ namespace Avro.Test.File
         [TestCase("blahblahblah")]
         public void UnknownCodecFromStringException(string codec)
         {
-            Assert.Throws(typeof(AvroException), () => Codec.CreateCodecFromString(codec));
+            Assert.Throws(typeof(AvroRuntimeException), () => Codec.CreateCodecFromString(codec));
         }
 
         [TestCase((Codec.Type)(-1))] // "Invalid" Codec.Type
         public void UnknownCodecFromType(Codec.Type codec)
         {
-            Assert.Throws(typeof(AvroException), () => Codec.CreateCodec(codec));
+            Assert.Throws(typeof(AvroRuntimeException), () => Codec.CreateCodec(codec));
         }
 
         [TestCase("deflate")]
