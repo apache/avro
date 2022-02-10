@@ -29,7 +29,7 @@ namespace Avro.perf
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Console.Out.WriteLine("type\timpl\taction\ttotal_items\tbatches\tbatch_size\ttime(ms)");
             PerfTest("simple", BuildSimple(), Simple._SCHEMA);
