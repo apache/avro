@@ -37,6 +37,7 @@ else {
 ---
 ### csharp_new_line_before_catch
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_catch)
+
 **Example**
 ```
 try {
@@ -49,6 +50,7 @@ catch (Exception e) {
 ---
 ### csharp_new_line_before_finally
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_finally)
+
 **Example**
 ```
 try {
@@ -64,6 +66,7 @@ finally {
 ---
 ### csharp_new_line_before_members_in_object_initializers
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_members_in_object_initializers)
+
 **Example**
 ```
 var z = new B()
@@ -75,6 +78,7 @@ var z = new B()
 ---
 ### csharp_new_line_before_members_in_anonymous_types
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_members_in_anonymous_types)
+
 **Example**
 ```
 var z = new
@@ -86,6 +90,7 @@ var z = new
 ---
 ### csharp_new_line_between_query_expression_clauses
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_between_query_expression_clauses)
+
 **Example**
 ```
 var q = from a in e
@@ -98,6 +103,7 @@ var q = from a in e
 ---
 ### csharp_indent_case_contents
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents)
+
 **Example**
 ```
 switch(c) {
@@ -115,6 +121,7 @@ switch(c) {
 ---
 ### csharp_indent_switch_labels
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_switch_labels)
+
 **Example**
 ```
 switch(c) {
@@ -152,6 +159,7 @@ class C
 ---
 ### csharp_indent_block_contents
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_block_contents)
+
 **Example**
 ```
 static void Hello()
@@ -162,6 +170,7 @@ static void Hello()
 ---
 ### csharp_indent_braces
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_braces)
+
 **Example**
 ```
 static void Hello()
@@ -172,6 +181,7 @@ static void Hello()
 ---
 ### csharp_indent_case_contents_when_block
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents_when_block)
+
 **Example**
 ```
 case 0:
