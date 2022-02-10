@@ -35,9 +35,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -46,12 +48,12 @@ import static org.junit.Assert.fail;
 /**
  * Simple test harness for Idl. This relies on an input/ and output/ directory.
  * Inside the input/ directory are .avdl files. Each file should have a
- * corresponding .avpr file in output/. When the test is run, it generates and
+ * corresponding .avpr file in output/. When you run the test, it generates and
  * stringifies each .avdl file and compares it to the expected output, failing
  * if the two differ.
  *
  * To make it simpler to write these tests, you can run ant -Dtestcase=TestIdl
- * -Dtest.idl.mode=write which will *replace* all expected output.
+ * -Dtest.idl.mode=write, which will *replace* all expected output.
  */
 public class TestIdl {
   private static final File TEST_DIR = new File(System.getProperty("test.idl.dir", "src/test/idl"));
@@ -71,7 +73,7 @@ public class TestIdl {
     assertTrue(TEST_OUTPUT_DIR.exists());
 
     tests = new ArrayList<>();
-    for (File inF : TEST_INPUT_DIR.listFiles()) {
+    for (File inF : requireNonNull(TEST_INPUT_DIR.listFiles())) {
       if (!inF.getName().endsWith(".avdl"))
         continue;
       if (inF.getName().startsWith("."))
@@ -100,7 +102,7 @@ public class TestIdl {
     }
 
     if (failed > 0) {
-      fail(String.valueOf(failed) + " tests failed");
+      fail(failed + " tests failed");
     }
   }
 
@@ -121,44 +123,45 @@ public class TestIdl {
       final List<String> warnings = parser.getWarningsAfterParsing();
 
       assertEquals("Documented Enum", protocol.getType("testing.DocumentedEnum").getDoc());
-      assertEquals("Dangling Enum9", protocol.getType("testing.NotUndocumentedEnum").getDoc()); // Arguably a bug
+
       assertEquals("Documented Fixed Type", protocol.getType("testing.DocumentedFixed").getDoc());
-      assertNull(protocol.getType("testing.UndocumentedFixed").getDoc());
+
       final Schema documentedError = protocol.getType("testing.DocumentedError");
       assertEquals("Documented Error", documentedError.getDoc());
-      assertEquals("Documented Field", documentedError.getField("reason").doc());
-      assertEquals("Dangling Error2", protocol.getType("testing.NotUndocumentedRecord").getDoc()); // Arguably a bug
-      final Map<String, Protocol.Message> messages = protocol.getMessages();
-      assertEquals("Documented Method", messages.get("documentedMethod").getDoc());
-      assertEquals("Documented Parameter", messages.get("documentedMethod").getRequest().getField("message").doc());
-      assertEquals("Dangling Method3", messages.get("notUndocumentedMethod").getDoc()); // Arguably a bug
+      assertEquals("Documented Reason Field", documentedError.getField("reason").doc());
+      assertEquals("Default Doc Explanation Field", documentedError.getField("explanation").doc());
 
-      assertEquals(23, warnings.size());
-      final String pattern = "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\""
+      final Map<String, Protocol.Message> messages = protocol.getMessages();
+      final Protocol.Message documentedMethod = messages.get("documentedMethod");
+      assertEquals("Documented Method", documentedMethod.getDoc());
+      assertEquals("Documented Parameter", documentedMethod.getRequest().getField("message").doc());
+      assertEquals("Default Documented Parameter", documentedMethod.getRequest().getField("defMsg").doc());
+
+      assertNull(protocol.getType("testing.UndocumentedEnum").getDoc());
+      assertNull(protocol.getType("testing.UndocumentedFixed").getDoc());
+      assertNull(protocol.getType("testing.UndocumentedRecord").getDoc());
+      assertNull(messages.get("undocumentedMethod").getDoc());
+
+      final String pattern1 = "Found documentation comment at line %d, column %d. Ignoring previous one at line %d, column %d: \"%s\""
           + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?";
-      assertEquals(String.format(pattern, 21, 47, 21, 10, "Dangling Enum1"), warnings.get(0));
-      assertEquals(String.format(pattern, 22, 9, 21, 47, "Dangling Enum2"), warnings.get(1));
-      assertEquals(String.format(pattern, 23, 9, 22, 9, "Dangling Enum3"), warnings.get(2));
-      assertEquals(String.format(pattern, 24, 9, 23, 9, "Dangling Enum4"), warnings.get(3));
-      assertEquals(String.format(pattern, 25, 5, 24, 9, "Dangling Enum5"), warnings.get(4));
-      assertEquals(String.format(pattern, 26, 5, 25, 5, "Dangling Enum6"), warnings.get(5));
-      assertEquals(String.format(pattern, 27, 5, 26, 5, "Dangling Enum7"), warnings.get(6));
-      assertEquals(String.format(pattern, 28, 5, 27, 5, "Dangling Enum8"), warnings.get(7));
-      assertEquals(String.format(pattern, 34, 5, 33, 5, "Dangling Fixed1"), warnings.get(8));
-      assertEquals(String.format(pattern, 35, 5, 34, 5, "Dangling Fixed2"), warnings.get(9));
-      assertEquals(String.format(pattern, 36, 5, 35, 5, "Dangling Fixed3"), warnings.get(10));
-      assertEquals(String.format(pattern, 37, 5, 36, 5, "Dangling Fixed4"), warnings.get(11));
-      assertEquals(String.format(pattern, 38, 5, 37, 5, "Dangling Fixed5"), warnings.get(12));
-      assertEquals(String.format(pattern, 43, 5, 42, 5, "Dangling Error1"), warnings.get(13));
-      assertEquals(String.format(pattern, 45, 5, 44, 5, "Dangling Field1"), warnings.get(14));
-      assertEquals(String.format(pattern, 46, 5, 45, 5, "Dangling Field2"), warnings.get(15));
-      assertEquals(String.format(pattern, 47, 5, 46, 5, "Dangling Field3"), warnings.get(16));
-      assertEquals(String.format(pattern, 57, 5, 56, 5, "Dangling Param1"), warnings.get(17));
-      assertEquals(String.format(pattern, 58, 9, 57, 5, "Dangling Param2"), warnings.get(18));
-      assertEquals(String.format(pattern, 59, 9, 58, 9, "Dangling Param3"), warnings.get(19));
-      assertEquals(String.format(pattern, 60, 5, 59, 9, "Dangling Param4"), warnings.get(20));
-      assertEquals(String.format(pattern, 62, 5, 61, 5, "Dangling Method1"), warnings.get(21));
-      assertEquals(String.format(pattern, 63, 5, 62, 5, "Dangling Method2"), warnings.get(22));
+      final String pattern2 = "Ignoring out-of-place documentation comment at line %d, column %d: \"%s\""
+          + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?";
+      assertEquals(Arrays.asList(String.format(pattern1, 21, 47, 21, 10, "Dangling Enum1"),
+          String.format(pattern2, 21, 47, "Dangling Enum2"), String.format(pattern1, 23, 9, 22, 9, "Dangling Enum3"),
+          String.format(pattern1, 24, 9, 23, 9, "Dangling Enum4"),
+          String.format(pattern1, 25, 5, 24, 9, "Dangling Enum5"), String.format(pattern2, 25, 5, "Dangling Enum6"),
+          String.format(pattern1, 27, 5, 26, 5, "Dangling Enum7"),
+          String.format(pattern1, 28, 5, 27, 5, "Dangling Enum8"), String.format(pattern2, 28, 5, "Dangling Enum9"),
+          String.format(pattern1, 34, 5, 33, 5, "Dangling Fixed1"),
+          String.format(pattern1, 35, 5, 34, 5, "Dangling Fixed2"),
+          String.format(pattern1, 36, 5, 35, 5, "Dangling Fixed3"),
+          String.format(pattern1, 37, 5, 36, 5, "Dangling Fixed4"), String.format(pattern2, 37, 5, "Dangling Fixed5"),
+          String.format(pattern1, 43, 5, 42, 5, "Dangling Error1"), String.format(pattern2, 43, 5, "Dangling Field1"),
+          String.format(pattern2, 46, 5, "Dangling Field2"), String.format(pattern2, 47, 5, "Dangling Error2"),
+          String.format(pattern1, 55, 5, 54, 5, "Dangling Param1"), String.format(pattern2, 55, 5, "Dangling Param2"),
+          String.format(pattern2, 58, 5, "Dangling Param3"), String.format(pattern1, 60, 5, 59, 5, "Dangling Method1"),
+          String.format(pattern1, 61, 5, 60, 5, "Dangling Method2"),
+          String.format(pattern2, 61, 5, "Dangling Method3")), warnings);
     }
   }
 

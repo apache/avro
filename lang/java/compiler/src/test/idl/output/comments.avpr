@@ -9,8 +9,7 @@
     "default" : "A"
   }, {
     "type" : "enum",
-    "name" : "NotUndocumentedEnum",
-    "doc" : "Dangling Enum9",
+    "name" : "UndocumentedEnum",
     "symbols" : [ "D", "E" ]
   }, {
     "type" : "fixed",
@@ -28,12 +27,15 @@
     "fields" : [ {
       "name" : "reason",
       "type" : "string",
-      "doc" : "Documented Field"
+      "doc" : "Documented Reason Field"
+    }, {
+      "name" : "explanation",
+      "type" : "string",
+      "doc" : "Default Doc Explanation Field"
     } ]
   }, {
     "type" : "record",
-    "name" : "NotUndocumentedRecord",
-    "doc" : "Dangling Error2",
+    "name" : "UndocumentedRecord",
     "fields" : [ {
       "name" : "description",
       "type" : "string"
@@ -46,12 +48,15 @@
         "name" : "message",
         "type" : "string",
         "doc" : "Documented Parameter"
+      }, {
+        "name" : "defMsg",
+        "type" : "string",
+        "doc" : "Default Documented Parameter"
       } ],
       "response" : "null",
       "errors" : [ "DocumentedError" ]
     },
-    "notUndocumentedMethod" : {
-      "doc" : "Dangling Method3",
+    "undocumentedMethod" : {
       "request" : [ {
         "name" : "message",
         "type" : "string"

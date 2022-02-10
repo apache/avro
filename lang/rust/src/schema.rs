@@ -1914,4 +1914,28 @@ mod tests {
         );
         assert!(RecordFieldOrder::from_str("not an ordering").is_err());
     }
+
+    /// AVRO-3374
+    #[test]
+    fn test_avro_3374_preserve_namespace_for_primitive() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type" : "record",
+              "name" : "ns.int",
+              "fields" : [
+                {"name" : "value", "type" : "int"},
+                {"name" : "next", "type" : [ "null", "ns.int" ]}
+              ]
+            }
+            "#,
+        )
+        .unwrap();
+
+        let json = schema.canonical_form();
+        assert_eq!(
+            json,
+            r#"{"name":"ns.int","type":"record","fields":[{"name":"value","type":"int"},{"name":"next","type":["null","ns.int"]}]}"#
+        );
+    }
 }

@@ -44,7 +44,7 @@
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
     <netty.version>4.1.72.Final</netty.version>
-    <protobuf.version>3.19.1</protobuf.version>
+    <protobuf.version>3.19.4</protobuf.version>
     <thrift.version>0.15.0</thrift.version>
     <slf4j.version>1.7.33</slf4j.version>
     <reload4j.version>1.2.18.0</reload4j.version>
@@ -61,7 +61,7 @@
     <grpc.version>1.44.0</grpc.version>
     <zstd-jni.version>1.5.1-1</zstd-jni.version>
     <!-- version properties for plugins -->
-    <archetype-plugin.version>3.2.0</archetype-plugin.version>
+    <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.4</bundle-plugin-version>
     <exec-plugin.version>3.0.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
