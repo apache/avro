@@ -5,7 +5,7 @@ The following rules are currently used within the .editorconfig of the Avro solu
 Note that the examples shown are based on the current settings in .editorconfig
 
 ## New line preferences
----
+
 ### csharp_new_line_before_open_brace
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_new_line_before_open_brace)
 
@@ -100,7 +100,7 @@ var q = from a in e
 ---
 
 ## Indentation preferences
----
+
 ### csharp_indent_case_contents
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_indent_case_contents)
 
