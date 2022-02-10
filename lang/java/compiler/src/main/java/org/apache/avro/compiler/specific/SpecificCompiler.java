@@ -381,7 +381,7 @@ public class SpecificCompiler {
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.addProperty("resource.loader.file.path", "/, ., ");
     velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)

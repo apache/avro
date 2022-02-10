@@ -90,7 +90,7 @@ public class Resolver {
         return new DoNothing(w, r, d);
 
       case FIXED:
-        if (w.getFullName() != null && !w.getFullName().equals(r.getFullName())) {
+        if (w.getName() != null && !w.getName().equals(r.getName())) {
           return new ErrorAction(w, r, d, ErrorType.NAMES_DONT_MATCH);
         } else if (w.getFixedSize() != r.getFixedSize()) {
           return new ErrorAction(w, r, d, ErrorType.SIZES_DONT_MATCH);
@@ -388,7 +388,7 @@ public class Resolver {
      * appropriate {@link EnumAdjust} is.
      */
     public static Action resolve(Schema w, Schema r, GenericData d) {
-      if (w.getFullName() != null && !w.getFullName().equals(r.getFullName()))
+      if (w.getName() != null && !w.getName().equals(r.getName()))
         return new ErrorAction(w, r, d, ErrorType.NAMES_DONT_MATCH);
 
       final List<String> wsymbols = w.getEnumSymbols();
