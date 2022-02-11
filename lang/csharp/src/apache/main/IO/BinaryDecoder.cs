@@ -52,7 +52,7 @@ namespace Avro.IO
         /// <returns>
         /// The boolean just read
         /// </returns>
-        /// <exception cref="InvalidDataException">Not a boolean value in the stream: {booleanValue}</exception>
+        /// <exception cref="AvroException">Not a boolean value in the stream: {booleanValue}</exception>
         public bool ReadBoolean()
         {
             byte booleanValue = read();
@@ -72,7 +72,7 @@ namespace Avro.IO
                 return true;
             }
 
-            throw new InvalidDataException($"Not a boolean value in the stream: {booleanValue}");
+            throw new AvroException($"Not a boolean value in the stream: {booleanValue}");
         }
 
         /// <summary>
@@ -311,11 +311,11 @@ namespace Avro.IO
         /// Reads this instance.
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="EndOfStreamException"></exception>
+        /// <exception cref="Avro.AvroException">End of stream reached</exception>
         private byte read()
         {
             int readByte = _stream.ReadByte();
-            return readByte == -1 ? throw new EndOfStreamException() : (byte)readByte;
+            return readByte == -1 ? throw new AvroException("End of stream reached") : (byte)readByte;
         }
 
         /// <summary>

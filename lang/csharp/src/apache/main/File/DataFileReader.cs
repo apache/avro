@@ -595,7 +595,7 @@ namespace Avro.File
                     {
                         _blockRemaining = _decoder.ReadLong();      // read block count
                     }
-                    catch (EndOfStreamException)
+                    catch (AvroException)
                     {
                         return false;
                     }

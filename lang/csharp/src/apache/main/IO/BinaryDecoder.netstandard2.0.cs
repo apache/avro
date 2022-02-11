@@ -84,19 +84,21 @@ namespace Avro.IO
         /// <returns>
         /// String read from the stream.
         /// </returns>
-        /// <exception cref="InvalidDataException">Can not deserialize a string with negative length!</exception>
-        /// <exception cref="AvroException">
+        /// <exception cref="Avro.AvroException">
+        /// Can not deserialize a string with negative length!
+        /// or
         /// String length is not supported!
         /// or
         /// Unable to read {length} bytes from a byte array of length {bytes.Length}
         /// </exception>
+
         public string ReadString()
         {
             int length = ReadInt();
 
             if (length < 0)
             {
-                throw new InvalidDataException("Can not deserialize a string with negative length!");
+                throw new AvroException("Can not deserialize a string with negative length!");
             }
 
             // TODO: Refer to comments on MaxDotNetArrayLength
@@ -124,7 +126,7 @@ namespace Avro.IO
         /// <param name="buffer">The buffer.</param>
         /// <param name="start">The start.</param>
         /// <param name="len">The length.</param>
-        /// <exception cref="EndOfStreamException"></exception>
+        /// <exception cref="Avro.AvroException">End of stream reached</exception>
         private void Read(byte[] buffer, int start, int len)
         {
             while (len > 0)
@@ -132,7 +134,7 @@ namespace Avro.IO
                 int n = _stream.Read(buffer, start, len);
                 if (n <= 0)
                 {
-                    throw new EndOfStreamException();
+                    throw new AvroException("End of stream reached");
                 }
 
                 start += n;

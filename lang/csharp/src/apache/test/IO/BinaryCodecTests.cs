@@ -256,7 +256,7 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
-                var exception = Assert.Throws<InvalidDataException>(() => d.ReadString());
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
                 Assert.AreEqual("Can not deserialize a string with negative length!", exception.Message);
