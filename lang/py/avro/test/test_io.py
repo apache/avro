@@ -468,6 +468,15 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
         with io.BytesIO(enc_bytes) as reader_bio:
             self.assertRaises(avro.errors.AvroTypeException, reader.read, avro.io.BinaryDecoder(reader_bio))
 
+        incompatibleUserRecord = {"name": -10, "age": 21, "location": "Woodford"}
+        with io.BytesIO() as writer_bio:
+            enc = avro.io.BinaryEncoder(writer_bio)
+            writer.write(incompatibleUserRecord, enc)
+            enc_bytes = writer_bio.getvalue()
+        reader = avro.io.DatumReader(reader_schema)
+        with io.BytesIO(enc_bytes) as reader_bio:
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
+
 
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:
