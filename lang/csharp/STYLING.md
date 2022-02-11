@@ -842,3 +842,178 @@ C c = new();
 C c2 = new() { Field = 0 };
 ```
 ---
+
+## Null-checking Preferences
+
+### csharp_style_throw_expression
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0016#csharp_style_throw_expression)
+
+Prefer to use throw expressions instead of throw statements
+
+**Example**
+```
+_s = s ?? throw new ArgumentNullException(nameof(s));
+```
+---
+### dotnet_style_coalesce_expression
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0029-ide0030#dotnet_style_coalesce_expression)
+
+Prefer null coalescing expressions to ternary operator checking
+
+**Example**
+```
+var v = x ?? y;
+```
+---
+### dotnet_style_coalesce_expression
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0031#dotnet_style_null_propagation)
+
+Prefer to use null-conditional operator when possible
+
+**Example**
+```
+string v = o?.ToString();
+```
+---
+### dotnet_style_prefer_is_null_check_over_reference_equality_method
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0041#dotnet_style_prefer_is_null_check_over_reference_equality_method)
+
+Prefer is null check over reference equality method
+
+**Example**
+```
+if (value is null)
+    return;
+```
+---
+### csharp_style_conditional_delegate_call
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide1005#csharp_style_conditional_delegate_call)
+
+Prefer to use the conditional coalescing operator (?.) when invoking a lambda expression, instead of performing a null check
+
+**Example**
+```
+func?.Invoke(args);
+```
+---
+
+## var Preferences
+
+### csharp_style_var_for_built_in_types
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0007-ide0008#csharp_style_var_for_built_in_types)
+
+Prefer explicit type over var to declare variables with built-in system types such as int
+
+**Example**
+```
+int x = 5;
+```
+---
+### csharp_style_var_when_type_is_apparent
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0007-ide0008#csharp_style_var_when_type_is_apparent)
+
+Prefer explicit type over var when the type is already mentioned on the right-hand side of a declaration expression
+
+**Example**
+```
+Customer obj = new Customer();
+```
+---
+### csharp_style_var_elsewhere
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0007-ide0008#csharp_style_var_elsewhere)
+
+Prefer explicit type over var in all cases, unless overridden by another code style rule
+
+**Example**
+```
+bool f = this.Init();
+```
+---
+
+## Expression-bodied member Preferences
+
+### csharp_style_expression_bodied_constructors
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0021#csharp_style_expression_bodied_constructors)
+
+Prefer expression bodies for constructors
+
+**Example**
+```
+public Customer(int age) => Age = age;
+```
+---
+### csharp_style_expression_bodied_methods
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0022#csharp_style_expression_bodied_methods)
+
+Prefer expression bodies for methods
+
+**Example**
+```
+public int GetAge() => this.Age;
+```
+---
+### csharp_style_expression_bodied_operators
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0023-ide0024#csharp_style_expression_bodied_operators)
+
+Prefer expression bodies for operators
+
+**Example**
+```
+public static ComplexNumber operator + (ComplexNumber c1, ComplexNumber c2)
+    => new ComplexNumber(c1.Real + c2.Real, c1.Imaginary + c2.Imaginary);
+```
+---
+### csharp_style_expression_bodied_properties
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0025#csharp_style_expression_bodied_properties)
+
+Prefer expression bodies for properties
+
+**Example**
+```
+public int Age => _age;
+```
+---
+### csharp_style_expression_bodied_indexers
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0026#csharp_style_expression_bodied_indexers)
+
+Prefer expression bodies for indexers
+
+**Example**
+```
+public T this[int i] => _values[i];
+```
+---
+### csharp_style_expression_bodied_accessors
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0027#csharp_style_expression_bodied_accessors)
+
+Prefer expression bodies for accessors
+
+**Example**
+```
+public int Age { get => _age; set => _age = value; }
+```
+---
+### csharp_style_expression_bodied_lambdas
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0053#csharp_style_expression_bodied_lambdas)
+
+Prefer expression bodies for lambdas
+
+**Example**
+```
+Func<int, int> square = x => x * x;
+```
+---
+### csharp_style_expression_bodied_local_functions
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0061#csharp_style_expression_bodied_local_functions)
+
+Prefer expression bodies for local functions
+
+**Example**
+```
+void M()
+{
+    Hello();
+    void Hello() => Console.WriteLine("Hello");
+}
+```
+---
