@@ -1180,3 +1180,396 @@ private static string GetText(string path, string filename)
 public void MyMethod() { };
 ```
 ---
+
+## Formatting Rules
+
+### dotnet_sort_system_directives_first
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#dotnet_sort_system_directives_first)
+
+Sort System.* using directives alphabetically, and place them before other using directives.
+
+**Example**
+```
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Avro;
+```
+---
+### dotnet_separate_import_directive_groups
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#dotnet_separate_import_directive_groups)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_separate_import_directive_groups = true
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Avro;
+
+// dotnet_separate_import_directive_groups = false
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Avro;
+```
+---
+### dotnet_style_namespace_match_folder
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#dotnet_style_namespace_match_folder)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_namespace_match_folder = true
+// file path: Example/Convention/C.cs
+using System;
+
+namespace Example.Convention
+{
+    class C
+    {
+    }
+}
+
+// dotnet_style_namespace_match_folder = false
+// file path: Example/Convention/C.cs
+using System;
+
+namespace Example
+{
+    class C
+    {
+    }
+}
+```
+---
+
+## Unnecessary Code Rules
+
+### Simplify name (IDE0001)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0001)
+**Example**
+```
+using System.IO;
+class C
+{
+    // IDE0001: 'System.IO.FileInfo' can be simplified to 'FileInfo'
+    System.IO.FileInfo file;
+
+    // Fixed code
+    FileInfo file;
+}
+```
+---
+### Simplify member access (IDE0002)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0002)
+**Example**
+```
+static void M1() { }
+static void M2()
+{
+    // IDE0002: 'C.M1' can be simplified to 'M1'
+    C.M1();
+
+    // Fixed code
+    M1();
+}
+```
+---
+### Remove unnecessary cast (IDE0004)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0004)
+**Example**
+```
+// Code with violations
+int v = (int)0;
+
+// Fixed code
+int v = 0;
+```
+---
+### Remove unnecessary import (IDE0005)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0005)
+**Example**
+```
+// Code with violations
+using System;
+using System.IO;    // IDE0005: Using directive is unnecessary
+class C
+{
+    public static void M()
+    {
+        Console.WriteLine("Hello");
+    }
+}
+
+// Fixed code
+using System;
+class C
+{
+    public static void M()
+    {
+        Console.WriteLine("Hello");
+    }
+}
+```
+---
+### Remove unreachable code (IDE0035)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0035)
+**Example**
+```
+// Code with violations
+void M()
+{
+    throw new System.Exception();
+
+    // IDE0035: Remove unreachable code
+    int v = 0;
+}
+
+// Fixed code
+void M()
+{
+    throw new System.Exception();
+}
+```
+---
+### Remove unused private member (IDE0051)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0051)
+**Example**
+```
+// Code with violations
+class C
+{
+    // IDE0051: Remove unused private members
+    private readonly int _fieldPrivate;
+    private int PropertyPrivate => 1;
+    private int GetNumPrivate() => 1;
+
+    // No IDE0051
+    internal readonly int FieldInternal;
+    private readonly int _fieldPrivateUsed;
+    public int PropertyPublic => _fieldPrivateUsed;
+    private int GetNumPrivateUsed() => 1;
+    internal int GetNumInternal() => GetNumPrivateUsed();
+    public int GetNumPublic() => GetNumPrivateUsed();
+}
+
+// Fixed code
+class C
+{
+    // No IDE0051
+    internal readonly int FieldInternal;
+    private readonly int _fieldPrivateUsed;
+    public int PropertyPublic => _fieldPrivateUsed;
+    private int GetNumPrivateUsed() => 1;
+    internal int GetNumInternal() => GetNumPrivateUsed();
+    public int GetNumPublic() => GetNumPrivateUsed();
+}
+```
+---
+### Remove unread private member (IDE0052)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0052)
+**Example**
+```
+class C
+{
+    // IDE0052: Remove unread private members
+    private readonly int _field1;
+    private int _field2;
+    private int Property { get; set; }
+
+    public C()
+    {
+        _field1 = 0;
+    }
+
+    public void SetMethod()
+    {
+        _field2 = 0;
+        Property = 0;
+    }
+}
+
+// Fixed code
+class C
+{
+    public C()
+    {
+    }
+
+    public void SetMethod()
+    {
+    }
+}
+```
+---
+### csharp_style_unused_value_expression_statement_preference
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0058#csharp_style_unused_value_expression_statement_preference)
+
+Prefer to assign an unused expression to a discard
+
+Default is discard_variable
+
+**Example**
+```
+_ = System.Convert.ToInt32("35");
+```
+---
+### csharp_style_unused_value_assignment_preference
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0059#csharp_style_unused_value_assignment_preference)
+
+Prefer to use a discard when assigning a value that's not used
+
+Default is discard_variable
+
+**Example**
+```
+int GetCount(Dictionary<string, int> wordCount, string searchWord)
+{
+    _ = wordCount.TryGetValue(searchWord, out var count);
+    return count;
+}
+```
+---
+### dotnet_code_quality_unused_parameters
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0060#dotnet_code_quality_unused_parameters)
+
+Flag methods with any accessibility that contain unused parameters
+
+Default is all
+
+**Example**
+```
+public int GetNum1(int unusedParam) { return 1; }
+internal int GetNum2(int unusedParam) { return 1; }
+private int GetNum3(int unusedParam) { return 1; }
+```
+---
+### dotnet_remove_unnecessary_suppression_exclusions
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0079#dotnet_remove_unnecessary_suppression_exclusions)
+
+ enables the rule for all rule IDs and rule categories
+
+Default is none
+
+**Example**
+```
+using System.Diagnostics.CodeAnalysis;
+
+class C1
+{
+    // 'dotnet_remove_unnecessary_suppression_exclusions = IDE0051'
+
+    // Unnecessary pragma suppression, but not flagged by IDE0079
+#pragma warning disable IDE0051 // IDE0051: Remove unused member
+    private int UsedMethod() => 0;
+#pragma warning restore IDE0051
+
+    public int PublicMethod() => UsedMethod();
+}
+```
+---
+### Remove unnecessary suppression operator (IDE0080)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0080)
+**Example**
+```
+// Code with violations
+if (o !is string) { }
+
+// Potential fixes:
+// 1.
+if (o is not string) { }
+
+// 2.
+if (!(o is string)) { }
+
+// 3.
+if (o is string) { }
+```
+---
+### Remove unnecessary equality operator (IDE0100)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0100)
+**Example**
+```
+// Code with violations
+if (x == true) { }
+if (M() != false) { }
+
+// Fixed code
+if (x) { }
+if (M()) { }
+```
+---
+### Remove unnecessary discard (IDE0110)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0110)
+**Example**
+```
+// Code with violations
+switch (o)
+{
+    case int _:
+        Console.WriteLine("Value was an int");
+        break;
+    case string _:
+        Console.WriteLine("Value was a string");
+        break;
+}
+
+// Fixed code
+switch (o)
+{
+    case int:
+        Console.WriteLine("Value was an int");
+        break;
+    case string:
+        Console.WriteLine("Value was a string");
+        break;
+}
+```
+---
+
+## Miscellaneous Rules
+
+### Remove invalid global 'SuppressMessageAttribute' (IDE0076)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0076)
+**Example**
+```
+// IDE0076: Invalid target '~F:N.C.F2' - no matching field named 'F2'
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "member", Target = "~F:N.C.F2")]
+// IDE0076: Invalid scope 'property'
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "property", Target = "~P:N.C.P")]
+
+// Fixed code
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "member", Target = "~F:N.C.F")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "member", Target = "~P:N.C.P")]
+
+namespace N
+{
+    class C
+    {
+        public int F;
+        public int P { get; }
+    }
+}
+```
+---
+### Avoid legacy format target in global 'SuppressMessageAttribute' (IDE0077)
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0077)
+**Example**
+```
+// IDE0077: Legacy format target 'N.C.#F'
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "member", Target = "N.C.#F")]
+
+// Fixed code
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Category", "Id: Title", Scope = "member", Target = "~F:N.C.F")]
+
+namespace N
+{
+    class C
+    {
+        public int F;
+    }
+}
+```
+---
