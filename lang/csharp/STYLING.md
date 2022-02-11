@@ -5,6 +5,7 @@ The following rules are currently used within the .editorconfig of the Avro solu
 Notes
  - The examples shown are based on the current settings in .editorconfig
  - :exclamation: Not defined :exclamation: means we have not set a preference
+ - There are cases where it is not explicitly defined in the .editorconfig, but there is a default option
 
 ## New line preferences
 
@@ -574,21 +575,15 @@ class MyClass
 ### dotnet_style_require_accessibility_modifiers
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0040#dotnet_style_require_accessibility_modifiers)
 
-:exclamation: Not defined :exclamation:
+Prefer accessibility modifiers to be declared except for public interface members.
+
+default is for_non_interface_members
 
 **Example**
 ```
-// dotnet_style_require_accessibility_modifiers = always
-// dotnet_style_require_accessibility_modifiers = for_non_interface_members
 class MyClass
 {
     private const string thisFieldIsConst = "constant";
-}
-
-// dotnet_style_require_accessibility_modifiers = never
-class MyClass
-{
-    const string thisFieldIsConst = "constant";
 }
 ```
 ---
@@ -628,56 +623,222 @@ void M()
 ### dotnet_style_parentheses_in_arithmetic_binary_operators
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_arithmetic_binary_operators)
 
-:exclamation: Not defined :exclamation:
+Prefer parentheses to clarify arithmetic operator (*, /, %, +, -, <<, >>, &, ^, |) precedence
+
+Default is always_for_clarity
 
 **Example**
 ```
-// dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity
 var v = a + (b * c);
-
-// dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary
-var v = a + b * c;
 ```
 ---
 ### dotnet_style_parentheses_in_relational_binary_operators
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_relational_binary_operators)
 
-:exclamation: Not defined :exclamation:
+Prefer parentheses to clarify relational operator (>, <, <=, >=, is, as, ==, !=) precedence
+
+Default is always_for_clarity
 
 **Example**
 ```
-// dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity
 var v = (a < b) == (c > d);
-
-// dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary
-var v = a < b == c > d;
 ```
 ---
 ### dotnet_style_parentheses_in_other_binary_operators
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_other_binary_operators)
 
-:exclamation: Not defined :exclamation:
+Prefer parentheses to clarify other binary operator (&&, ||, ??) precedence
+
+Default is always_for_clarity
 
 **Example**
 ```
-// dotnet_style_parentheses_in_other_binary_operators = always_for_clarity
 var v = a || (b && c);
-
-// dotnet_style_parentheses_in_other_binary_operators = never_if_unnecessary
-var v = a || b && c;
 ```
 ---
 ### dotnet_style_parentheses_in_other_operators
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_other_operators)
 
-:exclamation: Not defined :exclamation:
+Prefer to not have parentheses when operator precedence is obvious
+
+Default is never_if_unnecessary
 
 **Example**
 ```
-// dotnet_style_parentheses_in_other_operators = always_for_clarity
-var v = (a.b).Length;
-
-// dotnet_style_parentheses_in_other_operators = never_if_unnecessary
 var v = a.b.Length;
+```
+---
+
+## Expression-level preferences
+
+### dotnet_style_object_initializer
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0017#dotnet_style_object_initializer)
+
+Prefer objects to be initialized using object initializers when possible
+
+default is true
+
+**Example**
+```
+var c = new Customer() { Age = 21 };
+```
+---
+### csharp_style_inlined_variable_declaration
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0018#csharp_style_inlined_variable_declaration)
+
+Prefer out variables to be declared inline in the argument list of a method call when possible
+
+**Example**
+```
+if (int.TryParse(value, out int i) {...}
+```
+---
+### dotnet_style_collection_initializer
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0028#dotnet_style_collection_initializer)
+
+Prefer collections to be initialized using collection initializers when possible
+
+**Example**
+```
+var list = new List<int> { 1, 2, 3 };
+```
+---
+### dotnet_style_prefer_auto_properties
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0032#dotnet_style_prefer_auto_properties)
+
+Prefer auto properties over properties with private backing fields
+
+**Example**
+```
+private int Age { get; }
+```
+---
+### dotnet_style_explicit_tuple_names
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0033#dotnet_style_explicit_tuple_names)
+
+Prefer tuple names to ItemX properties
+
+**Example**
+```
+(string name, int age) customer = GetCustomer();
+var name = customer.name;
+```
+---
+### csharp_prefer_simple_default_expression
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0034#csharp_prefer_simple_default_expression)
+
+Prefer default over default(T)
+
+**Example**
+```
+void DoWork(CancellationToken cancellationToken = default) { ... }
+```
+---
+### dotnet_style_prefer_inferred_tuple_names
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0037#dotnet_style_prefer_inferred_tuple_names)
+
+Prefer inferred tuple element names
+
+**Example**
+```
+var tuple = (age, name);
+```
+---
+### dotnet_style_prefer_inferred_anonymous_type_member_names
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0037#dotnet_style_prefer_inferred_anonymous_type_member_names)
+
+Prefer inferred anonymous type member names
+
+**Example**
+```
+var anon = new { age, name };
+```
+---
+### csharp_style_pattern_local_over_anonymous_function
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0039#csharp_style_pattern_local_over_anonymous_function)
+
+Prefer anonymous functions over local functions
+
+**Example**
+```
+Func<int, int> fibonacci = null;
+fibonacci = (int n) =>
+{
+    return n <= 1 ? 1 : fibonacci(n - 1) + fibonacci(n - 2);
+};
+```
+---
+### csharp_style_deconstructed_variable_declaration
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0042#csharp_style_deconstructed_variable_declaration)
+
+Prefer deconstructed variable declaration
+
+default is true
+
+**Example**
+```
+var (name, age) = GetPersonTuple();
+Console.WriteLine($"{name} {age}");
+
+(int x, int y) = GetPointTuple();
+Console.WriteLine($"{x} {y}");
+```
+---
+### dotnet_style_prefer_conditional_expression_over_assignment
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0045#dotnet_style_prefer_conditional_expression_over_assignment)
+
+Prefer assignments with a ternary conditional over an if-else statement
+
+**Example**
+```
+string s = expr ? "hello" : "world";
+```
+---
+### dotnet_style_prefer_conditional_expression_over_return
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0046#dotnet_style_prefer_conditional_expression_over_return)
+
+Prefer return statements to use a ternary conditional over an if-else statement
+
+**Example**
+```
+return expr ? "hello" : "world"
+```
+---
+### dotnet_style_prefer_compound_assignment
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0054-ide0074#dotnet_style_prefer_compound_assignment)
+
+Prefer compound assignment expressions
+
+default is true
+
+**Example**
+```
+x += 1;
+```
+---
+### dotnet_style_prefer_simplified_boolean_expressions
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0075#dotnet_style_prefer_simplified_boolean_expressions)
+
+Prefer simplified conditional expressions
+
+default is true
+
+**Example**
+```
+var result1 = M1() && M2();
+var result2 = M1() || M2();
+```
+---
+### csharp_style_implicit_object_creation_when_type_is_apparent
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0090#csharp_style_implicit_object_creation_when_type_is_apparent)
+
+Prefer target-typed new expressions when created type is apparent
+
+default is true
+
+**Example**
+```
+C c = new();
+C c2 = new() { Field = 0 };
 ```
 ---
