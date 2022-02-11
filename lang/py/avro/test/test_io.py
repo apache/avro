@@ -466,7 +466,7 @@ class TestIncompatibleSchemaReading(unittest.TestCase):
             enc_bytes = writer_bio.getvalue()
         reader = avro.io.DatumReader(reader_schema)
         with io.BytesIO(enc_bytes) as reader_bio:
-            self.assertRaises(avro.errors.AvroTypeException, reader.read, avro.io.BinaryDecoder(reader_bio))
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
 
         incompatibleUserRecord = {"name": -10, "age": 21, "location": "Woodford"}
         with io.BytesIO() as writer_bio:
