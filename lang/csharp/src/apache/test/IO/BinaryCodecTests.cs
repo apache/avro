@@ -256,7 +256,7 @@ namespace Avro.Test
                 iostr.Position = 0;
                 Decoder d = new BinaryDecoder(iostr);
 
-                var exception = Assert.Throws<AvroException>(() => d.ReadString());
+                var exception = Assert.Throws<InvalidDataException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
                 Assert.AreEqual("Can not deserialize a string with negative length!", exception.Message);
@@ -309,7 +309,7 @@ namespace Avro.Test
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
+                Assert.AreEqual("Unable to read 2147483591 bytes from a byte array of length 16", exception.Message);
                 iostr.Close();
             }
         }

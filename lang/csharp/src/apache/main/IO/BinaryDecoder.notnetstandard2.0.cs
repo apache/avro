@@ -155,7 +155,10 @@ namespace Avro.IO
             while (!buffer.IsEmpty)
             {
                 int n = _stream.Read(buffer);
-                if (n <= 0) throw new EndOfStreamException();
+                if (n <= 0)
+                {
+                    throw new EndOfStreamException();
+                }
                 buffer = buffer.Slice(n);
             }
         }
