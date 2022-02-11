@@ -1109,3 +1109,74 @@ namespace N2
 }
 ```
 ---
+
+## Naming Rules
+
+### Non-private static fields are PascalCase
+**Example**
+```
+public static MyString = "value";
+protected static MyString = "value";
+internal static MyString = "value";
+protected_internal static MyString = "value";
+private_protected static MyString = "value";;
+```
+---
+### Constants are PascalCase
+**Example**
+```
+public const string MyConstant = "value";
+```
+---
+### Static fields are camelCase and start with s_
+**Example**
+```
+private static int s_myInt;
+```
+---
+# Instance fields are camelCase and start with _
+**Example**
+```
+private int _myInt;
+
+internal string _myString;
+```
+---
+# Locals and parameters are camelCase
+**Example**
+```
+private static string GetText(string path, string filename)
+{
+     var reader = File.OpenText($"{AppendPathSeparator(path)}{filename}");
+     var text = reader.ReadToEnd();
+     return text;
+
+     string AppendPathSeparator(string filepath)
+     {
+        return filepath.EndsWith(@"\") ? filepath : filepath + @"\";
+     }
+}
+```
+---
+# Local functions are PascalCase
+**Example**
+```
+private static string GetText(string path, string filename)
+{
+     var reader = File.OpenText($"{AppendPathSeparator(path)}{filename}");
+     var text = reader.ReadToEnd();
+     return text;
+
+     string AppendPathSeparator(string filepath)
+     {
+        return filepath.EndsWith(@"\") ? filepath : filepath + @"\";
+     }
+}
+```
+---
+# By default, name items with PascalCase
+**Example**
+```
+public void MyMethod() { };
+```
+---
