@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.IO;
 
 namespace Avro.IO
@@ -25,15 +25,18 @@ namespace Avro.IO
     /// </summary>
     public partial class BinaryDecoder : Decoder
     {
-        private readonly Stream stream;
+        /// <summary>
+        /// The stream
+        /// </summary>
+        private readonly Stream _stream;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
+        /// Initializes a new instance of the <see cref="BinaryDecoder" /> class.
         /// </summary>
         /// <param name="stream">Stream to decode.</param>
         public BinaryDecoder(Stream stream)
         {
-            this.stream = stream;
+            _stream = stream;
         }
 
         /// <summary>
@@ -44,22 +47,40 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// a boolean is written as a single byte
-        /// whose value is either 0 (false) or 1 (true).
+        /// a boolean is written as a single byte whose value is either 0 (false) or 1 (true).
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The boolean just read
+        /// </returns>
+        /// <exception cref="InvalidDataException">Not a boolean value in the stream: {booleanValue}</exception>
         public bool ReadBoolean()
         {
-            byte b = read();
-            if (b == 0) return false;
-            if (b == 1) return true;
-            throw new AvroException("Not a boolean value in the stream: " + b);
+            byte booleanValue = read();
+
+            /*
+             * HACK: Ignore IDE0046, this is a very specific case where you do not want to
+             * use a conditional statement or use Convert.ToBoolean()
+             */
+
+            if (booleanValue == 0)
+            {
+                return false;
+            }
+
+            if (booleanValue == 1)
+            {
+                return true;
+            }
+
+            throw new InvalidDataException($"Not a boolean value in the stream: {booleanValue}");
         }
 
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
-        /// <returns>An integer value.</returns>
+        /// <returns>
+        /// An integer value.
+        /// </returns>
         public int ReadInt()
         {
             return (int)ReadLong();
@@ -68,7 +89,9 @@ namespace Avro.IO
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
-        /// <returns>A long value.</returns>
+        /// <returns>
+        /// A long value.
+        /// </returns>
         public long ReadLong()
         {
             byte b = read();
@@ -80,6 +103,7 @@ namespace Avro.IO
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
+
             long value = (long)n;
             return (-(value & 0x01L)) ^ ((value >> 1) & 0x7fffffffffffffffL);
         }
@@ -87,7 +111,9 @@ namespace Avro.IO
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The bytes just read
+        /// </returns>
         public byte[] ReadBytes()
         {
             return read(ReadLong());
@@ -96,7 +122,9 @@ namespace Avro.IO
         /// <summary>
         /// Reads an enumeration.
         /// </summary>
-        /// <returns>Ordinal value of the enum.</returns>
+        /// <returns>
+        /// Ordinal value of the enum.
+        /// </returns>
         public int ReadEnum()
         {
             return ReadInt();
@@ -105,7 +133,9 @@ namespace Avro.IO
         /// <summary>
         /// Reads the size of the first block of an array.
         /// </summary>
-        /// <returns>Size of the first block of an array.</returns>
+        /// <returns>
+        /// Size of the first block of an array.
+        /// </returns>
         public long ReadArrayStart()
         {
             return doReadItemCount();
@@ -115,7 +145,9 @@ namespace Avro.IO
         /// Processes the next block of an array and returns the number of items in the block and
         /// let's the caller read those items.
         /// </summary>
-        /// <returns>Number of items in the next block of an array.</returns>
+        /// <returns>
+        /// Number of items in the next block of an array.
+        /// </returns>
         public long ReadArrayNext()
         {
             return doReadItemCount();
@@ -124,7 +156,9 @@ namespace Avro.IO
         /// <summary>
         /// Reads the size of the next block of map-entries.
         /// </summary>
-        /// <returns>Size of the next block of map-entries.</returns>
+        /// <returns>
+        /// Size of the next block of map-entries.
+        /// </returns>
         public long ReadMapStart()
         {
             return doReadItemCount();
@@ -133,16 +167,20 @@ namespace Avro.IO
         /// <summary>
         /// Processes the next block of map entries and returns the count of them.
         /// </summary>
-        /// <returns>Number of entires in the next block of a map.</returns>
+        /// <returns>
+        /// Number of entires in the next block of a map.
+        /// </returns>
         public long ReadMapNext()
         {
             return doReadItemCount();
         }
 
         /// <summary>
-        /// Reads the tag index of a union written by <see cref="BinaryEncoder.WriteUnionIndex(int)"/>.
+        /// Reads the tag index of a union written by <see cref="BinaryEncoder.WriteUnionIndex(int)" />.
         /// </summary>
-        /// <returns>Tag index of a union.</returns>
+        /// <returns>
+        /// Tag index of a union.
+        /// </returns>
         public int ReadUnionIndex()
         {
             return ReadInt();
@@ -161,12 +199,8 @@ namespace Avro.IO
         /// Reads fixed sized binary object.
         /// </summary>
         /// <param name="buffer">Buffer to read the fixed value into.</param>
-        /// <param name="start">
-        /// Position to start writing the fixed value to in the <paramref name="buffer"/>.
-        /// </param>
-        /// <param name="length">
-        /// Number of bytes of the fixed to read.
-        /// </param>
+        /// <param name="start">Position to start writing the fixed value to in the <paramref name="buffer" />.</param>
+        /// <param name="length">Number of bytes of the fixed to read.</param>
         public void ReadFixed(byte[] buffer, int start, int length)
         {
             Read(buffer, start, length);
@@ -221,7 +255,7 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Skips a byte-string written by <see cref="BinaryEncoder.WriteBytes(byte[])"/>.
+        /// Skips a byte-string written by <see cref="BinaryEncoder.WriteBytes(byte[])" />.
         /// </summary>
         public void SkipBytes()
         {
@@ -229,7 +263,7 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Skips a string written by <see cref="BinaryEncoder.WriteString(string)"/>.
+        /// Skips a string written by <see cref="BinaryEncoder.WriteString(string)" />.
         /// </summary>
         public void SkipString()
         {
@@ -261,21 +295,33 @@ namespace Avro.IO
             Skip(len);
         }
 
-        // Read p bytes into a new byte buffer
-        private byte[] read(long p)
+        /// <summary>
+        /// Read the byte array size into a new byte buffer
+        /// </summary>
+        /// <param name="byteArraySize">The number of bytes</param>
+        /// <returns>The new byte buffer</returns>
+        private byte[] read(long byteArraySize)
         {
-            byte[] buffer = new byte[p];
+            byte[] buffer = new byte[byteArraySize];
             Read(buffer, 0, buffer.Length);
             return buffer;
         }
 
+        /// <summary>
+        /// Reads this instance.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="EndOfStreamException"></exception>
         private byte read()
         {
-            int n = stream.ReadByte();
-            if (n >= 0) return (byte)n;
-            throw new AvroException("End of stream reached");
+            int readByte = _stream.ReadByte();
+            return readByte == -1 ? throw new EndOfStreamException() : (byte)readByte;
         }
 
+        /// <summary>
+        /// Does the read item count.
+        /// </summary>
+        /// <returns>A long result of the byte read</returns>
         private long doReadItemCount()
         {
             long result = ReadLong();
@@ -284,17 +330,26 @@ namespace Avro.IO
                 ReadLong(); // Consume byte-count if present
                 result = -result;
             }
+
             return result;
         }
 
-        private void Skip(int p)
+        /// <summary>
+        /// Skips the specified offset.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        private void Skip(int offset)
         {
-            stream.Seek(p, SeekOrigin.Current);
+            _stream.Seek(offset, SeekOrigin.Current);
         }
 
-        private void Skip(long p)
+        /// <summary>
+        /// Skips the specified offset.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        private void Skip(long offset)
         {
-            stream.Seek(p, SeekOrigin.Current);
+            _stream.Seek(offset, SeekOrigin.Current);
         }
     }
 }

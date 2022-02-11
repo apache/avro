@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.IO;
 using System.Text;
@@ -29,6 +30,10 @@ namespace Avro.IO
         /// <summary>
         /// It is hard to find documentation about the real maximum array length in .NET Framework 4.6.1, but this seems to work :-/
         /// </summary>
+        /*
+         * TODO: look into when gcAllowVeryLargeObjects was introduced.  The check using this may no longer be needed.
+         * It was enabled by default with .Net Framework 4.5 onward.
+         */
         private const int MaxDotNetArrayLength = 0x3FFFFFFF;
 
         /// <summary>
@@ -36,21 +41,19 @@ namespace Avro.IO
         /// The float is converted into a 32-bit integer using a method equivalent to
         /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The float just read
+        /// </returns>
         public float ReadFloat()
         {
             byte[] buffer = read(4);
 
             if (!BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(buffer);
+            }
 
             return BitConverter.ToSingle(buffer, 0);
-
-            //int bits = (Stream.ReadByte() & 0xff |
-            //(Stream.ReadByte()) & 0xff << 8 |
-            //(Stream.ReadByte()) & 0xff << 16 |
-            //(Stream.ReadByte()) & 0xff << 24);
-            //return intBitsToFloat(bits);
         }
 
         /// <summary>
@@ -58,57 +61,80 @@ namespace Avro.IO
         /// The double is converted into a 64-bit integer using a method equivalent to
         /// Java's doubleToLongBits and then encoded in little-endian format.
         /// </summary>
-        /// <returns>A double value.</returns>
+        /// <returns>
+        /// A double value.
+        /// </returns>
         public double ReadDouble()
         {
-            long bits = (stream.ReadByte() & 0xffL) |
-              (stream.ReadByte() & 0xffL) << 8 |
-              (stream.ReadByte() & 0xffL) << 16 |
-              (stream.ReadByte() & 0xffL) << 24 |
-              (stream.ReadByte() & 0xffL) << 32 |
-              (stream.ReadByte() & 0xffL) << 40 |
-              (stream.ReadByte() & 0xffL) << 48 |
-              (stream.ReadByte() & 0xffL) << 56;
+            long bits = (_stream.ReadByte() & 0xffL) |
+              (_stream.ReadByte() & 0xffL) << 8 |
+              (_stream.ReadByte() & 0xffL) << 16 |
+              (_stream.ReadByte() & 0xffL) << 24 |
+              (_stream.ReadByte() & 0xffL) << 32 |
+              (_stream.ReadByte() & 0xffL) << 40 |
+              (_stream.ReadByte() & 0xffL) << 48 |
+              (_stream.ReadByte() & 0xffL) << 56;
+
             return BitConverter.Int64BitsToDouble(bits);
         }
 
         /// <summary>
-        /// Reads a string written by <see cref="BinaryEncoder.WriteString(string)"/>.
+        /// Reads a string written by <see cref="BinaryEncoder.WriteString(string)" />.
         /// </summary>
-        /// <returns>String read from the stream.</returns>
+        /// <returns>
+        /// String read from the stream.
+        /// </returns>
+        /// <exception cref="InvalidDataException">Can not deserialize a string with negative length!</exception>
+        /// <exception cref="AvroException">
+        /// String length is not supported!
+        /// or
+        /// Unable to read {length} bytes from a byte array of length {bytes.Length}
+        /// </exception>
         public string ReadString()
         {
             int length = ReadInt();
 
             if (length < 0)
             {
-                throw new AvroException("Can not deserialize a string with negative length!");
+                throw new InvalidDataException("Can not deserialize a string with negative length!");
             }
 
+            // TODO: Refer to comments on MaxDotNetArrayLength
             if (length > MaxDotNetArrayLength)
             {
                 throw new AvroException("String length is not supported!");
             }
 
-            using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, true))
+            using (BinaryReader binaryReader = new BinaryReader(_stream, Encoding.UTF8, true))
             {
-                var bytes = binaryReader.ReadBytes(length);
+                byte[] bytes = binaryReader.ReadBytes(length);
 
                 if (bytes.Length != length)
                 {
-                    throw new AvroException("Could not read as many bytes from stream as expected!");
+                    throw new AvroException($"Unable to read {length} bytes from a byte array of length {bytes.Length}");
                 }
 
                 return Encoding.UTF8.GetString(bytes);
             }
         }
 
+        /// <summary>
+        /// Reads the specified buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="len">The length.</param>
+        /// <exception cref="EndOfStreamException"></exception>
         private void Read(byte[] buffer, int start, int len)
         {
             while (len > 0)
             {
-                int n = stream.Read(buffer, start, len);
-                if (n <= 0) throw new AvroException("End of stream reached");
+                int n = _stream.Read(buffer, start, len);
+                if (n <= 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
                 start += n;
                 len -= n;
             }

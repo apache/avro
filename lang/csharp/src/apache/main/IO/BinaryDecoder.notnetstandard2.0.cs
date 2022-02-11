@@ -30,6 +30,11 @@ namespace Avro.IO
     {
         private const int StackallocThreshold = 256;
         private const int MaxFastReadLength = 4096;
+
+        /*
+         * TODO: look into when gcAllowVeryLargeObjects was introduced.  The check using this may no longer be needed.
+         * It was enabled by default with .Net Framework 4.5 onward.
+         */
         private const int MaxDotNetArrayLength = 0x7FFFFFC7;
 
         /// <summary>
@@ -37,7 +42,9 @@ namespace Avro.IO
         /// The float is converted into a 32-bit integer using a method equivalent to
         /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The float just read
+        /// </returns>
         public float ReadFloat()
         {
             Span<byte> buffer = stackalloc byte[4];
@@ -51,7 +58,9 @@ namespace Avro.IO
         /// The double is converted into a 64-bit integer using a method equivalent to
         /// Java's doubleToLongBits and then encoded in little-endian format.
         /// </summary>
-        /// <returns>A double value.</returns>
+        /// <returns>
+        /// A double value.
+        /// </returns>
         public double ReadDouble()
         {
             Span<byte> buffer = stackalloc byte[8];
@@ -61,16 +70,24 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Reads a string written by <see cref="BinaryEncoder.WriteString(string)"/>.
+        /// Reads a string written by <see cref="BinaryEncoder.WriteString(string)" />.
         /// </summary>
-        /// <returns>String read from the stream.</returns>
+        /// <returns>
+        /// String read from the stream.
+        /// </returns>
+        /// <exception cref="InvalidDataException">Can not deserialize a string with negative length!</exception>
+        /// <exception cref="AvroException">
+        /// String length is not supported!
+        /// or
+        /// Unable to read {length} bytes from a byte array of length {bytes.Length}
+        /// </exception>
         public string ReadString()
         {
             int length = ReadInt();
 
             if (length < 0)
             {
-                throw new AvroException("Can not deserialize a string with negative length!");
+                throw new InvalidDataException("Can not deserialize a string with negative length!");
             }
 
             if (length <= MaxFastReadLength)
@@ -97,18 +114,19 @@ namespace Avro.IO
             }
             else
             {
+                // TODO: Refer to comments on MaxDotNetArrayLength
                 if (length > MaxDotNetArrayLength)
                 {
                     throw new AvroException("String length is not supported!");
                 }
 
-                using (var binaryReader = new BinaryReader(stream, Encoding.UTF8, true))
+                using (var binaryReader = new BinaryReader(_stream, Encoding.UTF8, true))
                 {
                     var bytes = binaryReader.ReadBytes(length);
 
                     if (bytes.Length != length)
                     {
-                        throw new AvroException("Could not read as many bytes from stream as expected!");
+                        throw new AvroException($"Unable to read {length} bytes from a byte array of length {bytes.Length}");
                     }
 
                     return Encoding.UTF8.GetString(bytes);
@@ -116,17 +134,28 @@ namespace Avro.IO
             }
         }
 
+        /// <summary>
+        /// Reads the specified buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="start">The start.</param>
+        /// <param name="len">The length.</param>
         private void Read(byte[] buffer, int start, int len)
         {
             Read(buffer.AsSpan(start, len));
         }
 
+        /// <summary>
+        /// Reads the specified buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <exception cref="EndOfStreamException"></exception>
         private void Read(Span<byte> buffer)
         {
             while (!buffer.IsEmpty)
             {
-                int n = stream.Read(buffer);
-                if (n <= 0) throw new AvroException("End of stream reached");
+                int n = _stream.Read(buffer);
+                if (n <= 0) throw new EndOfStreamException();
                 buffer = buffer.Slice(n);
             }
         }
