@@ -2,7 +2,9 @@
 
 The following rules are currently used within the .editorconfig of the Avro solution.  Any changes to this documentation should be reflected in the .editorconfig file and vice versa.
 
-Note that the examples shown are based on the current settings in .editorconfig
+Notes
+ - The examples shown are based on the current settings in .editorconfig
+ - :exclamation: Not defined :exclamation: means we have not set a preference
 
 ## New line preferences
 
