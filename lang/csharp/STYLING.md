@@ -6,6 +6,7 @@ Notes
  - The examples shown are based on the current settings in .editorconfig
  - :exclamation: Not defined :exclamation: means we have not set a preference
  - There are cases where it is not explicitly defined in the .editorconfig, but there is a default option
+ - The project currently targets a framework that uses C# 7.3
 
 ## New line preferences
 
@@ -459,7 +460,7 @@ public int Foo { get; set; }
 ### csharp_using_directive_placement
 [Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_using_directive_placement)
 
-Leave using directives outside namespace
+Prefer using directives to be placed outside the namespace
 
 **Example**
 ```
@@ -1014,6 +1015,97 @@ void M()
 {
     Hello();
     void Hello() => Console.WriteLine("Hello");
+}
+```
+---
+
+## Pattern matching Preferences
+
+### csharp_style_pattern_matching_over_as_with_null_check
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0019#csharp_style_pattern_matching_over_as_with_null_check)
+
+Prefer pattern matching instead of as expressions with null checks to determine if something is of a particular type
+
+**Example**
+```
+if (o is string s) {...}
+```
+---
+### csharp_style_pattern_matching_over_is_with_cast_check
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0020-ide0038#csharp_style_pattern_matching_over_is_with_cast_check)
+
+Prefer pattern matching instead of is expressions with type casts
+
+**Example**
+```
+if (o is int i) {...}
+```
+---
+### csharp_style_prefer_switch_expression
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0066#csharp_style_prefer_switch_expression)
+
+Prefer to use a switch expression (introduced with C# 8.0)
+
+**Example**
+```
+return x switch
+{
+    1 => 1 * 1,
+    2 => 2 * 2,
+    _ => 0,
+};
+```
+---
+### csharp_style_prefer_not_pattern
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0083#csharp_style_prefer_not_pattern)
+
+Prefer to use 'not' pattern, when possible (introduced with C# 9.0)
+
+Default is true
+
+**Example**
+```
+var y = o is not C c;
+```
+---
+
+## Code block Prerferences
+
+### csharp_prefer_braces
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0011#csharp_prefer_braces)
+
+Prefer curly braces even for one line of code
+
+**Example**
+```
+if (test) { this.Display(); }
+```
+---
+### csharp_prefer_simple_using_statement
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0063#csharp_prefer_simple_using_statement)
+
+Don't prefer to use a simple using statement
+
+**Example**
+```
+using (var a = b) { }
+```
+---
+
+## File Header Preferences
+
+### file_header_template
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0073#file_header_template)
+
+unset or empty string - Do not require file header.
+
+Default is unset
+
+**Example**
+```
+namespace N2
+{
+    class C2 { }
 }
 ```
 ---
