@@ -224,7 +224,7 @@ class BinaryDecoder:
         """
         read_bytes = self.reader.read(n)
         if len(read_bytes) != n:
-            raise avro.errors.InvalidBytesRead(f"Read {len(read_bytes)} bytes, expected {n} bytes")
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(read_bytes)} bytes, expected {n} bytes")
         return read_bytes
 
     def read_null(self) -> None:
@@ -724,7 +724,7 @@ class DatumReader:
             if isinstance(writers_schema, avro.schema.RecordSchema) and isinstance(readers_schema, avro.schema.RecordSchema):
                 # .type in ["record", "error", "request"]:
                 return self.read_record(writers_schema, readers_schema, decoder)
-        except avro.errors.InvalidBytesRead as e:
+        except avro.errors.InvalidAvroBinaryEncoding as e:
             decoder.reader.seek(0)
             datum = decoder.reader.read(-1)
             assert self.readers_schema is not None # Make mypy happy, readers schema is set in this point.

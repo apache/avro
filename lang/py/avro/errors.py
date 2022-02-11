@@ -32,7 +32,7 @@ class AvroException(Exception):
     """The base class for exceptions in avro."""
 
 
-class InvalidBytesRead(AvroException):
+class InvalidAvroBinaryEncoding(AvroException):
     """For invalid numbers of bytes read."""
 
 
