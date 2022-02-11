@@ -450,3 +450,232 @@ Leave code block on single line
 public int Foo { get; set; }
 ```
 ---
+
+## Using Directive Preferences
+
+### csharp_using_directive_placement
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_using_directive_placement)
+
+Leave using directives outside namespace
+
+**Example**
+```
+using System;
+
+namespace Conventions
+{
+
+}
+```
+---
+
+## Namespace Preferences
+
+### csharp_style_namespace_declarations
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_style_namespace_declarations)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// csharp_style_namespace_declarations = block_scoped
+using System;
+
+namespace Convention
+{
+    class C
+    {
+    }
+}
+
+// csharp_style_namespace_declarations = file_scoped
+using System;
+
+namespace Convention;
+class C
+{
+}
+```
+---
+
+## this and Me preferences
+
+### dotnet_style_qualification_for_field
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0003-ide0009#dotnet_style_qualification_for_field)
+
+Prefer fields not to be prefaced with this. or Me.
+
+**Example**
+```
+capacity = 0;
+```
+---
+### dotnet_style_qualification_for_property
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0003-ide0009#dotnet_style_qualification_for_property)
+
+Prefer properties not to be prefaced with this. or Me.
+
+**Example**
+```
+ID = 0;
+```
+---
+### dotnet_style_qualification_for_method
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0003-ide0009#dotnet_style_qualification_for_method)
+
+Prefer methods not to be prefaced with this. or Me.
+
+**Example**
+```
+Display();
+```
+---
+### dotnet_style_qualification_for_event
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0003-ide0009#dotnet_style_qualification_for_event)
+
+Prefer events not to be prefaced with this. or Me.
+
+**Example**
+```
+Elapsed += Handler;
+```
+---
+
+## Use language keywords instead of framework type names for type references
+
+### dotnet_style_predefined_type_for_locals_parameters_members
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0049#dotnet_style_predefined_type_for_locals_parameters_members)
+
+Prefer the language keyword for local variables, method parameters, and class members, instead of the type name, for types that have a keyword to represent them
+
+**Example**
+```
+private int _member;
+```
+---
+
+## Order modifiers
+
+### csharp_preferred_modifier_order
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0036#csharp_preferred_modifier_order)
+
+public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
+
+**Example**
+```
+class MyClass
+{
+    private static readonly int _daysInYear = 365;
+}
+```
+---
+### dotnet_style_require_accessibility_modifiers
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0040#dotnet_style_require_accessibility_modifiers)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_require_accessibility_modifiers = always
+// dotnet_style_require_accessibility_modifiers = for_non_interface_members
+class MyClass
+{
+    private const string thisFieldIsConst = "constant";
+}
+
+// dotnet_style_require_accessibility_modifiers = never
+class MyClass
+{
+    const string thisFieldIsConst = "constant";
+}
+```
+---
+### dotnet_style_readonly_field
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0044#dotnet_style_readonly_field)
+
+Prefer that private fields should be marked with readonly (C#) or ReadOnly (Visual Basic) if they are only ever assigned inline, or inside of a constructor
+
+**Example**
+```
+class MyClass
+{
+    private readonly int _daysInYear = 365;
+}
+```
+---
+### csharp_prefer_static_local_function
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0062#csharp_prefer_static_local_function)
+
+Prefer local functions to be marked static
+
+**Example**
+```
+void M()
+{
+    Hello();
+    static void Hello()
+    {
+        Console.WriteLine("Hello");
+    }
+}
+```
+---
+
+## Parentheses Preferences
+
+### dotnet_style_parentheses_in_arithmetic_binary_operators
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_arithmetic_binary_operators)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity
+var v = a + (b * c);
+
+// dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary
+var v = a + b * c;
+```
+---
+### dotnet_style_parentheses_in_relational_binary_operators
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_relational_binary_operators)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity
+var v = (a < b) == (c > d);
+
+// dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary
+var v = a < b == c > d;
+```
+---
+### dotnet_style_parentheses_in_other_binary_operators
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_other_binary_operators)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_parentheses_in_other_binary_operators = always_for_clarity
+var v = a || (b && c);
+
+// dotnet_style_parentheses_in_other_binary_operators = never_if_unnecessary
+var v = a || b && c;
+```
+---
+### dotnet_style_parentheses_in_other_operators
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0047-ide0048#dotnet_style_parentheses_in_other_operators)
+
+:exclamation: Not defined :exclamation:
+
+**Example**
+```
+// dotnet_style_parentheses_in_other_operators = always_for_clarity
+var v = (a.b).Length;
+
+// dotnet_style_parentheses_in_other_operators = never_if_unnecessary
+var v = a.b.Length;
+```
+---
