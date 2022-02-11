@@ -426,3 +426,27 @@ Remove space characters in non-empty square brackets [0]
 int index = numbers[0];
 ```
 ---
+
+## Wrap Preferences
+
+### csharp_preserve_single_line_statements
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_preserve_single_line_statements)
+
+Leave statements and member declarations on different lines
+
+**Example**
+```
+int i = 0;
+string name = "John";
+```
+---
+### csharp_preserve_single_line_blocks
+[Reference](https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#csharp_preserve_single_line_blocks)
+
+Leave code block on single line
+
+**Example**
+```
+public int Foo { get; set; }
+```
+---
