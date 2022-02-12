@@ -38,6 +38,10 @@ do
       # AVRO-2442: Explicitly set LANG to work around ICU bug in `dotnet test`
       LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
           --filter "TestCategory!=Interop" Avro.sln
+
+       dotnet build --configuration Release src/apache/codec/Avro.Codec.sln
+       ANG=en_US.UTF-8 dotnet test --configuration Release --no-build \
+          src/apache/codec/Avro.Codec.sln
       ;;
 
     perf)
