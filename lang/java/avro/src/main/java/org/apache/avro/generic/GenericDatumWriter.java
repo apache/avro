@@ -25,14 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Collection;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.LogicalType;
-import org.apache.avro.Schema;
+import org.apache.avro.*;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -207,7 +201,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected void writeRecord(Schema schema, Object datum, Encoder out) throws IOException {
     Object state = data.getRecordState(datum, schema);
     for (Field f : schema.getFields()) {
-      writeField(datum, f, out, state);
+      try {
+        writeField(datum, f, out, state);
+      } catch (Exception e) {
+        final String msg = String.format("Unable do write field %s on %s: %s.", f.name(), schema.getFullName(),
+            e.getMessage());
+        throw new AvroWriteFieldException(msg, e);
+      }
     }
   }
 
@@ -237,8 +237,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.
    */
   protected void writeEnum(Schema schema, Object datum, Encoder out) throws IOException {
-    if (!data.isEnum(datum))
+    if (!data.isEnum(datum)) {
       throw new AvroTypeException("Not an enum: " + datum + " for schema: " + schema);
+    }
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
 
@@ -266,7 +267,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /**
    * Called to find the index for a datum within a union. By default calls
-   * {@link GenericData#resolveUnion(Schema,Object)}.
+   * {@link GenericData#resolveUnion(Schema, Object)}.
    */
   protected int resolveUnion(Schema union, Object datum) {
     return data.resolveUnion(union, datum);

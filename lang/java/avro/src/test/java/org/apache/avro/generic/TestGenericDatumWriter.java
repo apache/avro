@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.AvroWriteFieldException;
 import org.apache.avro.Schema;
 import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryEncoder;
@@ -297,6 +298,24 @@ public class TestGenericDatumWriter {
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
+  }
+
+  @Test()
+  public void thowAvroWriteFieldExceptionWhenWriteInvalidValueForField() throws IOException {
+    String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
+        + "]}";
+    Schema s = new Schema.Parser().parse(json);
+    GenericRecord r = new GenericData.Record(s);
+    r.put("f1", null);
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<>(s);
+    Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
+    Exception exception = assertThrows(AvroWriteFieldException.class, () -> {
+      w.write(r, e);
+    });
+    String expectedMessage = "Unable do write field f1 on r: null of long in field f1.";
+    String actualMessage = exception.getMessage();
+    assertEquals(expectedMessage, actualMessage);
   }
 
   private enum AnEnum {
