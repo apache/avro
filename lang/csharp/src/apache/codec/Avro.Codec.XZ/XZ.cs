@@ -17,7 +17,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using Joveler.Compression.XZ;
 
 namespace Avro.Codec.XZ
@@ -54,7 +56,12 @@ namespace Avro.Codec.XZ
         private int _threads;
 
         public XZCodec()
-            : this(XZLevel.Default, false)
+            : this(XZLevel.Default)
+        {
+        }
+
+        public XZCodec(XZLevel level)
+            : this(level, false)
         {
         }
 
@@ -68,6 +75,98 @@ namespace Avro.Codec.XZ
             _level = level;
             _extreme = extreme;
             _threads = numOfThreads;
+        }
+
+        // !!!
+        // !!! This must be called as a global init before using this library
+        // !!! TODO: Make it more convinient
+        // !!!
+        public static void Initialize()
+        {
+            string libPath;
+            string foundLibPath = string.Empty;
+            string libName = "liblzma";
+            string rid;
+            string arch;
+
+            switch(RuntimeInformation.OSArchitecture)
+            {
+                case Architecture.X86:
+                    arch = "x86";
+                    break;
+                case Architecture.X64:
+                    arch = "x64";
+                    break;
+                case Architecture.Arm:
+                    arch = "arm";
+                    break;
+                case Architecture.Arm64:
+                    arch = "arm64";
+                    break;
+                default:
+                    throw new Exception("Unknown runtime architecture!");
+            };
+
+            // Unknown architecture
+            if (arch == null)
+                throw new Exception("Unknown runtime architecture!");
+
+            // Determine Platform (needed for proper Runtime ID)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                rid = $"win-{arch}";
+            else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                rid = $"linux-{arch}";
+            else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                rid = $"osx-{arch}";
+            else
+                // Unknown platform
+                throw new Exception("Unknown runtime platform!");
+            
+            // Determine Platform (needed for proper Runtime ID)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                libName += ".dll";
+            else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                libName += ".so";
+            else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                libName += ".dylib";
+            else
+                throw new PlatformNotSupportedException();
+
+            // Try to search for the lib in the working directory and the application binary directory
+            foreach (var relPath in new List<string> { ".", AppDomain.CurrentDomain.BaseDirectory })
+            {
+                // Try first the lib name directly
+                libPath = Path.Combine(relPath, libName);
+                if (System.IO.File.Exists(libPath))
+                {
+                    foundLibPath = libPath;
+                    break;
+                }
+
+                // Try the runtimes/RID/native location
+                // This is the default location for netstandard native libs
+                libPath = Path.Combine(relPath, "runtimes", rid, "native", libName);
+                if (System.IO.File.Exists(libPath))
+                {
+                    foundLibPath = libPath;
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(foundLibPath))
+                throw new PlatformNotSupportedException();
+
+            // Initialize XZ library
+            XZInit.GlobalInit(foundLibPath);
+        }
+
+        public static void Uninitialize()
+        {
+            XZInit.GlobalCleanup();
         }
 
         /// <inheritdoc/>

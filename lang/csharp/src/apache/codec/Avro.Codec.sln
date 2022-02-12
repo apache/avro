@@ -1,25 +1,30 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Codec.BZip2", "BZip2\Avro.Codec.BZip2.csproj", "{40201607-AA97-44FB-8353-6CDFA803FBBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.BZip2", "Avro.Codec.BZip2\Avro.Codec.BZip2.csproj", "{40201607-AA97-44FB-8353-6CDFA803FBBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Codec.XZ", "XZ\Avro.Codec.XZ.csproj", "{06396DF0-D656-4133-8BDC-EBF194D13AE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.BZip2.Test", "Avro.Codec.BZip2.Test\Avro.Codec.BZip2.Test.csproj", "{ABEDA4C6-8024-48C1-AFC0-37190ABC659A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Codec.Snappy", "Snappy\Avro.Codec.Snappy.csproj", "{C3F05185-2D65-4A63-B16D-6BE20A254C1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.Snappy", "Avro.Codec.Snappy\Avro.Codec.Snappy.csproj", "{C3F05185-2D65-4A63-B16D-6BE20A254C1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.main", "..\main\Avro.main.csproj", "{E5B71984-FAEC-43E2-B2AC-4413D737C5CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.Snappy.Test", "Avro.Codec.Snappy.Test\Avro.Codec.Snappy.Test.csproj", "{564A59B5-008D-4654-B63F-8EFAC8C45D10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avro.Codec.Zstandard", "Zstandard\Avro.Codec.Zstandard.csproj", "{21E6C150-200F-484C-949F-C818BBE4F276}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.XZ", "Avro.Codec.XZ\Avro.Codec.XZ.csproj", "{06396DF0-D656-4133-8BDC-EBF194D13AE4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.XZ.Test", "Avro.Codec.XZ.Test\Avro.Codec.XZ.Test.csproj", "{4E8A6CCA-90DF-4350-B928-E6ADA5686883}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.Zstandard", "Avro.Codec.Zstandard\Avro.Codec.Zstandard.csproj", "{21E6C150-200F-484C-949F-C818BBE4F276}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.Codec.Zstandard.Test", "Avro.Codec.Zstandard.Test\Avro.Codec.Zstandard.Test.csproj", "{B93B1C26-C254-4C04-BB6B-E4FC8CCA9122}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.main", "..\main\Avro.main.csproj", "{E5B71984-FAEC-43E2-B2AC-4413D737C5CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{40201607-AA97-44FB-8353-6CDFA803FBBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -42,5 +47,27 @@ Global
 		{21E6C150-200F-484C-949F-C818BBE4F276}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21E6C150-200F-484C-949F-C818BBE4F276}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21E6C150-200F-484C-949F-C818BBE4F276}.Release|Any CPU.Build.0 = Release|Any CPU
+		{564A59B5-008D-4654-B63F-8EFAC8C45D10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{564A59B5-008D-4654-B63F-8EFAC8C45D10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{564A59B5-008D-4654-B63F-8EFAC8C45D10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{564A59B5-008D-4654-B63F-8EFAC8C45D10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABEDA4C6-8024-48C1-AFC0-37190ABC659A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABEDA4C6-8024-48C1-AFC0-37190ABC659A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABEDA4C6-8024-48C1-AFC0-37190ABC659A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABEDA4C6-8024-48C1-AFC0-37190ABC659A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E8A6CCA-90DF-4350-B928-E6ADA5686883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E8A6CCA-90DF-4350-B928-E6ADA5686883}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E8A6CCA-90DF-4350-B928-E6ADA5686883}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E8A6CCA-90DF-4350-B928-E6ADA5686883}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B93B1C26-C254-4C04-BB6B-E4FC8CCA9122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B93B1C26-C254-4C04-BB6B-E4FC8CCA9122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B93B1C26-C254-4C04-BB6B-E4FC8CCA9122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B93B1C26-C254-4C04-BB6B-E4FC8CCA9122}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32C95735-F692-433B-BCD2-A702CA701398}
 	EndGlobalSection
 EndGlobal

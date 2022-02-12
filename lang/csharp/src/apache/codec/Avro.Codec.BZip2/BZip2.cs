@@ -26,6 +26,7 @@ namespace Avro.Codec.BZip2
     /// </summary>
     public enum BZip2Level
     {
+        Default = 9,
         Level1 = 1,
         Level2 = 2,
         Level3 = 3,
@@ -34,10 +35,7 @@ namespace Avro.Codec.BZip2
         Level6 = 6,
         Level7 = 7,
         Level8 = 8,
-        Level9 = 9,
-        Default = Level9,
-        Minimum = Level1,
-        Maximum = Level9
+        Level9 = 9
     }
 
     /// <summary>
