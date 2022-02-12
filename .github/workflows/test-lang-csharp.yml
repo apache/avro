@@ -36,7 +36,7 @@ jobs:
 
       - name: Add libzstd
         shell: bash
-        run: sudo apt-get install -y libzstd1
+        run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v1
