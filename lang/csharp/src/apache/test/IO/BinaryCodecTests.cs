@@ -309,7 +309,7 @@ namespace Avro.Test
                 var exception = Assert.Throws<AvroException>(() => d.ReadString());
 
                 Assert.NotNull(exception);
-                Assert.AreEqual("Unable to read 2147483591 bytes from a byte array of length 16", exception.Message);
+                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
                 iostr.Close();
             }
         }

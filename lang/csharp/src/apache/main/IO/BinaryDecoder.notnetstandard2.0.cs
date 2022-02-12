@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -127,7 +128,7 @@ namespace Avro.IO
 
                     if (bytes.Length != length)
                     {
-                        throw new AvroException($"Unable to read {length} bytes from a byte array of length {bytes.Length}");
+                        throw new AvroException("Could not read as many bytes from stream as expected!");
                     }
 
                     return Encoding.UTF8.GetString(bytes);
@@ -160,6 +161,7 @@ namespace Avro.IO
                 {
                     throw new AvroException("End of stream reached");
                 }
+
                 buffer = buffer.Slice(n);
             }
         }

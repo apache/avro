@@ -113,7 +113,7 @@ namespace Avro.IO
 
                 if (bytes.Length != length)
                 {
-                    throw new AvroException($"Unable to read {length} bytes from a byte array of length {bytes.Length}");
+                    throw new AvroException("Could not read as many bytes from stream as expected!");
                 }
 
                 return Encoding.UTF8.GetString(bytes);
