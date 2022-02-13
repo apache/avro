@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 
@@ -101,7 +102,7 @@ namespace Avro.File
         /// </summary>
         /// <param name="position">Position to test.</param>
         /// <returns>
-        /// True if pasth the next synchronization point after <paramref name="position"/>, false
+        /// True if past the next synchronization point after <paramref name="position"/>, false
         /// otherwise.
         /// </returns>
         bool PastSync(long position);
