@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -22,27 +23,20 @@ namespace Avro.Codec.XZ.Test
 {
     public class Tests
     {
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
             XZCodec.Initialize();
         }
 
-        [OneTimeTearDown]
-        public void OneTimeTearDOwn()
-        {
-            XZCodec.Uninitialize();
-        }
-
-        [TestCase(0)]
-        [TestCase(1000)]
-        [TestCase(64 * 1024)]
-        [TestCase(1 * 1024 * 1024)]
-        public void CompressDecompress(int length)
+        [Test, Combinatorial]
+        public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] XZLevel level)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
 
-            XZCodec codec = new XZCodec();
+            XZCodec codec = new XZCodec(level);
 
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
@@ -50,17 +44,32 @@ namespace Avro.Codec.XZ.Test
             CollectionAssert.AreEqual(data, uncompressed);
         }
 
+        [Test, Combinatorial]
+        public void CompressDecompressStream([ValueSource(nameof(_testLengths))] int length, [Values] XZLevel level)
+        {
+            byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
+
+            XZCodec codec = new XZCodec(level);
+
+            using (MemoryStream inputStream = new MemoryStream(data))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                codec.Compress(inputStream, outputStream);
+
+                byte[] compressed = outputStream.ToArray();
+                byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
+
+                CollectionAssert.AreEqual(data, uncompressed);
+            }
+        }
+
         [Test]
-        [TestCase(XZLevel.Level1, ExpectedResult = "xz-1")]
-        [TestCase(XZLevel.Level2, ExpectedResult = "xz-2")]
-        [TestCase(XZLevel.Level3, ExpectedResult = "xz-3")]
-        public string ToStringAndName(XZLevel level)
+        public void ToStringAndName([Values] XZLevel level)
         {
             XZCodec codec = new XZCodec(level);
 
             Assert.AreEqual("xz", codec.GetName());
-
-            return codec.ToString();
+            Assert.AreEqual($"xz-{(int)level}", codec.ToString());
         }
     }
 }

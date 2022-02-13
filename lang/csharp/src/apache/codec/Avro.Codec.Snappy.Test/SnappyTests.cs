@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -22,10 +23,9 @@ namespace Avro.Codec.Snappy.Test
 {
     public class Tests
     {
-        [TestCase(0)]
-        [TestCase(1000)]
-        [TestCase(64*1024)]
-        [TestCase(1*1024*1024)]
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+
+        [TestCaseSource(nameof(_testLengths))]
         public void CompressDecompress(int length)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
@@ -36,6 +36,25 @@ namespace Avro.Codec.Snappy.Test
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
 
             CollectionAssert.AreEqual(data, uncompressed);
+        }
+
+        [TestCaseSource(nameof(_testLengths))]
+        public void CompressDecompressStream(int length)
+        {
+            byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
+
+            SnappyCodec codec = new SnappyCodec();
+
+            using (MemoryStream inputStream = new MemoryStream(data))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                codec.Compress(inputStream, outputStream);
+
+                byte[] compressed = outputStream.ToArray();
+                byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
+
+                CollectionAssert.AreEqual(data, uncompressed);
+            }
         }
 
         [Test]

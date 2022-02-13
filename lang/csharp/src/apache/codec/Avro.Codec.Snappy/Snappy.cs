@@ -47,7 +47,7 @@ namespace Avro.Codec.Snappy
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
-            byte[] uncompressedData = inputStream.GetBuffer();
+            byte[] uncompressedData = inputStream.ToArray();
             byte[] compressedData = IronSnappy.Snappy.Encode(uncompressedData);
             outputStream.Write(compressedData, 0, compressedData.Length);
 

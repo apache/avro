@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -22,15 +23,14 @@ namespace Avro.Codec.Zstandard.Test
 {
     public class Tests
     {
-        [TestCase(0)]
-        [TestCase(1000)]
-        [TestCase(64 * 1024)]
-        [TestCase(1 * 1024 * 1024)]
-        public void CompressDecompress(int length)
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+
+        [Test, Combinatorial]
+        public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] ZstandardLevel level)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
 
-            ZstandardCodec codec = new ZstandardCodec();
+            ZstandardCodec codec = new ZstandardCodec(level);
 
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
@@ -38,17 +38,32 @@ namespace Avro.Codec.Zstandard.Test
             CollectionAssert.AreEqual(data, uncompressed);
         }
 
+        [Test, Combinatorial]
+        public void CompressDecompressStream([ValueSource(nameof(_testLengths))] int length, [Values] ZstandardLevel level)
+        {
+            byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
+
+            ZstandardCodec codec = new ZstandardCodec(level);
+
+            using (MemoryStream inputStream = new MemoryStream(data))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                codec.Compress(inputStream, outputStream);
+
+                byte[] compressed = outputStream.ToArray();
+                byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
+
+                CollectionAssert.AreEqual(data, uncompressed);
+            }
+        }
+
         [Test]
-        [TestCase(ZstandardLevel.Level1, ExpectedResult = "zstandard[1]")]
-        [TestCase(ZstandardLevel.Level2, ExpectedResult = "zstandard[2]")]
-        [TestCase(ZstandardLevel.Level3, ExpectedResult = "zstandard[3]")]
-        public string ToStringAndName(ZstandardLevel level)
+        public void ToStringAndName([Values] ZstandardLevel level)
         {
             ZstandardCodec codec = new ZstandardCodec(level);
 
             Assert.AreEqual("zstandard", codec.GetName());
-
-            return codec.ToString();
+            Assert.AreEqual($"zstandard[{(int)level}]", codec.ToString());
         }
     }
 }

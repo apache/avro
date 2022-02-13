@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -22,15 +23,14 @@ namespace Avro.Codec.BZip2.Test
 {
     public class Tests
     {
-        [TestCase(0)]
-        [TestCase(1000)]
-        [TestCase(64 * 1024)]
-        [TestCase(1 * 1024 * 1024)]
-        public void CompressDecompress(int length)
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+
+        [Test, Combinatorial]
+        public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
 
-            BZip2Codec codec = new BZip2Codec();
+            BZip2Codec codec = new BZip2Codec(level);
 
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
@@ -38,17 +38,32 @@ namespace Avro.Codec.BZip2.Test
             CollectionAssert.AreEqual(data, uncompressed);
         }
 
+        [Test, Combinatorial]
+        public void CompressDecompressStream([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
+        {
+            byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
+
+            BZip2Codec codec = new BZip2Codec(level);
+
+            using (MemoryStream inputStream = new MemoryStream(data))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                codec.Compress(inputStream, outputStream);
+
+                byte[] compressed = outputStream.ToArray();
+                byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
+
+                CollectionAssert.AreEqual(data, uncompressed);
+            }
+        }
+
         [Test]
-        [TestCase(BZip2Level.Level1, ExpectedResult = "bzip2-1")]
-        [TestCase(BZip2Level.Level2, ExpectedResult = "bzip2-2")]
-        [TestCase(BZip2Level.Level3, ExpectedResult = "bzip2-3")]
-        public string ToStringAndName(BZip2Level level)
+        public void ToStringAndName([Values] BZip2Level level)
         {
             BZip2Codec codec = new BZip2Codec(level);
 
             Assert.AreEqual("bzip2", codec.GetName());
-
-            return codec.ToString();
+            Assert.AreEqual($"bzip2-{(int)level}", codec.ToString());
         }
     }
 }

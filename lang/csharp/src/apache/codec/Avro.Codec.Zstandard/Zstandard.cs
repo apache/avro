@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using ZstdNet;
+using System.IO.Compression;
 
 namespace Avro.Codec.Zstandard
 {
@@ -72,8 +73,8 @@ namespace Avro.Codec.Zstandard
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
         {
-            using(CompressionOptions options = new CompressionOptions((int)_level))
-            using(Compressor compressor = new Compressor(options))
+            using (CompressionOptions options = new CompressionOptions((int)_level))
+            using (Compressor compressor = new Compressor(options))
             {
                 return compressor.Wrap(uncompressedData);
             }
@@ -82,11 +83,14 @@ namespace Avro.Codec.Zstandard
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
-            using(CompressionOptions options = new CompressionOptions((int)_level))
-            using(CompressionStream compressionStream = new CompressionStream(outputStream, options))
-            {
-                inputStream.CopyTo(compressionStream);
-            }
+            byte[] compressedData = Compress(inputStream.ToArray());
+            outputStream.Write(compressedData, 0, compressedData.Length);
+
+            //using (CompressionOptions options = new CompressionOptions((int)_level))
+            //using (CompressionStream compressionStream = new CompressionStream(outputStream, options))
+            //{
+            //    inputStream.CopyTo(compressionStream);
+            //}
         }
 
         /// <inheritdoc/>
