@@ -52,7 +52,7 @@ namespace Avro.Codec.Zstandard
     }
 
     /// <summary>
-    /// Implements BZip2 compression and decompression.
+    /// Implements Zstandard compression and decompression.
     /// </summary>
     public class ZstandardCodec : Avro.File.Codec
     {
@@ -85,12 +85,6 @@ namespace Avro.Codec.Zstandard
         {
             byte[] compressedData = Compress(inputStream.ToArray());
             outputStream.Write(compressedData, 0, compressedData.Length);
-
-            //using (CompressionOptions options = new CompressionOptions((int)_level))
-            //using (CompressionStream compressionStream = new CompressionStream(outputStream, options))
-            //{
-            //    inputStream.CopyTo(compressionStream);
-            //}
         }
 
         /// <inheritdoc/>
