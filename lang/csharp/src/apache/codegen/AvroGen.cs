@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGen
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -33,7 +34,7 @@ namespace Avro
             }
 
             // Print usage if help requested
-            if (args[0] == "-h" || args[0] == "--help")
+            if (args.Any(x => x.Equals("-h") || x.Equals("--help")))
             {
                 Usage();
                 return 0;
@@ -102,7 +103,7 @@ namespace Avro
 
             // Ensure we got all the command line arguments we need
             bool isValid = true;
-            int rc = 0;
+            int rc;
             if (!isProtocol.HasValue || inputFile == null)
             {
                 Console.Error.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
@@ -114,21 +115,20 @@ namespace Avro
                 isValid = false;
             }
 
-
             if (!isValid)
             {
                 Usage();
                 rc = 1;
             }
-            else if (isProtocol.Value)
-                rc = GenProtocol(inputFile, outputDir, namespaceMapping);
             else
-                rc = GenSchema(inputFile, outputDir, namespaceMapping);
+            {
+                rc = isProtocol.Value ? GenProtocol(inputFile, outputDir, namespaceMapping) : GenSchema(inputFile, outputDir, namespaceMapping);
+            }
 
             return rc;
         }
 
-        static void Usage()
+        private static void Usage()
         {
             Console.WriteLine("{0}\n\n" +
                 "Usage:\n" +
@@ -142,8 +142,8 @@ namespace Avro
                 AppDomain.CurrentDomain.FriendlyName);
             return;
         }
-        static int GenProtocol(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+
+        private static int GenProtocol(string infile, string outdir, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
             {
@@ -154,7 +154,9 @@ namespace Avro
                 codegen.AddProtocol(protocol);
 
                 foreach (var entry in namespaceMapping)
+                {
                     codegen.NamespaceMapping[entry.Key] = entry.Value;
+                }
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -167,8 +169,8 @@ namespace Avro
 
             return 0;
         }
-        static int GenSchema(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+
+        private static int GenSchema(string infile, string outdir, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
             {
