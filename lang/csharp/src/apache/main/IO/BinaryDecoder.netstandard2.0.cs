@@ -84,7 +84,7 @@ namespace Avro.IO
         /// <returns>
         /// String read from the stream.
         /// </returns>
-        /// <exception cref="Avro.AvroException">
+        /// <exception cref="AvroException">
         /// Can not deserialize a string with negative length!
         /// or
         /// String length is not supported!
@@ -111,12 +111,9 @@ namespace Avro.IO
             {
                 byte[] bytes = binaryReader.ReadBytes(length);
 
-                if (bytes.Length != length)
-                {
-                    throw new AvroException("Could not read as many bytes from stream as expected!");
-                }
-
-                return Encoding.UTF8.GetString(bytes);
+                return bytes.Length != length ?
+                    throw new AvroException("Could not read as many bytes from stream as expected!") :
+                    Encoding.UTF8.GetString(bytes);
             }
         }
 
@@ -126,7 +123,7 @@ namespace Avro.IO
         /// <param name="buffer">The buffer.</param>
         /// <param name="start">The start.</param>
         /// <param name="len">The length.</param>
-        /// <exception cref="Avro.AvroException">End of stream reached</exception>
+        /// <exception cref="AvroException">End of stream reached</exception>
         private void Read(byte[] buffer, int start, int len)
         {
             while (len > 0)

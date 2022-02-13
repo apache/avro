@@ -57,22 +57,12 @@ namespace Avro.IO
         {
             byte booleanValue = read();
 
-            /*
-             * HACK: Ignore IDE0046, this is a very specific case where you do not want to
-             * use a conditional statement or use Convert.ToBoolean()
-             */
-
-            if (booleanValue == 0)
+            if (booleanValue != 0 && booleanValue != 1)
             {
-                return false;
+                throw new AvroException($"Not a boolean value in the stream: {booleanValue}");
             }
 
-            if (booleanValue == 1)
-            {
-                return true;
-            }
-
-            throw new AvroException($"Not a boolean value in the stream: {booleanValue}");
+            return booleanValue == 0 ? false : true;
         }
 
         /// <summary>
@@ -311,7 +301,7 @@ namespace Avro.IO
         /// Reads this instance.
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="Avro.AvroException">End of stream reached</exception>
+        /// <exception cref="AvroException">End of stream reached</exception>
         private byte read()
         {
             int readByte = _stream.ReadByte();
