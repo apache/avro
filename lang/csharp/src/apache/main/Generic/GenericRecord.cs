@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -28,42 +29,42 @@ namespace Avro.Generic
     public class GenericRecord : IEquatable<GenericRecord>
     {
         /// <summary>
-        /// Schema for this record.
+        /// Gets the schema for this record.
         /// </summary>
+        /// <value>
+        /// The schema.
+        /// </value>
         public RecordSchema Schema { get; private set; }
 
-        private readonly object[] contents;
+        private readonly object[] _contents;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GenericRecord"/> class.
+        /// Initializes a new instance of the <see cref="GenericRecord" /> class.
         /// </summary>
         /// <param name="schema">Schema for this record.</param>
         public GenericRecord(RecordSchema schema)
         {
-            this.Schema = schema;
-            contents = new object[schema.Fields.Count];
+            Schema = schema;
+            _contents = new object[schema.Fields.Count];
         }
 
         /// <summary>
         /// Returns the value of the field with the given name.
         /// </summary>
+        /// <value>
+        /// The <see cref="object" />.
+        /// </value>
         /// <param name="fieldName">Name of the field.</param>
-        /// <returns>Value of the field with the given name.</returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="fieldName"/> is null.
-        /// </exception>
-        /// <exception cref="KeyNotFoundException">
-        /// <paramref name="fieldName"/> does not exist in this record.
-        /// </exception>
+        /// <returns>
+        /// Value of the field with the given name.
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">Key name: {fieldName}</exception>
         public object this[string fieldName]
         {
             get
             {
-                if (Schema.TryGetField(fieldName, out Field field))
-                {
-                    return contents[field.Pos];
-                }
-                throw new KeyNotFoundException("Key name: " + fieldName);
+                return Schema.TryGetField(fieldName, out Field field) ? _contents[field.Pos] :
+                    throw new KeyNotFoundException($"Key name: {fieldName}");
             }
         }
 
@@ -73,33 +74,29 @@ namespace Avro.Generic
         /// </summary>
         /// <param name="fieldName">Name of the field.</param>
         /// <param name="fieldValue">Value of the field.</param>
-        /// <exception cref="AvroException">
-        /// <paramref name="fieldName"/> does not exist in this record.
-        /// </exception>
+        /// <exception cref="AvroException">No such field: {fieldName}</exception>
         public void Add(string fieldName, object fieldValue)
         {
             if (Schema.TryGetField(fieldName, out Field field))
             {
                 // TODO: Use a matcher to verify that object has the right type for the field.
-                //contents.Add(fieldName, fieldValue);
-                contents[field.Pos] = fieldValue;
+                // _contents.Add(fieldName, fieldValue);
+                _contents[field.Pos] = fieldValue;
                 return;
             }
 
-            throw new AvroException("No such field: " + fieldName);
+            throw new AvroException($"No such field: {fieldName}");
         }
 
         /// <summary>
         /// Gets the value the specified field name.
         /// </summary>
         /// <param name="fieldName">Name of the field.</param>
-        /// <param name="result">
-        /// When this method returns true, contains the value of the specified field;
-        /// otherwise, null.
-        /// </param>
+        /// <param name="result">When this method returns true, contains the value of the specified field;
+        /// otherwise, null.</param>
         /// <returns>
         /// True if the field was found in the record. This method will only return true if
-        /// <see cref="Add(string, object)"/> has been called for the given field name.
+        /// <see cref="Add(string, object)" /> has been called for the given field name.
         /// </returns>
         public bool TryGetValue(string fieldName, out object result)
         {
@@ -109,7 +106,7 @@ namespace Avro.Generic
                 return false;
             }
 
-            result = contents[field.Pos];
+            result = _contents[field.Pos];
             return true;
         }
 
@@ -117,42 +114,37 @@ namespace Avro.Generic
         /// Returns the value of the field with the given position.
         /// </summary>
         /// <param name="fieldPos">The position of the field.</param>
-        /// <returns>Value of the field with the given position.</returns>
-        /// <exception cref="IndexOutOfRangeException">
-        /// <paramref name="fieldPos"/>
-        /// </exception>
+        /// <returns>
+        /// Value of the field with the given position.
+        /// </returns>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="fieldPos" /></exception>
         public object GetValue(int fieldPos)
         {
-            return contents[fieldPos];
+            return _contents[fieldPos];
         }
-
 
         /// <summary>
         /// Adds the value in the specified field position.
         /// </summary>
         /// <param name="fieldPos">Position of the field.</param>
         /// <param name="fieldValue">The value to add.</param>
-        /// <exception cref="IndexOutOfRangeException">
-        /// <paramref name="fieldPos"/>.
-        /// </exception>
-        public void Add(int fieldPos, object fieldValue) => contents[fieldPos] = fieldValue;
+        /// <exception cref="IndexOutOfRangeException"><paramref name="fieldPos" />.</exception>
+        public void Add(int fieldPos, object fieldValue) => _contents[fieldPos] = fieldValue;
 
         /// <summary>
         /// Gets the value in the specified field position.
         /// </summary>
         /// <param name="fieldPos">Position of the field.</param>
-        /// <param name="result">
-        /// When this method returns true, contains the value of the specified field;
-        /// otherwise, null.
-        /// </param>
+        /// <param name="result">When this method returns true, contains the value of the specified field;
+        /// otherwise, null.</param>
         /// <returns>
         /// True if the field position is valid.
         /// </returns>
         public bool TryGetValue(int fieldPos, out object result)
         {
-            if (fieldPos < contents.Length)
+            if (fieldPos < _contents.Length)
             {
-                result = contents[fieldPos];
+                result = _contents[fieldPos];
                 return true;
             }
 
@@ -163,65 +155,101 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-            return obj is GenericRecord
-                && Equals((GenericRecord)obj);
+            return this == obj ? true :
+                obj is GenericRecord genericRecord && Equals(genericRecord);
         }
 
         /// <inheritdoc/>
         public bool Equals(GenericRecord other)
         {
-            return Schema.Equals(other.Schema)
-                && arraysEqual(contents, other.contents);
+            return Schema.Equals(other.Schema) && arraysEqual(_contents, other._contents);
         }
 
-        private static bool mapsEqual(IDictionary d1, IDictionary d2)
+        /// <summary>
+        /// Validates the dictionaries contain the same values
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>True, if the dictionaries contain the same values</returns>
+        private static bool mapsEqual(IDictionary left, IDictionary right)
         {
-            if (d1.Count != d2.Count) return false;
-
-            foreach (DictionaryEntry kv in d1)
+            if (left.Count != right.Count)
             {
-                if (!d2.Contains(kv.Key))
-                    return false;
-                if (!objectsEqual(d2[kv.Key], kv.Value))
-                    return false;
+                return false;
             }
+
+            foreach (DictionaryEntry kv in left)
+            {
+                if (!right.Contains(kv.Key) || !objectsEqual(right[kv.Key], kv.Value))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
-        private static bool objectsEqual(object o1, object o2)
+        /// <summary>
+        /// Validates the objects are equal.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>true, if the objects are equal</returns>
+        private static bool objectsEqual(object left, object right)
         {
-            if (o1 == null) return o2 == null;
-            if (o2 == null) return false;
-            if (o1 is Array)
+            // Ignoring IDE0046 for readability
+
+            if (left == null && right == null)
             {
-                if (!(o2 is Array)) return false;
-                return arraysEqual((Array)o1 , (Array)o2);
+                return true;
             }
 
-            if (o1 is IDictionary)
+            if (left == null || right == null)
             {
-                if (!(o2 is IDictionary)) return false;
-                return mapsEqual((IDictionary)o1, (IDictionary)o2);
+                return false;
             }
 
-            return o1.Equals(o2);
+            if (left is Array leftArray)
+            {
+                return !(right is Array rightArray) ? false : arraysEqual(leftArray, rightArray);
+            }
+
+            if (left is IDictionary leftDictionary)
+            {
+                return !(right is IDictionary rightDictionary) ? false : mapsEqual(leftDictionary, rightDictionary);
+            }
+
+            return left.Equals(right);
         }
 
-        private static bool arraysEqual(Array a1, Array a2)
+        /// <summary>
+        /// Validates arrays are equal
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>true, if the arrays contain the same values</returns>
+        private static bool arraysEqual(Array left, Array right)
         {
-            if (a1.Length != a2.Length) return false;
-            for (int i = 0; i < a1.Length; i++)
+            if (left.Length != right.Length)
             {
-                if (!objectsEqual(a1.GetValue(i), a2.GetValue(i))) return false;
+                return false;
             }
+
+            for (int i = 0; i < left.Length; i++)
+            {
+                if (!objectsEqual(left.GetValue(i), right.GetValue(i)))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return 31 * contents.GetHashCode()/* + 29 * Schema.GetHashCode()*/;
+            return 31 * _contents.GetHashCode();
         }
 
         /// <inheritdoc/>
@@ -232,13 +260,14 @@ namespace Avro.Generic
             sb.Append(Schema);
             sb.Append(", contents: ");
             sb.Append("{ ");
-            foreach (var field in Schema.Fields)
+            foreach (Field field in Schema.Fields)
             {
                 sb.Append(field.Name);
                 sb.Append(": ");
-                sb.Append(contents[field.Pos]);
+                sb.Append(_contents[field.Pos]);
                 sb.Append(", ");
             }
+
             sb.Append('}');
             return sb.ToString();
         }
