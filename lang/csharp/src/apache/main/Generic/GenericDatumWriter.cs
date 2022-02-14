@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using Encoder = Avro.IO.Encoder;
@@ -37,21 +38,21 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        protected override void WriteRecordFields(object recordObj, RecordFieldWriter[] writers, Encoder encoder)
+        protected override void WriteRecordFields(object record, RecordFieldWriter[] writers, Encoder encoder)
         {
-            var record = (GenericRecord) recordObj;
-            foreach (var writer in writers)
+            GenericRecord genericRecord = (GenericRecord)record;
+            foreach (RecordFieldWriter writer in writers)
             {
-                writer.WriteField(record.GetValue(writer.Field.Pos), encoder);
+                writer.WriteField(genericRecord.GetValue(writer.Field.Pos), encoder);
             }
         }
 
         /// <inheritdoc/>
-        protected override void EnsureRecordObject( RecordSchema recordSchema, object value )
+        protected override void EnsureRecordObject(RecordSchema recordSchema, object value)
         {
-            if( value == null || !( value is GenericRecord ) || ! ( value as GenericRecord ).Schema.Equals( recordSchema )  )
+            if (value == null || !(value is GenericRecord) || !(value as GenericRecord).Schema.Equals(recordSchema))
             {
-                throw TypeMismatch( value, "record", "GenericRecord" );
+                throw TypeMismatch(value, "record", "GenericRecord");
             }
         }
 
@@ -64,16 +65,16 @@ namespace Avro.Generic
         /// <inheritdoc/>
         protected override WriteItem ResolveEnum(EnumSchema es)
         {
-            return (v,e) =>
+            return (v, e) =>
                        {
-                            if( v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
-                                throw TypeMismatch(v, "enum", "GenericEnum");
-                            e.WriteEnum(es.Ordinal((v as GenericEnum ).Value));
+                           if (v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
+                               throw TypeMismatch(v, "enum", "GenericEnum");
+                           e.WriteEnum(es.Ordinal((v as GenericEnum).Value));
                        };
         }
 
         /// <inheritdoc/>
-        protected override void WriteFixed( FixedSchema es, object value, Encoder encoder )
+        protected override void WriteFixed(FixedSchema es, object value, Encoder encoder)
         {
             if (value == null || !(value is GenericFixed) || !(value as GenericFixed).Schema.Equals(es))
             {
@@ -86,75 +87,106 @@ namespace Avro.Generic
         /// <summary>
         /// Tests whether the given schema an object are compatible.
         /// </summary>
+        /// <param name="sc">Schema to compare</param>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>
+        /// True if the two parameters are compatible, false otherwise.
+        /// </returns>
+        /// <exception cref="AvroException">Unknown schema type: {sc.Tag}</exception>
         /// <remarks>
         /// FIXME: This method of determining the Union branch has problems. If the data is IDictionary&lt;string, object&gt;
         /// if there are two branches one with record schema and the other with map, it choose the first one. Similarly if
         /// the data is byte[] and there are fixed and bytes schemas as branches, it choose the first one that matches.
         /// Also it does not recognize the arrays of primitive types.
         /// </remarks>
-        /// <param name="sc">Schema to compare</param>
-        /// <param name="obj">Object to compare</param>
-        /// <returns>True if the two parameters are compatible, false otherwise.</returns>
         protected override bool UnionBranchMatches(Schema sc, object obj)
         {
-            if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;
+            if (obj == null && sc.Tag != Schema.Type.Null)
+                return false;
             switch (sc.Tag)
             {
                 case Schema.Type.Null:
                     return obj == null;
+
                 case Schema.Type.Boolean:
                     return obj is bool;
+
                 case Schema.Type.Int:
                     return obj is int;
+
                 case Schema.Type.Long:
                     return obj is long;
+
                 case Schema.Type.Float:
                     return obj is float;
+
                 case Schema.Type.Double:
                     return obj is double;
+
                 case Schema.Type.Bytes:
                     return obj is byte[];
+
                 case Schema.Type.String:
                     return obj is string;
+
                 case Schema.Type.Error:
                 case Schema.Type.Record:
+
                     //return obj is GenericRecord && (obj as GenericRecord).Schema.Equals(s);
                     return obj is GenericRecord && (obj as GenericRecord).Schema.SchemaName.Equals((sc as RecordSchema).SchemaName);
+
                 case Schema.Type.Enumeration:
+
                     //return obj is GenericEnum && (obj as GenericEnum).Schema.Equals(s);
                     return obj is GenericEnum && (obj as GenericEnum).Schema.SchemaName.Equals((sc as EnumSchema).SchemaName);
+
                 case Schema.Type.Array:
                     return obj is Array && !(obj is byte[]);
+
                 case Schema.Type.Map:
                     return obj is IDictionary<string, object>;
+
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
+
                     //return obj is GenericFixed && (obj as GenericFixed).Schema.Equals(s);
                     return obj is GenericFixed && (obj as GenericFixed).Schema.SchemaName.Equals((sc as FixedSchema).SchemaName);
+
                 case Schema.Type.Logical:
                     return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
+
                 default:
-                    throw new AvroException("Unknown schema type: " + sc.Tag);
+                    throw new AvroException($"Unknown schema type: {sc.Tag}");
             }
         }
 
+        /// <summary>
+        /// Generic Array Access
+        /// </summary>
+        /// <seealso cref="PreresolvingDatumWriter&lt;T&gt;" />
         private class GenericArrayAccess : ArrayAccess
         {
-            public void EnsureArrayObject( object value )
+            /// <inheritdoc/>
+            public void EnsureArrayObject(object value)
             {
-                if( value == null || !( value is Array ) ) throw TypeMismatch( value, "array", "Array" );
+                if (value == null || !(value is Array))
+                {
+                    throw TypeMismatch(value, "array", "Array");
+                }
             }
 
-            public long GetArrayLength( object value )
+            /// <inheritdoc/>
+            public long GetArrayLength(object value)
             {
-                return ( (Array) value ).Length;
+                return ((Array)value).Length;
             }
 
+            /// <inheritdoc/>
             public void WriteArrayValues(object array, WriteItem valueWriter, Encoder encoder)
             {
-                var arrayInstance = (Array) array;
-                for(int i = 0; i < arrayInstance.Length; i++)
+                Array arrayInstance = (Array)array;
+                for (int i = 0; i < arrayInstance.Length; i++)
                 {
                     encoder.StartItem();
                     valueWriter(arrayInstance.GetValue(i), encoder);
