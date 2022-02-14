@@ -94,6 +94,7 @@ matrix:
           update: true
           packages:
             - wget
+            - libzstd-dev
       install:
         - wget https://dot.net/v1/dotnet-install.sh
         - bash ./dotnet-install.sh --version "3.1.402" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux"   # 3.1
