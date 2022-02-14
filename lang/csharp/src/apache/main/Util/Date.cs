@@ -36,7 +36,6 @@ namespace Avro.Util
         public Date() : base(LogicalTypeName)
         { }
 
-
         /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {

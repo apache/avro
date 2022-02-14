@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -68,8 +68,10 @@ namespace Avro
             string doc)
                             : base(Type.Fixed, name, aliases, props, names, doc)
         {
-            if (null == name.Name) throw new SchemaParseException("name cannot be null for fixed schema.");
-            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), "size must be greater than zero.");
+            if (null == name.Name)
+                throw new SchemaParseException("name cannot be null for fixed schema.");
+            if (size <= 0)
+                throw new ArgumentOutOfRangeException(nameof(size), "size must be greater than zero.");
             this.Size = size;
         }
 
@@ -93,7 +95,8 @@ namespace Avro
         /// <returns>true if two schemas are the same, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
+            if (obj == this)
+                return true;
 
             if (obj != null && obj is FixedSchema)
             {
@@ -119,9 +122,11 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema.Tag != Tag) return false;
+            if (writerSchema.Tag != Tag)
+                return false;
             FixedSchema that = writerSchema as FixedSchema;
-            if (that.Size != Size) return false;
+            if (that.Size != Size)
+                return false;
             if (that.SchemaName.Equals(SchemaName))
                 return true;
             else

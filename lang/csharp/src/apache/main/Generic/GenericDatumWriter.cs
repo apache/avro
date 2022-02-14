@@ -64,7 +64,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         protected override WriteItem ResolveEnum(EnumSchema es)
         {
-            return (v,e) =>
+            return (v ,e) =>
                        {
                             if( v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
                                 throw TypeMismatch(v, "enum", "GenericEnum");

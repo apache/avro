@@ -37,7 +37,7 @@ namespace Avro.Reflect
         /// </summary>
         public Type MapType { get => _mapType; set => _mapType = value; }
 
-        private ClassCache _classCache = new ClassCache();
+        private readonly ClassCache _classCache = new ClassCache();
 
         /// <summary>
         /// Class cache
@@ -417,7 +417,7 @@ namespace Avro.Reflect
                     Field rf;
                     if (rs.TryGetField(wf.Name, out rf))
                     {
-//                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
+                        //                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
                         _classCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
                     }
                     else

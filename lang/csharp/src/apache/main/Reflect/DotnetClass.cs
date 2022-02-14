@@ -1,4 +1,4 @@
-/*  
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,8 @@
  */
 
 using System;
-using System.Reflection;
 using System.Collections.Concurrent;
-using Avro;
+using System.Reflection;
 
 namespace Avro.Reflect
 {
@@ -28,9 +27,9 @@ namespace Avro.Reflect
     /// </summary>
     public class DotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        private readonly ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
-        private Type _type;
+        private readonly Type _type;
 
         /// <summary>
         /// Constructor

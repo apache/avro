@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
-using Avro;
 
 namespace Avro.Test
 {
@@ -35,7 +33,6 @@ namespace Avro.Test
         [TestCase("double")]
         [TestCase("bytes")]
         [TestCase("string")]
-
         [TestCase("\"null\"")]
         [TestCase("\"boolean\"")]
         [TestCase("\"int\"")]
@@ -54,6 +51,7 @@ namespace Avro.Test
         [TestCase("{ \"type\": \"double\" }")]
         [TestCase("{ \"type\": \"bytes\" }")]
         [TestCase("{ \"type\": \"string\" }")]
+
         // Record
         [TestCase("{\"type\": \"record\",\"name\": \"Test\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}")]
         [TestCase("{\"type\": \"record\",\"name\": \"Test\",\"fields\": " +
@@ -128,7 +126,6 @@ namespace Avro.Test
         [TestCase("double", Schema.Type.Double)]
         [TestCase("bytes", Schema.Type.Bytes)]
         [TestCase("string", Schema.Type.String)]
-
         [TestCase("{ \"type\": \"null\" }", Schema.Type.Null)]
         [TestCase("{ \"type\": \"boolean\" }", Schema.Type.Boolean)]
         [TestCase("{ \"type\": \"int\" }", Schema.Type.Int)]
@@ -171,7 +168,7 @@ namespace Avro.Test
         {
             try
             {
-                //remove any excess spaces in the JSON to normalize the match with toString 
+                //remove any excess spaces in the JSON to normalize the match with toString
                 schema = schema.Replace("{ ", "{")
                     .Replace("} ", "}")
                     .Replace("\" ", "\"")
@@ -225,7 +222,7 @@ namespace Avro.Test
             Assert.True(recordSchema["f1"].Schema.ToString().Contains("metafield"));
 
             Assert.True(definedSchema.Equals(recordSchema["f1"].Schema));
-            Assert.AreEqual(definedSchema.GetHashCode(),recordSchema["f1"].Schema.GetHashCode());
+            Assert.AreEqual(definedSchema.GetHashCode(), recordSchema["f1"].Schema.GetHashCode());
         }
 
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +

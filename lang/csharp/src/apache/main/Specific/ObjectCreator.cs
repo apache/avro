@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -81,6 +82,7 @@ namespace Avro.Specific
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable SA1600 // Elements should be documented
+
         /// <summary>
         /// Obsolete: This will be removed from the public API in a future version.
         /// </summary>
@@ -89,16 +91,19 @@ namespace Avro.Specific
         {
             public string name { get; private set; }
             public Schema.Type type { get; private set; }
+
             public NameCtorKey(string value1, Schema.Type value2)
                 : this()
             {
                 name = value1;
                 type = value2;
             }
+
             public bool Equals(NameCtorKey other)
             {
                 return Equals(other.name, name) && other.type == type;
             }
+
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj))
@@ -107,6 +112,7 @@ namespace Avro.Specific
                     return false;
                 return Equals((NameCtorKey)obj);
             }
+
             public override int GetHashCode()
             {
                 unchecked
@@ -116,15 +122,18 @@ namespace Avro.Specific
 #pragma warning restore CA1307 // Specify StringComparison
                 }
             }
+
             public static bool operator ==(NameCtorKey left, NameCtorKey right)
             {
                 return left.Equals(right);
             }
+
             public static bool operator !=(NameCtorKey left, NameCtorKey right)
             {
                 return !left.Equals(right);
             }
         }
+
 #pragma warning restore SA1600 // Elements should be documented
 #pragma warning restore CA1034 // Nested types should not be visible
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
@@ -259,87 +268,96 @@ namespace Avro.Specific
         /// </exception>
         public Type GetType(Schema schema)
         {
-            switch(schema.Tag) {
-            case Schema.Type.Null:
-                break;
-            case Schema.Type.Boolean:
-                return typeof(bool);
-            case Schema.Type.Int:
-                return typeof(int);
-            case Schema.Type.Long:
-                return typeof(long);
-            case Schema.Type.Float:
-                return typeof(float);
-            case Schema.Type.Double:
-                return typeof(double);
-            case Schema.Type.Bytes:
-                return typeof(byte[]);
-            case Schema.Type.String:
-                return typeof(string);
-            case Schema.Type.Union:
-                {
-                    if (schema is UnionSchema unSchema && unSchema.Count == 2)
+            switch (schema.Tag)
+            {
+                case Schema.Type.Null:
+                    break;
+
+                case Schema.Type.Boolean:
+                    return typeof(bool);
+
+                case Schema.Type.Int:
+                    return typeof(int);
+
+                case Schema.Type.Long:
+                    return typeof(long);
+
+                case Schema.Type.Float:
+                    return typeof(float);
+
+                case Schema.Type.Double:
+                    return typeof(double);
+
+                case Schema.Type.Bytes:
+                    return typeof(byte[]);
+
+                case Schema.Type.String:
+                    return typeof(string);
+
+                case Schema.Type.Union:
                     {
-                        Schema s1 = unSchema.Schemas[0];
-                        Schema s2 = unSchema.Schemas[1];
+                        if (schema is UnionSchema unSchema && unSchema.Count == 2)
+                        {
+                            Schema s1 = unSchema.Schemas[0];
+                            Schema s2 = unSchema.Schemas[1];
 
-                        // Nullable ?
-                        Type itemType = null;
-                        if (s1.Tag == Schema.Type.Null)
-                        {
-                            itemType = GetType(s2);
-                        }
-                        else if (s2.Tag == Schema.Type.Null)
-                        {
-                            itemType = GetType(s1);
-                        }
-
-                        if (itemType != null)
-                        {
-                            if (itemType.IsValueType && !itemType.IsEnum)
+                            // Nullable ?
+                            Type itemType = null;
+                            if (s1.Tag == Schema.Type.Null)
                             {
-                                try
-                                {
-                                    return GenericNullableType.MakeGenericType(itemType);
-                                }
-                                catch
-                                {
-                                }
+                                itemType = GetType(s2);
+                            }
+                            else if (s2.Tag == Schema.Type.Null)
+                            {
+                                itemType = GetType(s1);
                             }
 
-                            return itemType;
+                            if (itemType != null)
+                            {
+                                if (itemType.IsValueType && !itemType.IsEnum)
+                                {
+                                    try
+                                    {
+                                        return GenericNullableType.MakeGenericType(itemType);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+
+                                return itemType;
+                            }
                         }
+
+                        return typeof(object);
                     }
-
-                    return typeof(object);
-                }
-            case Schema.Type.Array:
-                {
-                    ArraySchema arrSchema = schema as ArraySchema;
-                    Type itemSchema = GetType(arrSchema.ItemSchema);
-
-                    return GenericListType.MakeGenericType(itemSchema);
-                }
-            case Schema.Type.Map:
-                {
-                    MapSchema mapSchema = schema as MapSchema;
-                    Type itemSchema = GetType(mapSchema.ValueSchema);
-
-                    return GenericMapType.MakeGenericType(typeof(string), itemSchema );
-                }
-            case Schema.Type.Enumeration:
-            case Schema.Type.Record:
-            case Schema.Type.Fixed:
-            case Schema.Type.Error:
-                {
-                    // Should all be named types
-                    if (schema is NamedSchema named)
+                case Schema.Type.Array:
                     {
-                        return FindType(named.Fullname);
-                    }
+                        ArraySchema arrSchema = schema as ArraySchema;
+                        Type itemSchema = GetType(arrSchema.ItemSchema);
 
-                    break;
-                }
+                        return GenericListType.MakeGenericType(itemSchema);
+                    }
+                case Schema.Type.Map:
+                    {
+                        MapSchema mapSchema = schema as MapSchema;
+                        Type itemSchema = GetType(mapSchema.ValueSchema);
+
+                        return GenericMapType.MakeGenericType(typeof(string), itemSchema);
+                    }
+                case Schema.Type.Enumeration:
+                case Schema.Type.Record:
+                case Schema.Type.Fixed:
+                case Schema.Type.Error:
+                    {
+                        // Should all be named types
+                        if (schema is NamedSchema named)
+                        {
+                            return FindType(named.Fullname);
+                        }
+
+                        break;
+                    }
             }
 
             // Fallback

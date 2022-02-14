@@ -15,21 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.CodeDom.Compiler;
-using Microsoft.CSharp;
 using NUnit.Framework;
-using Avro.Specific;
 
 namespace Avro.Test
 {
     [TestFixture]
-
-    class CodeGenTest
+    internal class CodeGenTest
     {
-
         [Test]
         public void TestGetNullableTypeException()
         {
@@ -42,7 +36,7 @@ namespace Avro.Test
 ""name"" : ""ClassKeywords"",
 ""namespace"" : ""com.base"",
 ""fields"" :
-		[ 	
+		[
 			{ ""name"" : ""int"", ""type"" : ""int"" },
 			{ ""name"" : ""base"", ""type"" : ""long"" },
 			{ ""name"" : ""event"", ""type"" : ""boolean"" },
@@ -71,7 +65,7 @@ namespace Avro.Test
 ""name"" : ""SchemaObject"",
 ""namespace"" : ""schematest"",
 ""fields"" :
-	[ 	
+	[
 		{ ""name"" : ""myobject"", ""type"" :
 			[
 				""null"",
@@ -90,7 +84,7 @@ namespace Avro.Test
 	""name"" : ""LogicalTypes"",
 	""namespace"" : ""schematest"",
 	""fields"" :
-		[ 	
+		[
 			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
 			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
 			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
@@ -203,6 +197,7 @@ namespace Avro.Test
             return compres;
         }
 #endif
+
         [TestFixture]
         public class CodeGenTestClass : CodeGen
         {

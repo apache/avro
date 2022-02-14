@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 namespace Avro.Specific
 {
     /// <summary>
@@ -52,5 +53,4 @@ namespace Avro.Specific
         /// <param name="callback">Callback.</param>
         void Request<T>(string messageName, object[] args, object callback);
     }
-
 }

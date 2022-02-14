@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.IO;
 
@@ -25,10 +26,13 @@ namespace Avro.IO
     /// </summary>
     public class BinaryEncoder : Encoder
     {
-        private readonly Stream Stream;
+        /// <summary>
+        /// The stream
+        /// </summary>
+        private readonly Stream _stream;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryEncoder"/> class without a backing
+        /// Initializes a new instance of the <see cref="BinaryEncoder" /> class without a backing
         /// stream.
         /// </summary>
         public BinaryEncoder() : this(null)
@@ -36,13 +40,13 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryEncoder"/> class that writes to
+        /// Initializes a new instance of the <see cref="BinaryEncoder" /> class that writes to
         /// the provided stream.
         /// </summary>
         /// <param name="stream">Stream to write to.</param>
         public BinaryEncoder(Stream stream)
         {
-            this.Stream = stream;
+            _stream = stream;
         }
 
         /// <summary>
@@ -55,10 +59,10 @@ namespace Avro.IO
         /// <summary>
         /// true is written as 1 and false 0.
         /// </summary>
-        /// <param name="b">Boolean value to write</param>
-        public void WriteBoolean(bool b)
+        /// <param name="value">Boolean value to write</param>
+        public void WriteBoolean(bool value)
         {
-            writeByte((byte)(b ? 1 : 0));
+            _stream.WriteByte((byte)(value ? 1 : 0));
         }
 
         /// <summary>
@@ -69,6 +73,7 @@ namespace Avro.IO
         {
             WriteLong(value);
         }
+
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
@@ -78,10 +83,11 @@ namespace Avro.IO
             ulong n = (ulong)((value << 1) ^ (value >> 63));
             while ((n & ~0x7FUL) != 0)
             {
-                writeByte((byte)((n & 0x7f) | 0x80));
+                _stream.WriteByte((byte)((n & 0x7f) | 0x80));
                 n >>= 7;
             }
-            writeByte((byte)n);
+
+            _stream.WriteByte((byte)n);
         }
 
         /// <summary>
@@ -89,13 +95,18 @@ namespace Avro.IO
         /// The float is converted into a 32-bit integer using a method equivalent to
         /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Value to write.</param>
         public void WriteFloat(float value)
         {
             byte[] buffer = BitConverter.GetBytes(value);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
-            writeBytes(buffer);
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(buffer);
+            }
+
+            _stream.Write(buffer, 0, buffer.Length);
         }
+
         /// <summary>
         ///A double is written as 8 bytes.
         ///The double is converted into a 64-bit integer using a method equivalent to
@@ -106,25 +117,24 @@ namespace Avro.IO
         {
             long bits = BitConverter.DoubleToInt64Bits(value);
 
-            writeByte((byte)(bits & 0xFF));
-            writeByte((byte)((bits >> 8) & 0xFF));
-            writeByte((byte)((bits >> 16) & 0xFF));
-            writeByte((byte)((bits >> 24) & 0xFF));
-            writeByte((byte)((bits >> 32) & 0xFF));
-            writeByte((byte)((bits >> 40) & 0xFF));
-            writeByte((byte)((bits >> 48) & 0xFF));
-            writeByte((byte)((bits >> 56) & 0xFF));
-
+            _stream.WriteByte((byte)(bits & 0xFF));
+            _stream.WriteByte((byte)((bits >> 8) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 16) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 24) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 32) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 40) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 48) & 0xFF));
+            _stream.WriteByte((byte)((bits >> 56) & 0xFF));
         }
 
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Value to write.</param>
         public void WriteBytes(byte[] value)
         {
             WriteLong(value.Length);
-            writeBytes(value);
+            _stream.Write(value, 0, value.Length);
         }
 
         /// <summary>
@@ -136,14 +146,14 @@ namespace Avro.IO
         public void WriteBytes(byte[] value, int offset, int length)
         {
             WriteLong(length);
-            writeBytes(value, offset, length);
+            _stream.Write(value, offset, length);
         }
 
         /// <summary>
         /// A string is encoded as a long followed by
         /// that many bytes of UTF-8 encoded character data.
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Value to write.</param>
         public void WriteString(string value)
         {
             WriteBytes(System.Text.Encoding.UTF8.GetBytes(value));
@@ -163,7 +173,10 @@ namespace Avro.IO
         /// <inheritdoc/>
         public void SetItemCount(long value)
         {
-            if (value > 0) WriteLong(value);
+            if (value > 0)
+            {
+                WriteLong(value);
+            }
         }
 
         /// <inheritdoc/>
@@ -203,22 +216,7 @@ namespace Avro.IO
         /// <inheritdoc/>
         public void WriteFixed(byte[] data, int start, int len)
         {
-            Stream.Write(data, start, len);
-        }
-
-        private void writeBytes(byte[] bytes)
-        {
-            Stream.Write(bytes, 0, bytes.Length);
-        }
-
-        private void writeBytes(byte[] bytes, int offset, int length)
-        {
-            Stream.Write(bytes, offset, length);
-        }
-
-        private void writeByte(byte b)
-        {
-            Stream.WriteByte(b);
+            _stream.Write(data, start, len);
         }
 
         /// <summary>
@@ -226,7 +224,7 @@ namespace Avro.IO
         /// </summary>
         public void Flush()
         {
-            Stream.Flush();
+            _stream.Flush();
         }
     }
 }

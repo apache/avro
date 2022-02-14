@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace Avro
@@ -22,7 +23,7 @@ namespace Avro
     /// <summary>
     /// CodeGen Exception.
     /// </summary>
-    /// <seealso cref="Avro.AvroException" />
+    /// <seealso cref="AvroException" />
     public class CodeGenException : AvroException
     {
         /// <summary>

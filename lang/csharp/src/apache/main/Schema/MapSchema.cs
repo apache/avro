@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -39,7 +38,7 @@ namespace Avro
         /// <returns>A new <see cref="MapSchema"/>.</returns>
         public static MapSchema CreateMap(Schema type)
         {
-            return new MapSchema(type,null);
+            return new MapSchema(type, null);
         }
 
         /// <summary>
@@ -53,7 +52,8 @@ namespace Avro
         internal static MapSchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jvalue = jtok["values"];
-            if (null == jvalue) throw new AvroTypeException($"Map does not have 'values' at '{jtok.Path}'");
+            if (null == jvalue)
+                throw new AvroTypeException($"Map does not have 'values' at '{jtok.Path}'");
             try
             {
                 return new MapSchema(ParseJson(jvalue, names, encspace), props);
@@ -71,7 +71,8 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
         {
-            if (null == valueSchema) throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
+            if (null == valueSchema)
+                throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
             this.ValueSchema = valueSchema;
         }
 
@@ -94,7 +95,8 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema.Tag != Tag) return false;
+            if (writerSchema.Tag != Tag)
+                return false;
 
             MapSchema that = writerSchema as MapSchema;
             return ValueSchema.CanRead(that.ValueSchema);
@@ -107,7 +109,8 @@ namespace Avro
         /// <returns>true if two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
+            if (this == obj)
+                return true;
 
             if (obj != null && obj is MapSchema)
             {

@@ -27,12 +27,12 @@ namespace Avro.Reflect
     /// </summary>
     public class ClassCache
     {
-        private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+        private static readonly ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
-        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+        private readonly ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        private readonly ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -84,42 +84,57 @@ namespace Avro.Reflect
             {
                 case Avro.Schema.Type.Null:
                     return null;
+
                 case Avro.Schema.Type.Boolean:
                     avroType = typeof(bool);
                     break;
+
                 case Avro.Schema.Type.Int:
                     avroType = typeof(int);
                     break;
+
                 case Avro.Schema.Type.Long:
                     avroType = typeof(long);
                     break;
+
                 case Avro.Schema.Type.Float:
                     avroType = typeof(float);
                     break;
+
                 case Avro.Schema.Type.Double:
                     avroType = typeof(double);
                     break;
+
                 case Avro.Schema.Type.Bytes:
                     avroType = typeof(byte[]);
                     break;
+
                 case Avro.Schema.Type.String:
                     avroType = typeof(string);
                     break;
+
                 case Avro.Schema.Type.Record:
                     return null;
+
                 case Avro.Schema.Type.Enumeration:
                     return null;
+
                 case Avro.Schema.Type.Array:
                     return null;
+
                 case Avro.Schema.Type.Map:
                     return null;
+
                 case Avro.Schema.Type.Union:
                     return null;
+
                 case Avro.Schema.Type.Fixed:
                     avroType = typeof(byte[]);
                     break;
+
                 case Avro.Schema.Type.Error:
                     return null;
+
                 default:
                     return null;
             }
@@ -159,6 +174,7 @@ namespace Avro.Reflect
         public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
         {
             Type h;
+
             // note ArraySchema is unamed and doesnt have a FulllName, use "helper" metadata
             // metadata is json string, strip quotes
             string s = null;
@@ -182,7 +198,7 @@ namespace Avro.Reflect
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
-               return null;
+                return null;
             }
 
             return c;
@@ -215,7 +231,8 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        /*              
+                        /*
+
                         //.StackOverflowException
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
@@ -228,6 +245,7 @@ namespace Avro.Reflect
                     }
 
                     break;
+
                 case ArraySchema ars:
                     if (!typeof(IEnumerable).IsAssignableFrom(objType))
                     {
@@ -241,6 +259,7 @@ namespace Avro.Reflect
 
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
+
                 case MapSchema ms:
                     if (!typeof(IDictionary).IsAssignableFrom(objType))
                     {
@@ -259,9 +278,11 @@ namespace Avro.Reflect
 
                     LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);
                     break;
+
                 case NamedSchema ns:
                     EnumCache.AddEnumNameMapItem(ns, objType);
                     break;
+
                 case UnionSchema us:
                     if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null) && objType.IsClass)
                     {
@@ -273,7 +294,6 @@ namespace Avro.Reflect
                                 LoadClassCache(objType, o);
                             }
                         }
-
                     }
                     else
                     {

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 
@@ -26,37 +27,39 @@ namespace Avro
     public class SchemaName
     {
         // cache the full name, so it won't allocate new strings on each call
-        private String fullName;
-        
+        private readonly string fullName;
+
         /// <summary>
         /// Name of the schema
         /// </summary>
-        public String Name { get; private set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Namespace specified within the schema
         /// </summary>
-        public String Space { get; private set; }
+        public string Space { get; private set; }
 
         /// <summary>
         /// Namespace from the most tightly enclosing schema
         /// </summary>
-        public String EncSpace { get; private set; }
+        public string EncSpace { get; private set; }
 
         /// <summary>
         /// Documentation for the schema
         /// </summary>
-        public String Documentation { get; private set; }
+        public string Documentation { get; private set; }
 
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public String Fullname { get { return fullName; } }
+        public string Fullname
+        { get { return fullName; } }
 
         /// <summary>
         /// Namespace of the schema
         /// </summary>
-        public String Namespace { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
+        public string Namespace
+        { get { return string.IsNullOrEmpty(this.Space) ? this.EncSpace : this.Space; } }
 
         /// <summary>
         /// Constructor for SchemaName
@@ -65,7 +68,7 @@ namespace Avro
         /// <param name="space">namespace of the schema</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <param name="documentation">documentation o fthe schema</param>
-        public SchemaName(String name, String space, String encspace, String documentation)
+        public SchemaName(string name, string space, string encspace, string documentation)
         {
             if (name == null)
             {                         // anonymous
@@ -112,9 +115,9 @@ namespace Avro
             {
                 JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
                 JsonHelper.writeIfNotNull(writer, "doc", this.Documentation);
-                if (!String.IsNullOrEmpty(this.Space))
+                if (!string.IsNullOrEmpty(this.Space))
                     JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Space);
-                else if (!String.IsNullOrEmpty(this.EncSpace)) // need to put enclosing name space for code generated classes
+                else if (!string.IsNullOrEmpty(this.EncSpace)) // need to put enclosing name space for code generated classes
                     JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.EncSpace);
             }
         }
@@ -126,7 +129,8 @@ namespace Avro
         /// <returns>true or false</returns>
         public override bool Equals(Object obj)
         {
-            if (obj == this) return true;
+            if (obj == this)
+                return true;
             if (obj != null && obj is SchemaName)
             {
                 SchemaName that = (SchemaName)obj;

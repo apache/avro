@@ -65,7 +65,7 @@ namespace Avro.Test.Specific
 		{
 			switch (fieldPos)
 			{
-			case 0: this.name = (System.String)fieldValue; break;
+			case 0: this.name = (string)fieldValue; break;
 			default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Put()");
 			};
 		}

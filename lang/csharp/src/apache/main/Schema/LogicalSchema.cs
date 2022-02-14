@@ -45,14 +45,16 @@ namespace Avro
         internal static LogicalSchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jtype = jtok["type"];
-            if (null == jtype) throw new AvroTypeException("Logical Type does not have 'type'");
+            if (null == jtype)
+                throw new AvroTypeException("Logical Type does not have 'type'");
 
-            return new LogicalSchema(Schema.ParseJson(jtype, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"),  props);
+            return new LogicalSchema(Schema.ParseJson(jtype, names, encspace), JsonHelper.GetRequiredString(jtok, "logicalType"), props);
         }
 
-        private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)
+        private LogicalSchema(Schema baseSchema, string logicalTypeName, PropertyMap props) : base(Type.Logical, props)
         {
-            if (null == baseSchema) throw new ArgumentNullException(nameof(baseSchema));
+            if (null == baseSchema)
+                throw new ArgumentNullException(nameof(baseSchema));
             BaseSchema = baseSchema;
             LogicalTypeName = logicalTypeName;
             LogicalType = LogicalTypeFactory.Instance.GetFromLogicalSchema(this);
@@ -83,7 +85,8 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema.Tag != Tag) return false;
+            if (writerSchema.Tag != Tag)
+                return false;
 
             LogicalSchema that = writerSchema as LogicalSchema;
             return BaseSchema.CanRead(that.BaseSchema);
@@ -96,7 +99,8 @@ namespace Avro
         /// <returns>true if two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
+            if (this == obj)
+                return true;
 
             if (obj != null && obj is LogicalSchema that)
             {

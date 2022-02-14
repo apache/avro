@@ -22,8 +22,6 @@ namespace Avro.IO
     /// Decoder is used to decode Avro data on a stream. There are methods to read the Avro types on the stream. There are also
     /// methods to skip items, which are usually more efficient than reading, on the stream.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface Decoder
     {
         /// <summary>
@@ -102,7 +100,7 @@ namespace Avro.IO
         /// <summary>
         /// Starts reading the map Avro type. This, together with ReadMapNext() is used to read the
         /// entries from Avro map. This returns the number of entries in the initial chunk. After consuming
-        /// the chunk, the client should call ReadMapNext() to get the number of entriess in the next
+        /// the chunk, the client should call ReadMapNext() to get the number of entries in the next
         /// chunk. The client should repeat the procedure until there are no more entries in the array.
         /// for (int n = decoder.ReadMapStart(); n > 0; n = decoder.ReadMapNext())
         /// {
@@ -194,5 +192,4 @@ namespace Avro.IO
         /// <param name="len">Length of the fixed.</param>
         void SkipFixed(int len);
     }
-
 }

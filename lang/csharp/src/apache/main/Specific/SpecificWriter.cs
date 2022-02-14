@@ -15,12 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avro;
-using Avro.IO;
 using Avro.Generic;
+using Avro.IO;
 
 namespace Avro.Specific
 {
@@ -185,42 +183,57 @@ namespace Avro.Specific
         /// <inheritdoc/>
         protected override bool Matches(Schema sc, object obj)
         {
-            if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;
+            if (obj == null && sc.Tag != Avro.Schema.Type.Null)
+                return false;
             switch (sc.Tag)
             {
                 case Schema.Type.Null:
                     return obj == null;
+
                 case Schema.Type.Boolean:
                     return obj is bool;
+
                 case Schema.Type.Int:
                     return obj is int;
+
                 case Schema.Type.Long:
                     return obj is long;
+
                 case Schema.Type.Float:
                     return obj is float;
+
                 case Schema.Type.Double:
                     return obj is double;
+
                 case Schema.Type.Bytes:
                     return obj is byte[];
+
                 case Schema.Type.String:
                     return obj is string;
+
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return obj is ISpecificRecord &&
                            ((obj as ISpecificRecord).Schema as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
+
                 case Schema.Type.Enumeration:
                     return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString());
+
                 case Schema.Type.Array:
                     return obj is System.Collections.IList;
+
                 case Schema.Type.Map:
                     return obj is System.Collections.IDictionary;
+
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
                     return obj is SpecificFixed &&
                            ((obj as SpecificFixed).Schema as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
+
                 case Schema.Type.Logical:
                     return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
+
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

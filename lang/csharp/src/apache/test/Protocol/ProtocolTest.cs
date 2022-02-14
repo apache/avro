@@ -15,13 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+
 using NUnit.Framework;
-using Avro;
 
 namespace Avro.Test
 {
@@ -73,7 +68,7 @@ namespace Avro.Test
 	""type"" : ""record"",
 	""name"" : ""Z"",
 	""fields"" :
-			[ 	
+			[
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
 				{ ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ] },
@@ -81,7 +76,7 @@ namespace Avro.Test
 				{ ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ] },
 				{ ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ] },
 				{ ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ] },
-				
+
 				{ ""name"" : ""myInt"", ""type"" : ""int"" },
 				{ ""name"" : ""myLong"", ""type"" : ""long"" },
 				{ ""name"" : ""myBool"", ""type"" : ""boolean"" },
@@ -91,8 +86,8 @@ namespace Avro.Test
 				{ ""name"" : ""myString"", ""type"" : ""string"" },
 				{ ""name"" : ""myNull"", ""type"" : ""null"" },
 
-				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },								
-				{ ""name"" : ""myFixed2"", ""type"" : ""MyFixed"" },								
+				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
+				{ ""name"" : ""myFixed2"", ""type"" : ""MyFixed"" },
 				{ ""name"" : ""myA"", ""type"" : ""A"" },
 				{ ""name"" : ""myE"", ""type"" : ""MyEnum"" },
 				{ ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
@@ -134,7 +129,7 @@ namespace Avro.Test
 	""type"" : ""record"",
 	""name"" : ""Z"",
 	""fields"" :
-			[ 	
+			[
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ], ""default"" : 1 },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ], ""default"" : 2 },
 				{ ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ], ""default"" : true },
@@ -142,7 +137,7 @@ namespace Avro.Test
 				{ ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ], ""default"" : 4.5 },
 				{ ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ], ""default"" : ""\u00ff"" },
 				{ ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ], ""default"" : ""foo"" },
-				
+
 				{ ""name"" : ""myInt"", ""type"" : ""int"", ""default"" : 10 },
 				{ ""name"" : ""myLong"", ""type"" : ""long"", ""default"" : 11 },
 				{ ""name"" : ""myBool"", ""type"" : ""boolean"", ""default"" : false },
@@ -178,7 +173,7 @@ namespace Avro.Test
             Protocol protocol2 = Protocol.Parse(json);
             string json2 = protocol2.ToString();
 
-            Assert.AreEqual(json,json2);
+            Assert.AreEqual(json, json2);
         }
 
         // Protocols match
@@ -221,7 +216,8 @@ namespace Avro.Test
     }
   }
 }",
-  true,true, TestName = "TestProtocolHash_ProtocolsMatch")]
+  true, true, TestName = "TestProtocolHash_ProtocolsMatch")]
+
         // Protocols match, order of schemas in 'types' are different
         [TestCase(
 @"{
@@ -262,7 +258,8 @@ namespace Avro.Test
     }
   }
 }",
-  false,true, TestName = "TestProtocolHash_ProtocolsMatch_OrderOfSchemasInTypesAreDifferent")]
+  false, true, TestName = "TestProtocolHash_ProtocolsMatch_OrderOfSchemasInTypesAreDifferent")]
+
         // Name of protocol is different
         [TestCase(
 @"{
@@ -303,7 +300,8 @@ namespace Avro.Test
     }
   }
 }",
-  false,false, TestName = "TestProtocolHash_NameOfProtocolIsDifferent")]
+  false, false, TestName = "TestProtocolHash_NameOfProtocolIsDifferent")]
+
         // Name of a message request is different: 'hi'
         [TestCase(
 @"{
@@ -344,7 +342,8 @@ namespace Avro.Test
     }
   }
 }",
-  false,false, TestName = "TestProtocolHash_NameOfMessageRequestIsDifferent")]
+  false, false, TestName = "TestProtocolHash_NameOfMessageRequestIsDifferent")]
+
         // Name of a type is different : Curse1
         [TestCase(
 @"{
@@ -385,7 +384,8 @@ namespace Avro.Test
     }
   }
 }",
-  false,false, TestName = "TestProtocolHash_NameOfTypeIsDifferent_Curse1")]
+  false, false, TestName = "TestProtocolHash_NameOfTypeIsDifferent_Curse1")]
+
         // Name of a record field is different: 'mymessage'
         [TestCase(
 @"{
@@ -426,7 +426,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,false, TestName = "TestProtocolHash_NameOfRecordFieldIsDifferent_MyMessage")]
+  false, false, TestName = "TestProtocolHash_NameOfRecordFieldIsDifferent_MyMessage")]
         public static void TestProtocolHash(string str1, string str2, bool md5_equal, bool hash_equal)
         {
             Protocol protocol1 = Protocol.Parse(str1);
