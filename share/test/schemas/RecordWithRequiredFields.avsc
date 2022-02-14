@@ -1,0 +1,53 @@
+{
+  "type" : "record",
+  "name" : "RecordWithRequiredFields",
+  "namespace" : "org.apache.avro",
+  "fields" : [ {
+    "name" : "f0",
+    "type" : "string"
+  }, {
+    "name" : "unionField",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "UnionRecord",
+      "fields" : [ {
+        "name" : "f1",
+        "type" : "string"
+      }, {
+        "name" : "arrayField",
+        "type" : {
+          "type" : "array",
+          "items" : {
+            "type" : "record",
+            "name" : "ArrayRecord",
+            "fields" : [ {
+              "name" : "f2",
+              "type" : "string"
+            }, {
+              "name" : "mapField",
+              "type" : {
+                "type" : "map",
+                "values" : {
+                  "type" : "record",
+                  "name" : "MapRecord",
+                  "fields" : [ {
+                    "name" : "f3",
+                    "type" : {
+                      "type" : "enum",
+                      "name" : "MapRecordEnum",
+                      "symbols" : [ "A", "B" ],
+                      "default" : "A"
+                    }
+                  }, {
+                    "name" : "f4",
+                    "type" : "string"
+                  } ]
+                }
+              }
+            } ]
+          }
+        }
+      } ]
+    } ]
+  } ]
+}

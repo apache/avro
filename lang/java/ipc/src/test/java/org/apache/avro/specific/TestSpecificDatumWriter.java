@@ -20,13 +20,25 @@ package org.apache.avro.specific;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.avro.ArrayRecord;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.MapRecord;
+import org.apache.avro.MapRecordEnum;
+import org.apache.avro.RecordWithRequiredFields;
 import org.apache.avro.Schema;
+import org.apache.avro.UnionRecord;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestRecordWithUnion;
 import org.apache.avro.test.TestRecord;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -69,9 +81,127 @@ public class TestSpecificDatumWriter {
       writer.write(testRecord, encoder);
       fail("Exception not thrown");
     } catch (NullPointerException e) {
-      assertTrue(e.getMessage().contains("null of string in field 'name'"));
+      assertTrue(e.getMessage().contains("null value for (non-nullable) string at TestRecord.name"));
     } finally {
       out.close();
     }
+  }
+
+  @Test
+  public void testNestedNPEErrorClarity() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF4(null);
+    try {
+      writeObject(topLevelRecord, false);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f4"));
+    }
+  }
+
+  @Test
+  public void testNestedNPEErrorClarityWithCustomCoders() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null);
+    try {
+      writeObject(topLevelRecord, true);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("custom coders were used"));
+    }
+  }
+
+  @Test
+  public void testNPEForMapKeyErrorClarity() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    Map<String, MapRecord> map = topLevelRecord.getUnionField().getArrayField().get(0).getMapField();
+    map.put(null, map.get("a")); // value is valid, but key is null
+    try {
+      writeObject(topLevelRecord, false);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("null key in map at RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField"));
+    }
+  }
+
+  @Test
+  public void testNPEForMapKeyErrorClarityWithCustomCoders() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    Map<String, MapRecord> map = topLevelRecord.getUnionField().getArrayField().get(0).getMapField();
+    map.put(null, map.get("a")); // value is valid, but key is null
+    try {
+      writeObject(topLevelRecord, true);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("custom coders were used"));
+    }
+  }
+
+  @Test
+  public void testNestedATEErrorClarity() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null); // not an enum
+    try {
+      writeObject(topLevelRecord, false);
+      Assert.fail("expected to throw");
+    } catch (AvroTypeException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f3"));
+    }
+  }
+
+  @Test
+  public void testNestedATEErrorClarityWithCustomCoders() throws Exception {
+    RecordWithRequiredFields topLevelRecord = buildComplexRecord();
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null); // not an enum
+    try {
+      writeObject(topLevelRecord, true);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      // with custom coders this gets us an NPE ...
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("custom coders were used"));
+    }
+  }
+
+  private RecordWithRequiredFields buildComplexRecord() {
+    RecordWithRequiredFields topLevelRecord = new RecordWithRequiredFields();
+    UnionRecord unionRecord = new UnionRecord();
+    ArrayRecord arrayRecord1 = new ArrayRecord();
+    ArrayRecord arrayRecord2 = new ArrayRecord();
+    MapRecord mapRecordA = new MapRecord();
+    mapRecordA.setF3(MapRecordEnum.B);
+    mapRecordA.setF4("4");
+    arrayRecord1.setF2("2");
+    Map<String, MapRecord> map1 = new HashMap<>();
+    map1.put("a", mapRecordA);
+    arrayRecord1.setMapField(map1);
+    arrayRecord2.setF2("2");
+    Map<String, MapRecord> map2 = new HashMap<>();
+    map2.put("a", mapRecordA);
+    arrayRecord2.setMapField(map2);
+    unionRecord.setF1("1");
+    unionRecord.setArrayField(Arrays.asList(arrayRecord1, arrayRecord2));
+    topLevelRecord.setF0("0");
+    topLevelRecord.setUnionField(unionRecord);
+
+    return topLevelRecord;
+  }
+
+  private void writeObject(IndexedRecord datum, boolean useCustomCoders) throws Exception {
+    writeObject(datum.getSchema(), datum, useCustomCoders);
+  }
+
+  private void writeObject(Schema schema, Object datum, boolean useCustomCoders) throws Exception {
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(new ByteArrayOutputStream(), null);
+    SpecificData specificData = new SpecificData();
+    specificData.setCustomCoders(useCustomCoders);
+    SpecificDatumWriter<Object> writer = new SpecificDatumWriter<>(schema, specificData);
+    writer.write(datum, encoder);
+    encoder.flush();
   }
 }
