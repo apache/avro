@@ -222,7 +222,12 @@ class BinaryDecoder:
         """
         Read n bytes.
         """
-        return self.reader.read(n)
+        if n < 0:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
+        read_bytes = self.reader.read(n)
+        if len(read_bytes) != n:
+            raise avro.errors.InvalidAvroBinaryEncoding(f"Read {len(read_bytes)} bytes, expected {n} bytes")
+        return read_bytes
 
     def read_null(self) -> None:
         """
