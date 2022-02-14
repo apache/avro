@@ -58,22 +58,17 @@ namespace Avro.Generic
         /// Constructs a generic reader by directly using the given DefaultReader
         /// </summary>
         /// <param name="reader">The actual reader to use</param>
-        public GenericReader(DefaultReader reader)
-        {
-            _reader = reader;
-        }
+        public GenericReader(DefaultReader reader) => _reader = reader;
 
         /// <summary>
         /// Gets the schema used to write the data.
         /// </summary>
-        public Schema WriterSchema
-        { get { return _reader.WriterSchema; } }
+        public Schema WriterSchema => _reader.WriterSchema;
 
         /// <summary>
         /// Gets the schema used to read the data.
         /// </summary>
-        public Schema ReaderSchema
-        { get { return _reader.ReaderSchema; } }
+        public Schema ReaderSchema => _reader.ReaderSchema;
 
         /// <summary>
         /// Reads an object off the stream.
@@ -83,10 +78,7 @@ namespace Avro.Generic
         /// </param>
         /// <param name="decoder">Decoder to read from.</param>
         /// <returns>Object we read from the decoder.</returns>
-        public T Read(T reuse, Decoder decoder)
-        {
-            return _reader.Read(reuse, decoder);
-        }
+        public T Read(T reuse, Decoder decoder) => _reader.Read(reuse, decoder);
     }
 
     /// <summary>
@@ -149,12 +141,9 @@ namespace Avro.Generic
         /// Object read from the decoder.
         /// </returns>
         /// <exception cref="AvroException">Schema mismatch. Reader: {ReaderSchema}, writer: {WriterSchema}</exception>
-        public T Read<T>(T reuse, Decoder decoder)
-        {
-            return !ReaderSchema.CanRead(WriterSchema) ?
+        public T Read<T>(T reuse, Decoder decoder) => !ReaderSchema.CanRead(WriterSchema) ?
                 throw new AvroException($"Schema mismatch. Reader: {ReaderSchema}, writer: {WriterSchema}") :
                 (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
-        }
 
         /// <summary>
         /// Reads an object off the stream.
@@ -285,10 +274,7 @@ namespace Avro.Generic
         /// <returns>
         /// The primitive type just read
         /// </returns>
-        protected T Read<T>(Schema.Type tag, Schema readerSchema, Reader<T> reader)
-        {
-            return reader();
-        }
+        protected T Read<T>(Schema.Type tag, Schema readerSchema, Reader<T> reader) => reader();
 
         /// <summary>
         /// Deserializes a record from the stream.
@@ -372,10 +358,7 @@ namespace Avro.Generic
         /// <returns>
         /// True if and only if a field with the given name is found.
         /// </returns>
-        protected virtual bool TryGetField(object record, string fieldName, int fieldPos, out object value)
-        {
-            return (record as GenericRecord).TryGetValue(fieldPos, out value);
-        }
+        protected virtual bool TryGetField(object record, string fieldName, int fieldPos, out object value) => (record as GenericRecord).TryGetValue(fieldPos, out value);
 
         /// <summary>
         /// Used by the default implementation of ReadRecord() to add a field to a record object. The derived
@@ -386,10 +369,7 @@ namespace Avro.Generic
         /// <param name="fieldName">The name of the field to probe.</param>
         /// <param name="fieldPos">Position of the field in the schema - not used in the base implementation.</param>
         /// <param name="fieldValue">The value to be added for the field</param>
-        protected virtual void AddField(object record, string fieldName, int fieldPos, object fieldValue)
-        {
-            (record as GenericRecord).Add(fieldPos, fieldValue);
-        }
+        protected virtual void AddField(object record, string fieldName, int fieldPos, object fieldValue) => (record as GenericRecord).Add(fieldPos, fieldValue);
 
         /// <summary>
         /// Deserializes a enum. Uses CreateEnum to construct the new enum object.
@@ -401,10 +381,7 @@ namespace Avro.Generic
         /// <returns>
         /// An enum object.
         /// </returns>
-        protected virtual object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder decoder)
-        {
-            return CreateEnum(reuse, readerSchema as EnumSchema, writerSchema[decoder.ReadEnum()]);
-        }
+        protected virtual object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder decoder) => CreateEnum(reuse, readerSchema as EnumSchema, writerSchema[decoder.ReadEnum()]);
 
         /// <summary>
         /// Used by the default implementation of ReadEnum to construct a new enum object.
@@ -476,10 +453,7 @@ namespace Avro.Generic
         /// <returns>
         /// An object suitable to deserialize an avro array
         /// </returns>
-        protected virtual object CreateArray(object reuse, ArraySchema arraySchema)
-        {
-            return (reuse != null && reuse is object[] objectArray) ? objectArray : Array.Empty<object>();
-        }
+        protected virtual object CreateArray(object reuse, ArraySchema arraySchema) => (reuse != null && reuse is object[] objectArray) ? objectArray : Array.Empty<object>();
 
         /// <summary>
         /// Returns the size of the given array object.
@@ -489,10 +463,7 @@ namespace Avro.Generic
         /// <returns>
         /// The size of the array
         /// </returns>
-        protected virtual int GetArraySize(object array)
-        {
-            return (array as object[]).Length;
-        }
+        protected virtual int GetArraySize(object array) => (array as object[]).Length;
 
         /// <summary>
         /// Resizes the array to the new value.
@@ -529,10 +500,7 @@ namespace Avro.Generic
         /// <returns>
         /// The object the given index. Null if no object has been assigned to that index.
         /// </returns>
-        protected virtual object GetArrayElement(object array, int index)
-        {
-            return (array as object[])[index];
-        }
+        protected virtual object GetArrayElement(object array, int index) => (array as object[])[index];
 
         /// <summary>
         /// Deserialized an avro map. The default implementation creates a new map using CreateMap() and then
@@ -588,10 +556,7 @@ namespace Avro.Generic
         /// <param name="map">A map object, which is guaranteed to be one returned by a previous call to CreateMap().</param>
         /// <param name="key">The key to add.</param>
         /// <param name="value">The value to add.</param>
-        protected virtual void AddMapEntry(object map, string key, object value)
-        {
-            (map as IDictionary<string, object>).Add(key, value);
-        }
+        protected virtual void AddMapEntry(object map, string key, object value) => (map as IDictionary<string, object>).Add(key, value);
 
         /// <summary>
         /// Deserialized an object based on the writer's union schema.
@@ -677,11 +642,8 @@ namespace Avro.Generic
         /// <returns>
         /// A fixed object with an appropriate buffer.
         /// </returns>
-        protected virtual object CreateFixed(object reuse, FixedSchema fixedSchema)
-        {
-            return (reuse != null && reuse is GenericFixed genericFixed && genericFixed.Schema.Equals(fixedSchema)) ?
+        protected virtual object CreateFixed(object reuse, FixedSchema fixedSchema) => (reuse != null && reuse is GenericFixed genericFixed && genericFixed.Schema.Equals(fixedSchema)) ?
                 genericFixed : new GenericFixed(fixedSchema);
-        }
 
         /// <summary>
         /// Returns a buffer of appropriate size to read data into.
@@ -691,10 +653,7 @@ namespace Avro.Generic
         /// <returns>
         /// A byte buffer of fixed's size.
         /// </returns>
-        protected virtual byte[] GetFixedBuffer(object genericFixed)
-        {
-            return (genericFixed as GenericFixed).Value;
-        }
+        protected virtual byte[] GetFixedBuffer(object genericFixed) => (genericFixed as GenericFixed).Value;
 
         /// <summary>
         /// Skip an instance of a schema.
