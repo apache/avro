@@ -81,8 +81,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       out.writeArrayStart();
       switch (type) {
       case BOOLEAN:
-        if (elementClass.isPrimitive())
-          ArrayAccessor.writeArray((boolean[]) datum, out);
+        ArrayAccessor.writeArray((boolean[]) datum, out);
         break;
       case DOUBLE:
         ArrayAccessor.writeArray((double[]) datum, out);

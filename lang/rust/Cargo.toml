@@ -67,7 +67,7 @@ snap = { version = "1.0.5", optional = true }
 strum = "0.23.0"
 strum_macros = "0.23.1"
 thiserror = "1.0.29"
-typed-builder = "0.9.1"
+typed-builder = "0.10.0"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 zerocopy = "0.6.1"
 lazy_static = "1.1.1"
