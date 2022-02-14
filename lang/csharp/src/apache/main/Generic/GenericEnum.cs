@@ -38,21 +38,11 @@ namespace Avro.Generic
             get { return _value; }
             set
             {
-                if (!Schema.Contains(value))
-                {
-                    if (!string.IsNullOrEmpty(Schema.Default))
-                    {
-                        _value = Schema.Default;
-                    }
-                    else
-                    {
-                        throw new AvroException($"Unknown value for enum: {value}({Schema})");
-                    }
-                }
-                else
-                {
+                _value = !Schema.Contains(value) ?
+                    !string.IsNullOrEmpty(Schema.Default) ?
+                    Schema.Default :
+                    throw new AvroException($"Unknown value for enum: {value}({Schema})") :
                     _value = value;
-                }
             }
         }
 
@@ -70,9 +60,9 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            return (obj != null && obj is GenericEnum)
-                ? Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal)
+            return (obj == this) ? true :
+                (obj != null && obj is GenericEnum) ?
+                Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal)
                 : false;
         }
 
