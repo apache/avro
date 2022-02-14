@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
@@ -37,8 +36,7 @@ namespace Avro
         /// <summary>
         /// Number of fields in the record
         /// </summary>
-        public int Count
-        { get { return Fields.Count; } }
+        public int Count { get { return Fields.Count; } }
 
         /// <summary>
         /// Map of field name and Field object for faster field lookups
@@ -46,7 +44,7 @@ namespace Avro
         private readonly IDictionary<string, Field> fieldLookup;
 
         private readonly IDictionary<string, Field> fieldAliasLookup;
-        private readonly bool request;
+        private bool request;
 
         /// <summary>
         /// Static function to return new instance of the record schema
@@ -64,8 +62,7 @@ namespace Avro
             if (null == jfields)
             {
                 jfields = jtok["request"];      // anonymous record from messages
-                if (null != jfields)
-                    request = true;
+                if (null != jfields) request = true;
             }
             if (null == jfields)
                 throw new SchemaParseException($"'fields' cannot be null for record at '{jtok.Path}'");
@@ -124,13 +121,12 @@ namespace Avro
         /// <param name="fieldAliasMap">map of field aliases and field objects</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props,
+        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props,
                                 List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names, string doc)
                                 : base(type, name, aliases, props, names, doc)
         {
-            if (!request && null == name.Name)
-                throw new SchemaParseException("name cannot be null for record schema.");
+            if (!request && null == name.Name) throw new SchemaParseException("name cannot be null for record schema.");
             this.Fields = fields;
             this.request = request;
             this.fieldLookup = fieldMap;
@@ -153,7 +149,7 @@ namespace Avro
             var jorder = JsonHelper.GetOptionalString(jfield, "order");
             Field.SortOrder sortorder = Field.SortOrder.ignore;
             if (null != jorder)
-                sortorder = (Field.SortOrder)Enum.Parse(typeof(Field.SortOrder), jorder);
+                sortorder = (Field.SortOrder) Enum.Parse(typeof(Field.SortOrder), jorder);
 
             var aliases = Field.GetAliases(jfield);
             var props = Schema.GetProperties(jfield);
@@ -182,8 +178,7 @@ namespace Avro
         {
             get
             {
-                if (string.IsNullOrEmpty(name))
-                    throw new ArgumentNullException(nameof(name));
+                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
                 Field field;
                 return fieldLookup.TryGetValue(name, out field) ? field : null;
             }
@@ -268,8 +263,7 @@ namespace Avro
         /// <returns>true if the two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this)
-                return true;
+            if (obj == this) return true;
             if (obj != null && obj is RecordSchema)
             {
                 RecordSchema that = obj as RecordSchema;
@@ -277,9 +271,7 @@ namespace Avro
                 {
                     if (this.SchemaName.Equals(that.SchemaName) && this.Count == that.Count)
                     {
-                        for (int i = 0; i < Fields.Count; i++)
-                            if (!Fields[i].Equals(that.Fields[i]))
-                                return false;
+                        for (int i = 0; i < Fields.Count; i++) if (!Fields[i].Equals(that.Fields[i])) return false;
                         return areEqual(that.Props, this.Props);
                     }
                     return false;
@@ -297,8 +289,7 @@ namespace Avro
             return protect(() => 0, () =>
             {
                 int result = SchemaName.GetHashCode();
-                foreach (Field f in Fields)
-                    result += 29 * f.GetHashCode();
+                foreach (Field f in Fields) result += 29 * f.GetHashCode();
                 result += getHashCode(Props);
                 return result;
             }, this);
@@ -311,8 +302,7 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if ((writerSchema.Tag != Type.Record) && (writerSchema.Tag != Type.Error))
-                return false;
+            if ((writerSchema.Tag != Type.Record) && (writerSchema.Tag != Type.Error)) return false;
 
             RecordSchema that = writerSchema as RecordSchema;
             return protect(() => true, () =>
@@ -329,15 +319,13 @@ namespace Avro
                             foreach (string alias in f.Aliases)
                             {
                                 f2 = that[alias];
-                                if (null != f2)
-                                    break;
+                                if (null != f2) break;
                             }
 
                     if (f2 == null && f.DefaultValue != null)
                         continue;         // Writer field missing, reader has default.
 
-                    if (f2 != null && f.Schema.CanRead(f2.Schema))
-                        continue;    // Both fields exist and are compatible.
+                    if (f2 != null && f.Schema.CanRead(f2.Schema)) continue;    // Both fields exist and are compatible.
                     return false;
                 }
                 return true;
@@ -370,19 +358,19 @@ namespace Avro
          * it could potenitally happen.
          * We do a linear seach for the marker as we don't expect the list to be very long.
          */
-
         private T protect<T>(Function<T> bypass, Function<T> main, RecordSchema that)
         {
             if (seen == null)
                 seen = new List<RecordSchemaPair>();
+
             else if (seen.Find((RecordSchemaPair rs) => rs.first == this && rs.second == that) != null)
                 return bypass();
 
             RecordSchemaPair p = new RecordSchemaPair(this, that);
             seen.Add(p);
-            try
-            { return main(); }
+            try { return main(); }
             finally { seen.Remove(p); }
         }
+
     }
 }

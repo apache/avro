@@ -24,7 +24,7 @@ using NUnit.Framework;
 namespace Avro.Test
 {
     [TestFixture]
-    internal class LogicalTypeTests
+    class LogicalTypeTests
     {
         [TestCase("1234.56")]
         [TestCase("-1234.56")]
@@ -151,7 +151,7 @@ namespace Avro.Test
             var timeMicroSchema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"time-micros\"}");
 
             var time = TimeSpan.Parse(s);
-
+            
             var avroTimeMilli = new TimeMillisecond();
             var avroTimeMicro = new TimeMicrosecond();
 
@@ -175,6 +175,7 @@ namespace Avro.Test
 
                 convertedTime = (TimeSpan)avroTimeMicro.ConvertToLogicalValue(avroTimeMicro.ConvertToBaseValue(time, timeMicroSchema), timeMicroSchema);
                 Assert.AreEqual(expectedTime, convertedTime);
+
             }
         }
 
@@ -189,7 +190,7 @@ namespace Avro.Test
 
             Assert.True(avroUuid.IsInstanceOfLogicalType(guid));
 
-            var converted = (Guid)avroUuid.ConvertToLogicalValue(avroUuid.ConvertToBaseValue(guid, schema), schema);
+            var converted = (Guid) avroUuid.ConvertToLogicalValue(avroUuid.ConvertToBaseValue(guid, schema), schema);
             Assert.AreEqual(guid, converted);
         }
     }

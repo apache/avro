@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -51,7 +50,7 @@ namespace Avro
         /// <summary>
         /// List of message objects representing the different schemas defined under the 'messages' attribute
         /// </summary>
-        public IDictionary<string, Message> Messages { get; set; }
+        public IDictionary<string,Message> Messages { get; set; }
 
         private byte[] md5;
 
@@ -85,14 +84,11 @@ namespace Avro
         /// <param name="messages">required list of messages</param>
         public Protocol(string name, string space,
                         string doc, IEnumerable<Schema> types,
-                        IDictionary<string, Message> messages)
+                        IDictionary<string,Message> messages)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name), "name cannot be null.");
-            if (null == types)
-                throw new ArgumentNullException(nameof(types), "types cannot be null.");
-            if (null == messages)
-                throw new ArgumentNullException(nameof(messages), "messages cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (null == types) throw new ArgumentNullException(nameof(types), "types cannot be null.");
+            if (null == messages) throw new ArgumentNullException(nameof(messages), "messages cannot be null.");
 
             this.Name = name;
             this.Namespace = space;
@@ -108,8 +104,7 @@ namespace Avro
         /// <returns>Protocol object</returns>
         public static Protocol Parse(string jstring)
         {
-            if (string.IsNullOrEmpty(jstring))
-                throw new ArgumentNullException("json", "json cannot be null.");
+            if (string.IsNullOrEmpty(jstring)) throw new ArgumentNullException("json", "json cannot be null.");
 
             JToken jtok = null;
             try
@@ -147,7 +142,7 @@ namespace Avro
                 }
             }
 
-            var messages = new Dictionary<string, Message>();
+            var messages = new Dictionary<string,Message>();
             JToken jmessages = jtok["messages"];
             if (null != jmessages)
             {
@@ -205,7 +200,7 @@ namespace Avro
             writer.WritePropertyName("messages");
             writer.WriteStartObject();
 
-            foreach (KeyValuePair<string, Message> message in this.Messages)
+            foreach (KeyValuePair<string,Message> message in this.Messages)
             {
                 writer.WritePropertyName(message.Key);
                 message.Value.writeJson(writer, names, this.Namespace);
@@ -222,10 +217,8 @@ namespace Avro
         /// <returns></returns>
         public override bool Equals(object obj)
         {
-            if (obj == this)
-                return true;
-            if (!(obj is Protocol))
-                return false;
+            if (obj == this) return true;
+            if (!(obj is Protocol)) return false;
 
             Protocol that = obj as Protocol;
 
@@ -244,11 +237,9 @@ namespace Avro
         /// <returns></returns>
         private bool TypesEquals(IList<Schema> that)
         {
-            if (Types.Count != that.Count)
-                return false;
+            if (Types.Count != that.Count) return false;
             foreach (Schema schema in Types)
-                if (!that.Contains(schema))
-                    return false;
+                if (!that.Contains(schema)) return false;
             return true;
         }
 
@@ -261,8 +252,7 @@ namespace Avro
         /// <returns></returns>
         private bool MessagesEquals(IDictionary<string, Message> that)
         {
-            if (Messages.Count != that.Count)
-                return false;
+            if (Messages.Count != that.Count) return false;
             foreach (KeyValuePair<string, Message> pair in Messages)
             {
                 if (!that.ContainsKey(pair.Key))

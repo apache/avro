@@ -89,19 +89,16 @@ namespace Avro
                     byte[] result = new byte[8];
                     for (int i = 0; i < 8; i++)
                     {
-                        result[i] = (byte)fp;
+                        result[i] = (byte) fp;
                         fp >>= 8;
                     }
                     return result;
-
                 case "MD5":
                     var md5 = System.Security.Cryptography.MD5.Create();
                     return md5.ComputeHash(data);
-
                 case "SHA-256":
                     var sha256 = System.Security.Cryptography.SHA256.Create();
                     return sha256.ComputeHash(data);
-
                 default:
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
                         "Unsupported fingerprint computation algorithm ({0})", fpName));
@@ -142,7 +139,7 @@ namespace Avro
 
             foreach (var b in data)
             {
-                result = ((long)(((ulong)result) >> 8)) ^ Fp64.FpTable[(int)(result ^ b) & 0xff];
+                result = ((long)(((ulong)result) >> 8)) ^ Fp64.FpTable[(int) (result ^ b) & 0xff];
             }
             return result;
         }
@@ -156,7 +153,7 @@ namespace Avro
                 case Schema.Type.Union:
                     UnionSchema us = s as UnionSchema;
                     o.Append('[');
-                    foreach (Schema b in us.Schemas)
+                    foreach(Schema b in us.Schemas)
                     {
                         if (!firstTime)
                         {
@@ -175,7 +172,7 @@ namespace Avro
                     o.Append("{\"type\":\"").Append(Schema.GetTypeString(s.Tag)).Append('\"');
                     if (st == Schema.Type.Array)
                     {
-                        ArraySchema arraySchema = s as ArraySchema;
+                        ArraySchema arraySchema  = s as ArraySchema;
                         Build(env, arraySchema.ItemSchema, o.Append(",\"items\":"));
                     }
                     else
@@ -267,7 +264,7 @@ namespace Avro
                         long mask = -(fp & 1L);
 
 #pragma warning disable CS0618 // Type or member is obsolete - remove with Empty64 made private.
-                        fp = ((long)(((ulong)fp) >> 1)) ^ (Empty64 & mask);
+                        fp = ((long) (((ulong) fp) >> 1)) ^ (Empty64 & mask);
 #pragma warning restore CS0618 // Type or member is obsolete
                     }
                     FpTable[i] = fp;

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -45,7 +44,7 @@ namespace Avro.Generic
         private readonly ArrayAccess _arrayAccess;
         private readonly MapAccess _mapAccess;
 
-        private readonly Dictionary<RecordSchema, WriteItem> _recordWriters = new Dictionary<RecordSchema, WriteItem>();
+        private readonly Dictionary<RecordSchema,WriteItem> _recordWriters = new Dictionary<RecordSchema,WriteItem>();
 
         /// <inheritdoc/>
         public void Write(T datum, Encoder encoder)
@@ -67,56 +66,41 @@ namespace Avro.Generic
             _writer = ResolveWriter(schema);
         }
 
-        private WriteItem ResolveWriter(Schema schema)
+        private WriteItem ResolveWriter( Schema schema )
         {
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
                     return WriteNull;
-
                 case Schema.Type.Boolean:
-                    return (v, e) => Write<bool>(v, schema.Tag, e.WriteBoolean);
-
+                    return (v, e) => Write<bool>( v, schema.Tag, e.WriteBoolean );
                 case Schema.Type.Int:
-                    return (v, e) => Write<int>(v, schema.Tag, e.WriteInt);
-
+                    return (v, e) => Write<int>( v, schema.Tag, e.WriteInt );
                 case Schema.Type.Long:
-                    return (v, e) => Write<long>(v, schema.Tag, e.WriteLong);
-
+                    return (v, e) => Write<long>( v, schema.Tag, e.WriteLong );
                 case Schema.Type.Float:
-                    return (v, e) => Write<float>(v, schema.Tag, e.WriteFloat);
-
+                    return (v, e) => Write<float>( v, schema.Tag, e.WriteFloat );
                 case Schema.Type.Double:
-                    return (v, e) => Write<double>(v, schema.Tag, e.WriteDouble);
-
+                    return (v, e) => Write<double>( v, schema.Tag, e.WriteDouble );
                 case Schema.Type.String:
-                    return (v, e) => Write<string>(v, schema.Tag, e.WriteString);
-
+                    return (v, e) => Write<string>( v, schema.Tag, e.WriteString );
                 case Schema.Type.Bytes:
-                    return (v, e) => Write<byte[]>(v, schema.Tag, e.WriteBytes);
-
+                    return (v, e) => Write<byte[]>( v, schema.Tag, e.WriteBytes );
                 case Schema.Type.Error:
                 case Schema.Type.Record:
-                    return ResolveRecord((RecordSchema)schema);
-
+                    return ResolveRecord((RecordSchema) schema);
                 case Schema.Type.Enumeration:
                     return ResolveEnum(schema as EnumSchema);
-
                 case Schema.Type.Fixed:
                     return (v, e) => WriteFixed(schema as FixedSchema, v, e);
-
                 case Schema.Type.Array:
                     return ResolveArray((ArraySchema)schema);
-
                 case Schema.Type.Map:
                     return ResolveMap((MapSchema)schema);
-
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)schema);
-
                 case Schema.Type.Logical:
                     return ResolveLogical((LogicalSchema)schema);
-
                 default:
                     return (v, e) => Error(schema, v);
             }
@@ -129,8 +113,7 @@ namespace Avro.Generic
         /// <param name="encoder">The encoder to use while serialization</param>
         protected void WriteNull(object value, Encoder encoder)
         {
-            if (value != null)
-                throw TypeMismatch(value, "null", "null");
+            if (value != null) throw TypeMismatch(value, "null", "null");
         }
 
         /// <summary>
@@ -142,10 +125,10 @@ namespace Avro.Generic
         /// <param name="writer">The writer which should be used to write the given type.</param>
         protected void Write<TValue>(object value, Schema.Type tag, Writer<TValue> writer)
         {
-            if (!(value is TValue))
-                throw TypeMismatch(value, tag.ToString(), typeof(TValue).ToString());
+            if (!(value is TValue)) throw TypeMismatch(value, tag.ToString(), typeof(TValue).ToString());
             writer((TValue)value);
         }
+
 
         /// <summary>
         /// Serializes a record using the given RecordSchema. It uses GetField method
@@ -168,10 +151,10 @@ namespace Avro.Generic
             foreach (Field field in recordSchema)
             {
                 var record = new RecordFieldWriter
-                {
-                    WriteField = ResolveWriter(field.Schema),
-                    Field = field
-                };
+                                 {
+                                     WriteField = ResolveWriter(field.Schema),
+                                     Field = field
+                                 };
                 writeSteps[index++] = record;
             }
 
@@ -219,7 +202,7 @@ namespace Avro.Generic
         /// <param name="fieldPos">The position of field in the record</param>
         /// <param name="writer">Used to write the field value to the encoder</param>
         /// <param name="encoder">Encoder to write to</param>
-        protected abstract void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder);
+        protected abstract void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder );
 
         /// <summary>
         /// Serializes an enumeration.
@@ -238,7 +221,7 @@ namespace Avro.Generic
         protected WriteItem ResolveArray(ArraySchema schema)
         {
             var itemWriter = ResolveWriter(schema.ItemSchema);
-            return (d, e) => WriteArray(itemWriter, d, e);
+            return (d,e) => WriteArray(itemWriter, d, e);
         }
 
         private void WriteArray(WriteItem itemWriter, object array, Encoder encoder)
@@ -284,6 +267,7 @@ namespace Avro.Generic
             encoder.WriteMapEnd();
         }
 
+
         private WriteItem ResolveUnion(UnionSchema unionSchema)
         {
             var branchSchemas = unionSchema.Schemas.ToArray();
@@ -293,6 +277,7 @@ namespace Avro.Generic
             {
                 branchWriters[branchIndex++] = ResolveWriter(branch);
             }
+
 
             return (v, e) => WriteUnion(unionSchema, branchSchemas, branchWriters, v, e);
         }
@@ -331,8 +316,7 @@ namespace Avro.Generic
         {
             for (int i = 0; i < branchSchemas.Length; i++)
             {
-                if (UnionBranchMatches(branchSchemas[i], obj))
-                    return i;
+                if (UnionBranchMatches(branchSchemas[i], obj)) return i;
             }
             throw new AvroException("Cannot find a match for " + obj.GetType() + " in " + us);
         }
@@ -356,7 +340,7 @@ namespace Avro.Generic
         /// <returns>A new <see cref="AvroException"/> indicating a type mismatch.</returns>
         protected static AvroException TypeMismatch(object obj, string schemaType, string type)
         {
-            return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()));
+            return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()) );
         }
 
         private void Error(Schema schema, Object value)
@@ -461,14 +445,14 @@ namespace Avro.Generic
             {
                 if (value as IDictionary == null)
                 {
-                    throw TypeMismatch(value, "map", "IDictionary");
+                    throw TypeMismatch( value, "map", "IDictionary" );
                 }
             }
 
             /// <inheritdoc/>
             public long GetMapSize(object value)
             {
-                return ((IDictionary)value).Count;
+                return ((IDictionary) value).Count;
             }
 
             /// <inheritdoc/>

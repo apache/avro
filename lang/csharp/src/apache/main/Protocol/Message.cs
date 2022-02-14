@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using Newtonsoft.Json.Linq;
 
@@ -76,8 +75,7 @@ namespace Avro
         /// </param>
         public Message(string name, string doc, RecordSchema request, Schema response, UnionSchema error, bool? oneway)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
             this.Request = request;
             this.Response = response;
             this.Error = error;
@@ -91,7 +89,7 @@ namespace Avro
             }
             else
             {
-                this.SupportedErrors = (UnionSchema)Schema.Parse("[\"string\"]");
+                this.SupportedErrors = (UnionSchema) Schema.Parse("[\"string\"]");
 
                 if (error != null)
                 {
@@ -184,16 +182,14 @@ namespace Avro
         /// <returns></returns>
         public override bool Equals(Object obj)
         {
-            if (obj == this)
-                return true;
-            if (!(obj is Message))
-                return false;
+          if (obj == this) return true;
+          if (!(obj is Message)) return false;
 
-            Message that = obj as Message;
-            return this.Name.Equals(that.Name, StringComparison.Ordinal) &&
-                   this.Request.Equals(that.Request) &&
-                   areEqual(this.Response, that.Response) &&
-                   areEqual(this.Error, that.Error);
+          Message that = obj as Message;
+          return this.Name.Equals(that.Name, StringComparison.Ordinal) &&
+                 this.Request.Equals(that.Request) &&
+                 areEqual(this.Response, that.Response) &&
+                 areEqual(this.Error, that.Error);
         }
 
         /// <summary>

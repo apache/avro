@@ -15,18 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Collections.Generic;
 using System.IO;
 
 namespace Avro.IO
 {
     /// <summary>
-    /// Utility to collect data written to an <see cref="OutputStream" /> in
-    /// <see cref="MemoryStream" />s.
+    /// Utility to collect data written to an <see cref="OutputStream"/> in
+    /// <see cref="MemoryStream"/>s.
     /// </summary>
-    /// <seealso cref="OutputStream" />
-    /// <seealso cref="ByteBufferInputStream" />
+    /// <seealso cref="ByteBufferInputStream"/>
     public class ByteBufferOutputStream : OutputStream
     {
         /// <summary>
@@ -44,7 +42,7 @@ namespace Avro.IO
 
         private void Reset()
         {
-            _buffers = new List<MemoryStream> { CreateBuffer() };
+            _buffers = new List<MemoryStream> {CreateBuffer()};
         }
 
         private List<MemoryStream> _buffers;
@@ -83,23 +81,23 @@ namespace Avro.IO
         }
 
         /// <inheritdoc/>
-        public override void Write(byte[] buffer, int offset, int count)
+        public override void Write(byte[] b, int off, int len)
         {
-            MemoryStream nextBuffer = _buffers[_buffers.Count - 1];
-            int remaining = (int)(nextBuffer.Length - nextBuffer.Position);
-            while (count > remaining)
+            var buffer = _buffers[_buffers.Count -1];
+            var remaining = (int) (buffer.Length - buffer.Position);
+            while (len > remaining)
             {
-                nextBuffer.Write(buffer, offset, remaining);
-                count -= remaining;
-                offset += remaining;
+                buffer.Write(b, off, remaining);
+                len -= remaining;
+                off += remaining;
 
-                nextBuffer = CreateBuffer();
-                _buffers.Add(nextBuffer);
+                buffer = CreateBuffer();
+                _buffers.Add(buffer);
 
-                remaining = (int)nextBuffer.Length;
+                remaining = (int) buffer.Length;
             }
 
-            nextBuffer.Write(buffer, offset, count);
+            buffer.Write(b, off, len);
         }
 
         /// <summary>

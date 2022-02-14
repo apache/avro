@@ -72,11 +72,11 @@ namespace Avro.File
         /// <summary>
         /// Codecs must implement an equals() method.
         /// </summary>
-        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
+        /// <param name="other">The <see cref="object" /> to compare with this instance.</param>
         /// <returns>
         ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public abstract override bool Equals(object obj);
+        public abstract override bool Equals(object other);
 
         /// <summary>
         /// Codecs must implement a HashCode() method that is
@@ -138,7 +138,6 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
-
                 default:
                     return new NullCodec();
             }
@@ -164,7 +163,6 @@ namespace Avro.File
             {
                 case DataFileConstants.DeflateCodec:
                     return new DeflateCodec();
-
                 default:
                     return new NullCodec();
             }

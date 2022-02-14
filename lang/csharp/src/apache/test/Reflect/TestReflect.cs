@@ -18,23 +18,24 @@
 
 using System.Collections;
 using System.IO;
+using NUnit.Framework;
 using Avro.IO;
 using Avro.Reflect;
-using NUnit.Framework;
 
 namespace Avro.Test
 {
     [TestFixture]
-    internal class TestReflect
+    class TestReflect
     {
-        private enum EnumResolutionEnum
+
+        enum EnumResolutionEnum
         {
             THIRD,
             FIRST,
             SECOND
         }
 
-        private class EnumResolutionRecord
+        class EnumResolutionRecord
         {
             public EnumResolutionEnum enumType { get; set; }
         }
@@ -49,8 +50,7 @@ namespace Avro.Test
 
             Schema readerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
                                         "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
-                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
-            ;
+                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");;
             testRecord.enumType = EnumResolutionEnum.SECOND;
 
             // serialize
@@ -58,7 +58,7 @@ namespace Avro.Test
 
             // deserialize
             var rec2 = deserialize<EnumResolutionRecord>(stream, writerSchema, readerSchema);
-            Assert.AreEqual(EnumResolutionEnum.SECOND, rec2.enumType);
+            Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
         }
 
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class
@@ -108,7 +108,7 @@ namespace Avro.Test
 
         private static void AssertReflectRecordEqual(Schema schema1, object rec1, Schema schema2, object rec2, ClassCache cache)
         {
-            var recordSchema = (RecordSchema)schema1;
+            var recordSchema = (RecordSchema) schema1;
             foreach (var f in recordSchema.Fields)
             {
                 var rec1Val = cache.GetClass(recordSchema).GetValue(rec1, f);
@@ -120,10 +120,10 @@ namespace Avro.Test
                 else if (rec1Val is IList)
                 {
                     var schema1List = f.Schema as ArraySchema;
-                    var rec1List = (IList)rec1Val;
-                    if (rec1List.Count > 0)
+                    var rec1List = (IList) rec1Val;
+                    if( rec1List.Count > 0 )
                     {
-                        var rec2List = (IList)rec2Val;
+                        var rec2List = (IList) rec2Val;
                         Assert.AreEqual(rec1List.Count, rec2List.Count);
                         for (int j = 0; j < rec1List.Count; j++)
                         {
@@ -138,8 +138,8 @@ namespace Avro.Test
                 else if (rec1Val is IDictionary)
                 {
                     var schema1Map = f.Schema as MapSchema;
-                    var rec1Dict = (IDictionary)rec1Val;
-                    var rec2Dict = (IDictionary)rec2Val;
+                    var rec1Dict = (IDictionary) rec1Val;
+                    var rec2Dict = (IDictionary) rec2Val;
                     Assert.AreEqual(rec2Dict.Count, rec2Dict.Count);
                     foreach (var key in rec1Dict.Keys)
                     {

@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Avro
 {
+
     /// <summary>
     /// Class for fields defined in a record
     /// </summary>
@@ -61,12 +61,10 @@ namespace Avro
         public readonly IList<string> aliases;
 
 #pragma warning disable CS0618 // Type or member is obsolete
-
         /// <summary>
         /// List of aliases for the field name.
         /// </summary>
         public IList<string> Aliases => aliases;
-
 #pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
@@ -126,10 +124,8 @@ namespace Avro
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name), "name cannot be null.");
-            if (null == schema)
-                throw new ArgumentNullException("type", "type cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (null == schema) throw new ArgumentNullException("type", "type cannot be null.");
             this.Schema = schema;
             this.Name = name;
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -215,8 +211,7 @@ namespace Avro
         /// <returns>custom property value</returns>
         public string GetProperty(string key)
         {
-            if (null == this.Props)
-                return null;
+            if (null == this.Props) return null;
             string v;
             return this.Props.TryGetValue(key, out v) ? v : null;
         }
@@ -228,8 +223,7 @@ namespace Avro
         /// <returns>true if two fields are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this)
-                return true;
+            if (obj == this) return true;
             if (obj != null && obj is Field)
             {
                 Field that = obj as Field;

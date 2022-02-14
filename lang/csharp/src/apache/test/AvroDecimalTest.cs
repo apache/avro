@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using NUnit.Framework;
 
 namespace Avro.test
 {
     [TestFixture]
-    internal class AvroDecimalTest
+    class AvroDecimalTest
     {
         [TestCase(1)]
         [TestCase(1000)]
@@ -38,7 +37,7 @@ namespace Avro.test
         {
             var valueString = value.ToString();
 
-            var avroDecimal = new AvroDecimal(value);
+            var avroDecimal = new AvroDecimal(value);            
             var avroDecimalString = avroDecimal.ToString();
 
             Assert.AreEqual(valueString, avroDecimalString);

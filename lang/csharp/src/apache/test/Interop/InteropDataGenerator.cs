@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -26,7 +25,7 @@ namespace Avro.Test.Interop
 {
     public class InteropDataGenerator
     {
-        private static void GenerateInteropData(string schemaPath, string outputDir)
+        static void GenerateInteropData(string schemaPath, string outputDir)
         {
             RecordSchema schema = null;
             using (var reader = new StreamReader(schemaPath))
@@ -92,7 +91,7 @@ namespace Avro.Test.Interop
             }
         }
 
-        private static void Main(string[] args)
+        static void Main(string[] args)
         {
             GenerateInteropData(args[0], args[1]);
         }

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -29,7 +29,7 @@ namespace Avro
         /// <summary>
         /// Schema for the array 'type' attribute
         /// </summary>
-        public Schema ItemSchema { get; set; }
+        public Schema ItemSchema { get; set;  }
 
         /// <summary>
         /// Static class to return a new instance of ArraySchema
@@ -42,8 +42,7 @@ namespace Avro
         internal static ArraySchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jitem = jtok["items"];
-            if (null == jitem)
-                throw new AvroTypeException($"Array does not have 'items' at '{jtok.Path}'");
+            if (null == jitem) throw new AvroTypeException($"Array does not have 'items' at '{jtok.Path}'");
             var schema = Schema.ParseJson(jitem, names, encspace);
             return new ArraySchema(schema, props);
         }
@@ -55,8 +54,7 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
-            if (null == items)
-                throw new ArgumentNullException(nameof(items));
+            if (null == items) throw new ArgumentNullException(nameof(items));
             this.ItemSchema = items;
         }
 
@@ -79,8 +77,7 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema.Tag != Tag)
-                return false;
+            if (writerSchema.Tag != Tag) return false;
 
             ArraySchema that = writerSchema as ArraySchema;
             return ItemSchema.CanRead(that.ItemSchema);
@@ -93,8 +90,7 @@ namespace Avro
         /// <returns>true two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj)
-                return true;
+            if (this == obj) return true;
 
             if (obj != null && obj is ArraySchema)
             {

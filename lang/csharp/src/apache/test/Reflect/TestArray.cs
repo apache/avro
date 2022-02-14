@@ -17,16 +17,18 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using Avro.IO;
 using Avro.Reflect;
 using NUnit.Framework;
+using System.Collections;
 
 namespace Avro.Test
 {
+
+
     [TestFixture]
     public class TestArray
     {
@@ -59,11 +61,13 @@ namespace Avro.Test
             }
         }";
 
+
+
         [TestCase]
         public void ListTest()
         {
             var schema = Schema.Parse(_simpleList);
-            var fixedRecWrite = new List<string>() { "value" };
+            var fixedRecWrite = new List<string>() {"value"};
 
             var writer = new ReflectWriter<List<string>>(schema);
             var reader = new ReflectReader<List<string>>(schema, schema);
@@ -74,7 +78,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 var fixedRecRead = reader.Read(new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.Count == 1);
-                Assert.AreEqual(fixedRecWrite[0], fixedRecRead[0]);
+                Assert.AreEqual(fixedRecWrite[0],fixedRecRead[0]);
             }
         }
 
@@ -82,7 +86,7 @@ namespace Avro.Test
         public void ListRecTest()
         {
             var schema = Schema.Parse(_recordList);
-            var fixedRecWrite = new List<ListRec>() { new ListRec() { S = "hello" } };
+            var fixedRecWrite = new List<ListRec>() { new ListRec() { S = "hello"}};
 
             var writer = new ReflectWriter<List<ListRec>>(schema);
             var reader = new ReflectReader<List<ListRec>>(schema, schema);
@@ -93,12 +97,13 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 var fixedRecRead = reader.Read(new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.Count == 1);
-                Assert.AreEqual(fixedRecWrite[0].S, fixedRecRead[0].S);
+                Assert.AreEqual(fixedRecWrite[0].S,fixedRecRead[0].S);
             }
         }
 
         public class ConcurrentQueueHelper<T> : ArrayHelper
         {
+
             /// <summary>
             /// Return the number of elements in the array.
             /// </summary>
@@ -108,7 +113,6 @@ namespace Avro.Test
                 ConcurrentQueue<T> e = (ConcurrentQueue<T>)Enumerable;
                 return e.Count;
             }
-
             /// <summary>
             /// Add an element to the array.
             /// </summary>
@@ -118,7 +122,6 @@ namespace Avro.Test
                 ConcurrentQueue<T> e = (ConcurrentQueue<T>)Enumerable;
                 e.Enqueue((T)o);
             }
-
             /// <summary>
             /// Clear the array.
             /// </summary>
@@ -156,12 +159,13 @@ namespace Avro.Test
             public string S { get; set; }
         }
 
+
         [TestCase]
         public void ConcurrentQueueTest()
         {
             var schema = Schema.Parse(_recordList);
             var fixedRecWrite = new ConcurrentQueue<ConcurrentQueueRec>();
-            fixedRecWrite.Enqueue(new ConcurrentQueueRec() { S = "hello" });
+            fixedRecWrite.Enqueue(new ConcurrentQueueRec() { S = "hello"});
             var cache = new ClassCache();
             cache.AddArrayHelper("arrayOfA", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
             var writer = new ReflectWriter<ConcurrentQueue<ConcurrentQueueRec>>(schema, cache);
@@ -179,7 +183,7 @@ namespace Avro.Test
                 ConcurrentQueueRec rRec = null;
                 fixedRecRead.TryDequeue(out rRec);
                 Assert.NotNull(rRec);
-                Assert.AreEqual(wRec.S, rRec.S);
+                Assert.AreEqual(wRec.S,rRec.S);
             }
         }
 
@@ -207,10 +211,9 @@ namespace Avro.Test
 
         private class MultiList
         {
-            public List<string> one { get; set; }
-            public ConcurrentQueue<string> two { get; set; }
+            public List<string> one {get;set;}
+            public ConcurrentQueue<string> two {get;set;}
         }
-
         [TestCase]
         public void MultiQueueTest()
         {

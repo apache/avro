@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Linq;
 using Newtonsoft.Json;
@@ -55,28 +54,20 @@ namespace Avro
             {
                 case "null":
                     return new PrimitiveSchema(Schema.Type.Null, props);
-
                 case "boolean":
                     return new PrimitiveSchema(Schema.Type.Boolean, props);
-
                 case "int":
                     return new PrimitiveSchema(Schema.Type.Int, props);
-
                 case "long":
                     return new PrimitiveSchema(Schema.Type.Long, props);
-
                 case "float":
                     return new PrimitiveSchema(Schema.Type.Float, props);
-
                 case "double":
                     return new PrimitiveSchema(Schema.Type.Double, props);
-
                 case "bytes":
                     return new PrimitiveSchema(Schema.Type.Bytes, props);
-
                 case "string":
                     return new PrimitiveSchema(Schema.Type.String, props);
-
                 default:
                     return null;
             }
@@ -90,12 +81,12 @@ namespace Avro
         /// <param name="encspace"></param>
         protected internal override void WriteJson(JsonTextWriter w, SchemaNames names, string encspace)
         {
-            if (this.Props?.Any() == true)
+            if(this.Props?.Any() == true)
             {
                 w.WriteStartObject();
                 w.WritePropertyName("type");
                 w.WriteValue(Name);
-                foreach (var prop in Props)
+                foreach(var prop in Props)
                 {
                     w.WritePropertyName(prop.Key);
                     w.WriteRawValue(prop.Value);
@@ -115,20 +106,16 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if (writerSchema is UnionSchema || Tag == writerSchema.Tag)
-                return true;
+            if (writerSchema is UnionSchema || Tag == writerSchema.Tag) return true;
             Type t = writerSchema.Tag;
             switch (Tag)
             {
                 case Type.Double:
                     return t == Type.Int || t == Type.Long || t == Type.Float;
-
                 case Type.Float:
                     return t == Type.Int || t == Type.Long;
-
                 case Type.Long:
                     return t == Type.Int;
-
                 default:
                     return false;
             }
@@ -141,8 +128,7 @@ namespace Avro
         /// <returns>true two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj)
-                return true;
+            if (this == obj) return true;
 
             if (obj != null && obj is PrimitiveSchema)
             {

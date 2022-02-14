@@ -78,8 +78,8 @@ namespace Avro.Test.Specific.@return
         {
             switch (fieldPos)
             {
-                case 0: this.id = (long)fieldValue; break;
-                case 1: this.name = (string)fieldValue; break;
+                case 0: this.id = (System.Int64)fieldValue; break;
+                case 1: this.name = (System.String)fieldValue; break;
                 default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Put()");
             };
         }

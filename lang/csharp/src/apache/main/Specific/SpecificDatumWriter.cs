@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections;
 using Avro.Generic;
@@ -40,7 +39,7 @@ namespace Avro.Specific
         /// <inheritdoc/>
         protected override void WriteRecordFields(object recordObj, RecordFieldWriter[] writers, Encoder encoder)
         {
-            var record = (ISpecificRecord)recordObj;
+            var record = (ISpecificRecord) recordObj;
             for (int i = 0; i < writers.Length; i++)
             {
                 var writer = writers[i];
@@ -68,9 +67,9 @@ namespace Avro.Specific
 
             var enumNames = Enum.GetNames(type);
             var translator = new int[enumNames.Length];
-            for (int i = 0; i < enumNames.Length; i++)
+            for(int i = 0; i < enumNames.Length; i++)
             {
-                if (es.Contains(enumNames[i]))
+                if(es.Contains(enumNames[i]))
                 {
                     translator[i] = es.Ordinal(enumNames[i]);
                 }
@@ -80,11 +79,11 @@ namespace Avro.Specific
                 }
             }
 
-            return (v, e) =>
+            return (v,e) =>
                        {
-                           if (v == null)
-                               throw new AvroTypeException("value is null in SpecificDefaultWriter.WriteEnum");
-                           if (v.GetType() == type)
+                           if(v == null)
+                                throw new AvroTypeException("value is null in SpecificDefaultWriter.WriteEnum");
+                           if(v.GetType() == type)
                            {
                                int translated = translator[(int)v];
                                if (translated == -1)
@@ -114,71 +113,56 @@ namespace Avro.Specific
         }
 
         /// <inheritdoc/>
-        protected override bool UnionBranchMatches(Schema sc, object obj)
+        protected override bool UnionBranchMatches( Schema sc, object obj )
         {
-            if (obj == null && sc.Tag != Avro.Schema.Type.Null)
-                return false;
+            if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;
             switch (sc.Tag)
             {
                 case Schema.Type.Null:
                     return obj == null;
-
                 case Schema.Type.Boolean:
                     return obj is bool;
-
                 case Schema.Type.Int:
                     return obj is int;
-
                 case Schema.Type.Long:
                     return obj is long;
-
                 case Schema.Type.Float:
                     return obj is float;
-
                 case Schema.Type.Double:
                     return obj is double;
-
                 case Schema.Type.Bytes:
                     return obj is byte[];
-
                 case Schema.Type.String:
                     return obj is string;
-
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return obj is ISpecificRecord &&
                            ((obj as ISpecificRecord).Schema as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
-
                 case Schema.Type.Enumeration:
                     return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString());
-
                 case Schema.Type.Array:
                     return obj is System.Collections.IList;
-
                 case Schema.Type.Map:
                     return obj is System.Collections.IDictionary;
-
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
                     return obj is SpecificFixed &&
                            ((obj as SpecificFixed).Schema as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
-
                 case Schema.Type.Logical:
                     return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
-
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }
         }
 
-        private class SpecificArrayAccess : ArrayAccess
+        class SpecificArrayAccess : ArrayAccess
         {
-            public void EnsureArrayObject(object value)
+            public void EnsureArrayObject( object value )
             {
-                if (!(value is System.Collections.IList))
+                if( !( value is System.Collections.IList ) )
                 {
-                    throw new AvroTypeException("Array does not implement non-generic IList");
+                    throw new AvroTypeException( "Array does not implement non-generic IList" );
                 }
             }
 
@@ -189,8 +173,8 @@ namespace Avro.Specific
 
             public void WriteArrayValues(object array, WriteItem valueWriter, Encoder encoder)
             {
-                var list = (IList)array;
-                for (int i = 0; i < list.Count; i++)
+                var list = (IList) array;
+                for (int i = 0; i < list.Count; i++ )
                 {
                     valueWriter(list[i], encoder);
                 }

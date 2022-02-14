@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
@@ -45,15 +44,13 @@ namespace Avro.Generic
 
         // read a specific field from a decoder
         private delegate object DecoderRead(Decoder dec);
-
         // skip specific field(s) from a decoder
         private delegate void DecoderSkip(Decoder dec);
-
         // read & set fields on a record
         private delegate void FieldReader(object record, Decoder decoder);
 
         private readonly ReadItem _reader;
-        private readonly Dictionary<SchemaPair, ReadItem> _recordReaders = new Dictionary<SchemaPair, ReadItem>();
+        private readonly Dictionary<SchemaPair,ReadItem> _recordReaders = new Dictionary<SchemaPair,ReadItem>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PreresolvingDatumReader{T}"/> class.
@@ -123,23 +120,18 @@ namespace Avro.Generic
             {
                 case Schema.Type.Null:
                     return ReadNull;
-
                 case Schema.Type.Boolean:
                     return ReadBoolean;
-
                 case Schema.Type.Int:
                     {
                         switch (readerSchema.Tag)
                         {
                             case Schema.Type.Long:
-                                return Read(d => (long)d.ReadInt());
-
+                                return Read(d => (long) d.ReadInt());
                             case Schema.Type.Float:
-                                return Read(d => (float)d.ReadInt());
-
+                                return Read(d => (float) d.ReadInt());
                             case Schema.Type.Double:
-                                return Read(d => (double)d.ReadInt());
-
+                                return Read(d => (double) d.ReadInt());
                             default:
                                 return Read(d => d.ReadInt());
                         }
@@ -149,11 +141,9 @@ namespace Avro.Generic
                         switch (readerSchema.Tag)
                         {
                             case Schema.Type.Float:
-                                return Read(d => (float)d.ReadLong());
-
+                                return Read(d => (float) d.ReadLong());
                             case Schema.Type.Double:
-                                return Read(d => (double)d.ReadLong());
-
+                                return Read(d => (double) d.ReadLong());
                             default:
                                 return Read(d => d.ReadLong());
                         }
@@ -163,43 +153,32 @@ namespace Avro.Generic
                         switch (readerSchema.Tag)
                         {
                             case Schema.Type.Double:
-                                return Read(d => (double)d.ReadFloat());
-
+                                return Read(d => (double) d.ReadFloat());
                             default:
                                 return Read(d => d.ReadFloat());
                         }
                     }
                 case Schema.Type.Double:
                     return Read(d => d.ReadDouble());
-
                 case Schema.Type.String:
                     return Read(d => d.ReadString());
-
                 case Schema.Type.Bytes:
                     return Read(d => d.ReadBytes());
-
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return ResolveRecord((RecordSchema)writerSchema, (RecordSchema)readerSchema);
-
                 case Schema.Type.Enumeration:
                     return ResolveEnum((EnumSchema)writerSchema, (EnumSchema)readerSchema);
-
                 case Schema.Type.Fixed:
                     return ResolveFixed((FixedSchema)writerSchema, (FixedSchema)readerSchema);
-
                 case Schema.Type.Array:
                     return ResolveArray((ArraySchema)writerSchema, (ArraySchema)readerSchema);
-
                 case Schema.Type.Map:
                     return ResolveMap((MapSchema)writerSchema, (MapSchema)readerSchema);
-
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)writerSchema, readerSchema);
-
                 case Schema.Type.Logical:
                     return ResolveLogical((LogicalSchema)writerSchema, (LogicalSchema)readerSchema);
-
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -219,7 +198,7 @@ namespace Avro.Generic
             var readerDefaultOrdinal = null != readerSchema.Default ? readerSchema.Ordinal(readerSchema.Default) : -1;
 
             foreach (var symbol in writerSchema.Symbols)
-            {
+            { 
                 var writerOrdinal = writerSchema.Ordinal(symbol);
                 if (readerSchema.Contains(symbol))
                 {
@@ -272,9 +251,9 @@ namespace Avro.Generic
                 if (readerSchema.TryGetFieldAlias(wf.Name, out rf))
                 {
                     var readItem = ResolveReader(wf.Schema, rf.Schema);
-                    if (IsReusable(rf.Schema.Tag))
+                    if(IsReusable(rf.Schema.Tag))
                     {
-                        readSteps.Add((rec, d) => recordAccess.AddField(rec, rf.Name, rf.Pos,
+                        readSteps.Add((rec,d) => recordAccess.AddField(rec, rf.Name, rf.Pos,
                             readItem(recordAccess.GetField(rec, rf.Name, rf.Pos), d)));
                     }
                     else
@@ -293,8 +272,7 @@ namespace Avro.Generic
             // fill in defaults for any reader fields not in the writer schema
             foreach (Field rf in readerSchema)
             {
-                if (writerSchema.Contains(rf.Name))
-                    continue;
+                if (writerSchema.Contains(rf.Name)) continue;
 
                 var defaultStream = new MemoryStream();
                 var defaultEncoder = new BinaryEncoder(defaultStream);
@@ -302,16 +280,16 @@ namespace Avro.Generic
                 defaultStream.Position = 0; // reset for writing
                 Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
                 defaultStream.Flush();
-                var defaultBytes = defaultStream.ToArray();
+	            var defaultBytes = defaultStream.ToArray();
 
                 var readItem = ResolveReader(rf.Schema, rf.Schema);
 
                 var rfInstance = rf;
-                if (IsReusable(rf.Schema.Tag))
+                if(IsReusable(rf.Schema.Tag))
                 {
                     readSteps.Add((rec, d) => recordAccess.AddField(rec, rfInstance.Name, rfInstance.Pos,
                         readItem(recordAccess.GetField(rec, rfInstance.Name, rfInstance.Pos),
-                            new BinaryDecoder(new MemoryStream(defaultBytes)))));
+                            new BinaryDecoder(new MemoryStream( defaultBytes)))));
                 }
                 else
                 {
@@ -324,13 +302,12 @@ namespace Avro.Generic
             return recordReader;
         }
 
-        private object ReadRecord(object reuse, Decoder decoder, RecordAccess recordAccess, IEnumerable<FieldReader> readSteps)
+        private object ReadRecord(object reuse, Decoder decoder, RecordAccess recordAccess, IEnumerable<FieldReader> readSteps )
         {
             var rec = recordAccess.CreateRecord(reuse);
             foreach (FieldReader fr in readSteps)
             {
                 fr(rec, decoder);
-
                 // TODO: on exception, report offending field
             }
             return rec;
@@ -346,11 +323,11 @@ namespace Avro.Generic
 
                 if (readerSchema is UnionSchema)
                 {
-                    var unionReader = (UnionSchema)readerSchema;
+                    var unionReader = (UnionSchema) readerSchema;
                     var readerBranch = unionReader.MatchingBranch(writerBranch);
                     if (readerBranch == -1)
                     {
-                        lookup[i] = (r, d) => { throw new AvroException("No matching schema for " + writerBranch + " in " + unionReader); };
+                        lookup[i] = (r, d) => { throw new AvroException( "No matching schema for " + writerBranch + " in " + unionReader ); };
                     }
                     else
                     {
@@ -361,7 +338,7 @@ namespace Avro.Generic
                 {
                     if (!readerSchema.CanRead(writerBranch))
                     {
-                        lookup[i] = (r, d) => { throw new AvroException("Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema); };
+                        lookup[i] = (r, d) => { throw new AvroException( "Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema ); };
                     }
                     else
                     {
@@ -386,7 +363,7 @@ namespace Avro.Generic
             var reader = ResolveReader(ws, rs);
             var mapAccess = GetMapAccess(readerSchema);
 
-            return (r, d) => ReadMap(r, d, mapAccess, reader);
+            return (r,d) => ReadMap(r, d, mapAccess, reader);
         }
 
         private object ReadMap(object reuse, Decoder decoder, MapAccess mapAccess, ReadItem valueReader)
@@ -455,8 +432,7 @@ namespace Avro.Generic
         protected static Schema FindBranch(UnionSchema us, Schema s)
         {
             int index = us.MatchingBranch(s);
-            if (index >= 0)
-                return us[index];
+            if (index >= 0) return us[index];
             throw new AvroException("No matching schema for " + s + " in " + us);
         }
 
@@ -482,50 +458,38 @@ namespace Avro.Generic
             {
                 case Schema.Type.Null:
                     return d => d.SkipNull();
-
                 case Schema.Type.Boolean:
                     return d => d.SkipBoolean();
-
                 case Schema.Type.Int:
                     return d => d.SkipInt();
-
                 case Schema.Type.Long:
                     return d => d.SkipLong();
-
                 case Schema.Type.Float:
                     return d => d.SkipFloat();
-
                 case Schema.Type.Double:
                     return d => d.SkipDouble();
-
                 case Schema.Type.String:
                     return d => d.SkipString();
-
                 case Schema.Type.Bytes:
                     return d => d.SkipBytes();
-
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     var recordSkips = new List<DecoderSkip>();
                     var recSchema = (RecordSchema)writerSchema;
                     recSchema.Fields.ForEach(r => recordSkips.Add(GetSkip(r.Schema)));
-                    return d => recordSkips.ForEach(s => s(d));
-
+                    return d => recordSkips.ForEach(s=>s(d));
                 case Schema.Type.Enumeration:
                     return d => d.SkipEnum();
-
                 case Schema.Type.Fixed:
                     var size = ((FixedSchema)writerSchema).Size;
                     return d => d.SkipFixed(size);
-
                 case Schema.Type.Array:
                     var itemSkip = GetSkip(((ArraySchema)writerSchema).ItemSchema);
                     return d =>
                     {
                         for (long n = d.ReadArrayStart(); n != 0; n = d.ReadArrayNext())
                         {
-                            for (long i = 0; i < n; i++)
-                                itemSkip(d);
+                            for (long i = 0; i < n; i++) itemSkip(d);
                         }
                     };
                 case Schema.Type.Map:
@@ -535,8 +499,7 @@ namespace Avro.Generic
                         {
                             for (long n = d.ReadMapStart(); n != 0; n = d.ReadMapNext())
                             {
-                                for (long i = 0; i < n; i++)
-                                { d.SkipString(); valueSkip(d); }
+                                for (long i = 0; i < n; i++) { d.SkipString(); valueSkip(d); }
                             }
                         };
                     }
@@ -545,14 +508,12 @@ namespace Avro.Generic
                     var lookup = new DecoderSkip[unionSchema.Count];
                     for (int i = 0; i < unionSchema.Count; i++)
                     {
-                        lookup[i] = GetSkip(unionSchema[i]);
+                        lookup[i] = GetSkip( unionSchema[i] );
                     }
                     return d => lookup[d.ReadUnionIndex()](d);
-
                 case Schema.Type.Logical:
                     var logicalSchema = (LogicalSchema)writerSchema;
                     return GetSkip(logicalSchema.BaseSchema);
-
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -683,7 +644,7 @@ namespace Avro.Generic
             /// True to reuse each element in the array when deserializing. False to create a new
             /// object for each element.
             /// </param>
-            void AddElements(object array, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse);
+            void AddElements( object array, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse );
         }
 
         /// <summary>
@@ -717,33 +678,30 @@ namespace Avro.Generic
             private Schema _writerSchema;
             private Schema _readerSchema;
 
-            public SchemaPair(Schema writerSchema, Schema readerSchema)
+            public SchemaPair( Schema writerSchema, Schema readerSchema )
             {
                 _writerSchema = writerSchema;
                 _readerSchema = readerSchema;
             }
 
-            protected bool Equals(SchemaPair other)
+            protected bool Equals( SchemaPair other )
             {
-                return Equals(_writerSchema, other._writerSchema) && Equals(_readerSchema, other._readerSchema);
+                return Equals( _writerSchema, other._writerSchema ) && Equals( _readerSchema, other._readerSchema );
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals( object obj )
             {
-                if (ReferenceEquals(null, obj))
-                    return false;
-                if (ReferenceEquals(this, obj))
-                    return true;
-                if (obj.GetType() != this.GetType())
-                    return false;
-                return Equals((SchemaPair)obj);
+                if( ReferenceEquals( null, obj ) ) return false;
+                if( ReferenceEquals( this, obj ) ) return true;
+                if( obj.GetType() != this.GetType() ) return false;
+                return Equals( (SchemaPair) obj );
             }
 
             public override int GetHashCode()
             {
                 unchecked
                 {
-                    return ((_writerSchema != null ? _writerSchema.GetHashCode() : 0) * 397) ^ (_readerSchema != null ? _readerSchema.GetHashCode() : 0);
+                    return ( ( _writerSchema != null ? _writerSchema.GetHashCode() : 0 ) * 397 ) ^ ( _readerSchema != null ? _readerSchema.GetHashCode() : 0 );
                 }
             }
         }

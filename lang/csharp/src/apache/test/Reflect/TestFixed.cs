@@ -17,17 +17,18 @@
  */
 
 using System.IO;
-using Avro.Generic;
 using Avro.IO;
+using Avro.Generic;
 using Avro.Reflect;
 using NUnit.Framework;
 
 namespace Avro.Test
 {
+
     [TestFixture]
     public class TestFixed
     {
-        public class ByteArrayFixedRec
+            public class ByteArrayFixedRec
         {
             public byte[] myFixed { get; set; }
         }
@@ -37,7 +38,7 @@ namespace Avro.Test
             public GenericFixed myFixed { get; set; }
         }
 
-        public class GenericFixedConverter : TypedFieldConverter<byte[], GenericFixed>
+        public class GenericFixedConverter : TypedFieldConverter<byte[],GenericFixed>
         {
             public override GenericFixed From(byte[] o, Schema s)
             {
@@ -55,7 +56,6 @@ namespace Avro.Test
             [AvroField(typeof(GenericFixedConverter))]
             public GenericFixed myFixed { get; set; }
         }
-
         private const string _fixedSchema = @"
         {
             ""namespace"": ""MessageTypes"",
@@ -77,15 +77,14 @@ namespace Avro.Test
         public void ByteArray()
         {
             var schema = Schema.Parse(_fixedSchema);
-            var fixedRecWrite = new ByteArrayFixedRec() { myFixed = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 } };
+            var fixedRecWrite = new ByteArrayFixedRec() { myFixed = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} };
             var fixedRecBad = new ByteArrayFixedRec() { myFixed = new byte[10] };
             ByteArrayFixedRec fixedRecRead = null;
 
             var writer = new ReflectWriter<ByteArrayFixedRec>(schema);
             var reader = new ReflectReader<ByteArrayFixedRec>(schema, schema);
 
-            Assert.Throws(typeof(AvroException), () =>
-            {
+            Assert.Throws(typeof(AvroException), ()=> {
                 using (var stream = new MemoryStream(256))
                 {
                     writer.Write(fixedRecBad, new BinaryEncoder(stream));
@@ -114,7 +113,7 @@ namespace Avro.Test
                     fs = f.Schema as FixedSchema;
                 }
             }
-            var fixedRecWrite = new GenericFixedConverterRec() { myFixed = new GenericFixed(fs) { Value = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 } } };
+            var fixedRecWrite = new GenericFixedConverterRec() { myFixed = new GenericFixed(fs) {Value = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} }};
             GenericFixedConverterRec fixedRecRead = null;
 
             var writer = new ReflectWriter<GenericFixedConverterRec>(schema);
@@ -143,10 +142,10 @@ namespace Avro.Test
                     fs = f.Schema as FixedSchema;
                 }
             }
-            var fixedRecWrite = new GenericFixedRec() { myFixed = new GenericFixed(fs) { Value = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 } } };
+            var fixedRecWrite = new GenericFixedRec() { myFixed = new GenericFixed(fs) {Value = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} }};
             GenericFixedRec fixedRecRead = null;
 
-            ClassCache.AddDefaultConverter<byte[], GenericFixed>((a, s) => new GenericFixed(s as FixedSchema, a), (p, s) => p.Value);
+            ClassCache.AddDefaultConverter<byte[], GenericFixed>((a,s)=>new GenericFixed(s as FixedSchema, a), (p,s)=>p.Value);
             var writer = new ReflectWriter<GenericFixedRec>(schema);
             var reader = new ReflectReader<GenericFixedRec>(schema, schema);
 

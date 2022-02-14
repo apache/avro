@@ -15,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using NUnit.Framework;
+using Avro;
 
 namespace Avro.Test
 {
@@ -133,71 +136,71 @@ namespace Avro.Test
         }
 
         // Records
-        [TestCase(1, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(1,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   true, TestName = "TestRecordAliasesResolution1")]
-        [TestCase(2, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(2,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false, TestName = "TestRecordAliasesResolution2")]
-        [TestCase(3, @"{""type"":""record"",""name"":""Rec"", ""aliases"":[""NewRec""],
+        [TestCase(3,@"{""type"":""record"",""name"":""Rec"", ""aliases"":[""NewRec""],
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   true, TestName = "TestRecordAliasesResolution3")]
-        [TestCase(4, @"{""type"":""record"",""name"":""Rec"", ""aliases"":[""OtherRec"",""DiffRec""],
+        [TestCase(4,@"{""type"":""record"",""name"":""Rec"", ""aliases"":[""OtherRec"",""DiffRec""],
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false, TestName = "TestRecordAliasesResolution4")]
-        [TestCase(5, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(5,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int""}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false, TestName = "TestRecordAliasesResolution5")]
-        [TestCase(6, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(6,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int"", ""aliases"":[""f2""]}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   true, TestName = "TestRecordAliasesResolution6")]
-        [TestCase(7, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(7,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int"", ""aliases"":[""f4"",""f5""]}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false, TestName = "TestRecordAliasesResolution7")]
-        [TestCase(8, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(8,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""symbols"":[""A""] }}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   false, TestName = "TestRecordAliasesResolution8")]
-        [TestCase(9, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(9,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   true, TestName = "TestRecordAliasesResolution9")]
-        [TestCase(10, @"{""type"":""record"",""name"":""Rec"",
+        [TestCase(10,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""DiffSymbol""], ""symbols"":[""A""] }}]}",
                   @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   false, TestName = "TestRecordAliasesResolution10")]
-        [TestCase(11, @"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
+        [TestCase(11,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
                     ""fields"":[{""name"":""f2"",""aliases"":[""f1""],""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }},
                                 {""name"":""f3"",""aliases"":[""f4""],""type"": {""type"":""fixed"", ""name"":""Fixed"", ""aliases"":[""NewFixed""], ""size"": 1 }}
                                ]}",
@@ -206,7 +209,7 @@ namespace Avro.Test
                                  {""name"":""f4"",""type"": {""type"":""fixed"", ""name"":""NewFixed"", ""size"": 1 }}
                                 ]}",
                   true, TestName = "TestRecordAliasesResolution11")]
-        [TestCase(12, @"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
+        [TestCase(12,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
                      ""fields"":[{""name"":""f2"",""aliases"":[""f1""],""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }},
                                  {""name"":""f3"",""aliases"":[""f4""],""type"": {""type"":""fixed"", ""name"":""Fixed"", ""aliases"":[""NewFixed""], ""size"":1 }}
                                 ]}",
@@ -215,6 +218,7 @@ namespace Avro.Test
                                  {""name"":""f4"",""type"": {""type"":""fixed"", ""name"":""NewFixed"", ""size"":1 }}
                                 ]}",
                   true, TestName = "TestRecordAliasesResolution12")]
+
         public void TestRecordAliasesResolution(int testid, string reader, string writer, bool canread)
         {
             try
@@ -229,5 +233,6 @@ namespace Avro.Test
                 Assert.IsTrue(false);
             }
         }
+
     }
 }

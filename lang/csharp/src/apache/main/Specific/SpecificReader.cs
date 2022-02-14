@@ -15,11 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.IO;
-using Avro.Generic;
+using Avro;
 using Avro.IO;
+using Avro.Generic;
 
 namespace Avro.Specific
 {
@@ -37,14 +40,12 @@ namespace Avro.Specific
         /// <summary>
         /// Schema for the writer class
         /// </summary>
-        public Schema WriterSchema
-        { get { return reader.WriterSchema; } }
+        public Schema WriterSchema { get { return reader.WriterSchema; } }
 
         /// <summary>
         /// Schema for the reader class
         /// </summary>
-        public Schema ReaderSchema
-        { get { return reader.ReaderSchema; } }
+        public Schema ReaderSchema { get { return reader.ReaderSchema; } }
 
         /// <summary>
         /// Constructs a generic reader for the given schemas using the DefaultReader. If the
@@ -89,7 +90,7 @@ namespace Avro.Specific
         /// </summary>
         /// <param name="writerSchema">schema of the object that wrote the data</param>
         /// <param name="readerSchema">schema of the object that will store the data</param>
-        public SpecificDefaultReader(Schema writerSchema, Schema readerSchema) : base(writerSchema, readerSchema)
+        public SpecificDefaultReader(Schema writerSchema, Schema readerSchema) : base(writerSchema,readerSchema)
         {
         }
 
@@ -134,8 +135,7 @@ namespace Avro.Specific
             var defaultDecoder = new BinaryDecoder(defaultStream);
             foreach (Field rf in rs)
             {
-                if (writerSchema.Contains(rf.Name))
-                    continue;
+                if (writerSchema.Contains(rf.Name)) continue;
 
                 defaultStream.Position = 0; // reset for writing
                 Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);

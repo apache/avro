@@ -38,9 +38,9 @@ namespace Avro.Reflect
             _to = to;
         }
 
-        private readonly Func<TAvro, Schema, TProperty> _from;
+        private Func<TAvro, Schema, TProperty> _from;
 
-        private readonly Func<TProperty, Schema, TAvro> _to;
+        private Func<TProperty, Schema, TAvro> _to;
 
         /// <summary>
         /// Inherited conversion method - call the Func.

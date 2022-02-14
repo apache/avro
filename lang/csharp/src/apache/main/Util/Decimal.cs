@@ -61,7 +61,7 @@ namespace Avro.Util
                 throw new AvroTypeException("'decimal' requires a 'scale' property that is zero or less than or equal to 'precision'");
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc/>      
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var decimalValue = (AvroDecimal)logicalValue;

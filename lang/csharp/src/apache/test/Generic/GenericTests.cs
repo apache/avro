@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
-using System.Collections.Generic;
 using System.IO;
-using Avro.Generic;
+using System.Linq;
 using Avro.IO;
+using System.Collections.Generic;
+using Avro.Generic;
 using NUnit.Framework;
 
 namespace Avro.Test.Generic
 {
-    internal class GenericTests
+    class GenericTests
     {
         private static void test<T>(string s, T value)
         {
@@ -187,6 +187,7 @@ namespace Avro.Test.Generic
             }
         }
 
+
         [TestCase("[{\"type\": \"map\", \"values\": \"int\"}, \"string\"]",
             "{\"type\": \"map\", \"values\": \"int\"}", new object[] { "a", 1, "b", 2 })]
         public void TestUnion_map(string unionSchema, string mapSchema, object[] value)
@@ -312,7 +313,7 @@ namespace Avro.Test.Generic
             new object[] { "f2", 100 }, Description = "Missing fields - double")]
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":\"bytes\"},{\"name\":\"f2\",\"type\":\"int\"}]}",
-            new object[] { "f1", new byte[] { 1, 0 }, "f2", 100 },
+            new object[] { "f1", new byte[] { 1 , 0 }, "f2", 100 },
             "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f2", 100 }, Description = "Missing fields - bytes")]
@@ -334,7 +335,6 @@ namespace Avro.Test.Generic
             "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f2", 100 }, Description = "Missing fields - union")]
-
         // TODO: Missing fields - record, enum, map, fixed
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":\"boolean\"}]}",
@@ -354,6 +354,7 @@ namespace Avro.Test.Generic
         {
             TestResolution(ws, mkMap(value), rs, mkMap(expected));
         }
+
 
         private static void testResolutionMismatch<T>(string writerSchema, T value, string readerSchema)
         {
@@ -479,7 +480,7 @@ namespace Avro.Test.Generic
             }
             else
             {
-                testResolutionMismatch(ws, mkFixed(ws, value), rs);
+                 testResolutionMismatch(ws, mkFixed(ws, value), rs); 
             }
         }
 
@@ -596,19 +597,18 @@ namespace Avro.Test.Generic
             GenericReader<S> r = new GenericReader<S>(ws, rs);
             Decoder d = new BinaryDecoder(ms);
             var items = new List<S>();
-
             // validate reading twice to make sure there isn't some state that isn't reset between reads.
-            items.Add(Read(r, d));
-            items.Add(Read(r, d));
+            items.Add( Read( r, d ) );
+            items.Add( Read( r, d ) );
             Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
             checkAlternateDeserializers(items, ms, initialPos, ws, rs);
             return items[0];
         }
 
-        private static S Read<S>(DatumReader<S> reader, Decoder d)
+        private static S Read<S>( DatumReader<S> reader, Decoder d )
         {
-            S reuse = default(S);
-            return reader.Read(reuse, d);
+            S reuse = default( S );
+            return reader.Read( reuse, d );
         }
 
         private static void checkAlternateDeserializers<S>(IEnumerable<S> expectations, Stream input, long startPos, Schema ws, Schema rs)
@@ -616,9 +616,9 @@ namespace Avro.Test.Generic
             input.Position = startPos;
             var reader = new GenericDatumReader<S>(ws, rs);
             Decoder d = new BinaryDecoder(input);
-            foreach (var expected in expectations)
+            foreach( var expected in expectations )
             {
-                var read = Read(reader, d);
+                var read = Read( reader, d );
                 Assert.AreEqual(expected, read);
             }
             Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
@@ -630,7 +630,6 @@ namespace Avro.Test.Generic
             Encoder e = new BinaryEncoder(ms);
             ws = Schema.Parse(writerSchema);
             GenericWriter<T> w = new GenericWriter<T>(ws);
-
             // write twice so we can validate reading twice
             w.Write(actual, e);
             w.Write(actual, e);

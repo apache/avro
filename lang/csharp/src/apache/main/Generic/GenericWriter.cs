@@ -49,21 +49,28 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public Schema Schema => _writer.Schema;
+        public Schema Schema
+        { get { return _writer.Schema; } }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericWriter{T}" /> class from a
         /// <see cref="DefaultWriter" />.
         /// </summary>
         /// <param name="writer">Write to initialize this new writer from.</param>
-        public GenericWriter(DefaultWriter writer) => _writer = writer;
+        public GenericWriter(DefaultWriter writer)
+        {
+            _writer = writer;
+        }
 
         /// <summary>
         /// Serializes the given object using this writer's schema.
         /// </summary>
         /// <param name="datum">The value to be serialized</param>
         /// <param name="encoder">The encoder to use for serializing</param>
-        public void Write(T datum, Encoder encoder) => _writer.Write(datum, encoder);
+        public void Write(T datum, Encoder encoder)
+        {
+            _writer.Write(datum, encoder);
+        }
     }
 
     /// <summary>
@@ -86,7 +93,10 @@ namespace Avro.Generic
         /// Constructs a generic writer for the given schema.
         /// </summary>
         /// <param name="schema">The schema for the object to be serialized</param>
-        public DefaultWriter(Schema schema) => Schema = schema;
+        public DefaultWriter(Schema schema)
+        {
+            Schema = schema;
+        }
 
         /// <summary>
         /// Examines the <see cref="Schema" /> and dispatches the actual work to one
@@ -96,7 +106,10 @@ namespace Avro.Generic
         /// <typeparam name="T">Type to write</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="encoder">The encoder to use during serialization</param>
-        public void Write<T>(T value, Encoder encoder) => Write(Schema, value, encoder);
+        public void Write<T>(T value, Encoder encoder)
+        {
+            Write(Schema, value, encoder);
+        }
 
         /// <summary>
         /// Examines the schema and dispatches the actual work to one
@@ -324,7 +337,10 @@ namespace Avro.Generic
         /// <returns>
         /// The array length of the given object
         /// </returns>
-        protected virtual long GetArrayLength(object value) => (value as Array).Length;
+        protected virtual long GetArrayLength(object value)
+        {
+            return (value as Array).Length;
+        }
 
         /// <summary>
         /// Returns the element at the given index from the given array object. The default implementation
@@ -337,7 +353,10 @@ namespace Avro.Generic
         /// <returns>
         /// The array element at the index
         /// </returns>
-        protected virtual object GetArrayElement(object value, long index) => (value as Array).GetValue(index);
+        protected virtual object GetArrayElement(object value, long index)
+        {
+            return (value as Array).GetValue(index);
+        }
 
         /// <summary>
         /// Serialized a map. The default implementation first ensure that the value is indeed a map and then uses
@@ -384,7 +403,10 @@ namespace Avro.Generic
         /// <returns>
         /// The size of the given map object
         /// </returns>
-        protected virtual long GetMapSize(object value) => (value as IDictionary<string, object>).Count;
+        protected virtual long GetMapSize(object value)
+        {
+            return (value as IDictionary<string, object>).Count;
+        }
 
         /// <summary>
         /// Returns the contents of the given map object. The default implementation guarantees that EnsureMapObject
@@ -395,7 +417,10 @@ namespace Avro.Generic
         /// <returns>
         /// The contents of the given map object
         /// </returns>
-        protected virtual IEnumerable<KeyValuePair<string, object>> GetMapValues(object value) => value as IDictionary<string, object>;
+        protected virtual IEnumerable<KeyValuePair<string, object>> GetMapValues(object value)
+        {
+            return value as IDictionary<string, object>;
+        }
 
         /// <summary>
         /// Resolves the given value against the given UnionSchema and serializes the object against
@@ -443,8 +468,10 @@ namespace Avro.Generic
         /// <param name="logicalSchema">The schema for serialization</param>
         /// <param name="value">The value to be serialized</param>
         /// <param name="encoder">The encoder for serialization</param>
-        protected virtual void WriteLogical(LogicalSchema logicalSchema, object value, Encoder encoder) =>
+        protected virtual void WriteLogical(LogicalSchema logicalSchema, object value, Encoder encoder)
+        {
             Write(logicalSchema.BaseSchema, logicalSchema.LogicalType.ConvertToBaseValue(value, logicalSchema), encoder);
+        }
 
         /// <summary>
         /// Serialized a fixed object. The default implementation requires that the value is
@@ -474,8 +501,11 @@ namespace Avro.Generic
         /// <returns>
         /// A new <see cref="AvroException" /> indicating a type mismatch.
         /// </returns>
-        protected AvroException TypeMismatch(object obj, string schemaType, string type) => new AvroException($"{type} required to write against {schemaType} schema but found "
+        protected AvroException TypeMismatch(object obj, string schemaType, string type)
+        {
+            return new AvroException($"{type} required to write against {schemaType} schema but found "
                 + $"{(null == obj ? "null" : obj.GetType().ToString())}");
+        }
 
         /// <summary>
         /// Throws new <see cref="AvroTypeException" />
@@ -483,7 +513,10 @@ namespace Avro.Generic
         /// <param name="schema">The schema.</param>
         /// <param name="value">The value.</param>
         /// <exception cref="AvroTypeException">Not a {schema}: {value}</exception>
-        private void Error(Schema schema, object value) => throw new AvroTypeException($"Not a {schema}: {value}");
+        private void Error(Schema schema, object value)
+        {
+            throw new AvroTypeException($"Not a {schema}: {value}");
+        }
 
         /// <summary>
         /// Tests whether the given schema an object are compatible.

@@ -35,6 +35,7 @@ namespace Avro.Util
         /// </summary>
         public Uuid() : base(LogicalTypeName) { }
 
+
         /// <inheritdoc />
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
@@ -44,7 +45,7 @@ namespace Avro.Util
         /// <inheritdoc />
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            return new Guid((string)baseValue);
+            return new Guid((string) baseValue);
         }
 
         /// <inheritdoc />

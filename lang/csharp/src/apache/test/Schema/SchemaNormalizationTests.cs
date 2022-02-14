@@ -18,10 +18,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using Avro.Test.Utils;
 using NUnit.Framework;
+using System.IO;
+using Avro.Test.Utils;
 
 namespace Avro.Test
 {
@@ -81,7 +81,7 @@ namespace Avro.Test
                 for (int j = 1; j < 129; j = j << 1)
                 {
                     bool overflow = (0 != (fp & overflowBit));
-                    fp = (long)(((ulong)fp) >> 1);
+                    fp = (long) (((ulong) fp) >> 1);
                     if (0 != (j & b[i]))
                     {
                         fp |= One;

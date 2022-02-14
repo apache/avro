@@ -1,4 +1,4 @@
-/*
+/*  
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,14 @@
  */
 
 using System;
-using System.Collections;
 using System.Reflection;
+using System.Collections;
 
 namespace Avro.Reflect
 {
     internal class DotnetProperty
     {
-        private readonly PropertyInfo _property;
+        private PropertyInfo _property;
 
         public IAvroFieldConverter Converter { get; set; }
 
@@ -45,48 +45,33 @@ namespace Avro.Reflect
             {
                 case Avro.Schema.Type.Null:
                     return (Nullable.GetUnderlyingType(propType) != null) || (!propType.IsValueType);
-
                 case Avro.Schema.Type.Boolean:
                     return propType == typeof(bool);
-
                 case Avro.Schema.Type.Int:
                     return propType == typeof(int);
-
                 case Avro.Schema.Type.Long:
                     return propType == typeof(long);
-
                 case Avro.Schema.Type.Float:
                     return propType == typeof(float);
-
                 case Avro.Schema.Type.Double:
                     return propType == typeof(double);
-
                 case Avro.Schema.Type.Bytes:
                     return propType == typeof(byte[]);
-
                 case Avro.Schema.Type.String:
                     return typeof(string).IsAssignableFrom(propType);
-
                 case Avro.Schema.Type.Record:
-
                     //TODO: this probably should work for struct too
                     return propType.IsClass;
-
                 case Avro.Schema.Type.Enumeration:
                     return propType.IsEnum;
-
                 case Avro.Schema.Type.Array:
                     return typeof(IEnumerable).IsAssignableFrom(propType);
-
                 case Avro.Schema.Type.Map:
                     return typeof(IDictionary).IsAssignableFrom(propType);
-
                 case Avro.Schema.Type.Union:
                     return true;
-
                 case Avro.Schema.Type.Fixed:
                     return propType == typeof(byte[]);
-
                 case Avro.Schema.Type.Error:
                     return propType.IsClass;
             }
@@ -94,7 +79,7 @@ namespace Avro.Reflect
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, IAvroFieldConverter converter, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
             Converter = converter;

@@ -1,4 +1,4 @@
-/*
+/*  
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Concurrent;
+using Avro;
 
 namespace Avro.Reflect
 {
@@ -26,7 +26,7 @@ namespace Avro.Reflect
     /// </summary>
     public static class EnumCache
     {
-        private readonly static ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
+        private static ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
 
         /// <summary>
         /// Add and entry to the cache

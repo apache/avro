@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json.Linq;
+
 
 namespace Avro
 {
@@ -82,16 +83,12 @@ namespace Avro
             {
                 case "fixed":
                     return FixedSchema.NewInstance(jo, props, names, encspace);
-
                 case "enum":
                     return EnumSchema.NewInstance(jo, props, names, encspace);
-
                 case "record":
                     return RecordSchema.NewInstance(Type.Record, jo, props, names, encspace);
-
                 case "error":
                     return RecordSchema.NewInstance(Type.Error, jo, props, names, encspace);
-
                 default:
                     NamedSchema result;
                     if (names.TryGetValue(type, null, encspace, doc, out result))
@@ -130,9 +127,9 @@ namespace Avro
         /// <returns>new SchemaName object</returns>
         protected static SchemaName GetName(JToken jtok, string encspace)
         {
-            string n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
-            string ns = JsonHelper.GetOptionalString(jtok, "namespace");
-            string d = JsonHelper.GetOptionalString(jtok, "doc");
+            String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
+            String ns = JsonHelper.GetOptionalString(jtok, "namespace");
+            String d = JsonHelper.GetOptionalString(jtok, "doc");
             return new SchemaName(n, ns, encspace, d);
         }
 
@@ -141,7 +138,7 @@ namespace Avro
         /// </summary>
         /// <param name="jtok">JSON object to read</param>
         /// <param name="space">namespace of the name this alias is for</param>
-        /// <param name="encspace">enclosing namespace of the name this alias is for</param>
+        /// <param name="encspace">enclosing namespace of the name this alias is for</param>        
         /// <returns>List of SchemaName that represents the list of alias. If no 'aliases' specified, then it returns null.</returns>
         protected static IList<SchemaName> GetAliases(JToken jtok, string space, string encspace)
         {
@@ -176,8 +173,7 @@ namespace Avro
             if (null != aliases)
             {
                 foreach (SchemaName alias in aliases)
-                    if (name.Equals(alias))
-                        return true;
+                    if (name.Equals(alias)) return true;
             }
             return false;
         }
@@ -202,7 +198,6 @@ namespace Avro
                 writer.WriteValue(name);
             }
             else
-
                 // schema is not in the list, write full schema definition
                 base.WriteJson(writer, names, encspace);
         }

@@ -15,11 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System.IO;
-using Avro.IO;
+ using Avro.IO;
 using Avro.Reflect;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Avro.test.Reflect
 {
@@ -88,7 +92,6 @@ namespace Avro.test.Reflect
               }
            ]
         }";
-
         [TestCase]
         public void RecurseTest()
         {
@@ -133,13 +136,11 @@ namespace Avro.test.Reflect
             }
         }
     }
-
     public class Recursive
     {
         public SimpleFoo Fo { get; set; }
         public Recursive Recurse { get; set; }
     }
-
     public class SimpleFoo
     {
         public int Age { get; set; }

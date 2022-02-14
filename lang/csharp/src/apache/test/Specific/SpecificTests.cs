@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
+using NUnit.Framework;
 using Avro.IO;
 using Avro.Specific;
 using Avro.Test.Specific;
+using System.Collections.Generic;
 using Avro.Test.Specific.@return;
-using NUnit.Framework;
 
 #if !NETCOREAPP
 using System.CodeDom;
@@ -34,10 +35,9 @@ using System.Reflection;
 namespace Avro.Test
 {
     [TestFixture]
-    internal class SpecificTests
+    class SpecificTests
     {
 #if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
-
         // The dynamically created assembly used in the test below can only be created
         // once otherwise repeated tests will fail as the same type name will exist in
         // multiple assemblies and so the type in the test and the type found by ObjectCreator
@@ -103,7 +103,6 @@ namespace Avro.Test
   "com.foo.Z",  // name of the schema to serialize
 @"// Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
 @"
-
   // Console.WriteLine(""Populating com.foo.Z..."");
   string bytes = ""bytes sample text"";
   System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
@@ -193,6 +192,8 @@ namespace Avro.Test
             method.Statements.Add(snippet2);
             ctd.Members.Add(method);
 
+
+
             // compile
             var comparam = new CompilerParameters(new string[] { "netstandard.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
@@ -248,7 +249,7 @@ namespace Avro.Test
 
             // deserialize
             var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
-            Assert.AreEqual(EnumType.SECOND, rec2.enumType);
+            Assert.AreEqual( EnumType.SECOND, rec2.enumType );
         }
 
         [Test]
@@ -259,7 +260,7 @@ namespace Avro.Test
             Schema readerSchema = Schema.Parse("{ \"type\": \"record\", \"name\": \"EnumRecord\", \"fields\": [ { \"name\": \"enumType\", \"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [ \"DEFAULT\", \"FIRST\", \"THIRD\" ], \"default\": \"DEFAULT\" } } ] }");
 
             //readerSchema is missing "SECOND" so should therefore be "DEFAULT"
-            var testRecord = new EnumRecord { enumType = EnumType.SECOND };
+            var testRecord = new EnumRecord {enumType = EnumType.SECOND};
 
             // serialize
             var stream = serialize(writerSchema, testRecord);
@@ -268,6 +269,7 @@ namespace Avro.Test
             var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
         }
+
 
         [Test]
         public void TestArrayWithReservedWords()
@@ -491,7 +493,7 @@ namespace Avro.Test
                 return;
             }
 
-            var recordSchema = (RecordSchema)rec1.Schema;
+            var recordSchema = (RecordSchema) rec1.Schema;
             for (int i = 0; i < recordSchema.Count; i++)
             {
                 var rec1Val = rec1.Get(i);
@@ -506,8 +508,8 @@ namespace Avro.Test
                 }
                 else if (rec1Val is IDictionary)
                 {
-                    var rec1Dict = (IDictionary)rec1Val;
-                    var rec2Dict = (IDictionary)rec2Val;
+                    var rec1Dict = (IDictionary) rec1Val;
+                    var rec2Dict = (IDictionary) rec2Val;
                     Assert.AreEqual(rec2Dict.Count, rec2Dict.Count);
                     foreach (var key in rec1Dict.Keys)
                     {
@@ -586,10 +588,9 @@ namespace Avro.Test
         THIRD,
     }
 
-    internal class EnumRecord : ISpecificRecord
+    class EnumRecord : ISpecificRecord
     {
         public EnumType enumType { get; set; }
-
         public Schema Schema
         {
             get

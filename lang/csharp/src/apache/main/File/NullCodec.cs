@@ -29,9 +29,7 @@ namespace Avro.File
         /// <summary>
         /// Initializes a new instance of the <see cref="NullCodec" /> class.
         /// </summary>
-        public NullCodec()
-        {
-        }
+        public NullCodec() { }
 
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
@@ -59,9 +57,9 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            return this == obj || GetType().Name == obj.GetType().Name;
+            return this == other || GetType().Name == other.GetType().Name;
         }
 
         /// <inheritdoc/>

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -80,8 +79,7 @@ namespace Avro
         {
             foreach (KeyValuePair<string, string> kp in this)
             {
-                if (ReservedProps.Contains(kp.Key))
-                    continue;
+                if (ReservedProps.Contains(kp.Key)) continue;
 
                 writer.WritePropertyName(kp.Key);
                 writer.WriteRawValue(kp.Value);
@@ -95,8 +93,7 @@ namespace Avro
         /// <returns>true if contents of the two maps are the same, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj)
-                return true;
+            if (this == obj) return true;
 
             if (obj != null && obj is PropertyMap)
             {

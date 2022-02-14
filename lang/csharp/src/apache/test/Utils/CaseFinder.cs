@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,7 @@ namespace Avro.Test.Utils
         private static string labelRegex = "[a-zA-Z][_a-zA-Z0-9]*";
         private static string newCaseName = "INPUT";
         private static string newCaseMarker = "<<" + newCaseName;
-        private static string startLinePattern = "^<<(" + labelRegex + ")(.*)$";
+        private static string startLinePattern = "^<<("+labelRegex+")(.*)$";
 
         /// <summary>
         /// Scan test-case file <code>streamReader</code> looking for test subcases

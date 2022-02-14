@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System.Collections;
 using Avro.Generic;
 using Avro.IO;
@@ -140,7 +139,7 @@ namespace Avro.Specific
 
             public byte[] GetFixedBuffer(object rec)
             {
-                return ((SpecificFixed)rec).Value;
+                return ((SpecificFixed) rec).Value;
             }
         }
 
@@ -162,12 +161,11 @@ namespace Avro.Specific
             {
                 IList array;
 
-                if (reuse != null)
+                if( reuse != null )
                 {
                     array = reuse as IList;
-                    if (array == null)
-                        throw new AvroException("array object does not implement non-generic IList");
-
+                    if( array == null )
+                        throw new AvroException( "array object does not implement non-generic IList" );
                     // retaining existing behavior where array contents aren't reused
                     // TODO: try to reuse contents?
                     array.Clear();
@@ -187,12 +185,12 @@ namespace Avro.Specific
                 // no action needed
             }
 
-            public void AddElements(object array, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse)
+            public void AddElements( object array, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse )
             {
                 var list = (IList)array;
-                for (int i = 0; i < elements; i++)
+                for (int i=0; i < elements; i++)
                 {
-                    list.Add(itemReader(null, decoder));
+                    list.Add( itemReader( null, decoder ) );
                 }
             }
         }
