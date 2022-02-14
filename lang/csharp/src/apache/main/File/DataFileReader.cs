@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -298,9 +299,8 @@ namespace Avro.File
         /// <inheritdoc/>
         public long PreviousSync()
         {
-            if (!_stream.CanSeek)
+            return _stream.CanSeek ? _blockStart :
                 throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
-            return _blockStart;
         }
 
         /// <inheritdoc/>
@@ -440,9 +440,10 @@ namespace Avro.File
         /// </returns>
         private static DatumReader<T> CreateDefaultReader(Schema writerSchema, Schema readerSchema)
         {
-            DatumReader<T> reader = null;
+            DatumReader<T> reader;
             Type type = typeof(T);
 
+            // IGNORE IDE0045, you can not simplify as suggested unless this is C# 9 or greater
             if (typeof(ISpecificRecord).IsAssignableFrom(type))
             {
                 reader = new SpecificReader<T>(writerSchema, readerSchema);
@@ -468,7 +469,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public T Next()
         {
-            return Next(default(T));
+            return Next(default);
         }
 
         /// <summary>
