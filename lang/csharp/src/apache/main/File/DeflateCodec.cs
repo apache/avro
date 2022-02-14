@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.IO;
 using System.IO.Compression;
 
@@ -33,8 +34,7 @@ namespace Avro.File
             MemoryStream outStream = new MemoryStream();
 
             using (DeflateStream Compress =
-                        new DeflateStream(outStream,
-                        CompressionMode.Compress))
+                        new DeflateStream(outStream, CompressionMode.Compress))
             {
                 Compress.Write(uncompressedData, 0, uncompressedData.Length);
             }
@@ -47,9 +47,7 @@ namespace Avro.File
         {
             outputStream.SetLength(0);
             using (DeflateStream Compress =
-                        new DeflateStream(outputStream,
-                        CompressionMode.Compress,
-                        true))
+                        new DeflateStream(outputStream, CompressionMode.Compress, true))
             {
                 Compress.Write(inputStream.GetBuffer(), 0, (int)inputStream.Length);
             }
@@ -58,13 +56,11 @@ namespace Avro.File
         /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData, int length)
         {
-
             MemoryStream inStream = new MemoryStream(compressedData);
             MemoryStream outStream = new MemoryStream();
 
             using (DeflateStream Decompress =
-                        new DeflateStream(inStream,
-                        CompressionMode.Decompress))
+                        new DeflateStream(inStream, CompressionMode.Decompress))
             {
                 CopyTo(Decompress, outStream);
             }
@@ -94,9 +90,9 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return this == other || GetType().Name == other.GetType().Name;
+            return this == obj || GetType().Name == obj.GetType().Name;
         }
 
         /// <inheritdoc/>
