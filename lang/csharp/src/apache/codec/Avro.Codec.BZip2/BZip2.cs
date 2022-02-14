@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.IO;
 
 namespace Avro.Codec.BZip2
@@ -40,11 +39,11 @@ namespace Avro.Codec.BZip2
     /// <summary>
     /// Implements BZip2 compression and decompression.
     /// </summary>
-    public class BZip2Codec : Avro.File.Codec
+    public class BZip2Codec : File.Codec
     {
         public const string DataFileConstant = "bzip2";
 
-        private BZip2Level _level;
+        private readonly BZip2Level _level;
 
         public BZip2Codec()
             : this(BZip2Level.Default)
@@ -70,6 +69,7 @@ namespace Avro.Codec.BZip2
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
+            outputStream.SetLength(0);
             ICSharpCode.SharpZipLib.BZip2.BZip2.Compress(inputStream, outputStream, false, (int)_level);
         }
 

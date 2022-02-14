@@ -24,10 +24,10 @@ namespace Avro.Codec.Snappy
     /// </summary>
     internal static class Crc32
     {
-        const uint DefaultPolynomial = 0xedb88320u;
-        const uint DefaultSeed = 0xffffffffu;
+        private const uint DefaultPolynomial = 0xedb88320u;
+        private const uint DefaultSeed = 0xffffffffu;
 
-        static uint[] defaultTable;
+        private static uint[] defaultTable;
 
         public static uint Compute(byte[] buffer)
         {
@@ -39,7 +39,7 @@ namespace Avro.Codec.Snappy
             return ~CalculateHash(InitializeTable(polynomial), seed, buffer);
         }
 
-        static uint[] InitializeTable(uint polynomial)
+        private static uint[] InitializeTable(uint polynomial)
         {
             if (polynomial == DefaultPolynomial && defaultTable != null)
                 return defaultTable;
@@ -62,7 +62,7 @@ namespace Avro.Codec.Snappy
             return createTable;
         }
 
-        static uint CalculateHash(uint[] table, uint seed, ReadOnlySpan<byte> buffer)
+        private static uint CalculateHash(uint[] table, uint seed, ReadOnlySpan<byte> buffer)
         {
             uint hash = seed;
             for (int i = 0; i < buffer.Length; i++)

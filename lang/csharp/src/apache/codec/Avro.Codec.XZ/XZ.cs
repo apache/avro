@@ -46,13 +46,13 @@ namespace Avro.Codec.XZ
     /// <summary>
     /// Implements XZ compression and decompression.
     /// </summary>
-    public class XZCodec : Avro.File.Codec
+    public class XZCodec : File.Codec
     {
         public const string DataFileConstant = "xz";
 
-        private XZLevel _level;
-        private bool _extreme;
-        private int _threads;
+        private readonly XZLevel _level;
+        private readonly bool _extreme;
+        private readonly int _threads;
 
         public XZCodec()
             : this(XZLevel.Default)
@@ -82,58 +82,35 @@ namespace Avro.Codec.XZ
         // !!!
         public static void Initialize()
         {
-            string libPath;
+            string arch = RuntimeInformation.OSArchitecture.ToString().ToLower();
             string foundLibPath = string.Empty;
-            string libName = "liblzma";
+            string libPath;
             string rid;
-            string arch;
+            string libName;
 
-            switch(RuntimeInformation.OSArchitecture)
+            // Determine Platform (needed for proper Runtime ID)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                case Architecture.X86:
-                    arch = "x86";
-                    break;
-                case Architecture.X64:
-                    arch = "x64";
-                    break;
-                case Architecture.Arm:
-                    arch = "arm";
-                    break;
-                case Architecture.Arm64:
-                    arch = "arm64";
-                    break;
-                default:
-                    throw new Exception("Unknown runtime architecture!");
-            };
-
-            // Unknown architecture
-            if (arch == null)
-                throw new Exception("Unknown runtime architecture!");
-
-            // Determine Platform (needed for proper Runtime ID)
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 rid = $"win-{arch}";
+                libName = "liblzma.dll";
+            }
             else
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
                 rid = $"linux-{arch}";
+                libName = "liblzma.so";
+            }
             else
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
                 rid = $"osx-{arch}";
+                libName = "liblzma.dylib";
+            }
             else
+            {
                 // Unknown platform
-                throw new Exception("Unknown runtime platform!");
-            
-            // Determine Platform (needed for proper Runtime ID)
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                libName += ".dll";
-            else
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                libName += ".so";
-            else
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                libName += ".dylib";
-            else
-                throw new PlatformNotSupportedException();
+                throw new PlatformNotSupportedException("Unknown runtime platform!");
+            }
 
             // Try to search for the lib in the working directory and the application binary directory
             foreach (var relPath in new List<string> { ".", AppDomain.CurrentDomain.BaseDirectory })
@@ -156,8 +133,23 @@ namespace Avro.Codec.XZ
                 }
             }
 
+            // Try the OS search path if nothing is found yet
             if (string.IsNullOrEmpty(foundLibPath))
-                throw new PlatformNotSupportedException();
+            {
+                var values = Environment.GetEnvironmentVariable("PATH");
+                foreach (string path in values.Split(Path.PathSeparator))
+                {
+                    libPath = Path.Combine(path, libName);
+                    if (System.IO.File.Exists(libPath))
+                    {
+                        foundLibPath = libPath;
+                        break;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(foundLibPath))
+                throw new PlatformNotSupportedException($"Unable to find {libName}");
 
             // Initialize XZ library
             XZInit.GlobalInit(foundLibPath);
@@ -193,6 +185,8 @@ namespace Avro.Codec.XZ
             {
                 Threads = _threads,
             };
+
+            outputStream.SetLength(0);
 
             using (XZStream xzStream = new XZStream(outputStream, compOpts, threadOpts))
             {

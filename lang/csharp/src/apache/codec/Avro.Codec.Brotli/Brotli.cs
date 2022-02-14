@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.IO;
-using System.IO.Compression;
 using BrotliSharpLib;
 
 namespace Avro.Codec.Brotli
@@ -45,11 +43,11 @@ namespace Avro.Codec.Brotli
     /// <summary>
     /// Implements Brotli compression and decompression.
     /// </summary>
-    public class BrotliCodec : Avro.File.Codec
+    public class BrotliCodec : File.Codec
     {
         public const string DataFileConstant = "brotli";
 
-        private BrotliLevel _level;
+        private readonly BrotliLevel _level;
 
         public BrotliCodec()
             : this(BrotliLevel.Default)
@@ -70,7 +68,8 @@ namespace Avro.Codec.Brotli
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
-            using (BrotliSharpLib.BrotliStream brotliStreams = new BrotliSharpLib.BrotliStream(outputStream, CompressionMode.Compress, false))
+            outputStream.SetLength(0);
+            using (BrotliStream brotliStreams = new BrotliStream(outputStream, System.IO.Compression.CompressionMode.Compress, false))
             {
                 brotliStreams.SetQuality((int)_level);
                 inputStream.CopyTo(brotliStreams);
