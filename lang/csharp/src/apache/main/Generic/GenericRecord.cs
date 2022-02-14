@@ -59,14 +59,8 @@ namespace Avro.Generic
         /// Value of the field with the given name.
         /// </returns>
         /// <exception cref="KeyNotFoundException">Key name: {fieldName}</exception>
-        public object this[string fieldName]
-        {
-            get
-            {
-                return Schema.TryGetField(fieldName, out Field field) ? _contents[field.Pos] :
+        public object this[string fieldName] => Schema.TryGetField(fieldName, out Field field) ? _contents[field.Pos] :
                     throw new KeyNotFoundException($"Key name: {fieldName}");
-            }
-        }
 
         /// <summary>
         /// Sets the value for a field. You may call this method multiple times with the same
@@ -118,10 +112,7 @@ namespace Avro.Generic
         /// Value of the field with the given position.
         /// </returns>
         /// <exception cref="IndexOutOfRangeException"><paramref name="fieldPos" /></exception>
-        public object GetValue(int fieldPos)
-        {
-            return _contents[fieldPos];
-        }
+        public object GetValue(int fieldPos) => _contents[fieldPos];
 
         /// <summary>
         /// Adds the value in the specified field position.
@@ -153,17 +144,11 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return this == obj ? true :
+        public override bool Equals(object obj) => this == obj ? true :
                 obj is GenericRecord genericRecord && Equals(genericRecord);
-        }
 
         /// <inheritdoc/>
-        public bool Equals(GenericRecord other)
-        {
-            return Schema.Equals(other.Schema) && arraysEqual(_contents, other._contents);
-        }
+        public bool Equals(GenericRecord other) => Schema.Equals(other.Schema) && ArraysEqual(_contents, other._contents);
 
         /// <summary>
         /// Validates the dictionaries contain the same values
@@ -171,7 +156,7 @@ namespace Avro.Generic
         /// <param name="left">The left.</param>
         /// <param name="right">The right.</param>
         /// <returns>True, if the dictionaries contain the same values</returns>
-        private static bool mapsEqual(IDictionary left, IDictionary right)
+        private static bool MapsEquals(IDictionary left, IDictionary right)
         {
             if (left.Count != right.Count)
             {
@@ -180,7 +165,7 @@ namespace Avro.Generic
 
             foreach (DictionaryEntry kv in left)
             {
-                if (!right.Contains(kv.Key) || !objectsEqual(right[kv.Key], kv.Value))
+                if (!right.Contains(kv.Key) || !ObjectsEquals(right[kv.Key], kv.Value))
                 {
                     return false;
                 }
@@ -195,7 +180,7 @@ namespace Avro.Generic
         /// <param name="left">The left.</param>
         /// <param name="right">The right.</param>
         /// <returns>true, if the objects are equal</returns>
-        private static bool objectsEqual(object left, object right)
+        private static bool ObjectsEquals(object left, object right)
         {
             // Ignoring IDE0046 for readability
 
@@ -211,12 +196,12 @@ namespace Avro.Generic
 
             if (left is Array leftArray)
             {
-                return !(right is Array rightArray) ? false : arraysEqual(leftArray, rightArray);
+                return !(right is Array rightArray) ? false : ArraysEqual(leftArray, rightArray);
             }
 
             if (left is IDictionary leftDictionary)
             {
-                return !(right is IDictionary rightDictionary) ? false : mapsEqual(leftDictionary, rightDictionary);
+                return !(right is IDictionary rightDictionary) ? false : MapsEquals(leftDictionary, rightDictionary);
             }
 
             return left.Equals(right);
@@ -228,7 +213,7 @@ namespace Avro.Generic
         /// <param name="left">The left.</param>
         /// <param name="right">The right.</param>
         /// <returns>true, if the arrays contain the same values</returns>
-        private static bool arraysEqual(Array left, Array right)
+        private static bool ArraysEqual(Array left, Array right)
         {
             if (left.Length != right.Length)
             {
@@ -237,7 +222,7 @@ namespace Avro.Generic
 
             for (int i = 0; i < left.Length; i++)
             {
-                if (!objectsEqual(left.GetValue(i), right.GetValue(i)))
+                if (!ObjectsEquals(left.GetValue(i), right.GetValue(i)))
                 {
                     return false;
                 }
@@ -247,10 +232,7 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return 31 * _contents.GetHashCode();
-        }
+        public override int GetHashCode() => 31 * _contents.GetHashCode();
 
         /// <inheritdoc/>
         public override string ToString()
