@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -42,7 +43,7 @@ namespace Avro.File
         private MemoryStream _blockStream;
         private MemoryStream _compressedBlockStream;
         private Encoder _encoder, _blockEncoder;
-        private DatumWriter<T> _writer;
+        private readonly DatumWriter<T> _writer;
 
         private byte[] _syncData;
         private bool _isOpen;
@@ -170,17 +171,11 @@ namespace Avro.File
         /// </exception>
         public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
         {
-            if (!inStream.CanRead)
-            {
-                throw new AvroRuntimeException($"{nameof(inStream)} must have Read access");
-            }
-
-            if (!outStream.CanWrite)
-            {
-                throw new AvroRuntimeException($"{nameof(outStream)} must have Write access");
-            }
-
-            return new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
+            return !inStream.CanRead ?
+                throw new AvroRuntimeException($"{nameof(inStream)} must have Read access") :
+                !outStream.CanWrite ?
+                throw new AvroRuntimeException($"{nameof(outStream)} must have Write access") :
+                new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
         }
 
         /// <summary>
@@ -199,17 +194,28 @@ namespace Avro.File
             return key.StartsWith(DataFileConstants.MetaDataReserved, StringComparison.Ordinal);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Set metadata pair.
+        /// </summary>
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        /// <exception cref="AvroRuntimeException">Cannot set reserved meta key: {key}</exception>
         public void SetMeta(string key, byte[] value)
         {
             if (IsReservedMeta(key))
             {
-                throw new AvroRuntimeException("Cannot set reserved meta key: " + key);
+                throw new AvroRuntimeException($"Cannot set reserved meta key: {key}");
             }
+
             _metaData.Add(key, value);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Set metadata pair (long value).
+        /// </summary>
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        /// <exception cref="AvroRuntimeException"></exception>
         public void SetMeta(string key, long value)
         {
             try
@@ -222,7 +228,12 @@ namespace Avro.File
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Set metadata pair (string value).
+        /// </summary>
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        /// <exception cref="AvroRuntimeException"></exception>
         public void SetMeta(string key, string value)
         {
             try
@@ -235,17 +246,27 @@ namespace Avro.File
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Set the synchronization interval for this file or stream, in bytes. Valid values range
+        /// from 32 to 2^30. Suggested values are between 2K and 2M.
+        /// </summary>
+        /// <param name="syncInterval">Approximate number of uncompressed bytes to write in each block.</param>
+        /// <exception cref="AvroRuntimeException">Invalid sync interval value: {syncInterval}</exception>
         public void SetSyncInterval(int syncInterval)
         {
             if (syncInterval < 32 || syncInterval > (1 << 30))
             {
-                throw new AvroRuntimeException("Invalid sync interval value: " + syncInterval);
+                throw new AvroRuntimeException($"Invalid sync interval value: {syncInterval}");
             }
+
             _syncInterval = syncInterval;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Append datum to a file or stream.
+        /// </summary>
+        /// <param name="datum">Datum to append.</param>
+        /// <exception cref="AvroRuntimeException">Error appending datum to writer</exception>
         public void Append(T datum)
         {
             AssertOpen();
@@ -262,6 +283,7 @@ namespace Avro.File
                 _blockStream.Position = usedBuffer;
                 throw new AvroRuntimeException("Error appending datum to writer", e);
             }
+
             _blockCount++;
             WriteIfBlockFull();
         }
@@ -288,7 +310,7 @@ namespace Avro.File
         /// </summary>
         /// <param name="inStream">The in stream.</param>
         /// <param name="outStream">The out stream.</param>
-        /// <returns></returns>
+        /// <returns>The file writer</returns>
         private IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
         {
             using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
@@ -360,7 +382,10 @@ namespace Avro.File
             Flush();
             _stream.Flush();
             if (!_leaveOpen)
+            {
                 _stream.Close();
+            }
+
             _blockStream.Dispose();
             _compressedBlockStream.Dispose();
             _isOpen = false;
@@ -388,7 +413,9 @@ namespace Avro.File
             _compressedBlockStream = new MemoryStream();
 
             if (_codec == null)
+            {
                 _codec = Codec.CreateCodec(Codec.Type.Null);
+            }
 
             _isOpen = true;
         }
@@ -399,7 +426,10 @@ namespace Avro.File
         /// <exception cref="AvroRuntimeException">Cannot complete operation: avro file/stream not open</exception>
         private void AssertOpen()
         {
-            if (!_isOpen) throw new AvroRuntimeException("Cannot complete operation: avro file/stream not open");
+            if (!_isOpen)
+            {
+                throw new AvroRuntimeException("Cannot complete operation: avro file/stream not open");
+            }
         }
 
         private IFileWriter<T> Create(Schema schema, Stream outStream, Codec codec, bool leaveOpen)
@@ -422,6 +452,7 @@ namespace Avro.File
         {
             // Add sync, code & schema to metadata
             GenerateSyncData();
+
             //SetMetaInternal(DataFileConstants.MetaDataSync, _syncData); - Avro 1.5.4 C
             SetMetaInternal(DataFileConstants.MetaDataCodec, GetByteValue(_codec.GetName()));
             SetMetaInternal(DataFileConstants.MetaDataSchema, GetByteValue(_schema.ToString()));
@@ -435,6 +466,7 @@ namespace Avro.File
                 _encoder.WriteString(metaPair.Key);
                 _encoder.WriteBytes(metaPair.Value);
             }
+
             _encoder.WriteMapEnd();
         }
 
@@ -444,7 +476,9 @@ namespace Avro.File
         private void WriteIfBlockFull()
         {
             if (BufferInUse() >= _syncInterval)
+            {
                 WriteBlock();
+            }
         }
 
         /// <summary>
@@ -537,7 +571,9 @@ namespace Avro.File
         {
             Close();
             if (disposing && !_leaveOpen)
+            {
                 _stream.Dispose();
+            }
         }
     }
 }
