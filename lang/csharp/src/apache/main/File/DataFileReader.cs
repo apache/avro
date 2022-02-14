@@ -200,7 +200,13 @@ namespace Avro.File
             return _header.MetaData.Keys;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Return the byte value of a metadata property.
+        /// </summary>
+        /// <param name="key">Key for the metadata entry.</param>
+        /// <returns>
+        /// Raw bytes of the value of the metadata entry. If key is not found null will be returned.
+        /// </returns>
         public byte[] GetMeta(string key)
         {
             try
@@ -219,7 +225,15 @@ namespace Avro.File
             return long.Parse(GetMetaString(key), CultureInfo.InvariantCulture);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Return the string value of a metadata property. This method assumes that the string is a
+        /// UTF-8 encoded in the header.
+        /// </summary>
+        /// <param name="key">Key for the metadata entry.</param>
+        /// <returns>
+        /// Metadata value as a string.
+        /// </returns>
+        /// <exception cref="AvroRuntimeException">Error fetching meta data for key: {key}</exception>
         public string GetMetaString(string key)
         {
             byte[] value = GetMeta(key);
@@ -233,16 +247,22 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
-                    "Error fetching meta data for key: {0}", key), e);
+                throw new AvroRuntimeException($"Error fetching meta data for key: {key}", e);
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Move to a specific, known synchronization point,
+        /// one returned from <see cref="Sync" /> while writing.
+        /// </summary>
+        /// <param name="position">Position to jump to.</param>
+        /// <exception cref="AvroRuntimeException">Not a valid input stream - must be seekable!</exception>
         public void Seek(long position)
         {
             if (!_stream.CanSeek)
+            {
                 throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
+            }
 
             _stream.Position = position;
             _decoder = new BinaryDecoder(_stream);
@@ -296,7 +316,13 @@ namespace Avro.File
             return (_blockStart >= position + DataFileConstants.SyncSize) || (_blockStart >= _stream.Length);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Return the last synchronization point before our current position.
+        /// </summary>
+        /// <returns>
+        /// Position of the last synchronization point before our current position.
+        /// </returns>
+        /// <exception cref="AvroRuntimeException">Not a valid input stream - must be seekable!</exception>
         public long PreviousSync()
         {
             return _stream.CanSeek ? _blockStart :
@@ -321,7 +347,13 @@ namespace Avro.File
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns true if more entries remain in this file.
+        /// </summary>
+        /// <returns>
+        /// True if more entries remain in this file, false otherwise.
+        /// </returns>
+        /// <exception cref="AvroRuntimeException">Error fetching next object from block: {e}</exception>
         public bool HasNext()
         {
             try
@@ -342,8 +374,7 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
-                    "Error fetching next object from block: {0}", e));
+                throw new AvroRuntimeException($"Error fetching next object from block: {e}");
             }
         }
 
@@ -371,10 +402,14 @@ namespace Avro.File
         protected virtual void Dispose(bool disposing)
         {
             if (!_leaveOpen)
+            {
                 _stream.Close();
+            }
 
             if (disposing && !_leaveOpen)
+            {
                 _stream.Dispose();
+            }
         }
 
         /// <summary>
@@ -403,8 +438,11 @@ namespace Avro.File
             {
                 throw new AvroRuntimeException("Not a valid data file!", e);
             }
+
             if (!firstBytes.SequenceEqual(DataFileConstants.Magic))
+            {
                 throw new AvroRuntimeException("Not a valid data file!");
+            }
 
             // read meta data
             long len = _decoder.ReadMapStart();
@@ -476,17 +514,22 @@ namespace Avro.File
         /// Reads the next datum from the file.
         /// </summary>
         /// <param name="reuse">The reuse.</param>
-        /// <returns>Next deserialized data entry.</returns>
-        /// <exception cref="AvroRuntimeException">No more datum objects remaining in block!
+        /// <returns>
+        /// Next deserialized data entry.
+        /// </returns>
+        /// <exception cref="AvroRuntimeException">
+        /// No more datum objects remaining in block!
         /// or
-        /// Error fetching next object from block: {0}.
+        /// Error fetching next object from block: {e}
         /// </exception>
         private T Next(T reuse)
         {
             try
             {
                 if (!HasNext())
+                {
                     throw new AvroRuntimeException("No more datum objects remaining in block!");
+                }
 
                 T result = _reader.Read(reuse, _datumDecoder);
                 if (--_blockRemaining == 0)
@@ -497,8 +540,7 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
-                    "Error fetching next object from block: {0}", e));
+                throw new AvroRuntimeException($"Error fetching next object from block: {e}");
             }
         }
 
@@ -508,7 +550,9 @@ namespace Avro.File
         private void BlockFinished()
         {
             if (_stream.CanSeek)
+            {
                 _blockStart = _stream.Position;
+            }
         }
 
         /// <summary>
@@ -524,7 +568,9 @@ namespace Avro.File
         private DataBlock NextRawBlock(DataBlock reuse)
         {
             if (!HasNextBlock())
+            {
                 throw new AvroRuntimeException("No data remaining in block!");
+            }
 
             if (reuse == null || reuse.Data.Length < _blockSize)
             {
@@ -540,7 +586,9 @@ namespace Avro.File
             _decoder.ReadFixed(_syncBuffer);
 
             if (!Enumerable.SequenceEqual(_syncBuffer, _header.SyncData))
+            {
                 throw new AvroRuntimeException("Invalid sync!");
+            }
 
             _availableBlock = false;
             return reuse;
@@ -549,14 +597,21 @@ namespace Avro.File
         /// <summary>
         /// Evaluates if there is data left in the stream.
         /// </summary>
-        /// <returns>True if there is data left in the stream, otherwise false.</returns>
+        /// <returns>
+        /// True if there is data left in the stream, otherwise false.
+        /// </returns>
         private bool DataLeft()
         {
             long currentPosition = _stream.Position;
+
             if (_stream.ReadByte() != -1)
+            {
                 _stream.Position = currentPosition;
+            }
             else
+            {
                 return false;
+            }
 
             return true;
         }
@@ -568,9 +623,9 @@ namespace Avro.File
         ///   <c>true</c> if [has next block]; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="AvroRuntimeException">
-        /// Block size invalid or too large for this implementation: " + _blockSize
+        /// Block size invalid or too large for this implementation: {_blockSize}
         /// or
-        /// Error ascertaining if data has next block: {0}.
+        /// Error ascertaining if data has next block: {e}
         /// </exception>
         private bool HasNextBlock()
         {
@@ -578,13 +633,17 @@ namespace Avro.File
             {
                 // block currently being read
                 if (_availableBlock)
+                {
                     return true;
+                }
 
                 // check to ensure still data to read
                 if (_stream.CanSeek)
                 {
                     if (!DataLeft())
+                    {
                         return false;
+                    }
 
                     _blockRemaining = _decoder.ReadLong();      // read block count
                 }
@@ -605,16 +664,15 @@ namespace Avro.File
                 _blockSize = _decoder.ReadLong();           // read block size
                 if (_blockSize > int.MaxValue || _blockSize < 0)
                 {
-                    throw new AvroRuntimeException("Block size invalid or too large for this " +
-                                                   "implementation: " + _blockSize);
+                    throw new AvroRuntimeException($"Block size invalid or too large for this implementation: {_blockSize}");
                 }
+
                 _availableBlock = true;
                 return true;
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
-                    "Error ascertaining if data has next block: {0}", e), e);
+                throw new AvroRuntimeException($"Error ascertaining if data has next block: {e}", e);
             }
         }
 
