@@ -42,36 +42,6 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema)
-        {
-            return new GenericArrayAccess();
-        }
-
-        /// <inheritdoc/>
-        protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
-        {
-            return new GenericEnumAccess(readerSchema);
-        }
-
-        /// <inheritdoc/>
-        protected override FixedAccess GetFixedAccess(FixedSchema readerSchema)
-        {
-            return new GenericFixedAccess(readerSchema);
-        }
-
-        /// <inheritdoc/>
-        protected override MapAccess GetMapAccess(MapSchema readerSchema)
-        {
-            return new GenericMapAccess();
-        }
-
-        /// <inheritdoc/>
-        protected override RecordAccess GetRecordAccess(RecordSchema readerSchema)
-        {
-            return new GenericRecordAccess(readerSchema);
-        }
-
-        /// <inheritdoc/>
         protected override bool IsReusable(Schema.Type tag)
         {
             switch (tag)
@@ -90,92 +60,34 @@ namespace Avro.Generic
             return true;
         }
 
-        /// <summary>
-        /// Generic Record Access
-        /// </summary>
-        /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
-        internal class GenericRecordAccess : RecordAccess
+        /// <inheritdoc/>
+        protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema)
         {
-            private readonly RecordSchema _schema;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="GenericRecordAccess"/> class.
-            /// </summary>
-            /// <param name="schema">The schema.</param>
-            public GenericRecordAccess(RecordSchema schema)
-            {
-                _schema = schema;
-            }
-
-            /// <inheritdoc/>
-            public void AddField(object record, string fieldName, int fieldPos, object fieldValue)
-            {
-                ((GenericRecord)record).Add(fieldName, fieldValue);
-            }
-
-            /// <inheritdoc/>
-            public object CreateRecord(object reuse)
-            {
-                GenericRecord ru = (reuse == null || !(reuse is GenericRecord) || !(reuse as GenericRecord).Schema.Equals(_schema)) ?
-                    new GenericRecord(_schema) :
-                    reuse as GenericRecord;
-                return ru;
-            }
-
-            /// <inheritdoc/>
-            public object GetField(object record, string fieldName, int fieldPos)
-            {
-                return !((GenericRecord)record).TryGetValue(fieldPos, out object result) ?
-                    null : result;
-            }
+            return new GenericArrayAccess();
         }
 
-        /// <summary>
-        /// Generic Array Access
-        /// </summary>
-        /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
-        private class GenericArrayAccess : ArrayAccess
+        /// <inheritdoc/>
+        protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
         {
-            /// <inheritdoc/>
-            public void AddElements(object arrayObj, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse)
-            {
-                object[] array = (object[])arrayObj;
-                for (int i = index; i < index + elements; i++)
-                {
-                    array[i] = reuse ? itemReader(array[i], decoder) : itemReader(null, decoder);
-                }
-            }
+            return new GenericEnumAccess(readerSchema);
+        }
 
-            /// <inheritdoc/>
-            public object Create(object reuse)
-            {
-                return (reuse is object[]) ? reuse : Array.Empty<object>();
-            }
+        /// <inheritdoc/>
+        protected override MapAccess GetMapAccess(MapSchema readerSchema)
+        {
+            return new GenericMapAccess();
+        }
 
-            /// <inheritdoc/>
-            public void EnsureSize(ref object array, int targetSize)
-            {
-                if (((object[])array).Length < targetSize)
-                    SizeTo(ref array, targetSize);
-            }
+        /// <inheritdoc/>
+        protected override RecordAccess GetRecordAccess(RecordSchema readerSchema)
+        {
+            return new GenericRecordAccess(readerSchema);
+        }
 
-            /// <inheritdoc/>
-            public void Resize(ref object array, int targetSize)
-            {
-                SizeTo(ref array, targetSize);
-            }
-
-            /// <summary>
-            /// Sizes to.
-            /// </summary>
-            /// <param name="array">The array.</param>
-            /// <param name="targetSize">Size of the target.</param>
-            private static void SizeTo(ref object array, int targetSize)
-            {
-                object[] o = (object[])array;
-                Array.Resize(ref o, targetSize);
-                array = o;
-            }
+        /// <inheritdoc/>
+        protected override FixedAccess GetFixedAccess(FixedSchema readerSchema)
+        {
+            return new GenericFixedAccess(readerSchema);
         }
 
         /// <summary>
@@ -212,6 +124,46 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Generic Record Access
+        /// </summary>
+        /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
+        internal class GenericRecordAccess : RecordAccess
+        {
+            private readonly RecordSchema _schema;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="GenericRecordAccess"/> class.
+            /// </summary>
+            /// <param name="schema">The schema.</param>
+            public GenericRecordAccess(RecordSchema schema)
+            {
+                _schema = schema;
+            }
+
+            /// <inheritdoc/>
+            public object CreateRecord(object reuse)
+            {
+                GenericRecord ru = (reuse == null || !(reuse is GenericRecord) || !(reuse as GenericRecord).Schema.Equals(_schema)) ?
+                    new GenericRecord(_schema) :
+                    reuse as GenericRecord;
+                return ru;
+            }
+
+            /// <inheritdoc/>
+            public object GetField(object record, string fieldName, int fieldPos)
+            {
+                return !((GenericRecord)record).TryGetValue(fieldPos, out object result) ?
+                    null : result;
+            }
+
+            /// <inheritdoc/>
+            public void AddField(object record, string fieldName, int fieldPos, object fieldValue)
+            {
+                ((GenericRecord)record).Add(fieldName, fieldValue);
+            }
+        }
+
+        /// <summary>
         /// Generic Fixed Access
         /// </summary>
         /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
@@ -243,11 +195,70 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Generic Array Access
+        /// </summary>
+        /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
+        private class GenericArrayAccess : ArrayAccess
+        {
+            /// <inheritdoc/>
+            public object Create(object reuse)
+            {
+                return (reuse is object[]) ? reuse : Array.Empty<object>();
+            }
+
+            /// <inheritdoc/>
+            public void EnsureSize(ref object array, int targetSize)
+            {
+                if (((object[])array).Length < targetSize)
+                    SizeTo(ref array, targetSize);
+            }
+
+            /// <inheritdoc/>
+            public void Resize(ref object array, int targetSize)
+            {
+                SizeTo(ref array, targetSize);
+            }
+
+            /// <inheritdoc/>
+            public void AddElements(object arrayObj, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse)
+            {
+                object[] array = (object[])arrayObj;
+                for (int i = index; i < index + elements; i++)
+                {
+                    array[i] = reuse ? itemReader(array[i], decoder) : itemReader(null, decoder);
+                }
+            }
+
+            /// <summary>
+            /// Sizes to.
+            /// </summary>
+            /// <param name="array">The array.</param>
+            /// <param name="targetSize">Size of the target.</param>
+            private static void SizeTo(ref object array, int targetSize)
+            {
+                object[] o = (object[])array;
+                Array.Resize(ref o, targetSize);
+                array = o;
+            }
+        }
+
+        /// <summary>
         /// Generic Map Access
         /// </summary>
         /// <seealso cref="PreresolvingDatumReader&lt;T&gt;" />
         private class GenericMapAccess : MapAccess
         {
+            /// <inheritdoc/>
+            public object Create(object reuse)
+            {
+                if (reuse is IDictionary<string, object> result)
+                {
+                    result.Clear();
+                    return result;
+                }
+                return new Dictionary<string, object>();
+            }
+
             /// <inheritdoc/>
             // TODO: reuse is not used, create overload and deprecate this, or implement with reuse
             public void AddElements(object mapObj, int elements, ReadItem itemReader, Decoder decoder, bool reuse)
@@ -258,17 +269,6 @@ namespace Avro.Generic
                     string key = decoder.ReadString();
                     map[key] = itemReader(null, decoder);
                 }
-            }
-
-            /// <inheritdoc/>
-            public object Create(object reuse)
-            {
-                if (reuse is IDictionary<string, object> result)
-                {
-                    result.Clear();
-                    return result;
-                }
-                return new Dictionary<string, object>();
             }
         }
     }
