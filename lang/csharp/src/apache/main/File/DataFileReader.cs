@@ -67,10 +67,7 @@ namespace Avro.File
         /// <returns>
         /// File Reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(string path)
-        {
-            return OpenReader(new FileStream(path, FileMode.Open), null);
-        }
+        public static IFileReader<T> OpenReader(string path) => OpenReader(new FileStream(path, FileMode.Open), null);
 
         /// <summary>
         /// Open a reader for a file using path and the reader's schema.
@@ -80,10 +77,7 @@ namespace Avro.File
         /// <returns>
         /// A new file reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(string path, Schema readerSchema)
-        {
-            return OpenReader(new FileStream(path, FileMode.Open), readerSchema);
-        }
+        public static IFileReader<T> OpenReader(string path, Schema readerSchema) => OpenReader(new FileStream(path, FileMode.Open), readerSchema);
 
         /// <summary>
         /// Open a reader for a stream.
@@ -92,10 +86,7 @@ namespace Avro.File
         /// <returns>
         /// File Reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream)
-        {
-            return OpenReader(inStream, null);
-        }
+        public static IFileReader<T> OpenReader(Stream inStream) => OpenReader(inStream, null);
 
         /// <summary>
         /// Open a reader for a stream.
@@ -105,10 +96,7 @@ namespace Avro.File
         /// <returns>
         /// File Reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream, bool leaveOpen)
-        {
-            return OpenReader(inStream, null, leaveOpen);
-        }
+        public static IFileReader<T> OpenReader(Stream inStream, bool leaveOpen) => OpenReader(inStream, null, leaveOpen);
 
         /// <summary>
         /// Open a reader for a stream using the reader's schema.
@@ -118,10 +106,7 @@ namespace Avro.File
         /// <returns>
         /// A new file reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema)
-        {
-            return OpenReader(inStream, readerSchema, CreateDefaultReader);
-        }
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema) => OpenReader(inStream, readerSchema, CreateDefaultReader);
 
         /// <summary>
         /// Open a reader for a stream using the reader's schema.
@@ -132,10 +117,7 @@ namespace Avro.File
         /// <returns>
         /// A new file reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, bool leaveOpen)
-        {
-            return OpenReader(inStream, readerSchema, CreateDefaultReader, leaveOpen);
-        }
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, bool leaveOpen) => OpenReader(inStream, readerSchema, CreateDefaultReader, leaveOpen);
 
         /// <summary>
         /// Open a reader for a stream using the reader's schema and a custom DatumReader.
@@ -146,10 +128,7 @@ namespace Avro.File
         /// <returns>
         /// A new file reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
-        {
-            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, false);         // (not supporting 1.2 or below, format)
-        }
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory) => new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, false);         // (not supporting 1.2 or below, format)
 
         /// <summary>
         /// Open a reader for a stream using the reader's schema and a custom DatumReader.
@@ -161,10 +140,7 @@ namespace Avro.File
         /// <returns>
         /// A new file reader.
         /// </returns>
-        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
-        {
-            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, leaveOpen);         // (not supporting 1.2 or below, format)
-        }
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen) => new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, leaveOpen);         // (not supporting 1.2 or below, format)
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataFileReader{T}"/> class.
@@ -183,22 +159,13 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public Header GetHeader()
-        {
-            return _header;
-        }
+        public Header GetHeader() => _header;
 
         /// <inheritdoc/>
-        public Schema GetSchema()
-        {
-            return _header.Schema;
-        }
+        public Schema GetSchema() => _header.Schema;
 
         /// <inheritdoc/>
-        public ICollection<string> GetMetaKeys()
-        {
-            return _header.MetaData.Keys;
-        }
+        public ICollection<string> GetMetaKeys() => _header.MetaData.Keys;
 
         /// <summary>
         /// Return the byte value of a metadata property.
@@ -220,10 +187,7 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public long GetMetaLong(string key)
-        {
-            return long.Parse(GetMetaString(key), CultureInfo.InvariantCulture);
-        }
+        public long GetMetaLong(string key) => long.Parse(GetMetaString(key), CultureInfo.InvariantCulture);
 
         /// <summary>
         /// Return the string value of a metadata property. This method assumes that the string is a
@@ -241,6 +205,7 @@ namespace Avro.File
             {
                 return null;
             }
+
             try
             {
                 return System.Text.Encoding.UTF8.GetString(value);
@@ -311,10 +276,7 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public bool PastSync(long position)
-        {
-            return (_blockStart >= position + DataFileConstants.SyncSize) || (_blockStart >= _stream.Length);
-        }
+        public bool PastSync(long position) => (_blockStart >= position + DataFileConstants.SyncSize) || (_blockStart >= _stream.Length);
 
         /// <summary>
         /// Return the last synchronization point before our current position.
@@ -323,17 +285,11 @@ namespace Avro.File
         /// Position of the last synchronization point before our current position.
         /// </returns>
         /// <exception cref="AvroRuntimeException">Not a valid input stream - must be seekable!</exception>
-        public long PreviousSync()
-        {
-            return _stream.CanSeek ? _blockStart :
+        public long PreviousSync() => _stream.CanSeek ? _blockStart :
                 throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
-        }
 
         /// <inheritdoc/>
-        public long Tell()
-        {
-            return _stream.Position;
-        }
+        public long Tell() => _stream.Position;
 
         /// <inheritdoc/>
         public IEnumerable<T> NextEntries
@@ -370,6 +326,7 @@ namespace Avro.File
                         _datumDecoder = new BinaryDecoder(_currentBlock.GetDataAsStream());
                     }
                 }
+
                 return _blockRemaining != 0;
             }
             catch (Exception e)
@@ -381,10 +338,7 @@ namespace Avro.File
         /// <summary>
         /// Resets this reader.
         /// </summary>
-        public void Reset()
-        {
-            Init(_stream);
-        }
+        public void Reset() => Init(_stream);
 
         /// <inheritdoc/>
         public void Dispose()
@@ -490,6 +444,7 @@ namespace Avro.File
             {
                 reader = new GenericReader<T>(writerSchema, readerSchema);
             }
+
             return reader;
         }
 
@@ -499,16 +454,10 @@ namespace Avro.File
         /// <returns>
         /// Resolved codec.
         /// </returns>
-        private Codec ResolveCodec()
-        {
-            return Codec.CreateCodecFromString(GetMetaString(DataFileConstants.MetaDataCodec));
-        }
+        private Codec ResolveCodec() => Codec.CreateCodecFromString(GetMetaString(DataFileConstants.MetaDataCodec));
 
         /// <inheritdoc/>
-        public T Next()
-        {
-            return Next(default);
-        }
+        public T Next() => Next(default);
 
         /// <summary>
         /// Reads the next datum from the file.
@@ -536,6 +485,7 @@ namespace Avro.File
                 {
                     BlockFinished();
                 }
+
                 return result;
             }
             catch (Exception e)
@@ -722,10 +672,7 @@ namespace Avro.File
             /// Gets the data as stream.
             /// </summary>
             /// <returns>A stream.</returns>
-            internal Stream GetDataAsStream()
-            {
-                return new MemoryStream(Data);
-            }
+            internal Stream GetDataAsStream() => new MemoryStream(Data);
         }
     }
 }
