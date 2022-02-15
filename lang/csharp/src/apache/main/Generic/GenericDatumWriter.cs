@@ -50,28 +50,26 @@ namespace Avro.Generic
         /// <inheritdoc/>
         protected override void EnsureRecordObject(RecordSchema recordSchema, object value)
         {
-            if (value == null || !(value is GenericRecord) || !(value as GenericRecord).Schema.Equals(recordSchema))
+            if (!(value is GenericRecord genericRecord) || !genericRecord.Schema.Equals(recordSchema))
             {
                 throw TypeMismatch(value, "record", "GenericRecord");
             }
         }
 
         /// <inheritdoc/>
-        protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder)
-        {
-            writer(((GenericRecord)record).GetValue(fieldPos), encoder);
-        }
+        protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder) => writer(((GenericRecord)record).GetValue(fieldPos), encoder);
 
         /// <inheritdoc/>
-        protected override WriteItem ResolveEnum(EnumSchema es)
-        {
-            return (v, e) =>
-                       {
-                           if (v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
-                               throw TypeMismatch(v, "enum", "GenericEnum");
-                           e.WriteEnum(es.Ordinal((v as GenericEnum).Value));
-                       };
-        }
+        protected override WriteItem ResolveEnum(EnumSchema es) =>
+            (v, e) =>
+            {
+                if (v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
+                {
+                    throw TypeMismatch(v, "enum", "GenericEnum");
+                }
+
+                e.WriteEnum(es.Ordinal((v as GenericEnum).Value));
+            };
 
         /// <inheritdoc/>
         protected override void WriteFixed(FixedSchema es, object value, Encoder encoder)
@@ -80,6 +78,7 @@ namespace Avro.Generic
             {
                 throw TypeMismatch(value, "fixed", "GenericFixed");
             }
+
             GenericFixed ba = (GenericFixed)value;
             encoder.WriteFixed(ba.Value);
         }
@@ -102,7 +101,10 @@ namespace Avro.Generic
         protected override bool UnionBranchMatches(Schema sc, object obj)
         {
             if (obj == null && sc.Tag != Schema.Type.Null)
+            {
                 return false;
+            }
+
             switch (sc.Tag)
             {
                 case Schema.Type.Null:
@@ -177,10 +179,7 @@ namespace Avro.Generic
             }
 
             /// <inheritdoc/>
-            public long GetArrayLength(object value)
-            {
-                return ((Array)value).Length;
-            }
+            public long GetArrayLength(object value) => ((Array)value).Length;
 
             /// <inheritdoc/>
             public void WriteArrayValues(object array, WriteItem valueWriter, Encoder encoder)
