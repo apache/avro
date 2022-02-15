@@ -61,10 +61,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path)
-        {
-            return OpenWriter(writer, new FileStream(path, FileMode.Create), Codec.CreateCodec(Codec.Type.Null));
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path) => OpenWriter(writer, new FileStream(path, FileMode.Create), Codec.CreateCodec(Codec.Type.Null));
 
         /// <summary>
         /// Open a new writer instance to write
@@ -75,10 +72,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream)
-        {
-            return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null));
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream) => OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null));
 
         /// <summary>
         /// Open a new writer instance to write
@@ -90,10 +84,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, bool leaveOpen)
-        {
-            return OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null), leaveOpen);
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, bool leaveOpen) => OpenWriter(writer, outStream, Codec.CreateCodec(Codec.Type.Null), leaveOpen);
 
         /// <summary>
         /// Open a new writer instance to write
@@ -105,10 +96,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path, Codec codec)
-        {
-            return OpenWriter(writer, new FileStream(path, FileMode.Create), codec);
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, string path, Codec codec) => OpenWriter(writer, new FileStream(path, FileMode.Create), codec);
 
         /// <summary>
         /// Open a new writer instance to write
@@ -120,10 +108,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec)
-        {
-            return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, false);
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec) => new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, false);
 
         /// <summary>
         /// Open a new writer instance to write
@@ -136,10 +121,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec, bool leaveOpen)
-        {
-            return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, leaveOpen);
-        }
+        public static IFileWriter<T> OpenWriter(DatumWriter<T> writer, Stream outStream, Codec codec, bool leaveOpen) => new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, leaveOpen);
 
         /// <summary>
         /// Open a new writer instance to append to a file path.
@@ -149,10 +131,7 @@ namespace Avro.File
         /// <returns>
         /// A new file writer.
         /// </returns>
-        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path)
-        {
-            return new DataFileWriter<T>(writer).AppendTo(path);
-        }
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path) => new DataFileWriter<T>(writer).AppendTo(path);
 
         /// <summary>
         /// Open a new writer instance to append to an output stream.
@@ -169,14 +148,12 @@ namespace Avro.File
         /// or
         /// {nameof(outStream)} must have Write access
         /// </exception>
-        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
-        {
-            return !inStream.CanRead ?
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream) =>
+            !inStream.CanRead ?
                 throw new AvroRuntimeException($"{nameof(inStream)} must have Read access") :
                 !outStream.CanWrite ?
                 throw new AvroRuntimeException($"{nameof(outStream)} must have Write access") :
                 new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataFileWriter{T}"/> class.
@@ -189,10 +166,7 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public bool IsReservedMeta(string key)
-        {
-            return key.StartsWith(DataFileConstants.MetaDataReserved, StringComparison.Ordinal);
-        }
+        public bool IsReservedMeta(string key) => key.StartsWith(DataFileConstants.MetaDataReserved, StringComparison.Ordinal);
 
         /// <summary>
         /// Set metadata pair.
@@ -295,9 +269,9 @@ namespace Avro.File
         /// <returns>a file writer</returns>
         private IFileWriter<T> AppendTo(string path)
         {
-            using (var inStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (FileStream inStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                var outStream = new FileStream(path, FileMode.Append);
+                FileStream outStream = new FileStream(path, FileMode.Append);
                 return AppendTo(inStream, outStream);
             }
 
@@ -487,10 +461,7 @@ namespace Avro.File
         /// <returns>
         /// Position of block stream
         /// </returns>
-        private long BufferInUse()
-        {
-            return _blockStream.Position;
-        }
+        private long BufferInUse() => _blockStream.Position;
 
         /// <summary>
         /// Writes the block.
@@ -518,10 +489,7 @@ namespace Avro.File
         /// <summary>
         /// Writes the synchronize data.
         /// </summary>
-        private void WriteSyncData()
-        {
-            _encoder.WriteFixed(_syncData);
-        }
+        private void WriteSyncData() => _encoder.WriteFixed(_syncData);
 
         /// <summary>
         /// Generates the synchronize data.
@@ -539,20 +507,14 @@ namespace Avro.File
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        private void SetMetaInternal(string key, byte[] value)
-        {
-            _metaData.Add(key, value);
-        }
+        private void SetMetaInternal(string key, byte[] value) => _metaData.Add(key, value);
 
         /// <summary>
         /// Gets the byte value.
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>byte array of string value</returns>
-        private byte[] GetByteValue(string value)
-        {
-            return System.Text.Encoding.UTF8.GetBytes(value);
-        }
+        private byte[] GetByteValue(string value) => System.Text.Encoding.UTF8.GetBytes(value);
 
         /// <inheritdoc/>
         public void Dispose()
