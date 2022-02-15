@@ -144,7 +144,7 @@ csharp_preserve_single_line_blocks = true:none
 csharp_preserve_single_line_statements = false:none
 csharp_prefer_static_local_function = true:suggestion
 csharp_prefer_simple_using_statement = false:none
-csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_switch_expression = false:none
 dotnet_style_readonly_field = true:suggestion
 
 # Expression-level preferences
