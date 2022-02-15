@@ -459,10 +459,7 @@ namespace Avro.File
             string codec = GetMetaString(DataFileConstants.MetaDataCodec);
 
             // If codec is absent, it is assumed to be "null"
-            if (codec == null)
-                return Codec.CreateCodec(Codec.Type.Null);
-
-            return Codec.CreateCodecFromString(codec);
+            return string.IsNullOrEmpty(codec) ? Codec.CreateCodec(Codec.Type.Null) : Codec.CreateCodecFromString(codec);
         }
 
         /// <inheritdoc/>
