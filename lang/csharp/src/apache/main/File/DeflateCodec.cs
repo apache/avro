@@ -84,21 +84,12 @@ namespace Avro.File
         }
 
         /// <inheritdoc/>
-        public override string GetName()
-        {
-            return DataFileConstants.DeflateCodec;
-        }
+        public override string GetName() => DataFileConstants.DeflateCodec;
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return this == obj || GetType().Name == obj.GetType().Name;
-        }
+        public override bool Equals(object obj) => this == obj || GetType().Name == obj.GetType().Name;
 
         /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return DataFileConstants.DeflateCodecHash;
-        }
+        public override int GetHashCode() => DataFileConstants.DeflateCodecHash;
     }
 }
