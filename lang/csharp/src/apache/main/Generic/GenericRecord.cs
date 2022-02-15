@@ -74,7 +74,6 @@ namespace Avro.Generic
             if (Schema.TryGetField(fieldName, out Field field))
             {
                 // TODO: Use a matcher to verify that object has the right type for the field.
-                // _contents.Add(fieldName, fieldValue);
                 _contents[field.Pos] = fieldValue;
                 return;
             }
