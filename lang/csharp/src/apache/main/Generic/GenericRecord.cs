@@ -144,8 +144,7 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => this == obj ? true :
-                obj is GenericRecord genericRecord && Equals(genericRecord);
+        public override bool Equals(object obj) => this == obj || (obj is GenericRecord genericRecord && Equals(genericRecord));
 
         /// <inheritdoc/>
         public bool Equals(GenericRecord other) => Schema.Equals(other.Schema) && ArraysEqual(_contents, other._contents);
@@ -196,12 +195,12 @@ namespace Avro.Generic
 
             if (left is Array leftArray)
             {
-                return !(right is Array rightArray) ? false : ArraysEqual(leftArray, rightArray);
+                return right is Array rightArray && ArraysEqual(leftArray, rightArray);
             }
 
             if (left is IDictionary leftDictionary)
             {
-                return !(right is IDictionary rightDictionary) ? false : MapsEquals(leftDictionary, rightDictionary);
+                return right is IDictionary rightDictionary && MapsEquals(leftDictionary, rightDictionary);
             }
 
             return left.Equals(right);
