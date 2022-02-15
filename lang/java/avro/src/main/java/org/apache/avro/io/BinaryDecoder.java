@@ -556,7 +556,7 @@ public class BinaryDecoder extends Decoder {
 
   /**
    * BufferAccessor is used by BinaryEncoder to enable {@link ByteSource}s and the
-   * InputStream returned by {@link BinaryDecoder.inputStream} to access the
+   * InputStream returned by {@link BinaryDecoder#inputStream} to access the
    * BinaryEncoder's buffer. When a BufferAccessor is created, it is attached to a
    * BinaryDecoder and its buffer. Its accessors directly reference the
    * BinaryDecoder's buffer. When detach() is called, it stores references to the
@@ -649,15 +649,15 @@ public class BinaryDecoder extends Decoder {
    * stronger guarantees than InputStream, freeing client code to be simplified
    * and faster.
    * <p/>
-   * {@link skipSourceBytes} and {@link readRaw} are guaranteed to have read or
+   * {@link #skipSourceBytes} and {@link #readRaw} are guaranteed to have read or
    * skipped as many bytes as possible, or throw EOFException.
-   * {@link trySkipBytes} and {@link tryRead} are guaranteed to attempt to read or
-   * skip as many bytes as possible and never throw EOFException, while returning
-   * the exact number of bytes skipped or read. {@link isEof} returns true if all
-   * the source bytes have been read or skipped. This condition can also be
-   * detected by a client if an EOFException is thrown from
-   * {@link skipSourceBytes} or {@link readRaw}, or if {@link trySkipBytes} or
-   * {@link tryRead} return 0;
+   * {@link #trySkipBytes} and {@link #tryReadRaw} are guaranteed to attempt to
+   * read or skip as many bytes as possible and never throw EOFException, while
+   * returning the exact number of bytes skipped or read. {@link #isEof} returns
+   * true if all the source bytes have been read or skipped. This condition can
+   * also be detected by a client if an EOFException is thrown from
+   * {@link #skipSourceBytes} or {@link #readRaw}, or if {@link #trySkipBytes} or
+   * {@link #tryReadRaw} return 0;
    * <p/>
    * A ByteSource also implements the InputStream contract for use by APIs that
    * require it. The InputStream interface must take into account buffering in any
