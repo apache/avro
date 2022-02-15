@@ -138,9 +138,11 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
-                default:
+                case Type.Null:
                     return new NullCodec();
             }
+
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>
@@ -150,6 +152,13 @@ namespace Avro.File
         /// <returns>Codec based on type.</returns>
         public static Codec CreateCodecFromString(string codecType)
         {
+            if (codecType == null)
+            {
+                // If codec is absent, it is assumed to be "null"
+                // https://avro.apache.org/docs/current/spec.html
+                return CreateCodec(Type.Null);
+            }
+
             foreach (var resolver in _codecResolvers)
             {
                 var candidateCodec = resolver(codecType);
@@ -162,10 +171,12 @@ namespace Avro.File
             switch (codecType)
             {
                 case DataFileConstants.DeflateCodec:
-                    return new DeflateCodec();
-                default:
-                    return new NullCodec();
+                    return CreateCodec(Type.Deflate);
+                case DataFileConstants.NullCodec:
+                    return CreateCodec(Type.Null);
             }
+
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>

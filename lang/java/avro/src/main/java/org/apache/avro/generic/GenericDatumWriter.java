@@ -86,7 +86,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
-   * to the its underlying representation object (such as a ByteBuffer).
+   * to its underlying representation object (such as a ByteBuffer).
    *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
