@@ -554,7 +554,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     Field(String name, Schema schema, String doc, JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
-      this.schema = schema;
+      this.schema = requireNotNull(schema, "schema");
       this.doc = doc;
       this.defaultValue = validateDefault ? validateDefault(name, schema, defaultValue) : defaultValue;
       this.order = Objects.requireNonNull(order, "Order cannot be null");
@@ -1583,6 +1583,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new SchemaParseException("Illegal character in: " + name);
     }
     return name;
+  }
+
+  private static <T> T requireNotNull(T input, String name) {
+    if (input != null) {
+      return input;
+    }
+    throw new IllegalArgumentException(name + " is required and cannot be null");
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
