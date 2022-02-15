@@ -34,10 +34,7 @@ namespace Avro.IO
         /// Initializes a new instance of the <see cref="BinaryDecoder" /> class.
         /// </summary>
         /// <param name="stream">Stream to decode.</param>
-        public BinaryDecoder(Stream stream)
-        {
-            _stream = stream;
-        }
+        public BinaryDecoder(Stream stream) => _stream = stream;
 
         /// <summary>
         /// null is written as zero bytes
@@ -55,14 +52,11 @@ namespace Avro.IO
         /// <exception cref="AvroException">Not a boolean value in the stream: {booleanValue}</exception>
         public bool ReadBoolean()
         {
-            byte booleanValue = read();
+            byte booleanValue = Read();
 
-            if (booleanValue != 0 && booleanValue != 1)
-            {
-                throw new AvroException($"Not a boolean value in the stream: {booleanValue}");
-            }
-
-            return booleanValue == 0 ? false : true;
+            return booleanValue != 0 && booleanValue != 1
+                ? throw new AvroException($"Not a boolean value in the stream: {booleanValue}")
+                : booleanValue != 0;
         }
 
         /// <summary>
@@ -71,10 +65,7 @@ namespace Avro.IO
         /// <returns>
         /// An integer value.
         /// </returns>
-        public int ReadInt()
-        {
-            return (int)ReadLong();
-        }
+        public int ReadInt() => (int)ReadLong();
 
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
@@ -84,12 +75,12 @@ namespace Avro.IO
         /// </returns>
         public long ReadLong()
         {
-            byte b = read();
+            byte b = Read();
             ulong n = b & 0x7FUL;
             int shift = 7;
             while ((b & 0x80) != 0)
             {
-                b = read();
+                b = Read();
                 n |= (b & 0x7FUL) << shift;
                 shift += 7;
             }
@@ -104,10 +95,7 @@ namespace Avro.IO
         /// <returns>
         /// The bytes just read
         /// </returns>
-        public byte[] ReadBytes()
-        {
-            return read(ReadLong());
-        }
+        public byte[] ReadBytes() => Read(ReadLong());
 
         /// <summary>
         /// Reads an enumeration.
@@ -115,10 +103,7 @@ namespace Avro.IO
         /// <returns>
         /// Ordinal value of the enum.
         /// </returns>
-        public int ReadEnum()
-        {
-            return ReadInt();
-        }
+        public int ReadEnum() => ReadInt();
 
         /// <summary>
         /// Reads the size of the first block of an array.
@@ -126,10 +111,7 @@ namespace Avro.IO
         /// <returns>
         /// Size of the first block of an array.
         /// </returns>
-        public long ReadArrayStart()
-        {
-            return doReadItemCount();
-        }
+        public long ReadArrayStart() => DoReadItemCount();
 
         /// <summary>
         /// Processes the next block of an array and returns the number of items in the block and
@@ -138,10 +120,7 @@ namespace Avro.IO
         /// <returns>
         /// Number of items in the next block of an array.
         /// </returns>
-        public long ReadArrayNext()
-        {
-            return doReadItemCount();
-        }
+        public long ReadArrayNext() => DoReadItemCount();
 
         /// <summary>
         /// Reads the size of the next block of map-entries.
@@ -149,10 +128,7 @@ namespace Avro.IO
         /// <returns>
         /// Size of the next block of map-entries.
         /// </returns>
-        public long ReadMapStart()
-        {
-            return doReadItemCount();
-        }
+        public long ReadMapStart() => DoReadItemCount();
 
         /// <summary>
         /// Processes the next block of map entries and returns the count of them.
@@ -160,10 +136,7 @@ namespace Avro.IO
         /// <returns>
         /// Number of entires in the next block of a map.
         /// </returns>
-        public long ReadMapNext()
-        {
-            return doReadItemCount();
-        }
+        public long ReadMapNext() => DoReadItemCount();
 
         /// <summary>
         /// Reads the tag index of a union written by <see cref="BinaryEncoder.WriteUnionIndex(int)" />.
@@ -171,19 +144,13 @@ namespace Avro.IO
         /// <returns>
         /// Tag index of a union.
         /// </returns>
-        public int ReadUnionIndex()
-        {
-            return ReadInt();
-        }
+        public int ReadUnionIndex() => ReadInt();
 
         /// <summary>
         /// Reads fixed sized binary object.
         /// </summary>
         /// <param name="buffer">Buffer to read the fixed value into.</param>
-        public void ReadFixed(byte[] buffer)
-        {
-            ReadFixed(buffer, 0, buffer.Length);
-        }
+        public void ReadFixed(byte[] buffer) => ReadFixed(buffer, 0, buffer.Length);
 
         /// <summary>
         /// Reads fixed sized binary object.
@@ -191,106 +158,70 @@ namespace Avro.IO
         /// <param name="buffer">Buffer to read the fixed value into.</param>
         /// <param name="start">Position to start writing the fixed value to in the <paramref name="buffer" />.</param>
         /// <param name="length">Number of bytes of the fixed to read.</param>
-        public void ReadFixed(byte[] buffer, int start, int length)
-        {
-            Read(buffer, start, length);
-        }
+        public void ReadFixed(byte[] buffer, int start, int length) => Read(buffer, start, length);
 
         /// <summary>
         /// Skips over a null value.
         /// </summary>
-        public void SkipNull()
-        {
-            ReadNull();
-        }
+        public void SkipNull() => ReadNull();
 
         /// <summary>
         /// Skips over a boolean value.
         /// </summary>
-        public void SkipBoolean()
-        {
-            ReadBoolean();
-        }
+        public void SkipBoolean() => ReadBoolean();
 
         /// <summary>
         /// Skips over an int value.
         /// </summary>
-        public void SkipInt()
-        {
-            ReadInt();
-        }
+        public void SkipInt() => ReadInt();
 
         /// <summary>
         /// Skips over a long value.
         /// </summary>
-        public void SkipLong()
-        {
-            ReadLong();
-        }
+        public void SkipLong() => ReadLong();
 
         /// <summary>
         /// Skips over a float value.
         /// </summary>
-        public void SkipFloat()
-        {
-            Skip(4);
-        }
+        public void SkipFloat() => Skip(4);
 
         /// <summary>
         /// Skips over a double value.
         /// </summary>
-        public void SkipDouble()
-        {
-            Skip(8);
-        }
+        public void SkipDouble() => Skip(8);
 
         /// <summary>
         /// Skips a byte-string written by <see cref="BinaryEncoder.WriteBytes(byte[])" />.
         /// </summary>
-        public void SkipBytes()
-        {
-            Skip(ReadLong());
-        }
+        public void SkipBytes() => Skip(ReadLong());
 
         /// <summary>
         /// Skips a string written by <see cref="BinaryEncoder.WriteString(string)" />.
         /// </summary>
-        public void SkipString()
-        {
-            SkipBytes();
-        }
+        public void SkipString() => SkipBytes();
 
         /// <summary>
         /// Skips an enum value.
         /// </summary>
-        public void SkipEnum()
-        {
-            ReadLong();
-        }
+        public void SkipEnum() => ReadLong();
 
         /// <summary>
         /// Skips a union tag index.
         /// </summary>
-        public void SkipUnionIndex()
-        {
-            ReadLong();
-        }
+        public void SkipUnionIndex() => ReadLong();
 
         /// <summary>
         /// Skips a fixed value of a specified length.
         /// </summary>
         /// <param name="len">Length of the fixed to skip.</param>
-        public void SkipFixed(int len)
-        {
-            Skip(len);
-        }
+        public void SkipFixed(int len) => Skip(len);
 
         /// <summary>
         /// Read the byte array size into a new byte buffer
         /// </summary>
         /// <param name="byteArraySize">The number of bytes</param>
         /// <returns>The new byte buffer</returns>
-        private byte[] read(long byteArraySize)
+        private byte[] Read(long byteArraySize)
         {
             byte[] buffer = new byte[byteArraySize];
             Read(buffer, 0, buffer.Length);
@@ -302,7 +233,7 @@ namespace Avro.IO
         /// </summary>
         /// <returns></returns>
         /// <exception cref="AvroException">End of stream reached</exception>
-        private byte read()
+        private byte Read()
         {
             int readByte = _stream.ReadByte();
             return readByte == -1 ? throw new AvroException("End of stream reached") : (byte)readByte;
@@ -312,7 +243,7 @@ namespace Avro.IO
         /// Does the read item count.
         /// </summary>
         /// <returns>A long result of the byte read</returns>
-        private long doReadItemCount()
+        private long DoReadItemCount()
         {
             long result = ReadLong();
             if (result < 0)
@@ -328,18 +259,12 @@ namespace Avro.IO
         /// Skips the specified offset.
         /// </summary>
         /// <param name="offset">The offset.</param>
-        private void Skip(int offset)
-        {
-            _stream.Seek(offset, SeekOrigin.Current);
-        }
+        private void Skip(int offset) => _stream.Seek(offset, SeekOrigin.Current);
 
         /// <summary>
         /// Skips the specified offset.
         /// </summary>
         /// <param name="offset">The offset.</param>
-        private void Skip(long offset)
-        {
-            _stream.Seek(offset, SeekOrigin.Current);
-        }
+        private void Skip(long offset) => _stream.Seek(offset, SeekOrigin.Current);
     }
 }
