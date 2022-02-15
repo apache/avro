@@ -90,28 +90,19 @@ namespace Avro
         /// </summary>
         /// <param name="namespaceLookup">The namespace lookup.</param>
         public CodeGen(Dictionary<string, CodeNamespace> namespaceLookup)
-            : this()
-        {
-            NamespaceLookup = namespaceLookup;
-        }
+            : this() => NamespaceLookup = namespaceLookup;
 
         /// <summary>
         /// Adds a protocol object to generate code for.
         /// </summary>
         /// <param name="protocol">The protocol.</param>
-        public virtual void AddProtocol(Protocol protocol)
-        {
-            Protocols.Add(protocol);
-        }
+        public virtual void AddProtocol(Protocol protocol) => Protocols.Add(protocol);
 
         /// <summary>
         /// Adds a schema object to generate code for.
         /// </summary>
         /// <param name="schema">schema object.</param>
-        public virtual void AddSchema(Schema schema)
-        {
-            Schemas.Add(schema);
-        }
+        public virtual void AddSchema(Schema schema) => Schemas.Add(schema);
 
         /// <summary>
         /// Adds a namespace object for the given name into the dictionary if it doesn't exist yet.
@@ -155,10 +146,7 @@ namespace Avro
         /// </returns>
         /// <exception cref="ArgumentNullException">name - name cannot be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to AddNamespace(string name).")]
-        protected virtual CodeNamespace addNamespace(string name)
-        {
-            return AddNamespace(name);
-        }
+        protected virtual CodeNamespace addNamespace(string name) => AddNamespace(name);
 
         /// <summary>
         /// Generates code for the given protocol and schema objects.
@@ -217,10 +205,7 @@ namespace Avro
         /// </summary>
         /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to ProcessSchemas().")]
-        protected virtual void processSchemas()
-        {
-            ProcessSchemas();
-        }
+        protected virtual void processSchemas() => ProcessSchemas();
 
         /// <summary>
         /// Generates code for the protocol objects.
@@ -265,10 +250,7 @@ namespace Avro
         /// </summary>
         /// <exception cref="CodeGenException">Names in protocol should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to ProcessProtocols().")]
-        protected virtual void processProtocols()
-        {
-            ProcessProtocols();
-        }
+        protected virtual void processProtocols() => ProcessProtocols();
 
         /// <summary>
         /// Generate list of named schemas from given protocol.
@@ -279,10 +261,7 @@ namespace Avro
         /// </returns>
         /// <exception cref="ArgumentNullException">protocol - Protocol can not be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please use GenerateNames() instead.")]
-        protected virtual SchemaNames generateNames(Protocol protocol)
-        {
-            return GenerateNames(protocol);
-        }
+        protected virtual SchemaNames generateNames(Protocol protocol) => GenerateNames(protocol);
 
         /// <summary>
         /// Generate list of named schemas from given protocol.
@@ -316,10 +295,7 @@ namespace Avro
         /// List of named schemas.
         /// </returns>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please use GenerateNames() instead.")]
-        protected virtual SchemaNames generateNames(Schema schema)
-        {
-            return GenerateNames(schema);
-        }
+        protected virtual SchemaNames generateNames(Schema schema) => GenerateNames(schema);
 
         /// <summary>
         /// Generate list of named schemas from given schema.
@@ -628,6 +604,7 @@ namespace Avro
                 TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public,
                 IsClass = true
             };
+
             ctd.BaseTypes.Add(protocolNameMangled);
 
             // Need to override
@@ -650,20 +627,19 @@ namespace Avro
                 Name = "Request",
                 ReturnType = new CodeTypeReference(typeof(void))
             };
-            {
-                CodeParameterDeclarationExpression requestor = new CodeParameterDeclarationExpression(typeof(Specific.ICallbackRequestor),
-                                                                       "requestor");
-                requestMethod.Parameters.Add(requestor);
 
-                CodeParameterDeclarationExpression messageName = new CodeParameterDeclarationExpression(typeof(string), "messageName");
-                requestMethod.Parameters.Add(messageName);
+            CodeParameterDeclarationExpression requestor = new CodeParameterDeclarationExpression(typeof(Specific.ICallbackRequestor),
+                                                                   "requestor");
+            requestMethod.Parameters.Add(requestor);
 
-                CodeParameterDeclarationExpression args = new CodeParameterDeclarationExpression(typeof(object[]), "args");
-                requestMethod.Parameters.Add(args);
+            CodeParameterDeclarationExpression messageName = new CodeParameterDeclarationExpression(typeof(string), "messageName");
+            requestMethod.Parameters.Add(messageName);
 
-                CodeParameterDeclarationExpression callback = new CodeParameterDeclarationExpression(typeof(object), "callback");
-                requestMethod.Parameters.Add(callback);
-            }
+            CodeParameterDeclarationExpression args = new CodeParameterDeclarationExpression(typeof(object[]), "args");
+            requestMethod.Parameters.Add(args);
+
+            CodeParameterDeclarationExpression callback = new CodeParameterDeclarationExpression(typeof(object), "callback");
+            requestMethod.Parameters.Add(callback);
 
             return requestMethod;
         }
@@ -1044,10 +1020,7 @@ namespace Avro
         /// </returns>
         /// <exception cref="ArgumentNullException">schema - UnionSchema can not be null.</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please use GetNullableType() instead.")]
-        public static Schema getNullableType(UnionSchema schema)
-        {
-            return GetNullableType(schema);
-        }
+        public static Schema getNullableType(UnionSchema schema) => GetNullableType(schema);
 
         /// <summary>
         /// Gets the schema of a union with null.
@@ -1096,6 +1069,7 @@ namespace Avro
             {
                 Attributes = MemberAttributes.Public
             };
+
             if (overrideFlag)
             {
                 property.Attributes |= MemberAttributes.Override;
