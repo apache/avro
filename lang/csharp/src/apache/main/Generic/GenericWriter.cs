@@ -506,6 +506,7 @@ namespace Avro.Generic
                 return false;
             }
 
+            // TODO: Ignoring IDE0066 for now. Address in separate pull request
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
