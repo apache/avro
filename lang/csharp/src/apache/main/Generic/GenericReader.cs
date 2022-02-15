@@ -302,7 +302,9 @@ namespace Avro.Generic
                         AddField(record, writerField.Name, fieldAlias.Pos, Read(obj, writerField.Schema, fieldAlias.Schema, decoder));
                     }
                     else
+                    {
                         Skip(writerField.Schema, decoder);
+                    }
                 }
                 catch (Exception ex)
                 {
