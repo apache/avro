@@ -44,7 +44,7 @@ namespace Avro
             bool? isProtocol = null;
             string inputFile = null;
             string outputDir = null;
-            var namespaceMapping = new Dictionary<string, string>();
+            Dictionary<string, string> namespaceMapping = new Dictionary<string, string>();
             for (int i = 0; i < args.Length; ++i)
             {
                 if (args[i] == "-p")
@@ -80,7 +80,7 @@ namespace Avro
                         return 1;
                     }
 
-                    var parts = args[++i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] parts = args[++i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length != 2)
                     {
                         Console.Error.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
@@ -153,7 +153,7 @@ namespace Avro
                 CodeGen codegen = new CodeGen();
                 codegen.AddProtocol(protocol);
 
-                foreach (var entry in namespaceMapping)
+                foreach (KeyValuePair<string, string> entry in namespaceMapping)
                 {
                     codegen.NamespaceMapping[entry.Key] = entry.Value;
                 }
@@ -180,8 +180,10 @@ namespace Avro
                 CodeGen codegen = new CodeGen();
                 codegen.AddSchema(schema);
 
-                foreach (var entry in namespaceMapping)
+                foreach (KeyValuePair<string, string> entry in namespaceMapping)
+                {
                     codegen.NamespaceMapping[entry.Key] = entry.Value;
+                }
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
