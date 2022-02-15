@@ -35,15 +35,12 @@ namespace Avro.Generic
         /// </summary>
         public string Value
         {
-            get { return _value; }
-            set
-            {
-                _value = !Schema.Contains(value) ?
+            get => _value;
+            set => _value = !Schema.Contains(value) ?
                     !string.IsNullOrEmpty(Schema.Default) ?
                     Schema.Default :
                     throw new AvroException($"Unknown value for enum: {value}({Schema})") :
                     _value = value;
-            }
         }
 
         /// <summary>
@@ -58,24 +55,12 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return (obj == this) ? true :
-                (obj != null && obj is GenericEnum) ?
-                Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal)
-                : false;
-        }
+        public override bool Equals(object obj) => (obj == this) || (obj != null && obj is GenericEnum) && Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal);
 
         /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return 17 * Value.GetHashCode();
-        }
+        public override int GetHashCode() => 17 * Value.GetHashCode();
 
         /// <inheritdoc/>
-        public override string ToString()
-        {
-            return $"Schema: {Schema}, value: {Value}";
-        }
+        public override string ToString() => $"Schema: {Schema}, value: {Value}";
     }
 }
