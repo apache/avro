@@ -61,34 +61,19 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema)
-        {
-            return new GenericArrayAccess();
-        }
+        protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema) => new GenericArrayAccess();
 
         /// <inheritdoc/>
-        protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
-        {
-            return new GenericEnumAccess(readerSchema);
-        }
+        protected override EnumAccess GetEnumAccess(EnumSchema readerSchema) => new GenericEnumAccess(readerSchema);
 
         /// <inheritdoc/>
-        protected override MapAccess GetMapAccess(MapSchema readerSchema)
-        {
-            return new GenericMapAccess();
-        }
+        protected override MapAccess GetMapAccess(MapSchema readerSchema) => new GenericMapAccess();
 
         /// <inheritdoc/>
-        protected override RecordAccess GetRecordAccess(RecordSchema readerSchema)
-        {
-            return new GenericRecordAccess(readerSchema);
-        }
+        protected override RecordAccess GetRecordAccess(RecordSchema readerSchema) => new GenericRecordAccess(readerSchema);
 
         /// <inheritdoc/>
-        protected override FixedAccess GetFixedAccess(FixedSchema readerSchema)
-        {
-            return new GenericFixedAccess(readerSchema);
-        }
+        protected override FixedAccess GetFixedAccess(FixedSchema readerSchema) => new GenericFixedAccess(readerSchema);
 
         /// <summary>
         /// Generic Enum Access
@@ -102,10 +87,7 @@ namespace Avro.Generic
             /// Initializes a new instance of the <see cref="GenericEnumAccess"/> class.
             /// </summary>
             /// <param name="schema">The schema.</param>
-            public GenericEnumAccess(EnumSchema schema)
-            {
-                _schema = schema;
-            }
+            public GenericEnumAccess(EnumSchema schema) => _schema = schema;
 
             /// <inheritdoc/>
             public object CreateEnum(object reuse, int ordinal)
@@ -135,32 +117,19 @@ namespace Avro.Generic
             /// Initializes a new instance of the <see cref="GenericRecordAccess"/> class.
             /// </summary>
             /// <param name="schema">The schema.</param>
-            public GenericRecordAccess(RecordSchema schema)
-            {
-                _schema = schema;
-            }
+            public GenericRecordAccess(RecordSchema schema) => _schema = schema;
 
             /// <inheritdoc/>
-            public object CreateRecord(object reuse)
-            {
-                GenericRecord ru = (reuse == null || !(reuse is GenericRecord) || !(reuse as GenericRecord).Schema.Equals(_schema)) ?
+            public object CreateRecord(object reuse) => (!(reuse is GenericRecord genericRecord) || !genericRecord.Schema.Equals(_schema)) ?
                     new GenericRecord(_schema) :
-                    reuse as GenericRecord;
-                return ru;
-            }
+                    genericRecord;
 
             /// <inheritdoc/>
-            public object GetField(object record, string fieldName, int fieldPos)
-            {
-                return !((GenericRecord)record).TryGetValue(fieldPos, out object result) ?
+            public object GetField(object record, string fieldName, int fieldPos) => !((GenericRecord)record).TryGetValue(fieldPos, out object result) ?
                     null : result;
-            }
 
             /// <inheritdoc/>
-            public void AddField(object record, string fieldName, int fieldPos, object fieldValue)
-            {
-                ((GenericRecord)record).Add(fieldName, fieldValue);
-            }
+            public void AddField(object record, string fieldName, int fieldPos, object fieldValue) => ((GenericRecord)record).Add(fieldName, fieldValue);
         }
 
         /// <summary>
@@ -175,23 +144,14 @@ namespace Avro.Generic
             /// Initializes a new instance of the <see cref="GenericFixedAccess"/> class.
             /// </summary>
             /// <param name="schema">The schema.</param>
-            public GenericFixedAccess(FixedSchema schema)
-            {
-                _schema = schema;
-            }
+            public GenericFixedAccess(FixedSchema schema) => _schema = schema;
 
             /// <inheritdoc/>
-            public object CreateFixed(object reuse)
-            {
-                return (reuse is GenericFixed && (reuse as GenericFixed).Schema.Equals(_schema)) ?
+            public object CreateFixed(object reuse) => (reuse is GenericFixed && (reuse as GenericFixed).Schema.Equals(_schema)) ?
                     reuse : new GenericFixed(_schema);
-            }
 
             /// <inheritdoc/>
-            public byte[] GetFixedBuffer(object f)
-            {
-                return ((GenericFixed)f).Value;
-            }
+            public byte[] GetFixedBuffer(object f) => ((GenericFixed)f).Value;
         }
 
         /// <summary>
@@ -201,23 +161,19 @@ namespace Avro.Generic
         private class GenericArrayAccess : ArrayAccess
         {
             /// <inheritdoc/>
-            public object Create(object reuse)
-            {
-                return (reuse is object[]) ? reuse : Array.Empty<object>();
-            }
+            public object Create(object reuse) => (reuse is object[]) ? reuse : Array.Empty<object>();
 
             /// <inheritdoc/>
             public void EnsureSize(ref object array, int targetSize)
             {
                 if (((object[])array).Length < targetSize)
+                {
                     SizeTo(ref array, targetSize);
+                }
             }
 
             /// <inheritdoc/>
-            public void Resize(ref object array, int targetSize)
-            {
-                SizeTo(ref array, targetSize);
-            }
+            public void Resize(ref object array, int targetSize) => SizeTo(ref array, targetSize);
 
             /// <inheritdoc/>
             public void AddElements(object arrayObj, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse)
@@ -256,6 +212,7 @@ namespace Avro.Generic
                     result.Clear();
                     return result;
                 }
+
                 return new Dictionary<string, object>();
             }
 
