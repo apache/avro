@@ -92,7 +92,7 @@ namespace Avro.File.Zstandard
         {
             using (Decompressor decompressor = new Decompressor())
             {
-                return decompressor.Unwrap(compressedData.AsSpan(0, blockLength));
+                return decompressor.Unwrap(compressedData); //.AsSpan(0, blockLength));
             }
         }
 
