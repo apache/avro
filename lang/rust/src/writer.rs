@@ -83,14 +83,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// internal buffering for performance reasons. If you want to be sure the value has been
     /// written, then call [`flush`](struct.Writer.html#method.flush).
     pub fn append<T: Into<Value>>(&mut self, value: T) -> AvroResult<usize> {
-        let n = if !self.has_header {
-            let header = self.header()?;
-            let n = self.append_bytes(header.as_ref())?;
-            self.has_header = true;
-            n
-        } else {
-            0
-        };
+        let n = self.maybe_write_header()?;
 
         let avro = value.into();
         write_value_ref(self.schema, &avro, &mut self.buffer)?;
@@ -112,14 +105,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// internal buffering for performance reasons. If you want to be sure the value has been
     /// written, then call [`flush`](struct.Writer.html#method.flush).
     pub fn append_value_ref(&mut self, value: &Value) -> AvroResult<usize> {
-        let n = if !self.has_header {
-            let header = self.header()?;
-            let n = self.append_bytes(header.as_ref())?;
-            self.has_header = true;
-            n
-        } else {
-            0
-        };
+        let n = self.maybe_write_header()?;
 
         write_value_ref(self.schema, value, &mut self.buffer)?;
 
@@ -306,6 +292,16 @@ impl<'a, W: Write> Writer<'a, W> {
         header.extend_from_slice(&self.marker);
 
         Ok(header)
+    }
+    fn maybe_write_header(&mut self) -> AvroResult<usize> {
+        if !self.has_header {
+            let header = self.header()?;
+            let n = self.append_bytes(header.as_ref())?;
+            self.has_header = true;
+            Ok(n)
+        } else {
+            Ok(0)
+        }
     }
 }
 
