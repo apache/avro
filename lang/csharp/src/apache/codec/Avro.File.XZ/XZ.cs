@@ -200,7 +200,7 @@ namespace Avro.File.XZ
         {
             XZDecompressOptions decompOpts = new XZDecompressOptions();
 
-            using (MemoryStream inputStream = new MemoryStream(compressedData,0, blockLength))
+            using (MemoryStream inputStream = new MemoryStream(compressedData, 0, blockLength))
             using (MemoryStream outputStream = new MemoryStream())
             using (XZStream xzStream = new XZStream(inputStream, decompOpts))
             {
