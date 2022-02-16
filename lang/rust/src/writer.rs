@@ -276,7 +276,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Adds custom metadata to the file.
     /// This method could be used only before adding the first record to the writer.
-    pub fn add_meta_data(&mut self, key: String, value: String) -> AvroResult<()> {
+    pub fn add_user_metadata(&mut self, key: String, value: String) -> AvroResult<()> {
         if !self.has_header {
             self.metadata.insert(key, Value::String(value));
             Ok(())
@@ -839,10 +839,10 @@ mod tests {
         let mut writer = Writer::new(&schema, Vec::new());
 
         writer
-            .add_meta_data("key1".to_string(), "value1".to_string())
+            .add_user_metadata("key1".to_string(), "value1".to_string())
             .unwrap();
         writer
-            .add_meta_data("key2".to_string(), "value2".to_string())
+            .add_user_metadata("key2".to_string(), "value2".to_string())
             .unwrap();
 
         let mut record = Record::new(&schema).unwrap();
@@ -867,11 +867,15 @@ mod tests {
         record.put("b", "foo");
         writer.append(record.clone()).unwrap();
 
-        if writer
-            .add_meta_data("stringKey".to_string(), "value2".into())
-            .is_ok()
-        {
-            panic!("Expected error that metadata cannot be added after adding data");
+        match writer.add_user_metadata("stringKey".to_string(), "value2".into()) {
+            Err(e @ Error::FileHeaderAlreadyWritten) => {
+                assert_eq!(e.to_string(), "The file metadata is already flushed.")
+            }
+            Err(e) => panic!(
+                "Unexpected error occurred while writing user metadata: {:?}",
+                e
+            ),
+            Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
         }
     }
 }

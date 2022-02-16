@@ -36,7 +36,7 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
-    metadata: HashMap<String, String>,
+    user_metadata: HashMap<String, String>,
 }
 
 impl<R: Read> Block<R> {
@@ -49,7 +49,7 @@ impl<R: Read> Block<R> {
             buf_idx: 0,
             message_count: 0,
             marker: [0; 16],
-            metadata: HashMap::default(),
+            user_metadata: Default::default(),
         };
 
         block.read_header()?;
@@ -70,65 +70,10 @@ impl<R: Read> Block<R> {
             return Err(Error::HeaderMagic);
         }
 
-        if let Value::Map(meta) = decode(&meta_schema, &mut self.reader)? {
-            // TODO: surface original parse schema errors instead of coalescing them here
-            let json = meta
-                .get("avro.schema")
-                .and_then(|bytes| {
-                    if let Value::Bytes(ref bytes) = *bytes {
-                        from_slice(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .ok_or(Error::GetAvroSchemaFromMap)?;
-            self.writer_schema = Schema::parse(&json)?;
-
-            if let Some(codec) = meta
-                .get("avro.codec")
-                .and_then(|codec| {
-                    if let Value::Bytes(ref bytes) = *codec {
-                        std::str::from_utf8(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .and_then(|codec| Codec::from_str(codec).ok())
-            {
-                self.codec = codec;
-            }
-
-            if let Some(metadata) =
-                meta.get("avro.user_metadata")
-                    .and_then(|metadata| match *metadata {
-                        Value::Bytes(ref bytes) => {
-                            match decode(
-                                &Schema::Map(Box::new(Schema::String)),
-                                &mut bytes.as_slice(),
-                            ) {
-                                Ok(Value::Map(ref map)) => Some(map.clone()),
-                                _ => {
-                                    warn!("Failed to parse user metadata");
-                                    None
-                                }
-                            }
-                        }
-                        _ => None,
-                    })
-            {
-                self.metadata = metadata
-                    .iter()
-                    .map(|(k, v)| match v {
-                        Value::String(s) => (k.clone(), s.clone()),
-                        unknown => {
-                            warn!("User metadata values must be strings, found {:?}", unknown);
-                            (k.clone(), format!("{:?}", unknown))
-                        }
-                    })
-                    .collect();
-            } else {
-                debug!("No user metadata found in the file.");
-            }
+        if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
+            self.read_writer_schema(&metadata)?;
+            self.read_codec(&metadata)?;
+            self.read_user_metadata(&metadata)?;
         } else {
             return Err(Error::GetHeaderMetadata);
         }
@@ -219,6 +164,74 @@ impl<R: Read> Block<R> {
         self.message_count -= 1;
         Ok(Some(item))
     }
+
+    fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        let json = metadata
+            .get("avro.schema")
+            .and_then(|bytes| {
+                if let Value::Bytes(ref bytes) = *bytes {
+                    from_slice(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .ok_or(Error::GetAvroSchemaFromMap)?;
+        self.writer_schema = Schema::parse(&json)?;
+        Ok(())
+    }
+
+    fn read_codec(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        if let Some(codec) = metadata
+            .get("avro.codec")
+            .and_then(|codec| {
+                if let Value::Bytes(ref bytes) = *codec {
+                    std::str::from_utf8(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .and_then(|codec| Codec::from_str(codec).ok())
+        {
+            self.codec = codec;
+        }
+        Ok(())
+    }
+
+    fn read_user_metadata(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        if let Some(user_metadata) =
+            metadata
+                .get("avro.user_metadata")
+                .and_then(|metadata| match *metadata {
+                    Value::Bytes(ref bytes) => {
+                        match decode(
+                            &Schema::Map(Box::new(Schema::String)),
+                            &mut bytes.as_slice(),
+                        ) {
+                            Ok(Value::Map(ref map)) => Some(map.clone()),
+                            _ => {
+                                warn!("Failed to parse user metadata");
+                                None
+                            }
+                        }
+                    }
+                    _ => None,
+                })
+        {
+            self.user_metadata = user_metadata
+                .iter()
+                .map(|(k, v)| match v {
+                    Value::String(s) => (k.clone(), s.clone()),
+                    unknown => {
+                        warn!("User metadata values must be strings, found {:?}", unknown);
+                        (k.clone(), format!("{:?}", unknown))
+                    }
+                })
+                .collect();
+        } else {
+            debug!("No user metadata found in the file.");
+        }
+        Ok(())
+    }
 }
 
 /// Main interface for reading Avro formatted values.
@@ -287,7 +300,7 @@ impl<'a, R: Read> Reader<'a, R> {
     }
 
     pub fn user_metadata(&self) -> &HashMap<String, String> {
-        &self.block.metadata
+        &self.block.user_metadata
     }
 
     #[inline]
@@ -551,7 +564,9 @@ mod tests {
         user_meta_data.insert("key2".to_string(), "value2".to_string());
 
         for (k, v) in user_meta_data.iter() {
-            writer.add_meta_data(k.to_string(), v.to_string()).unwrap();
+            writer
+                .add_user_metadata(k.to_string(), v.to_string())
+                .unwrap();
         }
 
         let mut record = Record::new(&schema).unwrap();
