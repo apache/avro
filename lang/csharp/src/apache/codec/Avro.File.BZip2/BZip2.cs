@@ -75,7 +75,7 @@ namespace Avro.File.BZip2
         /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData, int blockLength)
         {
-            using (MemoryStream inputStream = new MemoryStream(compressedData))
+            using (MemoryStream inputStream = new MemoryStream(compressedData, 0, blockLength))
             using (MemoryStream outputStream = new MemoryStream())
             {
                 ICSharpCode.SharpZipLib.BZip2.BZip2.Decompress(inputStream, outputStream, false);
