@@ -36,7 +36,7 @@
     <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
     <IronSnappyVersion>1.3.0</IronSnappyVersion>
     <JovelerCompressionXZVersion>4.1.0</JovelerCompressionXZVersion>
-    <ZstdNetVersion>1.4.5</ZstdNetVersion>
+    <ZstandardNetVersion>1.1.7</ZstandardNetVersion>
   </PropertyGroup>
 
   <!--

@@ -39,7 +39,7 @@
 
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <PackageReference Include="ZstdNet" Version="$(ZstdNetVersion)" />
+    <PackageReference Include="Zstandard.Net" Version="$(ZstandardNetVersion)" />
   </ItemGroup>
 
   <ItemGroup>

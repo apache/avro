@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.IO;
-using ZstdNet;
+using System.IO.Compression;
+using Zstandard.Net;
 
 namespace Avro.File.Zstandard
 {
@@ -70,10 +70,13 @@ namespace Avro.File.Zstandard
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
         {
-            using (CompressionOptions options = new CompressionOptions((int)_level))
-            using (Compressor compressor = new Compressor(options))
+            using (var outputStream = new MemoryStream())
+            using (var compressionStream = new ZstandardStream(outputStream, CompressionMode.Compress))
             {
-                return compressor.Wrap(uncompressedData);
+                compressionStream.CompressionLevel = (int)_level;
+                compressionStream.Write(uncompressedData, 0, uncompressedData.Length);
+                compressionStream.Flush();
+                return outputStream.ToArray();
             }
         }
 
@@ -81,18 +84,26 @@ namespace Avro.File.Zstandard
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
             inputStream.Position = 0;
-            byte[] compressedData = Compress(inputStream.ToArray());
-
             outputStream.SetLength(0);
-            outputStream.Write(compressedData, 0, compressedData.Length);
+
+            using (var compressionStream = new ZstandardStream(outputStream, CompressionMode.Compress, true))
+            {
+                compressionStream.CompressionLevel = (int)_level;
+                inputStream.CopyTo(compressionStream);
+                compressionStream.Flush();
+            }
         }
 
         /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData, int blockLength)
         {
-            using (Decompressor decompressor = new Decompressor())
+            using (var memoryStream = new MemoryStream(compressedData, 0, blockLength))
+            using (var outputStream = new MemoryStream())
+            using (var compressionStream = new ZstandardStream(memoryStream, CompressionMode.Decompress))
             {
-                return decompressor.Unwrap(compressedData); //.AsSpan(0, blockLength));
+                compressionStream.CopyTo(outputStream);
+                compressionStream.Flush();
+                return outputStream.ToArray();
             }
         }
 
