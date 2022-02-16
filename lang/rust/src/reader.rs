@@ -19,6 +19,7 @@
 use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
 use serde_json::from_slice;
 use std::{
+    collections::HashMap,
     io::{ErrorKind, Read},
     str::FromStr,
 };
@@ -35,6 +36,7 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    metadata: HashMap<String, String>,
 }
 
 impl<R: Read> Block<R> {
@@ -47,6 +49,7 @@ impl<R: Read> Block<R> {
             buf_idx: 0,
             message_count: 0,
             marker: [0; 16],
+            metadata: HashMap::default(),
         };
 
         block.read_header()?;
@@ -93,6 +96,38 @@ impl<R: Read> Block<R> {
                 .and_then(|codec| Codec::from_str(codec).ok())
             {
                 self.codec = codec;
+            }
+
+            if let Some(metadata) =
+                meta.get("avro.user_metadata")
+                    .and_then(|metadata| match *metadata {
+                        Value::Bytes(ref bytes) => {
+                            match decode(
+                                &Schema::Map(Box::new(Schema::String)),
+                                &mut bytes.as_slice(),
+                            ) {
+                                Ok(Value::Map(ref map)) => Some(map.clone()),
+                                _ => {
+                                    warn!("Failed to parse user metadata");
+                                    None
+                                }
+                            }
+                        }
+                        _ => None,
+                    })
+            {
+                self.metadata = metadata
+                    .iter()
+                    .map(|(k, v)| match v {
+                        Value::String(s) => (k.clone(), s.clone()),
+                        unknown => {
+                            warn!("User metadata values must be strings, found {:?}", unknown);
+                            (k.clone(), format!("{:?}", unknown))
+                        }
+                    })
+                    .collect();
+            } else {
+                debug!("No user metadata found in the file.");
             }
         } else {
             return Err(Error::GetHeaderMetadata);
@@ -249,6 +284,10 @@ impl<'a, R: Read> Reader<'a, R> {
     /// Get a reference to the optional reader `Schema`.
     pub fn reader_schema(&self) -> Option<&Schema> {
         self.reader_schema
+    }
+
+    pub fn user_metadata(&self) -> &HashMap<String, String> {
+        &self.block.metadata
     }
 
     #[inline]
@@ -498,5 +537,33 @@ mod tests {
         for value in reader {
             assert!(value.is_err());
         }
+    }
+
+    #[test]
+    fn test_avro_3405_read_user_metadata_success() {
+        use crate::writer::Writer;
+
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let mut user_meta_data = HashMap::new();
+        user_meta_data.insert("key1".to_string(), "value1".to_string());
+        user_meta_data.insert("key2".to_string(), "value2".to_string());
+
+        for (k, v) in user_meta_data.iter() {
+            writer.add_meta_data(k.to_string(), v.to_string()).unwrap();
+        }
+
+        let mut record = Record::new(&schema).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+
+        writer.append(record.clone()).unwrap();
+        writer.append(record.clone()).unwrap();
+        writer.flush().unwrap();
+        let result = writer.into_inner().unwrap();
+
+        let reader = Reader::new(&result[..]).unwrap();
+        assert_eq!(reader.user_metadata(), &user_meta_data);
     }
 }
