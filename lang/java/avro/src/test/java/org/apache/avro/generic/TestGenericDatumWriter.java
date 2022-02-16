@@ -342,13 +342,13 @@ public class TestGenericDatumWriter {
     @SuppressWarnings("unchecked")
     Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
         .get("unionField")).get("arrayField")).get(0).get("mapField");
-    map.get("a").put("f4", null);
+    map.get("a").put("strField", null);
     try {
       writeObject(topLevelRecord);
       Assert.fail("expected to throw");
     } catch (NullPointerException expected) {
       Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f4"));
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
     }
   }
 
@@ -385,13 +385,13 @@ public class TestGenericDatumWriter {
     @SuppressWarnings("unchecked")
     Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
         .get("unionField")).get("arrayField")).get(0).get("mapField");
-    map.get("a").put("f4", 42); // not a string
+    map.get("a").put("strField", 42); // not a string
     try {
       writeObject(topLevelRecord);
       Assert.fail("expected to throw");
     } catch (ClassCastException expected) {
       Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f4"));
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
     }
   }
 
@@ -412,15 +412,15 @@ public class TestGenericDatumWriter {
     @SuppressWarnings("unchecked")
     Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
         .get("unionField")).get("arrayField")).get(0).get("mapField");
-    map.get("a").put("f3", 42); // not a n enum
+    map.get("a").put("enumField", 42); // not an enum
     try {
       writeObject(topLevelRecord);
       Assert.fail("expected to throw");
     } catch (AvroTypeException expected) {
       Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f3"));
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].enumField"));
       Assert.assertTrue("unexpected message " + expected.getMessage(),
-          expected.getMessage().contains("42 (a java.lang.Integer)"));
+          expected.getMessage().contains("42 (a java.lang.Integer) is not a MapRecordEnum"));
     }
   }
 
@@ -437,25 +437,25 @@ public class TestGenericDatumWriter {
         Arrays.asList(arrayRecord1, arrayRecord2));
     Schema mapRecordSchema = arraySchema.getElementType().getField("mapField").schema().getValueType();
     GenericData.Record mapRecordA = new GenericData.Record(mapRecordSchema);
-    Schema mapRecordEnumSchema = mapRecordSchema.getField("f3").schema();
+    Schema mapRecordEnumSchema = mapRecordSchema.getField("enumField").schema();
 
-    mapRecordA.put("f3", new GenericData.EnumSymbol(mapRecordEnumSchema, "B"));
-    mapRecordA.put("f4", "4");
+    mapRecordA.put("enumField", new GenericData.EnumSymbol(mapRecordEnumSchema, "B"));
+    mapRecordA.put("strField", "4");
 
-    arrayRecord1.put("f2", "2");
+    arrayRecord1.put("strField", "2");
     HashMap<String, GenericData.Record> map1 = new HashMap<>();
     map1.put("a", mapRecordA);
     arrayRecord1.put("mapField", map1);
 
-    arrayRecord2.put("f2", "2");
+    arrayRecord2.put("strField", "2");
     HashMap<String, GenericData.Record> map2 = new HashMap<>();
     map2.put("a", mapRecordA);
     arrayRecord2.put("mapField", map2);
 
-    unionRecord.put(unionRecord.getSchema().getField("f1").pos(), "1");
+    unionRecord.put(unionRecord.getSchema().getField("strField").pos(), "1");
     unionRecord.put(unionRecord.getSchema().getField("arrayField").pos(), array); // BOOM
 
-    topLevelRecord.put(topLevelRecord.getSchema().getField("f0").pos(), "0");
+    topLevelRecord.put(topLevelRecord.getSchema().getField("strField").pos(), "0");
     topLevelRecord.put(topLevelRecord.getSchema().getField("unionField").pos(), unionRecord);
 
     return topLevelRecord;

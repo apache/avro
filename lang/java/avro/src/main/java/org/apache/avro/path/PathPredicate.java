@@ -18,5 +18,9 @@
 
 package org.apache.avro.path;
 
+/**
+ * a predicate is a filter that restricts items selected by a
+ * {@link LocationStep}
+ */
 public interface PathPredicate extends PathElement {
 }

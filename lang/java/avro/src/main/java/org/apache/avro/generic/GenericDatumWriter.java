@@ -32,13 +32,15 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.TracingAvroTypeException;
+import org.apache.avro.path.TracingAvroTypeException;
 import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.path.ArrayPositionPredicate;
 import org.apache.avro.path.LocationStep;
 import org.apache.avro.path.MapKeyPredicate;
+import org.apache.avro.path.TracingClassCastException;
+import org.apache.avro.path.TracingNullPointException;
 import org.apache.avro.path.UnionTypePredicate;
 import org.apache.avro.util.SchemaUtil;
 

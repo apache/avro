@@ -16,19 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.avro;
+package org.apache.avro.path;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.avro.path.PathElement;
+
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
 import org.apache.avro.util.SchemaUtil;
 
+/**
+ * an {@link AvroTypeException} with extra fields used to trace back the path to
+ * a bad value through an object graph
+ */
 public class TracingAvroTypeException extends AvroTypeException implements PathTracingException<AvroTypeException> {
   private final List<PathElement> reversePath;
 
   public TracingAvroTypeException(AvroTypeException cause) {
     super(cause.getMessage(), cause);
-    this.reversePath = new ArrayList<>(1); // expected to be short
+    this.reversePath = new ArrayList<>(3); // expected to be short
   }
 
   @Override

@@ -3,7 +3,7 @@
   "name" : "RecordWithRequiredFields",
   "namespace" : "org.apache.avro",
   "fields" : [ {
-    "name" : "f0",
+    "name" : "strField",
     "type" : "string"
   }, {
     "name" : "unionField",
@@ -11,7 +11,7 @@
       "type" : "record",
       "name" : "UnionRecord",
       "fields" : [ {
-        "name" : "f1",
+        "name" : "strField",
         "type" : "string"
       }, {
         "name" : "arrayField",
@@ -21,7 +21,7 @@
             "type" : "record",
             "name" : "ArrayRecord",
             "fields" : [ {
-              "name" : "f2",
+              "name" : "strField",
               "type" : "string"
             }, {
               "name" : "mapField",
@@ -31,7 +31,7 @@
                   "type" : "record",
                   "name" : "MapRecord",
                   "fields" : [ {
-                    "name" : "f3",
+                    "name" : "enumField",
                     "type" : {
                       "type" : "enum",
                       "name" : "MapRecordEnum",
@@ -39,7 +39,7 @@
                       "default" : "A"
                     }
                   }, {
-                    "name" : "f4",
+                    "name" : "strField",
                     "type" : "string"
                   } ]
                 }

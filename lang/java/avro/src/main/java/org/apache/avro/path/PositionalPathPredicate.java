@@ -16,24 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.avro;
-
-import org.apache.avro.path.PathElement;
+package org.apache.avro.path;
 
 /**
- * interface for exceptions that can trace the AvroPath of an error
- * 
- * @param <T>
+ * filters items by their context position
  */
-public interface PathTracingException<T extends Throwable> {
-  /**
-   * appends a path element to the trace. expected to be called in reverse-order
-   * as the exception bubbles up the stack
-   * 
-   * @param step an AvroPath step tracing back from the location of the original
-   *             exception towards the root of the data graph
-   */
-  void tracePath(PathElement step);
-
-  T summarize(Schema root);
+public interface PositionalPathPredicate extends PathPredicate {
 }

@@ -18,7 +18,10 @@
 
 package org.apache.avro.path;
 
-public class ArrayPositionPredicate implements PathPredicate {
+/**
+ * Returns items by their position (numeric index) in an array
+ */
+public class ArrayPositionPredicate implements PositionalPathPredicate {
   private final long index;
 
   public ArrayPositionPredicate(long index) {

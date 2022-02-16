@@ -18,18 +18,29 @@
 
 package org.apache.avro.path;
 
+import org.apache.avro.Schema;
+
 /**
- * Returns items by their position (numeric index of type) in a union schema
+ * interface for exceptions that can trace the AvroPath of an error
+ *
+ * @param <T> the regular (user-facing) exception that will be
+ *            {@link #summarize(Schema)}ed out of this class
  */
-public class UnionTypePredicate implements PositionalPathPredicate {
-  private final String type;
+public interface PathTracingException<T extends Throwable> {
+  /**
+   * appends a path element to the trace. expected to be called in reverse-order
+   * as the exception bubbles up the stack
+   *
+   * @param step an AvroPath step tracing back from the location of the original
+   *             exception towards the root of the data graph
+   */
+  void tracePath(PathElement step);
 
-  public UnionTypePredicate(String type) {
-    this.type = type;
-  }
-
-  @Override
-  public String toString() {
-    return "[" + type + "]";
-  }
+  /**
+   * produces a user-facing exception to be thrown back out to user code
+   * 
+   * @param root the root object for the operation that generated the exception
+   * @return an exception
+   */
+  T summarize(Schema root);
 }

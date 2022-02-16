@@ -23,10 +23,10 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
-import org.apache.avro.TracingAvroTypeException;
+import org.apache.avro.path.TracingAvroTypeException;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.TracingClassCastException;
-import org.apache.avro.generic.TracingNullPointException;
+import org.apache.avro.path.TracingClassCastException;
+import org.apache.avro.path.TracingNullPointException;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.path.LocationStep;
 

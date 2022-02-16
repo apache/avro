@@ -18,6 +18,10 @@
 
 package org.apache.avro.path;
 
+/**
+ * Selects items based on their "path" (name of a property under which they are
+ * stored) relative to the context.
+ */
 public class LocationStep implements PathElement {
   /**
    * selector part of location step. either "." or ".."

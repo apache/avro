@@ -19,7 +19,7 @@
 package org.apache.avro.path;
 
 /**
- * element in an AvroPath expression
+ * root interface for all pieces of an AvroPath expression
  */
 public interface PathElement {
 }

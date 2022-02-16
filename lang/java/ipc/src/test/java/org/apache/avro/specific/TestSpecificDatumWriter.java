@@ -90,20 +90,20 @@ public class TestSpecificDatumWriter {
   @Test
   public void testNestedNPEErrorClarity() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
-    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF4(null);
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setStrField(null);
     try {
       writeObject(topLevelRecord, false);
       Assert.fail("expected to throw");
     } catch (NullPointerException expected) {
       Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f4"));
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
     }
   }
 
   @Test
   public void testNestedNPEErrorClarityWithCustomCoders() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
-    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null);
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null);
     try {
       writeObject(topLevelRecord, true);
       Assert.fail("expected to throw");
@@ -144,20 +144,20 @@ public class TestSpecificDatumWriter {
   @Test
   public void testNestedATEErrorClarity() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
-    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null); // not an enum
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null); // not an enum
     try {
       writeObject(topLevelRecord, false);
       Assert.fail("expected to throw");
     } catch (AvroTypeException expected) {
       Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField(\"a\").f3"));
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].enumField"));
     }
   }
 
   @Test
   public void testNestedATEErrorClarityWithCustomCoders() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
-    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setF3(null); // not an enum
+    topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null); // not an enum
     try {
       writeObject(topLevelRecord, true);
       Assert.fail("expected to throw");
@@ -174,19 +174,19 @@ public class TestSpecificDatumWriter {
     ArrayRecord arrayRecord1 = new ArrayRecord();
     ArrayRecord arrayRecord2 = new ArrayRecord();
     MapRecord mapRecordA = new MapRecord();
-    mapRecordA.setF3(MapRecordEnum.B);
-    mapRecordA.setF4("4");
-    arrayRecord1.setF2("2");
+    mapRecordA.setEnumField(MapRecordEnum.B);
+    mapRecordA.setStrField("4");
+    arrayRecord1.setStrField("2");
     Map<String, MapRecord> map1 = new HashMap<>();
     map1.put("a", mapRecordA);
     arrayRecord1.setMapField(map1);
-    arrayRecord2.setF2("2");
+    arrayRecord2.setStrField("2");
     Map<String, MapRecord> map2 = new HashMap<>();
     map2.put("a", mapRecordA);
     arrayRecord2.setMapField(map2);
-    unionRecord.setF1("1");
+    unionRecord.setStrField("1");
     unionRecord.setArrayField(Arrays.asList(arrayRecord1, arrayRecord2));
-    topLevelRecord.setF0("0");
+    topLevelRecord.setStrField("0");
     topLevelRecord.setUnionField(unionRecord);
 
     return topLevelRecord;

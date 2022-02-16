@@ -18,7 +18,11 @@
 
 package org.apache.avro.path;
 
-public class MapKeyPredicate implements PathPredicate {
+/**
+ * Returns items by their position (string key under which they are stored) in a
+ * map
+ */
+public class MapKeyPredicate implements PositionalPathPredicate {
   private final String key;
 
   public MapKeyPredicate(String key) {
@@ -34,6 +38,6 @@ public class MapKeyPredicate implements PathPredicate {
     if (key == null) {
       return "";
     }
-    return "(\"" + key + "\")";
+    return "[\"" + key + "\"]";
   }
 }

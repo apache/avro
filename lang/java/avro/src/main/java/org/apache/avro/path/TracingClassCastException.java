@@ -15,33 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.generic;
+package org.apache.avro.path;
 
-import org.apache.avro.PathTracingException;
 import org.apache.avro.Schema;
-import org.apache.avro.path.MapKeyPredicate;
-import org.apache.avro.path.PathElement;
 import org.apache.avro.util.SchemaUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * a {@link NullPointerException} with extra fields used to trace back the path
- * to a null value through an object graph
+ * a {@link ClassCastException} with extra fields used to trace back the path to
+ * a bad value through an object graph
  */
-public class TracingNullPointException extends NullPointerException
-    implements PathTracingException<NullPointerException> {
-  private final NullPointerException cause;
+public class TracingClassCastException extends ClassCastException implements PathTracingException<ClassCastException> {
+  private final ClassCastException cause;
+  private final Object datum;
   private final Schema expected;
   private final boolean customCoderUsed;
   private final List<PathElement> reversePath;
 
-  public TracingNullPointException(NullPointerException cause, Schema expected, boolean customCoderUsed) {
+  public TracingClassCastException(ClassCastException cause, Object datum, Schema expected, boolean customCoderUsed) {
     this.cause = cause;
+    this.datum = datum;
     this.expected = expected;
     this.customCoderUsed = customCoderUsed;
-    this.reversePath = new ArrayList<>(1); // assume short
+    this.reversePath = new ArrayList<>(3); // assume short
   }
 
   @Override
@@ -50,7 +48,7 @@ public class TracingNullPointException extends NullPointerException
   }
 
   @Override
-  public NullPointerException getCause() {
+  public ClassCastException getCause() {
     return cause;
   }
 
@@ -58,27 +56,17 @@ public class TracingNullPointException extends NullPointerException
    * @return a hopefully helpful error message
    */
   @Override
-  public NullPointerException summarize(Schema root) {
+  public ClassCastException summarize(Schema root) {
     StringBuilder sb = new StringBuilder();
-    sb.append("null value for (non-nullable) ");
+    sb.append("value ").append(SchemaUtil.describe(datum));
+    sb.append(" cannot be cast to expected type ").append(SchemaUtil.describe(expected));
     if (reversePath == null || reversePath.isEmpty()) {
       // very simple "shallow" NPE, no nesting at all, or custom coders used means we
       // have no data
       if (customCoderUsed) {
-        sb.append("field or map key. no further details available as custom coders were used");
-      } else {
-        sb.append(SchemaUtil.describe(expected));
+        sb.append(". No further details available as custom coders were used");
       }
     } else {
-      PathElement innerMostElement = reversePath.get(0);
-      boolean isNullMapKey = innerMostElement instanceof MapKeyPredicate
-          && ((MapKeyPredicate) innerMostElement).getKey() == null;
-      if (isNullMapKey) {
-        sb.delete(0, sb.length()); // clear
-        sb.append("null key in map");
-      } else {
-        sb.append(SchemaUtil.describe(expected));
-      }
       sb.append(" at ");
       if (root != null) {
         sb.append(SchemaUtil.describe(root));
@@ -88,7 +76,7 @@ public class TracingNullPointException extends NullPointerException
         sb.append(step.toString());
       }
     }
-    NullPointerException summary = new NullPointerException(sb.toString());
+    ClassCastException summary = new ClassCastException(sb.toString());
     summary.initCause(cause);
     return summary;
   }
