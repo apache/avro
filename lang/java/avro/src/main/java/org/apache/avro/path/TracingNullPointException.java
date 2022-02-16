@@ -47,7 +47,7 @@ public class TracingNullPointException extends NullPointerException
   }
 
   @Override
-  public NullPointerException getCause() {
+  public synchronized NullPointerException getCause() {
     return cause;
   }
 

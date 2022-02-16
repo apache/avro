@@ -48,7 +48,7 @@ public class TracingClassCastException extends ClassCastException implements Pat
   }
 
   @Override
-  public ClassCastException getCause() {
+  public synchronized ClassCastException getCause() {
     return cause;
   }
 
