@@ -122,13 +122,13 @@ namespace Avro.IO
                     throw new AvroException("String length is not supported!");
                 }
 
-                using (BinaryReader binaryReader = new BinaryReader(_stream, Encoding.UTF8, true))
+                using (var binaryReader = new BinaryReader(_stream, Encoding.UTF8, true))
                 {
-                    byte[] bytes = binaryReader.ReadBytes(length);
+                    var bytes = binaryReader.ReadBytes(length);
 
-                    return bytes.Length != length
-                        ? throw new AvroException("Could not read as many bytes from stream as expected!")
-                        : Encoding.UTF8.GetString(bytes);
+                    return bytes.Length == length ?
+                        Encoding.UTF8.GetString(bytes) :
+                        throw new AvroException("Could not read as many bytes from stream as expected!");
                 }
             }
         }
@@ -139,7 +139,10 @@ namespace Avro.IO
         /// <param name="buffer">The buffer.</param>
         /// <param name="start">The start.</param>
         /// <param name="len">The length.</param>
-        private void Read(byte[] buffer, int start, int len) => Read(buffer.AsSpan(start, len));
+        private void Read(byte[] buffer, int start, int len)
+        {
+            Read(buffer.AsSpan(start, len));
+        }
 
         /// <summary>
         /// Reads the specified buffer.
