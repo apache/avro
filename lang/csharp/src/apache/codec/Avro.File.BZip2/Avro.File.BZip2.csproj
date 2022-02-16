@@ -20,15 +20,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>Avro.Codec.Zstandard</AssemblyName>
+    <AssemblyName>Avro.File.BZip2</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../../Avro.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>CS8002</NoWarn> <!-- Referenced assembly 'ZstdNet' does not have a strong name. -->
   </PropertyGroup>
 
   <PropertyGroup>
     <!-- NuGet Package Settings -->
-    <PackageId>Apache.Avro.Codec.Zstandard</PackageId>
+    <PackageId>Apache.Avro.File.BZip2</PackageId>
     <Description></Description>
   </PropertyGroup>
 
@@ -39,7 +38,7 @@
 
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <PackageReference Include="ZstdNet" Version="1.4.5" />
+    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
   </ItemGroup>
 
   <ItemGroup>

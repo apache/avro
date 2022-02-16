@@ -19,18 +19,18 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Avro.Codec.BZip2.Test
+namespace Avro.File.Snappy.Test
 {
     public class Tests
     {
         private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
 
-        [Test, Combinatorial]
-        public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
+        [TestCaseSource(nameof(_testLengths))]
+        public void CompressDecompress(int length)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
 
-            BZip2Codec codec = new BZip2Codec(level);
+            SnappyCodec codec = new SnappyCodec();
 
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
@@ -38,12 +38,12 @@ namespace Avro.Codec.BZip2.Test
             CollectionAssert.AreEqual(data, uncompressed);
         }
 
-        [Test, Combinatorial]
-        public void CompressDecompressStream([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
+        [TestCaseSource(nameof(_testLengths))]
+        public void CompressDecompressStream(int length)
         {
             byte[] data = Enumerable.Range(0, length).Select(x => (byte)x).ToArray();
 
-            BZip2Codec codec = new BZip2Codec(level);
+            SnappyCodec codec = new SnappyCodec();
 
             using (MemoryStream inputStream = new MemoryStream(data))
             using (MemoryStream outputStream = new MemoryStream())
@@ -58,12 +58,12 @@ namespace Avro.Codec.BZip2.Test
         }
 
         [Test]
-        public void ToStringAndName([Values] BZip2Level level)
+        public void ToStringAndName()
         {
-            BZip2Codec codec = new BZip2Codec(level);
+            SnappyCodec codec = new SnappyCodec();
 
-            Assert.AreEqual("bzip2", codec.GetName());
-            Assert.AreEqual($"bzip2-{(int)level}", codec.ToString());
+            Assert.AreEqual("snappy", codec.GetName());
+            Assert.AreEqual("snappy", codec.ToString());
         }
     }
 }

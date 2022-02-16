@@ -19,7 +19,7 @@ using System;
 using System.IO;
 using ZstdNet;
 
-namespace Avro.Codec.Zstandard
+namespace Avro.File.Zstandard
 {
     /// <summary>
     /// Zstandard Compression level
@@ -53,10 +53,8 @@ namespace Avro.Codec.Zstandard
     /// <summary>
     /// Implements Zstandard compression and decompression.
     /// </summary>
-    public class ZstandardCodec : File.Codec
+    public class ZstandardCodec : Codec
     {
-        public const string DataFileConstant = "zstandard";
-
         private readonly ZstandardLevel _level;
 
         public ZstandardCodec()
@@ -82,6 +80,7 @@ namespace Avro.Codec.Zstandard
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
+            inputStream.Position = 0;
             byte[] compressedData = Compress(inputStream.ToArray());
 
             outputStream.SetLength(0);
@@ -100,7 +99,7 @@ namespace Avro.Codec.Zstandard
         /// <inheritdoc/>
         public override string GetName()
         {
-            return DataFileConstant;
+            return DataFileConstants.ZstandardCodec;
         }
 
         /// <inheritdoc/>

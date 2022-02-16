@@ -19,16 +19,8 @@
   <Import Project="../../../../common.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>Avro.Codec.Brotli</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>../../../../Avro.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <!-- NuGet Package Settings -->
-    <PackageId>Apache.Avro.Codec.Brotli</PackageId>
-    <Description></Description>
+    <TargetFrameworks>$(DefaultUnitTestTargetFrameworks)</TargetFrameworks>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -36,12 +28,15 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
-  <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
+    <ProjectReference Include="../Avro.File.XZ/Avro.File.XZ.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../main/Avro.main.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterVersion)" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleRunnerVersion)" />
   </ItemGroup>
+
 </Project>

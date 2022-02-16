@@ -19,17 +19,11 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Avro.Codec.XZ.Test
+namespace Avro.File.XZ.Test
 {
     public class Tests
     {
         private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
-
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            XZCodec.Initialize();
-        }
 
         [Test, Combinatorial]
         public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] XZLevel level)

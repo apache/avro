@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Avro.Codec.Zstandard.Test
+namespace Avro.File.Zstandard.Test
 {
     public class Tests
     {

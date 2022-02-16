@@ -21,7 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Joveler.Compression.XZ;
 
-namespace Avro.Codec.XZ
+namespace Avro.File.XZ
 {
     /// <summary>
     /// XZ Compression level
@@ -46,10 +46,8 @@ namespace Avro.Codec.XZ
     /// <summary>
     /// Implements XZ compression and decompression.
     /// </summary>
-    public class XZCodec : File.Codec
+    public class XZCodec : Codec
     {
-        public const string DataFileConstant = "xz";
-
         private readonly XZLevel _level;
         private readonly bool _extreme;
         private readonly int _threads;
@@ -76,11 +74,12 @@ namespace Avro.Codec.XZ
             _threads = numOfThreads;
         }
 
-        // !!!
-        // !!! This must be called as a global init before using this library
-        // !!! TODO: Make it more convinient
-        // !!!
-        public static void Initialize()
+        static XZCodec()
+        {
+            Initialize(); // One time initialization
+        }
+
+        private static void Initialize()
         {
             string arch = RuntimeInformation.OSArchitecture.ToString().ToLower();
             string foundLibPath = string.Empty;
@@ -186,6 +185,7 @@ namespace Avro.Codec.XZ
                 Threads = _threads,
             };
 
+            inputStream.Position = 0;
             outputStream.SetLength(0);
 
             using (XZStream xzStream = new XZStream(outputStream, compOpts, threadOpts))
@@ -213,7 +213,7 @@ namespace Avro.Codec.XZ
         /// <inheritdoc/>
         public override string GetName()
         {
-            return DataFileConstant;
+            return DataFileConstants.XZCodec;
         }
 
         /// <inheritdoc/>

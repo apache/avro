@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 using System.IO;
-using BrotliSharpLib;
 
-namespace Avro.Codec.Brotli
+namespace Avro.File.BZip2
 {
     /// <summary>
-    /// Brotli Compression level
+    /// BZip2 Compression level
     /// </summary>
-    public enum BrotliLevel
+    public enum BZip2Level
     {
-        Default = 1,
-        Level0 = 0,
+        Default = 9,
         Level1 = 1,
         Level2 = 2,
         Level3 = 3,
@@ -35,26 +33,22 @@ namespace Avro.Codec.Brotli
         Level6 = 6,
         Level7 = 7,
         Level8 = 8,
-        Level9 = 9,
-        Level10 = 10,
-        Level11 = 11
+        Level9 = 9
     }
 
     /// <summary>
-    /// Implements Brotli compression and decompression.
+    /// Implements BZip2 compression and decompression.
     /// </summary>
-    public class BrotliCodec : File.Codec
+    public class BZip2Codec : Codec
     {
-        public const string DataFileConstant = "brotli";
+        private readonly BZip2Level _level;
 
-        private readonly BrotliLevel _level;
-
-        public BrotliCodec()
-            : this(BrotliLevel.Default)
+        public BZip2Codec()
+            : this(BZip2Level.Default)
         {
         }
 
-        public BrotliCodec(BrotliLevel level)
+        public BZip2Codec(BZip2Level level)
         {
             _level = level;
         }
@@ -62,30 +56,37 @@ namespace Avro.Codec.Brotli
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
         {
-            return BrotliSharpLib.Brotli.CompressBuffer(uncompressedData, 0, uncompressedData.Length, (int)_level);
+            using (MemoryStream inputStream = new MemoryStream(uncompressedData))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                Compress(inputStream, outputStream);
+                return outputStream.ToArray();
+            }
         }
 
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
+            inputStream.Position = 0;
             outputStream.SetLength(0);
-            using (BrotliStream brotliStreams = new BrotliStream(outputStream, System.IO.Compression.CompressionMode.Compress, false))
-            {
-                brotliStreams.SetQuality((int)_level);
-                inputStream.CopyTo(brotliStreams);
-            }
+            ICSharpCode.SharpZipLib.BZip2.BZip2.Compress(inputStream, outputStream, false, (int)_level);
         }
 
         /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData, int blockLength)
         {
-            return BrotliSharpLib.Brotli.DecompressBuffer(compressedData, 0, blockLength);
+            using (MemoryStream inputStream = new MemoryStream(compressedData))
+            using (MemoryStream outputStream = new MemoryStream())
+            {
+                ICSharpCode.SharpZipLib.BZip2.BZip2.Decompress(inputStream, outputStream, false);
+                return outputStream.ToArray();
+            }
         }
 
         /// <inheritdoc/>
         public override string GetName()
         {
-            return DataFileConstant;
+            return DataFileConstants.BZip2Codec;
         }
 
         /// <inheritdoc/>

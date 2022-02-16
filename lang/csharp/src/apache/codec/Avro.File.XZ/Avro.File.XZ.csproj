@@ -20,7 +20,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>Avro.Codec.XZ</AssemblyName>
+    <AssemblyName>Avro.File.XZ</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../../Avro.snk</AssemblyOriginatorKeyFile>
     <NoWarn>CS8002</NoWarn> <!-- Referenced assembly 'Joveler.Compression.XZ' does not have a strong name. -->
@@ -28,7 +28,7 @@
 
   <PropertyGroup>
     <!-- NuGet Package Settings -->
-    <PackageId>Apache.Avro.Codec.XZ</PackageId>
+    <PackageId>Apache.Avro.File.XZ</PackageId>
     <Description></Description>
   </PropertyGroup>
 
@@ -39,7 +39,7 @@
 
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <PackageReference Include="Joveler.Compression.XZ" Version="4.1.0" />
+    <PackageReference Include="Joveler.Compression.XZ" Version="$(JovelerCompressionXZVersion)" />
   </ItemGroup>
 
   <ItemGroup>

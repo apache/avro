@@ -19,8 +19,17 @@
   <Import Project="../../../../common.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(DefaultUnitTestTargetFrameworks)</TargetFrameworks>
-    <IsPackable>false</IsPackable>
+    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
+    <AssemblyName>Avro.File.Zstandard</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../../../Avro.snk</AssemblyOriginatorKeyFile>
+    <NoWarn>CS8002</NoWarn> <!-- Referenced assembly 'ZstdNet' does not have a strong name. -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet Package Settings -->
+    <PackageId>Apache.Avro.File.Zstandard</PackageId>
+    <Description></Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -28,15 +37,12 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
+  <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <ProjectReference Include="../Avro.Codec.Brotli/Avro.Codec.Brotli.csproj" />
+    <PackageReference Include="ZstdNet" Version="$(ZstdNetVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterVersion)" />
-    <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleRunnerVersion)" />
+    <ProjectReference Include="../../main/Avro.main.csproj" />
   </ItemGroup>
-
 </Project>

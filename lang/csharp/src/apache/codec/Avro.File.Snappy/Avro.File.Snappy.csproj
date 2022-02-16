@@ -20,14 +20,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>Avro.Codec.Snappy</AssemblyName>
+    <AssemblyName>Avro.File.Snappy</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../../../../Avro.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <!-- NuGet Package Settings -->
-    <PackageId>Apache.Avro.Codec.Snappy</PackageId>
+    <PackageId>Apache.Avro.File.Snappy</PackageId>
     <Description></Description>
   </PropertyGroup>
 
@@ -38,7 +38,7 @@
 
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
-    <PackageReference Include="IronSnappy" Version="1.3.0" />
+    <PackageReference Include="IronSnappy" Version="$(IronSnappyVersion)" />
   </ItemGroup>
 
   <ItemGroup>

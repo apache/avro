@@ -18,15 +18,13 @@
 using System;
 using System.IO;
 
-namespace Avro.Codec.Snappy
+namespace Avro.File.Snappy
 {
     /// <summary>
     /// Implements Snappy compression and decompression.
     /// </summary>
-    public class SnappyCodec : File.Codec
+    public class SnappyCodec : Codec
     {
-        public const string DataFileConstant = "snappy";
-
         /// <inheritdoc/>
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
@@ -46,6 +44,8 @@ namespace Avro.Codec.Snappy
         /// <inheritdoc/>
         public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
+            inputStream.Position = 0;
+
             byte[] uncompressedData = inputStream.ToArray();
             byte[] compressedData = IronSnappy.Snappy.Encode(uncompressedData);
 
@@ -75,7 +75,7 @@ namespace Avro.Codec.Snappy
         /// <inheritdoc/>
         public override string GetName()
         {
-            return DataFileConstant;
+            return DataFileConstants.SnappyCodec;
         }
 
         /// <inheritdoc/>

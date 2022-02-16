@@ -166,9 +166,9 @@ namespace Avro.File
                 case Type.XZ:
                 case Type.Zstandard:
                     {
-                        // Create codec dynamically from "Avro.Codec.CODECNAME" assembly
-                        Assembly assembly = Assembly.Load($"Avro.Codec.{codecType}");
-                        return assembly.CreateInstance($"Avro.Codec.{codecType}.{codecType}Codec") as Codec;
+                        // Create codec dynamically from "Avro.File.CODECNAME" assembly
+                        Assembly assembly = Assembly.Load($"Avro.File.{codecType}");
+                        return assembly.CreateInstance($"Avro.File.{codecType}.{codecType}Codec") as Codec;
                     }
             }
 

@@ -17,7 +17,7 @@
  */
 using System;
 
-namespace Avro.Codec.Snappy
+namespace Avro.File.Snappy
 {
     /// <summary>
     /// Implements a 32-bit CRC hash algorithm.

@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Avro.Codec.Snappy/Avro.Codec.Snappy.csproj" />
+    <ProjectReference Include="../Avro.File.BZip2/Avro.File.BZip2.csproj" />
   </ItemGroup>
 
   <ItemGroup>
