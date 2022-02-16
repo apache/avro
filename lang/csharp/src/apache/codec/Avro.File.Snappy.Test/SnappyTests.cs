@@ -23,7 +23,7 @@ namespace Avro.File.Snappy.Test
 {
     public class Tests
     {
-        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 100000 };
 
         [TestCaseSource(nameof(_testLengths))]
         public void CompressDecompress(int length)
@@ -35,7 +35,7 @@ namespace Avro.File.Snappy.Test
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
 
-            CollectionAssert.AreEqual(data, uncompressed);
+            Assert.IsTrue(Enumerable.SequenceEqual(data, uncompressed));
         }
 
         [TestCaseSource(nameof(_testLengths))]
@@ -53,7 +53,7 @@ namespace Avro.File.Snappy.Test
                 byte[] compressed = outputStream.ToArray();
                 byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
 
-                CollectionAssert.AreEqual(data, uncompressed);
+                Assert.IsTrue(Enumerable.SequenceEqual(data, uncompressed));
             }
         }
 

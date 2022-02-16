@@ -23,7 +23,7 @@ namespace Avro.File.BZip2.Test
 {
     public class Tests
     {
-        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 1 * 1024 * 1024 };
+        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 100000 };
 
         [Test, Combinatorial]
         public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
@@ -35,7 +35,7 @@ namespace Avro.File.BZip2.Test
             byte[] compressed = codec.Compress(data);
             byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
 
-            CollectionAssert.AreEqual(data, uncompressed);
+            Assert.IsTrue(Enumerable.SequenceEqual(data, uncompressed));
         }
 
         [Test, Combinatorial]
@@ -53,7 +53,7 @@ namespace Avro.File.BZip2.Test
                 byte[] compressed = outputStream.ToArray();
                 byte[] uncompressed = codec.Decompress(compressed, compressed.Length);
 
-                CollectionAssert.AreEqual(data, uncompressed);
+                Assert.IsTrue(Enumerable.SequenceEqual(data, uncompressed));
             }
         }
 
