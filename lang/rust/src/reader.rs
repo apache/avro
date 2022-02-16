@@ -290,15 +290,19 @@ impl<'a, R: Read> Reader<'a, R> {
     }
 
     /// Get a reference to the writer `Schema`.
+    #[inline]
     pub fn writer_schema(&self) -> &Schema {
         &self.block.writer_schema
     }
 
     /// Get a reference to the optional reader `Schema`.
+    #[inline]
     pub fn reader_schema(&self) -> Option<&Schema> {
         self.reader_schema
     }
 
+    /// Get a reference to the user metadata
+    #[inline]
     pub fn user_metadata(&self) -> &HashMap<String, String> {
         &self.block.user_metadata
     }
