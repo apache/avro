@@ -49,8 +49,8 @@ pub struct Writer<'a, W> {
     marker: Vec<u8>,
     #[builder(default = false, setter(skip))]
     has_header: bool,
-    #[builder(default, setter(skip))]
-    metadata: HashMap<String, Value>,
+    #[builder(default)]
+    user_metadata: HashMap<String, Value>,
 }
 
 impl<'a, W: Write> Writer<'a, W> {
@@ -278,7 +278,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// This method could be used only before adding the first record to the writer.
     pub fn add_user_metadata<T: AsRef<[u8]>>(&mut self, key: String, value: T) -> AvroResult<()> {
         if !self.has_header {
-            self.metadata
+            self.user_metadata
                 .insert(key, Value::Bytes(value.as_ref().to_vec()));
             Ok(())
         } else {
@@ -296,7 +296,7 @@ impl<'a, W: Write> Writer<'a, W> {
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
         metadata.insert("avro.codec", self.codec.into());
 
-        for (k, v) in &self.metadata {
+        for (k, v) in &self.user_metadata {
             metadata.insert(k.as_str(), v.clone());
         }
 
@@ -878,5 +878,26 @@ mod tests {
             ),
             Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
         }
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_with_builder_api_success() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+
+        let mut user_meta_data: HashMap<String, Value> = HashMap::new();
+        user_meta_data.insert(
+            "stringKey".to_string(),
+            Value::String("stringValue".to_string()),
+        );
+        user_meta_data.insert("bytesKey".to_string(), Value::Bytes(b"bytesValue".to_vec()));
+        user_meta_data.insert("vecKey".to_string(), Value::Bytes(vec![1, 2, 3]));
+
+        let writer: Writer<'_, Vec<u8>> = Writer::builder()
+            .writer(Vec::new())
+            .schema(&schema)
+            .user_metadata(user_meta_data.clone())
+            .build();
+
+        assert_eq!(writer.user_metadata, user_meta_data);
     }
 }
