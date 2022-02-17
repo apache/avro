@@ -69,9 +69,7 @@ fn create_expected_user_metadata() -> HashMap<String, Vec<u8>> {
         "stringKey".to_string(),
         "stringValue".to_string().into_bytes(),
     );
-    user_metadata.insert("strKey".to_string(), "strValue".as_bytes().to_vec());
     user_metadata.insert("bytesKey".to_string(), b"bytesValue".to_vec());
-    user_metadata.insert("vecKey".to_string(), vec![1, 2, 3]);
     user_metadata
 }
 

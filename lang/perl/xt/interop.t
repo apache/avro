@@ -24,6 +24,11 @@ use IO::File;
 use_ok 'Avro::DataFile';
 use_ok 'Avro::DataFileReader';
 
+my $expected_metadata = {
+    stringKey => 'stringValue',
+    bytesKey => 'bytesValue'
+};
+
 for my $path (glob '../../build/interop/data/*.avro') {
     my $fn = basename($path);
     substr($fn, rindex $fn, '.') = '';
@@ -36,7 +41,14 @@ for my $path (glob '../../build/interop/data/*.avro') {
         }
     }
     my $fh = IO::File->new($path);
-    Avro::DataFileReader->new(fh => $fh);
+    my $reader = Avro::DataFileReader->new(fh => $fh);
+
+    my $metadata = $reader->metadata;
+    delete $metadata->{'avro.schema'};
+    delete $metadata->{'avro.codec'};
+    if (keys %$metadata) {
+        is_deeply($metadata, $expected_metadata, "user metadata check");
+    }
     diag("Succeeded: ${path}");
 }
 
