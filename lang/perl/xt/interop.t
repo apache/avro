@@ -44,10 +44,11 @@ for my $path (glob '../../build/interop/data/*.avro') {
     my $reader = Avro::DataFileReader->new(fh => $fh);
 
     my $metadata = $reader->metadata;
-    delete $metadata->{'avro.schema'};
-    delete $metadata->{'avro.codec'};
-    if (keys %$metadata) {
-        is_deeply($metadata, $expected_metadata, "user metadata check");
+    if (exists $metadata->{stringKey}) {
+        is($metadata->{stringKey}, $expected_metadata->{stringKey}, "check user metadata: stringKey ");
+    }
+    if (exists $metadata->{bytesKey}) {
+        is($metadata->{bytesKey}, join('', $expected_metadata->{bytesKey}), "check user metadata: bytesKey ");
     }
     diag("Succeeded: ${path}");
 }
