@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn write_user_metadata(writer: &mut Writer<Vec<u8>>) -> anyhow::Result<()> {
-    writer.add_user_metadata("stringKey".to_string(), "stringValue".to_string())?;
+    writer.add_user_metadata("stringKey".to_string(), "stringValue")?;
     writer.add_user_metadata("bytesKey".to_string(), b"bytesValue")?;
 
     Ok(())

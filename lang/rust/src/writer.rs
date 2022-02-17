@@ -278,6 +278,9 @@ impl<'a, W: Write> Writer<'a, W> {
     /// This method could be used only before adding the first record to the writer.
     pub fn add_user_metadata<T: AsRef<[u8]>>(&mut self, key: String, value: T) -> AvroResult<()> {
         if !self.has_header {
+            if key.starts_with("avro.") {
+                return Err(Error::InvalidMetadataKey(key));
+            }
             self.user_metadata
                 .insert(key, Value::Bytes(value.as_ref().to_vec()));
             Ok(())
@@ -877,6 +880,24 @@ mod tests {
                 e
             ),
             Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
+        }
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_reserved_prefix_failure() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let key = "avro.stringKey".to_string();
+        match writer.add_user_metadata(key.clone(), "value") {
+            Err(ref e @ Error::InvalidMetadataKey(_)) => {
+                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {}.", key))
+            }
+            Err(e) => panic!(
+                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {:?}",
+                e
+            ),
+            Ok(_) => panic!("Expected an error that the metadata key cannot be prefixed with 'avro.'"),
         }
     }
 

@@ -379,6 +379,9 @@ pub enum Error {
 
     #[error("The file metadata is already flushed.")]
     FileHeaderAlreadyWritten,
+
+    #[error("Metadata keys starting with 'avro.' are reserved for internal usage: {0}.")]
+    InvalidMetadataKey(String),
 }
 
 impl serde::ser::Error for Error {
