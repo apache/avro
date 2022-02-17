@@ -19,6 +19,7 @@
 use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
 use serde_json::from_slice;
 use std::{
+    collections::HashMap,
     io::{ErrorKind, Read},
     str::FromStr,
 };
@@ -35,6 +36,7 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    user_metadata: HashMap<String, Vec<u8>>,
 }
 
 impl<R: Read> Block<R> {
@@ -47,6 +49,7 @@ impl<R: Read> Block<R> {
             buf_idx: 0,
             message_count: 0,
             marker: [0; 16],
+            user_metadata: Default::default(),
         };
 
         block.read_header()?;
@@ -67,32 +70,18 @@ impl<R: Read> Block<R> {
             return Err(Error::HeaderMagic);
         }
 
-        if let Value::Map(meta) = decode(&meta_schema, &mut self.reader)? {
-            // TODO: surface original parse schema errors instead of coalescing them here
-            let json = meta
-                .get("avro.schema")
-                .and_then(|bytes| {
-                    if let Value::Bytes(ref bytes) = *bytes {
-                        from_slice(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .ok_or(Error::GetAvroSchemaFromMap)?;
-            self.writer_schema = Schema::parse(&json)?;
+        if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
+            self.read_writer_schema(&metadata)?;
+            self.read_codec(&metadata)?;
 
-            if let Some(codec) = meta
-                .get("avro.codec")
-                .and_then(|codec| {
-                    if let Value::Bytes(ref bytes) = *codec {
-                        std::str::from_utf8(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .and_then(|codec| Codec::from_str(codec).ok())
-            {
-                self.codec = codec;
+            for (key, value) in metadata {
+                if key == "avro.schema" || key == "avro.codec" {
+                    // already processed
+                } else if key.starts_with("avro.") {
+                    warn!("Ignoring unknown metadata key: {}", key);
+                } else {
+                    self.read_user_metadata(key, value)?;
+                }
             }
         } else {
             return Err(Error::GetHeaderMetadata);
@@ -184,6 +173,54 @@ impl<R: Read> Block<R> {
         self.message_count -= 1;
         Ok(Some(item))
     }
+
+    fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        let json = metadata
+            .get("avro.schema")
+            .and_then(|bytes| {
+                if let Value::Bytes(ref bytes) = *bytes {
+                    from_slice(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .ok_or(Error::GetAvroSchemaFromMap)?;
+        self.writer_schema = Schema::parse(&json)?;
+        Ok(())
+    }
+
+    fn read_codec(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        if let Some(codec) = metadata
+            .get("avro.codec")
+            .and_then(|codec| {
+                if let Value::Bytes(ref bytes) = *codec {
+                    std::str::from_utf8(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .and_then(|codec| Codec::from_str(codec).ok())
+        {
+            self.codec = codec;
+        }
+        Ok(())
+    }
+
+    fn read_user_metadata(&mut self, key: String, value: Value) -> AvroResult<()> {
+        match value {
+            Value::Bytes(ref vec) => {
+                self.user_metadata.insert(key, vec.clone());
+                Ok(())
+            }
+            wrong => {
+                warn!(
+                    "User metadata values must be Value::Bytes, found {:?}",
+                    wrong
+                );
+                Ok(())
+            }
+        }
+    }
 }
 
 /// Main interface for reading Avro formatted values.
@@ -242,13 +279,21 @@ impl<'a, R: Read> Reader<'a, R> {
     }
 
     /// Get a reference to the writer `Schema`.
+    #[inline]
     pub fn writer_schema(&self) -> &Schema {
         &self.block.writer_schema
     }
 
     /// Get a reference to the optional reader `Schema`.
+    #[inline]
     pub fn reader_schema(&self) -> Option<&Schema> {
         self.reader_schema
+    }
+
+    /// Get a reference to the user metadata
+    #[inline]
+    pub fn user_metadata(&self) -> &HashMap<String, Vec<u8>> {
+        &self.block.user_metadata
     }
 
     #[inline]
@@ -498,5 +543,37 @@ mod tests {
         for value in reader {
             assert!(value.is_err());
         }
+    }
+
+    #[test]
+    fn test_avro_3405_read_user_metadata_success() {
+        use crate::writer::Writer;
+
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let mut user_meta_data: HashMap<String, Vec<u8>> = HashMap::new();
+        user_meta_data.insert(
+            "stringKey".to_string(),
+            "stringValue".to_string().into_bytes(),
+        );
+        user_meta_data.insert("bytesKey".to_string(), b"bytesValue".to_vec());
+        user_meta_data.insert("vecKey".to_string(), vec![1, 2, 3]);
+
+        for (k, v) in user_meta_data.iter() {
+            writer.add_user_metadata(k.to_string(), v).unwrap();
+        }
+
+        let mut record = Record::new(&schema).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+
+        writer.append(record.clone()).unwrap();
+        writer.append(record.clone()).unwrap();
+        writer.flush().unwrap();
+        let result = writer.into_inner().unwrap();
+
+        let reader = Reader::new(&result[..]).unwrap();
+        assert_eq!(reader.user_metadata(), &user_meta_data);
     }
 }

@@ -376,6 +376,12 @@ pub enum Error {
     /// Error while resolving Schema::Ref
     #[error("Unresolved schema reference: {0}")]
     SchemaResolutionError(String),
+
+    #[error("The file metadata is already flushed.")]
+    FileHeaderAlreadyWritten,
+
+    #[error("Metadata keys starting with 'avro.' are reserved for internal usage: {0}.")]
+    InvalidMetadataKey(String),
 }
 
 impl serde::ser::Error for Error {

@@ -24,6 +24,11 @@ use IO::File;
 use_ok 'Avro::DataFile';
 use_ok 'Avro::DataFileReader';
 
+my $expected_metadata = {
+    stringKey => 'stringValue',
+    bytesKey => 'bytesValue'
+};
+
 for my $path (glob '../../build/interop/data/*.avro') {
     my $fn = basename($path);
     substr($fn, rindex $fn, '.') = '';
@@ -36,7 +41,15 @@ for my $path (glob '../../build/interop/data/*.avro') {
         }
     }
     my $fh = IO::File->new($path);
-    Avro::DataFileReader->new(fh => $fh);
+    my $reader = Avro::DataFileReader->new(fh => $fh);
+
+    my $metadata = $reader->metadata;
+    if (exists $metadata->{stringKey}) {
+        is($metadata->{stringKey}, $expected_metadata->{stringKey}, "check user metadata: stringKey ");
+    }
+    if (exists $metadata->{bytesKey}) {
+        is($metadata->{bytesKey}, join('', $expected_metadata->{bytesKey}), "check user metadata: bytesKey ");
+    }
     diag("Succeeded: ${path}");
 }
 
