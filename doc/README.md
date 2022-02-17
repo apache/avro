@@ -1,38 +1,15 @@
-# Docsy Example
+# Apache Avro website
 
-[Docsy][] is a [Hugo theme][] for technical documentation sites, providing easy
-site navigation, structure, and more. This **Docsy Example Project** uses the
-Docsy theme and provides a skeleton documentation structure for you to use. You
-can clone/copy this project and edit it with your own content, or use it as an
-example.
+This is a repository of Apache Avro website. The repository of Apache Avro can be found [here](https://github.com/apache/avro).
 
-In this project, the Docsy theme is included as a Git submodule:
+This website is base on [Hugo](https://gohugo.io) and uses [Docsy](https://www.docsy.dev/) theme.
 
-```bash
-$ git submodule
-...<hash>... themes/docsy (remotes/origin/HEAD)
-```
+## Getting started
 
-You can find detailed theme instructions in the [Docsy user guide][].
-
-This Docsy Example Project is hosted on [Netlify][] at [example.docsy.dev][].
-You can view deploy logs from the [deploy section of the project's Netlify
-dashboard][deploys], or this [alternate dashboard][].
-
-This is not an officially supported Google product. This project is currently maintained.
-
-## Using the Docsy Example Project as a template
-
-A simple way to get started is to use this project as a template, which gives you a site project that is set up and ready to use. To do this: 
-
-1. Click **Use this template**.
-
-2. Select a name for your new project and click **Create repository from template**.
-
-3. Make your own local working copy of your new repo using git clone, replacing https://github.com/me/example.git with your repo’s web URL:
+Clone this repository:
 
 ```bash
-git clone --recurse-submodules --depth 1 https://github.com/me/example.git
+git clone --recurse-submodules https://github.com/apache/avro-website.git
 ```
 
 You can now edit your own versions of the site’s source files.
@@ -43,22 +20,51 @@ If you want to do SCSS edits and want to publish these, you need to install `Pos
 npm install
 ```
 
-## Running the website locally
+## Work flow
 
-Building and running the site locally requires a recent `extended` version of [Hugo](https://gohugo.io).
+1. Building and running the site locally requires a recent `extended` version of [Hugo](https://gohugo.io).
 You can find out more about how to install Hugo for your environment in our
 [Getting started](https://www.docsy.dev/docs/getting-started/#prerequisites-and-installation) guide.
-
 Once you've made your working copy of the site repo, from the repo root folder, run:
 
-```
-hugo server
-```
+    
+   ```
+   hugo server --navigateToChanged
+   ```
+   
+1. Edit .md and .html files in `content/` folder
+1. Once satisfied with the changes, commit them: 
+   
+   ```
+   git commit -a
+   ```
+
+1. Generate the HTML filse
+stop `hugo server --navigateToChanged` (with Ctrl+C) and run 
+
+   ```
+   hugo --gc --minify
+   ```
+   
+    This will generate the HTMLs in `public/` folder and this is actually what is being deployed
+
+1. Add the modified HTML files to Git
+    
+   ```
+   git add .
+   git rm offline-search-index.<<OLD-HASH>>.json
+   git commit -a
+   git push
+   ```
+
+
+This way even when the PR modifies a lot of files we can review only the first commit, the meaningful one, with the modified files in `content/` folder
+
 
 ## Running a container locally
 
-You can run docsy-example inside a [Docker](https://docs.docker.com/)
-container, the container runs with a volume bound to the `docsy-example`
+You can also run avro-website inside a [Docker](https://docs.docker.com/)
+container, the container runs with a volume bound to the `avro-website`
 folder. This approach doesn't require you to install any dependencies other
 than [Docker Desktop](https://www.docker.com/products/docker-desktop) on
 Windows and Mac, and [Docker Compose](https://docs.docker.com/compose/install/)
@@ -97,7 +103,7 @@ docker-compose rm
 For more information see the [Docker Compose
 documentation](https://docs.docker.com/compose/gettingstarted/).
 
-## Troubleshooting
+### Troubleshooting
 
 As you run the website locally, you may run into the following error:
 
@@ -113,10 +119,28 @@ Error: Error building site: TOCSS: failed to transform "scss/main.scss" (text/x-
 This error occurs if you have not installed the extended version of Hugo.
 See our [user guide](https://www.docsy.dev/docs/getting-started/) for instructions on how to install Hugo.
 
-[alternate dashboard]: https://app.netlify.com/sites/goldydocs/deploys
-[deploys]: https://app.netlify.com/sites/docsy-example/deploys
-[Docsy user guide]: https://docsy.dev/docs
-[Docsy]: https://github.com/google/docsy
-[example.docsy.dev]: https://example.docsy.dev
-[Hugo theme]: https://www.mikedane.com/static-site-generators/hugo/installing-using-themes/
-[Netlify]: https://netlify.com
+## Edit content
+
+The website content is in `content/en` folder. It contains `.md` (Markdown) and `.html` (HTML) files.
+
+### Layouts
+
+To change the layout of any page edit `layouts/<page>/**.html`. If there is no layout for a given page at that location then copy the one provided by the theme and edit it:
+
+     cp themes/docsy/layouts/<xyz> layouts/<xyz>
+
+### Avro version
+
+When a new version of Apache Avro is released:
+
+1. Change the value of `params.avroversion` in `config.toml`
+2. Add a new entry to the `Releases` pages in the `Blog` section, for example:
+```
+cp content/en/blog/releases/avro-1.10.2-released.md content/en/blog/releases/avro-1.11.0-released.md
+```
+
+### API documentation for C/C++/C# modules
+
+The API documentations for C/C++/C# are built by their respective `build.sh dist` implementations. The final HTML should be copied to the `external` folder, for example:
+
+    cp ../avro/build/avro-doc-1.12.0-SNAPSHOT/api/c/* content/en/docs/external/c/
