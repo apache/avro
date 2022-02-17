@@ -1,5 +1,5 @@
 ---
-title: "Docsy Blog"
+title: "Blog"
 linkTitle: "Blog"
 menu:
   main:
