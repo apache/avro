@@ -276,9 +276,10 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Adds custom metadata to the file.
     /// This method could be used only before adding the first record to the writer.
-    pub fn add_user_metadata(&mut self, key: String, value: String) -> AvroResult<()> {
+    pub fn add_user_metadata<T: AsRef<[u8]>>(&mut self, key: String, value: T) -> AvroResult<()> {
         if !self.has_header {
-            self.metadata.insert(key, Value::String(value));
+            self.metadata
+                .insert(key, Value::Bytes(value.as_ref().to_vec()));
             Ok(())
         } else {
             Err(Error::FileHeaderAlreadyWritten)
@@ -295,14 +296,8 @@ impl<'a, W: Write> Writer<'a, W> {
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
         metadata.insert("avro.codec", self.codec.into());
 
-        if !self.metadata.is_empty() {
-            let mut buf = Vec::new();
-            encode(
-                &Value::Map(self.metadata.clone()),
-                &Schema::Map(Box::new(Schema::String)),
-                &mut buf,
-            );
-            metadata.insert("avro.user_metadata", Value::Bytes(buf));
+        for (k, v) in &self.metadata {
+            metadata.insert(k.as_str(), v.clone());
         }
 
         let mut header = Vec::new();
@@ -839,10 +834,16 @@ mod tests {
         let mut writer = Writer::new(&schema, Vec::new());
 
         writer
-            .add_user_metadata("key1".to_string(), "value1".to_string())
+            .add_user_metadata("stringKey".to_string(), "stringValue".to_string())
             .unwrap();
         writer
-            .add_user_metadata("key2".to_string(), "value2".to_string())
+            .add_user_metadata("strKey".to_string(), "strValue")
+            .unwrap();
+        writer
+            .add_user_metadata("bytesKey".to_string(), b"bytesValue")
+            .unwrap();
+        writer
+            .add_user_metadata("vecKey".to_string(), vec![1, 2, 3])
             .unwrap();
 
         let mut record = Record::new(&schema).unwrap();
@@ -854,7 +855,7 @@ mod tests {
         writer.flush().unwrap();
         let result = writer.into_inner().unwrap();
 
-        assert_eq!(result.len(), 237);
+        assert_eq!(result.len(), 260);
     }
 
     #[test]
@@ -867,7 +868,7 @@ mod tests {
         record.put("b", "foo");
         writer.append(record.clone()).unwrap();
 
-        match writer.add_user_metadata("stringKey".to_string(), "value2".into()) {
+        match writer.add_user_metadata("stringKey".to_string(), "value2".to_string()) {
             Err(e @ Error::FileHeaderAlreadyWritten) => {
                 assert_eq!(e.to_string(), "The file metadata is already flushed.")
             }

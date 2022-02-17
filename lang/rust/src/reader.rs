@@ -36,7 +36,7 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
-    user_metadata: HashMap<String, String>,
+    user_metadata: HashMap<String, Vec<u8>>,
 }
 
 impl<R: Read> Block<R> {
@@ -73,7 +73,16 @@ impl<R: Read> Block<R> {
         if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
             self.read_writer_schema(&metadata)?;
             self.read_codec(&metadata)?;
-            self.read_user_metadata(&metadata)?;
+
+            for (key, value) in metadata {
+                if key == "avro.schema" || key == "avro.codec" {
+                    // already processed
+                } else if key.starts_with("avro.") {
+                    warn!("Ignoring unknown metadata key: {}", key);
+                } else {
+                    self.read_user_metadata(key, value)?;
+                }
+            }
         } else {
             return Err(Error::GetHeaderMetadata);
         }
@@ -197,40 +206,17 @@ impl<R: Read> Block<R> {
         Ok(())
     }
 
-    fn read_user_metadata(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
-        if let Some(user_metadata) =
-            metadata
-                .get("avro.user_metadata")
-                .and_then(|metadata| match *metadata {
-                    Value::Bytes(ref bytes) => {
-                        match decode(
-                            &Schema::Map(Box::new(Schema::String)),
-                            &mut bytes.as_slice(),
-                        ) {
-                            Ok(Value::Map(ref map)) => Some(map.clone()),
-                            _ => {
-                                warn!("Failed to parse user metadata");
-                                None
-                            }
-                        }
-                    }
-                    _ => None,
-                })
-        {
-            self.user_metadata = user_metadata
-                .iter()
-                .map(|(k, v)| match v {
-                    Value::String(s) => (k.clone(), s.clone()),
-                    unknown => {
-                        warn!("User metadata values must be strings, found {:?}", unknown);
-                        (k.clone(), format!("{:?}", unknown))
-                    }
-                })
-                .collect();
-        } else {
-            debug!("No user metadata found in the file.");
+    fn read_user_metadata(&mut self, key: String, value: Value) -> AvroResult<()> {
+        match value {
+            Value::Bytes(ref vec) => {
+                self.user_metadata.insert(key, vec.clone());
+                Ok(())
+            }
+            wrong => {
+                warn!("User metadata values must be strings, found {:?}", wrong);
+                Ok(())
+            }
         }
-        Ok(())
     }
 }
 
@@ -303,7 +289,7 @@ impl<'a, R: Read> Reader<'a, R> {
 
     /// Get a reference to the user metadata
     #[inline]
-    pub fn user_metadata(&self) -> &HashMap<String, String> {
+    pub fn user_metadata(&self) -> &HashMap<String, Vec<u8>> {
         &self.block.user_metadata
     }
 
@@ -563,14 +549,16 @@ mod tests {
         let schema = Schema::parse_str(SCHEMA).unwrap();
         let mut writer = Writer::new(&schema, Vec::new());
 
-        let mut user_meta_data = HashMap::new();
-        user_meta_data.insert("key1".to_string(), "value1".to_string());
-        user_meta_data.insert("key2".to_string(), "value2".to_string());
+        let mut user_meta_data: HashMap<String, Vec<u8>> = HashMap::new();
+        user_meta_data.insert(
+            "stringKey".to_string(),
+            "stringValue".to_string().into_bytes(),
+        );
+        user_meta_data.insert("bytesKey".to_string(), b"bytesValue".to_vec());
+        user_meta_data.insert("vecKey".to_string(), vec![1, 2, 3]);
 
         for (k, v) in user_meta_data.iter() {
-            writer
-                .add_user_metadata(k.to_string(), v.to_string())
-                .unwrap();
+            writer.add_user_metadata(k.to_string(), v).unwrap();
         }
 
         let mut record = Record::new(&schema).unwrap();
