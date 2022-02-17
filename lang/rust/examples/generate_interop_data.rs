@@ -78,6 +78,8 @@ fn main() -> anyhow::Result<()> {
 
     for codec in Codec::iter() {
         let mut writer = Writer::with_codec(&schema, Vec::new(), codec);
+        write_user_metadata(&mut writer)?;
+
         let datum = create_datum(&schema);
         writer.append(datum)?;
         let bytes = writer.into_inner()?;
@@ -94,6 +96,15 @@ fn main() -> anyhow::Result<()> {
             bytes,
         )?;
     }
+
+    Ok(())
+}
+
+fn write_user_metadata(writer: &mut Writer<Vec<u8>>) -> anyhow::Result<()> {
+    writer.add_user_metadata("stringKey".to_string(), "stringValue".to_string())?;
+    writer.add_user_metadata("strKey".to_string(), "strValue")?;
+    writer.add_user_metadata("bytesKey".to_string(), b"bytesValue")?;
+    writer.add_user_metadata("vecKey".to_string(), vec![1, 2, 3])?;
 
     Ok(())
 }
