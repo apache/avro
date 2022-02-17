@@ -17,16 +17,20 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.FileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -79,19 +83,27 @@ public class DataFileInteropTest {
   private <T extends Object> void readFiles(DatumReaderProvider<T> provider) throws IOException {
     for (File f : Objects.requireNonNull(DATAFILE_DIR.listFiles())) {
       System.out.println("Reading: " + f.getName());
-      try (FileReader<? extends Object> reader = DataFileReader.openReader(f, provider.get())) {
+      try (DataFileReader<? extends Object> reader = (DataFileReader<? extends Object>) DataFileReader.openReader(f,
+          provider.get())) {
+
+        // Ignore avro.schema & avro.codec. Some SDKs do not support user metadata.
+        if (reader.getMetaKeys().size() > 2) {
+          assertEquals("stringValue", reader.getMetaString("stringKey"));
+          assertArrayEquals("bytesValue".getBytes(StandardCharsets.UTF_8), reader.getMeta("bytesKey"));
+        }
+
         int i = 0;
         for (Object datum : reader) {
           i++;
-          Assert.assertNotNull(datum);
+          assertNotNull(datum);
         }
-        Assert.assertNotEquals(0, i);
+        assertNotEquals(0, i);
       }
     }
   }
 
   interface DatumReaderProvider<T extends Object> {
-    public DatumReader<T> get();
+    DatumReader<T> get();
   }
 
 }

@@ -49,6 +49,8 @@ pub struct Writer<'a, W> {
     marker: Vec<u8>,
     #[builder(default = false, setter(skip))]
     has_header: bool,
+    #[builder(default)]
+    user_metadata: HashMap<String, Value>,
 }
 
 impl<'a, W: Write> Writer<'a, W> {
@@ -83,14 +85,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// internal buffering for performance reasons. If you want to be sure the value has been
     /// written, then call [`flush`](struct.Writer.html#method.flush).
     pub fn append<T: Into<Value>>(&mut self, value: T) -> AvroResult<usize> {
-        let n = if !self.has_header {
-            let header = self.header()?;
-            let n = self.append_bytes(header.as_ref())?;
-            self.has_header = true;
-            n
-        } else {
-            0
-        };
+        let n = self.maybe_write_header()?;
 
         let avro = value.into();
         write_value_ref(self.schema, &avro, &mut self.buffer)?;
@@ -112,14 +107,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// internal buffering for performance reasons. If you want to be sure the value has been
     /// written, then call [`flush`](struct.Writer.html#method.flush).
     pub fn append_value_ref(&mut self, value: &Value) -> AvroResult<usize> {
-        let n = if !self.has_header {
-            let header = self.header()?;
-            let n = self.append_bytes(header.as_ref())?;
-            self.has_header = true;
-            n
-        } else {
-            0
-        };
+        let n = self.maybe_write_header()?;
 
         write_value_ref(self.schema, value, &mut self.buffer)?;
 
@@ -286,6 +274,21 @@ impl<'a, W: Write> Writer<'a, W> {
         self.writer.write(bytes).map_err(Error::WriteBytes)
     }
 
+    /// Adds custom metadata to the file.
+    /// This method could be used only before adding the first record to the writer.
+    pub fn add_user_metadata<T: AsRef<[u8]>>(&mut self, key: String, value: T) -> AvroResult<()> {
+        if !self.has_header {
+            if key.starts_with("avro.") {
+                return Err(Error::InvalidMetadataKey(key));
+            }
+            self.user_metadata
+                .insert(key, Value::Bytes(value.as_ref().to_vec()));
+            Ok(())
+        } else {
+            Err(Error::FileHeaderAlreadyWritten)
+        }
+    }
+
     /// Create an Avro header based on schema, codec and sync marker.
     fn header(&self) -> Result<Vec<u8>, Error> {
         let schema_bytes = serde_json::to_string(self.schema)
@@ -295,6 +298,10 @@ impl<'a, W: Write> Writer<'a, W> {
         let mut metadata = HashMap::with_capacity(2);
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
         metadata.insert("avro.codec", self.codec.into());
+
+        for (k, v) in &self.user_metadata {
+            metadata.insert(k.as_str(), v.clone());
+        }
 
         let mut header = Vec::new();
         header.extend_from_slice(AVRO_OBJECT_HEADER);
@@ -306,6 +313,17 @@ impl<'a, W: Write> Writer<'a, W> {
         header.extend_from_slice(&self.marker);
 
         Ok(header)
+    }
+
+    fn maybe_write_header(&mut self) -> AvroResult<usize> {
+        if !self.has_header {
+            let header = self.header()?;
+            let n = self.append_bytes(header.as_ref())?;
+            self.has_header = true;
+            Ok(n)
+        } else {
+            Ok(0)
+        }
     }
 }
 
@@ -811,5 +829,96 @@ mod tests {
             &result[last_data_byte - data.len()..last_data_byte],
             data.as_slice()
         );
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_success() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        writer
+            .add_user_metadata("stringKey".to_string(), "stringValue".to_string())
+            .unwrap();
+        writer
+            .add_user_metadata("strKey".to_string(), "strValue")
+            .unwrap();
+        writer
+            .add_user_metadata("bytesKey".to_string(), b"bytesValue")
+            .unwrap();
+        writer
+            .add_user_metadata("vecKey".to_string(), vec![1, 2, 3])
+            .unwrap();
+
+        let mut record = Record::new(&schema).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+
+        writer.append(record.clone()).unwrap();
+        writer.append(record.clone()).unwrap();
+        writer.flush().unwrap();
+        let result = writer.into_inner().unwrap();
+
+        assert_eq!(result.len(), 260);
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_failure() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let mut record = Record::new(&schema).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+        writer.append(record.clone()).unwrap();
+
+        match writer.add_user_metadata("stringKey".to_string(), "value2".to_string()) {
+            Err(e @ Error::FileHeaderAlreadyWritten) => {
+                assert_eq!(e.to_string(), "The file metadata is already flushed.")
+            }
+            Err(e) => panic!(
+                "Unexpected error occurred while writing user metadata: {:?}",
+                e
+            ),
+            Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
+        }
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_reserved_prefix_failure() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let key = "avro.stringKey".to_string();
+        match writer.add_user_metadata(key.clone(), "value") {
+            Err(ref e @ Error::InvalidMetadataKey(_)) => {
+                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {}.", key))
+            }
+            Err(e) => panic!(
+                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {:?}",
+                e
+            ),
+            Ok(_) => panic!("Expected an error that the metadata key cannot be prefixed with 'avro.'"),
+        }
+    }
+
+    #[test]
+    fn test_avro_3405_writer_add_metadata_with_builder_api_success() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+
+        let mut user_meta_data: HashMap<String, Value> = HashMap::new();
+        user_meta_data.insert(
+            "stringKey".to_string(),
+            Value::String("stringValue".to_string()),
+        );
+        user_meta_data.insert("bytesKey".to_string(), Value::Bytes(b"bytesValue".to_vec()));
+        user_meta_data.insert("vecKey".to_string(), Value::Bytes(vec![1, 2, 3]));
+
+        let writer: Writer<'_, Vec<u8>> = Writer::builder()
+            .writer(Vec::new())
+            .schema(&schema)
+            .user_metadata(user_meta_data.clone())
+            .build();
+
+        assert_eq!(writer.user_metadata, user_meta_data);
     }
 }
