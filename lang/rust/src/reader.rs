@@ -213,7 +213,7 @@ impl<R: Read> Block<R> {
                 Ok(())
             }
             wrong => {
-                warn!("User metadata values must be strings, found {:?}", wrong);
+                warn!("User metadata values must be Value::Bytes, found {:?}", wrong);
                 Ok(())
             }
         }
