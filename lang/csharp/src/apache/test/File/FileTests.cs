@@ -857,6 +857,44 @@ namespace Avro.Test.File
         }
 
         /// <summary>
+        /// Reading & writing many specific record objects
+        /// </summary>
+        /// <param name="codecType"></param>
+        /// <param name="numOfRecords"></param>
+        [Test]
+        public void TestLargeSpecificData([Values] Codec.Type codecType, [Values(0, 1000, 100000)] int numOfRecords)
+        {
+            foreach (var rwFactory in SpecificOptions<Foo>())
+            {
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                Schema schema = Schema.Parse(specificSchema);
+                using (IFileWriter<Foo> dataFileWriter = rwFactory.CreateWriter(dataFileOutputStream, schema, Codec.CreateCodec(codecType)))
+                {
+                    for (int index = 0; index < numOfRecords; index++)
+                    {
+                        dataFileWriter.Append(new Foo() { name = $"Name-{index}", age = index });
+                    }
+                }
+
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+
+                // Read back and verify
+                using (IFileReader<Foo> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    int index = 0;
+                    foreach (Foo record in reader.NextEntries)
+                    {
+                        Assert.AreEqual($"Name-{index}", record.name);
+                        Assert.AreEqual(index, record.age);
+                        index++;
+                    }
+
+                    Assert.AreEqual(numOfRecords, index);
+                }
+            }
+        }
+
+        /// <summary>
         /// Reading and writing using optional codecs
         /// </summary>
         /// <param name="schemaStr"></param>
