@@ -55,7 +55,7 @@ namespace Avro.Generic
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => (obj == this) || (obj != null && obj is GenericEnum) && Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal);
+        public override bool Equals(object obj) => (obj == this) || (obj != null && obj is GenericEnum && Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal));
 
         /// <inheritdoc/>
         public override int GetHashCode() => 17 * Value.GetHashCode();
