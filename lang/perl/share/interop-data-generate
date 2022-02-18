@@ -55,8 +55,7 @@ my $datum = {
 };
 
 my $metadata = {
-    stringKey => 'stringValue',
-    bytesKey => 'bytesValue'
+    user_metadata => 'someByteArray'
 };
 
 while (my ($codec, $enabled) = each(%Avro::DataFile::ValidCodec)) {
