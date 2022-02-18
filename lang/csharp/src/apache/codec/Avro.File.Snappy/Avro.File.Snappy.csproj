@@ -28,7 +28,7 @@
   <PropertyGroup>
     <!-- NuGet Package Settings -->
     <PackageId>Apache.Avro.File.Snappy</PackageId>
-    <Description></Description>
+    <Description>Snappy compression library for Apache.Avro</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
