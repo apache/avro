@@ -75,7 +75,7 @@ namespace Avro
         protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CodeGen"/> class.
+        /// Initializes a new instance of the <see cref="CodeGen" /> class.
         /// </summary>
         public CodeGen()
         {
@@ -167,7 +167,7 @@ namespace Avro
         /// <summary>
         /// Generates code for the schema objects.
         /// </summary>
-        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
         protected virtual void ProcessSchemas()
         {
             foreach (Schema schema in Schemas)
@@ -194,7 +194,7 @@ namespace Avro
                             break;
 
                         default:
-                            throw new CodeGenException("Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag);
+                            throw new CodeGenException($"Names in schema should only be of type NamedSchema, type found {sn.Value.Tag}");
                     }
                 }
             }
@@ -203,7 +203,7 @@ namespace Avro
         /// <summary>
         /// Generates code for the schema objects.
         /// </summary>
-        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found " + sn.Value.Tag.</exception>
+        /// <exception cref="CodeGenException">Names in schema should only be of type NamedSchema, type found {sn.Value.Tag}</exception>
         [Obsolete("This method is deprecated and it will be removed in a future release! Please change call to ProcessSchemas().")]
         protected virtual void processSchemas() => ProcessSchemas();
 
@@ -316,7 +316,7 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema object to search.</param>
         /// <param name="names">list of named schemas.</param>
-        /// <exception cref="CodeGenException">Unable to add name for " + schema.Name + " type " + schema.Tag.</exception>
+        /// <exception cref="CodeGenException">Unable to add name for {schema.Name} type {schema.Tag}</exception>
         protected virtual void addName(Schema schema, SchemaNames names)
         {
             NamedSchema ns = schema as NamedSchema;
@@ -374,7 +374,7 @@ namespace Avro
                     break;
 
                 default:
-                    throw new CodeGenException("Unable to add name for " + schema.Name + " type " + schema.Tag);
+                    throw new CodeGenException($"Unable to add name for {schema.Name} type {schema.Tag}");
             }
         }
 
@@ -512,7 +512,7 @@ namespace Avro
         /// Generates code for an individual protocol.
         /// </summary>
         /// <param name="protocol">Protocol to generate code for.</param>
-        /// <exception cref="CodeGenException">Namespace required for enum schema " + nspace.</exception>
+        /// <exception cref="CodeGenException">Namespace required for enum schema {nspace}</exception>
         protected virtual void processInterface(Protocol protocol)
         {
             // Create abstract class
@@ -591,7 +591,7 @@ namespace Avro
             string nspace = protocol.Namespace;
             if (string.IsNullOrEmpty(nspace))
             {
-                throw new CodeGenException("Namespace required for enum schema " + nspace);
+                throw new CodeGenException($"Namespace required for enum schema {nspace}");
             }
 
             CodeNamespace codens = AddNamespace(nspace);
@@ -628,8 +628,8 @@ namespace Avro
                 ReturnType = new CodeTypeReference(typeof(void))
             };
 
-            CodeParameterDeclarationExpression requestor = new CodeParameterDeclarationExpression(typeof(Specific.ICallbackRequestor),
-                                                                   "requestor");
+            CodeParameterDeclarationExpression requestor =
+                new CodeParameterDeclarationExpression(typeof(Specific.ICallbackRequestor), "requestor");
             requestMethod.Parameters.Add(requestor);
 
             CodeParameterDeclarationExpression messageName = new CodeParameterDeclarationExpression(typeof(string), "messageName");
@@ -700,8 +700,7 @@ namespace Avro
                 {
                     bool unused = false;
                     string type = getType(response, false, ref unused);
-                    CodeParameterDeclarationExpression parameter = new CodeParameterDeclarationExpression("Avro.IO.ICallback<" + type + ">",
-                                                                           "callback");
+                    CodeParameterDeclarationExpression parameter = new CodeParameterDeclarationExpression($"Avro.IO.ICallback<{type}>", "callback");
                     messageMember.Parameters.Add(parameter);
                 }
 
@@ -933,7 +932,7 @@ namespace Avro
         /// or
         /// Unable to cast schema into a logical schema
         /// or
-        /// Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag.
+        /// Unable to generate CodeTypeReference for {schema.Name} type {schema.Tag}
         /// </exception>
         internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
         {
@@ -1008,7 +1007,7 @@ namespace Avro
                         ? $"System.Nullable<{csharpType.GetGenericArguments()[0]}>" : csharpType.ToString();
             }
 
-            throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
+            throw new CodeGenException($"Unable to generate CodeTypeReference for {schema.Name} type {schema.Tag}");
         }
 
         /// <summary>
@@ -1030,14 +1029,11 @@ namespace Avro
         /// schema that is nullable.
         /// </returns>
         /// <exception cref="ArgumentNullException">schema - UnionSchema can not be null.</exception>
-        public static Schema GetNullableType(UnionSchema schema)
-        {
-            return schema == null ?
+        public static Schema GetNullableType(UnionSchema schema) => schema == null ?
                 throw new ArgumentNullException(nameof(schema), "UnionSchema can not be null") :
                 schema.Count == 2 && !schema.Schemas.All(x => x.Tag != Schema.Type.Null) ?
                 schema.Schemas.FirstOrDefault(x => x.Tag != Schema.Type.Null) :
                 null;
-        }
 
         /// <summary>
         /// Creates the static schema field for class types.
