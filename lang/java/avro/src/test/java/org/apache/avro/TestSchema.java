@@ -361,4 +361,9 @@ public class TestSchema {
   public void testEnumSymbolAsNull() {
     Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
   }
+
+  @Test(expected = NullPointerException.class)
+  public void testSchemaFieldWithoutSchema() {
+    new Schema.Field("f", null);
+  }
 }

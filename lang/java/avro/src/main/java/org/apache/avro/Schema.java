@@ -554,7 +554,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     Field(String name, Schema schema, String doc, JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
-      this.schema = schema;
+      this.schema = Objects.requireNonNull(schema, "schema is required and cannot be null");
       this.doc = doc;
       this.defaultValue = validateDefault ? validateDefault(name, schema, defaultValue) : defaultValue;
       this.order = Objects.requireNonNull(order, "Order cannot be null");
