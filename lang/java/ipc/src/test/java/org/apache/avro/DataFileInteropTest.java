@@ -86,10 +86,9 @@ public class DataFileInteropTest {
       try (DataFileReader<? extends Object> reader = (DataFileReader<? extends Object>) DataFileReader.openReader(f,
           provider.get())) {
 
-        // Ignore avro.schema & avro.codec. Some SDKs do not support user metadata.
-        if (reader.getMetaKeys().size() > 2) {
-          assertEquals("stringValue", reader.getMetaString("stringKey"));
-          assertArrayEquals("bytesValue".getBytes(StandardCharsets.UTF_8), reader.getMeta("bytesKey"));
+        byte[] user_metadata = reader.getMeta("user_metadata");
+        if (user_metadata != null) {
+          assertArrayEquals("someByteArray".getBytes(StandardCharsets.UTF_8), user_metadata);
         }
 
         int i = 0;
