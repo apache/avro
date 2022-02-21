@@ -22,10 +22,10 @@
 
         // Rust
         "vadimcn.vscode-lldb",
-		"mutantdino.resourcemonitor",
-		"matklad.rust-analyzer",
-		"tamasfe.even-better-toml",
-		"serayuzgur.crates",
+        "mutantdino.resourcemonitor",
+        "matklad.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
 
         // Java
         "vscjava.vscode-java-pack",
