@@ -21,6 +21,7 @@ use apache_avro::{
     Codec, Writer,
 };
 use std::{collections::HashMap, io::BufWriter};
+use std::io::Write;
 use strum::IntoEnumIterator;
 
 fn create_datum(schema: &Schema) -> Record {
@@ -77,12 +78,6 @@ fn main() -> anyhow::Result<()> {
     let schema = Schema::parse_str(schema_str.as_str())?;
 
     for codec in Codec::iter() {
-        let mut writer = Writer::with_codec(&schema, BufWriter::new(Vec::new()), codec);
-        write_user_metadata(&mut writer)?;
-
-        let datum = create_datum(&schema);
-        writer.append(datum)?;
-        let bytes = writer.into_inner()?;
 
         let codec_name = <&str>::from(codec);
         let suffix = if codec_name == "null" {
@@ -91,16 +86,22 @@ fn main() -> anyhow::Result<()> {
             format!("_{}", codec_name)
         };
 
-        std::fs::write(
-            format!("../../build/interop/data/rust{}.avro", suffix),
-            bytes.into_inner()?,
-        )?;
+        let file_name = format!("../../build/interop/data/rust{}.avro", suffix);
+        let output_file = std::fs::File::create(&file_name)?;
+
+        let mut writer = Writer::with_codec(&schema, BufWriter::new(output_file), codec);
+        write_user_metadata(&mut writer)?;
+
+        let datum = create_datum(&schema);
+        writer.append(datum)?;
+        writer.flush()?;
+        println!("Wrote {}", file_name);
     }
 
     Ok(())
 }
 
-fn write_user_metadata(writer: &mut Writer<BufWriter<Vec<u8>>>) -> anyhow::Result<()> {
+fn write_user_metadata<W: Write>(writer: &mut Writer<BufWriter<W>>) -> anyhow::Result<()> {
     writer.add_user_metadata("user_metadata".to_string(), b"someByteArray")?;
 
     Ok(())
