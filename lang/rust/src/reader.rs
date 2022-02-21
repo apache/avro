@@ -72,7 +72,7 @@ impl<R: Read> Block<R> {
 
         if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
             self.read_writer_schema(&metadata)?;
-            self.read_codec(&metadata)?;
+            self.read_codec(&metadata);
 
             for (key, value) in metadata {
                 if key == "avro.schema" || key == "avro.codec" {
@@ -80,7 +80,7 @@ impl<R: Read> Block<R> {
                 } else if key.starts_with("avro.") {
                     warn!("Ignoring unknown metadata key: {}", key);
                 } else {
-                    self.read_user_metadata(key, value)?;
+                    self.read_user_metadata(key, value);
                 }
             }
         } else {
@@ -189,7 +189,7 @@ impl<R: Read> Block<R> {
         Ok(())
     }
 
-    fn read_codec(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+    fn read_codec(&mut self, metadata: &HashMap<String, Value>) {
         if let Some(codec) = metadata
             .get("avro.codec")
             .and_then(|codec| {
@@ -203,21 +203,18 @@ impl<R: Read> Block<R> {
         {
             self.codec = codec;
         }
-        Ok(())
     }
 
-    fn read_user_metadata(&mut self, key: String, value: Value) -> AvroResult<()> {
+    fn read_user_metadata(&mut self, key: String, value: Value) {
         match value {
             Value::Bytes(ref vec) => {
                 self.user_metadata.insert(key, vec.clone());
-                Ok(())
             }
             wrong => {
                 warn!(
                     "User metadata values must be Value::Bytes, found {:?}",
                     wrong
                 );
-                Ok(())
             }
         }
     }
