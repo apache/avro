@@ -16,7 +16,8 @@
 // under the License.
 
 use apache_avro::Reader;
-use std::{collections::HashMap, ffi::OsStr, fs::File, io::BufReader};
+use std::{collections::HashMap, ffi::OsStr, io::BufReader};
+use std::io::Read;
 
 fn main() -> anyhow::Result<()> {
     let mut expected_user_metadata: HashMap<String, Vec<u8>> = HashMap::new();
@@ -64,8 +65,8 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
-fn test_user_metadata(
-    reader: &Reader<BufReader<&File>>,
+fn test_user_metadata<R: Read>(
+    reader: &Reader<BufReader<R>>,
     expected_user_metadata: &HashMap<String, Vec<u8>>,
 ) {
     let user_metadata = reader.user_metadata();
