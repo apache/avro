@@ -20,8 +20,10 @@ use apache_avro::{
     types::{Record, Value},
     Codec, Writer,
 };
-use std::{collections::HashMap, io::BufWriter};
-use std::io::Write;
+use std::{
+    collections::HashMap,
+    io::{BufWriter, Write},
+};
 use strum::IntoEnumIterator;
 
 fn create_datum(schema: &Schema) -> Record {
@@ -78,7 +80,6 @@ fn main() -> anyhow::Result<()> {
     let schema = Schema::parse_str(schema_str.as_str())?;
 
     for codec in Codec::iter() {
-
         let codec_name = <&str>::from(codec);
         let suffix = if codec_name == "null" {
             "".to_owned()
