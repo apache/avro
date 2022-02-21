@@ -16,7 +16,7 @@
 // under the License.
 
 use apache_avro::Reader;
-use std::{collections::HashMap, ffi::OsStr, fs::File};
+use std::{collections::HashMap, ffi::OsStr, fs::File, io::BufReader};
 
 fn main() -> anyhow::Result<()> {
     let mut expected_user_metadata: HashMap<String, Vec<u8>> = HashMap::new();
@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
             if ext == "avro" {
                 println!("Checking {:?}", &path);
                 let content = std::fs::File::open(&path)?;
-                let reader = Reader::new(&content)?;
+                let reader = Reader::new(BufReader::new(&content))?;
 
                 test_user_metadata(&reader, &expected_user_metadata);
 
@@ -64,7 +64,10 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
-fn test_user_metadata(reader: &Reader<&File>, expected_user_metadata: &HashMap<String, Vec<u8>>) {
+fn test_user_metadata(
+    reader: &Reader<BufReader<&File>>,
+    expected_user_metadata: &HashMap<String, Vec<u8>>,
+) {
     let user_metadata = reader.user_metadata();
     if !user_metadata.is_empty() {
         assert_eq!(user_metadata, expected_user_metadata);
