@@ -1,0 +1,42 @@
+{
+    "name": "Avro Development",
+
+    "build": { "dockerfile": "../share/docker/Dockerfile" },
+
+    // Use 'settings' to set *default* container specific settings.json values on container create.
+    // You can edit these settings after create using File > Preferences > Settings > Remote.
+    "settings": {
+    },
+
+    // Add the IDs of extensions you want installed when the container is created in the array below.
+    "extensions": [
+        // Python
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+
+         // C/C++
+        "ms-vscode.cpptools",
+
+        // C#
+        "ms-dotnettools.csharp",
+
+        // Rust
+        "vadimcn.vscode-lldb",
+		"mutantdino.resourcemonitor",
+		"matklad.rust-analyzer",
+		"tamasfe.even-better-toml",
+		"serayuzgur.crates",
+
+        // Java
+        "vscjava.vscode-java-pack",
+
+        // Shell script
+        "timonwong.shellcheck",
+
+        // YAML
+        "redhat.vscode-yaml",
+
+        // Git
+        "eamodio.gitlens"
+    ]
+}
