@@ -20,7 +20,7 @@ use apache_avro::{
     types::{Record, Value},
     Codec, Writer,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, io::BufWriter};
 use strum::IntoEnumIterator;
 
 fn create_datum(schema: &Schema) -> Record {
@@ -77,7 +77,7 @@ fn main() -> anyhow::Result<()> {
     let schema = Schema::parse_str(schema_str.as_str())?;
 
     for codec in Codec::iter() {
-        let mut writer = Writer::with_codec(&schema, Vec::new(), codec);
+        let mut writer = Writer::with_codec(&schema, BufWriter::new(Vec::new()), codec);
         write_user_metadata(&mut writer)?;
 
         let datum = create_datum(&schema);
@@ -93,14 +93,14 @@ fn main() -> anyhow::Result<()> {
 
         std::fs::write(
             format!("../../build/interop/data/rust{}.avro", suffix),
-            bytes,
+            bytes.into_inner()?,
         )?;
     }
 
     Ok(())
 }
 
-fn write_user_metadata(writer: &mut Writer<Vec<u8>>) -> anyhow::Result<()> {
+fn write_user_metadata(writer: &mut Writer<BufWriter<Vec<u8>>>) -> anyhow::Result<()> {
     writer.add_user_metadata("user_metadata".to_string(), b"someByteArray")?;
 
     Ok(())
