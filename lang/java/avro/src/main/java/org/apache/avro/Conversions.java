@@ -78,6 +78,16 @@ public class Conversions {
     }
 
     @Override
+    public BigDecimal fromCharSequence(CharSequence value, Schema schema, LogicalType type) {
+      return new BigDecimal(value.toString());
+    }
+
+    @Override
+    public CharSequence toCharSequence(BigDecimal value, Schema schema, LogicalType type) {
+      return value.toString();
+    }
+
+    @Override
     public BigDecimal fromBytes(ByteBuffer value, Schema schema, LogicalType type) {
       int scale = ((LogicalTypes.Decimal) type).getScale();
       // always copy the bytes out because BigInteger has no offset/length ctor

@@ -129,6 +129,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     resolver = cache.get(expected);
     if (resolver == null) {
       resolver = DecoderFactory.get().resolvingDecoder(Schema.applyAliases(actual, expected), expected, null);
+      resolver.configure(getData());
+
       cache.put(expected, resolver);
     }
 
