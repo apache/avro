@@ -23,7 +23,7 @@ namespace Avro.File.BZip2.Test
 {
     public class Tests
     {
-        private static int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 100000 };
+        private static readonly int[] _testLengths = new int[] { 0, 1000, 64 * 1024, 100000 };
 
         [Test, Combinatorial]
         public void CompressDecompress([ValueSource(nameof(_testLengths))] int length, [Values] BZip2Level level)
