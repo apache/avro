@@ -30,3 +30,5 @@ composer.lock
 .phpunit.result.cache
 .mvn/jvm.config # Maven JVM settings
 **/*.run.xml    # Intellij IDEA Run configurations
+/lang/csharp/src/apache/test/Coverage
+/lang/csharp/src/apache/test/TestResults
