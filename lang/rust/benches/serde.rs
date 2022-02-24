@@ -15,10 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::{
+use apache_avro::{
     schema::Schema,
     types::{Record, Value},
-    Reader, Writer,
+    AvroResult, Reader, Writer,
 };
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::time::Duration;
@@ -138,19 +138,19 @@ const RAW_ADDRESS_SCHEMA: &str = r#"
 }
 "#;
 
-fn make_small_record() -> (Schema, Value) {
-    let small_schema = Schema::parse_str(RAW_SMALL_SCHEMA).unwrap();
+fn make_small_record() -> anyhow::Result<(Schema, Value)> {
+    let small_schema = Schema::parse_str(RAW_SMALL_SCHEMA)?;
     let small_record = {
         let mut small_record = Record::new(&small_schema).unwrap();
         small_record.put("field", "foo");
         small_record.into()
     };
-    (small_schema, small_record)
+    Ok((small_schema, small_record))
 }
 
-fn make_big_record() -> (Schema, Value) {
-    let big_schema = Schema::parse_str(RAW_BIG_SCHEMA).unwrap();
-    let address_schema = Schema::parse_str(RAW_ADDRESS_SCHEMA).unwrap();
+fn make_big_record() -> anyhow::Result<(Schema, Value)> {
+    let big_schema = Schema::parse_str(RAW_BIG_SCHEMA)?;
+    let address_schema = Schema::parse_str(RAW_ADDRESS_SCHEMA)?;
     let mut address = Record::new(&address_schema).unwrap();
     address.put("street", "street");
     address.put("city", "city");
@@ -168,65 +168,70 @@ fn make_big_record() -> (Schema, Value) {
         big_record.into()
     };
 
-    (big_schema, big_record)
+    Ok((big_schema, big_record))
 }
 
 fn make_records(record: Value, count: usize) -> Vec<Value> {
     std::iter::repeat(record).take(count).collect()
 }
 
-fn write(schema: &Schema, records: &[Value]) -> Vec<u8> {
+fn write(schema: &Schema, records: &[Value]) -> AvroResult<Vec<u8>> {
     let mut writer = Writer::new(schema, Vec::new());
     writer.extend_from_slice(records).unwrap();
-    writer.into_inner().unwrap()
+    writer.into_inner()
 }
 
-fn read(schema: &Schema, bytes: &[u8]) {
-    let reader = Reader::with_schema(schema, bytes).unwrap();
+fn read(schema: &Schema, bytes: &[u8]) -> anyhow::Result<()> {
+    let reader = Reader::with_schema(schema, bytes)?;
 
     for record in reader {
-        let _ = record.unwrap();
+        let _ = record?;
     }
+    Ok(())
 }
 
-fn read_schemaless(bytes: &[u8]) {
-    let reader = Reader::new(bytes).unwrap();
+fn read_schemaless(bytes: &[u8]) -> anyhow::Result<()> {
+    let reader = Reader::new(bytes)?;
 
     for record in reader {
-        let _ = record.unwrap();
+        let _ = record?;
     }
+    Ok(())
 }
 
 fn bench_write(
     c: &mut Criterion,
-    make_record: impl Fn() -> (Schema, Value),
+    make_record: impl Fn() -> anyhow::Result<(Schema, Value)>,
     n_records: usize,
     name: &str,
-) {
-    let (schema, record) = make_record();
+) -> anyhow::Result<()> {
+    let (schema, record) = make_record()?;
     let records = make_records(record, n_records);
     c.bench_function(name, |b| b.iter(|| write(&schema, &records)));
+    Ok(())
 }
 
 fn bench_read(
     c: &mut Criterion,
-    make_record: impl Fn() -> (Schema, Value),
+    make_record: impl Fn() -> anyhow::Result<(Schema, Value)>,
     n_records: usize,
     name: &str,
-) {
-    let (schema, record) = make_record();
+) -> anyhow::Result<()> {
+    let (schema, record) = make_record()?;
     let records = make_records(record, n_records);
-    let bytes = write(&schema, &records);
+    let bytes = write(&schema, &records).unwrap();
     c.bench_function(name, |b| b.iter(|| read(&schema, &bytes)));
+    Ok(())
 }
 
-fn bench_from_file(c: &mut Criterion, file_path: &str, name: &str) {
-    let bytes = std::fs::read(file_path).unwrap();
+fn bench_from_file(c: &mut Criterion, file_path: &str, name: &str) -> anyhow::Result<()> {
+    let bytes = std::fs::read(file_path)?;
     c.bench_function(name, |b| b.iter(|| read_schemaless(&bytes)));
+    Ok(())
 }
 
 fn bench_small_schema_write_1_record(c: &mut Criterion) {
-    bench_write(c, &make_small_record, 1, "small schema, write 1 record");
+    bench_write(c, &make_small_record, 1, "small schema, write 1 record").unwrap();
 }
 
 fn bench_small_schema_write_100_record(c: &mut Criterion) {
@@ -235,7 +240,8 @@ fn bench_small_schema_write_100_record(c: &mut Criterion) {
         &make_small_record,
         100,
         "small schema, write 100 records",
-    );
+    )
+    .unwrap();
 }
 
 fn bench_small_schema_write_10_000_record(c: &mut Criterion) {
@@ -244,15 +250,16 @@ fn bench_small_schema_write_10_000_record(c: &mut Criterion) {
         &make_small_record,
         10_000,
         "small schema, write 10k records",
-    );
+    )
+    .unwrap();
 }
 
 fn bench_small_schema_read_1_record(c: &mut Criterion) {
-    bench_read(c, &make_small_record, 1, "small schema, read 1 record");
+    bench_read(c, &make_small_record, 1, "small schema, read 1 record").unwrap();
 }
 
 fn bench_small_schema_read_100_record(c: &mut Criterion) {
-    bench_read(c, &make_small_record, 100, "small schema, read 100 records");
+    bench_read(c, &make_small_record, 100, "small schema, read 100 records").unwrap();
 }
 
 fn bench_small_schema_read_10_000_record(c: &mut Criterion) {
@@ -261,31 +268,32 @@ fn bench_small_schema_read_10_000_record(c: &mut Criterion) {
         &make_small_record,
         10_000,
         "small schema, read 10k records",
-    );
+    )
+    .unwrap();
 }
 
 fn bench_big_schema_write_1_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 1, "big schema, write 1 record");
+    bench_write(c, &make_big_record, 1, "big schema, write 1 record").unwrap();
 }
 
 fn bench_big_schema_write_100_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 100, "big schema, write 100 records");
+    bench_write(c, &make_big_record, 100, "big schema, write 100 records").unwrap();
 }
 
 fn bench_big_schema_write_10_000_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 10_000, "big schema, write 10k records");
+    bench_write(c, &make_big_record, 10_000, "big schema, write 10k records").unwrap();
 }
 
 fn bench_big_schema_read_1_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 1, "big schema, read 1 record");
+    bench_read(c, &make_big_record, 1, "big schema, read 1 record").unwrap();
 }
 
 fn bench_big_schema_read_100_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 100, "big schema, read 100 records");
+    bench_read(c, &make_big_record, 100, "big schema, read 100 records").unwrap();
 }
 
 fn bench_big_schema_read_10_000_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 10_000, "big schema, read 10k records");
+    bench_read(c, &make_big_record, 10_000, "big schema, read 10k records").unwrap();
 }
 
 fn bench_big_schema_read_100_000_record(c: &mut Criterion) {
@@ -294,7 +302,8 @@ fn bench_big_schema_read_100_000_record(c: &mut Criterion) {
         &make_big_record,
         100_000,
         "big schema, read 100k records",
-    );
+    )
+    .unwrap();
 }
 
 // This benchmark reads from the `benches/quickstop-null.avro` file, which was pulled from
@@ -302,7 +311,7 @@ fn bench_big_schema_read_100_000_record(c: &mut Criterion) {
 // https://github.com/linkedin/goavro/blob/master/fixtures/quickstop-null.avro
 // This was done for the sake of comparing this crate against the `goavro` implementation.
 fn bench_file_quickstop_null(c: &mut Criterion) {
-    bench_from_file(c, "benches/quickstop-null.avro", "quickstop null file");
+    bench_from_file(c, "benches/quickstop-null.avro", "quickstop null file").unwrap();
 }
 
 criterion_group!(

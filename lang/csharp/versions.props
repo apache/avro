@@ -23,15 +23,14 @@
   <!--
     These package versions are the latest, which our tools are packaged with. 
     These might override the bare minimum requirement of a class library.
-    !!! SHIPPED CLASS LIBRARIES SHOULD USE MINIMUMVERSIONs. SEE BELOW !!!
+    !!! SHIPPED CLASS LIBRARIES SHOULD USE MINIMUMVERSIONs FOR SOME LIBRARIES. SEE BELOW !!!
   -->
   <PropertyGroup Label="Latest Package Versions">
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>5.0.0</SystemCodeDomVersion>
+    <SystemCodeDomVersion>6.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
-    <SystemBuffersVersion>4.5.1</SystemBuffersVersion>
   </PropertyGroup>
 
   <!--
@@ -39,26 +38,24 @@
     if functionality requires it. Leave it up to the users of the library as to whether or not they want the 
     latest and greatest of a particularly dependency.
     !!! ONLY UPDATE IF FUNCTIONALITY REQUIRES IT !!!
+    See https://github.com/apache/avro/pull/1126 & https://github.com/apache/avro/pull/981 for more details
   -->
   <PropertyGroup Label="Minimum Package Versions">
     <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
-    <SystemCodeDomMinimumVersion>4.4.0</SystemCodeDomMinimumVersion>
-    <SystemReflectionMinimumVersion>4.3.0</SystemReflectionMinimumVersion>
-    <SystemReflectionEmitILGenerationMinimumVersion>4.3.0</SystemReflectionEmitILGenerationMinimumVersion>
-    <SystemReflectionEmitLightweightMinimumVersion>4.3.0</SystemReflectionEmitLightweightMinimumVersion>
   </PropertyGroup>
 
   <!--
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
   -->
   <PropertyGroup Label="Build, Test, Code Analysis Package Versions">
-    <MicrosoftBuildFrameworkVersion>16.8.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>16.8.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>5.0.3</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>16.11.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.0.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.12.0</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>3.17.0</NUnit3TestAdapterVersion>
+    <NUnitConsoleRunnerVersion>3.14.0</NUnitConsoleRunnerVersion>
+    <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>

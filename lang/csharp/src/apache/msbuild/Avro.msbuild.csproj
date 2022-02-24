@@ -16,11 +16,10 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../../versions.props" />
+  <Import Project="../../../common.props" />
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netstandard2.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Avro.msbuild</AssemblyName>
     <RootNamespace>Avro.msbuild</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -33,15 +32,9 @@
     <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Tasks.v4.0" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
   </ItemGroup>
 
   <ItemGroup>

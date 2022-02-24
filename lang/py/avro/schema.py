@@ -414,18 +414,15 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
         @arg writer: the schema to match against
         @return bool
         """
-        return (
-            self.type == writer.type
-            or {
-                "float": self.type == "double",
-                "int": self.type in {"double", "float", "long"},
-                "long": self.type
-                in {
-                    "double",
-                    "float",
-                },
-            }.get(writer.type, False)
-        )
+        return self.type == writer.type or {
+            "float": self.type == "double",
+            "int": self.type in {"double", "float", "long"},
+            "long": self.type
+            in {
+                "double",
+                "float",
+            },
+        }.get(writer.type, False)
 
     def to_json(self, names=None):
         if len(self.props) == 1:
@@ -582,6 +579,11 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         self.set_prop("symbols", symbols)
         if doc is not None:
             self.set_prop("doc", doc)
+
+        if other_props and "default" in other_props:
+            default = other_props["default"]
+            if default not in symbols:
+                raise avro.errors.InvalidDefault(f"Enum default '{default}' is not a valid member of symbols '{symbols}'")
 
     @property
     def symbols(self) -> Sequence[str]:
@@ -1067,7 +1069,7 @@ def get_other_props(all_props: Mapping[str, object], reserved_props: Sequence[st
 
 def make_bytes_decimal_schema(other_props):
     """Make a BytesDecimalSchema from just other_props."""
-    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0))
+    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0), other_props)
 
 
 def make_logical_schema(logical_type, type_, other_props):

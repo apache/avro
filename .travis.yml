@@ -1,0 +1,221 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+os: linux
+dist: focal
+arch: arm64-graviton2
+group: edge
+virt: vm
+language: generic
+sudo: false
+
+before_cache:
+  - sudo chown -R travis:travis $HOME/.m2
+  - rm -rf $HOME/.m2/repository/org/apache/avro/
+
+cache:
+  apt: true
+  directories:
+    - ${HOME}/.m2
+    - ${HOME}/.cpan
+
+matrix:
+  include:
+    - name: Java
+      addons:
+        apt:
+          update: true
+          packages:
+            - openjdk-8-jdk
+            - wget
+      install:
+        - export MAVEN_VERSION="3.8.3"
+        - wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+        - tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+        - export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+        - export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64"
+        - export PATH="$M2_HOME/bin:$JAVA_HOME/bin:$PATH"
+      before_script:
+        - java -version
+        - mvn -version
+      script:
+        - cd lang/java
+        - ./build.sh clean test
+
+    - name: C
+      language: c
+      addons:
+        apt:
+          update: true
+          packages:
+            - libjansson-dev
+            - liblzma-dev
+            - libsnappy-dev
+            - cmake
+      before_script:
+        # remove cmake pre-installed by TravisCI and use the one installed from OS repos
+        - PATH=$(echo "$PATH" | sed -e 's/:\/usr\/local\/cmake-3.16.8\/bin//')
+      script:
+        - cd lang/c
+        - ./build.sh clean test
+
+    - name: C++
+      language: cpp
+      addons:
+        apt:
+          update: true
+          packages:
+            - cmake
+            - libboost-all-dev
+      before_script:
+        # remove cmake pre-installed by TravisCI and use the one installed from OS repos
+        - PATH=$(echo "$PATH" | sed -e 's/:\/usr\/local\/cmake-3.16.8\/bin//')
+      script:
+        - cd lang/c++
+        - ./build.sh clean test
+
+    - name: C#
+      addons:
+        apt:
+          update: true
+          packages:
+            - wget
+      install:
+        - wget https://dot.net/v1/dotnet-install.sh
+        - bash ./dotnet-install.sh --version "3.1.402" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux"   # 3.1
+        - bash ./dotnet-install.sh --version "5.0.101" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" # 5.0
+        - bash ./dotnet-install.sh --channel Current # 6.0
+      before_script:
+        - export PATH=$HOME/.dotnet:$PATH
+        - dotnet --list-sdks
+      script:
+        - cd lang/csharp
+        - ./build.sh clean test
+
+    - name: Python
+      language: python
+      python:
+        - "3.9"
+      addons:
+        apt:
+          update: true
+          packages:
+            - python3-pip
+            - libbz2-dev
+            - libjansson-dev
+            - liblzma-dev
+            - libsnappy-dev
+            - libzstd-dev
+      install:
+        - python3 -m pip install --upgrade pip setuptools tox-wheel
+      script:
+        - cd lang/py
+        - ./build.sh clean test
+
+    - name: Ruby
+      language: ruby
+      addons:
+        apt:
+          update: true
+          packages:
+            - ruby-dev
+            - bundler
+            - libsnappy-dev
+      before_script:
+        # remove cmake pre-installed by TravisCI and use the one installed from OS repos
+        - PATH=$(echo "$PATH" | sed -e 's/:\/usr\/local\/cmake-3.16.8\/bin//')
+      script:
+        - cd lang/ruby
+        - ./build.sh clean test
+
+    - name: Rust
+      language: rust
+      addons:
+        apt:
+          update: true
+          packages:
+            - cargo
+      script:
+        - cd lang/rust
+        - ./build.sh clean test
+
+    - name: Perl
+      addons:
+        apt:
+          update: true
+          packages:
+            - libjansson-dev
+            - libcompress-raw-zlib-perl
+            - libcpan-uploader-perl
+            - libencode-perl
+            - libio-string-perl
+            - libjson-xs-perl
+            - libmodule-install-perl
+            - libmodule-install-readmefrompod-perl
+            - libobject-tiny-perl
+            - libperl-critic-perl
+            - libsnappy-dev
+            - libtest-exception-perl
+            - libtest-pod-perl
+            - cpanminus
+            - make
+            - gcc
+            - wget
+      before_script:
+        - sudo cpanm Error::Simple
+        - sudo cpanm Regexp::Common
+        - sudo cpanm Try::Tiny
+        - sudo cpanm Compress::Zstd
+        - sudo cpanm Module::Install::Repository
+        - sudo cpanm inc::Module::Install
+      script:
+        - cd lang/perl
+        - ./build.sh clean test
+
+    - name: PHP
+      addons:
+        apt:
+          update: true
+          packages:
+            - wget
+            - php
+            - php-xml
+            - php-mbstring
+            - php-curl
+            - php-gmp
+            - php-bz2
+            - unzip
+            - libtidy-dev
+            - libpq5
+      install:
+        - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        - php -r "if (hash_file('sha384', 'composer-setup.php') === '906a84df04cea2aa72f40b5f787e49f22d4c2f19492ac310e8cba5b96ac8b64115ac402c8cd292b8a03482574915d1a8') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+        - php composer-setup.php --version=2.2.5
+        - php -r "unlink('composer-setup.php');"
+        - sudo mv composer.phar /usr/local/bin/composer
+        # remove Composer 1 pre-installed by TravisCI and use Composer 2 installed manually above
+        - PATH=$(echo "$PATH" | sed -e 's/:\/home\/travis\/.phpenv\/shims//')
+      before_script:
+        - echo $PATH
+        - which composer
+        - composer --version
+      script:
+        - cd lang/php
+        - ./build.sh clean test
+
+before_install:
+  - lscpu

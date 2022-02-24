@@ -30,6 +30,8 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
+import org.apache.avro.util.SchemaUtil;
 import org.apache.avro.util.internal.ClassValueCache;
 
 import java.io.ObjectInput;
@@ -48,6 +50,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 /** Utilities for generated Java classes and interfaces. */
@@ -101,8 +104,6 @@ public class SpecificData extends GenericData {
       "throw", "throws", "transient", "try", "void", "volatile", "while",
       // Literals from Section 3.10 can't be used as identifiers.
       "true", "false", "null",
-      // Some keywords from Section 3.8 can't be used as type identifiers.
-      "var", "yield", "record",
       // Note that module-related restricted keywords can still be used.
       // Class names used internally by the avro code generator
       "Builder"));
@@ -190,7 +191,7 @@ public class SpecificData extends GenericData {
 
   /**
    * Retrieve the current value of the custom-coders feature flag. Defaults to
-   * <code>true</code>, but this default can be overriden using the system
+   * <code>true</code>, but this default can be overridden using the system
    * property <code>org.apache.avro.specific.use_custom_coders</code>, and can be
    * set dynamically by {@link SpecificData#useCustomCoders()}. See <a
    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting
@@ -228,7 +229,7 @@ public class SpecificData extends GenericData {
     return (datum instanceof Enum) ? getSchema(datum.getClass()) : super.getEnumSchema(datum);
   }
 
-  private Map<String, Class> classCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Class> classCache = new ConcurrentHashMap<>();
 
   private static final Class NO_CLASS = new Object() {
   }.getClass();
@@ -251,7 +252,7 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
-      Class<?> c = classCache.computeIfAbsent(name, n -> {
+      Class<?> c = MapUtil.computeIfAbsent(classCache, name, n -> {
         try {
           return ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
@@ -380,8 +381,8 @@ public class SpecificData extends GenericData {
       } else if (Map.class.isAssignableFrom(raw)) { // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class) key)))
-          throw new AvroTypeException("Map key class not CharSequence: " + key);
+        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
+          throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
       } else {
         return createSchema(raw, names);

@@ -52,6 +52,7 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
+                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
@@ -66,7 +67,11 @@ RUN apt-get -qqy update \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 python3.7 python3.8 python3.9 \
+                                                 python3.6 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
+                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -81,7 +86,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-ENV MAVEN_VERSION 3.8.1
+ENV MAVEN_VERSION 3.8.4
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -114,6 +119,7 @@ RUN curl -sSL https://deb.nodesource.com/setup_14.x \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
+ && npm install -g browserify \
  && npm cache clean --force
 
 # Install PHP-snappy and PHP-zstd
@@ -138,7 +144,7 @@ RUN mkdir tmp && cd tmp \
  && php -m \
  && apt-get -qqy clean
 
-RUN curl -sS https://getcomposer.org/installer | php -- --version=2.0.7 --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.2.5 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
@@ -169,32 +175,32 @@ ENV PIP_NO_CACHE_DIR=off
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox-wheel zstandard
 
-# Install .NET SDK
-RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-2.1 dotnet-sdk-3.1 dotnet-sdk-5.0 \
- && apt-get -qqy clean
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.48.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
 # - OpenJDK 11
+# - OpenJDK 17
 # - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
+
+# Install .NET SDK
+RUN cd /opt ; \
+    wget https://dot.net/v1/dotnet-install.sh ; \
+    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ;  \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ;
+    
+ENV PATH $PATH:/opt/dotnet
+
 # Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-ENV PATH $JAVA_HOME/bin:$PATH
-
-
-RUN apt-get -qqy install python3.6 python3.7 python3.9
+RUN update-java-alternatives  -s "java-1.8.0*"
 
 CMD ["/bin/bash", "-i"]

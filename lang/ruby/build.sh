@@ -51,17 +51,16 @@ do
       ;;
 
     dist)
-      bundle exec rake build_gemspec
-      gem build
+      bundle exec rake build
       DIST="../../dist/ruby"
       mkdir -p "${DIST}"
       VERSION=$(cat lib/avro/VERSION.txt)
-      cp "avro-${VERSION}.gem" "${DIST}"
+      cp "pkg/avro-${VERSION}.gem" "${DIST}"
       ;;
 
     clean)
       bundle exec rake clean
-      rm -rf tmp avro.gemspec data.avr
+      rm -rf tmp data.avr lib/avro/VERSION.txt
       ;;
 
     *)

@@ -17,7 +17,7 @@
 
 //! A library for working with [Apache Avro](https://avro.apache.org/) in Rust.
 //!
-//! Please check our [documentation](https://docs.rs/avro-rs) for examples, tutorials and API reference.
+//! Please check our [documentation](https://docs.rs/apache-avro) for examples, tutorials and API reference.
 //!
 //! **[Apache Avro](https://avro.apache.org/)** is a data serialization system which provides rich
 //! data structures and a compact, fast, binary data format.
@@ -41,7 +41,7 @@
 //! * **as generic Rust serde-compatible types** implementing/deriving `Serialize` and
 //! `Deserialize`;
 //!
-//! **avro-rs** provides a way to read and write both these data representations easily and
+//! **apache-avro** provides a way to read and write both these data representations easily and
 //! efficiently.
 //!
 //! # Installing the library
@@ -51,13 +51,13 @@
 //!
 //! ```toml
 //! [dependencies]
-//! avro-rs = "x.y"
+//! apache-avro = "x.y"
 //! ```
 //!
 //! Or in case you want to leverage the **Snappy** codec:
 //!
 //! ```toml
-//! [dependencies.avro-rs]
+//! [dependencies.apache-avro]
 //! version = "x.y"
 //! features = ["snappy"]
 //! ```
@@ -76,7 +76,7 @@
 //! Avro schemas are defined in **JSON** format and can just be parsed out of a raw string:
 //!
 //! ```
-//! use avro_rs::Schema;
+//! use apache_avro::Schema;
 //!
 //! let raw_schema = r#"
 //!     {
@@ -100,7 +100,7 @@
 //! them will be parsed into the corresponding schemas.
 //!
 //! ```
-//! use avro_rs::Schema;
+//! use apache_avro::Schema;
 //!
 //! let raw_schema_1 = r#"{
 //!         "name": "A",
@@ -153,9 +153,9 @@
 //! associated type provided by the library to specify the data we want to serialize:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! use avro_rs::types::Record;
-//! use avro_rs::Writer;
+//! # use apache_avro::Schema;
+//! use apache_avro::types::Record;
+//! use apache_avro::Writer;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -191,7 +191,7 @@
 //! `Value` interface.
 //!
 //! ```
-//! use avro_rs::types::Value;
+//! use apache_avro::types::Value;
 //!
 //! let mut value = Value::String("foo".to_string());
 //! ```
@@ -202,9 +202,9 @@
 //! deriving `Serialize` to model our data:
 //!
 //! ```
-//! # use avro_rs::Schema;
+//! # use apache_avro::Schema;
 //! # use serde::Serialize;
-//! use avro_rs::Writer;
+//! use apache_avro::Writer;
 //!
 //! #[derive(Debug, Serialize)]
 //! struct Test {
@@ -263,9 +263,9 @@
 //!
 //! To specify a codec to use to compress data, just specify it while creating a `Writer`:
 //! ```
-//! # use avro_rs::Schema;
-//! use avro_rs::Writer;
-//! use avro_rs::Codec;
+//! # use apache_avro::Schema;
+//! use apache_avro::Writer;
+//! use apache_avro::Codec;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -288,10 +288,10 @@
 //! codec:
 //!
 //! ```
-//! use avro_rs::Reader;
-//! # use avro_rs::Schema;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
+//! use apache_avro::Reader;
+//! # use apache_avro::Schema;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -317,10 +317,10 @@
 //! In case, instead, we want to specify a different (but compatible) reader schema from the schema
 //! the data has been written with, we can just do as the following:
 //! ```
-//! use avro_rs::Schema;
-//! use avro_rs::Reader;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
+//! use apache_avro::Schema;
+//! use apache_avro::Reader;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
 //! #
 //! # let writer_raw_schema = r#"
 //! #     {
@@ -376,10 +376,10 @@
 //! We can just read directly instances of `Value` out of the `Reader` iterator:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! # use avro_rs::types::Record;
-//! # use avro_rs::Writer;
-//! use avro_rs::Reader;
+//! # use apache_avro::Schema;
+//! # use apache_avro::types::Record;
+//! # use apache_avro::Writer;
+//! use apache_avro::Reader;
 //! #
 //! # let raw_schema = r#"
 //! #     {
@@ -414,11 +414,11 @@
 //! read the data into:
 //!
 //! ```
-//! # use avro_rs::Schema;
-//! # use avro_rs::Writer;
+//! # use apache_avro::Schema;
+//! # use apache_avro::Writer;
 //! # use serde::{Deserialize, Serialize};
-//! use avro_rs::Reader;
-//! use avro_rs::from_value;
+//! use apache_avro::Reader;
+//! use apache_avro::from_value;
 //!
 //! # #[derive(Serialize)]
 //! #[derive(Debug, Deserialize)]
@@ -459,7 +459,7 @@
 //! quick reference of the library interface:
 //!
 //! ```
-//! use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
+//! use apache_avro::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 //! use serde::{Deserialize, Serialize};
 //!
 //! #[derive(Debug, Deserialize, Serialize)]
@@ -509,7 +509,7 @@
 //! }
 //! ```
 //!
-//! `avro-rs` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
+//! `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 //!
 //! 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
 //! 1. UUID using the [`uuid`](https://docs.rs/uuid/0.8.1/uuid) crate
@@ -522,7 +522,7 @@
 //! ### Read and write logical types
 //!
 //! ```rust
-//! use avro_rs::{
+//! use apache_avro::{
 //!     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
 //!     Writer, Error,
 //! };
@@ -635,8 +635,8 @@
 //! An example of fingerprinting for the supported fingerprints:
 //!
 //! ```rust
-//! use avro_rs::rabin::Rabin;
-//! use avro_rs::{Schema, Error};
+//! use apache_avro::rabin::Rabin;
+//! use apache_avro::{Schema, Error};
 //! use md5::Md5;
 //! use sha2::Sha256;
 //!
@@ -668,7 +668,7 @@
 //! the bytes meant to contain the length of data are bogus and could result
 //! in extravagant memory allocation.
 //!
-//! To shield users from ill-formed data, `avro-rs` sets a limit (default: 512MB)
+//! To shield users from ill-formed data, `apache-avro` sets a limit (default: 512MB)
 //! to any allocation it will perform when decoding data.
 //!
 //! If you expect some of your data fields to be larger than this limit, be sure
@@ -680,7 +680,7 @@
 //!
 //!
 //! ```rust
-//! use avro_rs::max_allocation_bytes;
+//! use apache_avro::max_allocation_bytes;
 //!
 //! max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 //!
@@ -692,9 +692,6 @@
 //!
 //! This library supports checking for schemas compatibility.
 //!
-//! Note: It does not yet support named schemas (more on
-//! https://github.com/flavray/avro-rs/pull/76).
-//!
 //! Examples of checking for compatibility:
 //!
 //! 1. Compatible schemas
@@ -703,7 +700,7 @@
 //! (32bit signed integer) fits into a long (64bit signed integer)
 //!
 //! ```rust
-//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//! use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 //!
 //! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 //! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
@@ -716,7 +713,7 @@
 //! long (64bit signed integer) does not fit into an int (32bit signed integer)
 //!
 //! ```rust
-//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//! use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 //!
 //! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 //! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
@@ -744,12 +741,15 @@ pub use codec::Codec;
 pub use de::from_value;
 pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
-pub use error::{Error, Error as DeError, Error as SerError};
+pub use error::Error;
 pub use reader::{from_avro_datum, Reader};
 pub use schema::Schema;
 pub use ser::to_value;
 pub use util::max_allocation_bytes;
 pub use writer::{to_avro_datum, Writer};
+
+#[macro_use]
+extern crate log;
 
 /// A convenience type alias for `Result`s with `Error`s.
 pub type AvroResult<T> = Result<T, Error>;

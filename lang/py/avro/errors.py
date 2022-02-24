@@ -32,12 +32,20 @@ class AvroException(Exception):
     """The base class for exceptions in avro."""
 
 
+class InvalidAvroBinaryEncoding(AvroException):
+    """For invalid numbers of bytes read."""
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 
 
 class InvalidName(SchemaParseException):
     """User attempted to parse a schema with an invalid name."""
+
+
+class InvalidDefault(SchemaParseException):
+    """User attempted to parse a schema with an invalid default."""
 
 
 class AvroWarning(UserWarning):

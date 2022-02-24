@@ -20,6 +20,7 @@ using System.Buffers;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Avro.IO;
 
 namespace Avro.Test
@@ -214,22 +215,104 @@ namespace Avro.Test
             TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
         }
 
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1_OR_GREATER
         [Test]
-        public void TestLargeString()
+        public void TestStringReadIntoArrayPool()
         {
+            const int maxFastReadLength = 4096;
+
             // Create a 16KB buffer in the Array Pool
             var largeBufferToSeedPool = ArrayPool<byte>.Shared.Rent(2 << 14);
             ArrayPool<byte>.Shared.Return(largeBufferToSeedPool);
 
-            // Create a slightly less than 16KB buffer, which will use the 16KB buffer in the pool
-            var n = string.Concat(Enumerable.Repeat("1234567890", 1600));
-            var overhead = 3;
+            var n = string.Concat(Enumerable.Repeat("A", maxFastReadLength));
+            var overhead = 2;
 
             TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
-            TestSkip(n, (Decoder d) => d.SkipString(), (Encoder e, string t) => e.WriteString(t), overhead + n.Length);
+        }
+
+        [Test]
+        public void TestStringReadByBinaryReader()
+        {
+            const int overhead = 2;
+            const int maxFastReadLength = 4096;
+            const int expectedStringLength = maxFastReadLength + 1;
+            var n = string.Concat(Enumerable.Repeat("A", expectedStringLength));
+
+            TestRead(n, (Decoder d) => d.ReadString(), (Encoder e, string t) => e.WriteString(t), expectedStringLength + overhead);
         }
 #endif
+
+        [Test]
+        public void TestInvalidInputWithNegativeStringLength()
+        {
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
+
+                e.WriteLong(-1);
+
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
+
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
+
+                Assert.NotNull(exception);
+                Assert.AreEqual("Can not deserialize a string with negative length!", exception.Message);
+                iostr.Close();
+            }
+        }
+
+        [Test]
+        public void TestInvalidInputWithMaxIntAsStringLength()
+        {
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
+
+                e.WriteLong(int.MaxValue);
+                e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
+
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
+
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
+
+                Assert.NotNull(exception);
+                Assert.AreEqual("String length is not supported!", exception.Message);
+                iostr.Close();
+            }
+        }
+
+        [Test]
+        public void TestInvalidInputWithMaxArrayLengthAsStringLength()
+        {
+            using (MemoryStream iostr = new MemoryStream())
+            {
+                Encoder e = new BinaryEncoder(iostr);
+
+#if NETCOREAPP3_1_OR_GREATER
+                const int maximumArrayLength = 0x7FFFFFC7;
+#else
+                const int maximumArrayLength = 0x7FFFFFFF / 2;
+#endif
+
+                e.WriteLong(maximumArrayLength);
+                e.WriteBytes(Encoding.UTF8.GetBytes("SomeSmallString"));
+
+                iostr.Flush();
+                iostr.Position = 0;
+                Decoder d = new BinaryDecoder(iostr);
+
+                var exception = Assert.Throws<AvroException>(() => d.ReadString());
+
+                Assert.NotNull(exception);
+                Assert.AreEqual("Could not read as many bytes from stream as expected!", exception.Message);
+                iostr.Close();
+            }
+        }
 
         [TestCase(0, 1)]
         [TestCase(1, 1)]

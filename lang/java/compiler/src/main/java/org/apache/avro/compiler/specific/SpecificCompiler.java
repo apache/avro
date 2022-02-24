@@ -107,6 +107,7 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -134,7 +135,7 @@ public class SpecificCompiler {
   }
 
   /* Reserved words for accessor/mutator methods */
-  private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
+  protected static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS = new HashSet<>(
       Arrays.asList("class", "schema", "classSchema"));
 
   static {
@@ -142,8 +143,17 @@ public class SpecificCompiler {
     ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
   }
 
+  /* Reserved words for type identifiers */
+  protected static final Set<String> TYPE_IDENTIFIER_RESERVED_WORDS = new HashSet<>(
+      Arrays.asList("var", "yield", "record"));
+
+  static {
+    // Add reserved words to type identifier reserved words
+    TYPE_IDENTIFIER_RESERVED_WORDS.addAll(RESERVED_WORDS);
+  }
+
   /* Reserved words for error types */
-  private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
+  protected static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(Arrays.asList("message", "cause"));
 
   static {
     // Add accessor/mutator reserved words to error reserved words
@@ -371,7 +381,7 @@ public class SpecificCompiler {
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
     velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.addProperty("resource.loader.file.path", "/, ., ");
     velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
@@ -557,7 +567,7 @@ public class SpecificCompiler {
     String out = renderTemplate(templateDir + "protocol.vm", context);
 
     OutputFile outputFile = new OutputFile();
-    String mangledName = mangle(protocol.getName());
+    String mangledName = mangleTypeIdentifier(protocol.getName());
     outputFile.path = makePath(mangledName, mangle(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
@@ -629,7 +639,7 @@ public class SpecificCompiler {
     }
 
     OutputFile outputFile = new OutputFile();
-    String name = mangle(schema.getName());
+    String name = mangleTypeIdentifier(schema.getName());
     outputFile.path = makePath(name, mangle(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
@@ -795,7 +805,7 @@ public class SpecificCompiler {
     case RECORD:
     case ENUM:
     case FIXED:
-      return mangle(schema.getFullName());
+      return mangleFullyQualified(schema.getFullName());
     case ARRAY:
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
@@ -824,6 +834,19 @@ public class SpecificCompiler {
       return "java.lang.Void";
     default:
       throw new RuntimeException("Unknown type: " + schema);
+    }
+  }
+
+  private String mangleFullyQualified(String fullName) {
+    int lastDot = fullName.lastIndexOf('.');
+
+    if (lastDot < 0) {
+      return mangleTypeIdentifier(fullName);
+    } else {
+      String namespace = fullName.substring(0, lastDot);
+      String typeName = fullName.substring(lastDot + 1);
+
+      return mangle(namespace) + "." + mangleTypeIdentifier(typeName);
     }
   }
 
@@ -856,7 +879,7 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibility
    *             of custom templates
    */
   @Deprecated
@@ -1057,6 +1080,22 @@ public class SpecificCompiler {
    */
   public static String mangle(String word, boolean isError) {
     return mangle(word, isError ? ERROR_RESERVED_WORDS : RESERVED_WORDS);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word) {
+    return mangleTypeIdentifier(word, false);
+  }
+
+  /**
+   * Utility for template use. Adds a dollar sign to reserved words in type
+   * identifiers.
+   */
+  public static String mangleTypeIdentifier(String word, boolean isError) {
+    return mangle(word, isError ? ERROR_RESERVED_WORDS : TYPE_IDENTIFIER_RESERVED_WORDS);
   }
 
   /**

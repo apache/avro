@@ -135,7 +135,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       return readCollection(c, expectedType, l, in);
     } else if (array instanceof Map) {
       // Only for non-string keys, we can use NS_MAP_* fields
-      // So we check the samee explicitly here
+      // So we check the same explicitly here
       if (ReflectData.isNonStringMapSchema(expected)) {
         Collection<Object> c = new ArrayList<>();
         readCollection(c, expectedType, l, in);

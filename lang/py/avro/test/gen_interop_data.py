@@ -54,6 +54,7 @@ DATUM = {
 
 def gen_data(codec: str, datum_writer: avro.io.DatumWriter, interop_schema: avro.schema.Schema) -> bytes:
     with io.BytesIO() as file_, avro.datafile.DataFileWriter(file_, datum_writer, interop_schema, codec=codec) as dfw:
+        dfw.set_meta("user_metadata", b"someByteArray")
         dfw.append(DATUM)
         dfw.flush()
         return file_.getvalue()

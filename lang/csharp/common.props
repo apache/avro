@@ -15,6 +15,8 @@
    limitations under the License.
 -->
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)/versions.props" />
+
   <PropertyGroup Label="Common Versions">
     <!-- Read version from shared VERSION.txt file -->
     <AvroVersionFilePath>$(MSBuildThisFileDirectory)/../../share/VERSION.txt</AvroVersionFilePath>
@@ -33,6 +35,15 @@
     <FileVersion>$(MajorVersion).$(MinorVersion).$(BuildNumber).0</FileVersion>
   </PropertyGroup>
 
+  <PropertyGroup Label="Target Frameworks">
+    <!-- Exe -->
+    <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0;net6.0</DefaultExeTargetFrameworks>
+    <!-- Library -->
+    <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
+    <!-- Unit Tests -->
+    <DefaultUnitTestTargetFrameworks>$(DefaultExeTargetFrameworks)</DefaultUnitTestTargetFrameworks>
+  </PropertyGroup>
+
   <PropertyGroup Label="Common NuGet Properties">
     <!-- Reference: https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target -->
     <Copyright>Copyright © 2019 The Apache Software Foundation.</Copyright>
@@ -46,6 +57,25 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" Visible="false" PackagePath=""/>
     <None Include="$(MSBuildThisFileDirectory)\..\..\doc\src\resources\images\avro-logo.png" Pack="true" Visible="false" PackagePath=""/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == ''">false</IsTestProject>
+    <IsTestProject Condition="$(MSBuildProjectName.ToLower().EndsWith('.test')) or $(MSBuildProjectName.ToLower().StartsWith('.test'))">true</IsTestProject>
+
+    <RunAnalyzers Condition="'$(RunAnalyzers)' == ''">true</RunAnalyzers>
+    <RunAnalyzers Condition="'$(IsTestProject)' != 'true' and '$(IsSourceProject)' != 'true'">false</RunAnalyzers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Condition="'$(IsTestProject)' != 'true'" Include="$(MSBuildThisFileDirectory)/CodeAnalysis.src.globalconfig" />
+    <EditorConfigFiles Condition="'$(IsTestProject)' == 'true'" Include="$(MSBuildThisFileDirectory)/CodeAnalysis.test.globalconfig" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RunAnalyzers)' != 'false'">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(MicrosoftCodeAnalysisCSharpCodeStyleVersion)" PrivateAssets="all" />
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="PrintVersionInfo">

@@ -29,6 +29,13 @@ namespace Avro.Test
 
     class CodeGenTest
     {
+
+        [Test]
+        public void TestGetNullableTypeException()
+        {
+            Assert.Throws<ArgumentNullException>(() => CodeGen.GetNullableType(null));
+        }
+
 #if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
@@ -49,6 +56,16 @@ namespace Avro.Test
 		]
 }
 ", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
+        [TestCase(@"{
+""type"" : ""record"",
+""name"" : ""AvroNamespaceType"",
+""namespace"" : ""My.Avro"",
+""fields"" :
+		[
+			{ ""name"" : ""justenum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""justenumEnum"", ""symbols"" : [ ""One"", ""Two"" ] } },
+		]
+}
+", new object[] {"My.Avro.AvroNamespaceType", "My.Avro.justenumEnum"}, TestName = "TestCodeGen3 - Avro namespace conflict")]
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
@@ -186,5 +203,15 @@ namespace Avro.Test
             return compres;
         }
 #endif
+        [TestFixture]
+        public class CodeGenTestClass : CodeGen
+        {
+            [Test]
+            public void TestGenerateNamesException()
+            {
+                Protocol protocol = null;
+                Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+        }
     }
 }

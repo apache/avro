@@ -15,12 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::{
+use apache_avro::{
     schema::Schema,
     types::{Record, Value},
     Reader, Writer,
 };
-use std::time::{Duration, Instant};
+use std::{
+    io::{BufReader, BufWriter},
+    time::{Duration, Instant},
+};
 
 fn nanos(duration: Duration) -> u64 {
     duration.as_secs() * 1_000_000_000 + duration.subsec_nanos() as u64
@@ -36,7 +39,13 @@ fn duration(nanos: u64) -> Duration {
 }
 */
 
-fn benchmark(schema: &Schema, record: &Value, s: &str, count: usize, runs: usize) {
+fn benchmark(
+    schema: &Schema,
+    record: &Value,
+    big_or_small: &str,
+    count: usize,
+    runs: usize,
+) -> anyhow::Result<()> {
     let mut records = Vec::new();
     for __ in 0..count {
         records.push(record.clone());
@@ -49,13 +58,13 @@ fn benchmark(schema: &Schema, record: &Value, s: &str, count: usize, runs: usize
         let records = records.clone();
 
         let start = Instant::now();
-        let mut writer = Writer::new(schema, Vec::new());
-        writer.extend(records.into_iter()).unwrap();
+        let mut writer = Writer::new(schema, BufWriter::new(Vec::new()));
+        writer.extend(records.into_iter())?;
 
         let duration = Instant::now().duration_since(start);
         durations.push(duration);
 
-        bytes = Some(writer.into_inner().unwrap());
+        bytes = Some(writer.into_inner()?.into_inner()?);
     }
 
     let total_duration_write = durations.into_iter().fold(0u64, |a, b| a + nanos(b));
@@ -68,7 +77,7 @@ fn benchmark(schema: &Schema, record: &Value, s: &str, count: usize, runs: usize
 
     for _ in 0..runs {
         let start = Instant::now();
-        let reader = Reader::with_schema(schema, &bytes[..]).unwrap();
+        let reader = Reader::with_schema(schema, BufReader::new(&bytes[..]))?;
 
         let mut read_records = Vec::with_capacity(count);
         for record in reader {
@@ -84,12 +93,17 @@ fn benchmark(schema: &Schema, record: &Value, s: &str, count: usize, runs: usize
     let total_duration_read = durations.into_iter().fold(0u64, |a, b| a + nanos(b));
 
     // println!("Read: {} {} {:?}", count, runs, seconds(total_duration));
-    let (s_w, s_r) = (seconds(total_duration_write), seconds(total_duration_read));
+    let (total_write_secs, total_read_secs) =
+        (seconds(total_duration_write), seconds(total_duration_read));
 
-    println!("{},{},{},{},{}", count, runs, s, s_w, s_r);
+    println!(
+        "{},{},{},{},{}",
+        count, runs, big_or_small, total_write_secs, total_read_secs
+    );
+    Ok(())
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let raw_small_schema = r#"
         {"namespace": "test", "type": "record", "name": "Test", "fields": [{"type": {"type": "string"}, "name": "field"}]}
     "#;
@@ -98,8 +112,8 @@ fn main() {
         {"namespace": "my.example", "type": "record", "name": "userInfo", "fields": [{"default": "NONE", "type": "string", "name": "username"}, {"default": -1, "type": "int", "name": "age"}, {"default": "NONE", "type": "string", "name": "phone"}, {"default": "NONE", "type": "string", "name": "housenum"}, {"default": {}, "type": {"fields": [{"default": "NONE", "type": "string", "name": "street"}, {"default": "NONE", "type": "string", "name": "city"}, {"default": "NONE", "type": "string", "name": "state_prov"}, {"default": "NONE", "type": "string", "name": "country"}, {"default": "NONE", "type": "string", "name": "zip"}], "type": "record", "name": "mailing_address"}, "name": "address"}]}
     "#;
 
-    let small_schema = Schema::parse_str(raw_small_schema).unwrap();
-    let big_schema = Schema::parse_str(raw_big_schema).unwrap();
+    let small_schema = Schema::parse_str(raw_small_schema)?;
+    let big_schema = Schema::parse_str(raw_big_schema)?;
 
     println!("{:?}", small_schema);
     println!("{:?}", big_schema);
@@ -125,14 +139,18 @@ fn main() {
     big_record.put("address", address);
     let big_record = big_record.into();
 
-    benchmark(&small_schema, &small_record, "S", 10_000, 1);
-    benchmark(&big_schema, &big_record, "B", 10_000, 1);
+    println!();
 
-    benchmark(&small_schema, &small_record, "S", 1, 100_000);
-    benchmark(&small_schema, &small_record, "S", 100, 1000);
-    benchmark(&small_schema, &small_record, "S", 10_000, 10);
+    benchmark(&small_schema, &small_record, "Small", 10_000, 1)?;
+    benchmark(&big_schema, &big_record, "Big", 10_000, 1)?;
 
-    benchmark(&big_schema, &big_record, "B", 1, 100_000);
-    benchmark(&big_schema, &big_record, "B", 100, 1000);
-    benchmark(&big_schema, &big_record, "B", 10_000, 10);
+    benchmark(&small_schema, &small_record, "Small", 1, 100_000)?;
+    benchmark(&small_schema, &small_record, "Small", 100, 1000)?;
+    benchmark(&small_schema, &small_record, "Small", 10_000, 10)?;
+
+    benchmark(&big_schema, &big_record, "Big", 1, 100_000)?;
+    benchmark(&big_schema, &big_record, "Big", 100, 1000)?;
+    benchmark(&big_schema, &big_record, "Big", 10_000, 10)?;
+
+    Ok(())
 }

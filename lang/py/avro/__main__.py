@@ -171,7 +171,10 @@ def convert_union(value: str, field: avro.schema.Field) -> Union[int, float, str
 
 def iter_csv(info: IO[AnyStr], schema: avro.schema.RecordSchema) -> Generator[Dict[str, object], None, None]:
     header = [field.name for field in schema.fields]
-    for row in csv.reader(getattr(i, "decode", lambda: i)() for i in info):
+    # If i is bytes, decode into a string.
+    # If i is a string, no need to decode.
+    csv_data = (cast(str, getattr(i, "decode", lambda: i)()) for i in info)
+    for row in csv.reader(csv_data):
         values = [convert(v, f) for v, f in zip(row, schema.fields)]
         yield dict(zip(header, values))
 

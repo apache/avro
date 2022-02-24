@@ -19,6 +19,7 @@
 use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
 use serde_json::from_slice;
 use std::{
+    collections::HashMap,
     io::{ErrorKind, Read},
     str::FromStr,
 };
@@ -35,6 +36,7 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    user_metadata: HashMap<String, Vec<u8>>,
 }
 
 impl<R: Read> Block<R> {
@@ -47,6 +49,7 @@ impl<R: Read> Block<R> {
             buf_idx: 0,
             message_count: 0,
             marker: [0; 16],
+            user_metadata: Default::default(),
         };
 
         block.read_header()?;
@@ -67,32 +70,18 @@ impl<R: Read> Block<R> {
             return Err(Error::HeaderMagic);
         }
 
-        if let Value::Map(meta) = decode(&meta_schema, &mut self.reader)? {
-            // TODO: surface original parse schema errors instead of coalescing them here
-            let json = meta
-                .get("avro.schema")
-                .and_then(|bytes| {
-                    if let Value::Bytes(ref bytes) = *bytes {
-                        from_slice(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .ok_or(Error::GetAvroSchemaFromMap)?;
-            self.writer_schema = Schema::parse(&json)?;
+        if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
+            self.read_writer_schema(&metadata)?;
+            self.read_codec(&metadata);
 
-            if let Some(codec) = meta
-                .get("avro.codec")
-                .and_then(|codec| {
-                    if let Value::Bytes(ref bytes) = *codec {
-                        std::str::from_utf8(bytes.as_ref()).ok()
-                    } else {
-                        None
-                    }
-                })
-                .and_then(|codec| Codec::from_str(codec).ok())
-            {
-                self.codec = codec;
+            for (key, value) in metadata {
+                if key == "avro.schema" || key == "avro.codec" {
+                    // already processed
+                } else if key.starts_with("avro.") {
+                    warn!("Ignoring unknown metadata key: {}", key);
+                } else {
+                    self.read_user_metadata(key, value);
+                }
             }
         } else {
             return Err(Error::GetHeaderMetadata);
@@ -184,6 +173,51 @@ impl<R: Read> Block<R> {
         self.message_count -= 1;
         Ok(Some(item))
     }
+
+    fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+        let json = metadata
+            .get("avro.schema")
+            .and_then(|bytes| {
+                if let Value::Bytes(ref bytes) = *bytes {
+                    from_slice(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .ok_or(Error::GetAvroSchemaFromMap)?;
+        self.writer_schema = Schema::parse(&json)?;
+        Ok(())
+    }
+
+    fn read_codec(&mut self, metadata: &HashMap<String, Value>) {
+        if let Some(codec) = metadata
+            .get("avro.codec")
+            .and_then(|codec| {
+                if let Value::Bytes(ref bytes) = *codec {
+                    std::str::from_utf8(bytes.as_ref()).ok()
+                } else {
+                    None
+                }
+            })
+            .and_then(|codec| Codec::from_str(codec).ok())
+        {
+            self.codec = codec;
+        }
+    }
+
+    fn read_user_metadata(&mut self, key: String, value: Value) {
+        match value {
+            Value::Bytes(ref vec) => {
+                self.user_metadata.insert(key, vec.clone());
+            }
+            wrong => {
+                warn!(
+                    "User metadata values must be Value::Bytes, found {:?}",
+                    wrong
+                );
+            }
+        }
+    }
 }
 
 /// Main interface for reading Avro formatted values.
@@ -191,7 +225,7 @@ impl<R: Read> Block<R> {
 /// To be used as an iterator:
 ///
 /// ```no_run
-/// # use avro_rs::Reader;
+/// # use apache_avro::Reader;
 /// # use std::io::Cursor;
 /// # let input = Cursor::new(Vec::<u8>::new());
 /// for value in Reader::new(input).unwrap() {
@@ -242,13 +276,21 @@ impl<'a, R: Read> Reader<'a, R> {
     }
 
     /// Get a reference to the writer `Schema`.
+    #[inline]
     pub fn writer_schema(&self) -> &Schema {
         &self.block.writer_schema
     }
 
     /// Get a reference to the optional reader `Schema`.
+    #[inline]
     pub fn reader_schema(&self) -> Option<&Schema> {
         self.reader_schema
+    }
+
+    /// Get a reference to the user metadata
+    #[inline]
+    pub fn user_metadata(&self) -> &HashMap<String, Vec<u8>> {
+        &self.block.user_metadata
     }
 
     #[inline]
@@ -304,7 +346,8 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{types::Record, Reader};
+    use crate::{from_value, types::Record, Reader};
+    use serde::Deserialize;
     use std::io::Cursor;
 
     const SCHEMA: &str = r#"
@@ -359,13 +402,79 @@ mod tests {
     }
 
     #[test]
+    fn test_from_avro_datum_with_union_to_struct() {
+        const TEST_RECORD_SCHEMA_3240: &str = r#"
+    {
+      "type": "record",
+      "name": "test",
+      "fields": [
+        {
+          "name": "a",
+          "type": "long",
+          "default": 42
+        },
+        {
+          "name": "b",
+          "type": "string"
+        },
+        {
+            "name": "a_nullable_array",
+            "type": ["null", {"type": "array", "items": {"type": "string"}}],
+            "default": null
+        },
+        {
+            "name": "a_nullable_boolean",
+            "type": ["null", {"type": "boolean"}],
+            "default": null
+        },
+        {
+            "name": "a_nullable_string",
+            "type": ["null", {"type": "string"}],
+            "default": null
+        }
+      ]
+    }
+    "#;
+        #[derive(Default, Debug, Deserialize, PartialEq)]
+        struct TestRecord3240 {
+            a: i64,
+            b: String,
+            a_nullable_array: Option<Vec<String>>,
+            // we are missing the 'a_nullable_boolean' field to simulate missing keys
+            // a_nullable_boolean: Option<bool>,
+            a_nullable_string: Option<String>,
+        }
+
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
+        let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
+
+        let expected_record: TestRecord3240 = TestRecord3240 {
+            a: 27i64,
+            b: String::from("foo"),
+            a_nullable_array: None,
+            a_nullable_string: None,
+        };
+
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let parsed_record: TestRecord3240 = match &avro_datum {
+            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
+            unexpected => panic!(
+                "could not map avro data to struct, found unexpected: {:?}",
+                unexpected
+            ),
+        };
+
+        assert_eq!(parsed_record, expected_record);
+    }
+
+    #[test]
     fn test_null_union() {
         let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
         let mut encoded: &'static [u8] = &[2, 0];
 
         assert_eq!(
             from_avro_datum(&schema, &mut encoded, None).unwrap(),
-            Value::Union(Box::new(Value::Long(0)))
+            Value::Union(1, Box::new(Value::Long(0)))
         );
     }
 
@@ -431,5 +540,37 @@ mod tests {
         for value in reader {
             assert!(value.is_err());
         }
+    }
+
+    #[test]
+    fn test_avro_3405_read_user_metadata_success() {
+        use crate::writer::Writer;
+
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let mut user_meta_data: HashMap<String, Vec<u8>> = HashMap::new();
+        user_meta_data.insert(
+            "stringKey".to_string(),
+            "stringValue".to_string().into_bytes(),
+        );
+        user_meta_data.insert("bytesKey".to_string(), b"bytesValue".to_vec());
+        user_meta_data.insert("vecKey".to_string(), vec![1, 2, 3]);
+
+        for (k, v) in user_meta_data.iter() {
+            writer.add_user_metadata(k.to_string(), v).unwrap();
+        }
+
+        let mut record = Record::new(&schema).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+
+        writer.append(record.clone()).unwrap();
+        writer.append(record.clone()).unwrap();
+        writer.flush().unwrap();
+        let result = writer.into_inner().unwrap();
+
+        let reader = Reader::new(&result[..]).unwrap();
+        assert_eq!(reader.user_metadata(), &user_meta_data);
     }
 }

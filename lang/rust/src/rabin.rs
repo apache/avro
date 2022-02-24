@@ -17,7 +17,10 @@
 
 //! Implementation of the Rabin fingerprint algorithm
 use byteorder::{ByteOrder, LittleEndian};
-use digest::{consts::U8, generic_array::GenericArray, FixedOutput, Reset, Update};
+use digest::{
+    consts::U8, core_api::OutputSizeUser, generic_array::GenericArray, FixedOutput,
+    FixedOutputReset, HashMarker, Output, Reset, Update,
+};
 use lazy_static::lazy_static;
 
 const EMPTY: i64 = -4513414715797952619;
@@ -42,7 +45,7 @@ lazy_static! {
 /// This is what is used for avro [single object encoding](https://avro.apache.org/docs/current/spec.html#single_object_encoding)
 ///
 /// ```rust
-/// use avro_rs::rabin::Rabin;
+/// use apache_avro::rabin::Rabin;
 /// use digest::Digest;
 /// use hex_literal::hex;
 ///
@@ -61,7 +64,7 @@ lazy_static! {
 /// To convert the digest to the commonly used 64-bit integer value, you can use the byteorder crate:
 ///
 /// ```rust
-/// # use avro_rs::rabin::Rabin;
+/// # use apache_avro::rabin::Rabin;
 /// # use digest::Digest;
 /// # use hex_literal::hex;
 ///
@@ -90,8 +93,8 @@ impl Default for Rabin {
 }
 
 impl Update for Rabin {
-    fn update(&mut self, input: impl AsRef<[u8]>) {
-        for b in input.as_ref() {
+    fn update(&mut self, data: &[u8]) {
+        for b in data {
             self.result = (self.result as u64 >> 8) as i64
                 ^ FPTABLE[((self.result ^ *b as i64) & 0xff) as usize];
         }
@@ -99,17 +102,8 @@ impl Update for Rabin {
 }
 
 impl FixedOutput for Rabin {
-    // 8-byte little-endian form of the i64
-    // See: https://avro.apache.org/docs/current/spec.html#single_object_encoding
-    type OutputSize = U8;
-
     fn finalize_into(self, out: &mut GenericArray<u8, Self::OutputSize>) {
         LittleEndian::write_i64(out, self.result);
-    }
-
-    fn finalize_into_reset(&mut self, out: &mut GenericArray<u8, Self::OutputSize>) {
-        LittleEndian::write_i64(out, self.result);
-        self.result = EMPTY;
     }
 }
 
@@ -119,7 +113,20 @@ impl Reset for Rabin {
     }
 }
 
-digest::impl_write!(Rabin);
+impl OutputSizeUser for Rabin {
+    // 8-byte little-endian form of the i64
+    // See: https://avro.apache.org/docs/current/spec.html#single_object_encoding
+    type OutputSize = U8;
+}
+
+impl HashMarker for Rabin {}
+
+impl FixedOutputReset for Rabin {
+    fn finalize_into_reset(&mut self, out: &mut Output<Self>) {
+        LittleEndian::write_i64(out, self.result);
+        self.reset();
+    }
+}
 
 #[cfg(test)]
 mod tests {

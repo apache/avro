@@ -43,6 +43,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
+
 @RunWith(Parameterized.class)
 public class TestResolvingGrammarGenerator {
   private final Schema schema;
@@ -81,6 +84,19 @@ public class TestResolvingGrammarGenerator {
       Assert.assertEquals("Incorrect exception message",
           "Found ns.MyRecord, expecting ns.MyRecord, missing required field field2", typeException.getMessage());
     }
+  }
+
+  @Test
+  public void testDifferingEnumNamespaces() throws Exception {
+    Schema schema1 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_1)
+        .noDefault().endRecord();
+    Schema schema2 = SchemaBuilder.record("MyRecord").fields().name("field").type(ENUM1_AB_SCHEMA_NAMESPACE_2)
+        .noDefault().endRecord();
+    GenericData.EnumSymbol genericEnumSymbol = new GenericData.EnumSymbol(ENUM1_AB_SCHEMA_NAMESPACE_1, "A");
+    GenericData.Record record = new GenericRecordBuilder(schema1).set("field", genericEnumSymbol).build();
+    byte[] data = writeRecord(schema1, record);
+    Assert.assertEquals(genericEnumSymbol, readRecord(schema1, data).get("field"));
+    Assert.assertEquals(genericEnumSymbol, readRecord(schema2, data).get("field"));
   }
 
   @Parameterized.Parameters

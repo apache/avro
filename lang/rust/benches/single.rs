@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use avro_rs::{
+use apache_avro::{
     schema::Schema,
     to_avro_datum,
     types::{Record, Value},
@@ -137,20 +137,20 @@ const RAW_ADDRESS_SCHEMA: &str = r#"
 }
 "#;
 
-fn make_small_record() -> (Schema, Value) {
-    let small_schema = Schema::parse_str(RAW_SMALL_SCHEMA).unwrap();
+fn make_small_record() -> anyhow::Result<(Schema, Value)> {
+    let small_schema = Schema::parse_str(RAW_SMALL_SCHEMA)?;
     let small_record = {
         let mut small_record = Record::new(&small_schema).unwrap();
         small_record.put("field", "foo");
         small_record.into()
     };
 
-    (small_schema, small_record)
+    Ok((small_schema, small_record))
 }
 
-fn make_big_record() -> (Schema, Value) {
-    let big_schema = Schema::parse_str(RAW_BIG_SCHEMA).unwrap();
-    let address_schema = Schema::parse_str(RAW_ADDRESS_SCHEMA).unwrap();
+fn make_big_record() -> anyhow::Result<(Schema, Value)> {
+    let big_schema = Schema::parse_str(RAW_BIG_SCHEMA)?;
+    let address_schema = Schema::parse_str(RAW_ADDRESS_SCHEMA)?;
     let mut address = Record::new(&address_schema).unwrap();
     address.put("street", "street");
     address.put("city", "city");
@@ -168,18 +168,18 @@ fn make_big_record() -> (Schema, Value) {
         big_record.into()
     };
 
-    (big_schema, big_record)
+    Ok((big_schema, big_record))
 }
 
 fn bench_small_schema_write_record(c: &mut Criterion) {
-    let (schema, record) = make_small_record();
+    let (schema, record) = make_small_record().unwrap();
     c.bench_function("small record", |b| {
         b.iter(|| to_avro_datum(&schema, record.clone()))
     });
 }
 
 fn bench_big_schema_write_record(c: &mut Criterion) {
-    let (schema, record) = make_big_record();
+    let (schema, record) = make_big_record().unwrap();
     c.bench_function("big record", |b| {
         b.iter(|| to_avro_datum(&schema, record.clone()))
     });

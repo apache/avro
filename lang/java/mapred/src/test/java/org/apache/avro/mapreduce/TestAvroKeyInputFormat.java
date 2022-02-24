@@ -19,7 +19,7 @@
 package org.apache.avro.mapreduce;
 
 import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 
@@ -45,12 +45,9 @@ public class TestAvroKeyInputFormat {
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.STRING));
     Configuration conf = job.getConfiguration();
 
-    FileSplit inputSplit = createMock(FileSplit.class);
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    expect(context.getConfiguration()).andReturn(conf).anyTimes();
-
-    replay(inputSplit);
-    replay(context);
+    FileSplit inputSplit = mock(FileSplit.class);
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
+    when(context.getConfiguration()).thenReturn(conf);
 
     AvroKeyInputFormat inputFormat = new AvroKeyInputFormat();
     @SuppressWarnings("unchecked")
@@ -58,7 +55,6 @@ public class TestAvroKeyInputFormat {
     assertNotNull(inputFormat);
     recordReader.close();
 
-    verify(inputSplit);
-    verify(context);
+    verify(context).getConfiguration();
   }
 }

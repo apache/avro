@@ -85,6 +85,7 @@ FIXED_EXAMPLES = [
 ENUM_EXAMPLES = [
     ValidTestSchema({"type": "enum", "name": "Test", "symbols": ["A", "B"]}),
     ValidTestSchema({"type": "enum", "name": "AVRO2174", "symbols": ["nowhitespace"]}),
+    InvalidTestSchema({"type": "enum", "name": "bad_default", "symbols": ["A"], "default": "B"}, comment="AVRO-3229"),
     InvalidTestSchema({"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}),
     InvalidTestSchema({"type": "enum", "name": [0, 1, 1, 2, 3, 5, 8], "symbols": ["Golden", "Mean"]}),
     InvalidTestSchema({"type": "enum", "symbols": ["I", "will", "fail", "no", "name"]}),
@@ -642,16 +643,16 @@ class TestMisc(unittest.TestCase):
             }
         )
 
-        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
-
         fixed_decimal = fixed_decimal_schema.parse()
         self.assertEqual(4, fixed_decimal.get_prop("precision"))
         self.assertEqual(2, fixed_decimal.get_prop("scale"))
         self.assertEqual(2, fixed_decimal.get_prop("size"))
 
+        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
         bytes_decimal = bytes_decimal_schema.parse()
         self.assertEqual(4, bytes_decimal.get_prop("precision"))
         self.assertEqual(0, bytes_decimal.get_prop("scale"))
+        self.assertEqual("decimal", bytes_decimal.get_prop("logicalType"))
 
     def test_fixed_decimal_valid_max_precision(self):
         # An 8 byte number can represent any 18 digit number.
