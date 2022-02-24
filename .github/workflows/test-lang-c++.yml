@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
 
       - name: Clean
         run: ./build.sh clean

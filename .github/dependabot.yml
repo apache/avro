@@ -51,6 +51,13 @@ updates:
       day: "sunday"
     open-pull-requests-limit: 20
 
+  - package-ecosystem: "npm"
+    directory: "/doc"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "pip"
     directory: "/lang/py/"
     schedule:
@@ -65,10 +72,16 @@ updates:
       day: "sunday"
     open-pull-requests-limit: 20
 
+  - package-ecosystem: "bundler"
+    directory: "/doc/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+    open-pull-requests-limit: 20
+
   - package-ecosystem: "cargo"
     directory: "/lang/rust/"
     schedule:
       interval: "weekly"
       day: "sunday"
     open-pull-requests-limit: 20
-

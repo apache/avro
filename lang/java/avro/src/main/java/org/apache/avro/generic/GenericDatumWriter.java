@@ -32,9 +32,17 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.path.TracingAvroTypeException;
 import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.path.ArrayPositionPredicate;
+import org.apache.avro.path.LocationStep;
+import org.apache.avro.path.MapKeyPredicate;
+import org.apache.avro.path.TracingClassCastException;
+import org.apache.avro.path.TracingNullPointException;
+import org.apache.avro.path.UnionTypePredicate;
+import org.apache.avro.util.SchemaUtil;
 
 /** {@link DatumWriter} for generic Java objects. */
 public class GenericDatumWriter<D> implements DatumWriter<D> {
@@ -70,7 +78,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   public void write(D datum, Encoder out) throws IOException {
     Objects.requireNonNull(out, "Encoder cannot be null");
-    write(root, datum, out);
+    try {
+      write(root, datum, out);
+    } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+      throw e.summarize(root);
+    }
   }
 
   /** Called to write data. */
@@ -125,8 +137,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
 
   /** Called to write data. */
   protected void writeWithoutConversion(Schema schema, Object datum, Encoder out) throws IOException {
+    int unionIndex = -1;
+    Schema.Type schemaType = schema.getType();
     try {
-      switch (schema.getType()) {
+      switch (schemaType) {
       case RECORD:
         writeRecord(schema, datum, out);
         break;
@@ -140,9 +154,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         writeMap(schema, datum, out);
         break;
       case UNION:
-        int index = resolveUnion(schema, datum);
-        out.writeIndex(index);
-        write(schema.getTypes().get(index), datum, out);
+        unionIndex = resolveUnion(schema, datum);
+        out.writeIndex(unionIndex);
+        write(schema.getTypes().get(unionIndex), datum, out);
         break;
       case FIXED:
         writeFixed(schema, datum, out);
@@ -174,8 +188,18 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       default:
         error(schema, datum);
       }
+    } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+      if (schemaType == Schema.Type.UNION) {
+        e.tracePath(new UnionTypePredicate(schema.getTypes().get(unionIndex).getName()));
+      }
+      // writeArray() and writeMap() have their own handling
+      throw e;
     } catch (NullPointerException e) {
-      throw npe(e, " of " + schema.getFullName());
+      throw new TracingNullPointException(e, schema, false);
+    } catch (ClassCastException e) {
+      throw new TracingClassCastException(e, datum, schema, false);
+    } catch (AvroTypeException e) {
+      throw new TracingAvroTypeException(e);
     }
   }
 
@@ -223,6 +247,9 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       final UnresolvedUnionException unresolvedUnionException = new UnresolvedUnionException(f.schema(), f, value);
       unresolvedUnionException.addSuppressed(uue);
       throw unresolvedUnionException;
+    } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+      e.tracePath(new LocationStep(".", f.name()));
+      throw e;
     } catch (NullPointerException e) {
       throw npe(e, " in field " + f.name());
     } catch (ClassCastException cce) {
@@ -237,8 +264,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * representations.
    */
   protected void writeEnum(Schema schema, Object datum, Encoder out) throws IOException {
-    if (!data.isEnum(datum))
-      throw new AvroTypeException("Not an enum: " + datum + " for schema: " + schema);
+    if (!data.isEnum(datum)) {
+      AvroTypeException cause = new AvroTypeException(
+          "value " + SchemaUtil.describe(datum) + " is not a " + SchemaUtil.describe(schema));
+      throw new TracingAvroTypeException(cause);
+    }
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
 
@@ -254,7 +284,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     out.setItemCount(size);
     for (Iterator<? extends Object> it = getArrayElements(datum); it.hasNext();) {
       out.startItem();
-      write(element, it.next(), out);
+      try {
+        write(element, it.next(), out);
+      } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+        e.tracePath(new ArrayPositionPredicate(actualSize));
+        throw e;
+      }
       actualSize++;
     }
     out.writeArrayEnd();
@@ -276,18 +311,16 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    * Called by the default implementation of {@link #writeArray} to get the size
    * of an array. The default implementation is for {@link Collection}.
    */
-  @SuppressWarnings("unchecked")
   protected long getArraySize(Object array) {
-    return ((Collection) array).size();
+    return ((Collection<?>) array).size();
   }
 
   /**
    * Called by the default implementation of {@link #writeArray} to enumerate
    * array elements. The default implementation is for {@link Collection}.
    */
-  @SuppressWarnings("unchecked")
-  protected Iterator<? extends Object> getArrayElements(Object array) {
-    return ((Collection) array).iterator();
+  protected Iterator<?> getArrayElements(Object array) {
+    return ((Collection<?>) array).iterator();
   }
 
   /**
@@ -301,8 +334,21 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     out.setItemCount(size);
     for (Map.Entry<Object, Object> entry : getMapEntries(datum)) {
       out.startItem();
-      writeString(entry.getKey().toString(), out);
-      write(value, entry.getValue(), out);
+      String key;
+      try {
+        key = entry.getKey().toString();
+      } catch (NullPointerException npe) {
+        TracingNullPointException tnpe = new TracingNullPointException(npe, Schema.create(Schema.Type.STRING), false);
+        tnpe.tracePath(new MapKeyPredicate(null));
+        throw tnpe;
+      }
+      writeString(key, out);
+      try {
+        write(value, entry.getValue(), out);
+      } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+        e.tracePath(new MapKeyPredicate(key));
+        throw e;
+      }
       actualSize++;
     }
     out.writeMapEnd();
@@ -363,7 +409,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   }
 
   private void error(Schema schema, Object datum) {
-    throw new AvroTypeException("Not a " + schema + ": " + datum);
+    throw new AvroTypeException("value " + SchemaUtil.describe(datum) + " is not a " + SchemaUtil.describe(schema));
   }
 
 }
