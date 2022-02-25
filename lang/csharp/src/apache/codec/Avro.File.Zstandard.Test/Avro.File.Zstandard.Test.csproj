@@ -16,14 +16,11 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../../../common.props" />
+  <Import Project="../../../../common.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(DefaultUnitTestTargetFrameworks)</TargetFrameworks>
-    <RootNamespace>Avro.test</RootNamespace>
-    <AssemblyName>Avro.test</AssemblyName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -32,28 +29,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterVersion)" />
-    <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleRunnerVersion)" />
+    <ProjectReference Include="../Avro.File.Zstandard/Avro.File.Zstandard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\main\Avro.main.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\codec\Avro.File.Snappy\Avro.File.Snappy.csproj" />
-    <ProjectReference Include="..\codec\Avro.File.BZip2\Avro.File.BZip2.csproj" />
-    <ProjectReference Include="..\codec\Avro.File.XZ\Avro.File.XZ.csproj" />
-    <ProjectReference Include="..\codec\Avro.File.Zstandard\Avro.File.Zstandard.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterVersion)" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleRunnerVersion)" />
   </ItemGroup>
 
 </Project>
