@@ -9,12 +9,12 @@ This website is base on [Hugo](https://gohugo.io) and uses the [Docsy](https://w
 (cd doc && npm install)
 
 # Serve the website dynamically using extended hugo:
-hugo server --buildDrafts --buildFuture --bind 0.0.0.0
+hugo server --buildDrafts --buildFuture --bind 0.0.0.0 --navigateToChanged
 
 # You can do the same thing without installing hugo via docker.
 # From the Avro root directory:
 docker run --rm -v $(pwd):/src -p 1313:1313 jakejarvis/hugo-extended:latest --source doc/ server \
-    --buildDrafts --buildFuture --bind 0.0.0.0
+    --buildDrafts --buildFuture --bind 0.0.0.0 --navigateToChanged
 ```
 
 ## Building the website in a distribution
