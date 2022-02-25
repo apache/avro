@@ -643,7 +643,9 @@ public class TestReflectLogicalTypes {
 
     RecordWithDates recordWithDates = new RecordWithDates();
     recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
     recordWithDates.localDate = LocalDate.parse("2021-01-01");
+    recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
 
     File test = write(reflect, schema, recordWithDates);
 
@@ -655,6 +657,7 @@ public class TestReflectLogicalTypes {
     NestedDates nestedDates = new NestedDates();
     nestedDates.recordWithDates = recordWithDates;
     nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+    nestedDates.emptyRecordWithDatesList = new ArrayList<>();
 
     test = write(reflect, schema, nestedDates);
 
@@ -672,7 +675,9 @@ public class TestReflectLogicalTypes {
 
     RecordWithDates recordWithDates = new RecordWithDates();
     recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
     recordWithDates.localDate = LocalDate.parse("2021-01-01");
+    recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
 
     File test = write(reflect, schema, recordWithDates);
 
@@ -684,6 +689,7 @@ public class TestReflectLogicalTypes {
     NestedDates nestedDates = new NestedDates();
     nestedDates.recordWithDates = recordWithDates;
     nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+    nestedDates.emptyRecordWithDatesList = null; // test nullable array
 
     test = write(reflect, schema, nestedDates);
 
@@ -831,45 +837,46 @@ class RecordWithTimestamps {
 class RecordWithDates {
   LocalDate localDate;
   Date date;
+  List<LocalDate> localDates;
+  List<Date> dates;
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!(obj instanceof RecordWithDates)) {
-      return false;
-    }
-    RecordWithDates that = (RecordWithDates) obj;
-    return Objects.equals(localDate, that.localDate) && Objects.equals(date, that.date);
+    RecordWithDates that = (RecordWithDates) o;
+    return Objects.equals(localDate, that.localDate) && Objects.equals(date, that.date)
+        && Objects.equals(localDates, that.localDates) && Objects.equals(dates, that.dates);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(localDate, date);
+    return Objects.hash(localDate, date, localDates, dates);
   }
 }
 
 class NestedDates {
   RecordWithDates recordWithDates;
   List<RecordWithDates> recordWithDatesList;
+  List<RecordWithDates> emptyRecordWithDatesList;
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!(obj instanceof NestedDates)) {
-      return false;
-    }
-    NestedDates that = (NestedDates) obj;
+    NestedDates that = (NestedDates) o;
     return Objects.equals(recordWithDates, that.recordWithDates)
-        && Objects.equals(recordWithDatesList, that.recordWithDatesList);
+        && Objects.equals(recordWithDatesList, that.recordWithDatesList)
+        && Objects.equals(emptyRecordWithDatesList, that.emptyRecordWithDatesList);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(recordWithDates, recordWithDatesList);
+    return Objects.hash(recordWithDates, recordWithDatesList, emptyRecordWithDatesList);
   }
 }
 
