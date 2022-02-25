@@ -658,6 +658,8 @@ public class TestReflectLogicalTypes {
     nestedDates.recordWithDates = recordWithDates;
     nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
     nestedDates.emptyRecordWithDatesList = new ArrayList<>();
+    nestedDates.recordWithDateArray = new RecordWithDates[] { recordWithDates };
+    nestedDates.emtpyRecordWithDateArray = new RecordWithDates[0];
 
     test = write(reflect, schema, nestedDates);
 
@@ -690,6 +692,8 @@ public class TestReflectLogicalTypes {
     nestedDates.recordWithDates = recordWithDates;
     nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
     nestedDates.emptyRecordWithDatesList = null; // test nullable array
+    nestedDates.recordWithDateArray = new RecordWithDates[] { recordWithDates };
+    nestedDates.emtpyRecordWithDateArray = null;
 
     test = write(reflect, schema, nestedDates);
 
@@ -861,6 +865,8 @@ class NestedDates {
   RecordWithDates recordWithDates;
   List<RecordWithDates> recordWithDatesList;
   List<RecordWithDates> emptyRecordWithDatesList;
+  RecordWithDates[] recordWithDateArray;
+  RecordWithDates[] emtpyRecordWithDateArray;
 
   @Override
   public boolean equals(Object o) {
@@ -871,12 +877,17 @@ class NestedDates {
     NestedDates that = (NestedDates) o;
     return Objects.equals(recordWithDates, that.recordWithDates)
         && Objects.equals(recordWithDatesList, that.recordWithDatesList)
-        && Objects.equals(emptyRecordWithDatesList, that.emptyRecordWithDatesList);
+        && Objects.equals(emptyRecordWithDatesList, that.emptyRecordWithDatesList)
+        && Arrays.equals(recordWithDateArray, that.recordWithDateArray)
+        && Arrays.equals(emtpyRecordWithDateArray, that.emtpyRecordWithDateArray);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(recordWithDates, recordWithDatesList, emptyRecordWithDatesList);
+    int result = Objects.hash(recordWithDates, recordWithDatesList, emptyRecordWithDatesList);
+    result = 31 * result + Arrays.hashCode(recordWithDateArray);
+    result = 31 * result + Arrays.hashCode(emtpyRecordWithDateArray);
+    return result;
   }
 }
 

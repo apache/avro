@@ -134,7 +134,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       elementClass = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
     }
 
-    Schema expectedType = expected.getElementType();
+    Schema elementSchema = expected.getElementType();
     long l = in.readArrayStart();
     if (l <= 0) {
       return newArray(old, 0, expected, elementClass);
@@ -144,13 +144,13 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (array instanceof Collection) {
       @SuppressWarnings("unchecked")
       Collection<Object> c = (Collection<Object>) array;
-      return readCollection(c, elementClass, expectedType, l, in);
+      return readCollection(c, elementClass, elementSchema, l, in);
     } else if (array instanceof Map) {
       // Only for non-string keys, we can use NS_MAP_* fields
       // So we check the same explicitly here
       if (ReflectData.isNonStringMapSchema(expected)) {
         Collection<Object> c = new ArrayList<>();
-        readCollection(c, elementClass, expectedType, l, in);
+        readCollection(c, elementClass, elementSchema, l, in);
         Map m = (Map) array;
         for (Object ele : c) {
           IndexedRecord rec = ((IndexedRecord) ele);
@@ -164,72 +164,39 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         throw new AvroRuntimeException(msg);
       }
     } else {
-      return readJavaArray(array, elementClass, expectedType, l, in);
+      return readJavaArray(array, elementClass, elementSchema, l, in);
     }
   }
 
-  private Object readJavaArray(Object array, Class<?> cls, Schema expectedType, long l, ResolvingDecoder in)
+  private Object readJavaArray(Object array, Class<?> elementClass, Schema expected, long l, ResolvingDecoder in)
       throws IOException {
-    Class<?> elementType = array.getClass().getComponentType();
-    if (elementType.isPrimitive()) {
-      return readPrimitiveArray(array, elementType, l, in);
+    Class<?> arrayElementClass = array.getClass().getComponentType();
+    if (arrayElementClass.isPrimitive()) {
+      return ArrayAccessor.readArray(array, arrayElementClass, l, in);
     } else {
-      return readObjectArray((Object[]) array, cls, expectedType, l, in);
-    }
-  }
-
-  private Object readPrimitiveArray(Object array, Class<?> c, long l, ResolvingDecoder in) throws IOException {
-    return ArrayAccessor.readArray(array, c, l, in);
-  }
-
-  private Object readObjectArray(Object[] array, Class<?> cls, Schema expectedType, long l, ResolvingDecoder in)
-      throws IOException {
-    LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = cls == null ? getData().getConversionFor(logicalType)
-        : getData().getConversionByClass(cls, logicalType);
-    int index = 0;
-    if (logicalType != null && conversion != null) {
+      int index = 0;
       do {
         int limit = index + (int) l;
         while (index < limit) {
-          Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
-          array[index] = element;
+          Object element = readAndConvert(null, elementClass, expected, in);
+          ((Object[]) array)[index] = element;
           index++;
         }
       } while ((l = in.arrayNext()) > 0);
-    } else {
-      do {
-        int limit = index + (int) l;
-        while (index < limit) {
-          Object element = readWithoutConversion(null, expectedType, in);
-          array[index] = element;
-          index++;
-        }
-      } while ((l = in.arrayNext()) > 0);
+
+      return array;
     }
-    return array;
   }
 
   private Object readCollection(Collection<Object> c, Class<?> cls, Schema expectedType, long l, ResolvingDecoder in)
       throws IOException {
-    LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = cls == null ? getData().getConversionFor(logicalType)
-        : getData().getConversionByClass(cls, logicalType);
-    if (logicalType != null && conversion != null) {
-      do {
-        for (int i = 0; i < l; i++) {
-          Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
-          c.add(element);
-        }
-      } while ((l = in.arrayNext()) > 0);
-    } else {
-      do {
-        for (int i = 0; i < l; i++) {
-          Object element = readWithoutConversion(null, expectedType, in);
-          c.add(element);
-        }
-      } while ((l = in.arrayNext()) > 0);
-    }
+    do {
+      for (int i = 0; i < l; i++) {
+        Object element = readAndConvert(null, cls, expectedType, in);
+        c.add(element);
+      }
+    } while ((l = in.arrayNext()) > 0);
+
     return c;
   }
 
