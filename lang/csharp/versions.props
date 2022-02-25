@@ -57,5 +57,8 @@
     <NUnitConsoleRunnerVersion>3.14.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
+    <CoverletCollector>3.1.2</CoverletCollector>
+    <CoverletMSBuild>3.1.2</CoverletMSBuild>
+    <ReportGenerator>5.0.4</ReportGenerator>
   </PropertyGroup>
 </Project>
