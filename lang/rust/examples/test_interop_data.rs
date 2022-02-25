@@ -16,10 +16,15 @@
 // under the License.
 
 use apache_avro::Reader;
-use std::{collections::HashMap, ffi::OsStr, fs::File};
+use std::{
+    collections::HashMap,
+    ffi::OsStr,
+    io::{BufReader, Read},
+};
 
 fn main() -> anyhow::Result<()> {
-    let expected_user_metadata: HashMap<String, Vec<u8>> = create_expected_user_metadata();
+    let mut expected_user_metadata: HashMap<String, Vec<u8>> = HashMap::new();
+    expected_user_metadata.insert("user_metadata".to_string(), b"someByteArray".to_vec());
 
     let data_dir = std::fs::read_dir("../../build/interop/data/")
         .expect("Unable to list the interop data directory");
@@ -37,7 +42,7 @@ fn main() -> anyhow::Result<()> {
             if ext == "avro" {
                 println!("Checking {:?}", &path);
                 let content = std::fs::File::open(&path)?;
-                let reader = Reader::new(&content)?;
+                let reader = Reader::new(BufReader::new(&content))?;
 
                 test_user_metadata(&reader, &expected_user_metadata);
 
@@ -63,17 +68,10 @@ fn main() -> anyhow::Result<()> {
     }
 }
 
-fn create_expected_user_metadata() -> HashMap<String, Vec<u8>> {
-    let mut user_metadata: HashMap<String, Vec<u8>> = HashMap::new();
-    user_metadata.insert(
-        "stringKey".to_string(),
-        "stringValue".to_string().into_bytes(),
-    );
-    user_metadata.insert("bytesKey".to_string(), b"bytesValue".to_vec());
-    user_metadata
-}
-
-fn test_user_metadata(reader: &Reader<&File>, expected_user_metadata: &HashMap<String, Vec<u8>>) {
+fn test_user_metadata<R: Read>(
+    reader: &Reader<BufReader<R>>,
+    expected_user_metadata: &HashMap<String, Vec<u8>>,
+) {
     let user_metadata = reader.user_metadata();
     if !user_metadata.is_empty() {
         assert_eq!(user_metadata, expected_user_metadata);

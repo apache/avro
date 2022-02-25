@@ -72,7 +72,7 @@ impl<R: Read> Block<R> {
 
         if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
             self.read_writer_schema(&metadata)?;
-            self.read_codec(&metadata)?;
+            self.read_codec(&metadata);
 
             for (key, value) in metadata {
                 if key == "avro.schema" || key == "avro.codec" {
@@ -80,7 +80,7 @@ impl<R: Read> Block<R> {
                 } else if key.starts_with("avro.") {
                     warn!("Ignoring unknown metadata key: {}", key);
                 } else {
-                    self.read_user_metadata(key, value)?;
+                    self.read_user_metadata(key, value);
                 }
             }
         } else {
@@ -189,7 +189,7 @@ impl<R: Read> Block<R> {
         Ok(())
     }
 
-    fn read_codec(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
+    fn read_codec(&mut self, metadata: &HashMap<String, Value>) {
         if let Some(codec) = metadata
             .get("avro.codec")
             .and_then(|codec| {
@@ -203,21 +203,18 @@ impl<R: Read> Block<R> {
         {
             self.codec = codec;
         }
-        Ok(())
     }
 
-    fn read_user_metadata(&mut self, key: String, value: Value) -> AvroResult<()> {
+    fn read_user_metadata(&mut self, key: String, value: Value) {
         match value {
             Value::Bytes(ref vec) => {
                 self.user_metadata.insert(key, vec.clone());
-                Ok(())
             }
             wrong => {
                 warn!(
                     "User metadata values must be Value::Bytes, found {:?}",
                     wrong
                 );
-                Ok(())
             }
         }
     }
@@ -504,7 +501,7 @@ mod tests {
     #[test]
     fn test_reader_invalid_header() {
         let schema = Schema::parse_str(SCHEMA).unwrap();
-        let invalid = ENCODED.to_owned().into_iter().skip(1).collect::<Vec<u8>>();
+        let invalid = ENCODED.iter().copied().skip(1).collect::<Vec<u8>>();
         assert!(Reader::with_schema(&schema, &invalid[..]).is_err());
     }
 
@@ -512,8 +509,8 @@ mod tests {
     fn test_reader_invalid_block() {
         let schema = Schema::parse_str(SCHEMA).unwrap();
         let invalid = ENCODED
-            .to_owned()
-            .into_iter()
+            .iter()
+            .copied()
             .rev()
             .skip(19)
             .collect::<Vec<u8>>()
@@ -534,11 +531,7 @@ mod tests {
 
     #[test]
     fn test_reader_only_header() {
-        let invalid = ENCODED
-            .to_owned()
-            .into_iter()
-            .take(165)
-            .collect::<Vec<u8>>();
+        let invalid = ENCODED.iter().copied().take(165).collect::<Vec<u8>>();
         let reader = Reader::new(&invalid[..]).unwrap();
         for value in reader {
             assert!(value.is_err());

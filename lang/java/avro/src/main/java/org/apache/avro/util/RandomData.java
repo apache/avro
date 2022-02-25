@@ -170,8 +170,7 @@ public class RandomData implements Iterable<Object> {
     Schema sch = new Schema.Parser().parse(new File(args[0]));
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
-      writer.setMeta("stringKey", "stringValue");
-      writer.setMeta("bytesKey", "bytesValue".getBytes(StandardCharsets.UTF_8));
+      writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));
       writer.create(sch, new File(args[1]));
 
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
