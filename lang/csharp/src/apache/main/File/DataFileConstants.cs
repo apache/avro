@@ -52,6 +52,26 @@ namespace Avro.File
         public const string DeflateCodec = "deflate";
 
         /// <summary>
+        /// Identifier for the Snappy codec.
+        /// </summary>
+        public const string SnappyCodec = "snappy";
+
+        /// <summary>
+        /// Identifier for the BZip2 codec.
+        /// </summary>
+        public const string BZip2Codec = "bzip2";
+
+        /// <summary>
+        /// Identifier for the XZ codec.
+        /// </summary>
+        public const string XZCodec = "xz";
+
+        /// <summary>
+        /// Identifier for the Zstandard codec.
+        /// </summary>
+        public const string ZstandardCodec = "zstandard";
+
+        /// <summary>
         /// Reserved 'avro' metadata key.
         /// </summary>
         public const string MetaDataReserved = "avro";

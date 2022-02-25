@@ -31,6 +31,12 @@
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
+
+    <!-- The following pacakges are required for the extra codec libraries. These are not direct dependencies of the Avro.main library. -->
+    <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
+    <IronSnappyVersion>1.3.0</IronSnappyVersion>
+    <JovelerCompressionXZVersion>4.1.0</JovelerCompressionXZVersion>
+    <ZstandardNetVersion>1.1.7</ZstandardNetVersion>
   </PropertyGroup>
 
   <!--
