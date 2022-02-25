@@ -47,7 +47,7 @@
   <PropertyGroup Label="Common NuGet Properties">
     <!-- Reference: https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target -->
     <Copyright>Copyright © 2019 The Apache Software Foundation.</Copyright>
-    <PackageIcon>avro-logo.png</PackageIcon>
+    <PackageIcon>logo.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://avro.apache.org/</PackageProjectUrl>
     <PackageTags>Avro;Apache;Serialization;Binary;Json;Schema</PackageTags>
@@ -56,7 +56,7 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" Visible="false" PackagePath=""/>
-    <None Include="$(MSBuildThisFileDirectory)\..\..\doc\src\resources\images\avro-logo.png" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="$(MSBuildThisFileDirectory)\..\..\doc\assets\icons\logo.png" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
 
   <PropertyGroup>
