@@ -170,12 +170,10 @@ The primitive types supported by Avro IDL are the same as those supported by Avr
 ### Logical Types
 Some of the logical types supported by Avro's JSON format are also supported by Avro IDL. The currently supported types are:
 
-* _decimal_ (logical type decimal)
-* _date_ (logical type date)
-* _time_ms_ (logical type time-millis)
-* _timestamp_ms_ (logical type timestamp-millis)
-
-TODO FIX LINKS ABOVE
+* _decimal_ (logical type [decimal]({{< relref "specification#decimal" >}}))
+* _date_ (logical type [date]({{< relref "specification#date" >}}))
+* _time_ms_ (logical type [time-millis]({{< relref "specification#time-millisecond-precision" >}}))
+* _timestamp_ms_ (logical type [timestamp-millis]({{< relref "specification#timestamp-millisecond-precision" >}}))
 
 For example:
 ```java
@@ -208,7 +206,7 @@ record Card {
 ``` 
 
 ### Default Values
-Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the spec. TODO fix link!
+Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the [spec]({{< relref "specification#schema-record" >}}).
 
 ### Complex Types
 
@@ -286,7 +284,7 @@ record MyRecord {
   string @order("ignore") myIgnoredField;
 }
 ``` 
-A field's type may also be preceded by annotations, e.g.:
+A field's type (with the exception of type references) may also be preceded by annotations, e.g.:
 ```java
 record MyRecord {
   @java-class("java.util.ArrayList") array<string> myStrings;
@@ -322,46 +320,56 @@ record MyRecord {
 Some annotations like those listed above are handled specially. All other annotations are added as properties to the protocol, message, schema or field.
 
 ## Complete Example
-The following is a complete example of a Avro IDL file that shows most of the above features:
+The following is an example of an Avro IDL file that shows most of the above features:
 ```java
+/*
+* Header with license information.
+*/
+
 /**
  * An example protocol in Avro IDL
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
-
+  /** Documentation for the enum type Kind */
   @aliases(["org.foo.KindOf"])
   enum Kind {
     FOO,
     BAR, // the bar enum value
     BAZ
-  }
+  } = FOO; // For schema evolution purposes, unmatched values do not throw an error, but are resolved to FOO.
 
+  /** MD5 hash; good enough to avoid most collisions, and smaller than (for example) SHA256. */
   fixed MD5(16);
 
   record TestRecord {
-    @order("ignore")
-    string name;
+    /** Record name; has no intrinsic order */
+    string @order("ignore") name;
 
-    @order("descending")
-    Kind kind;
+    Kind @order("descending") kind;
 
     MD5 hash;
 
-    union { MD5, null} @aliases(["hash"]) nullableHash;
+    /*
+    Note that 'null' is the first union type. Just like .avsc / .avpr files, the default value must be of the first union type.
+    */
+    union { null, MD5 } /** Optional field */ @aliases(["hash"]) nullableHash = null;
 
     array<long> arrayOfLongs;
   }
 
+  /** Errors are records that can be thrown from a method */
   error TestError {
     string message;
   }
 
   string hello(string greeting);
+  /** Return what was given. Demonstrates the use of backticks to name types/fields/messages/parameters after keywords */
   TestRecord echo(TestRecord `record`);
   int add(int arg1, int arg2);
   bytes echoBytes(bytes data);
   void `error`() throws TestError;
+  // The oneway keyword forces the method to return null.
   void ping() oneway;
 }
 ```
