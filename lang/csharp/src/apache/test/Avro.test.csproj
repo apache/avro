@@ -32,11 +32,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="$(CoverletCollector)">
+    <PackageReference Include="coverlet.collector" Version="$(CoverletCollectorVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.msbuild" Version="$(CoverletMSBuild)">
+    <PackageReference Include="coverlet.msbuild" Version="$(CoverletMSBuildVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -47,7 +47,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="ReportGenerator" Version="$(ReportGenerator)" />
+    <PackageReference Include="ReportGenerator" Version="$(ReportGeneratorVersion)" />
   </ItemGroup>
 
   <ItemGroup>
