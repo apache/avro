@@ -65,5 +65,33 @@ namespace Avro.File.Zstandard.Test
             Assert.AreEqual("zstandard", codec.GetName());
             Assert.AreEqual($"zstandard[{(int)level}]", codec.ToString());
         }
+
+        [Test]
+        public void DefaultLevel()
+        {
+            ZstandardCodec codec = new ZstandardCodec();
+
+            Assert.AreEqual(ZstandardLevel.Default, codec.Level);
+        }
+
+        [Test]
+        public void Equal([Values] ZstandardLevel level)
+        {
+            ZstandardCodec codec1 = new ZstandardCodec(level);
+            ZstandardCodec codec2 = new ZstandardCodec(level);
+
+            Assert.IsTrue(codec1.Equals(codec1));
+            Assert.IsTrue(codec2.Equals(codec2));
+            Assert.IsTrue(codec1.Equals(codec2));
+            Assert.IsTrue(codec2.Equals(codec1));
+        }
+
+        [Test]
+        public void HashCode([Values] ZstandardLevel level)
+        {
+            ZstandardCodec codec = new ZstandardCodec(level);
+
+            Assert.AreNotEqual(0, codec.GetHashCode());
+        }
     }
 }

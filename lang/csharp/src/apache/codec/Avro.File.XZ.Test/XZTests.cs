@@ -65,5 +65,33 @@ namespace Avro.File.XZ.Test
             Assert.AreEqual("xz", codec.GetName());
             Assert.AreEqual($"xz-{(int)level}", codec.ToString());
         }
+
+        [Test]
+        public void DefaultLevel()
+        {
+            XZCodec codec = new XZCodec();
+
+            Assert.AreEqual(XZLevel.Default, codec.Level);
+        }
+
+        [Test]
+        public void Equal([Values] XZLevel level)
+        {
+            XZCodec codec1 = new XZCodec(level);
+            XZCodec codec2 = new XZCodec(level);
+
+            Assert.IsTrue(codec1.Equals(codec1));
+            Assert.IsTrue(codec2.Equals(codec2));
+            Assert.IsTrue(codec1.Equals(codec2));
+            Assert.IsTrue(codec2.Equals(codec1));
+        }
+
+        [Test]
+        public void HashCode([Values] XZLevel level)
+        {
+            XZCodec codec = new XZCodec(level);
+
+            Assert.AreNotEqual(0, codec.GetHashCode());
+        }
     }
 }

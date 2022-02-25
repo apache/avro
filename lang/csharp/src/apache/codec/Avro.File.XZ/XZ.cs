@@ -48,9 +48,9 @@ namespace Avro.File.XZ
     /// </summary>
     public class XZCodec : Codec
     {
-        private readonly XZLevel _level;
-        private readonly bool _extreme;
-        private readonly int _threads;
+        public XZLevel Level {get; private set;}
+        public bool Extreme {get; private set;}
+        public int Threads {get; private set;}
 
         public XZCodec()
             : this(XZLevel.Default)
@@ -69,9 +69,9 @@ namespace Avro.File.XZ
 
         public XZCodec(XZLevel level, bool extreme, int numOfThreads)
         {
-            _level = level;
-            _extreme = extreme;
-            _threads = numOfThreads;
+            Level = level;
+            Extreme = extreme;
+            Threads = numOfThreads;
         }
 
         static XZCodec()
@@ -175,14 +175,14 @@ namespace Avro.File.XZ
         {
             XZCompressOptions compOpts = new XZCompressOptions
             {
-                Level = (LzmaCompLevel)(int)_level,
-                ExtremeFlag = _extreme,
+                Level = (LzmaCompLevel)(int)Level,
+                ExtremeFlag = Extreme,
                 LeaveOpen = true
             };
 
             XZThreadedCompressOptions threadOpts = new XZThreadedCompressOptions
             {
-                Threads = _threads,
+                Threads = Threads,
             };
 
             inputStream.Position = 0;
@@ -225,13 +225,13 @@ namespace Avro.File.XZ
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return 0;
+            return GetName().GetHashCode();
         }
 
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"{GetName()}-{(int)_level}";
+            return $"{GetName()}-{(int)Level}";
         }
     }
 }

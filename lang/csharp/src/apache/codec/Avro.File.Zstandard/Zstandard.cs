@@ -55,7 +55,7 @@ namespace Avro.File.Zstandard
     /// </summary>
     public class ZstandardCodec : Codec
     {
-        private readonly ZstandardLevel _level;
+        public ZstandardLevel Level {get; private set;}
 
         public ZstandardCodec()
             : this(ZstandardLevel.Default)
@@ -64,7 +64,7 @@ namespace Avro.File.Zstandard
 
         public ZstandardCodec(ZstandardLevel level)
         {
-            _level = level;
+            Level = level;
         }
 
         /// <inheritdoc/>
@@ -73,7 +73,7 @@ namespace Avro.File.Zstandard
             using (var outputStream = new MemoryStream())
             using (var compressionStream = new ZstandardStream(outputStream, CompressionMode.Compress))
             {
-                compressionStream.CompressionLevel = (int)_level;
+                compressionStream.CompressionLevel = (int)Level;
                 compressionStream.Write(uncompressedData, 0, uncompressedData.Length);
                 compressionStream.Flush();
                 return outputStream.ToArray();
@@ -88,7 +88,7 @@ namespace Avro.File.Zstandard
 
             using (var compressionStream = new ZstandardStream(outputStream, CompressionMode.Compress, true))
             {
-                compressionStream.CompressionLevel = (int)_level;
+                compressionStream.CompressionLevel = (int)Level;
                 inputStream.CopyTo(compressionStream);
                 compressionStream.Flush();
             }
@@ -122,13 +122,13 @@ namespace Avro.File.Zstandard
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return 0;
+            return GetName().GetHashCode();
         }
 
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"{GetName()}[{(int)_level}]";
+            return $"{GetName()}[{(int)Level}]";
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Avro.File.BZip2
     /// </summary>
     public class BZip2Codec : Codec
     {
-        private readonly BZip2Level _level;
+        public BZip2Level Level {get; private set;}
 
         public BZip2Codec()
             : this(BZip2Level.Default)
@@ -50,7 +50,7 @@ namespace Avro.File.BZip2
 
         public BZip2Codec(BZip2Level level)
         {
-            _level = level;
+            Level = level;
         }
 
         /// <inheritdoc/>
@@ -69,7 +69,7 @@ namespace Avro.File.BZip2
         {
             inputStream.Position = 0;
             outputStream.SetLength(0);
-            ICSharpCode.SharpZipLib.BZip2.BZip2.Compress(inputStream, outputStream, false, (int)_level);
+            ICSharpCode.SharpZipLib.BZip2.BZip2.Compress(inputStream, outputStream, false, (int)Level);
         }
 
         /// <inheritdoc/>
@@ -98,13 +98,13 @@ namespace Avro.File.BZip2
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return 0;
+            return GetName().GetHashCode();
         }
 
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"{GetName()}-{(int)_level}";
+            return $"{GetName()}-{(int)Level}";
         }
     }
 }

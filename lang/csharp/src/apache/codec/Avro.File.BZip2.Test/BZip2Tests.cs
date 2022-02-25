@@ -65,5 +65,33 @@ namespace Avro.File.BZip2.Test
             Assert.AreEqual("bzip2", codec.GetName());
             Assert.AreEqual($"bzip2-{(int)level}", codec.ToString());
         }
+
+        [Test]
+        public void DefaultLevel()
+        {
+            BZip2Codec codec = new BZip2Codec();
+
+            Assert.AreEqual(BZip2Level.Default, codec.Level);
+        }
+
+        [Test]
+        public void Equal([Values] BZip2Level level)
+        {
+            BZip2Codec codec1 = new BZip2Codec(level);
+            BZip2Codec codec2 = new BZip2Codec(level);
+
+            Assert.IsTrue(codec1.Equals(codec1));
+            Assert.IsTrue(codec2.Equals(codec2));
+            Assert.IsTrue(codec1.Equals(codec2));
+            Assert.IsTrue(codec2.Equals(codec1));
+        }
+
+        [Test]
+        public void HashCode([Values] BZip2Level level)
+        {
+            BZip2Codec codec = new BZip2Codec(level);
+
+            Assert.AreNotEqual(0, codec.GetHashCode());
+        }
     }
 }

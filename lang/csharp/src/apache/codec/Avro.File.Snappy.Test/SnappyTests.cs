@@ -65,5 +65,25 @@ namespace Avro.File.Snappy.Test
             Assert.AreEqual("snappy", codec.GetName());
             Assert.AreEqual("snappy", codec.ToString());
         }
+
+        [Test]
+        public void Equal()
+        {
+            SnappyCodec codec1 = new SnappyCodec();
+            SnappyCodec codec2 = new SnappyCodec();
+
+            Assert.IsTrue(codec1.Equals(codec1));
+            Assert.IsTrue(codec2.Equals(codec2));
+            Assert.IsTrue(codec1.Equals(codec2));
+            Assert.IsTrue(codec2.Equals(codec1));
+        }
+
+        [Test]
+        public void HashCode()
+        {
+            SnappyCodec codec = new SnappyCodec();
+
+            Assert.AreNotEqual(0, codec.GetHashCode());
+        }
     }
 }

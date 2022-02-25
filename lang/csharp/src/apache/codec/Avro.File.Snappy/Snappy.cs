@@ -87,7 +87,7 @@ namespace Avro.File.Snappy
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return 0;
+            return GetName().GetHashCode();
         }
     }
 }
