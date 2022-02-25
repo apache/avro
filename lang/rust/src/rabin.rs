@@ -154,7 +154,7 @@ mod tests {
 
         for (s, fp) in data {
             hasher.update(s.as_bytes());
-            let result = LittleEndian::read_i64(&hasher.finalize_reset().to_vec());
+            let result = LittleEndian::read_i64(&hasher.finalize_reset());
             assert_eq!(*fp, result);
         }
     }
