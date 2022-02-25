@@ -97,10 +97,6 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (elementClass == null) {
       elementClass = collectionClass.getComponentType();
     }
-    if (elementClass == null) {
-      ReflectData data = (ReflectData) getData();
-      elementClass = data.getClass(schema.getElementType());
-    }
     return Array.newInstance(elementClass, size);
   }
 
@@ -326,7 +322,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       Conversion<?> conversion;
       if (type instanceof Class<?>) {
         conversion = getData().getConversionByClass((Class<?>) type);
-      } else if (type instanceof ParameterizedType) {
+      } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class<?>) {
         conversion = getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType());
       } else {
         // fallback to get conversion by logical type
