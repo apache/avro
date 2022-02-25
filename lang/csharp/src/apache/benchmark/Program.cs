@@ -25,8 +25,7 @@ namespace Avro.Benchmark
         // dotnet run -c Release -f net6.0 --runtimes netcoreapp3.1 net5.0 net6.0
         public static void Main(string[] args)
         {
-            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
-            BenchmarkRunner.Run<Benchmarks>();
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
 }
