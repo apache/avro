@@ -82,7 +82,7 @@ do
       # If not specified use default location
       [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
 
-      # Set NUGET_KEY beofre executing script. E.g. `NUGET_KEY=YOUR_KEY ./build.sh release`
+      # Set NUGET_KEY beofre executing script. E.g. `NUGET_KEY="YOUR_KEY" ./build.sh release`
       [ "$NUGET_KEY" ] || (echo "NUGET_KEY is not set"; exit 1)
 
       PACKAGES_TO_PUSH=("./build/main/Apache.Avro.${VERSION}.nupkg")
