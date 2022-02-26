@@ -45,7 +45,7 @@ do
       dotnet run --configuration Release --framework net6.0
       ;;
 
-    dist)
+    dist|release)
       # pack NuGet packages
       dotnet pack --configuration Release Avro.sln
 
@@ -76,7 +76,7 @@ do
       cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
 
       # Release (pushing packages to nuget.org)
-      if [ "$RELEASE" == "true" ] || [ "$RELEASE" == "1" ] 
+      if [ "$target" == "release" ]
       then
         # If not specified use default location
         [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
@@ -108,7 +108,7 @@ do
       ;;
 
     *)
-      echo "Usage: $0 {lint|test|clean|dist|perf|interop-data-generate|interop-data-test}"
+      echo "Usage: $0 {lint|test|clean|dist|release|perf|interop-data-generate|interop-data-test}"
       exit 1
 
   esac
