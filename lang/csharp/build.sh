@@ -23,69 +23,6 @@ cd `dirname "$0"`                  # connect to root
 ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
-function dist()
-{
-  # pack NuGet packages
-  dotnet pack --configuration Release Avro.sln
-
-  # add the binary LICENSE and NOTICE to the tarball
-  mkdir -p build/
-  cp LICENSE NOTICE build/
-
-  # add binaries to the tarball
-  mkdir -p build/main/
-  cp -R src/apache/main/bin/Release/* build/main/
-  # add codec binaries to the tarball
-  for codec in Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard
-  do
-    mkdir -p build/codec/$codec/
-    cp -R src/apache/codec/$codec/bin/Release/* build/codec/$codec/
-  done
-  # add codegen binaries to the tarball
-  mkdir -p build/codegen/
-  cp -R src/apache/codegen/bin/Release/* build/codegen/
-
-  # build the tarball
-  mkdir -p ${ROOT}/dist/csharp
-  (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
-
-  # build documentation
-  doxygen Avro.dox
-  mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-  cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-}
-
-function release()
-{
-  # If not specified use default location
-  [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
-
-  # Set NUGET_KEY before executing script. E.g. `NUGET_KEY="YOUR_KEY" ./build.sh release`
-  [ "$NUGET_KEY" ] || (echo "NUGET_KEY is not set"; exit 1)
-
-  PACKAGES_TO_PUSH=("./build/main/Apache.Avro.${VERSION}.nupkg")
-  PACKAGES_TO_PUSH+=("./build/codegen/Apache.Avro.Tools.${VERSION}.nupkg")
-  PACKAGES_TO_PUSH+=("./build/codec/Avro.File.Snappy/Apache.Avro.File.Snappy.${VERSION}.nupkg")
-  PACKAGES_TO_PUSH+=("./build/codec/Avro.File.BZip2/Apache.Avro.File.BZip2.${VERSION}.nupkg")
-  PACKAGES_TO_PUSH+=("./build/codec/Avro.File.XZ/Apache.Avro.File.XZ.${VERSION}.nupkg")
-  PACKAGES_TO_PUSH+=("./build/codec/Avro.File.Zstandard/Apache.Avro.File.Zstandard.${VERSION}.nupkg")
-
-  # Check if dist needed to run (if gz file does not exist)
-  [ -f "$ROOT/dist/csharp/avro-csharp-${VERSION}.tar.gz" ] || dist
-
-  # Check if all packages exist before calling nuget push
-  for package in "${PACKAGES_TO_PUSH[@]}"
-  do
-    [ -f "$package" ] || (echo "Package $package does not exist. Incomplete dist step?"; exit 1)
-  done
-
-  # Push packages to nuget.org
-  for package in "${PACKAGES_TO_PUSH[@]}"
-  do
-    dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
-  done
-}
-
 for target in "$@"
 do
 
@@ -109,11 +46,51 @@ do
       ;;
 
     dist)
-      dist
-      ;;
+      # pack NuGet packages
+      dotnet pack --configuration Release Avro.sln
 
-    release)
-      release
+      # add the binary LICENSE and NOTICE to the tarball
+      mkdir -p build/
+      cp LICENSE NOTICE build/
+
+      # add binaries to the tarball
+      mkdir -p build/main/
+      cp -R src/apache/main/bin/Release/* build/main/
+      # add codec binaries to the tarball
+      for codec in Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard
+      do
+        mkdir -p build/codec/$codec/
+        cp -R src/apache/codec/$codec/bin/Release/* build/codec/$codec/
+      done
+      # add codegen binaries to the tarball
+      mkdir -p build/codegen/
+      cp -R src/apache/codegen/bin/Release/* build/codegen/
+
+      # build the tarball
+      mkdir -p ${ROOT}/dist/csharp
+      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
+
+      # build documentation
+      doxygen Avro.dox
+      mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+      cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+
+      # Release (pushing packages to nuget.org)
+      if [ "$RELEASE" == "true" ] || [ "$RELEASE" == "1" ] 
+      then
+        # If not specified use default location
+        [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
+
+        # Set NUGET_KEY before executing script. E.g. `NUGET_KEY="YOUR_KEY" ./build.sh release`
+        [ "$NUGET_KEY" ] || (echo "NUGET_KEY is not set"; exit 1)
+
+        # Push packages to nuget.org
+        # Note: use loop instead of -exec or xargs to stop at first failure
+        find ./build/ -name '*.nupkg' -type f -print0 | while IFS= read -r -d '' package
+        do
+          dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
+        done
+      fi
       ;;
 
     interop-data-generate)
