@@ -177,7 +177,7 @@ namespace Avro.Benchmark
         [Benchmark]
         public ISpecificRecord CreateSpecificRecordSmall()
         {
-            return new com.benchmark.small.test()
+            return new org.apache.avro.benchmark.small.test()
             {
                 field = "foo"
             };
@@ -186,13 +186,13 @@ namespace Avro.Benchmark
         [Benchmark]
         public ISpecificRecord CreateSpecificRecordBig()
         {
-            return new com.benchmark.big.userInfo()
+            return new org.apache.avro.benchmark.big.userInfo()
             {
                 username = "username",
                 age = 10,
                 phone = "000000000",
                 housenum = "0000",
-                address = new com.benchmark.big.mailing_address()
+                address = new org.apache.avro.benchmark.big.mailing_address()
                 {
                     street = "street",
                     city = "city",
@@ -242,13 +242,13 @@ namespace Avro.Benchmark
         [Benchmark]
         public void AvroToSpecificRecordsSmall()
         {
-            AvroToSpecificRecords<com.benchmark.small.test>(_avroSpecificSmall, _schemaSmall);
+            AvroToSpecificRecords<org.apache.avro.benchmark.small.test>(_avroSpecificSmall, _schemaSmall);
         }
 
         [Benchmark]
         public void AvroToSpecificRecordsBig()
         {
-            AvroToSpecificRecords<com.benchmark.big.userInfo>(_avroSpecificBig, _schemaBig);
+            AvroToSpecificRecords<org.apache.avro.benchmark.big.userInfo>(_avroSpecificBig, _schemaBig);
         }
     }
 }

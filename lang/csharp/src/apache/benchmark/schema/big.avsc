@@ -1,5 +1,5 @@
 {
-  "namespace": "com.benchmark.big",
+  "namespace": "org.apache.avro.benchmark.big",
   "type": "record",
   "name": "userInfo",
   "fields": [

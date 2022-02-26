@@ -1,5 +1,5 @@
 {
-  "namespace": "com.benchmark.small",
+  "namespace": "org.apache.avro.benchmark.small",
   "type": "record",
   "name": "test",
   "fields": [
