@@ -38,27 +38,26 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already parsed</param>
         /// <param name="encspace">enclosing namespace for the array schema</param>
-        /// <returns>New instance of Array Schema</returns>
+        /// <returns></returns>
         internal static ArraySchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jitem = jtok["items"];
-            if (jitem == null)
-            {
+            if (null == jitem)
                 throw new AvroTypeException($"Array does not have 'items' at '{jtok.Path}'");
-            }
-
-            Schema schema = Schema.ParseJson(jitem, names, encspace);
+            var schema = Schema.ParseJson(jitem, names, encspace);
             return new ArraySchema(schema, props);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArraySchema"/> class.
+        /// Constructor
         /// </summary>
         /// <param name="items">schema for the array items type</param>
         /// <param name="props">dictionary that provides access to custom properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
-            ItemSchema = items;
+            if (null == items)
+                throw new ArgumentNullException(nameof(items));
+            this.ItemSchema = items;
         }
 
         /// <summary>
@@ -81,42 +80,35 @@ namespace Avro
         public override bool CanRead(Schema writerSchema)
         {
             if (writerSchema.Tag != Tag)
-            {
                 return false;
-            }
 
-            ArraySchema arraySchema = writerSchema as ArraySchema;
-            return ItemSchema.CanRead(arraySchema.ItemSchema);
+            ArraySchema that = writerSchema as ArraySchema;
+            return ItemSchema.CanRead(that.ItemSchema);
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="object" />, is equal to this instance.
+        /// Function to compare equality of two array schemas
         /// </summary>
-        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <param name="obj">other array schema</param>
+        /// <returns>true two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == null || !(obj is ArraySchema))
-            {
-                return false;
-            }
-
             if (this == obj)
-            {
                 return true;
-            }
 
-            return ItemSchema.Equals(((ArraySchema)obj).ItemSchema) && areEqual(((ArraySchema)obj).Props, this.Props);
+            if (obj != null && obj is ArraySchema)
+            {
+                ArraySchema that = obj as ArraySchema;
+                if (ItemSchema.Equals(that.ItemSchema))
+                    return areEqual(that.Props, this.Props);
+            }
+            return false;
         }
 
         /// <summary>
-        /// Returns a hash code for this instance.
+        /// Hashcode function
         /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return 29 * ItemSchema.GetHashCode() + getHashCode(Props);
