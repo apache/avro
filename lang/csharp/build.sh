@@ -76,6 +76,35 @@ do
       cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
       ;;
 
+    release)
+      # "dist" step must be executed before this step
+
+      # If not specified use default location
+      [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
+
+      # Set NUGET_KEY beofre executing script. E.g. `NUGET_KEY=YOUR_KEY ./build.sh release`
+      [ "$NUGET_KEY" ] || (echo "NUGET_KEY is not set"; exit 1)
+
+      PACKAGES_TO_PUSH=("./build/main/Apache.Avro.${VERSION}.nupkg")
+      PACKAGES_TO_PUSH+=("./build/codegen/Apache.Avro.Tools.${VERSION}.nupkg")
+      PACKAGES_TO_PUSH+=("./build/codec/Avro.File.Snappy/Apache.Avro.File.Snappy.${VERSION}.nupkg")
+      PACKAGES_TO_PUSH+=("./build/codec/Avro.File.BZip2/Apache.Avro.File.BZip2.${VERSION}.nupkg")
+      PACKAGES_TO_PUSH+=("./build/codec/Avro.File.XZ/Apache.Avro.File.XZ.${VERSION}.nupkg")
+      PACKAGES_TO_PUSH+=("./build/codec/Avro.File.Zstandard/Apache.Avro.File.Zstandard.${VERSION}.nupkg")
+
+      # Check if all packages exist
+      for package in "${PACKAGES_TO_PUSH[@]}"
+      do
+        [ -f "$package" ] || (echo "Package $package does not exist. Run './build.sh dist' first."; exit 1)
+      done
+
+      # Push packages to nuget.org
+      for package in "${PACKAGES_TO_PUSH[@]}"
+      do
+        dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
+      done
+      ;;
+
     interop-data-generate)
       dotnet run --project src/apache/test/Avro.test.csproj --framework net6.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
