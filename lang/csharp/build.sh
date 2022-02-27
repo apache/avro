@@ -23,6 +23,9 @@ cd `dirname "$0"`                  # connect to root
 ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
+CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
+SUPPORTED_SDKS="3.1 5.0 6.0"
+
 for target in "$@"
 do
 
@@ -57,7 +60,7 @@ do
       mkdir -p build/main/
       cp -R src/apache/main/bin/Release/* build/main/
       # add codec binaries to the tarball
-      for codec in Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard
+      for codec in $CSHARP_CODEC_LIBS
       do
         mkdir -p build/codec/$codec/
         cp -R src/apache/codec/$codec/bin/Release/* build/codec/$codec/
@@ -93,6 +96,25 @@ do
       fi
       ;;
 
+    verify-release)
+      for sdk_ver in $SUPPORTED_SDKS
+      do
+        docker run -it --rm mcr.microsoft.com/dotnet/sdk:$sdk_ver /bin/bash -ce "\
+          mkdir test-project && \
+          cd test-project && \
+          dotnet new console && \
+          dotnet add package Apache.Avro --version $VERSION && \
+          for codec in $CSHARP_CODEC_LIBS; do \
+            dotnet add package Apache.\$codec --version $VERSION; \
+          done && \
+          dotnet build && \
+          dotnet tool install --global Apache.Avro.Tools --version $VERSION && \
+          export PATH=\$PATH:/root/.dotnet/tools && \
+          avrogen --help"
+      done
+      echo "Verified"
+      ;;
+
     interop-data-generate)
       dotnet run --project src/apache/test/Avro.test.csproj --framework net6.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
@@ -108,7 +130,7 @@ do
       ;;
 
     *)
-      echo "Usage: $0 {lint|test|clean|dist|release|perf|interop-data-generate|interop-data-test}"
+      echo "Usage: $0 {lint|test|clean|dist|release|verify-release|perf|interop-data-generate|interop-data-test}"
       exit 1
 
   esac
