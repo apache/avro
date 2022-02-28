@@ -39,6 +39,9 @@ change_java_version() {
 
 # ===========================================================================
 
+# This might not have been sourced if the entrypoint is not bash
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+
 set -xe
 cd "${0%/*}"
 
@@ -174,7 +177,11 @@ do
       cp "lang/perl/Avro-$VERSION.tar.gz" dist/perl/
 
       # build docs
-      (cd doc; ant)
+      cp -r doc/ build/staging-web/
+      find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
+      read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+      # If it was a SNAPSHOT, it was lowercased during the build.
+      cp -R build/staging-web/public/docs/next/* "build/$DOC_DIR/"
       # add LICENSE and NOTICE for docs
       mkdir -p "build/$DOC_DIR"
       cp doc/LICENSE "build/$DOC_DIR"
@@ -206,7 +213,7 @@ do
 
     clean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
@@ -234,7 +241,7 @@ do
 
     veryclean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
