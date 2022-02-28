@@ -26,6 +26,18 @@ VERSION=`cat $ROOT/share/VERSION.txt`
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
 SUPPORTED_SDKS="3.1 5.0 6.0"
 
+function ask
+{
+  while true; do
+    read -p "$1 ([y]es/[n]o/([a]bort)? " answer
+    case $answer in
+        [Yy]*) break;;
+        [Nn]*) return 1;;
+        [Aa]*) exit 1;;
+    esac
+  done
+}
+
 for target in "$@"
 do
 
@@ -99,6 +111,7 @@ do
     verify-release)
       for sdk_ver in $SUPPORTED_SDKS
       do
+        ask "Verify .NET SDK $sdk_ver" && \
         docker run -it --rm mcr.microsoft.com/dotnet/sdk:$sdk_ver /bin/bash -ce "\
           mkdir test-project && \
           cd test-project && \
