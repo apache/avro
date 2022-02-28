@@ -174,48 +174,62 @@ namespace Avro
             if (jtok is JArray) // union schema with no 'type' property or union type for a record field
                 return UnionSchema.NewInstance(jtok as JArray, null, names, encspace);
 
-            if (jtok is JObject) // JSON object with open/close parenthesis, it must have a 'type' property
+            if (jtok is JObject jObject) // JSON object with open/close parenthesis, it must have a 'type' property
             {
-                JObject jo = jtok as JObject;
-
-                JToken jtype = jo["type"];
-                if (null == jtype)
+                JToken jtype = jObject["type"];
+                if (jtype == null)
+                {
                     throw new SchemaParseException($"Property type is required at '{jtok.Path}'");
+                }
 
-                var props = Schema.GetProperties(jtok);
+                PropertyMap props = Schema.GetProperties(jtok);
 
                 if (jtype.Type == JTokenType.String)
                 {
                     string type = (string)jtype;
 
                     if (type.Equals("array", StringComparison.Ordinal))
-                        return ArraySchema.NewInstance(jtok, props, names, encspace);
-                    if (type.Equals("map", StringComparison.Ordinal))
-                        return MapSchema.NewInstance(jtok, props, names, encspace);
-                    if (null != jo["logicalType"]) // logical type based on a primitive
-                        return LogicalSchema.NewInstance(jtok, props, names, encspace);
-
-                    Schema schema = PrimitiveSchema.NewInstance((string)type, props);
-                    if (null != schema) return schema;
-
-                    return NamedSchema.NewInstance(jo, props, names, encspace);
-                }
-                else if (jtype.Type == JTokenType.Array)
-                    return UnionSchema.NewInstance(jtype as JArray, props, names, encspace);
-                else if (jtype.Type == JTokenType.Object)
-                {
-                    if (null != jo["logicalType"]) // logical type based on a complex type
                     {
-                        return LogicalSchema.NewInstance(jtok, props, names, encspace);
+                        return new ArraySchema(jtok, props, names, encspace);
                     }
 
-                    var schema = ParseJson(jtype, names, encspace); // primitive schemas are allowed to have additional metadata properties
+                    if (type.Equals("map", StringComparison.Ordinal))
+                    {
+                        return new MapSchema(jtok, props, names, encspace);
+                    }
+
+                    if (jObject["logicalType"] != null) // logical type based on a primitive
+                    {
+                        return new LogicalSchema(jtok, props, names, encspace);
+                    }
+
+                    Schema schema = PrimitiveSchema.NewInstance((string)type, props);
+                    if (schema != null)
+                    {
+                        return schema;
+                    }
+
+                    return NamedSchema.NewInstance(jObject, props, names, encspace);
+                }
+                else if (jtype.Type == JTokenType.Array)
+                {
+                    return UnionSchema.NewInstance(jtype as JArray, props, names, encspace);
+                }
+                else if (jtype.Type == JTokenType.Object)
+                {
+                    if (jObject["logicalType"] != null) // logical type based on a complex type
+                    {
+                        return new LogicalSchema(jtok, props, names, encspace);
+                    }
+
+                    Schema schema = ParseJson(jtype, names, encspace); // primitive schemas are allowed to have additional metadata properties
                     if (schema is PrimitiveSchema)
                     {
                         return schema;
                     }
                 }
             }
+
             throw new AvroTypeException($"Invalid JSON for schema: {jtok} at '{jtok.Path}'");
         }
 
@@ -379,6 +393,74 @@ namespace Avro
         protected static int getHashCode(object obj)
         {
             return obj == null ? 0 : obj.GetHashCode();
+        }
+
+        /// <summary>
+        /// Parses the Schema.Type from a string.
+        /// </summary>
+        /// <param name="type">The type to convert.</param>
+        /// <param name="removeQuotes">if set to <c>true</c> [remove quotes].</param>
+        /// <returns>A Schema.Type unless it could not parse then null</returns>
+        /// <remarks>
+        /// usage ParseType("string") returns Schema.Type.String
+        /// </remarks>
+        public static Schema.Type? ParseType(string type, bool removeQuotes = false)
+        {
+            string newValue = removeQuotes ? type.Trim('"') : type;
+
+            switch (newValue)
+            {
+                case "null":
+                    return Schema.Type.Null;
+
+                case "boolean":
+                    return Schema.Type.Boolean;
+
+                case "int":
+                    return Schema.Type.Int;
+
+                case "long":
+                    return Schema.Type.Long;
+
+                case "float":
+                    return Schema.Type.Float;
+
+                case "double":
+                    return Schema.Type.Double;
+
+                case "bytes":
+                    return Schema.Type.Bytes;
+
+                case "string":
+                    return Schema.Type.String;
+
+                case "record":
+                    return Schema.Type.Record;
+
+                case "enumeration":
+                    return Schema.Type.Enumeration;
+
+                case "array":
+                    return Schema.Type.Array;
+
+                case "map":
+                    return Schema.Type.Map;
+
+                case "union":
+                    return Schema.Type.Union;
+
+                case "fixed":
+                    return Schema.Type.Fixed;
+
+                case "error":
+                    return Schema.Type.Error;
+
+                case "logical":
+                    return Schema.Type.Logical;
+
+                default:
+                    return null;
+            }
         }
     }
 }
