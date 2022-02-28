@@ -28,6 +28,8 @@ SUPPORTED_SDKS="3.1 5.0 6.0"
 
 function ask
 {
+  [ "$DISABLE_ASK" == "1" ] && return 0
+
   while true; do
     read -p "$1 ([y]es/[n]o/([a]bort)? " answer
     case $answer in
