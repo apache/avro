@@ -1,4 +1,3 @@
-
 ---
 title: "Specification"
 linkTitle: "Specification"
@@ -251,7 +250,9 @@ The fullname of a record, enum or fixed definition is determined by the required
 
 References to previously defined names are as in the latter two cases above: if they contain a dot they are a fullname, if they do not contain a dot, the namespace is the namespace of the enclosing definition.
 
-Primitive type names have no namespace and their names may not be defined in any namespace.
+Primitive type names (`null`, `boolean`, `int`, `long`, `float`, `double`, `bytes`, `string`) have no namespace and their names may not be defined in any namespace.
+
+Complex types (`record`, `enum`, `array`, `map`, `fixed`) have no namespace, but their names (as well as `union`) are permitted to be reused as type names.  This can be confusing to the human reader, but is always unambiguous for binary serialization.  Due to the limitations of JSON encoding, it is a best practice to use a namespace with these names.
 
 A schema or protocol may not contain multiple definitions of a fullname. Further, a name must be defined before it is used ("before" in the depth-first, left-to-right traversal of the JSON parse tree, where the types attribute of a protocol is always deemed to come "before" the messages attribute.)
 
