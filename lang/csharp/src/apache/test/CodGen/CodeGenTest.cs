@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using NUnit.Framework;
@@ -211,6 +212,65 @@ namespace Avro.Test
             {
                 Protocol protocol = null;
                 Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+
+            // No mapping
+            [TestCase(null, null, "my.avro.ns")]
+            // Self mapping
+            [TestCase("my.avro.ns", "my.avro.ns", "my.avro.ns")]
+            // Full mappings
+            [TestCase("my.avro.ns", "my", "my")]
+            [TestCase("my.avro.ns", "my.csharp.ns", "my.csharp.ns")]
+            [TestCase("my.avro.ns", "my.whatever.verylong.complicated.ns", "my.whatever.verylong.complicated.ns")]
+            // Partial mappings
+            [TestCase("my.avro", "your.csharp", "your.csharp.ns")]
+            [TestCase("my.avro", "your.whatever.verylong.complicated.csharp", "your.whatever.verylong.complicated.csharp.ns")]
+            [TestCase("my", "your", "your.avro.ns")]
+            [TestCase("my", "your.whatever.verylong.complicated", "your.whatever.verylong.complicated.avro.ns")]
+            public void TestNamespaceMapping(string mapNamespaceFrom, string mapNamespaceTo, string expectedFullNamespace)
+            {
+                string schemaText = @"
+{
+  ""type"" : ""record"",
+  ""name"" : ""TestModel"",
+  ""namespace"" : ""my.avro.ns"",
+  ""fields"" : [ {
+    ""name"" : ""eventType"",
+    ""type"" : {
+      ""type"" : ""enum"",
+      ""name"" : ""EventType"",
+      ""symbols"" : [ ""CREATE"", ""UPDATE"", ""DELETE"" ]
+    }
+  }]
+}";
+
+                CodeGen codegen = new CodeGen();
+
+                if (mapNamespaceFrom == null)
+                {
+                    // No mapping
+                    codegen.AddSchema(schemaText);
+                }
+                else
+                {
+                    // Use mapping
+                    codegen.AddSchema(schemaText, new Dictionary<string, string>() { { mapNamespaceFrom, mapNamespaceTo } });
+                }
+
+                // Check top level namespace
+                Assert.AreEqual(1, codegen.Schemas.Count);
+                RecordSchema schema = (RecordSchema)codegen.Schemas[0];
+                Assert.AreEqual(expectedFullNamespace, schema.Namespace);
+                Assert.AreEqual($"TestModel", schema.Name);
+                Assert.AreEqual($"{expectedFullNamespace}.TestModel", schema.Fullname);
+
+                // Check namespace for the field
+                Assert.AreEqual(1, schema.Fields.Count);
+                Field field = schema.Fields[0];
+                EnumSchema fieldSchema = (EnumSchema)field.Schema;
+                Assert.AreEqual(expectedFullNamespace, fieldSchema.Namespace);
+                Assert.AreEqual($"EventType", fieldSchema.Name);
+                Assert.AreEqual($"{expectedFullNamespace}.EventType", fieldSchema.Fullname);
             }
         }
     }
