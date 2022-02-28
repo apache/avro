@@ -321,9 +321,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (logicalType != null) {
       Conversion<?> conversion;
       if (type instanceof Class<?>) {
-        conversion = getData().getConversionByClass((Class<?>) type);
+        conversion = getData().getConversionByClass((Class<?>) type, logicalType);
       } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class<?>) {
-        conversion = getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType());
+        conversion = getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType(), logicalType);
       } else {
         // fallback to get conversion by logical type
         conversion = getData().getConversionFor(logicalType);
