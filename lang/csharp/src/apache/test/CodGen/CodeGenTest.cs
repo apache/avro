@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using NUnit.Framework;
