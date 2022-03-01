@@ -226,6 +226,7 @@ namespace Avro.Test.AvroGen
 
             // Add project reference to Avro library
             result = ExecuteCommand("dotnet", "add reference ../../../../../main/Avro.main.csproj", outDir);
+            Assert.AreEqual(0, result.ExitCode);
 
             // Build project
             result = ExecuteCommand("dotnet", "build", outDir);
