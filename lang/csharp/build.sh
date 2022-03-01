@@ -104,7 +104,6 @@ do
         # Note: use loop instead of -exec or xargs to stop at first failure
         for package in $(find ./build/ -name '*.nupkg' -type f)
         do
-          echo $package
           ask "Push $package to nuget.org" && echo dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
         done
       fi
