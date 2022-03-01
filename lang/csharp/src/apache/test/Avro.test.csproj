@@ -43,6 +43,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
+    <ProjectReference Include="..\codegen\Avro.codegen.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,13 +17,13 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGen
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -33,7 +33,7 @@ namespace Avro
             }
 
             // Print usage if help requested
-            if (args[0] == "-h" || args[0] == "--help")
+            if (args.Contains("-h") || args.Contains("--help"))
             {
                 Usage();
                 return 0;

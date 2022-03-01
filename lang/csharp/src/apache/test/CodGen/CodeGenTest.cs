@@ -23,7 +23,7 @@ using Microsoft.CSharp;
 using NUnit.Framework;
 using Avro.Specific;
 
-namespace Avro.Test
+namespace Avro.Test.CodeGen
 {
     [TestFixture]
 
@@ -33,7 +33,7 @@ namespace Avro.Test
         [Test]
         public void TestGetNullableTypeException()
         {
-            Assert.Throws<ArgumentNullException>(() => CodeGen.GetNullableType(null));
+            Assert.Throws<ArgumentNullException>(() => Avro.CodeGen.GetNullableType(null));
         }
 
 #if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
@@ -161,7 +161,7 @@ namespace Avro.Test
         {
             Schema schema = Schema.Parse(str);
 
-            var codegen = new CodeGen();
+            var codegen = new Avro.CodeGen();
             codegen.AddSchema(schema);
 
             if (avroNamespace != null && csharpNamespace != null)
@@ -178,7 +178,7 @@ namespace Avro.Test
 
         private static CompilerResults GenerateSchema(Schema schema)
         {
-            var codegen = new CodeGen();
+            var codegen = new Avro.CodeGen();
             codegen.AddSchema(schema);
             return GenerateAssembly(codegen);
         }
@@ -204,7 +204,7 @@ namespace Avro.Test
         }
 #endif
         [TestFixture]
-        public class CodeGenTestClass : CodeGen
+        public class CodeGenTestClass : Avro.CodeGen
         {
             [Test]
             public void TestGenerateNamesException()
@@ -243,7 +243,7 @@ namespace Avro.Test
   }]
 }";
 
-                CodeGen codegen = new CodeGen();
+                Avro.CodeGen codegen = new Avro.CodeGen();
 
                 if (mapNamespaceFrom == null)
                 {
