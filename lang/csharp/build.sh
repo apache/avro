@@ -29,13 +29,12 @@ SUPPORTED_SDKS="3.1 5.0 6.0"
 function ask
 {
   [ "$DISABLE_ASK" == "1" ] && return 0
-
   while true; do
-    read -p "$1 ([y]es/[n]o/([a]bort)? " answer
+    read -r -n 1 -p "$1 ([y]es/[n]o/([a]bort)? " answer
     case $answer in
-        [Yy]*) break;;
-        [Nn]*) return 1;;
-        [Aa]*) exit 1;;
+        [Yy]) return 0; break;;
+        [Nn]) echo "Skip..."; return 1; break;;
+        [Aa]) echo "ABORT..."; exit 1;;
     esac
   done
 }
@@ -103,9 +102,10 @@ do
 
         # Push packages to nuget.org
         # Note: use loop instead of -exec or xargs to stop at first failure
-        find ./build/ -name '*.nupkg' -type f -print0 | while IFS= read -r -d '' package
+        for package in $(find ./build/ -name '*.nupkg' -type f)
         do
-          dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
+          echo $package
+          ask "Push $package to nuget.org" && echo dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
         done
       fi
       ;;
