@@ -17,8 +17,11 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using System.Text;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Avro.Test.AvroGen
 {
@@ -26,14 +29,64 @@ namespace Avro.Test.AvroGen
 
     class AvroGenTest
     {
-        class AvroGenResult
+        enum GenerateType
+        {
+            Schema,
+            Protocol
+        };
+
+        class ExecuteResult
         {
             public int ExitCode { get; set; }
             public string[] StdOut { get; set; }
             public string[] StdErr { get; set; }
         }
 
-        private AvroGenResult RunAvroGen(params string[] args)
+        private ExecuteResult ExecuteCommand(string cmd, string args, string workingDirectory)
+        {
+            ExecuteResult result = new ExecuteResult();
+            List<string> stdOut = new List<string>();
+            List<string> stdErr = new List<string>();
+
+            Process process = Process.Start(new ProcessStartInfo(cmd, args)
+            {
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    stdOut.Add(e.Data);
+                }
+            };
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    stdErr.Add(e.Data);
+                }
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            process.WaitForExit();
+
+            result.ExitCode = process.ExitCode;
+            result.StdOut = stdOut.ToArray();
+            result.StdErr = stdErr.ToArray();
+
+            process.Close();
+
+            return result;
+        }
+
+        private ExecuteResult RunAvroGen(IEnumerable<string> args)
         {
             // Save stdout and stderr
             TextWriter conOut = Console.Out;
@@ -41,7 +94,7 @@ namespace Avro.Test.AvroGen
 
             try
             {
-                AvroGenResult result = new AvroGenResult();
+                ExecuteResult result = new ExecuteResult();
                 StringBuilder strBuilderOut = new StringBuilder();
                 StringBuilder strBuilderErr = new StringBuilder();
 
@@ -55,7 +108,7 @@ namespace Avro.Test.AvroGen
                     Console.SetOut(writerOut);
                     Console.SetError(writerErr);
 
-                    result.ExitCode = Avro.AvroGen.Main(args);
+                    result.ExitCode = Avro.AvroGen.Main(args.ToArray());
 
                     writerOut.Flush();
                     writerErr.Flush();
@@ -77,7 +130,7 @@ namespace Avro.Test.AvroGen
         [Test]
         public void NoArgs()
         {
-            AvroGenResult result = RunAvroGen(Array.Empty<string>());
+            ExecuteResult result = RunAvroGen(Array.Empty<string>());
             Assert.AreEqual(1, result.ExitCode);
             Assert.AreNotEqual(0, result.StdOut.Length);
             Assert.AreEqual(0, result.StdErr.Length);
@@ -90,7 +143,7 @@ namespace Avro.Test.AvroGen
         [TestCase("-p", "whatever.avsc", ".", "-h")]
         public void Help(params string[] args)
         {
-            AvroGenResult result = RunAvroGen(args);
+            ExecuteResult result = RunAvroGen(args);
 
             Assert.AreEqual(0, result.ExitCode);
             Assert.AreNotEqual(0, result.StdOut.Length);
@@ -104,15 +157,83 @@ namespace Avro.Test.AvroGen
         [TestCase(".")]
         public void MissingArgs(params string[] args)
         {
-            AvroGenResult result = RunAvroGen(args);
+            ExecuteResult result = RunAvroGen(args);
             Assert.AreEqual(1, result.ExitCode);
             Assert.AreNotEqual(0, result.StdOut.Length);
             Assert.AreNotEqual(0, result.StdErr.Length);
         }
 
-        // TODO:
-        //   - Tests to generate actual source code from schema files
-        //   - Compile the generated code
-        //   - Execute the generated code and check for expected behaviour (?)
+
+        [TestCase(null, null, TestName = "GenerateSchemas")] // No namespace mapping
+        [TestCase("org.apache.avro.codegentest", "my.csharp.codegentest", TestName = "GenerateSchemasWithMapping")] // Map namespace
+        [TestCase("org.apache.avro.codegentest", "my.csharp.event.return.int.codegentest", TestName = "GenerateSchemasWithReservedMapping")] // Map namespace to name with reserved words
+        public void GenerateSchemas(string namespaceMappingFrom, string namespaceMappingTo)
+        {
+            List<string> schemFiles = new List<string>()
+            {
+                "resources/avro/nested_logical_types_array.avsc",
+                "resources/avro/nested_logical_types_map.avsc",
+                "resources/avro/nested_logical_types_record.avsc",
+                "resources/avro/nested_logical_types_union.avsc",
+                "resources/avro/nested_records_different_namespace.avsc",
+                "resources/avro/nullable_logical_types.avsc",
+                "resources/avro/nullable_logical_types_array.avsc",
+                "resources/avro/string_logical_type.avsc"
+            };
+
+            string outDir = $"./generated_{TestContext.CurrentContext.Test.Name}";
+            ExecuteResult result;
+
+            // Make sure directory exists
+            Directory.CreateDirectory(outDir);
+
+            // Run avrogen on scema files
+            foreach (string schemaFile in schemFiles)
+            {
+                List<string> avroGenArgs = new List<string>()
+                {
+                    "-s",
+                    schemaFile,
+                    outDir
+                };
+
+                if (namespaceMappingFrom != null)
+                {
+                    avroGenArgs.Add("--namespace");
+                    avroGenArgs.Add($"{namespaceMappingFrom}:{namespaceMappingTo}");
+                }
+
+                result = RunAvroGen(avroGenArgs);
+
+                // Verify result
+                Assert.AreEqual(0, result.ExitCode);
+                Assert.AreEqual(0, result.StdOut.Length);
+                Assert.AreEqual(0, result.StdErr.Length);
+            }
+
+            // Determine the current framework
+#if NETCOREAPP3_1
+            string framework = "netcoreapp3.1";
+#elif NET5_0
+            string framework = "net5.0";
+#elif NET6_0
+            string framework = "net6.0";
+#endif
+
+            // Create new console project
+            result = ExecuteCommand("dotnet", $"new console --force -f {framework}", outDir);
+            Assert.AreEqual(0, result.ExitCode);
+
+            // Add project reference to Avro library
+            result = ExecuteCommand("dotnet", "add reference ../../../../../main/Avro.main.csproj", outDir);
+
+            // Build project
+            result = ExecuteCommand("dotnet", "build", outDir);
+            Assert.AreEqual(0, result.ExitCode);
+
+            // Run project
+            result = ExecuteCommand("dotnet", "run --no-build", outDir);
+            Assert.AreEqual(0, result.ExitCode);
+        }
     }
 }
