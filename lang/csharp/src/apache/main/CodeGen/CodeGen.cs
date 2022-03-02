@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.CSharp;
 
 namespace Avro
@@ -89,23 +88,10 @@ namespace Avro
         /// <summary>
         /// Adds a protocol object to generate code for.
         /// </summary>
-        /// <param name="protocol">The protocol object.</param>
+        /// <param name="protocol">protocol object.</param>
         public virtual void AddProtocol(Protocol protocol)
         {
             Protocols.Add(protocol);
-        }
-
-        /// <summary>
-        /// Adds a protocol object to generate code for.
-        /// </summary>
-        /// <param name="text">protocol text.</param>
-        /// <param name="namespaceMapping">namespace mapping key/value pairs.</param>
-        public virtual void AddProtocol(string text, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
-        {
-            if (namespaceMapping != null)
-                text = ReplaceMappedNamespaces(text, namespaceMapping);
-
-            Protocols.Add(Protocol.Parse(text));
         }
 
         /// <summary>
@@ -115,19 +101,6 @@ namespace Avro
         public virtual void AddSchema(Schema schema)
         {
             Schemas.Add(schema);
-        }
-
-        /// <summary>
-        /// Adds a schema object to generate code for.
-        /// </summary>
-        /// <param name="text">schema text.</param>
-        /// <param name="namespaceMapping">namespace mapping key/value pairs</param>
-        public virtual void AddSchema(string text, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
-        {
-            if (namespaceMapping != null)
-                text = ReplaceMappedNamespaces(text, namespaceMapping);
-
-            Schemas.Add(Schema.Parse(text));
         }
 
         /// <summary>
@@ -1168,32 +1141,6 @@ namespace Avro
                     }
                 }
             }
-        }
-
-        private string ReplaceMappedNamespaces(string text, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
-        {
-            // Replace namespace in "namespace" definitions: 
-            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
-            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
-            // Note: It keeps the original whitespaces
-            return Regex.Replace(text, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
-            {
-                string ns = m.Groups[3].Value;
-                foreach (var mapping in namespaceMapping)
-                {
-                    if (mapping.Key == ns)
-                    {
-                        ns = mapping.Value;
-                        break;
-                    }
-                    else
-                    if (ns.StartsWith($"{mapping.Key}."))
-                    {
-                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
-                    }
-                }
-                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
-            });
         }
     }
 }

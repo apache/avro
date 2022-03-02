@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Avro
 {
@@ -149,8 +150,13 @@ namespace Avro
             {
                 string text = System.IO.File.ReadAllText(infile);
 
+                if (namespaceMapping != null)
+                    text = ReplaceMappedNamespaces(text, namespaceMapping);
+
+                Protocol protocol = Protocol.Parse(text);
+
                 CodeGen codegen = new CodeGen();
-                codegen.AddProtocol(text, namespaceMapping);
+                codegen.AddProtocol(protocol);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -170,10 +176,13 @@ namespace Avro
             {
                 string text = System.IO.File.ReadAllText(infile);
 
+                if (namespaceMapping != null)
+                    text = ReplaceMappedNamespaces(text, namespaceMapping);
+
+                Schema schema = Schema.Parse(text);
 
                 CodeGen codegen = new CodeGen();
-
-                codegen.AddSchema(text, namespaceMapping);
+                codegen.AddSchema(schema);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -185,6 +194,35 @@ namespace Avro
             }
 
             return 0;
+        }
+
+        public static string ReplaceMappedNamespaces(string ns, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (namespaceMapping == null)
+                return ns;
+
+            // Replace namespace in "namespace" definitions: 
+            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
+            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
+            // Note: It keeps the original whitespaces
+            return Regex.Replace(ns, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
+            {
+                string ns = m.Groups[3].Value;
+                foreach (var mapping in namespaceMapping)
+                {
+                    if (mapping.Key == ns)
+                    {
+                        ns = mapping.Value;
+                        break;
+                    }
+                    else
+                    if (ns.StartsWith($"{mapping.Key}."))
+                    {
+                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
+                    }
+                }
+                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
+            });
         }
     }
 }

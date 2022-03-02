@@ -765,5 +765,47 @@ namespace Avro.Test.AvroGen
                     Assert.AreEqual(stype, field.GetType());
             }
         }
+
+        [Test]
+        public void TestGetNullableTypeException()
+        {
+            Assert.Throws<ArgumentNullException>(() => Avro.CodeGen.GetNullableType(null));
+        }
+
+        // No mapping
+        [TestCase("org.apache.avro.codegentest.testdata", null, null, "org.apache.avro.codegentest.testdata")]
+        // Self mapping
+        [TestCase("org.apache.avro.codegentest.testdata", "org.apache.avro.codegentest.testdata", "org.apache.avro.codegentest.testdata", "org.apache.avro.codegentest.testdata")]
+        // Full mappings
+        [TestCase("org.apache.avro.codegentest.testdata", "org.apache.avro.codegentest.testdata", "my", "my")]
+        [TestCase("org.apache.avro.codegentest.testdata", "org.apache.avro.codegentest.testdata", "my.apache.csharp.codegentest.testdata", "my.apache.csharp.codegentest.testdata")]
+        // Partial mappings
+        [TestCase("org.apache.avro.codegentest.testdata", "org.apache.avro", "my.apache.csharp", "my.apache.csharp.codegentest.testdata")]
+        [TestCase("org.apache.avro.codegentest.testdata", "org", "my", "my.apache.avro.codegentest.testdata")]
+        public void TestNamespaceMapping(string ns, string mapNamespaceFrom, string mapNamespaceTo, string expectedNamespace)
+        {
+            Dictionary<string, string> namespaceMapping;
+
+            if (mapNamespaceFrom == null)
+            {
+                namespaceMapping = null;
+            }
+            else
+            {
+                namespaceMapping = new Dictionary<string, string>() { { mapNamespaceFrom, mapNamespaceTo } };
+
+            }
+
+            string schemaText = Avro.AvroGen.ReplaceMappedNamespaces(_nullableLogicalTypes, namespaceMapping);
+
+            var codegen = new CodeGen();
+            codegen.AddSchema(Schema.Parse(schemaText));
+
+            Assert.AreEqual(1, codegen.Schemas.Count);
+            RecordSchema schema = (RecordSchema)codegen.Schemas[0];
+            Assert.AreEqual(expectedNamespace, schema.Namespace);
+            Assert.AreEqual($"NullableLogicalTypes", schema.Name);
+            Assert.AreEqual($"{expectedNamespace}.NullableLogicalTypes", schema.Fullname);
+        }
     }
 }
