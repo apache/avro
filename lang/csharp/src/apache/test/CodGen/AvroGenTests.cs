@@ -18,10 +18,14 @@
 using System;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using NUnit.Framework;
+using Avro.Specific;
 
 namespace Avro.Test.AvroGen
 {
@@ -40,50 +44,6 @@ namespace Avro.Test.AvroGen
             public int ExitCode { get; set; }
             public string[] StdOut { get; set; }
             public string[] StdErr { get; set; }
-        }
-
-        private ExecuteResult ExecuteCommand(string cmd, string args, string workingDirectory)
-        {
-            ExecuteResult result = new ExecuteResult();
-            List<string> stdOut = new List<string>();
-            List<string> stdErr = new List<string>();
-
-            Process process = Process.Start(new ProcessStartInfo(cmd, args)
-            {
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-
-            process.OutputDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                {
-                    stdOut.Add(e.Data);
-                }
-            };
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                {
-                    stdErr.Add(e.Data);
-                }
-            };
-
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            process.WaitForExit();
-
-            result.ExitCode = process.ExitCode;
-            result.StdOut = stdOut.ToArray();
-            result.StdErr = stdErr.ToArray();
-
-            process.Close();
-
-            return result;
         }
 
         private ExecuteResult RunAvroGen(IEnumerable<string> args)
@@ -127,6 +87,87 @@ namespace Avro.Test.AvroGen
             }
         }
 
+        private void CompileAvroFiles(IEnumerable<string> avroFiles, string outputDir, GenerateType genType = GenerateType.Schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            // Make sure directory exists
+            Directory.CreateDirectory(outputDir);
+
+            // Run avrogen on scema files
+            foreach (string schemaFile in avroFiles)
+            {
+                List<string> avroGenArgs = new List<string>()
+                {
+                    "-s",
+                    schemaFile,
+                    outputDir
+                };
+
+                if (namespaceMapping != null)
+                {
+                    foreach (KeyValuePair<string, string> kv in namespaceMapping)
+                    {
+                        avroGenArgs.Add("--namespace");
+                        avroGenArgs.Add($"{kv.Key}:{kv.Value}");
+                    }
+                }
+
+                ExecuteResult result = RunAvroGen(avroGenArgs);
+
+                // Verify result
+                Assert.AreEqual(0, result.ExitCode);
+                Assert.AreEqual(0, result.StdOut.Length);
+                Assert.AreEqual(0, result.StdErr.Length);
+            }
+        }
+
+        private Assembly CompileCharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName, bool loadAssembly = true)
+        {
+            // Base path to assemblies .NET assemblies
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+
+            using (var compilerStream = new MemoryStream())
+            {
+                // Create compiler
+                CSharpCompilation compilation = CSharpCompilation
+                    .Create(assemblyName)
+                    .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                    .AddReferences(
+                        MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                        MetadataReference.CreateFromFile(typeof(Schema).Assembly.Location),
+                        MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
+                        MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "netstandard.dll"))
+                    )
+                    .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
+                    {
+                        string sourceText = System.IO.File.ReadAllText(sourceFile);
+                        return CSharpSyntaxTree.ParseText(sourceText);
+                    }));
+
+                // Compile
+                EmitResult compilationResult = compilation.Emit(compilerStream);
+                if (!compilationResult.Success)
+                {
+                    foreach (Diagnostic diagnostic in compilationResult.Diagnostics)
+                    {
+                        if (diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error)
+                        {
+                            TestContext.WriteLine($"{diagnostic.Id} - {diagnostic.GetMessage()} - {diagnostic.Location}");
+                        }
+                    }
+                    Assert.IsTrue(compilationResult.Success, "Compilation failed");
+                }
+
+                if (!loadAssembly)
+                {
+                    return null;
+                }
+
+                // Load assembly
+                compilerStream.Seek(0, SeekOrigin.Begin);
+                return Assembly.Load(compilerStream.ToArray());
+            }
+        }
+
         [Test]
         public void NoArgs()
         {
@@ -163,78 +204,132 @@ namespace Avro.Test.AvroGen
             Assert.AreNotEqual(0, result.StdErr.Length);
         }
 
-
-        [TestCase(null, null, TestName = "GenerateSchemas")] // No namespace mapping
-        [TestCase("org.apache.avro.codegentest", "my.csharp.codegentest", TestName = "GenerateSchemasWithMapping")] // Map namespace
-        [TestCase("org.apache.avro.codegentest", "my.csharp.event.return.int.codegentest", TestName = "GenerateSchemasWithReservedMapping")] // Map namespace to name with reserved words
-        public void GenerateSchemas(string namespaceMappingFrom, string namespaceMappingTo)
+        private void GenerateSchemaAssembly(string assemblyName, string schemaFileName, IEnumerable<string> typeNamesToCheck, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
-            List<string> schemFiles = new List<string>()
-            {
-                "resources/avro/nested_logical_types_array.avsc",
-                "resources/avro/nested_logical_types_map.avsc",
-                "resources/avro/nested_logical_types_record.avsc",
-                "resources/avro/nested_logical_types_union.avsc",
-                "resources/avro/nested_records_different_namespace.avsc",
-                "resources/avro/nullable_logical_types.avsc",
-                "resources/avro/nullable_logical_types_array.avsc",
-                "resources/avro/string_logical_type.avsc"
-            };
-
-            string outDir = $"./generated_{TestContext.CurrentContext.Test.Name}";
-            ExecuteResult result;
+            string outputDir = Path.Combine($"generated", assemblyName);
 
             // Make sure directory exists
-            Directory.CreateDirectory(outDir);
+            Directory.CreateDirectory(outputDir);
 
-            // Run avrogen on scema files
-            foreach (string schemaFile in schemFiles)
+            // Compile avro
+            CompileAvroFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
+
+            // Compile into netstandard library and load assembly
+            Assembly assembly = CompileCharpFilesIntoLibrary(
+                new DirectoryInfo(outputDir)
+                    .EnumerateFiles("*.cs", SearchOption.AllDirectories)
+                    .Select(fi => fi.FullName),
+                assemblyName);
+
+            // Check if types available in compiled assembly
+            foreach (string typeName in typeNamesToCheck)
             {
-                List<string> avroGenArgs = new List<string>()
-                {
-                    "-s",
-                    schemaFile,
-                    outDir
-                };
+                Type type = assembly.GetType(typeName);
 
-                if (namespaceMappingFrom != null)
-                {
-                    avroGenArgs.Add("--namespace");
-                    avroGenArgs.Add($"{namespaceMappingFrom}:{namespaceMappingTo}");
-                }
+                Assert.IsNotNull(type);
 
-                result = RunAvroGen(avroGenArgs);
-
-                // Verify result
-                Assert.AreEqual(0, result.ExitCode);
-                Assert.AreEqual(0, result.StdOut.Length);
-                Assert.AreEqual(0, result.StdErr.Length);
+                // Instantiate and sanity check if member can be called
+                ISpecificRecord obj = (ISpecificRecord)Activator.CreateInstance(type);
+                Assert.IsNotNull(obj.Schema);
             }
+        }
 
-            // Determine the current framework
-#if NETCOREAPP3_1
-            string framework = "netcoreapp3.1";
-#elif NET5_0
-            string framework = "net5.0";
-#elif NET6_0
-            string framework = "net6.0";
-#endif
+        private static IEnumerable<TestCaseData> GenerateSchemaSource()
+        {
+            // No namespace mapping
+            yield return new TestCaseData(
+                "resources/avro/nested_logical_types_array.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
+                    "org.apache.avro.codegentest.testdata.RecordInArray"
+                }).SetName("{m}(nested_logical_types_array)");
+            yield return new TestCaseData(
+                "resources/avro/nested_logical_types_map.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesMap",
+                    "org.apache.avro.codegentest.testdata.RecordInMap"
+                }).SetName("{m}(nested_logical_types_map)");
+            yield return new TestCaseData(
+                "resources/avro/nested_logical_types_record.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord",
+                    "org.apache.avro.codegentest.testdata.NestedRecord"
+                }).SetName("{m}(nested_logical_types_record)");
+            yield return new TestCaseData(
+                "resources/avro/nested_logical_types_union.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion",
+                    "org.apache.avro.codegentest.testdata.RecordInUnion"
+                }).SetName("{m}(nested_logical_types_union)");
+            yield return new TestCaseData(
+                "resources/avro/nested_records_different_namespace.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
+                    "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
+                }).SetName("{m}(nested_records_different_namespace)");
+            yield return new TestCaseData(
+                "resources/avro/nullable_logical_types.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NullableLogicalTypes"
+                }).SetName("{m}(nullable_logical_types)");
+            yield return new TestCaseData(
+                "resources/avro/nullable_logical_types_array.avsc",
+                new string[]
+                {
+                    "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
+                }).SetName("{m}(nullable_logical_types_array)");
+        }
 
-            // Create new console project
-            result = ExecuteCommand("dotnet", $"new console --force -f {framework}", outDir);
-            Assert.AreEqual(0, result.ExitCode);
+        [TestCaseSource(nameof(GenerateSchemaSource))]
+        public void GenerateSchema(string schemaFileName, IEnumerable<string> typeNamesToCheck)
+        {
+            GenerateSchemaAssembly($"GenerateSchema_{Path.GetFileNameWithoutExtension(schemaFileName)}", schemaFileName, typeNamesToCheck);
+        }
 
-            // Add project reference to Avro library
-            result = ExecuteCommand("dotnet", "add reference ../../../../../main/Avro.main.csproj", outDir);
-            Assert.AreEqual(0, result.ExitCode);
+        private static IEnumerable<TestCaseData> GenerateSchemaWithNamespaceMappingSource()
+        {
+            // Namespace mapping
+            yield return new TestCaseData(
+                "resources/avro/nested_logical_types_array.avsc",
+                new Dictionary<string, string>
+                {
+                    { "org.apache.avro", "my.csharp"}
+                },
+                new string[]
+                {
+                    "my.csharp.codegentest.testdata.NestedLogicalTypesArray",
+                    "my.csharp.codegentest.testdata.RecordInArray"
+                }).SetName("{m}(nested_logical_types_array)");
 
-            // Build project
-            result = ExecuteCommand("dotnet", "build", outDir);
-            Assert.AreEqual(0, result.ExitCode);
+            // Multiple namespace mapping
+            yield return new TestCaseData(
+                "resources/avro/nested_records_different_namespace.avsc",
+                new Dictionary<string, string>
+                {
+                    { "org.apache.avro.codegentest.some", "my.csharp.some"},
+                    { "org.apache.avro.codegentest.other", "my.csharp.other"}
+                },
+                new string[]
+                {
+                    "my.csharp.some.NestedSomeNamespaceRecord",
+                    "my.csharp.other.NestedOtherNamespaceRecord"
+                }).SetName("{m}(nested_records_different_namespace)");
+        }
 
-            // Run project
-            result = ExecuteCommand("dotnet", "run --no-build", outDir);
-            Assert.AreEqual(0, result.ExitCode);
+        [TestCaseSource(nameof(GenerateSchemaWithNamespaceMappingSource))]
+        public void GenerateSchemaWithNamespaceMapping(string schemaFileName, IEnumerable<KeyValuePair<string, string>> namespaceMapping, IEnumerable<string> typeNamesToCheck)
+        {
+            GenerateSchemaAssembly(
+                $"GenerateSchemaNamespaceMapping_{Path.GetFileNameWithoutExtension(schemaFileName)}",
+                schemaFileName,
+                typeNamesToCheck,
+                namespaceMapping);
         }
     }
 }

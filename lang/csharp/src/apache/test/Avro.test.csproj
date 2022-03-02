@@ -35,9 +35,8 @@
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterVersion)" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleRunnerVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
 
