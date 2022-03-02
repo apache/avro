@@ -1,4 +1,4 @@
-<!--
+﻿<!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
    this work for additional information regarding copyright ownership.
@@ -50,10 +50,6 @@
     <ProjectReference Include="..\codec\Avro.File.BZip2\Avro.File.BZip2.csproj" />
     <ProjectReference Include="..\codec\Avro.File.XZ\Avro.File.XZ.csproj" />
     <ProjectReference Include="..\codec\Avro.File.Zstandard\Avro.File.Zstandard.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\..\..\java\integration-test\codegen-test\src\test\resources\**\*.avsc" CopyToOutputDirectory="PreserveNewest" Link="resources\%(RecursiveDir)\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
