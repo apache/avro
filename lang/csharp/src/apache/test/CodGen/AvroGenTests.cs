@@ -61,7 +61,7 @@ namespace Avro.Test.AvroGen
                 using (StringWriter writerOut = new StringWriter(strBuilderOut))
                 using (StringWriter writerErr = new StringWriter(strBuilderErr))
                 {
-                    writerOut.NewLine = "\n"; 
+                    writerOut.NewLine = "\n";
                     writerErr.NewLine = "\n";
 
                     // Overwrite stdout and stderr to be able to capture console output
@@ -87,13 +87,13 @@ namespace Avro.Test.AvroGen
             }
         }
 
-        private void CompileAvroFiles(IEnumerable<string> avroFiles, string outputDir, GenerateType genType = GenerateType.Schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        private void CompileAvroSchemaFiles(IEnumerable<string> schemaFileNames, string outputDir, GenerateType genType = GenerateType.Schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
             // Make sure directory exists
             Directory.CreateDirectory(outputDir);
 
             // Run avrogen on scema files
-            foreach (string schemaFile in avroFiles)
+            foreach (string schemaFile in schemaFileNames)
             {
                 List<string> avroGenArgs = new List<string>()
                 {
@@ -120,23 +120,30 @@ namespace Avro.Test.AvroGen
             }
         }
 
-        private Assembly CompileCharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName, bool loadAssembly = true)
+        private Assembly CompileCharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName = null, bool loadAssembly = true)
         {
+            // CReate random assenbly name if not specified
+            if (assemblyName == null)
+                assemblyName = Path.GetRandomFileName();
+
             // Base path to assemblies .NET assemblies
             var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
             using (var compilerStream = new MemoryStream())
             {
+                List<string> assemblies = new List<string>()
+                {
+                    typeof(object).Assembly.Location,
+                    typeof(Schema).Assembly.Location,
+                    Path.Combine(assemblyPath, "System.Runtime.dll"),
+                    Path.Combine(assemblyPath, "netstandard.dll")
+                };
+
                 // Create compiler
                 CSharpCompilation compilation = CSharpCompilation
                     .Create(assemblyName)
                     .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                    .AddReferences(
-                        MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                        MetadataReference.CreateFromFile(typeof(Schema).Assembly.Location),
-                        MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "System.Runtime.dll")),
-                        MetadataReference.CreateFromFile(Path.Combine(assemblyPath, "netstandard.dll"))
-                    )
+                    .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
                     .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
                     {
                         string sourceText = System.IO.File.ReadAllText(sourceFile);
@@ -162,7 +169,6 @@ namespace Avro.Test.AvroGen
                     return null;
                 }
 
-                // Load assembly
                 compilerStream.Seek(0, SeekOrigin.Begin);
                 return Assembly.Load(compilerStream.ToArray());
             }
@@ -204,132 +210,309 @@ namespace Avro.Test.AvroGen
             Assert.AreNotEqual(0, result.StdErr.Length);
         }
 
-        private void GenerateSchemaAssembly(string assemblyName, string schemaFileName, IEnumerable<string> typeNamesToCheck, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        private Assembly TestSchemaFromFile(string schemaFileName, IEnumerable<string> typeNamesToCheck = null, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
-            string outputDir = Path.Combine($"generated", assemblyName);
+            string outputDir = Path.Combine(
+                TestContext.CurrentContext.WorkDirectory,
+                $"generated",
+                $"{TestContext.CurrentContext.Test.MethodName}-{TestContext.CurrentContext.Test.ID}",
+                $"{Path.GetFileNameWithoutExtension(schemaFileName)}");
 
             // Make sure directory exists
             Directory.CreateDirectory(outputDir);
 
             // Compile avro
-            CompileAvroFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
+            CompileAvroSchemaFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
 
             // Compile into netstandard library and load assembly
             Assembly assembly = CompileCharpFilesIntoLibrary(
                 new DirectoryInfo(outputDir)
                     .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-                    .Select(fi => fi.FullName),
-                assemblyName);
+                    .Select(fi => fi.FullName));
 
-            // Check if types available in compiled assembly
-            foreach (string typeName in typeNamesToCheck)
+            if (typeNamesToCheck != null)
             {
-                Type type = assembly.GetType(typeName);
+                // Check if the compiled code has exactly the same types defined as the check list
+                Assert.AreEqual(typeNamesToCheck.Count(), assembly.DefinedTypes.Count());
 
-                Assert.IsNotNull(type);
+                // Check if types available in compiled assembly
+                foreach (string typeName in typeNamesToCheck)
+                {
+                    Type type = assembly.GetType(typeName);
+                    Assert.IsNotNull(type);
 
-                // Instantiate and sanity check if member can be called
-                ISpecificRecord obj = (ISpecificRecord)Activator.CreateInstance(type);
-                Assert.IsNotNull(obj.Schema);
+                    // Instantiate
+                    object obj = Activator.CreateInstance(type);
+                }
+            }
+
+            return assembly;
+        }
+
+        private Assembly TestSchema(string schema, IEnumerable<string> typeNamesToCheck = null, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            string schemaFileName = Path.GetTempFileName();
+
+            // Save schema into temp file
+            System.IO.File.WriteAllText(schemaFileName, schema);
+
+            try
+            {
+                return TestSchemaFromFile(schemaFileName, typeNamesToCheck, namespaceMapping);
+            }
+            finally
+            {
+                // Delete temp file
+                System.IO.File.Delete(schemaFileName);
             }
         }
 
-        private static IEnumerable<TestCaseData> GenerateSchemaSource()
+        [TestCase(
+            "resources/avro/nested_logical_types_array.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
+                "org.apache.avro.codegentest.testdata.RecordInArray"
+            })]
+        [TestCase(
+            "resources/avro/nested_logical_types_map.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesMap",
+                "org.apache.avro.codegentest.testdata.RecordInMap"
+            })]
+        [TestCase(
+            "resources/avro/nested_logical_types_record.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord",
+                "org.apache.avro.codegentest.testdata.NestedRecord"
+            })]
+        [TestCase(
+            "resources/avro/nested_logical_types_union.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion",
+                "org.apache.avro.codegentest.testdata.RecordInUnion"
+            })]
+        [TestCase(
+            "resources/avro/nested_records_different_namespace.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
+                "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
+            })]
+        [TestCase(
+            "resources/avro/nullable_logical_types.avsc",
+            new string[]
+            {
+               "org.apache.avro.codegentest.testdata.NullableLogicalTypes"
+            })]
+        [TestCase(
+            "resources/avro/nullable_logical_types_array.avsc",
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
+            })]
+        public void GenerateSchemaFromFile(string schemaFileName, IEnumerable<string> typeNamesToCheck)
         {
-            // No namespace mapping
-            yield return new TestCaseData(
-                "resources/avro/nested_logical_types_array.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
-                    "org.apache.avro.codegentest.testdata.RecordInArray"
-                }).SetName("{m}(nested_logical_types_array)");
-            yield return new TestCaseData(
-                "resources/avro/nested_logical_types_map.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesMap",
-                    "org.apache.avro.codegentest.testdata.RecordInMap"
-                }).SetName("{m}(nested_logical_types_map)");
-            yield return new TestCaseData(
-                "resources/avro/nested_logical_types_record.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord",
-                    "org.apache.avro.codegentest.testdata.NestedRecord"
-                }).SetName("{m}(nested_logical_types_record)");
-            yield return new TestCaseData(
-                "resources/avro/nested_logical_types_union.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion",
-                    "org.apache.avro.codegentest.testdata.RecordInUnion"
-                }).SetName("{m}(nested_logical_types_union)");
-            yield return new TestCaseData(
-                "resources/avro/nested_records_different_namespace.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
-                    "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
-                }).SetName("{m}(nested_records_different_namespace)");
-            yield return new TestCaseData(
-                "resources/avro/nullable_logical_types.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NullableLogicalTypes"
-                }).SetName("{m}(nullable_logical_types)");
-            yield return new TestCaseData(
-                "resources/avro/nullable_logical_types_array.avsc",
-                new string[]
-                {
-                    "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
-                }).SetName("{m}(nullable_logical_types_array)");
+            TestSchemaFromFile(schemaFileName, typeNamesToCheck);
         }
 
-        [TestCaseSource(nameof(GenerateSchemaSource))]
-        public void GenerateSchema(string schemaFileName, IEnumerable<string> typeNamesToCheck)
+        [TestCase(
+            "resources/avro/nested_logical_types_array.avsc",
+            "org.apache.avro", "my.csharp",
+            new string[]
+            {
+                "my.csharp.codegentest.testdata.NestedLogicalTypesArray",
+                "my.csharp.codegentest.testdata.RecordInArray"
+            })]
+        [TestCase(
+            "resources/avro/nested_logical_types_array.avsc",
+            "org", "my",
+            new string[]
+            {
+                "my.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
+                "my.apache.avro.codegentest.testdata.RecordInArray"
+            })]
+        [TestCase(
+            "resources/avro/nullable_logical_types_array.avsc",
+            "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
+            new string[]
+            {
+                "org.apache.csharp.codegentest.testdata.NullableLogicalTypesArray"
+            })]
+        public void GenerateSchemaFromFileWithNamespaceMapping(string schemaFileName, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> typeNamesToCheck)
         {
-            GenerateSchemaAssembly($"GenerateSchema_{Path.GetFileNameWithoutExtension(schemaFileName)}", schemaFileName, typeNamesToCheck);
+            TestSchemaFromFile(schemaFileName, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } });
         }
 
-        private static IEnumerable<TestCaseData> GenerateSchemaWithNamespaceMappingSource()
+        [TestCase(
+            "resources/avro/nested_logical_types_array.avsc",
+            "org.apache.avro", "my.@class.@switch.@event",
+            new string[]
+            {
+                "my.class.switch.event.codegentest.testdata.NestedLogicalTypesArray",
+                "my.class.switch.event.codegentest.testdata.RecordInArray"
+            })]
+        [TestCase(
+            "resources/avro/nested_logical_types_array.avsc",
+            "org", "my",
+            new string[]
+            {
+                "my.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
+                "my.apache.avro.codegentest.testdata.RecordInArray"
+            })]
+        [TestCase(
+            "resources/avro/nullable_logical_types_array.avsc",
+            "org.apache.avro.codegentest.testdata", "org.apache.@return.@int",
+            new string[]
+            {
+                "org.apache.return.int.NullableLogicalTypesArray"
+            })]
+        public void GenerateSchemaFromFileWithReservedNamespaceMapping(string schemaFileName, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> typeNamesToCheck)
         {
-            // Namespace mapping
-            yield return new TestCaseData(
-                "resources/avro/nested_logical_types_array.avsc",
-                new Dictionary<string, string>
-                {
-                    { "org.apache.avro", "my.csharp"}
-                },
-                new string[]
-                {
-                    "my.csharp.codegentest.testdata.NestedLogicalTypesArray",
-                    "my.csharp.codegentest.testdata.RecordInArray"
-                }).SetName("{m}(nested_logical_types_array)");
-
-            // Multiple namespace mapping
-            yield return new TestCaseData(
-                "resources/avro/nested_records_different_namespace.avsc",
-                new Dictionary<string, string>
-                {
-                    { "org.apache.avro.codegentest.some", "my.csharp.some"},
-                    { "org.apache.avro.codegentest.other", "my.csharp.other"}
-                },
-                new string[]
-                {
-                    "my.csharp.some.NestedSomeNamespaceRecord",
-                    "my.csharp.other.NestedOtherNamespaceRecord"
-                }).SetName("{m}(nested_records_different_namespace)");
+            TestSchemaFromFile(schemaFileName, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } });
         }
 
-        [TestCaseSource(nameof(GenerateSchemaWithNamespaceMappingSource))]
-        public void GenerateSchemaWithNamespaceMapping(string schemaFileName, IEnumerable<KeyValuePair<string, string>> namespaceMapping, IEnumerable<string> typeNamesToCheck)
+        [TestCase(@"
+{
+    ""type"" : ""record"",
+    ""name"" : ""ClassKeywords"",
+    ""namespace"" : ""com.base"",
+    ""fields"" :
+        [ 	
+            { ""name"" : ""int"", ""type"" : ""int"" },
+            { ""name"" : ""base"", ""type"" : ""long"" },
+            { ""name"" : ""event"", ""type"" : ""boolean"" },
+            { ""name"" : ""foreach"", ""type"" : ""double"" },
+            { ""name"" : ""bool"", ""type"" : ""float"" },
+            { ""name"" : ""internal"", ""type"" : ""bytes"" },
+            { ""name"" : ""while"", ""type"" : ""string"" },
+            { ""name"" : ""return"", ""type"" : ""null"" },
+            { ""name"" : ""enum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""class"", ""symbols"" : [ ""Unknown"", ""A"", ""B"" ], ""default"" : ""Unknown"" } },
+            { ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
+        ]
+}",
+            new object[] { "com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string), typeof(object), "com.base.class", "com.base.static" })]
+        [TestCase(@"
+{
+    ""type"" : ""record"",
+    ""name"" : ""AvroNamespaceType"",
+    ""namespace"" : ""My.Avro"",
+    ""fields"" :
+        [
+            { ""name"" : ""justenum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""justenumEnum"", ""symbols"" : [ ""One"", ""Two"" ] } },
+        ]
+}",
+            new object[] { "My.Avro.AvroNamespaceType", "My.Avro.justenumEnum" })]
+        [TestCase(@"
+{
+    ""type"" : ""record"",
+    ""name"" : ""SchemaObject"",
+    ""namespace"" : ""schematest"",
+    ""fields"" :
+        [ 	
+            { ""name"" : ""myobject"", ""type"" :
+                [
+                    ""null"",
+                    { ""type"" : ""array"", ""items"" :
+                        [
+                            ""null"",
+                            { ""type"" : ""enum"", ""name"" : ""MyEnum"", ""symbols"" : [ ""A"", ""B"" ] },
+                            { ""type"": ""fixed"", ""size"": 16, ""name"": ""MyFixed"" }
+                        ]
+                    }
+                ]
+            }
+        ]
+}",
+            new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
+        [TestCase(@"
+{
+	""type"" : ""record"",
+	""name"" : ""LogicalTypes"",
+	""namespace"" : ""schematest"",
+	""fields"" :
+		[ 	
+			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+		]
+}",
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+        public void GenerateSchema(string schema, object[] result)
         {
-            GenerateSchemaAssembly(
-                $"GenerateSchemaNamespaceMapping_{Path.GetFileNameWithoutExtension(schemaFileName)}",
-                schemaFileName,
-                typeNamesToCheck,
-                namespaceMapping);
+            Assembly assembly = TestSchema(schema);
+
+            // Instantiate object
+            Type type = assembly.GetType((string)result[0]);
+            Assert.IsNotNull(type);
+
+            ISpecificRecord record = Activator.CreateInstance(type) as ISpecificRecord;
+            Assert.IsNotNull(record);
+
+            // test type of each fields
+            for (int i = 1; i < result.Length; ++i)
+            {
+                object field = record.Get(i - 1);
+                Type stype;
+                if (result[i].GetType() == typeof(string))
+                {
+                    Type t = assembly.GetType((string)result[i]);
+                    Assert.IsNotNull(record);
+
+                    object obj = Activator.CreateInstance(t);
+                    Assert.IsNotNull(obj);
+                    stype = obj.GetType();
+                }
+                else
+                    stype = (Type)result[i];
+                if (!stype.IsValueType)
+                    Assert.IsNull(field);   // can't test reference type, it will be null
+                else if (stype.IsValueType && field == null)
+                    Assert.IsNull(field); // nullable value type, so we can't get the type using GetType
+                else
+                    Assert.AreEqual(stype, field.GetType());
+            }
+        }
+
+        [TestCase(@"
+{
+    ""type"": ""fixed"",
+    ""namespace"": ""com.base"",
+    ""name"": ""MD5"",
+    ""size"": 16
+}",
+            "com.base", "SchemaTest",
+            new string[]
+            {
+                "SchemaTest.MD5"
+            })]
+        [TestCase(@"
+{
+    ""type"": ""fixed"",
+    ""namespace"": ""com.base"",
+    ""name"": ""MD5"",
+    ""size"": 16
+}",
+            "miss", "SchemaTest",
+            new string[]
+            {
+                "com.base.MD5"
+            })]
+        public void GenerateSchemaWithNamespaceMapping(string schema, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> typeNamesToCheck)
+        {
+            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } });
         }
     }
 }
