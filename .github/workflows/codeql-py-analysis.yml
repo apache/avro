@@ -32,6 +32,10 @@ on:
     - .github/workflows/codeql-py-analysis.yml
     - lang/py/**
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze

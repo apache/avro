@@ -30,6 +30,10 @@ defaults:
   run:
     working-directory: lang/rust
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   miri_check:
     runs-on: ubuntu-latest
