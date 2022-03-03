@@ -28,6 +28,10 @@ defaults:
   run:
     working-directory: lang/php
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: PHP ${{ matrix.php }} Test
