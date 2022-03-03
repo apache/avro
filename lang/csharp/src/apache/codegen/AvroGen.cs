@@ -103,7 +103,6 @@ namespace Avro
 
             // Ensure we got all the command line arguments we need
             bool isValid = true;
-            int rc = 0;
             if (!isProtocol.HasValue || inputFile == null)
             {
                 Console.Error.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
@@ -115,18 +114,26 @@ namespace Avro
                 isValid = false;
             }
 
-
             if (!isValid)
             {
                 Usage();
-                rc = 1;
+                return 1;
             }
-            else if (isProtocol.Value)
-                rc = GenProtocol(inputFile, outputDir, namespaceMapping);
-            else
-                rc = GenSchema(inputFile, outputDir, namespaceMapping);
 
-            return rc;
+            try
+            {
+                if (isProtocol.Value)
+                    GenProtocol(inputFile, outputDir, namespaceMapping);
+                else
+                    GenSchema(inputFile, outputDir, namespaceMapping);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Exception occurred. " + ex.Message);
+                return 1;
+            }
+
+            return 0;
         }
 
         static void Usage()
@@ -143,57 +150,39 @@ namespace Avro
                 AppDomain.CurrentDomain.FriendlyName);
             return;
         }
-        static int GenProtocol(string infile, string outdir,
+
+        static void GenProtocol(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
-            try
-            {
-                string text = System.IO.File.ReadAllText(infile);
+            string text = System.IO.File.ReadAllText(infile);
 
-                if (namespaceMapping != null)
-                    text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
+            if (namespaceMapping != null)
+                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
 
-                Protocol protocol = Protocol.Parse(text);
+            Protocol protocol = Protocol.Parse(text);
 
-                CodeGen codegen = new CodeGen();
-                codegen.AddProtocol(protocol);
+            CodeGen codegen = new CodeGen();
+            codegen.AddProtocol(protocol);
 
-                codegen.GenerateCode();
-                codegen.WriteTypes(outdir);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine("Exception occurred. " + ex.Message);
-                return 1;
-            }
-
-            return 0;
+            codegen.GenerateCode();
+            codegen.WriteTypes(outdir);
         }
-        static int GenSchema(string infile, string outdir,
+
+        static void GenSchema(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
-            try
-            {
-                string text = System.IO.File.ReadAllText(infile);
+            string text = System.IO.File.ReadAllText(infile);
 
-                if (namespaceMapping != null)
-                    text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
+            if (namespaceMapping != null)
+                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
 
-                Schema schema = Schema.Parse(text);
+            Schema schema = Schema.Parse(text);
 
-                CodeGen codegen = new CodeGen();
-                codegen.AddSchema(schema);
+            CodeGen codegen = new CodeGen();
+            codegen.AddSchema(schema);
 
-                codegen.GenerateCode();
-                codegen.WriteTypes(outdir);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine("Exception occurred. " + ex.Message);
-                return 1;
-            }
-
-            return 0;
+            codegen.GenerateCode();
+            codegen.WriteTypes(outdir);
         }
 
         public static string ReplaceMappedNamespacesInSchema(string schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
@@ -207,15 +196,22 @@ namespace Avro
             // Note: It keeps the original whitespaces
             return Regex.Replace(schema, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
             {
+                // m.Groups[1]: whitespaces before ':'
+                // m.Groups[2]: whitespaces after ':'
+                // m.Groups[3]: the namespace
+
                 string ns = m.Groups[3].Value;
+
                 foreach (var mapping in namespaceMapping)
                 {
+                    // Full match
                     if (mapping.Key == ns)
                     {
                         ns = mapping.Value;
                         break;
                     }
                     else
+                    // Partial match
                     if (ns.StartsWith($"{mapping.Key}."))
                     {
                         ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
