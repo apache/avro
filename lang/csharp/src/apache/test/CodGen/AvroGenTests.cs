@@ -427,12 +427,12 @@ namespace Avro.Test
                 if (generatedFiles != null)
                 {
                     FileInfo schemaFileInfo = new FileInfo(schemaFileName);
-                    foreach (string generatedSourceFile in generatedFiles)
+                    foreach (string generatedFile in generatedFiles)
                     {
-                        FileInfo fileInfo = new FileInfo(Path.Combine(outputDir, generatedSourceFile));
+                        FileInfo fileInfo = new FileInfo(Path.Combine(outputDir, generatedFile));
                         // Check if file exists and it is was created later than the input schema file
                         Assert.That(fileInfo, Does.Exist);
-                        Assert.That(fileInfo.CreationTime, Is.GreaterThan(schemaFileInfo.CreationTime));
+                        Assert.That(fileInfo.CreationTime, Is.GreaterThanOrEqualTo(schemaFileInfo.CreationTime));
                     }
                 }
 
