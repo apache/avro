@@ -27,11 +27,11 @@ using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Avro.Specific;
 
-namespace Avro.Test.AvroGen
+namespace Avro.Test
 {
     [TestFixture]
 
-    class AvroGenTest
+    class AvroGenTests
     {
         private const string _customConversionWithLogicalTypes = @"
 {
@@ -766,12 +766,6 @@ namespace Avro.Test.AvroGen
             }
         }
 
-        [Test]
-        public void TestGetNullableTypeException()
-        {
-            Assert.Throws<ArgumentNullException>(() => Avro.CodeGen.GetNullableType(null));
-        }
-
         // No mapping
         [TestCase("org.apache.avro.codegentest.testdata", null, null, "org.apache.avro.codegentest.testdata")]
         // Self mapping
@@ -784,17 +778,8 @@ namespace Avro.Test.AvroGen
         [TestCase("org.apache.avro.codegentest.testdata", "org", "my", "my.apache.avro.codegentest.testdata")]
         public void TestNamespaceMapping(string ns, string mapNamespaceFrom, string mapNamespaceTo, string expectedNamespace)
         {
-            Dictionary<string, string> namespaceMapping;
-
-            if (mapNamespaceFrom == null)
-            {
-                namespaceMapping = null;
-            }
-            else
-            {
-                namespaceMapping = new Dictionary<string, string>() { { mapNamespaceFrom, mapNamespaceTo } };
-
-            }
+            Dictionary<string, string> namespaceMapping = mapNamespaceFrom != null ?
+                new Dictionary<string, string>() { { mapNamespaceFrom, mapNamespaceTo } } : null;
 
             string schemaText = Avro.AvroGen.ReplaceMappedNamespaces(_nullableLogicalTypes, namespaceMapping);
 
