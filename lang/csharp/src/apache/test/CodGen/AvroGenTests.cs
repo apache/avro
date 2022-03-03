@@ -299,7 +299,7 @@ namespace Avro.Test
                     Console.SetOut(writerOut);
                     Console.SetError(writerErr);
 
-                    result.ExitCode = Avro.AvroGen.Main(args.ToArray());
+                    result.ExitCode = AvroGen.Main(args.ToArray());
 
                     writerOut.Flush();
                     writerErr.Flush();
@@ -885,7 +885,7 @@ namespace Avro.Test
             Dictionary<string, string> namespaceMapping = mapNamespaceFrom != null ?
                 new Dictionary<string, string>() { { mapNamespaceFrom, mapNamespaceTo } } : null;
 
-            string schemaText = Avro.AvroGen.ReplaceMappedNamespaces(_nullableLogicalTypes, namespaceMapping);
+            string schemaText = AvroGen.ReplaceMappedNamespacesInSchema(_nullableLogicalTypes, namespaceMapping);
 
             var codegen = new CodeGen();
             codegen.AddSchema(Schema.Parse(schemaText));

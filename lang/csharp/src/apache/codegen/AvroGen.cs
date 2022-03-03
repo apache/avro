@@ -151,7 +151,7 @@ namespace Avro
                 string text = System.IO.File.ReadAllText(infile);
 
                 if (namespaceMapping != null)
-                    text = ReplaceMappedNamespaces(text, namespaceMapping);
+                    text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
 
                 Protocol protocol = Protocol.Parse(text);
 
@@ -177,7 +177,7 @@ namespace Avro
                 string text = System.IO.File.ReadAllText(infile);
 
                 if (namespaceMapping != null)
-                    text = ReplaceMappedNamespaces(text, namespaceMapping);
+                    text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
 
                 Schema schema = Schema.Parse(text);
 
@@ -196,16 +196,16 @@ namespace Avro
             return 0;
         }
 
-        public static string ReplaceMappedNamespaces(string ns, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        public static string ReplaceMappedNamespacesInSchema(string schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             if (namespaceMapping == null)
-                return ns;
+                return schema;
 
             // Replace namespace in "namespace" definitions: 
             //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
             //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
             // Note: It keeps the original whitespaces
-            return Regex.Replace(ns, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
+            return Regex.Replace(schema, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
             {
                 string ns = m.Groups[3].Value;
                 foreach (var mapping in namespaceMapping)
@@ -219,6 +219,7 @@ namespace Avro
                     if (ns.StartsWith($"{mapping.Key}."))
                     {
                         ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
+                        break;
                     }
                 }
                 return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
