@@ -1110,6 +1110,7 @@ namespace Avro
         /// Writes each types in each namespaces into individual files.
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
+        /// <param name="skipDirectories">skip creation of directories based on schema namespace</param>
         public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
         {
             var cscp = new CSharpCodeProvider();
