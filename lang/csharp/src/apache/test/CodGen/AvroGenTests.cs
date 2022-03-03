@@ -342,9 +342,9 @@ namespace Avro.Test
                 ExecuteResult result = RunAvroGen(avroGenArgs);
 
                 // Verify result
-                Assert.AreEqual(0, result.ExitCode);
-                Assert.AreEqual(0, result.StdOut.Length);
-                Assert.AreEqual(0, result.StdErr.Length);
+                Assert.That(result.ExitCode, Is.EqualTo(0));
+                Assert.That(result.StdOut, Is.Empty);
+                Assert.That(result.StdErr, Is.Empty);
             }
         }
 
@@ -389,8 +389,8 @@ namespace Avro.Test
                             TestContext.WriteLine($"{diagnostic.Id} - {diagnostic.GetMessage()} - {diagnostic.Location}");
                         }
                     }
-                    Assert.IsTrue(compilationResult.Success, "Compilation failed");
                 }
+                Assert.That(compilationResult.Success, Is.True);
 
                 if (!loadAssembly)
                 {
@@ -402,43 +402,11 @@ namespace Avro.Test
             }
         }
 
-        [Test]
-        public void NoArgs()
-        {
-            ExecuteResult result = RunAvroGen(Array.Empty<string>());
-            Assert.AreEqual(1, result.ExitCode);
-            Assert.AreNotEqual(0, result.StdOut.Length);
-            Assert.AreEqual(0, result.StdErr.Length);
-        }
-
-        [TestCase("-h")]
-        [TestCase("--help")]
-        [TestCase("--help", "-h")]
-        [TestCase("--help", "-s", "whatever.avsc", ".")]
-        [TestCase("-p", "whatever.avsc", ".", "-h")]
-        public void Help(params string[] args)
-        {
-            ExecuteResult result = RunAvroGen(args);
-
-            Assert.AreEqual(0, result.ExitCode);
-            Assert.AreNotEqual(0, result.StdOut.Length);
-            Assert.AreEqual(0, result.StdErr.Length);
-        }
-
-        [TestCase("-p")]
-        [TestCase("-s")]
-        [TestCase("-p", "whatever.avsc")]
-        [TestCase("-s", "whatever.avsc")]
-        [TestCase(".")]
-        public void MissingArgs(params string[] args)
-        {
-            ExecuteResult result = RunAvroGen(args);
-            Assert.AreEqual(1, result.ExitCode);
-            Assert.AreNotEqual(0, result.StdOut.Length);
-            Assert.AreNotEqual(0, result.StdErr.Length);
-        }
-
-        private Assembly TestSchema(string schema, IEnumerable<string> typeNamesToCheck = null, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        private Assembly TestSchema(
+            string schema,
+            IEnumerable<string> typeNamesToCheck = null,
+            IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
+            IEnumerable<string> generatedFiles = null)
         {
             string compiledAssemblyName = Guid.NewGuid().ToString();
             string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, compiledAssemblyName);
@@ -455,6 +423,19 @@ namespace Avro.Test
                 // Compile avro
                 CompileAvroSchemaFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
 
+                // Check generated files
+                if (generatedFiles != null)
+                {
+                    FileInfo schemaFileInfo = new FileInfo(schemaFileName);
+                    foreach (string generatedSourceFile in generatedFiles)
+                    {
+                        FileInfo fileInfo = new FileInfo(Path.Combine(outputDir, generatedSourceFile));
+                        // Check if file exists and it is was created later than the input schema file
+                        Assert.That(fileInfo, Does.Exist);
+                        Assert.That(fileInfo.CreationTime, Is.GreaterThan(schemaFileInfo.CreationTime));
+                    }
+                }
+
                 // Compile into netstandard library and load assembly
                 Assembly assembly = CompileCharpFilesIntoLibrary(
                     new DirectoryInfo(outputDir)
@@ -464,14 +445,14 @@ namespace Avro.Test
 
                 if (typeNamesToCheck != null)
                 {
-                    // Check if the compiled code has exactly the same types defined as the check list
-                    Assert.AreEqual(typeNamesToCheck.Count(), assembly.DefinedTypes.Count());
+                    // Check if the compiled code has the same number of types defined as the check list
+                    Assert.That(typeNamesToCheck.Count(), Is.EqualTo(assembly.DefinedTypes.Count()));
 
                     // Check if types available in compiled assembly
                     foreach (string typeName in typeNamesToCheck)
                     {
                         Type type = assembly.GetType(typeName);
-                        Assert.IsNotNull(type);
+                        Assert.That(type, Is.Not.Null);
 
                         // Instantiate
                         object obj = Activator.CreateInstance(type);
@@ -486,11 +467,58 @@ namespace Avro.Test
             }
         }
 
+        [Test]
+        public void CommandLineNoArgs()
+        {
+            ExecuteResult result = RunAvroGen(Array.Empty<string>());
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.StdOut, Is.Not.Empty);
+            Assert.That(result.StdErr, Is.Empty);
+        }
+
+        [TestCase("-h")]
+        [TestCase("--help")]
+        [TestCase("--help", "-h")]
+        [TestCase("--help", "-s", "whatever.avsc", ".")]
+        [TestCase("-p", "whatever.avsc", ".", "-h")]
+        public void CommandLineHelp(params string[] args)
+        {
+            ExecuteResult result = RunAvroGen(args);
+
+            Assert.That(result.ExitCode, Is.EqualTo(0));
+            Assert.That(result.StdOut, Is.Not.Empty);
+            Assert.That(result.StdErr, Is.Empty);
+        }
+
+        [TestCase("-p")]
+        [TestCase("-s")]
+        [TestCase("-p", "whatever.avsc")]
+        [TestCase("-s", "whatever.avsc")]
+        [TestCase("whatever.avsc")]
+        [TestCase("whatever.avsc .")]
+        [TestCase(".")]
+        [TestCase("-s", "whatever.avsc", "--namespace")]
+        [TestCase("-s", "whatever.avsc", "--namespace", "org.apache")]
+        [TestCase("-s", "whatever.avsc", "--namespace", "org.apache:")]
+        public void CommandLineMissingArgs(params string[] args)
+        {
+            ExecuteResult result = RunAvroGen(args);
+
+            Assert.That(result.ExitCode, Is.EqualTo(1));
+            Assert.That(result.StdOut, Is.Not.Empty);
+            Assert.That(result.StdErr, Is.Not.Empty);
+        }
+
         [TestCase(
             _logicalTypesWithDefaults,
             new string[]
             {
                 "org.apache.avro.codegentest.testdata.LogicalTypesWithDefaults"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/LogicalTypesWithDefaults.cs"
             })]
         [TestCase(
             _nestedLogicalTypesArray,
@@ -498,6 +526,11 @@ namespace Avro.Test
             {
                 "org.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
                 "org.apache.avro.codegentest.testdata.RecordInArray"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesArray.cs",
+                "org/apache/avro/codegentest/testdata/RecordInArray.cs"
             })]
         [TestCase(
             _nestedLogicalTypesMap,
@@ -505,6 +538,11 @@ namespace Avro.Test
             {
                 "org.apache.avro.codegentest.testdata.NestedLogicalTypesMap",
                 "org.apache.avro.codegentest.testdata.RecordInMap"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesMap.cs",
+                "org/apache/avro/codegentest/testdata/RecordInMap.cs"
             })]
         [TestCase(
             _nestedLogicalTypesRecord,
@@ -512,6 +550,11 @@ namespace Avro.Test
             {
                 "org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord",
                 "org.apache.avro.codegentest.testdata.NestedRecord"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesRecord.cs",
+                "org/apache/avro/codegentest/testdata/NestedRecord.cs"
             })]
         [TestCase(
             _nestedLogicalTypesUnion,
@@ -519,6 +562,11 @@ namespace Avro.Test
             {
                 "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion",
                 "org.apache.avro.codegentest.testdata.RecordInUnion"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesUnion.cs",
+                "org/apache/avro/codegentest/testdata/RecordInUnion.cs"
             })]
         [TestCase(
             _nestedSomeNamespaceRecord,
@@ -526,22 +574,35 @@ namespace Avro.Test
             {
                 "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
                 "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/some/NestedSomeNamespaceRecord.cs",
+                "org/apache/avro/codegentest/other/NestedOtherNamespaceRecord.cs"
             })]
         [TestCase(
             _nullableLogicalTypes,
             new string[]
             {
                "org.apache.avro.codegentest.testdata.NullableLogicalTypes"
+            },
+            new string[]
+            {
+               "org/apache/avro/codegentest/testdata/NullableLogicalTypes.cs"
             })]
         [TestCase(
             _nullableLogicalTypesArray,
             new string[]
             {
                 "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NullableLogicalTypesArray.cs"
             })]
-        public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck)
+        public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFiles)
         {
-            TestSchema(schema, typeNamesToCheck);
+            TestSchema(schema, typeNamesToCheck, generatedFiles: generatedFiles);
         }
 
         [TestCase(
@@ -551,6 +612,11 @@ namespace Avro.Test
             {
                 "my.csharp.codegentest.testdata.NestedLogicalTypesArray",
                 "my.csharp.codegentest.testdata.RecordInArray"
+            },
+            new string[]
+            {
+                "my/csharp/codegentest/testdata/NestedLogicalTypesArray.cs",
+                "my/csharp/codegentest/testdata/RecordInArray.cs"
             })]
         [TestCase(
             _nestedLogicalTypesArray,
@@ -559,6 +625,11 @@ namespace Avro.Test
             {
                 "my.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
                 "my.apache.avro.codegentest.testdata.RecordInArray"
+            },
+            new string[]
+            {
+                "my/apache/avro/codegentest/testdata/NestedLogicalTypesArray.cs",
+                "my/apache/avro/codegentest/testdata/RecordInArray.cs"
             })]
         [TestCase(
             _nullableLogicalTypesArray,
@@ -566,6 +637,47 @@ namespace Avro.Test
             new string[]
             {
                 "org.apache.csharp.codegentest.testdata.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "org/apache/csharp/codegentest/testdata/NullableLogicalTypesArray.cs"
+            })]
+        [TestCase(
+            _nestedLogicalTypesArray,
+            "org.apache.avro", "my.@class.@switch.@event",
+            new string[]
+            {
+                "my.class.switch.event.codegentest.testdata.NestedLogicalTypesArray",
+                "my.class.switch.event.codegentest.testdata.RecordInArray"
+            },
+            new string[]
+            {
+                "my/class/switch/event/codegentest/testdata/NestedLogicalTypesArray.cs",
+                "my/class/switch/event/codegentest/testdata/RecordInArray.cs"
+            })]
+        [TestCase(
+            _nestedLogicalTypesArray,
+            "org", "my",
+            new string[]
+            {
+                "my.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
+                "my.apache.avro.codegentest.testdata.RecordInArray"
+            },
+            new string[]
+            {
+                "my/apache/avro/codegentest/testdata/NestedLogicalTypesArray.cs",
+                "my/apache/avro/codegentest/testdata/RecordInArray.cs"
+            })]
+        [TestCase(
+            _nullableLogicalTypesArray,
+            "org.apache.avro.codegentest.testdata", "org.apache.@return.@int",
+            new string[]
+            {
+                "org.apache.return.int.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "org/apache/return/int/NullableLogicalTypesArray.cs"
             })]
         [TestCase(@"
 {
@@ -578,6 +690,10 @@ namespace Avro.Test
             new string[]
             {
                 "SchemaTest.MD5"
+            },
+            new string[]
+            {
+                "SchemaTest/MD5.cs"
             })]
         [TestCase(@"
 {
@@ -590,38 +706,19 @@ namespace Avro.Test
             new string[]
             {
                 "com.base.MD5"
+            },
+            new string[]
+            {
+                "com/base/MD5.cs"
             })]
-        public void GenerateSchemaWithNamespaceMapping(string schema, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> typeNamesToCheck)
+        public void GenerateSchemaWithNamespaceMapping(
+            string schema,
+            string namespaceMappingFrom,
+            string namespaceMappingTo,
+            IEnumerable<string> typeNamesToCheck,
+            IEnumerable<string> generatedFiles)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } });
-        }
-
-        [TestCase(
-            _nestedLogicalTypesArray,
-            "org.apache.avro", "my.@class.@switch.@event",
-            new string[]
-            {
-                "my.class.switch.event.codegentest.testdata.NestedLogicalTypesArray",
-                "my.class.switch.event.codegentest.testdata.RecordInArray"
-            })]
-        [TestCase(
-            _nestedLogicalTypesArray,
-            "org", "my",
-            new string[]
-            {
-                "my.apache.avro.codegentest.testdata.NestedLogicalTypesArray",
-                "my.apache.avro.codegentest.testdata.RecordInArray"
-            })]
-        [TestCase(
-            _nullableLogicalTypesArray,
-            "org.apache.avro.codegentest.testdata", "org.apache.@return.@int",
-            new string[]
-            {
-                "org.apache.return.int.NullableLogicalTypesArray"
-            })]
-        public void GenerateSchemaWithReservedNamespaceMapping(string schema, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> typeNamesToCheck)
-        {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } });
+            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFiles);
         }
 
         [TestCase(_logicalTypesWithCustomConversion)]
@@ -643,10 +740,10 @@ namespace Avro.Test
                 ExecuteResult result = RunAvroGen(new string[] { "-s", schemaFileName, outputDir });
 
                 // Verify result
-                Assert.AreEqual(1, result.ExitCode);
-                Assert.AreEqual(0, result.StdOut.Length);
-                Assert.AreNotEqual(0, result.StdErr.Length);
-                Assert.True(result.StdErr[0].StartsWith("Exception occurred."));
+                Assert.That(result.ExitCode, Is.EqualTo(1));
+                Assert.That(result.StdOut, Is.Empty);
+                Assert.That(result.StdErr, Is.Not.Empty);
+                Assert.That(result.StdErr[0], Does.StartWith("Exception occurred."));
             }
             finally
             {
@@ -736,7 +833,7 @@ namespace Avro.Test
 
             // Instantiate object
             Type type = assembly.GetType((string)result[0]);
-            Assert.IsNotNull(type);
+            Assert.That(type, Is.Not.Null);
 
             ISpecificRecord record = Activator.CreateInstance(type) as ISpecificRecord;
             Assert.IsNotNull(record);
@@ -749,20 +846,28 @@ namespace Avro.Test
                 if (result[i].GetType() == typeof(string))
                 {
                     Type t = assembly.GetType((string)result[i]);
-                    Assert.IsNotNull(record);
+                    Assert.That(record, Is.Not.Null);
 
                     object obj = Activator.CreateInstance(t);
-                    Assert.IsNotNull(obj);
+                    Assert.That(obj, Is.Not.Null);
                     stype = obj.GetType();
                 }
                 else
+                {
                     stype = (Type)result[i];
+                }
                 if (!stype.IsValueType)
-                    Assert.IsNull(field);   // can't test reference type, it will be null
+                {
+                    Assert.That(field, Is.Null);   // can't test reference type, it will be null
+                }
                 else if (stype.IsValueType && field == null)
-                    Assert.IsNull(field); // nullable value type, so we can't get the type using GetType
+                {
+                    Assert.That(field, Is.Null); // nullable value type, so we can't get the type using GetType
+                }
                 else
-                    Assert.AreEqual(stype, field.GetType());
+                {
+                    Assert.That(field.GetType(), Is.EqualTo(stype));
+                }
             }
         }
 
@@ -786,11 +891,11 @@ namespace Avro.Test
             var codegen = new CodeGen();
             codegen.AddSchema(Schema.Parse(schemaText));
 
-            Assert.AreEqual(1, codegen.Schemas.Count);
+            Assert.That(codegen.Schemas.Count, Is.EqualTo(1));
             RecordSchema schema = (RecordSchema)codegen.Schemas[0];
-            Assert.AreEqual(expectedNamespace, schema.Namespace);
-            Assert.AreEqual($"NullableLogicalTypes", schema.Name);
-            Assert.AreEqual($"{expectedNamespace}.NullableLogicalTypes", schema.Fullname);
+            Assert.That(schema.Namespace, Is.EqualTo(expectedNamespace));
+            Assert.That(schema.Name, Is.EqualTo("NullableLogicalTypes"));
+            Assert.That(schema.Fullname, Is.EqualTo($"{expectedNamespace}.NullableLogicalTypes"));
         }
     }
 }
