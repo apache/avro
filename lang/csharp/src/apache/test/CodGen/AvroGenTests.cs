@@ -406,13 +406,16 @@ namespace Avro.Test
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
-            IEnumerable<string> generatedFiles = null)
+            IEnumerable<string> generatedFilesToCheck = null)
         {
             string compiledAssemblyName = Guid.NewGuid().ToString();
             string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, compiledAssemblyName);
 
             // Create temp folder
             Directory.CreateDirectory(outputDir);
+
+            // Make sure to start with an empty working folder
+            Assert.That(new DirectoryInfo(outputDir), Is.Empty);
 
             try
             {
@@ -423,16 +426,12 @@ namespace Avro.Test
                 // Compile avro
                 CompileAvroSchemaFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
 
-                // Check generated files
-                if (generatedFiles != null)
+                // Check if all generated files exist
+                if (generatedFilesToCheck != null)
                 {
-                    FileInfo schemaFileInfo = new FileInfo(schemaFileName);
-                    foreach (string generatedFile in generatedFiles)
+                    foreach (string generatedFile in generatedFilesToCheck)
                     {
-                        FileInfo fileInfo = new FileInfo(Path.Combine(outputDir, generatedFile));
-                        // Check if file exists and it is was created later than the input schema file
-                        Assert.That(fileInfo, Does.Exist);
-                        Assert.That(fileInfo.CreationTime, Is.GreaterThanOrEqualTo(schemaFileInfo.CreationTime));
+                        Assert.That(new FileInfo(Path.Combine(outputDir, generatedFile)), Does.Exist);
                     }
                 }
 
@@ -600,9 +599,9 @@ namespace Avro.Test
             {
                 "org/apache/avro/codegentest/testdata/NullableLogicalTypesArray.cs"
             })]
-        public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFiles)
+        public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, generatedFiles: generatedFiles);
+            TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
 
         [TestCase(
@@ -716,9 +715,9 @@ namespace Avro.Test
             string namespaceMappingFrom,
             string namespaceMappingTo,
             IEnumerable<string> typeNamesToCheck,
-            IEnumerable<string> generatedFiles)
+            IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFiles);
+            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
         [TestCase(_logicalTypesWithCustomConversion)]
