@@ -1290,6 +1290,122 @@ fn field_ordering_position(field: &str) -> Option<usize> {
         .map(|pos| pos + 1)
 }
 
+#[cfg(feature = "derive")]
+pub fn record_schema_for_fields(
+    name: Name,
+    doc: Documentation,
+    fields: Vec<RecordField>,
+) -> Schema {
+    let lookup: HashMap<String, usize> = fields
+        .iter()
+        .map(|field| (field.name.to_owned(), field.position))
+        .collect();
+    Schema::Record {
+        name,
+        doc,
+        fields,
+        lookup,
+    }
+}
+
+#[cfg(feature = "derive")]
+pub trait AvroSchema {
+    fn get_schema() -> Schema;
+}
+
+#[cfg(feature = "derive")]
+macro_rules! impl_schema(
+    ($type:ty, $variant_constructor:expr) => (
+        impl AvroSchema for $type {
+            fn get_schema() -> Schema {
+                $variant_constructor
+            }
+        }
+    );
+);
+
+#[cfg(feature = "derive")]
+impl_schema!(i8, Schema::Int);
+#[cfg(feature = "derive")]
+impl_schema!(i16, Schema::Int);
+#[cfg(feature = "derive")]
+impl_schema!(i32, Schema::Int);
+#[cfg(feature = "derive")]
+impl_schema!(u8, Schema::Int);
+#[cfg(feature = "derive")]
+impl_schema!(u16, Schema::Int);
+#[cfg(feature = "derive")]
+impl_schema!(f32, Schema::Float);
+#[cfg(feature = "derive")]
+impl_schema!(f64, Schema::Double);
+#[cfg(feature = "derive")]
+impl_schema!(char, Schema::String);
+#[cfg(feature = "derive")]
+impl_schema!(String, Schema::String);
+#[cfg(feature = "derive")]
+impl_schema!(uuid::Uuid, Schema::Uuid);
+#[cfg(feature = "derive")]
+impl_schema!(u32, Schema::Long);
+#[cfg(feature = "derive")]
+impl_schema!(u64, Schema::Long);
+#[cfg(feature = "derive")]
+impl_schema!(core::time::Duration, Schema::Duration);
+
+#[cfg(feature = "derive")]
+impl<T> AvroSchema for Vec<T>
+where
+    T: AvroSchema,
+{
+    fn get_schema() -> Schema {
+        Schema::Array(Box::new(T::get_schema()))
+    }
+}
+
+#[cfg(feature = "derive")]
+impl<T> AvroSchema for Option<T>
+where
+    T: AvroSchema,
+{
+    fn get_schema() -> Schema {
+        let inner_schema = T::get_schema();
+        Schema::Union(UnionSchema {
+            schemas: vec![Schema::Null, inner_schema.clone()],
+            variant_index: vec![Schema::Null, inner_schema.clone()]
+                .iter()
+                .enumerate()
+                .map(|(idx, s)| (SchemaKind::from(s), idx))
+                .collect(),
+        })
+    }
+}
+
+#[cfg(feature = "derive")]
+impl<T> AvroSchema for Map<String, T>
+where
+    T: AvroSchema,
+{
+    fn get_schema() -> Schema {
+        Schema::Map(Box::new(T::get_schema()))
+    }
+}
+
+#[cfg(feature = "derive")]
+impl<T> AvroSchema for HashMap<String, T>
+where
+    T: AvroSchema,
+{
+    fn get_schema() -> Schema {
+        Schema::Map(Box::new(T::get_schema()))
+    }
+}
+/// Need to determin best course of action here
+// #[cfg(feature = "derive")]
+// impl AvroSchema for Vec<u8> {
+//     fn get_schema() -> Schema {
+//         Schema::Bytes
+//     }
+// }
+
 #[cfg(test)]
 mod tests {
     use super::*;
