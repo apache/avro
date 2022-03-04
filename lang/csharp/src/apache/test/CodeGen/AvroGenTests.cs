@@ -322,10 +322,13 @@ namespace Avro.Test.CodeGen
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
-            IEnumerable<string> generatedFilesToCheck = null)
+            IEnumerable<string> generatedFilesToCheck = null,
+            bool testFromFile = true)
         {
-            string compiledAssemblyName = Guid.NewGuid().ToString();
-            string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, compiledAssemblyName);
+            string uniqeId = Guid.NewGuid().ToString();
+
+            string compiledAssemblyName = uniqeId;
+            string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, uniqeId);
 
             // Create temp folder
             Directory.CreateDirectory(outputDir);
@@ -336,8 +339,21 @@ namespace Avro.Test.CodeGen
             try
             {
                 // Compile avro
-                AvroGen avroGen = new AvroGen(schema, namespaceMapping);
-                avroGen.GenerateSchema(outputDir);
+
+                if (testFromFile)
+                {
+                    // Save schema if testing is from file
+                    string schemaFileName = Path.Combine(outputDir, $"{uniqeId}.avsc");
+                    System.IO.File.WriteAllText(schemaFileName, schema);
+
+                    // Generate schema from file
+                    AvroGen.GenerateSchemaFromFile(schemaFileName, outputDir, namespaceMapping);
+                }
+                else
+                {
+                    // Generate schema from text
+                    AvroGen.GenerateSchema(schema, outputDir, namespaceMapping);
+                }
 
                 // Check if all generated files exist
                 if (generatedFilesToCheck != null)
@@ -377,13 +393,6 @@ namespace Avro.Test.CodeGen
             {
                 Directory.Delete(outputDir, true);
             }
-        }
-
-        [TestCase(null)]
-        [TestCase("")]
-        public void EmptySchemaArgumentNullException(string schema)
-        {
-            Assert.That(() => new AvroGen(schema), Throws.Exception.TypeOf<ArgumentNullException>());
         }
 
         [TestCase(
@@ -611,8 +620,7 @@ namespace Avro.Test.CodeGen
             {
                 Assert.That(() =>
                 {
-                    AvroGen avroGen = new AvroGen(schema);
-                    avroGen.GenerateSchema(outputDir);
+                    AvroGen.GenerateSchema(schema, outputDir);
                 }, Throws.Exception.TypeOf(expectedException));
             }
             finally
@@ -620,7 +628,6 @@ namespace Avro.Test.CodeGen
                 Directory.Delete(outputDir, true);
             }
         }
-
 
         [TestCase(@"
 {

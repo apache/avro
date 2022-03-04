@@ -76,62 +76,6 @@ namespace Avro.Test.CodeGen
             }
         }
 
-        // The actual functionaluty of AvroGen is tested in `AvroGenTests.cs`
-        // This tests just validates that the proper files are generated,
-        // however it does not test the actual compilation of the generated source files
-        private void TestSchema(string schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null, IEnumerable<string> generatedFilesToCheck = null)
-        {
-            string uniqueId = Guid.NewGuid().ToString();
-            string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, uniqueId);
-
-            // Create temp folder
-            Directory.CreateDirectory(outputDir);
-
-            // Make sure to start with an empty working folder
-            Assert.That(new DirectoryInfo(outputDir), Is.Empty);
-
-            try
-            {
-                // Save schema into file
-                string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
-                System.IO.File.WriteAllText(schemaFileName, schema);
-
-                // Generate avrogen tool arguments
-                List<string> avroGenToolArgs = new List<string>()
-                {
-                    "-s",
-                    schemaFileName,
-                    outputDir
-                };
-                if (namespaceMapping != null)
-                {
-                    foreach (KeyValuePair<string, string> kv in namespaceMapping)
-                    {
-                        avroGenToolArgs.Add("--namespace");
-                        avroGenToolArgs.Add($"{kv.Key}:{kv.Value}");
-                    }
-                }
-
-                // Run avrogen tool
-                AvroGenToolResult result = RunAvroGenTool(avroGenToolArgs.ToArray());
-
-                // Check avrogen result
-                Assert.That(result.ExitCode, Is.EqualTo(0));
-                Assert.That(result.StdOut, Is.Empty);
-                Assert.That(result.StdErr, Is.Empty);
-
-                // Check if all generated files exist
-                foreach (string generatedFile in generatedFilesToCheck)
-                {
-                    Assert.That(new FileInfo(Path.Combine(outputDir, generatedFile)), Does.Exist);
-                }
-            }
-            finally
-            {
-                Directory.Delete(outputDir, true);
-            }
-        }
-
         [Test]
         public void CommandLineNoArgs()
         {
@@ -174,39 +118,6 @@ namespace Avro.Test.CodeGen
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.StdOut, Is.Not.Empty);
             Assert.That(result.StdErr, Is.Not.Empty);
-        }
-
-        [TestCase(@"
-{
-    ""type"": ""fixed"",
-    ""namespace"": ""com.base"",
-    ""name"": ""MD5"",
-    ""size"": 16
-}",
-            new string[]
-            {
-                "com/base/MD5.cs"
-            })]
-        public void GenerateSchema(string schema, IEnumerable<string> generatedFilesToCheck)
-        {
-            TestSchema(schema, namespaceMapping: null, generatedFilesToCheck: generatedFilesToCheck);
-        }
-
-        [TestCase(@"
-{
-    ""type"": ""fixed"",
-    ""namespace"": ""com.base"",
-    ""name"": ""MD5"",
-    ""size"": 16
-}",
-            "com.base", "SchemaTest",
-            new string[]
-            {
-                "SchemaTest/MD5.cs"
-            })]
-        public void GenerateSchemaWithNamespaceMapping(string schema, string namespaceMappingFrom, string namespaceMappingTo, IEnumerable<string> generatedFilesToCheck)
-        {
-            TestSchema(schema, namespaceMapping: new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck: generatedFilesToCheck);
         }
     }
 }

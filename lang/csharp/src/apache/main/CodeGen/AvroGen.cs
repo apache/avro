@@ -24,35 +24,20 @@ namespace Avro
     /// <summary>
     /// Generates C# code from Avro schemas and protocols.
     /// </summary>
-    public class AvroGen
+    public static class AvroGen
     {
-        private readonly string _input;
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="AvroGen"/> class.
+        /// Generate files for protocol.
         /// </summary>
-        /// <param name="input">input schema or protocol definition.</param>
-        /// <param name="namespaceMapping">namespace mappings object.</param>
-        public AvroGen(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                throw new ArgumentNullException(nameof(input));
-            }
-
-            _input = input;
-
-            if (namespaceMapping != null)
-                _input = ReplaceMappedNamespacesInSchema(_input, namespaceMapping);
-        }
-
-        /// <summary>
-        /// Generate files for schema.
-        /// </summary>
+        /// <param name="input">input protocol definition.</param>
         /// <param name="outputDir">output directory for generated files.</param>
-        public void GenerateProtocol(string outputDir)
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        public static void GenerateProtocol(string input, string outputDir, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
-            Protocol protocol = Protocol.Parse(_input);
+            if (namespaceMapping != null)
+                input = ReplaceMappedNamespacesInSchema(input, namespaceMapping);
+
+            Protocol protocol = Protocol.Parse(input);
 
             CodeGen codegen = new CodeGen();
             codegen.AddProtocol(protocol);
@@ -64,10 +49,27 @@ namespace Avro
         /// <summary>
         /// Generate files for protocol.
         /// </summary>
+        /// <param name="inputFile">input protocol definition file.</param>
         /// <param name="outputDir">output directory for generated files.</param>
-        public void GenerateSchema(string outputDir)
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        public static void GenerateProtocolFromFile(string inputFile, string outputDir, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
         {
-            Schema schema = Schema.Parse(_input);
+            string text = System.IO.File.ReadAllText(inputFile);
+            GenerateProtocol(text, outputDir, namespaceMapping);
+        }
+
+        /// <summary>
+        /// Generate files for schema.
+        /// </summary>
+        /// <param name="input">input schema definition.</param>
+        /// <param name="outputDir">output directory for generated files.</param>
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        public static void GenerateSchema(string input, string outputDir, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            if (namespaceMapping != null)
+                input = ReplaceMappedNamespacesInSchema(input, namespaceMapping);
+
+            Schema schema = Schema.Parse(input);
 
             CodeGen codegen = new CodeGen();
             codegen.AddSchema(schema);
@@ -77,13 +79,25 @@ namespace Avro
         }
 
         /// <summary>
+        /// Generate files for schema.
+        /// </summary>
+        /// <param name="inputFile">input schema definition file.</param>
+        /// <param name="outputDir">output directory for generated files.</param>
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        public static void GenerateSchemaFromFile(string inputFile, string outputDir, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            string text = System.IO.File.ReadAllText(inputFile);
+            GenerateSchema(text, outputDir, namespaceMapping);
+        }
+
+        /// <summary>
         /// Replace namespace(s) in schema or protocol definition.
         /// </summary>
         /// <param name="input">input schema or protocol definition.</param>
         /// <param name="namespaceMapping">namespace mappings object.</param>
         public static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
-            if (namespaceMapping == null)
+            if (namespaceMapping == null || input == null)
                 return input;
 
             // Replace namespace in "namespace" definitions: 

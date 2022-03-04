@@ -121,17 +121,11 @@ namespace Avro
 
             try
             {
-                // Read schema or protocol definition
-                string text = System.IO.File.ReadAllText(inputFile);
-
-                // Create avro generator
-                AvroGen avroGen = new AvroGen(text, namespaceMapping);
-
                 // Generate code
                 if (isProtocol.Value)
-                    avroGen.GenerateProtocol(outputDir);
+                    AvroGen.GenerateProtocolFromFile(inputFile, outputDir, namespaceMapping);
                 else
-                    avroGen.GenerateSchema(outputDir);
+                    AvroGen.GenerateSchemaFromFile(inputFile, outputDir, namespaceMapping);
             }
             catch (Exception ex)
             {
