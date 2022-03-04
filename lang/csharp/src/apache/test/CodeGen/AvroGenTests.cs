@@ -19,7 +19,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -322,8 +321,7 @@ namespace Avro.Test.CodeGen
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
-            IEnumerable<string> generatedFilesToCheck = null,
-            bool testFromFile = true)
+            IEnumerable<string> generatedFilesToCheck = null)
         {
             string uniqeId = Guid.NewGuid().ToString();
 
@@ -338,22 +336,12 @@ namespace Avro.Test.CodeGen
 
             try
             {
-                // Compile avro
+                // Save schema
+                string schemaFileName = Path.Combine(outputDir, $"{uniqeId}.avsc");
+                System.IO.File.WriteAllText(schemaFileName, schema);
 
-                if (testFromFile)
-                {
-                    // Save schema if testing is from file
-                    string schemaFileName = Path.Combine(outputDir, $"{uniqeId}.avsc");
-                    System.IO.File.WriteAllText(schemaFileName, schema);
-
-                    // Generate schema from file
-                    AvroGen.GenerateSchemaFromFile(schemaFileName, outputDir, namespaceMapping);
-                }
-                else
-                {
-                    // Generate schema from text
-                    AvroGen.GenerateSchema(schema, outputDir, namespaceMapping);
-                }
+                // Generate from schema file
+                AvroGen.GenerateSchemaFromFile(schemaFileName, outputDir, namespaceMapping);
 
                 // Check if all generated files exist
                 if (generatedFilesToCheck != null)
