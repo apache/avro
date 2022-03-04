@@ -7,8 +7,8 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-syn = {version="1.0.60",features=["full","fold"]}
+syn = {version= "1.0.60", features=["full", "fold"]}
 quote = "1.0.8"
 proc-macro2 = "1.0"
 serde = { version = "1.0.130", features = ["derive"] }
-avro-rs = { path = "../avro" }
+apache-avro = { path = "../avro" }

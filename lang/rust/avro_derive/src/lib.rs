@@ -47,12 +47,12 @@ fn get_data_struct_schema_def(
                 let schema_expr = type_to_schema_expr(&field.ty)?;
                 let position = position;
                 record_field_exprs.push(quote! {
-                    avro_rs::schema::RecordField {
+                    apache_avro::schema::RecordField {
                             name: #name.to_string(),
                             doc: Option::None,
                             default: Option::None,
                             schema: #schema_expr,
-                            order: avro_rs::schema::RecordFieldOrder::Ignore,
+                            order: apache_avro::schema::RecordFieldOrder::Ignore,
                             position: #position,
                         }
                 });
@@ -74,7 +74,7 @@ fn get_data_struct_schema_def(
     let name = ident.to_string();
     Ok(quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
-        avro_rs::schema::record_schema_for_fields(avro_rs::schema::Name::new(#name), None, schema_fields)
+        apache_avro::schema::record_schema_for_fields(apache_avro::schema::Name::new(#name), None, schema_fields)
     })
 }
 
@@ -90,8 +90,8 @@ fn get_data_enum_schema_def(
             .collect();
         let name = ident.to_string();
         Ok(quote! {
-            avro_rs::schema::Schema::Enum {
-                name: avro_rs::schema::Name::new(#name),
+            apache_avro::schema::Schema::Enum {
+                name: apache_avro::schema::Name::new(#name),
                 doc: None,
                 symbols: vec![#(#symbols.to_owned()),*]
             }
@@ -111,11 +111,11 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
 
         let schema = match &type_string[..] {
             "bool" => quote! {Schema::Boolean},
-            "i8" | "i16" | "i32" | "u8" | "u16" => quote! {Schema::Int},
-            "i64" => quote! {Schema::Long},
-            "f32" => quote! {Schema::Float},
-            "f64" => quote! {Schema::Double},
-            "String" => quote! {Schema::String},
+            "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::schema::Schema::Int},
+            "i64" => quote! {apache_avro::schema::Schema::Long},
+            "f32" => quote! {apache_avro::schema::Schema::Float},
+            "f64" => quote! {apache_avro::schema::Schema::Double},
+            "String" => quote! {apache_avro::schema::Schema::String},
             "char" => {
                 return Err(vec![Error::new_spanned(
                     ty,
@@ -135,7 +135,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
         Ok(schema)
     } else if let Type::Array(ta) = ty {
         let inner_schema_expr = type_to_schema_expr(&ta.elem)?;
-        Ok(quote! {Schema::Array(Box::new(#inner_schema_expr))})
+        Ok(quote! {apache_avro::schema::Schema::Array(Box::new(#inner_schema_expr))})
     } else {
         Err(vec![])
     }

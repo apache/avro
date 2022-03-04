@@ -1,6 +1,6 @@
 use avro_derive::*;
-use avro_rs::schema::AvroSchema;
-use avro_rs::{from_value, Reader, Schema, Writer};
+use apache_avro::schema::AvroSchema;
+use apache_avro::{from_value, Reader, Schema, Writer};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::collections::HashMap;
