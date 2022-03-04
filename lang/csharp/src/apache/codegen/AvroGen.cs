@@ -18,11 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Avro
 {
-    public class AvroGen
+    public class AvroGenTool
     {
         public static int Main(string[] args)
         {
@@ -122,10 +121,17 @@ namespace Avro
 
             try
             {
+                // Read schema or protocol definition
+                string text = System.IO.File.ReadAllText(inputFile);
+
+                // Create avro generator
+                AvroGen avroGen = new AvroGen(text, namespaceMapping);
+
+                // Generate code
                 if (isProtocol.Value)
-                    GenProtocol(inputFile, outputDir, namespaceMapping);
+                    avroGen.GenerateProtocol(outputDir);
                 else
-                    GenSchema(inputFile, outputDir, namespaceMapping);
+                    avroGen.GenerateSchema(outputDir);
             }
             catch (Exception ex)
             {
@@ -136,7 +142,7 @@ namespace Avro
             return 0;
         }
 
-        static void Usage()
+        private static void Usage()
         {
             Console.WriteLine("{0}\n\n" +
                 "Usage:\n" +
@@ -149,77 +155,6 @@ namespace Avro
                 "              May be specified multiple times to map multiple namespaces.\n",
                 AppDomain.CurrentDomain.FriendlyName);
             return;
-        }
-
-        static void GenProtocol(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
-        {
-            string text = System.IO.File.ReadAllText(infile);
-
-            if (namespaceMapping != null)
-                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
-
-            Protocol protocol = Protocol.Parse(text);
-
-            CodeGen codegen = new CodeGen();
-            codegen.AddProtocol(protocol);
-
-            codegen.GenerateCode();
-            codegen.WriteTypes(outdir);
-        }
-
-        static void GenSchema(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
-        {
-            string text = System.IO.File.ReadAllText(infile);
-
-            if (namespaceMapping != null)
-                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
-
-            Schema schema = Schema.Parse(text);
-
-            CodeGen codegen = new CodeGen();
-            codegen.AddSchema(schema);
-
-            codegen.GenerateCode();
-            codegen.WriteTypes(outdir);
-        }
-
-        public static string ReplaceMappedNamespacesInSchema(string schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
-        {
-            if (namespaceMapping == null)
-                return schema;
-
-            // Replace namespace in "namespace" definitions: 
-            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
-            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
-            // Note: It keeps the original whitespaces
-            return Regex.Replace(schema, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
-            {
-                // m.Groups[1]: whitespaces before ':'
-                // m.Groups[2]: whitespaces after ':'
-                // m.Groups[3]: the namespace
-
-                string ns = m.Groups[3].Value;
-
-                foreach (var mapping in namespaceMapping)
-                {
-                    // Full match
-                    if (mapping.Key == ns)
-                    {
-                        ns = mapping.Value;
-                        break;
-                    }
-                    else
-                    // Partial match
-                    if (ns.StartsWith($"{mapping.Key}."))
-                    {
-                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
-                        break;
-                    }
-                }
-                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
-            });
         }
     }
 }

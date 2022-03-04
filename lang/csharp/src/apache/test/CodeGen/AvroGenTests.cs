@@ -27,7 +27,7 @@ using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Avro.Specific;
 
-namespace Avro.Test
+namespace Avro.Test.CodeGen
 {
     [TestFixture]
 
@@ -264,90 +264,6 @@ namespace Avro.Test
   ]
 }";
 
-        enum GenerateType
-        {
-            Schema,
-            Protocol
-        };
-
-        class ExecuteResult
-        {
-            public int ExitCode { get; set; }
-            public string[] StdOut { get; set; }
-            public string[] StdErr { get; set; }
-        }
-
-        private ExecuteResult RunAvroGen(IEnumerable<string> args)
-        {
-            // Save stdout and stderr
-            TextWriter conOut = Console.Out;
-            TextWriter conErr = Console.Error;
-
-            try
-            {
-                ExecuteResult result = new ExecuteResult();
-                StringBuilder strBuilderOut = new StringBuilder();
-                StringBuilder strBuilderErr = new StringBuilder();
-
-                using (StringWriter writerOut = new StringWriter(strBuilderOut))
-                using (StringWriter writerErr = new StringWriter(strBuilderErr))
-                {
-                    writerOut.NewLine = "\n";
-                    writerErr.NewLine = "\n";
-
-                    // Overwrite stdout and stderr to be able to capture console output
-                    Console.SetOut(writerOut);
-                    Console.SetError(writerErr);
-
-                    result.ExitCode = AvroGen.Main(args.ToArray());
-
-                    writerOut.Flush();
-                    writerErr.Flush();
-
-                    result.StdOut = strBuilderOut.Length == 0 ? Array.Empty<string>() : strBuilderOut.ToString().Split(writerOut.NewLine);
-                    result.StdErr = strBuilderErr.Length == 0 ? Array.Empty<string>() : strBuilderErr.ToString().Split(writerErr.NewLine);
-                }
-
-                return result;
-            }
-            finally
-            {
-                // Restore console
-                Console.SetOut(conOut);
-                Console.SetError(conErr);
-            }
-        }
-
-        private void CompileAvroSchemaFiles(IEnumerable<string> schemaFileNames, string outputDir, GenerateType genType = GenerateType.Schema, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
-        {
-            // Run avrogen on scema files
-            foreach (string schemaFile in schemaFileNames)
-            {
-                List<string> avroGenArgs = new List<string>()
-                {
-                    "-s",
-                    schemaFile,
-                    outputDir
-                };
-
-                if (namespaceMapping != null)
-                {
-                    foreach (KeyValuePair<string, string> kv in namespaceMapping)
-                    {
-                        avroGenArgs.Add("--namespace");
-                        avroGenArgs.Add($"{kv.Key}:{kv.Value}");
-                    }
-                }
-
-                ExecuteResult result = RunAvroGen(avroGenArgs);
-
-                // Verify result
-                Assert.That(result.ExitCode, Is.EqualTo(0));
-                Assert.That(result.StdOut, Is.Empty);
-                Assert.That(result.StdErr, Is.Empty);
-            }
-        }
-
         private Assembly CompileCharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName = null, bool loadAssembly = true)
         {
             // CReate random assenbly name if not specified
@@ -419,12 +335,9 @@ namespace Avro.Test
 
             try
             {
-                // Save schema into file
-                string schemaFileName = Path.Combine(outputDir, Path.GetTempFileName());
-                System.IO.File.WriteAllText(schemaFileName, schema);
-
                 // Compile avro
-                CompileAvroSchemaFiles(new List<string>() { schemaFileName }, outputDir, GenerateType.Schema, namespaceMapping);
+                AvroGen avroGen = new AvroGen(schema, namespaceMapping);
+                avroGen.GenerateSchema(outputDir);
 
                 // Check if all generated files exist
                 if (generatedFilesToCheck != null)
@@ -466,47 +379,11 @@ namespace Avro.Test
             }
         }
 
-        [Test]
-        public void CommandLineNoArgs()
+        [TestCase(null)]
+        [TestCase("")]
+        public void EmptySchemaArgumentNullException(string schema)
         {
-            ExecuteResult result = RunAvroGen(Array.Empty<string>());
-
-            Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.StdOut, Is.Not.Empty);
-            Assert.That(result.StdErr, Is.Empty);
-        }
-
-        [TestCase("-h")]
-        [TestCase("--help")]
-        [TestCase("--help", "-h")]
-        [TestCase("--help", "-s", "whatever.avsc", ".")]
-        [TestCase("-p", "whatever.avsc", ".", "-h")]
-        public void CommandLineHelp(params string[] args)
-        {
-            ExecuteResult result = RunAvroGen(args);
-
-            Assert.That(result.ExitCode, Is.EqualTo(0));
-            Assert.That(result.StdOut, Is.Not.Empty);
-            Assert.That(result.StdErr, Is.Empty);
-        }
-
-        [TestCase("-p")]
-        [TestCase("-s")]
-        [TestCase("-p", "whatever.avsc")]
-        [TestCase("-s", "whatever.avsc")]
-        [TestCase("whatever.avsc")]
-        [TestCase("whatever.avsc .")]
-        [TestCase(".")]
-        [TestCase("-s", "whatever.avsc", "--namespace")]
-        [TestCase("-s", "whatever.avsc", "--namespace", "org.apache")]
-        [TestCase("-s", "whatever.avsc", "--namespace", "org.apache:")]
-        public void CommandLineMissingArgs(params string[] args)
-        {
-            ExecuteResult result = RunAvroGen(args);
-
-            Assert.That(result.ExitCode, Is.EqualTo(1));
-            Assert.That(result.StdOut, Is.Not.Empty);
-            Assert.That(result.StdErr, Is.Not.Empty);
+            Assert.That(() => new AvroGen(schema), Throws.Exception.TypeOf<ArgumentNullException>());
         }
 
         [TestCase(
@@ -720,10 +597,10 @@ namespace Avro.Test
             TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
-        [TestCase(_logicalTypesWithCustomConversion)]
-        [TestCase(_customConversionWithLogicalTypes)]
-        [TestCase(_nestedLogicalTypesUnionFixedDecimal)]
-        public void NotSupportedSchema(string schema)
+        [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
+        [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
+        [TestCase(_nestedLogicalTypesUnionFixedDecimal, typeof(SchemaParseException))]
+        public void NotSupportedSchema(string schema, Type expectedException)
         {
             string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, Guid.NewGuid().ToString());
 
@@ -732,17 +609,11 @@ namespace Avro.Test
 
             try
             {
-                // Save schema into file
-                string schemaFileName = Path.Combine(outputDir, Path.GetTempFileName());
-                System.IO.File.WriteAllText(schemaFileName, schema);
-
-                ExecuteResult result = RunAvroGen(new string[] { "-s", schemaFileName, outputDir });
-
-                // Verify result
-                Assert.That(result.ExitCode, Is.EqualTo(1));
-                Assert.That(result.StdOut, Is.Empty);
-                Assert.That(result.StdErr, Is.Not.Empty);
-                Assert.That(result.StdErr[0], Does.StartWith("Exception occurred."));
+                Assert.That(() =>
+                {
+                    AvroGen avroGen = new AvroGen(schema);
+                    avroGen.GenerateSchema(outputDir);
+                }, Throws.Exception.TypeOf(expectedException));
             }
             finally
             {
@@ -887,7 +758,7 @@ namespace Avro.Test
 
             string schemaText = AvroGen.ReplaceMappedNamespacesInSchema(_nullableLogicalTypes, namespaceMapping);
 
-            var codegen = new CodeGen();
+            var codegen = new Avro.CodeGen();
             codegen.AddSchema(Schema.Parse(schemaText));
 
             Assert.That(codegen.Schemas.Count, Is.EqualTo(1));

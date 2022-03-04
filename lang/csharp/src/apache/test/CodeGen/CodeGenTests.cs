@@ -18,32 +18,32 @@
 using System;
 using NUnit.Framework;
 
-namespace Avro.Test
+namespace Avro.Test.CodeGen
 {
     [TestFixture]
 
-    class CodeGenTest
+    class CodeGenTests
     {
         [Test]
         public void TestGetNullableTypeException()
         {
-            Assert.Throws<ArgumentNullException>(() => CodeGen.GetNullableType(null));
+            Assert.Throws<ArgumentNullException>(() => Avro.CodeGen.GetNullableType(null));
         }
 
         [TestFixture]
-        public class CodeGenTestClass : CodeGen
+        public class CodeGenTestClass : Avro.CodeGen
         {
             [Test]
             public void TestGenerateNamesException()
             {
                 Protocol protocol = null;
-                Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+                Assert.Throws<ArgumentNullException>(() => GenerateNames(protocol));
             }
 
             [Test]
             public void TestAddNamespaceException()
             {
-                Assert.Throws<ArgumentNullException>(() => this.AddNamespace(null));
+                Assert.Throws<ArgumentNullException>(() => AddNamespace(null));
             }
         }
     }
