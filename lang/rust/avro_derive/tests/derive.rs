@@ -203,4 +203,45 @@ mod test_derive {
         };
         freeze_dry(enum_included);
     }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct ConsList {
+        value : i32,
+        next: Option<Box<ConsList>>
+    }
+
+    #[test]
+    fn test_cons() {
+        let list = ConsList {
+            value : 34,
+            next: Some(Box::new(
+                ConsList { value: 42, next: None }
+            ))
+        };
+        freeze_dry(list)
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct ConsListGeneric<T : AvroSchemaWithResolved> {
+        value : T,
+        next: Option<Box<ConsListGeneric<T>>>
+    }
+
+    #[test]
+    fn test_cons_generic() {
+        let list = ConsListGeneric::<Test6> 
+        {
+            value : Test6 {
+                a: Basic::B ,
+                b: "testing".into(),
+            },
+            next: Some(Box::new(
+                ConsListGeneric::<Test6> { value: Test6{
+                    a: Basic::D,
+                    b: "testing2".into(),
+                }, next: None }
+            ))
+        };
+        freeze_dry(list)
+    }
 }
