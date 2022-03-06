@@ -30,6 +30,7 @@ use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
     fmt,
+    hash::{Hash, Hasher},
     str::FromStr,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
@@ -220,7 +221,7 @@ impl<'a> From<&'a types::Value> for SchemaKind {
 ///
 /// More information about schema names can be found in the
 /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Name {
     pub name: String,
     pub namespace: Option<String>,
@@ -241,16 +242,40 @@ impl Name {
         }
     }
 
+    /// Create a new `Name`.
+    /// Parses the optional `namespace` from the `name` string.
+    /// `aliases` will not be defined.
+    pub fn parse_str(name: &str) -> Name {
+        let (name, namespace) = Name::get_name_and_namespace(name);
+        Name {
+            name,
+            namespace,
+            aliases: None,
+        }
+    }
+
+    fn get_name_and_namespace(name: &str) -> (String, Option<String>) {
+        if let Some(idx) = name.rfind('.') {
+            let namespace_from_name = name[..idx].to_owned();
+            let name_from_name = name[idx + 1..].to_owned();
+            (name_from_name, Some(namespace_from_name))
+        } else {
+            (name.to_owned(), None)
+        }
+    }
+
     /// Parse a `serde_json::Value` into a `Name`.
     fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
-        let name = complex.name().ok_or(Error::GetNameField)?;
+        let (name, namespace_from_name) = complex
+            .name()
+            .map(|name| Name::get_name_and_namespace(name.as_str()))
+            .ok_or(Error::GetNameField)?;
 
+        // FIXME Reading name from the type is wrong ! The name there is just a metadata (AVRO-3430)
         let type_name = match complex.get("type") {
             Some(Value::Object(complex_type)) => complex_type.name().or(None),
             _ => None,
         };
-
-        let namespace = complex.string("namespace");
 
         let aliases: Option<Vec<String>> = complex
             .get("aliases")
@@ -265,7 +290,7 @@ impl Name {
 
         Ok(Name {
             name: type_name.unwrap_or(name),
-            namespace,
+            namespace: namespace_from_name.or_else(|| complex.string("namespace")),
             aliases,
         })
     }
@@ -289,6 +314,20 @@ impl Name {
                 None => self.name.clone(),
             }
         }
+    }
+}
+
+impl Hash for Name {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.fullname(None).hash(state);
+    }
+}
+
+impl Eq for Name {}
+
+impl PartialEq for Name {
+    fn eq(&self, other: &Name) -> bool {
+        self.fullname(None).eq(&other.fullname(None))
     }
 }
 
@@ -435,15 +474,15 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 
 #[derive(Default)]
 struct Parser {
-    input_schemas: HashMap<String, Value>,
+    input_schemas: HashMap<Name, Value>,
     // A map of name -> Schema::Ref
     // Used to resolve cyclic references, i.e. when a
     // field's type is a reference to its record's type
-    resolving_schemas: HashMap<String, Schema>,
-    input_order: Vec<String>,
+    resolving_schemas: HashMap<Name, Schema>,
+    input_order: Vec<Name>,
     // A map of name -> fully parsed Schema
     // Used to avoid parsing the same schema twice
-    parsed_schemas: HashMap<String, Schema>,
+    parsed_schemas: HashMap<Name, Schema>,
 }
 
 impl Schema {
@@ -485,17 +524,17 @@ impl Schema {
     ///
     /// If two of the input schemas have the same fullname, an Error will be returned.
     pub fn parse_list(input: &[&str]) -> Result<Vec<Schema>, Error> {
-        let mut input_schemas: HashMap<String, Value> = HashMap::with_capacity(input.len());
-        let mut input_order: Vec<String> = Vec::with_capacity(input.len());
+        let mut input_schemas: HashMap<Name, Value> = HashMap::with_capacity(input.len());
+        let mut input_order: Vec<Name> = Vec::with_capacity(input.len());
         for js in input {
             let schema: Value = serde_json::from_str(js).map_err(Error::ParseSchemaJson)?;
             if let Value::Object(inner) = &schema {
-                let fullname = Name::parse(inner)?.fullname(None);
-                let previous_value = input_schemas.insert(fullname.clone(), schema);
+                let name = Name::parse(inner)?;
+                let previous_value = input_schemas.insert(name.clone(), schema);
                 if previous_value.is_some() {
-                    return Err(Error::NameCollision(fullname));
+                    return Err(Error::NameCollision(name.fullname(None)));
                 }
-                input_order.push(fullname);
+                input_order.push(name);
             } else {
                 return Err(Error::GetNameField);
             }
@@ -577,7 +616,7 @@ impl Parser {
             "float" => Ok(Schema::Float),
             "bytes" => Ok(Schema::Bytes),
             "string" => Ok(Schema::String),
-            _ => self.fetch_schema(name),
+            _ => self.fetch_schema_ref(name),
         }
     }
 
@@ -590,7 +629,7 @@ impl Parser {
     ///
     /// This method allows schemas definitions that depend on other types to
     /// parse their dependencies (or look them up if already parsed).
-    fn fetch_schema(&mut self, name: &str) -> AvroResult<Schema> {
+    fn fetch_schema_ref(&mut self, name: &str) -> AvroResult<Schema> {
         fn get_schema_ref(parsed: &Schema) -> Schema {
             match &parsed {
                 Schema::Record { ref name, .. }
@@ -600,23 +639,23 @@ impl Parser {
             }
         }
 
-        if let Some(parsed) = self.parsed_schemas.get(name) {
+        let name = Name::parse_str(name);
+
+        if let Some(parsed) = self.parsed_schemas.get(&name) {
             return Ok(get_schema_ref(parsed));
         }
-        if let Some(resolving_schema) = self.resolving_schemas.get(name) {
+        if let Some(resolving_schema) = self.resolving_schemas.get(&name) {
             return Ok(resolving_schema.clone());
         }
 
         let value = self
             .input_schemas
-            .remove(name)
-            .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
+            .remove(&name)
+            .ok_or_else(|| Error::ParsePrimitive(name.fullname(None)))?;
 
         let parsed = self.parse(&value)?;
-        self.parsed_schemas.insert(
-            get_schema_type_name(name.to_string(), value),
-            parsed.clone(),
-        );
+        self.parsed_schemas
+            .insert(get_schema_type_name(name, value), parsed.clone());
 
         Ok(get_schema_ref(&parsed))
     }
@@ -812,7 +851,7 @@ impl Parser {
     fn register_resolving_schema(&mut self, name: &Name) {
         let resolving_schema = Schema::Ref { name: name.clone() };
         self.resolving_schemas
-            .insert(name.fullname(None), resolving_schema.clone());
+            .insert(name.clone(), resolving_schema.clone());
 
         let namespace = &name.namespace;
 
@@ -822,16 +861,16 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
+                let alias_name = Name::parse_str(alias_fullname.as_str());
                 self.resolving_schemas
-                    .insert(alias_fullname, resolving_schema.clone());
+                    .insert(alias_name, resolving_schema.clone());
             });
         }
     }
 
     fn register_parsed_schema(&mut self, name: &Name, schema: &Schema) {
-        self.parsed_schemas
-            .insert(name.fullname(None), schema.clone());
-        self.resolving_schemas.remove(name.fullname(None).as_str());
+        self.parsed_schemas.insert(name.clone(), schema.clone());
+        self.resolving_schemas.remove(name);
 
         let namespace = &name.namespace;
 
@@ -841,9 +880,9 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
-                self.parsed_schemas
-                    .insert(alias_fullname.clone(), schema.clone());
-                self.resolving_schemas.remove(alias_fullname.as_str());
+                let alias_name = Name::parse_str(alias_fullname.as_str());
+                self.resolving_schemas.remove(&alias_name);
+                self.parsed_schemas.insert(alias_name, schema.clone());
             });
         }
     }
@@ -851,10 +890,12 @@ impl Parser {
     /// Returns already parsed schema or a schema that is currently being resolved.
     fn get_already_seen_schema(&self, complex: &Map<String, Value>) -> Option<&Schema> {
         match complex.get("type") {
-            Some(Value::String(ref typ)) => self
-                .resolving_schemas
-                .get(typ)
-                .or_else(|| self.parsed_schemas.get(typ)),
+            Some(Value::String(ref typ)) => {
+                let name = Name::parse_str(typ.as_str());
+                self.resolving_schemas
+                    .get(&name)
+                    .or_else(|| self.parsed_schemas.get(&name))
+            }
             _ => None,
         }
     }
@@ -1016,10 +1057,10 @@ impl Parser {
     }
 }
 
-fn get_schema_type_name(name: String, value: Value) -> String {
+fn get_schema_type_name(name: Name, value: Value) -> Name {
     match value.get("type") {
         Some(Value::Object(complex_type)) => match complex_type.name() {
-            Some(name) => name,
+            Some(name) => Name::parse_str(name.as_str()),
             _ => name,
         },
         _ => name,
@@ -1032,7 +1073,7 @@ impl Serialize for Schema {
         S: Serializer,
     {
         match *self {
-            Schema::Ref { ref name } => serializer.serialize_str(&name.name),
+            Schema::Ref { ref name } => serializer.serialize_str(&name.fullname(None)),
             Schema::Null => serializer.serialize_str("null"),
             Schema::Boolean => serializer.serialize_str("boolean"),
             Schema::Int => serializer.serialize_str("int"),
@@ -2224,5 +2265,53 @@ mod tests {
 
         let expected = r#"{"name":"test.test","type":"record","fields":[{"name":"bar","type":{"name":"test.foo","type":"record","fields":[{"name":"id","type":"long"}]}},{"name":"baz","type":"test.foo"}]}"#;
         assert_eq!(schema.canonical_form(), expected);
+    }
+
+    #[test]
+    fn test_read_namespace_from_name() {
+        let schema = r#"
+    {
+      "name": "space.name",
+      "type": "record",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int"
+        }
+      ]
+    }
+    "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, .. } = schema {
+            assert_eq!(name.name, "name");
+            assert_eq!(name.namespace, Some("space".to_string()));
+        } else {
+            panic!("Expected a record schema!");
+        }
+    }
+
+    #[test]
+    fn test_namespace_from_name_has_priority_over_from_field() {
+        let schema = r#"
+    {
+      "name": "space1.name",
+      "namespace": "space2",
+      "type": "record",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int"
+        }
+      ]
+    }
+    "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, .. } = schema {
+            assert_eq!(name.namespace, Some("space1".to_string()));
+        } else {
+            panic!("Expected a record schema!");
+        }
     }
 }
