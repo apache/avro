@@ -175,7 +175,7 @@ impl SchemaKind {
     pub fn is_named(self) -> bool {
         matches!(
             self,
-            SchemaKind::Record | SchemaKind::Enum | SchemaKind::Fixed
+            SchemaKind::Record | SchemaKind::Enum | SchemaKind::Fixed | SchemaKind::Ref
         )
     }
 }
@@ -591,8 +591,17 @@ impl Parser {
     /// This method allows schemas definitions that depend on other types to
     /// parse their dependencies (or look them up if already parsed).
     fn fetch_schema(&mut self, name: &str) -> AvroResult<Schema> {
+        fn get_schema_ref(parsed: &Schema) -> Schema {
+            match &parsed {
+                Schema::Record { ref name, .. }
+                | Schema::Enum { ref name, .. }
+                | Schema::Fixed { ref name, .. } => Schema::Ref { name: name.clone() },
+                _ => parsed.clone(),
+            }
+        }
+
         if let Some(parsed) = self.parsed_schemas.get(name) {
-            return Ok(parsed.clone());
+            return Ok(get_schema_ref(parsed));
         }
         if let Some(resolving_schema) = self.resolving_schemas.get(name) {
             return Ok(resolving_schema.clone());
@@ -608,7 +617,8 @@ impl Parser {
             get_schema_type_name(name.to_string(), value),
             parsed.clone(),
         );
-        Ok(parsed)
+
+        Ok(get_schema_ref(&parsed))
     }
 
     fn parse_precision_and_scale(
@@ -1393,9 +1403,6 @@ mod tests {
             ]
         }"#;
 
-        let schema_a = Schema::parse_str(schema_str_a).unwrap();
-        let schema_b = Schema::parse_str(schema_str_b).unwrap();
-
         let schema_c = Schema::parse_list(&[schema_str_a, schema_str_b, schema_str_c])
             .unwrap()
             .last()
@@ -1409,7 +1416,17 @@ mod tests {
                 name: "field_one".to_string(),
                 doc: None,
                 default: None,
-                schema: Schema::Union(UnionSchema::new(vec![schema_a, schema_b]).unwrap()),
+                schema: Schema::Union(
+                    UnionSchema::new(vec![
+                        Schema::Ref {
+                            name: Name::new("A"),
+                        },
+                        Schema::Ref {
+                            name: Name::new("B"),
+                        },
+                    ])
+                    .unwrap(),
+                ),
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
@@ -1441,8 +1458,6 @@ mod tests {
             ]
         }"#;
 
-        let schema_a = Schema::parse_str(schema_str_a).unwrap();
-
         let schema_option_a = Schema::parse_list(&[schema_str_a, schema_str_option_a])
             .unwrap()
             .last()
@@ -1455,8 +1470,16 @@ mod tests {
             fields: vec![RecordField {
                 name: "field_one".to_string(),
                 doc: None,
-                default: Some(Value::Null),
-                schema: Schema::Union(UnionSchema::new(vec![Schema::Null, schema_a]).unwrap()),
+                default: Some(Value::String("null".to_string())),
+                schema: Schema::Union(
+                    UnionSchema::new(vec![
+                        Schema::Null,
+                        Schema::Ref {
+                            name: Name::new("A"),
+                        },
+                    ])
+                    .unwrap(),
+                ),
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
@@ -1636,7 +1659,7 @@ mod tests {
 
         let schema = Schema::parse_str(schema).unwrap();
         let schema_str = schema.canonical_form();
-        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]},{"name":"Manager","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]}]}]}"#;
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]},{"name":"Manager","type":"record","fields":[{"name":"gender","type":"Gender"}]}]}]}"#;
         assert_eq!(schema_str, expected);
     }
 
@@ -1684,7 +1707,7 @@ mod tests {
 
         let schema = Schema::parse_str(schema).unwrap();
         let schema_str = schema.canonical_form();
-        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]},{"name":"Manager","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]}]}]}"#;
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]},{"name":"Manager","type":"record","fields":[{"name":"id","type":"EmployeeId"}]}]}]}"#;
         assert_eq!(schema_str, expected);
     }
 
@@ -2179,5 +2202,27 @@ mod tests {
             json,
             r#"{"name":"ns.int","type":"record","fields":[{"name":"value","type":"int"},{"name":"next","type":["null","ns.int"]}]}"#
         );
+    }
+
+    #[test]
+    fn test_avro_3433_preserve_schema_refs_in_json() {
+        let schema = r#"
+    {
+      "name": "test.test",
+      "type": "record",
+      "fields": [
+        {
+          "name": "bar",
+          "type": { "name": "test.foo", "type": "record", "fields": [{ "name": "id", "type": "long" }] }
+        },
+        { "name": "baz", "type": "test.foo" }
+      ]
+    }
+    "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+
+        let expected = r#"{"name":"test.test","type":"record","fields":[{"name":"bar","type":{"name":"test.foo","type":"record","fields":[{"name":"id","type":"long"}]}},{"name":"baz","type":"test.foo"}]}"#;
+        assert_eq!(schema.canonical_form(), expected);
     }
 }
