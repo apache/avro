@@ -17,7 +17,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Reflection;
 
 namespace Avro
 {
@@ -36,6 +37,13 @@ namespace Avro
             if (args[0] == "-h" || args[0] == "--help")
             {
                 Usage();
+                return 0;
+            }
+
+            if (args.Contains("--version"))
+            {
+                // Print version information
+                Console.WriteLine(Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
                 return 0;
             }
 
@@ -136,6 +144,7 @@ namespace Avro
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
                 "  -h --help   Show this screen.\n" +
+                "  --version   Show version.\n" +
                 "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
                 "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
                 "              May be specified multiple times to map multiple namespaces.\n",
