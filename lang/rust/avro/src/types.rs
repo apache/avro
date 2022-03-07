@@ -19,7 +19,7 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::{Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema, Name},
+    schema::{Name, Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema},
     AvroResult, Error,
 };
 use serde_json::{Number, Value as JsonValue};
@@ -413,7 +413,11 @@ impl Value {
         self.resolve_internal(schema, &mut schemas_by_name)
     }
 
-    fn resolve_internal(mut self, schema: &Schema, schemas_by_name: &mut HashMap<Name, Schema>) -> AvroResult<Self> {
+    fn resolve_internal(
+        mut self,
+        schema: &Schema,
+        schemas_by_name: &mut HashMap<Name, Schema>,
+    ) -> AvroResult<Self> {
         pub fn resolve0(
             value: &mut Value,
             schema: &Schema,
@@ -714,7 +718,11 @@ impl Value {
         }
     }
 
-    fn resolve_union(self, schema: &UnionSchema, schemas_by_name: &mut HashMap<Name, Schema>) -> Result<Self, Error> {
+    fn resolve_union(
+        self,
+        schema: &UnionSchema,
+        schemas_by_name: &mut HashMap<Name, Schema>,
+    ) -> Result<Self, Error> {
         let v = match self {
             // Both are unions case.
             Value::Union(_i, v) => *v,
@@ -724,10 +732,17 @@ impl Value {
         // Find the first match in the reader schema.
         // FIXME: this might be wrong when the union consists of multiple same records that have different names
         let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
-        Ok(Value::Union(i as u32, Box::new(v.resolve_internal(inner, schemas_by_name)?)))
+        Ok(Value::Union(
+            i as u32,
+            Box::new(v.resolve_internal(inner, schemas_by_name)?),
+        ))
     }
 
-    fn resolve_array(self, schema: &Schema, schemas_by_name: &mut HashMap<Name, Schema>) -> Result<Self, Error> {
+    fn resolve_array(
+        self,
+        schema: &Schema,
+        schemas_by_name: &mut HashMap<Name, Schema>,
+    ) -> Result<Self, Error> {
         match self {
             Value::Array(items) => Ok(Value::Array(
                 items
@@ -742,12 +757,20 @@ impl Value {
         }
     }
 
-    fn resolve_map(self, schema: &Schema, schemas_by_name: &mut HashMap<Name, Schema>) -> Result<Self, Error> {
+    fn resolve_map(
+        self,
+        schema: &Schema,
+        schemas_by_name: &mut HashMap<Name, Schema>,
+    ) -> Result<Self, Error> {
         match self {
             Value::Map(items) => Ok(Value::Map(
                 items
                     .into_iter()
-                    .map(|(key, value)| value.resolve_internal(schema, schemas_by_name).map(|value| (key, value)))
+                    .map(|(key, value)| {
+                        value
+                            .resolve_internal(schema, schemas_by_name)
+                            .map(|value| (key, value))
+                    })
                     .collect::<Result<_, _>>()?,
             )),
             other => Err(Error::GetMap {
@@ -757,7 +780,11 @@ impl Value {
         }
     }
 
-    fn resolve_record(self, fields: &[RecordField], schemas_by_name: &mut HashMap<Name, Schema>) -> Result<Self, Error> {
+    fn resolve_record(
+        self,
+        fields: &[RecordField],
+        schemas_by_name: &mut HashMap<Name, Schema>,
+    ) -> Result<Self, Error> {
         let mut items = match self {
             Value::Map(items) => Ok(items),
             Value::Record(fields) => Ok(fields.into_iter().collect::<HashMap<_, _>>()),
@@ -788,7 +815,10 @@ impl Value {
                                     Schema::Null => Value::Union(0, Box::new(Value::Null)),
                                     _ => Value::Union(
                                         0,
-                                        Box::new(Value::from(value.clone()).resolve_internal(first, schemas_by_name)?),
+                                        Box::new(
+                                            Value::from(value.clone())
+                                                .resolve_internal(first, schemas_by_name)?,
+                                        ),
                                     ),
                                 }
                             }
@@ -1329,7 +1359,8 @@ mod tests {
 
     #[test]
     fn test_recursive_resolves() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1350,17 +1381,22 @@ mod tests {
                     "type":"Inner"
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("z".into(),Value::Int(6))]);
-        let outer = Value::Record(vec![("a".into(),inner_value1.clone()), ("b".into(), inner_value2.clone())]);
-        outer.resolve(&schema).expect("Record definition defined in one field must be availible in other field");
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer = Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
+        outer
+            .resolve(&schema)
+            .expect("Record definition defined in one field must be availible in other field");
     }
 
     #[test]
     fn test_recursive_resolves2() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1387,22 +1423,28 @@ mod tests {
                     }
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("z".into(),Value::Int(6))]);
-        let outer_value = Value::Record(
-            vec![
-                ("a".into(), Value::Array(vec![inner_value1.clone()])),
-                ("b".into(), Value::Map(vec![("akey".into(),inner_value2.clone())].into_iter().collect()))
-                ]
-            );
-        outer_value.resolve(&schema).expect("Record defined in array definition must be resolveable from map");
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            ("a".into(), Value::Array(vec![inner_value1])),
+            (
+                "b".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+        ]);
+        outer_value
+            .resolve(&schema)
+            .expect("Record defined in array definition must be resolveable from map");
     }
 
     #[test]
     fn test_recursive_resolves3() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1426,24 +1468,28 @@ mod tests {
                     }
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("z".into(),Value::Int(6))]);
-        let outer_value = Value::Record(
-            vec![
-                ("a".into(), inner_value1.clone()),
-                ("b".into(), Value::Map(vec![("akey".into(),inner_value2.clone())
-                ]
-                .into_iter().collect()))
-                ]
-            );
-        outer_value.resolve(&schema).expect("Record defined in record field must be resolvable from map field");
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            ("a".into(), inner_value1),
+            (
+                "b".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+        ]);
+        outer_value
+            .resolve(&schema)
+            .expect("Record defined in record field must be resolvable from map field");
     }
 
     #[test]
     fn test_recursive_resolves4() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1471,22 +1517,24 @@ mod tests {
                     }
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("j".into(), Value::Record(vec![("z".into(),Value::Int(6))]))]);
-        let outer_value = Value::Record(
-            vec![
-                ("a".into(), inner_value1.clone()),
-                ("b".into(), inner_value2.clone())
-                ]
-            );
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![(
+            "j".into(),
+            Value::Record(vec![("z".into(), Value::Int(6))]),
+        )]);
+        let outer_value =
+            Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
         outer_value.resolve(&schema).expect("Record schema defined in field must be resolvable in Record schema defined in other field");
     }
 
     #[test]
     fn test_recursive_resolves5() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1513,22 +1561,28 @@ mod tests {
                     }
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("z".into(),Value::Int(6))]);
-        let outer_value = Value::Record(
-            vec![
-                ("a".into(), Value::Map(vec![("akey".into(),inner_value2.clone())].into_iter().collect())),
-                ("b".into(), Value::Array(vec![inner_value1.clone()])) 
-                ]
-            );
-        outer_value.resolve(&schema).expect("Record defined in map definition must be resolveable from array");
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            (
+                "a".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+            ("b".into(), Value::Array(vec![inner_value1])),
+        ]);
+        outer_value
+            .resolve(&schema)
+            .expect("Record defined in map definition must be resolveable from array");
     }
 
     #[test]
     fn test_recursive_resolves6() {
-        let schema  = Schema::parse_str(r#"
+        let schema = Schema::parse_str(
+            r#"
         {
             "type":"record",
             "name":"TestStruct",
@@ -1549,13 +1603,22 @@ mod tests {
                     "type":"Inner"
                 }
             ]
-        }"#).unwrap();
+        }"#,
+        )
+        .unwrap();
 
-        let inner_value1 = Value::Record(vec![("z".into(),Value::Int(3))]);
-        let inner_value2 = Value::Record(vec![("z".into(),Value::Int(6))]);
-        let outer1 = Value::Record(vec![("a".into(),inner_value1.clone()), ("b".into(), inner_value2.clone())]);
-        outer1.resolve(&schema).expect("Record definition defined in union must be resolvabled in other field");
-        let outer2 = Value::Record(vec![("a".into(), Value::Null), ("b".into(), inner_value2.clone())]);
-        outer2.resolve(&schema).expect("Record definition defined in union must be resolvabled in other field");
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer1 = Value::Record(vec![
+            ("a".into(), inner_value1),
+            ("b".into(), inner_value2.clone()),
+        ]);
+        outer1
+            .resolve(&schema)
+            .expect("Record definition defined in union must be resolvabled in other field");
+        let outer2 = Value::Record(vec![("a".into(), Value::Null), ("b".into(), inner_value2)]);
+        outer2
+            .resolve(&schema)
+            .expect("Record definition defined in union must be resolvabled in other field");
     }
 }
