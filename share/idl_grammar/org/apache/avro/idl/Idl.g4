@@ -38,11 +38,18 @@ grammar Idl;
 
 // \u001a is the ascii 'sub'(stitute) character, used as end-of-file marker in older systems. It was also used as "end of character stream".
 // Thus, accept it at end of the input and ignore anything that comes after it. (See: https://en.wikipedia.org/wiki/Substitute_character)
-idlFile: protocol=protocolDeclaration ('\u001a' .*?)? EOF;
+idlFile: (
+    protocol=protocolDeclaration |
+    namespace=namespaceDeclaration? mainSchema=mainSchemaDeclaration? (imports+=importStatement|namedSchemas+=namedSchemaDeclaration)*
+) ('\u001a' .*?)? EOF;
 
 protocolDeclaration: (doc=DocComment)? schemaProperties+=schemaProperty* Protocol name=identifier body=protocolDeclarationBody;
 
 protocolDeclarationBody : LBrace (imports+=importStatement|namedSchemas+=namedSchemaDeclaration|messages+=messageDeclaration)* RBrace ;
+
+namespaceDeclaration: Namespace namespace=identifier Semicolon;
+
+mainSchemaDeclaration: Schema mainSchema=fullType Semicolon;
 
 /**
  * The parser accepts anything that's not a symbol as an identifier. That is, it accepts both an IdentifierToken and all keywords. Which
@@ -50,6 +57,7 @@ protocolDeclarationBody : LBrace (imports+=importStatement|namedSchemas+=namedSc
  */
 identifier: word=(IdentifierToken
   | Protocol
+  | Namespace
   | Import
   | IDL
   | Schema
@@ -164,6 +172,7 @@ WS: [ \t\n\r\f] -> skip;
 ** Simple tokens
 */
 Protocol: 'protocol';
+Namespace: 'namespace';
 Import: 'import';
 IDL: 'idl';
 Schema: 'schema';

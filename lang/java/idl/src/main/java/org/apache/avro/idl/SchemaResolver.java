@@ -22,7 +22,9 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -97,7 +99,16 @@ final class SchemaResolver {
    * @return a copy of idlFile with all schemas resolved
    */
   static IdlFile resolve(final IdlFile idlFile, String... schemaPropertiesToRemove) {
-    return new IdlFile(resolve(idlFile.getProtocol(), schemaPropertiesToRemove), idlFile.getWarnings());
+    if (idlFile.getProtocol() != null) {
+      return new IdlFile(resolve(idlFile.getProtocol(), schemaPropertiesToRemove), idlFile.getWarnings());
+    }
+
+    ResolvingVisitor visitor = new ResolvingVisitor(null, idlFile::getNamedSchema, schemaPropertiesToRemove);
+    Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
+
+    List<Schema> namedSchemata = idlFile.getNamedSchemas().values().stream().map(resolver).collect(Collectors.toList());
+    Schema mainSchema = Optional.ofNullable(idlFile.getMainSchema()).map(resolver).orElse(null);
+    return new IdlFile(idlFile.getNamespace(), mainSchema, namedSchemata, idlFile.getWarnings());
   }
 
   /**

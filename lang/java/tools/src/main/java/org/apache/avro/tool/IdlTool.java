@@ -19,6 +19,7 @@
 package org.apache.avro.tool;
 
 import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.idl.IdlFile;
 import org.apache.avro.idl.IdlReader;
@@ -54,7 +55,8 @@ public class IdlTool implements Tool {
     String outputName = getArg(args, useJavaCC ? 2 : 1, "-");
     File outputFile = "-".equals(outputName) ? null : new File(outputName);
 
-    Protocol p;
+    Schema m = null;
+    Protocol p = null;
     if (useJavaCC) {
       try (Idl parser = new Idl(inputFile)) {
         p = parser.CompilationUnit();
@@ -69,6 +71,7 @@ public class IdlTool implements Tool {
         err.println("Warning: " + warning);
       }
       p = idlFile.getProtocol();
+      m = idlFile.getMainSchema();
     }
 
     PrintStream parseOut = out;
@@ -76,8 +79,12 @@ public class IdlTool implements Tool {
       parseOut = new PrintStream(new FileOutputStream(outputFile));
     }
 
+    if (m == null && p == null) {
+      err.println("Error: the IDL file does not contain a schema nor a protocol.");
+      return 1;
+    }
     try {
-      parseOut.print(p.toString(true));
+      parseOut.print(m == null ? p.toString(true) : m.toString(true));
     } finally {
       if (parseOut != out) // Close only the newly created FileOutputStream
         parseOut.close();
@@ -100,6 +107,6 @@ public class IdlTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "Generates a JSON protocol from an Avro IDL file";
+    return "Generates a JSON schema or protocol from an Avro IDL file";
   }
 }

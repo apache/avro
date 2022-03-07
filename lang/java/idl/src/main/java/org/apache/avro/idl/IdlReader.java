@@ -84,6 +84,7 @@ import org.apache.avro.idl.IdlParser.JsonPairContext;
 import org.apache.avro.idl.IdlParser.JsonValueContext;
 import org.apache.avro.idl.IdlParser.MapTypeContext;
 import org.apache.avro.idl.IdlParser.MessageDeclarationContext;
+import org.apache.avro.idl.IdlParser.NamespaceDeclarationContext;
 import org.apache.avro.idl.IdlParser.NullableTypeContext;
 import org.apache.avro.idl.IdlParser.PrimitiveTypeContext;
 import org.apache.avro.idl.IdlParser.ProtocolDeclarationBodyContext;
@@ -264,6 +265,7 @@ public class IdlReader {
     private final List<String> warnings;
 
     private IdlFile result;
+    private Schema mainSchema;
     private Protocol protocol;
     private final Deque<String> namespaces;
     private final List<String> enumSymbols;
@@ -283,6 +285,7 @@ public class IdlReader {
       warnings = new ArrayList<>();
 
       result = null;
+      mainSchema = null;
       protocol = null;
       namespaces = new ArrayDeque<>();
       enumSymbols = new ArrayList<>();
@@ -340,8 +343,8 @@ public class IdlReader {
     }
 
     private String currentNamespace() {
-      String namespace = namespaces.element();
-      return namespace.isEmpty() ? null : namespace;
+      String namespace = namespaces.peek();
+      return namespace == null || namespace.isEmpty() ? null : namespace;
     }
 
     private void popNamespace() {
@@ -350,7 +353,12 @@ public class IdlReader {
 
     @Override
     public void exitIdlFile(IdlFileContext ctx) {
-      IdlFile unresolved = new IdlFile(protocol, warnings);
+      IdlFile unresolved;
+      if (protocol == null) {
+        unresolved = new IdlFile(currentNamespace(), mainSchema, getTypes().values(), warnings);
+      } else {
+        unresolved = new IdlFile(protocol, warnings);
+      }
       result = SchemaResolver.resolve(unresolved, OPTIONAL_NULLABLE_TYPE_PROPERTY);
     }
 
@@ -378,6 +386,17 @@ public class IdlReader {
         protocol.setTypes(getTypes().values());
       if (!namespaces.isEmpty())
         popNamespace();
+    }
+
+    @Override
+    public void exitNamespaceDeclaration(NamespaceDeclarationContext ctx) {
+      pushNamespace(namespace("", identifier(ctx.namespace)));
+    }
+
+    @Override
+    public void exitMainSchemaDeclaration(IdlParser.MainSchemaDeclarationContext ctx) {
+      mainSchema = typeStack.pop();
+      assert typeStack.isEmpty();
     }
 
     @Override
