@@ -812,7 +812,7 @@ The following schema represents a date:
 }
 ```
 
-### Time (millisecond precision)
+### Time (millisecond precision) {#time_ms}
 The `time-millis` logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one millisecond.
 
 A `time-millis` logical type annotates an Avro `int`, where the int stores the number of milliseconds after midnight, 00:00:00.000.
@@ -822,7 +822,7 @@ The `time-micros` logical type represents a time of day, with no reference to a 
 
 A `time-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds after midnight, 00:00:00.000000.
 
-### Timestamp (millisecond precision)
+### Timestamp (millisecond precision) {#timestamp_ms}
 The `timestamp-millis` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
 A `timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
@@ -832,7 +832,7 @@ The `timestamp-micros` logical type represents an instant on the global timeline
 
 A `timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
 
-### Local timestamp (millisecond precision)
+### Local timestamp (millisecond precision) {#local_timestamp_ms}
 The `local-timestamp-millis` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
 
 A `local-timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.

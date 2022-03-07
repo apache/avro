@@ -32,23 +32,37 @@ import java.util.stream.Collectors;
  * the protocol containing the schemas.
  */
 public class IdlFile {
+  private final Schema mainSchema;
   private final Protocol protocol;
   private final String namespace;
   private final Map<String, Schema> namedSchemas;
   private final List<String> warnings;
 
   IdlFile(Protocol protocol, List<String> warnings) {
-    this(protocol.getNamespace(), protocol.getTypes(), protocol, warnings);
+    this(protocol.getNamespace(), protocol.getTypes(), null, protocol, warnings);
   }
 
-  private IdlFile(String namespace, Iterable<Schema> schemas, Protocol protocol, List<String> warnings) {
+  IdlFile(String namespace, Schema mainSchema, Iterable<Schema> schemas, List<String> warnings) {
+    this(namespace, schemas, mainSchema, null, warnings);
+  }
+
+  private IdlFile(String namespace, Iterable<Schema> schemas, Schema mainSchema, Protocol protocol,
+      List<String> warnings) {
     this.namespace = namespace;
     this.namedSchemas = new LinkedHashMap<>();
     for (Schema namedSchema : schemas) {
       this.namedSchemas.put(namedSchema.getFullName(), namedSchema);
     }
+    this.mainSchema = mainSchema;
     this.protocol = protocol;
     this.warnings = Collections.unmodifiableList(new ArrayList<>(warnings));
+  }
+
+  /**
+   * The (main) schema defined by the IDL file.
+   */
+  public Schema getMainSchema() {
+    return mainSchema;
   }
 
   /**
@@ -105,6 +119,9 @@ public class IdlFile {
   String outputString() {
     if (protocol != null) {
       return protocol.toString();
+    }
+    if (mainSchema != null) {
+      return mainSchema.toString();
     }
     if (namedSchemas.isEmpty()) {
       return "[]";

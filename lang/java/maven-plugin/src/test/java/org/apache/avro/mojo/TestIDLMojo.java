@@ -19,6 +19,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ import static java.util.Arrays.asList;
 /**
  * Test the IDL Protocol Mojo.
  */
-public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
+public class TestIDLMojo extends AbstractAvroMojoTest {
 
   private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom.xml");
   private File injectingVelocityToolsTestPom = new File(getBasedir(),
@@ -38,7 +39,7 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   @Test
   public void testIdlProtocolMojo() throws Exception {
-    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+    final IDLMojo mojo = (IDLMojo) lookupMojo("idl", testPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
 
@@ -46,14 +47,14 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
-    final Set<String> generatedFiles = new HashSet<>(asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
-        "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
+    final Set<String> generatedFiles = new HashSet<>(
+        asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"));
     assertFilesExist(outputDir, generatedFiles);
 
     final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
 
-    assertEquals(Collections.singletonList("[WARN] Line 22, char 5: Ignoring out-of-place documentation comment.\n"
+    assertEquals(Collections.singletonList("[WARN] Line 22, char 1: Ignoring out-of-place documentation comment.\n"
         + "Did you mean to use a multiline comment ( /* ... */ ) instead?"), log.getLogEntries());
   }
 
@@ -67,8 +68,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
-    final Set<String> generatedFiles = new HashSet<>(asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
-        "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
+    final Set<String> generatedFiles = new HashSet<>(
+        asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
