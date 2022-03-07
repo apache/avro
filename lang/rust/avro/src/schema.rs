@@ -40,7 +40,7 @@ lazy_static! {
 
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
-        Regex::new(r"^([A-Za-z_\.][A-Za-z0-9_\.]*)?([A-Za-z_][A-Za-z0-9_]*)$").unwrap();
+        Regex::new(r"^((?P<namespace>[A-Za-z_][A-Za-z0-9_\.]*)*\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 }
 
 /// Represents an Avro schema fingerprint
@@ -249,24 +249,13 @@ impl Name {
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Option<String>)> {
-        if !SCHEMA_NAME_R.is_match(name) {
-            return Err(Error::InvalidSchemaName(
-                name.to_string(),
-                SCHEMA_NAME_R.as_str(),
-            ));
-        }
-
-        if let Some(idx) = name.rfind('.') {
-            let namespace = if idx > 0 {
-                Some(name[..idx].to_string())
-            } else {
-                None
-            };
-            let name_from_name = name[idx + 1..].to_owned();
-            Ok((name_from_name, namespace))
-        } else {
-            Ok((name.to_owned(), None))
-        }
+        let caps = SCHEMA_NAME_R
+            .captures(name)
+            .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), SCHEMA_NAME_R.as_str()))?;
+        Ok((
+            caps["name"].to_string(),
+            caps.name("namespace").map(|s| s.as_str().to_string()),
+        ))
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
