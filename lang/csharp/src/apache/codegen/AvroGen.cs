@@ -143,11 +143,11 @@ namespace Avro
                 "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
-                "  -h --help   Show this screen.\n" +
-                "  --version   Show version.\n" +
-                "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
-                "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
-                "              May be specified multiple times to map multiple namespaces.\n",
+                "  -h --help        Show this screen.\n" +
+                "  -V --version     Show version.\n" +
+                "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
+                "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
+                "                   May be specified multiple times to map multiple namespaces.\n",
                 AppDomain.CurrentDomain.FriendlyName);
             return;
         }
