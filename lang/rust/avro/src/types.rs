@@ -729,6 +729,16 @@ impl Value {
             // Reader is a union, but writer is not.
             v => v,
         };
+
+        schema.schemas.iter().for_each(|s| match s {
+            Schema::Record { name, .. }
+            | Schema::Enum { name, .. }
+            | Schema::Fixed { name, .. } => {
+                schemas_by_name.insert(name.clone(), s.clone());
+            }
+            _ => (),
+        });
+
         // Find the first match in the reader schema.
         // FIXME: this might be wrong when the union consists of multiple same records that have different names
         let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
