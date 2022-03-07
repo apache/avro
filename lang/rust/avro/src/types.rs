@@ -933,7 +933,7 @@ mod tests {
     fn validate_fixed() {
         let schema = Schema::Fixed {
             size: 4,
-            name: Name::new("some_fixed"),
+            name: Name::new("some_fixed").unwrap(),
             doc: None,
         };
 
@@ -946,7 +946,7 @@ mod tests {
     #[test]
     fn validate_enum() {
         let schema = Schema::Enum {
-            name: Name::new("some_enum"),
+            name: Name::new("some_enum").unwrap(),
             doc: None,
             symbols: vec![
                 "spades".to_string(),
@@ -963,7 +963,7 @@ mod tests {
         assert!(!Value::String("lorem".to_string()).validate(&schema));
 
         let other_schema = Schema::Enum {
-            name: Name::new("some_other_enum"),
+            name: Name::new("some_other_enum").unwrap(),
             doc: None,
             symbols: vec![
                 "hearts".to_string(),
@@ -987,7 +987,7 @@ mod tests {
         //    ]
         // }
         let schema = Schema::Record {
-            name: Name::new("some_record"),
+            name: Name::new("some_record").unwrap(),
             doc: None,
             fields: vec![
                 RecordField {
@@ -1138,7 +1138,7 @@ mod tests {
                 precision: 10,
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
-                    name: Name::new("decimal"),
+                    name: Name::new("decimal").unwrap(),
                     size: 20,
                     doc: None
                 })

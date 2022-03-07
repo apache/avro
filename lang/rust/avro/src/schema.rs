@@ -36,7 +36,11 @@ use std::{
 use strum_macros::{EnumDiscriminants, EnumString};
 
 lazy_static! {
-    static ref ENUM_SYMBOL_NAME: Regex = Regex::new(r"[A-Za-z_][A-Za-z0-9_]*").unwrap();
+    static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
+
+    // An optional namespace (with optional dots) followed by a name without any dots in it.
+    static ref SCHEMA_NAME_R: Regex =
+        Regex::new(r"^([A-Za-z_\.][A-Za-z0-9_\.]*)?([A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 }
 
 /// Represents an Avro schema fingerprint
@@ -235,22 +239,33 @@ impl Name {
     /// Create a new `Name`.
     /// Parses the optional `namespace` from the `name` string.
     /// `aliases` will not be defined.
-    pub fn new(name: &str) -> Name {
-        let (name, namespace) = Name::get_name_and_namespace(name);
-        Name {
+    pub fn new(name: &str) -> AvroResult<Name> {
+        let (name, namespace) = Name::get_name_and_namespace(name)?;
+        Ok(Name {
             name,
             namespace,
             aliases: None,
-        }
+        })
     }
 
-    fn get_name_and_namespace(name: &str) -> (String, Option<String>) {
+    fn get_name_and_namespace(name: &str) -> AvroResult<(String, Option<String>)> {
+        if !SCHEMA_NAME_R.is_match(name) {
+            return Err(Error::InvalidSchemaName(
+                name.to_string(),
+                SCHEMA_NAME_R.as_str(),
+            ));
+        }
+
         if let Some(idx) = name.rfind('.') {
-            let namespace_from_name = name[..idx].to_owned();
+            let namespace = if idx > 0 {
+                Some(name[..idx].to_string())
+            } else {
+                None
+            };
             let name_from_name = name[idx + 1..].to_owned();
-            (name_from_name, Some(namespace_from_name))
+            Ok((name_from_name, namespace))
         } else {
-            (name.to_owned(), None)
+            Ok((name.to_owned(), None))
         }
     }
 
@@ -258,7 +273,7 @@ impl Name {
     fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
-            .map(|name| Name::get_name_and_namespace(name.as_str()))
+            .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
             .ok_or(Error::GetNameField)?;
 
         // FIXME Reading name from the type is wrong ! The name there is just a metadata (AVRO-3430)
@@ -309,7 +324,7 @@ impl Name {
 
 impl From<&str> for Name {
     fn from(name: &str) -> Self {
-        Name::new(name)
+        Name::new(name).unwrap()
     }
 }
 
@@ -635,7 +650,7 @@ impl Parser {
             }
         }
 
-        let name = Name::new(name);
+        let name = Name::new(name)?;
 
         if let Some(parsed) = self.parsed_schemas.get(&name) {
             return Ok(get_schema_ref(parsed));
@@ -858,7 +873,7 @@ impl Parser {
                     None => alias.clone(),
                 };
 
-                let alias_name = Name::new(alias_fullname.as_str());
+                let alias_name = Name::new(alias_fullname.as_str()).unwrap();
                 self.resolving_schemas
                     .insert(alias_name, resolving_schema.clone());
             });
@@ -877,7 +892,7 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
-                let alias_name = Name::new(alias_fullname.as_str());
+                let alias_name = Name::new(alias_fullname.as_str()).unwrap();
                 self.resolving_schemas.remove(&alias_name);
                 self.parsed_schemas.insert(alias_name, schema.clone());
             });
@@ -888,7 +903,7 @@ impl Parser {
     fn get_already_seen_schema(&self, complex: &Map<String, Value>) -> Option<&Schema> {
         match complex.get("type") {
             Some(Value::String(ref typ)) => {
-                let name = Name::new(typ.as_str());
+                let name = Name::new(typ.as_str()).unwrap();
                 self.resolving_schemas
                     .get(&name)
                     .or_else(|| self.parsed_schemas.get(&name))
@@ -968,7 +983,7 @@ impl Parser {
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
             // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !ENUM_SYMBOL_NAME.is_match(symbol) {
+            if !ENUM_SYMBOL_NAME_R.is_match(symbol) {
                 return Err(Error::EnumSymbolName(symbol.to_string()));
             }
 
@@ -1057,7 +1072,7 @@ impl Parser {
 fn get_schema_type_name(name: Name, value: Value) -> Name {
     match value.get("type") {
         Some(Value::Object(complex_type)) => match complex_type.name() {
-            Some(name) => Name::new(name.as_str()),
+            Some(name) => Name::new(name.as_str()).unwrap(),
             _ => name,
         },
         _ => name,
@@ -1199,7 +1214,7 @@ impl Serialize for Schema {
                 // the Avro doesn't indicate what the name of the underlying fixed type of a
                 // duration should be or typically is.
                 let inner = Schema::Fixed {
-                    name: Name::new("duration"),
+                    name: Name::new("duration").unwrap(),
                     doc: None,
                     size: 12,
                 };
@@ -1448,7 +1463,7 @@ mod tests {
             .clone();
 
         let schema_c_expected = Schema::Record {
-            name: Name::new("C"),
+            name: Name::new("C").unwrap(),
             doc: None,
             fields: vec![RecordField {
                 name: "field_one".to_string(),
@@ -1457,10 +1472,10 @@ mod tests {
                 schema: Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Ref {
-                            name: Name::new("A"),
+                            name: Name::new("A").unwrap(),
                         },
                         Schema::Ref {
-                            name: Name::new("B"),
+                            name: Name::new("B").unwrap(),
                         },
                     ])
                     .unwrap(),
@@ -1503,7 +1518,7 @@ mod tests {
             .clone();
 
         let schema_option_a_expected = Schema::Record {
-            name: Name::new("OptionA"),
+            name: Name::new("OptionA").unwrap(),
             doc: None,
             fields: vec![RecordField {
                 name: "field_one".to_string(),
@@ -1513,7 +1528,7 @@ mod tests {
                     UnionSchema::new(vec![
                         Schema::Null,
                         Schema::Ref {
-                            name: Name::new("A"),
+                            name: Name::new("A").unwrap(),
                         },
                     ])
                     .unwrap(),
@@ -1548,7 +1563,7 @@ mod tests {
         lookup.insert("b".to_owned(), 1);
 
         let expected = Schema::Record {
-            name: Name::new("test"),
+            name: Name::new("test").unwrap(),
             doc: None,
             fields: vec![
                 RecordField {
@@ -1606,14 +1621,14 @@ mod tests {
         node_lookup.insert("label".to_owned(), 0);
 
         let expected = Schema::Record {
-            name: Name::new("test"),
+            name: Name::new("test").unwrap(),
             doc: None,
             fields: vec![RecordField {
                 name: "recordField".to_string(),
                 doc: None,
                 default: None,
                 schema: Schema::Record {
-                    name: Name::new("Node"),
+                    name: Name::new("Node").unwrap(),
                     doc: None,
                     fields: vec![
                         RecordField {
@@ -1629,7 +1644,7 @@ mod tests {
                             doc: None,
                             default: None,
                             schema: Schema::Array(Box::new(Schema::Ref {
-                                name: Name::new("Node"),
+                                name: Name::new("Node").unwrap(),
                             })),
                             order: RecordFieldOrder::Ascending,
                             position: 1,
@@ -2035,7 +2050,7 @@ mod tests {
         ).unwrap();
 
         let expected = Schema::Enum {
-            name: Name::new("Suit"),
+            name: Name::new("Suit").unwrap(),
             doc: None,
             symbols: vec![
                 "diamonds".to_owned(),
@@ -2071,7 +2086,7 @@ mod tests {
         let schema = Schema::parse_str(r#"{"type": "fixed", "name": "test", "size": 16}"#).unwrap();
 
         let expected = Schema::Fixed {
-            name: Name::new("test"),
+            name: Name::new("test").unwrap(),
             doc: None,
             size: 16usize,
         };
@@ -2087,7 +2102,7 @@ mod tests {
         .unwrap();
 
         let expected = Schema::Fixed {
-            name: Name::new("test"),
+            name: Name::new("test").unwrap(),
             doc: Some(String::from("FixedSchema documentation")),
             size: 16usize,
         };
@@ -2333,6 +2348,32 @@ mod tests {
             assert_eq!(name.namespace, Some("space2".to_string()));
         } else {
             panic!("Expected a record schema!");
+        }
+    }
+
+    #[test]
+    /// Zero-length namespace is considered as no-namespace.
+    fn test_namespace_from_name_with_empty_value() {
+        let name = Name::new(".name").unwrap();
+        assert_eq!(name.name, "name");
+        assert_eq!(name.namespace, None);
+    }
+
+    #[test]
+    /// Whitespace is not allowed in the name.
+    fn test_name_with_whitespace_value() {
+        match Name::new(" ") {
+            Err(Error::InvalidSchemaName(_, _)) => {}
+            _ => panic!("Expected an Error::InvalidSchemaName!"),
+        }
+    }
+
+    #[test]
+    /// The name must be non-empty.
+    fn test_name_with_no_name_part() {
+        match Name::new("space.") {
+            Err(Error::InvalidSchemaName(_, _)) => {}
+            _ => panic!("Expected an Error::InvalidSchemaName!"),
         }
     }
 }
