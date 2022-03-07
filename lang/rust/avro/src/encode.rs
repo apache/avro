@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    schema::Schema,
+    schema::{Name, Schema},
     types::Value,
     util::{zig_i32, zig_i64},
 };
@@ -55,17 +55,17 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
         value: &Value,
         schema: &Schema,
         buffer: &mut Vec<u8>,
-        schemas_by_name: &mut HashMap<String, Schema>,
+        schemas_by_name: &mut HashMap<Name, Schema>,
     ) {
         match &schema {
             Schema::Ref { ref name } => {
-                let resolved = schemas_by_name.get(name.name.as_str()).unwrap();
+                let resolved = schemas_by_name.get(name).unwrap();
                 return encode_ref0(value, resolved, buffer, &mut schemas_by_name.clone());
             }
             Schema::Record { ref name, .. }
             | Schema::Enum { ref name, .. }
             | Schema::Fixed { ref name, .. } => {
-                schemas_by_name.insert(name.name.clone(), schema.clone());
+                schemas_by_name.insert(name.clone(), schema.clone());
             }
             _ => (),
         }
@@ -126,6 +126,15 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             Value::Enum(i, _) => encode_int(*i as i32, buffer),
             Value::Union(idx, item) => {
                 if let Schema::Union(ref inner) = *schema {
+                    inner.schemas.iter().for_each(|s| match s {
+                        Schema::Record { name, .. }
+                        | Schema::Enum { name, .. }
+                        | Schema::Fixed { name, .. } => {
+                            schemas_by_name.insert(name.clone(), s.clone());
+                        }
+                        _ => (),
+                    });
+
                     let inner_schema = inner
                         .schemas
                         .get(*idx as usize)
