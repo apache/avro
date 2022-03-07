@@ -233,19 +233,9 @@ pub type Documentation = Option<String>;
 
 impl Name {
     /// Create a new `Name`.
-    /// No `namespace` nor `aliases` will be defined.
-    pub fn new(name: &str) -> Name {
-        Name {
-            name: name.to_owned(),
-            namespace: None,
-            aliases: None,
-        }
-    }
-
-    /// Create a new `Name`.
     /// Parses the optional `namespace` from the `name` string.
     /// `aliases` will not be defined.
-    pub fn parse_str(name: &str) -> Name {
+    pub fn new(name: &str) -> Name {
         let (name, namespace) = Name::get_name_and_namespace(name);
         Name {
             name,
@@ -314,6 +304,12 @@ impl Name {
                 None => self.name.clone(),
             }
         }
+    }
+}
+
+impl From<&str> for Name {
+    fn from(name: &str) -> Self {
+        Name::new(name)
     }
 }
 
@@ -639,7 +635,7 @@ impl Parser {
             }
         }
 
-        let name = Name::parse_str(name);
+        let name = Name::new(name);
 
         if let Some(parsed) = self.parsed_schemas.get(&name) {
             return Ok(get_schema_ref(parsed));
@@ -861,7 +857,7 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
-                let alias_name = Name::parse_str(alias_fullname.as_str());
+                let alias_name = Name::new(alias_fullname.as_str());
                 self.resolving_schemas
                     .insert(alias_name, resolving_schema.clone());
             });
@@ -880,7 +876,7 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
-                let alias_name = Name::parse_str(alias_fullname.as_str());
+                let alias_name = Name::new(alias_fullname.as_str());
                 self.resolving_schemas.remove(&alias_name);
                 self.parsed_schemas.insert(alias_name, schema.clone());
             });
@@ -891,7 +887,7 @@ impl Parser {
     fn get_already_seen_schema(&self, complex: &Map<String, Value>) -> Option<&Schema> {
         match complex.get("type") {
             Some(Value::String(ref typ)) => {
-                let name = Name::parse_str(typ.as_str());
+                let name = Name::new(typ.as_str());
                 self.resolving_schemas
                     .get(&name)
                     .or_else(|| self.parsed_schemas.get(&name))
@@ -1060,7 +1056,7 @@ impl Parser {
 fn get_schema_type_name(name: Name, value: Value) -> Name {
     match value.get("type") {
         Some(Value::Object(complex_type)) => match complex_type.name() {
-            Some(name) => Name::parse_str(name.as_str()),
+            Some(name) => Name::new(name.as_str()),
             _ => name,
         },
         _ => name,
@@ -2310,6 +2306,30 @@ mod tests {
         let schema = Schema::parse_str(schema).unwrap();
         if let Schema::Record { name, .. } = schema {
             assert_eq!(name.namespace, Some("space1".to_string()));
+        } else {
+            panic!("Expected a record schema!");
+        }
+    }
+
+    #[test]
+    fn test_namespace_from_field() {
+        let schema = r#"
+    {
+      "name": "name",
+      "namespace": "space2",
+      "type": "record",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int"
+        }
+      ]
+    }
+    "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, .. } = schema {
+            assert_eq!(name.namespace, Some("space2".to_string()));
         } else {
             panic!("Expected a record schema!");
         }
