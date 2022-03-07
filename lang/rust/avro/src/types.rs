@@ -1358,7 +1358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves() {
+    fn test_avro_3433_recursive_resolves_record() {
         let schema = Schema::parse_str(
             r#"
         {
@@ -1394,7 +1394,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves2() {
+    fn test_avro_3433_recursive_resolves_array() {
         let schema = Schema::parse_str(
             r#"
         {
@@ -1442,7 +1442,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves3() {
+    fn test_avro_3433_recursive_resolves_map() {
         let schema = Schema::parse_str(
             r#"
         {
@@ -1487,7 +1487,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves4() {
+    fn test_avro_3433_recursive_resolves_record_wrapper() {
         let schema = Schema::parse_str(
             r#"
         {
@@ -1532,7 +1532,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves5() {
+    fn test_avro_3433_recursive_resolves_map_and_array() {
         let schema = Schema::parse_str(
             r#"
         {
@@ -1580,7 +1580,7 @@ mod tests {
     }
 
     #[test]
-    fn test_recursive_resolves6() {
+    fn test_avro_3433_recursive_resolves_union() {
         let schema = Schema::parse_str(
             r#"
         {
