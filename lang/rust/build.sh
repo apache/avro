@@ -56,7 +56,7 @@ function command_dist()
 {
   execute cargo build --release --lib --all-features
   execute cargo package
-  execute mkdir -p  $BUILD_ROOT/dist/rust
+  execute mkdir -p $BUILD_ROOT/dist/rust
   execute cp target/package/apache-avro-*.crate $dist_dir
 }
 

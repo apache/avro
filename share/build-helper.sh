@@ -38,7 +38,6 @@ COLOR_PURPLE="\033[0;35m"
 COLOR_CYAN="\033[0;36m"
 COLOR_NONE="\033[0m"
 
-
 function usage()
 {
     echo "Usage: $(basename "$0") [OPTION]... [COMMAND]..."
@@ -52,7 +51,6 @@ function usage()
     echo "      --no-colors                       No colors"
     echo "  -v, --verbose                         Verbose output"
     echo "  -V, --version                         Version"
-    echo "  -h, --help                            Shows help"
     echo "  -h, --help                            Shows help"
     [ "$BUILD_EXTRA_OPTIONS_USAGE" ] && echo "$BUILD_EXTRA_OPTIONS_USAGE"
     echo ""
