@@ -29,6 +29,10 @@ defaults:
   run:
     working-directory: lang/java
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Java ${{ matrix.java }} Test
