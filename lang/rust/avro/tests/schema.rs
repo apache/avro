@@ -64,7 +64,7 @@ const FIXED_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    (r#"{"type": "fixed", "name": "Missing size"}"#, false),
+    (r#"{"type": "fixed", "name": "MissingSize"}"#, false),
     (r#"{"type": "fixed", "size": 314}"#, false),
 ];
 

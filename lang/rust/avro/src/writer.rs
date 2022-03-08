@@ -520,7 +520,7 @@ mod tests {
     fn decimal_fixed() -> TestResult<()> {
         let size = 30;
         let inner = Schema::Fixed {
-            name: Name::new("decimal"),
+            name: Name::new("decimal").unwrap(),
             doc: None,
             size,
         };
@@ -558,7 +558,7 @@ mod tests {
     #[test]
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
-            name: Name::new("duration"),
+            name: Name::new("duration").unwrap(),
             doc: None,
             size: 12,
         };
