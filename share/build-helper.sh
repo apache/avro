@@ -38,10 +38,6 @@ COLOR_PURPLE="\033[0;35m"
 COLOR_CYAN="\033[0;36m"
 COLOR_NONE="\033[0m"
 
-# Turn off colors automatically if not terminal
-[ -t 1 ] || disable-colors
-
-trap "cleanup" EXIT INT TERM
 
 function usage()
 {
@@ -204,3 +200,8 @@ function build-run()
     shift
   done
 }
+
+# Turn off colors automatically if not terminal
+[ -t 1 ] || disable-colors
+
+trap "cleanup" EXIT INT TERM
