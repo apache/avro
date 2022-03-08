@@ -17,6 +17,8 @@
 
 set -e  # exit on error
 
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
 BUILD_DESCRIPTION="Build script for Apache Avro Rust"
 source ../../share/build-helper.sh
 
