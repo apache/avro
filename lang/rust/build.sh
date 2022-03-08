@@ -58,6 +58,14 @@ function command_dist()
   execute cp target/package/apache-avro-*.crate $dist_dir
 }
 
+function command_release()
+{
+  command_dist
+
+  execute cargo login $CARGO_API_TOKEN
+  execute cargo publish
+}
+
 function command_interop-data-generate()
 {
   prepare_build
