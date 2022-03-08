@@ -224,4 +224,276 @@ mod tests {
         );
         assert_eq!(vec![0u8], buf);
     }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_record() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value =
+            Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
+        encode(&outer_value, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_array() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"array",
+                        "items": {
+                            "type":"record",
+                            "name": "Inner",
+                            "fields": [ {
+                                "name":"z",
+                                "type":"int"
+                            }]
+                        }
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": {
+                        "type":"map",
+                        "values":"Inner"
+                    }
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            ("a".into(), Value::Array(vec![inner_value1])),
+            (
+                "b".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+        ]);
+        encode(&outer_value, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_map() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": {
+                        "type":"map",
+                        "values":"Inner"
+                    }
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            ("a".into(), inner_value1),
+            (
+                "b".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+        ]);
+        encode(&outer_value, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_record_wrapper() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": {
+                        "type":"record",
+                        "name": "InnerWrapper",
+                        "fields": [ {
+                            "name":"j",
+                            "type":"Inner"
+                        }]
+                    }
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![(
+            "j".into(),
+            Value::Record(vec![("z".into(), Value::Int(6))]),
+        )]);
+        let outer_value =
+            Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
+        encode(&outer_value, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_map_and_array() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"map",
+                        "values": {
+                            "type":"record",
+                            "name": "Inner",
+                            "fields": [ {
+                                "name":"z",
+                                "type":"int"
+                            }]
+                        }
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": {
+                        "type":"array",
+                        "items":"Inner"
+                    }
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            (
+                "a".into(),
+                Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
+            ),
+            ("b".into(), Value::Array(vec![inner_value1])),
+        ]);
+        encode(&outer_value, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3433_recursive_definition_encode_union() {
+        let mut buf = Vec::new();
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":["null", {
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }]
+                },
+                {
+                    "name":"b",
+                    "type":"Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value1 = Value::Record(vec![
+            ("a".into(), Value::Union(1, Box::new(inner_value1))),
+            ("b".into(), inner_value2.clone()),
+        ]);
+        encode(&outer_value1, &schema, &mut buf);
+        assert!(!buf.is_empty());
+
+        buf.drain(..);
+        let outer_value2 = Value::Record(vec![
+            ("a".into(), Value::Union(0, Box::new(Value::Null))),
+            ("b".into(), inner_value2),
+        ]);
+        encode(&outer_value2, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
 }
