@@ -646,6 +646,8 @@ public class TestReflectLogicalTypes {
     recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
     recordWithDates.localDate = LocalDate.parse("2021-01-01");
     recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
+    recordWithDates.dateArray = new Date[0];
+    recordWithDates.localDateArray = new LocalDate[0];
 
     File test = write(reflect, schema, recordWithDates);
 
@@ -680,6 +682,8 @@ public class TestReflectLogicalTypes {
     recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
     recordWithDates.localDate = LocalDate.parse("2021-01-01");
     recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
+    recordWithDates.dateArray = new Date[] { Date.valueOf("2021-01-01") };
+    recordWithDates.localDateArray = new LocalDate[] { LocalDate.parse("2021-01-02") };
 
     File test = write(reflect, schema, recordWithDates);
 
@@ -843,6 +847,8 @@ class RecordWithDates {
   Date date;
   List<LocalDate> localDates;
   List<Date> dates;
+  LocalDate[] localDateArray;
+  Date[] dateArray;
 
   @Override
   public boolean equals(Object o) {
@@ -852,12 +858,16 @@ class RecordWithDates {
       return false;
     RecordWithDates that = (RecordWithDates) o;
     return Objects.equals(localDate, that.localDate) && Objects.equals(date, that.date)
-        && Objects.equals(localDates, that.localDates) && Objects.equals(dates, that.dates);
+        && Objects.equals(localDates, that.localDates) && Objects.equals(dates, that.dates)
+        && Arrays.equals(localDateArray, that.localDateArray) && Arrays.equals(dateArray, that.dateArray);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(localDate, date, localDates, dates);
+    int result = Objects.hash(localDate, date, localDates, dates);
+    result = 31 * result + Arrays.hashCode(localDateArray);
+    result = 31 * result + Arrays.hashCode(dateArray);
+    return result;
   }
 }
 

@@ -75,7 +75,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   protected Object newArray(Object old, int size, Schema schema, Class<?> cls) {
     Class<?> collectionClass = ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
 
-    // java-element-class takes priority
+    // java-element-class takes priority over cls
     Class<?> elementClass = ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
     if (elementClass == null) {
       elementClass = cls;
@@ -120,17 +120,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   }
 
   private Object readArray(Object old, Type type, Schema expected, ResolvingDecoder in) throws IOException {
-    Class<?> elementClass = null;
-    if (type instanceof Class && ((Class<?>) type).isArray()) {
-      // get array element class
-      elementClass = ((Class<?>) type).getComponentType();
-    } else if (type instanceof ParameterizedType
-        && Collection.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType())) {
-      // get collection element class
-      elementClass = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
-    }
-
+    Class<?> elementClass = getElementClass(type);
     Schema elementSchema = expected.getElementType();
+
     long l = in.readArrayStart();
     if (l <= 0) {
       return newArray(old, 0, expected, elementClass);
@@ -164,6 +156,19 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     }
   }
 
+  private Class<?> getElementClass(Type type) {
+    if (type instanceof Class && ((Class<?>) type).isArray()) {
+      // get array element class
+      return ((Class<?>) type).getComponentType();
+    } else if (type instanceof ParameterizedType
+        && Collection.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType())) {
+      // get collection element class
+      return (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
+    } else {
+      return null;
+    }
+  }
+
   private Object readJavaArray(Object array, Class<?> elementClass, Schema expected, long l, ResolvingDecoder in)
       throws IOException {
     Class<?> arrayElementClass = array.getClass().getComponentType();
@@ -187,7 +192,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
   private Object readCollection(Collection<Object> c, Class<?> cls, Schema expectedType, long l, ResolvingDecoder in)
       throws IOException {
     do {
-      for (int i = 0; i < l; i++) {
+      for (long i = 0; i < l; i++) {
         Object element = readAndConvert(null, cls, expectedType, in);
         c.add(element);
       }
@@ -319,21 +324,26 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     // convert
     LogicalType logicalType = expected.getLogicalType();
     if (logicalType != null) {
-      Conversion<?> conversion;
-      if (type instanceof Class<?>) {
-        conversion = getData().getConversionByClass((Class<?>) type, logicalType);
-      } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class<?>) {
-        conversion = getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType(), logicalType);
-      } else {
-        // fallback to get conversion by logical type
-        conversion = getData().getConversionFor(logicalType);
-      }
-
+      Conversion<?> conversion = getConversion(type, logicalType);
       if (conversion != null) {
         return convert(value, expected, logicalType, conversion);
       }
     }
 
     return value;
+  }
+
+  private Conversion<?> getConversion(Type type, LogicalType logicalType) {
+    if (type instanceof Class<?>) {
+      // get conversion by class for un-parametrized Class (including Array)
+      return getData().getConversionByClass((Class<?>) type, logicalType);
+    } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class<?>) {
+      // get conversion by class for parametrized Class (e.g. Collection, user defined
+      // parameterized class)
+      return getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType(), logicalType);
+    } else {
+      // fallback to get conversion by logical type
+      return getData().getConversionFor(logicalType);
+    }
   }
 }
