@@ -332,7 +332,7 @@ public class Protocol extends JsonProperties {
    * {@code props} of {@code m}.
    */
   public Message createMessage(Message m, Schema request) {
-    return new Message(name, doc, m, request);
+    return new Message(m.name, m.doc, m, request);
   }
 
   /** Create a one-way message. */
