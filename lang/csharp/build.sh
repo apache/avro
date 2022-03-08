@@ -181,7 +181,7 @@ do
       ;;
 
     interop-data-test)
-      $OPTION_DRY_RUN LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
+      $OPTION_DRY_RUN dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
       ;;
 
     clean)
