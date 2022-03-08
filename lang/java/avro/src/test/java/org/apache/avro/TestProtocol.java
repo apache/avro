@@ -53,7 +53,6 @@ public class TestProtocol {
     assertEquals(parsedStringProtocol.toString(), parsedArrayOfStringProtocol.toString());
   }
 
-
   @Test
   public void testCopyMessage() {
     Protocol p = new Protocol("P", "protocol", "foo");
