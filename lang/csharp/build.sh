@@ -27,6 +27,9 @@ SUPPORTED_SDKS="3.1 5.0 6.0"
 DEFAULT_FRAMEWORK="net6.0"
 CONFIGURATION="Release"
 
+[ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
+[ "$NUGET_KEY" ] || fatal "NUGET_KEY not set"
+
 function command_lint()
 {
   echo "This is a stub where someone can provide linting."
@@ -88,7 +91,7 @@ function command_release()
   # Note: use loop instead of -exec or xargs to stop at first failure
   for package in $(find ./build/ -name '*.nupkg' -type f)
   do
-    ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$OPTION_NUGET_KEY" -s "$OPTION_NUGET_SOURCE"
+    ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
   done
 }
     

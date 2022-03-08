@@ -19,13 +19,10 @@ BUILD_HELPER_DIR="$(dirname "$BASH_SOURCE")"
 BUILD_ROOT="$(realpath --relative-to="$(pwd)" $BUILD_HELPER_DIR/..)"
 
 # Read version
-VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
 BUILD_VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
 
 OPTION_YES=""
 OPTION_DRY_RUN=""
-OPTION_NUGET_KEY=""
-OPTION_NUGET_SOURCE="https://api.nuget.org/v3/index.json"
 
 [ "$BUILD_DESCRIPTION" ] || BUILD_DESCRIPTION="Build script for Apache Avro"
 
@@ -46,13 +43,10 @@ function usage()
     echo "Options:"
     echo "  -y, --yes                             Answer yes to all question"
     echo "      --dry-run                         Dont execute commands, just echo them"
-    echo "      --nuget-source NUGET_SOURCE       Nuget source (default: $OPTION_DRY_RUN)"
-    echo "      --nuget-key NUGET_KEY             Nuget key"
     echo "      --no-colors                       No colors"
     echo "  -v, --verbose                         Verbose output"
     echo "  -V, --version                         Version"
     echo "  -h, --help                            Shows help"
-    [ "$BUILD_EXTRA_OPTIONS_USAGE" ] && echo "$BUILD_EXTRA_OPTIONS_USAGE"
     echo ""
     echo "Commands:"
     echo "  lint                                  Lint the code"
@@ -64,9 +58,6 @@ function usage()
     echo "  perf                                  Run performance tests"
     echo "  interop-data-generate                 Generate interop data"
     echo "  interop-data-test                     Test interop data"
-    [ "$BUILD_EXTRA_COMMANDS_USAGE" ] && echo "$BUILD_EXTRA_COMMANDS_USAGE"
-
-    return 0
 }
 
 function cleanup()
@@ -168,11 +159,6 @@ function build-run()
 
       --dry-run)
         OPTION_DRY_RUN="1"
-        ;;
-
-      --nuget-key)
-        OPTION_NUGET_KEY="$2"
-        shift
         ;;
 
       --no-colors)
