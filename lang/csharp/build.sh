@@ -33,49 +33,50 @@ function command_lint()
 
 function command_test()
 {
-  $OPTION_DRY_RUN dotnet build --configuration $CONFIGURATION Avro.sln
+  execute dotnet build --configuration $CONFIGURATION Avro.sln
 
   # AVRO-2442: Explicitly set LANG to work around ICU bug in `dotnet test`
-  $OPTION_DRY_RUN dotnet test --configuration "$CONFIGURATION" --no-build \
-      --filter "TestCategory!=Interop" Avro.sln
+  execute dotnet test --configuration "$CONFIGURATION" --no-build --filter "TestCategory!=Interop" Avro.sln
 }
 
 function command_perf()
 {
-  $OPTION_DRY_RUN pushd ./src/apache/perf/
-  $OPTION_DRY_RUN dotnet run --configuration "$CONFIGURATION" --framework "$FRAMEWORK"
+  execute pushd ./src/apache/perf/
+  execute dotnet run --configuration "$CONFIGURATION" --framework "$FRAMEWORK"
 }
 
 function command_dist()
 {
   # pack NuGet packages
-  $OPTION_DRY_RUN dotnet pack --configuration "$CONFIGURATION" Avro.sln
+  execute dotnet pack --configuration "$CONFIGURATION" Avro.sln
 
   # add the binary LICENSE and NOTICE to the tarball
-  $OPTION_DRY_RUN mkdir -p build/
-  $OPTION_DRY_RUN cp LICENSE NOTICE build/
+  execute mkdir -p build/
+  execute cp LICENSE NOTICE build/
 
   # add binaries to the tarball
-  $OPTION_DRY_RUN mkdir -p build/main/
-  $OPTION_DRY_RUN cp -R src/apache/main/bin/$CONFIGURATION/* build/main/
+  execute mkdir -p build/main/
+  execute cp -R src/apache/main/bin/$CONFIGURATION/* build/main/
   # add codec binaries to the tarball
   for codec in $CSHARP_CODEC_LIBS
   do
-    $OPTION_DRY_RUN mkdir -p build/codec/$codec/
-    $OPTION_DRY_RUN cp -R src/apache/codec/$codec/bin/$CONFIGURATION/* build/codec/$codec/
+    execute mkdir -p build/codec/$codec/
+    execute cp -R src/apache/codec/$codec/bin/$CONFIGURATION/* build/codec/$codec/
   done
   # add codegen binaries to the tarball
-  $OPTION_DRY_RUN mkdir -p build/codegen/
-  $OPTION_DRY_RUN cp -R src/apache/codegen/bin/$CONFIGURATION/* build/codegen/
+  execute mkdir -p build/codegen/
+  execute cp -R src/apache/codegen/bin/$CONFIGURATION/* build/codegen/
 
   # build the tarball
-  $OPTION_DRY_RUN mkdir -p ${ROOT}/dist/csharp
-  $OPTION_DRY_RUN pushd cd build && tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE && popd
+  execute mkdir -p ${ROOT}/dist/csharp
+  execute pushd build
+  execute tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE
+  execute popd
 
   # build documentation
-  $OPTION_DRY_RUN doxygen Avro.dox
-  $OPTION_DRY_RUN mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-  $OPTION_DRY_RUN cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+  execute doxygen Avro.dox
+  execute mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+  execute cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
 }
 
 function command_release()
@@ -86,7 +87,7 @@ function command_release()
   # Note: use loop instead of -exec or xargs to stop at first failure
   for package in $(find ./build/ -name '*.nupkg' -type f)
   do
-    ask "Push $package to nuget.org" && $OPTION_DRY_RUN dotnet nuget push "$package" -k "$OPTION_NUGET_KEY" -s "$OPTION_NUGET_SOURCE"
+    ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$OPTION_NUGET_KEY" -s "$OPTION_NUGET_SOURCE"
   done
 }
     
@@ -94,7 +95,7 @@ function command_verify-release()
 {
   for sdk_ver in $SUPPORTED_SDKS
   do
-    $OPTION_DRY_RUN docker run -it --rm mcr.microsoft.com/dotnet/sdk:$sdk_ver /bin/bash -ce "\
+    execute docker run -it --rm mcr.microsoft.com/dotnet/sdk:$sdk_ver /bin/bash -ce "\
       mkdir test-project && \
       cd test-project && \
       dotnet new console && \
@@ -112,19 +113,19 @@ function command_verify-release()
 
 function command_interop-data-generate()
 {
-  $OPTION_DRY_RUN dotnet run --project src/apache/test/Avro.test.csproj --framework $DEFAULT_FRAMEWORK ../../share/test/schemas/interop.avsc ../../build/interop/data
+  execute dotnet run --project src/apache/test/Avro.test.csproj --framework $DEFAULT_FRAMEWORK ../../share/test/schemas/interop.avsc ../../build/interop/data
 }
 
 function command_interop-data-test()
 {
-  $OPTION_DRY_RUN dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
+  execute dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
 }
 
 function command_clean()
 {
-  $OPTION_DRY_RUN rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
-  $OPTION_DRY_RUN rm -rf build
-  $OPTION_DRY_RUN rm -f  TestResult.xml
+  execute rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
+  execute rm -rf build
+  execute rm -f  TestResult.xml
 }
 
 source $ROOT/share/build-helper.sh

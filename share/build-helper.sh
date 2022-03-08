@@ -21,7 +21,7 @@
 # Cleanup function to be called if script exits normally, CTRL+C or TERM signal
 trap "cleanup" EXIT TERM INT
 
-OPTION_YES="0"
+OPTION_YES=""
 OPTION_DRY_RUN=""
 OPTION_NUGET_KEY=""
 OPTION_NUGET_SOURCE="https://api.nuget.org/v3/index.json"
@@ -127,6 +127,18 @@ function ask()
   done
 }
 
+function execute()
+{
+  # if dry run is enabled then simply return 
+	if [ "$OPTION_DRY_RUN" == "1" ]
+  then
+    echo "$@"
+  else
+    "$@"
+    #eval "$@"
+  fi
+}
+
 # Turn off colors automatically if not terminal
 [ -t 1 ] || disable-colors
 
@@ -153,7 +165,7 @@ do
       ;;
 
     --dry-run)
-      OPTION_DRY_RUN="echo"
+      OPTION_DRY_RUN="1"
       ;;
 
     --nuget-key)
