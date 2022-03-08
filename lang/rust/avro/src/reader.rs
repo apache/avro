@@ -501,7 +501,7 @@ mod tests {
     #[test]
     fn test_reader_invalid_header() {
         let schema = Schema::parse_str(SCHEMA).unwrap();
-        let invalid = ENCODED.to_owned().into_iter().skip(1).collect::<Vec<u8>>();
+        let invalid = ENCODED.iter().copied().skip(1).collect::<Vec<u8>>();
         assert!(Reader::with_schema(&schema, &invalid[..]).is_err());
     }
 
@@ -509,8 +509,8 @@ mod tests {
     fn test_reader_invalid_block() {
         let schema = Schema::parse_str(SCHEMA).unwrap();
         let invalid = ENCODED
-            .to_owned()
-            .into_iter()
+            .iter()
+            .copied()
             .rev()
             .skip(19)
             .collect::<Vec<u8>>()
@@ -531,11 +531,7 @@ mod tests {
 
     #[test]
     fn test_reader_only_header() {
-        let invalid = ENCODED
-            .to_owned()
-            .into_iter()
-            .take(165)
-            .collect::<Vec<u8>>();
+        let invalid = ENCODED.iter().copied().take(165).collect::<Vec<u8>>();
         let reader = Reader::new(&invalid[..]).unwrap();
         for value in reader {
             assert!(value.is_err());

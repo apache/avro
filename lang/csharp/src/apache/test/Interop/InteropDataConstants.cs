@@ -25,7 +25,11 @@ namespace Avro.Test.Interop
         public static readonly HashSet<string> SupportedCodecNames = new HashSet<string>
         {
             DataFileConstants.NullCodec,
-            DataFileConstants.DeflateCodec
+            DataFileConstants.DeflateCodec,
+            DataFileConstants.SnappyCodec,
+            DataFileConstants.BZip2Codec,
+            DataFileConstants.XZCodec,
+            DataFileConstants.ZstandardCodec
         };
     }
 }

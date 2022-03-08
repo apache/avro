@@ -31,6 +31,12 @@
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
+
+    <!-- The following pacakges are required for the extra codec libraries. These are not direct dependencies of the Avro.main library. -->
+    <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
+    <IronSnappyVersion>1.3.0</IronSnappyVersion>
+    <JovelerCompressionXZVersion>4.1.0</JovelerCompressionXZVersion>
+    <ZstandardNetVersion>1.1.7</ZstandardNetVersion>
   </PropertyGroup>
 
   <!--
@@ -47,7 +53,8 @@
   <!--
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
   -->
-  <PropertyGroup Label="Build, Test, Code Analysis Package Versions">
+  <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
+    <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
     <MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.0.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>

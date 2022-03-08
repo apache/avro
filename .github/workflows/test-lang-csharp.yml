@@ -28,11 +28,19 @@ defaults:
   run:
     working-directory: lang/csharp
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v1
@@ -59,6 +67,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
         uses: actions/setup-dotnet@v1
