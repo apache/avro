@@ -123,7 +123,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/js; ./build.sh interop-data-test)
       (cd lang/ruby; ./build.sh interop-data-test)
-      (cd lang/php; ./build.sh test-interop)
+      (cd lang/php; ./build.sh interop-data-test)
       (cd lang/perl; ./build.sh interop-data-test)
 
       # java needs to package the jars for the interop rpc tests

@@ -17,9 +17,8 @@
 
 set -e
 
-ROOT=../..
-
 BUILD_DESCRIPTION="Build script for Apache Avro C#"
+source ../../share/build-helper.sh
 
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
 SUPPORTED_SDKS="3.1 5.0 6.0"
@@ -36,7 +35,7 @@ function command_test()
   execute dotnet build --configuration $CONFIGURATION Avro.sln
 
   # AVRO-2442: Explicitly set LANG to work around ICU bug in `dotnet test`
-  execute dotnet test --configuration "$CONFIGURATION" --no-build --filter "TestCategory!=Interop" Avro.sln
+  execute LANG=en_US.UTF-8 dotnet test --configuration "$CONFIGURATION" --no-build --filter "TestCategory!=Interop" Avro.sln
 }
 
 function command_perf()
@@ -68,15 +67,15 @@ function command_dist()
   execute cp -R src/apache/codegen/bin/$CONFIGURATION/* build/codegen/
 
   # build the tarball
-  execute mkdir -p ${ROOT}/dist/csharp
+  execute mkdir -p ${BUILD_ROOT}/dist/csharp
   execute pushd build
-  execute tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE
+  execute tar czf ${BUILD_ROOT}/../dist/csharp/avro-csharp-${BUILD_VERSION}.tar.gz main codegen LICENSE NOTICE
   execute popd
 
   # build documentation
   execute doxygen Avro.dox
-  execute mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-  execute cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+  execute mkdir -p ${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp
+  execute cp -pr build/doc/* ${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp
 }
 
 function command_release()
@@ -99,12 +98,12 @@ function command_verify-release()
       mkdir test-project && \
       cd test-project && \
       dotnet new console && \
-      dotnet add package Apache.Avro --version $VERSION && \
+      dotnet add package Apache.Avro --version $BUILD_VERSION && \
       for codec in $CSHARP_CODEC_LIBS; do \
-        dotnet add package Apache.\$codec --version $VERSION; \
+        dotnet add package Apache.\$codec --version $BUILD_VERSION; \
       done && \
       dotnet build && \
-      dotnet tool install --global Apache.Avro.Tools --version $VERSION && \
+      dotnet tool install --global Apache.Avro.Tools --version $BUILD_VERSION && \
       export PATH=\$PATH:/root/.dotnet/tools && \
       avrogen --help"
   done
@@ -118,7 +117,7 @@ function command_interop-data-generate()
 
 function command_interop-data-test()
 {
-  execute dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
+  execute LANG=en_US.UTF-8 dotnet test --filter 'TestCategory=Interop' --logger 'console\;verbosity=normal\;noprogress=true' src/apache/test/Avro.test.csproj
 }
 
 function command_clean()
@@ -128,4 +127,4 @@ function command_clean()
   execute rm -f  TestResult.xml
 }
 
-source $ROOT/share/build-helper.sh
+build-run "$@"

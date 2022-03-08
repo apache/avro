@@ -17,57 +17,59 @@
 
 set -e  # exit on error
 
-root_dir=$(pwd)
-build_dir="../../build/rust"
-dist_dir="../../dist/rust"
+BUILD_DESCRIPTION="Build script for Apache Avro Rust"
+source ../../share/build-helper.sh
 
+build_dir="$BUILD_ROOT/build/rust"
+dist_dir="$BUILD_ROOT/dist/rust"
 
 function clean {
   if [ -d $build_dir ]; then
     find $build_dir | xargs chmod 755
-    rm -rf $build_dir
+    execute rm -rf $build_dir
   fi
 }
 
-
 function prepare_build {
   clean
-  mkdir -p $build_dir
+  execute mkdir -p $build_dir
 }
 
-cd `dirname "$0"`
+function command_clean()
+{
+  execute cargo clean
+}
 
-for target in "$@"
-do
-  case "$target" in
-    clean)
-      cargo clean
-      ;;
-    lint)
-      cargo clippy --all-targets --all-features -- -Dclippy::all
-      ;;
-    test)
-      cargo test
-      ;;
-    dist)
-      cargo build --release --lib --all-features
-      cargo package
-      mkdir -p  ../../dist/rust
-      cp target/package/apache-avro-*.crate $dist_dir
-      ;;
-    interop-data-generate)
-      prepare_build
-      export RUST_LOG=apache_avro=debug
-      export RUST_BACKTRACE=1
-      cargo run --all-features --example generate_interop_data
-      ;;
+function command_lint()
+{
+  execute cargo clippy --all-targets --all-features -- -Dclippy::all
+}
 
-    interop-data-test)
-      prepare_build
-      cargo run --all-features --example test_interop_data
-      ;;
-    *)
-      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
-      exit 1
-  esac
-done
+function command_test()
+{
+  execute cargo test
+}
+
+function command_dist()
+{
+  execute cargo build --release --lib --all-features
+  execute cargo package
+  execute mkdir -p  $BUILD_ROOT/dist/rust
+  execute cp target/package/apache-avro-*.crate $dist_dir
+}
+
+function command_interop-data-generate()
+{
+  prepare_build
+  export RUST_LOG=apache_avro=debug
+  export RUST_BACKTRACE=1
+  execute cargo run --all-features --example generate_interop_data
+}
+
+function command_interop-data-test()
+{
+  prepare_build
+  execute cargo run --all-features --example test_interop_data
+}
+
+build-run "$@"

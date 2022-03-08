@@ -17,6 +17,9 @@
 
 set -e
 
+BUILD_DESCRIPTION="Build script for Apache Avro Ruby"
+source ../../share/build-helper.sh
+
 # connect to avro ruby root directory
 cd "$(dirname "$0")"
 
@@ -31,40 +34,38 @@ gem install --no-document -v 1.17.3 bundler
 rbenv rehash 2>/dev/null || echo "Not using rbenv"
 bundle install
 
-for target in "$@"
-do
-  case "$target" in
-    lint)
-      bundle exec rubocop
-      ;;
+function command_lint()
+{
+  execute bundle exec rubocop
+}
 
-    interop-data-generate)
-      bundle exec rake generate_interop
-      ;;
+function command_interop-data-generate()
+{
+  execute bundle exec rake generate_interop
+}
 
-    interop-data-test)
-      bundle exec rake interop
-      ;;
+function command_interop-data-test()
+{
+  execute bundle exec rake interop
+}
 
-    test)
-      bundle exec rake test
-      ;;
+function command_test()
+{
+  execute bundle exec rake test
+}
 
-    dist)
-      bundle exec rake build
-      DIST="../../dist/ruby"
-      mkdir -p "${DIST}"
-      VERSION=$(cat lib/avro/VERSION.txt)
-      cp "pkg/avro-${VERSION}.gem" "${DIST}"
-      ;;
+function command_dist()
+{
+  execute bundle exec rake build
+  DIST="$BUILD_ROOT/dist/ruby"
+  mkdir -p "${DIST}"
+  cp "pkg/avro-${BUILD_VERSION}.gem" "${DIST}"
+}
 
-    clean)
-      bundle exec rake clean
-      rm -rf tmp data.avr lib/avro/VERSION.txt
-      ;;
+function command_clean()
+{
+  execute bundle exec rake clean
+  execute rm -rf tmp data.avr lib/avro/VERSION.txt
+}
 
-    *)
-      echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
-      exit 1
-  esac
-done
+build-run "$@"

@@ -17,35 +17,41 @@
 
 set -e
 
-cd `dirname "$0"`
+BUILD_DESCRIPTION="Build script for Apache Avro Javascript"
+source ../../share/build-helper.sh
 
-for target in "$@"
-do
-  case "$target" in
-    lint)
-      npm install
-      npm run lint
-      ;;
-    test)
-      npm install
-      npm run cover
-      ;;
-    dist)
-      npm pack
-      mkdir -p ../../dist/js
-      mv avro-js-*.tgz ../../dist/js
-      ;;
-    clean)
-      rm -rf coverage
-      ;;
-    interop-data-generate)
-      npm run interop-data-generate
-      ;;
-    interop-data-test)
-      npm run interop-data-test
-      ;;
-    *)
-      echo "Usage: $0 {lint|test|dist|clean}" >&2
-      exit 1
-  esac
-done
+function command_lint()
+{
+  execute npm install
+  execute npm run lint
+}
+
+function command_test()
+{
+  execute npm install
+  execute npm run cover
+}
+
+function command_dist()
+{
+  execute npm pack
+  execute mkdir -p $BUILD_ROOT/dist/js
+  execute mv avro-js-*.tgz $BUILD_ROOT/dist/js
+}
+
+function command_clean()
+{
+  execute rm -rf coverage
+}
+
+function command_interop-data-generate()
+{
+  execute npm run interop-data-generate
+}
+
+function command_interop-data-test()
+{
+  execute npm run interop-data-test
+}
+
+build-run "$@"

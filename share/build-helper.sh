@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Check mandatory variables
-[ "$ROOT" ] || { echo "ROOT not set"; exit 1; }
+BUILD_HELPER_DIR="$(dirname "$BASH_SOURCE")"
+BUILD_ROOT="$(realpath --relative-to="$(pwd)" $BUILD_HELPER_DIR/..)"
 
-# Cleanup function to be called if script exits normally, CTRL+C or TERM signal
-trap "cleanup" EXIT TERM INT
+# Read version
+VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
+BUILD_VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
 
 OPTION_YES=""
 OPTION_DRY_RUN=""
@@ -32,7 +33,15 @@ OPTION_NUGET_SOURCE="https://api.nuget.org/v3/index.json"
 COLOR_RED="\033[0;31m"
 COLOR_GREEN="\033[0;32m"
 COLOR_YELLOW="\033[0;33m"
+COLOR_BLUE="\033[0;34m"
+COLOR_PURPLE="\033[0;35m"
+COLOR_CYAN="\033[0;36m"
 COLOR_NONE="\033[0m"
+
+# Turn off colors automatically if not terminal
+[ -t 1 ] || disable-colors
+
+trap "cleanup" EXIT INT TERM
 
 function usage()
 {
@@ -48,6 +57,8 @@ function usage()
     echo "  -v, --verbose                         Verbose output"
     echo "  -V, --version                         Version"
     echo "  -h, --help                            Shows help"
+    echo "  -h, --help                            Shows help"
+    [ "$BUILD_EXTRA_OPTIONS_USAGE" ] && echo "$BUILD_EXTRA_OPTIONS_USAGE"
     echo ""
     echo "Commands:"
     echo "  lint                                  Lint the code"
@@ -59,6 +70,9 @@ function usage()
     echo "  perf                                  Run performance tests"
     echo "  interop-data-generate                 Generate interop data"
     echo "  interop-data-test                     Test interop data"
+    [ "$BUILD_EXTRA_COMMANDS_USAGE" ] && echo "$BUILD_EXTRA_COMMANDS_USAGE"
+
+    return 0
 }
 
 function cleanup()
@@ -99,6 +113,9 @@ function disable-colors()
     COLOR_RED=""
     COLOR_GREEN=""
     COLOR_YELLOW=""
+    COLOR_BLUE=""
+    COLOR_PURPLE=""
+    COLOR_CYAN=""
     COLOR_NONE=""
 }
 
@@ -129,67 +146,61 @@ function ask()
 
 function execute()
 {
-  # if dry run is enabled then simply return 
-	if [ "$OPTION_DRY_RUN" == "1" ]
-  then
-    echo "$@"
-  else
-    "$@"
-    #eval "$@"
-  fi
+  echo -e "$COLOR_CYAN$*$COLOR_NONE"
+  [ "$OPTION_DRY_RUN" == "1" ] && return 0
+  eval "$@"
 }
 
-# Turn off colors automatically if not terminal
-[ -t 1 ] || disable-colors
+function build-run()
+{
+  # Iterate through arguments
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      -h|--help)
+        usage
+        # Do not show done message
+        trap "" INT TERM EXIT
+        exit 0
+        ;;
 
-# Read version
-VERSION="$(cat "$ROOT"/share/VERSION.txt)"
+      -v|--verbose)
+        set -x
+        ;;
 
-# Iterate through arguments
-while [ $# -gt 0 ]
-do
-  case "$1" in
-    -h|--help)
-      usage
-      # Do not show done message
-      trap "" INT TERM EXIT
-      exit 0
-      ;;
+      -y|--yes)
+        OPTION_YES="1"
+        ;;
 
-    -v|--verbose)
-      set -x
-      ;;
+      --dry-run)
+        OPTION_DRY_RUN="1"
+        ;;
 
-    -y|--yes)
-      OPTION_YES="1"
-      ;;
+      --nuget-key)
+        OPTION_NUGET_KEY="$2"
+        shift
+        ;;
 
-    --dry-run)
-      OPTION_DRY_RUN="1"
-      ;;
+      --no-colors)
+        disable-colors
+        ;;
 
-    --nuget-key)
-      OPTION_NUGET_KEY="$2"
-      shift
-      ;;
+      -V|--version)
+        echo "$VERSION"
+        ;;
 
-    --no-colors)
-      disable-colors
-      ;;
+      lint|test|perf|dist|release|verify-release|interop-data-generate|interop-data-test|clean)
+        COMMAND="command_$1"
+        [[ $(type -t $COMMAND) == function ]] || { echo "Command '$1' is not implemented"; exit 1; }
+        # Execute command
+        $COMMAND
+        ;;
 
-    -V|--version)
-      echo "$VERSION"
-      ;;
+      *)
+        fatal "Unknown option or command: $1"
+        ;;
+    esac
 
-    lint|test|perf|dist|release|verify-release|interop-data-generate|interop-data-test|clean)
-      COMMAND="command_$1"
-      [[ $(type -t $COMMAND) == function ]] && $COMMAND || { echo "Command '$1' is not implemented"; exit 1; }
-      ;;
-
-    *)
-      fatal "Unknown option or command: $1"
-      ;;
-  esac
-
-  shift
-done
+    shift
+  done
+}

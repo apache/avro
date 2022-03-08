@@ -17,13 +17,12 @@
 
 set -e
 
-usage() {
-  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
-  exit 1
-}
+BUILD_DESCRIPTION="Build script for Apache Avro Python"
+source ../../share/build-helper.sh
 
-clean() {
-  git clean -xdf '*.avpr' \
+function command_clean()
+{
+  execute git clean -xdf '*.avpr' \
                  '*.avsc' \
                  '*.egg-info' \
                  '*.py[co]' \
@@ -35,7 +34,8 @@ clean() {
                  'userlogs'
 }
 
-dist() (
+function command_dist()
+{
   ##
   # Use https://pypa-build.readthedocs.io to create the build artifacts.
   local destination virtualenv
@@ -46,43 +46,32 @@ dist() (
     pwd
   )
   virtualenv="$(mktemp -d)"
-  python3 -m venv "$virtualenv"
-  "$virtualenv/bin/python3" -m pip install build
-  "$virtualenv/bin/python3" -m build --outdir "$destination"
-)
-
-interop-data-generate() {
-  ./setup.py generate_interop_data
-  cp -r avro/test/interop/data ../../build/interop
+  execute python3 -m venv "$virtualenv"
+  execute "$virtualenv/bin/python3" -m pip install build
+  execute "$virtualenv/bin/python3" -m build --outdir "$destination"
 }
 
-interop-data-test() {
-  mkdir -p avro/test/interop ../../build/interop/data
-  cp -r ../../build/interop/data avro/test/interop
-  python3 -m unittest avro.test.test_datafile_interop
+function command_interop-data-generate()
+{
+  execute ./setup.py generate_interop_data
+  execute cp -r avro/test/interop/data $BUILD_ROOT/build/interop
 }
 
-lint() {
-  python3 -m tox -e lint
+function command_interop-data-test()
+{
+  execute mkdir -p avro/test/interop $BUILD_ROOT/build/interop/data
+  execute cp -r $BUILD_ROOT/build/interop/data avro/test/interop
+  execute python3 -m unittest avro.test.test_datafile_interop
 }
 
-test_() {
-  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
+function command_lint()
+{
+  execute python3 -m tox -e lint
 }
 
-main() {
-  (( $# )) || usage
-  for target; do
-    case "$target" in
-      clean) clean;;
-      dist) dist;;
-      interop-data-generate) interop-data-generate;;
-      interop-data-test) interop-data-test;;
-      lint) lint;;
-      test) test_;;
-      *) usage;;
-    esac
-  done
+function command_test()
+{
+  execute TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
 }
 
-main "$@"
+build-run "$@"
