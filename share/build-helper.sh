@@ -162,6 +162,8 @@ function build-add-command()
 
 function build-run()
 {
+  [ "$#" == "0" ] && fatal "Nothing to do"
+
   # Iterate through arguments
   while [ $# -gt 0 ]
   do
