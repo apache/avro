@@ -17,6 +17,9 @@
 
 set -e # exit on error
 
+shopt -s globstar # enable **/* globbing
+shopt -s nullglob # return nothing if no glob match
+
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
 # shellcheck disable=SC1091
@@ -32,8 +35,7 @@ function command_clean()
 function command_lint()
 {
   local failures=0
-  # shellcheck disable=SC2044
-  for i in $(find lib t xt -name '*.p[lm]' -or -name '*.t'); do
+  for i in {lib,t,xt}/**/*.{p[lm],t}; do
     if ! execute perlcritic --verbose 1 "${i}"; then
       ((failures=failures+1))
     fi

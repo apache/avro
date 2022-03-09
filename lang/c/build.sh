@@ -22,7 +22,7 @@ set -e        # exit on error
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-# shellcheck disable=1091
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "C"
 
 root_dir=$(pwd)

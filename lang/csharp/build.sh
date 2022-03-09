@@ -17,9 +17,12 @@
 
 set -e
 
+shopt -s globstar # enable **/* globbing
+shopt -s nullglob # return nothing if no glob match
+
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-# shellcheck disable=1091
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "C#"
 
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
@@ -88,9 +91,7 @@ function command_release()
   command_dist
 
   # Push packages to nuget.org
-  # Note: use loop instead of -exec or xargs to stop at first failure
-  # shellcheck disable=SC2044
-  for package in $(find ./build/ -name '*.nupkg' -type f)
+  for package in ./build/**/*.nupkg
   do
     ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
   done
