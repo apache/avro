@@ -24,10 +24,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 
@@ -91,12 +89,8 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
-        final SpecificCompiler compiler;
         final Protocol protocol = idlFile.getProtocol();
-        getLog().info("Compiling protocol: " + protocol.getNamespace() + "." + protocol.getName());
-        getLog().info(
-            "Schema names: " + protocol.getTypes().stream().map(Schema::getFullName).collect(Collectors.joining(", ")));
-        compiler = new SpecificCompiler(protocol);
+        final SpecificCompiler compiler = new SpecificCompiler(protocol);
         compiler.setStringType(GenericData.StringType.valueOf(stringType));
         compiler.setTemplateDir(templateDirectory);
         compiler.setFieldVisibility(getFieldVisibility());
