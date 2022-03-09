@@ -19,6 +19,7 @@ set -e # exit on error
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "Perl"
 
 function command_clean()
@@ -31,8 +32,9 @@ function command_clean()
 function command_lint()
 {
   local failures=0
+  # shellcheck disable=SC2044
   for i in $(find lib t xt -name '*.p[lm]' -or -name '*.t'); do
-    if ! execute perlcritic --verbose 1 ${i}; then
+    if ! execute perlcritic --verbose 1 "${i}"; then
       ((failures=failures+1))
     fi
   done
@@ -49,7 +51,7 @@ function command_test()
 
 function command_dist()
 {
-  execute cp $BUILD_ROOT/share/VERSION.txt .
+  execute cp "$BUILD_ROOT/share/VERSION.txt" .
   execute perl ./Makefile.PL
   execute make dist
 }

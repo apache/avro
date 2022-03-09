@@ -19,6 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "Javascript"
 
 function command_lint()
@@ -36,8 +37,8 @@ function command_test()
 function command_dist()
 {
   execute npm pack
-  execute mkdir -p $BUILD_ROOT/dist/js
-  execute mv avro-js-*.tgz $BUILD_ROOT/dist/js
+  execute mkdir -p "$BUILD_ROOT/dist/js"
+  execute mv avro-js-*.tgz "$BUILD_ROOT/dist/js"
 }
 
 function command_clean()

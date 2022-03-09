@@ -19,6 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "Python"
 
 function command_clean()
@@ -55,13 +56,13 @@ function command_dist()
 function command_interop-data-generate()
 {
   execute ./setup.py generate_interop_data
-  execute cp -r avro/test/interop/data $BUILD_ROOT/build/interop
+  execute cp -r avro/test/interop/data "$BUILD_ROOT/build/interop"
 }
 
 function command_interop-data-test()
 {
-  execute mkdir -p avro/test/interop $BUILD_ROOT/build/interop/data
-  execute cp -r $BUILD_ROOT/build/interop/data avro/test/interop
+  execute mkdir -p avro/test/interop "$BUILD_ROOT/build/interop/data"
+  execute cp -r "$BUILD_ROOT/build/interop/data" avro/test/interop
   execute python3 -m unittest avro.test.test_datafile_interop
 }
 

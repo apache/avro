@@ -19,6 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "PHP"
 
 dist_dir="$BUILD_ROOT/dist/php"

@@ -86,7 +86,12 @@ function cleanup()
 
     BUILD_END_TIME="$(date +%s)"
 
-    [ "$RC" == "0" ] && ok "Done in $(( BUILD_END_TIME - BUILD_START_TIME ))s." || error "FAILED!"
+    if [ "$RC" == "0" ]
+    then
+      ok "Done in $(( BUILD_END_TIME - BUILD_START_TIME ))s."
+    else
+      error "FAILED!"
+    fi
 
     exit "$RC"
 }
@@ -129,7 +134,7 @@ function ask()
   [ "$OPTION_YES" == "1" ] && echo -e "$prompt y" && return 0
   [ "$OPTION_DRY_RUN" == "1" ] && return 0
   while true; do
-    answer="$(read -r -n 1 -p "$(echo -e $prompt)" answer && echo $answer)"
+    answer="$(read -r -n 1 -p "$(echo -e "$prompt")" answer && echo "$answer")"
     echo
     case ${answer} in
         [Yy])
@@ -152,6 +157,7 @@ function execute()
 {
   echo -e "$COLOR_CYAN$*$COLOR_NONE"
   [ "$OPTION_DRY_RUN" == "1" ] && return 0
+  # shellcheck disable=2294
   eval "$@"
 }
 
@@ -204,10 +210,10 @@ function build-run()
         if [ "${BUILD_COMMANDS[$1]}" ] 
         then
           # Check if command function is available
-          if [ "$(type -t command_"$1")" == "function" ]
+          if [ "$(type -t "command_$1")" == "function" ]
           then
             # Execute command
-            command_$1
+            "command_$1"
           else
             fatal "Command $1 is not implemented"
           fi

@@ -19,6 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=1091
 source ../../share/build-helper.sh "C#"
 
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
@@ -60,23 +61,23 @@ function command_dist()
   # add codec binaries to the tarball
   for codec in $CSHARP_CODEC_LIBS
   do
-    execute mkdir -p build/codec/$codec/
-    execute cp -R src/apache/codec/$codec/bin/$CONFIGURATION/* build/codec/$codec/
+    execute mkdir -p build/codec/"$codec"/
+    execute cp -R src/apache/codec/"$codec"/bin/$CONFIGURATION/* build/codec/"$codec"/
   done
   # add codegen binaries to the tarball
   execute mkdir -p build/codegen/
   execute cp -R src/apache/codegen/bin/$CONFIGURATION/* build/codegen/
 
   # build the tarball
-  execute mkdir -p ${BUILD_ROOT}/dist/csharp
+  execute mkdir -p "${BUILD_ROOT}/dist/csharp"
   execute pushd build
-  execute tar czf ${BUILD_ROOT}/../dist/csharp/avro-csharp-${BUILD_VERSION}.tar.gz main codegen LICENSE NOTICE
+  execute tar czf "${BUILD_ROOT}/../dist/csharp/avro-csharp-${BUILD_VERSION}.tar.gz" main codegen LICENSE NOTICE
   execute popd
 
   # build documentation
   execute doxygen Avro.dox
-  execute mkdir -p ${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp
-  execute cp -pr build/doc/* ${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp
+  execute mkdir -p "${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp"
+  execute cp -pr build/doc/* "${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp"
 }
 
 function command_release()
@@ -88,6 +89,7 @@ function command_release()
 
   # Push packages to nuget.org
   # Note: use loop instead of -exec or xargs to stop at first failure
+  # shellcheck disable=SC2044
   for package in $(find ./build/ -name '*.nupkg' -type f)
   do
     ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
@@ -98,7 +100,7 @@ function command_verify-release()
 {
   for sdk_ver in $SUPPORTED_SDKS
   do
-    execute docker run -it --rm mcr.microsoft.com/dotnet/sdk:$sdk_ver /bin/bash -ce "\
+    execute docker run -it --rm mcr.microsoft.com/dotnet/sdk:"$sdk_ver" /bin/bash -ce "\
       mkdir test-project && \
       cd test-project && \
       dotnet new console && \

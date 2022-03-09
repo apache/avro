@@ -19,21 +19,22 @@ set -e  # exit on error
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
+# shellcheck disable=SC1091
 source ../../share/build-helper.sh "Rust"
 
 build_dir="$BUILD_ROOT/build/rust"
 dist_dir="$BUILD_ROOT/dist/rust"
 
 function clean {
-  if [ -d $build_dir ]; then
-    find $build_dir | xargs chmod 755
-    execute rm -rf $build_dir
+  if [ -d "$build_dir" ]; then
+    execute find "$build_dir" -exec chmod 755 {} +
+    execute rm -rf "$build_dir"
   fi
 }
 
 function prepare_build {
   clean
-  execute mkdir -p $build_dir
+  execute mkdir -p "$build_dir"
 }
 
 function command_clean()
@@ -55,15 +56,15 @@ function command_dist()
 {
   execute cargo build --release --lib --all-features
   execute cargo package
-  execute mkdir -p $BUILD_ROOT/dist/rust
-  execute cp target/package/apache-avro-*.crate $dist_dir
+  execute mkdir -p "$BUILD_ROOT/dist/rust"
+  execute cp target/package/apache-avro-*.crate "$dist_dir"
 }
 
 function command_release()
 {
   command_dist
 
-  execute cargo login $CARGO_API_TOKEN
+  execute cargo login "$CARGO_API_TOKEN"
   execute cargo publish
 }
 
