@@ -30,6 +30,7 @@ Install-Package Apache.Avro
 | Avro.msbuild        |                            | Library    | ✔️                 | ✔️               |               |           |           |
 | Avro.perf           |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 | Avro.test           |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.benchmark      |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 
 ## Dependency package version strategy
 
