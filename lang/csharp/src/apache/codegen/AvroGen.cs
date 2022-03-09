@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,15 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGen
     {
-        static int Main(string[] args)
+        private static Arguments _arguments = new Arguments();
+
+        private const string _schemaParameter = "-s";
+        private const string _schemaName = "Schema";
+        private const string _protocolParameter = "-p";
+        private const string _protocolName = "Protocol";
+        private const string _namespaceParameter = "--namespace";
+        private const string _outputDirectoryParameter = "--outputdir";
+        private const string _createNamespaceDirectoriesParameter = "--create-namespace-directories";
+
+        private static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -33,131 +43,81 @@ namespace Avro
             }
 
             // Print usage if help requested
-            if (args[0] == "-h" || args[0] == "--help")
+            if (args.Contains("-h") || args.Contains("--help"))
             {
                 Usage();
                 return 0;
             }
 
             // Parse command line arguments
-            bool? isProtocol = null;
-            string inputFile = null;
-            string outputDir = null;
-            var namespaceMapping = new Dictionary<string, string>();
-            for (int i = 0; i < args.Length; ++i)
+            if (args.Contains(_protocolParameter))
             {
-                if (args[i] == "-p")
+                if (ParseInput(args, _protocolParameter, _protocolName) == 0)
                 {
-                    if (i + 1 >= args.Length)
-                    {
-                        Console.Error.WriteLine("Missing path to protocol file");
-                        Usage();
-                        return 1;
-                    }
-
-                    isProtocol = true;
-                    inputFile = args[++i];
-                }
-                else if (args[i] == "-s")
-                {
-                    if (i + 1 >= args.Length)
-                    {
-                        Console.Error.WriteLine("Missing path to schema file");
-                        Usage();
-                        return 1;
-                    }
-
-                    isProtocol = false;
-                    inputFile = args[++i];
-                }
-                else if (args[i] == "--namespace")
-                {
-                    if (i + 1 >= args.Length)
-                    {
-                        Console.Error.WriteLine("Missing namespace mapping");
-                        Usage();
-                        return 1;
-                    }
-
-                    var parts = args[++i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length != 2)
-                    {
-                        Console.Error.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
-                        Usage();
-                        return 1;
-                    }
-
-                    namespaceMapping[parts[0]] = parts[1];
-                }
-                else if (outputDir == null)
-                {
-                    outputDir = args[i];
+                    GenProtocol();
                 }
                 else
                 {
-                    Console.Error.WriteLine("Unexpected command line argument: {0}", args[i]);
                     Usage();
+                    return 1;
                 }
             }
 
-            // Ensure we got all the command line arguments we need
-            bool isValid = true;
-            int rc = 0;
-            if (!isProtocol.HasValue || inputFile == null)
+            if (args.Contains(_schemaParameter))
             {
-                Console.Error.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
-                isValid = false;
-            }
-            else if (outputDir == null)
-            {
-                Console.Error.WriteLine("Must provide 'outputdir'");
-                isValid = false;
+                if (ParseInput(args, _schemaParameter, _schemaName) == 0)
+                {
+                    GenSchema();
+                }
+                else
+                {
+                    Usage();
+                    return 1;
+                }
             }
 
-
-            if (!isValid)
-            {
-                Usage();
-                rc = 1;
-            }
-            else if (isProtocol.Value)
-                rc = GenProtocol(inputFile, outputDir, namespaceMapping);
-            else
-                rc = GenSchema(inputFile, outputDir, namespaceMapping);
-
-            return rc;
+            Console.Error.WriteLine($"Must provide either '{_protocolParameter} <protocolfile>' " +
+                $"or '{_schemaParameter} <schemafile>'");
+            Usage();
+            return 1;
         }
 
-        static void Usage()
+        private static void Usage()
         {
-            Console.WriteLine("{0}\n\n" +
+            Console.WriteLine(
+                $"{AppDomain.CurrentDomain.FriendlyName}\n\n" +
                 "Usage:\n" +
-                "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
-                "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
+                $"  avrogen {_protocolParameter} <protocolfile> <outputdir> [{_namespaceParameter} <my.avro.ns:my.csharp.ns>]\n" +
+                $"  avrogen {_schemaParameter} <schemafile> <outputdir> [{_namespaceParameter} <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
-                "  -h --help   Show this screen.\n" +
-                "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
-                "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
-                "              May be specified multiple times to map multiple namespaces.\n",
-                AppDomain.CurrentDomain.FriendlyName);
+                $"{FormatUsage("-h --help")}Show this screen.\n\n" +
+                $"{FormatUsage(_namespaceParameter)}Map an Avro schema/protocol namespace to a C# namespace.\n" +
+                $"{FormatUsage(null)}the format is \"my.avro.namespace:my.csharp.namespace\".\n" +
+                $"{FormatUsage(null)}May be specified multiple times to map multiple namespaces.\n\n" +
+                $"{FormatUsage(_outputDirectoryParameter)}Optional parameter for setting output directory.\n" +
+                $"{FormatUsage(null)}{_outputDirectoryParameter} <outputdir> instead of <outputdir>\n\n" +
+                $"{FormatUsage(_createNamespaceDirectoriesParameter)}Optional parameter to change how the files \n" +
+                $"{FormatUsage(null)}are output to the outputdir.  Default is set to true.\n" +
+                $"{FormatUsage(null)}False will output the files to the root of the outputdir\n"
+                );
             return;
         }
-        static int GenProtocol(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+
+        private static int GenProtocol()
         {
             try
             {
-                string text = System.IO.File.ReadAllText(infile);
+                string text = System.IO.File.ReadAllText(_arguments.Input);
                 Protocol protocol = Protocol.Parse(text);
 
                 CodeGen codegen = new CodeGen();
                 codegen.AddProtocol(protocol);
 
-                foreach (var entry in namespaceMapping)
+                foreach (var entry in _arguments.NamespaceMapping)
                     codegen.NamespaceMapping[entry.Key] = entry.Value;
 
                 codegen.GenerateCode();
-                codegen.WriteTypes(outdir);
+                codegen.WriteTypes(_arguments.OutputDirectory);
             }
             catch (Exception ex)
             {
@@ -167,22 +127,22 @@ namespace Avro
 
             return 0;
         }
-        static int GenSchema(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+
+        private static int GenSchema()
         {
             try
             {
-                string text = System.IO.File.ReadAllText(infile);
+                string text = System.IO.File.ReadAllText(_arguments.Input);
                 Schema schema = Schema.Parse(text);
 
                 CodeGen codegen = new CodeGen();
                 codegen.AddSchema(schema);
 
-                foreach (var entry in namespaceMapping)
+                foreach (var entry in _arguments.NamespaceMapping)
                     codegen.NamespaceMapping[entry.Key] = entry.Value;
 
                 codegen.GenerateCode();
-                codegen.WriteTypes(outdir);
+                codegen.WriteTypes(_arguments.OutputDirectory, _arguments.CreateNamespaceDirectories);
             }
             catch (Exception ex)
             {
@@ -191,6 +151,124 @@ namespace Avro
             }
 
             return 0;
+        }
+
+        private static int ParseInput(string[] args, string parameter, string parameterName)
+        {
+            _arguments.Input = GetTwoPartArgument(args, parameter);
+            if (_arguments.HasInput)
+            {
+                Console.Error.WriteLine($"Missing path to {parameterName.ToLower()} file");
+                return 1;
+            }
+
+            if (!System.IO.File.Exists(_arguments.Input))
+            {
+                Console.Error.WriteLine($"{parameterName} file does not exist");
+                return 1;
+            }
+
+            if (ParseOutputDirectory(args, Array.IndexOf(args, parameter) + 2) == 1)
+            {
+                return 1;
+            }
+
+            if (args.Contains(_namespaceParameter) && ParseNamespace(args) == 1)
+            {
+                return 1;
+            }
+
+            if (args.Contains(_createNamespaceDirectoriesParameter) && ParseCreateNamespaceDirectories(args) == 1)
+            {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        private static int ParseOutputDirectory(string[] args, int? expectedPosition)
+        {
+            // Was outputdir set via parameter
+            if (args.Contains(_outputDirectoryParameter))
+            {
+                _arguments.OutputDirectory = GetTwoPartArgument(args, _outputDirectoryParameter);
+
+                if (!_arguments.HasOutputDirectory | !System.IO.Directory.Exists(_arguments.OutputDirectory))
+                {
+                    Console.Error.WriteLine($"Must provide {_outputDirectoryParameter} <outputdir>");
+                    return 1;
+                }
+
+                return 0;
+            }
+
+            if (expectedPosition.HasValue)
+            {
+                _arguments.OutputDirectory = args[expectedPosition.Value];
+
+                if (!_arguments.HasOutputDirectory | !System.IO.Directory.Exists(_arguments.OutputDirectory))
+                {
+                    Console.Error.WriteLine("Must provide 'outputdir'");
+                    return 1;
+                }
+            }
+
+            return 0;
+        }
+
+        private static int ParseNamespace(string[] args)
+        {
+            string namespaces = GetTwoPartArgument(args, _namespaceParameter);
+
+            if (string.IsNullOrEmpty(namespaces))
+            {
+                Console.Error.WriteLine("Missing namespace mapping");
+                return 1;
+            }
+
+            string[] parts = namespaces.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2)
+            {
+                Console.Error.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
+                return 1;
+            }
+
+            _arguments.NamespaceMapping[parts[0]] = parts[1];
+            return 0;
+        }
+
+        private static int ParseCreateNamespaceDirectories(string[] args)
+        {
+            string createDirectoriesValue = GetTwoPartArgument(args, _createNamespaceDirectoriesParameter);
+
+            if (string.IsNullOrWhiteSpace(createDirectoriesValue) |
+                (!createDirectoriesValue.Equals("true", StringComparison.InvariantCultureIgnoreCase) &
+                !createDirectoriesValue.Equals("false", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                Console.Error.WriteLine($"{_createNamespaceDirectoriesParameter} parameters must have a value of true or false");
+                return 1;
+            }
+
+            _arguments.CreateNamespaceDirectories = createDirectoriesValue.Equals("true", StringComparison.InvariantCultureIgnoreCase);
+
+            return 0;
+        }
+
+        private static string GetTwoPartArgument(string[] args, string option)
+            => args.SkipWhile(i => i != option).Skip(1).Take(1).FirstOrDefault();
+
+        private static string FormatUsage(string parameter)
+        {
+            // Use the longest parameter.  Add 2 spaces at front and 1 space at the end.
+            int length = _createNamespaceDirectoriesParameter.Length + 3;
+
+            if (string.IsNullOrEmpty(parameter))
+            {
+                return new string(' ', length);
+            }
+
+            return $"  {parameter}{new string(' ', length - parameter.Length - 2)}";
+
         }
     }
 }
