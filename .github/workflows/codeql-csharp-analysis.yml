@@ -32,6 +32,10 @@ on:
     - .github/workflows/codeql-csharp-analysis.yml
     - lang/csharp/**
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze

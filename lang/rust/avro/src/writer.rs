@@ -520,7 +520,7 @@ mod tests {
     fn decimal_fixed() -> TestResult<()> {
         let size = 30;
         let inner = Schema::Fixed {
-            name: Name::new("decimal"),
+            name: Name::new("decimal").unwrap(),
             doc: None,
             size,
         };
@@ -558,7 +558,7 @@ mod tests {
     #[test]
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
-            name: Name::new("duration"),
+            name: Name::new("duration").unwrap(),
             doc: None,
             size: 12,
         };
@@ -837,7 +837,7 @@ mod tests {
         let mut writer = Writer::new(&schema, Vec::new());
 
         writer
-            .add_user_metadata("stringKey".to_string(), "stringValue".to_string())
+            .add_user_metadata("stringKey".to_string(), String::from("stringValue"))
             .unwrap();
         writer
             .add_user_metadata("strKey".to_string(), "strValue")
@@ -871,7 +871,7 @@ mod tests {
         record.put("b", "foo");
         writer.append(record.clone()).unwrap();
 
-        match writer.add_user_metadata("stringKey".to_string(), "value2".to_string()) {
+        match writer.add_user_metadata("stringKey".to_string(), String::from("value2")) {
             Err(e @ Error::FileHeaderAlreadyWritten) => {
                 assert_eq!(e.to_string(), "The file metadata is already flushed.")
             }

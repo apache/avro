@@ -29,6 +29,10 @@ defaults:
   run:
     working-directory: lang/java
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Java ${{ matrix.java }} Test
@@ -104,6 +108,14 @@ jobs:
           python3 -m pip install --upgrade pip setuptools tox-wheel
           python3 -m pip install python-snappy zstandard
 
+      - name: Setup C# for Generating Interop Data
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
       - name: Install Java Avro for Interop Test
         working-directory: .
         run: mvn -B install -DskipTests
@@ -118,6 +130,10 @@ jobs:
 
       - name: Generate Interop Data using Python
         working-directory: lang/py
+        run: ./build.sh interop-data-generate
+
+      - name: Generate Interop Data using C#
+        working-directory: lang/csharp
         run: ./build.sh interop-data-generate
 
       - name: Run Interop Tests

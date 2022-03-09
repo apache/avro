@@ -210,7 +210,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                             usize::try_from(index)
                                 .map_err(|e| Error::ConvertI64ToUsize(e, index))?,
                         )
-                        .ok_or_else(|| Error::GetUnionVariant {
+                        .ok_or(Error::GetUnionVariant {
                             index,
                             num_variants: variants.len(),
                         })?;
@@ -332,7 +332,7 @@ mod tests {
         let inner = Box::new(Schema::Fixed {
             size: 2,
             doc: None,
-            name: Name::new("decimal"),
+            name: Name::new("decimal").unwrap(),
         });
         let schema = Schema::Decimal {
             inner,
@@ -356,7 +356,7 @@ mod tests {
         use num_bigint::ToBigInt;
         let inner = Box::new(Schema::Fixed {
             size: 13,
-            name: Name::new("decimal"),
+            name: Name::new("decimal").unwrap(),
             doc: None,
         });
         let schema = Schema::Decimal {
