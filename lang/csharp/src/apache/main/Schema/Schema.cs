@@ -393,7 +393,7 @@ namespace Avro
         /// </remarks>
         public static Schema.Type? ParseType(string type, bool removeQuotes = false)
         {
-            string newValue = removeQuotes ? type.Trim('"') : type;
+            string newValue = removeQuotes ? RemoveQuotes(type) : type;
 
             switch (newValue)
             {
@@ -448,6 +448,24 @@ namespace Avro
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Removes the quotes from the first position and last position of the string.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>
+        /// If string has a quote at the beginning and the end it removes them,
+        /// otherwise it returns the original string
+        /// </returns>
+        private static string RemoveQuotes(string value)
+        {
+            if(value.StartsWith("\"") && value.EndsWith("\""))
+            {
+                return value.Substring(1, value.Length - 2);
+            }
+
+            return value;
         }
     }
 }
