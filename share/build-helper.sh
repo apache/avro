@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUILD_HELPER_DIR="$(dirname "$BASH_SOURCE")"
-BUILD_ROOT="$(realpath --relative-to="$(pwd)" $BUILD_HELPER_DIR/..)"
+BUILD_HELPER_DIR="$(dirname "${BASH_SOURCE[0]}")"
+BUILD_ROOT="$(realpath --relative-to="$(pwd)" "$BUILD_HELPER_DIR/..")"
 
 # Read version
 BUILD_VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
@@ -24,21 +24,21 @@ BUILD_VERSION="$(cat "$BUILD_ROOT/share/VERSION.txt")"
 OPTION_YES=""
 OPTION_DRY_RUN=""
 
-[ "$BUILD_DESCRIPTION" ] || BUILD_DESCRIPTION="Build script for Apache Avro"
+[ "$BUILD_LANGUAGE" ] || BUILD_LANGUAGE="$1"
 
 # Colors
 COLOR_RED="\033[0;31m"
 COLOR_GREEN="\033[0;32m"
 COLOR_YELLOW="\033[0;33m"
-COLOR_BLUE="\033[0;34m"
-COLOR_PURPLE="\033[0;35m"
+#COLOR_BLUE="\033[0;34m"
+#COLOR_PURPLE="\033[0;35m"
 COLOR_CYAN="\033[0;36m"
 COLOR_NONE="\033[0m"
 
 function usage()
 {
     echo "Usage: $(basename "$0") [OPTION]... [COMMAND]..."
-    echo "$BUILD_DESCRIPTION"
+    echo "Build script for Apache Avro $BUILD_LANGUAGE"
     echo ""
     echo "Options:"
     echo "  -y, --yes                             Answer yes to all question"
@@ -98,8 +98,8 @@ function disable-colors()
     COLOR_RED=""
     COLOR_GREEN=""
     COLOR_YELLOW=""
-    COLOR_BLUE=""
-    COLOR_PURPLE=""
+    #COLOR_BLUE=""
+    #COLOR_PURPLE=""
     COLOR_CYAN=""
     COLOR_NONE=""
 }
@@ -166,7 +166,7 @@ function build-run()
         ;;
 
       -V|--version)
-        echo "$VERSION"
+        echo "$BUILD_VERSION"
         ;;
 
       lint|test|perf|dist|release|verify-release|interop-data-generate|interop-data-test|clean)

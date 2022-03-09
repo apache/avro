@@ -19,8 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-BUILD_DESCRIPTION="Build script for Apache Avro Javascript"
-source ../../share/build-helper.sh
+source ../../share/build-helper.sh "Javascript"
 
 function command_lint()
 {

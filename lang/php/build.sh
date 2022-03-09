@@ -19,10 +19,7 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-BUILD_DESCRIPTION="Build script for Apache Avro PHP"
-source ../../share/build-helper.sh
-
-set -x
+source ../../share/build-helper.sh "PHP"
 
 dist_dir="$BUILD_ROOT/dist/php"
 build_dir="pkg"

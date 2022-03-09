@@ -19,16 +19,12 @@ set -e
 
 cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-BUILD_DESCRIPTION="Build script for Apache Avro C#"
-source ../../share/build-helper.sh
+source ../../share/build-helper.sh "C#"
 
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
 SUPPORTED_SDKS="3.1 5.0 6.0"
 DEFAULT_FRAMEWORK="net6.0"
 CONFIGURATION="Release"
-
-[ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
-[ "$NUGET_KEY" ] || fatal "NUGET_KEY not set"
 
 function command_lint()
 {
@@ -85,6 +81,9 @@ function command_dist()
 
 function command_release()
 {
+  [ "$NUGET_SOURCE" ] || NUGET_SOURCE="https://api.nuget.org/v3/index.json"
+  [ "$NUGET_KEY" ] || fatal "NUGET_KEY not set"
+
   command_dist
 
   # Push packages to nuget.org
