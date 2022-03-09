@@ -18,6 +18,7 @@
 package org.apache.avro.mojo;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,11 +53,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
 
-    assertEquals(asList("[INFO] Compiling protocol: test.IdlTest", "[INFO] Schema names: test.IdlPrivacy, test.IdlUser",
-        "[WARN] Line 22, char 5: Ignoring out-of-place documentation comment.\n"
-            + "Did you mean to use a multiline comment ( /* ... */ ) instead?",
-        "[INFO] Compiling protocol: test.IdlClasspathImportTest",
-        "[INFO] Schema names: test.IdlPrivacy, test.IdlUser, test.IdlUserWrapper"), log.getLogEntries());
+    assertEquals(Collections.singletonList("[WARN] Line 22, char 5: Ignoring out-of-place documentation comment.\n"
+        + "Did you mean to use a multiline comment ( /* ... */ ) instead?"), log.getLogEntries());
   }
 
   @Test
