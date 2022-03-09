@@ -35,29 +35,44 @@ COLOR_YELLOW="\033[0;33m"
 COLOR_CYAN="\033[0;36m"
 COLOR_NONE="\033[0m"
 
+# Commands
+declare -A BUILD_COMMANDS
+
+BUILD_COMMANDS["lint"]="Lint the code"
+BUILD_COMMANDS["test"]="Run unit tests"
+BUILD_COMMANDS["clean"]="Clean the build files"
+BUILD_COMMANDS["dist"]="Create a distribution tarball"
+BUILD_COMMANDS["release"]="Release project"
+BUILD_COMMANDS["verify-release"]="Verify release"
+BUILD_COMMANDS["perf"]="Run performance tests"
+BUILD_COMMANDS["interop-data-generate"]="Generate interop data"
+BUILD_COMMANDS["interop-data-test"]="Test interop data"
+
+# Example to define additional command. Put the following into the language specific build.sh
+#
+#function command_new-command() {
+#  echo "This is a new command"
+#}
+#build-add-command "new-command" "Description of new command"
+
 function usage()
 {
     echo "Usage: $(basename "$0") [OPTION]... [COMMAND]..."
     echo "Build script for Apache Avro $BUILD_LANGUAGE"
     echo ""
     echo "Options:"
-    echo "  -y, --yes                             Answer yes to all question"
-    echo "      --dry-run                         Dont execute commands, just echo them"
-    echo "      --no-colors                       No colors"
-    echo "  -v, --verbose                         Verbose output"
-    echo "  -V, --version                         Version"
-    echo "  -h, --help                            Shows help"
+    printf "  %-40s%s\n" "-y, --yes"       "Answer yes to all question"
+    printf "  %-40s%s\n" "    --dry-run"   "Do not execute commands, just echo them"
+    printf "  %-40s%s\n" "    --no-colors" "No colors"
+    printf "  %-40s%s\n" "-v, --verbose"   "Verbose output"
+    printf "  %-40s%s\n" "-V, --version"   "Shows version"
+    printf "  %-40s%s\n" "-h, --help"      "Shows help"
     echo ""
     echo "Commands:"
-    echo "  lint                                  Lint the code"
-    echo "  test                                  Run unit tests"
-    echo "  clean                                 Clean the build files"
-    echo "  dist                                  Create a distribution tarball"
-    echo "  release                               Release project"
-    echo "  verify-release                        Verify release"
-    echo "  perf                                  Run performance tests"
-    echo "  interop-data-generate                 Generate interop data"
-    echo "  interop-data-test                     Test interop data"
+    for cmd in "${!BUILD_COMMANDS[@]}"
+    do
+      printf "  %-40s%s\n" "$cmd" "${BUILD_COMMANDS[$cmd]}"
+    done | sort
 }
 
 function cleanup()
@@ -136,6 +151,11 @@ function execute()
   eval "$@"
 }
 
+function build-add-command()
+{
+  BUILD_COMMANDS["$1"]="$2"
+}
+
 function build-run()
 {
   # Iterate through arguments
@@ -169,15 +189,25 @@ function build-run()
         echo "$BUILD_VERSION"
         ;;
 
-      lint|test|perf|dist|release|verify-release|interop-data-generate|interop-data-test|clean)
-        COMMAND="command_$1"
-        [[ $(type -t $COMMAND) == function ]] || { echo "Command '$1' is not implemented"; exit 1; }
-        # Execute command
-        $COMMAND
+      -*)
+        fatal "Unknown option: $1"
         ;;
 
       *)
-        fatal "Unknown option or command: $1"
+        # Check if command
+        if [ "${BUILD_COMMANDS[$1]}" ] 
+        then
+          # Check if command function is available
+          if [ "$(type -t command_"$1")" == "function" ]
+          then
+            # Execute command
+            command_$1
+          else
+            fatal "Command $1 is not implemented"
+          fi
+        else
+          fatal "Unknown command: $1"
+        fi
         ;;
     esac
 
