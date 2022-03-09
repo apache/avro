@@ -55,6 +55,8 @@ BUILD_COMMANDS["interop-data-test"]="Test interop data"
 #}
 #build-add-command "new-command" "Description of new command"
 
+BUILD_START_TIME="$(date +%s)"
+
 function usage()
 {
     echo "Usage: $(basename "$0") [OPTION]... [COMMAND]..."
@@ -82,7 +84,9 @@ function cleanup()
     trap "" INT TERM EXIT
     set +e
 
-    [ "$RC" == "0" ] && ok "Done." || error "FAILED!"
+    BUILD_END_TIME="$(date +%s)"
+
+    [ "$RC" == "0" ] && ok "Done in $(( BUILD_END_TIME - BUILD_START_TIME ))s." || error "FAILED!"
 
     exit "$RC"
 }
