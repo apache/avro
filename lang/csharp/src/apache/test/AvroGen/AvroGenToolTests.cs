@@ -89,7 +89,7 @@ namespace Avro.Test.AvroGen
         [TestCase("--help")]
         [TestCase("--help", "-h")]
         [TestCase("--help", "-s", "whatever.avsc", ".")]
-        [TestCase("-p", "whatever.avsc", ".", "-h")]
+        [TestCase("-p", "whatever.avpr", ".", "-h")]
         public void CommandLineHelp(params string[] args)
         {
             AvroGenToolResult result = RunAvroGenTool(args);
@@ -101,10 +101,11 @@ namespace Avro.Test.AvroGen
 
         [TestCase("-p")]
         [TestCase("-s")]
-        [TestCase("-p", "whatever.avsc")]
+        [TestCase("-p", "whatever.avpr")]
+        [TestCase("-p", "whatever.avpr")]
         [TestCase("-s", "whatever.avsc")]
         [TestCase("whatever.avsc")]
-        [TestCase("whatever.avsc .")]
+        [TestCase("whatever.avsc", ".")]
         [TestCase(".")]
         [TestCase("-s", "whatever.avsc", "--namespace")]
         [TestCase("-s", "whatever.avsc", "--namespace", "org.apache")]

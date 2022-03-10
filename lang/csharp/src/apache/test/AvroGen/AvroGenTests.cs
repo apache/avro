@@ -375,6 +375,7 @@ namespace Avro.Test.AvroGen
 
                         // Instantiate
                         object obj = Activator.CreateInstance(type);
+                        Assert.That(obj, Is.Not.Null);
                     }
                 }
 
@@ -711,6 +712,7 @@ namespace Avro.Test.AvroGen
                 }
                 else
                 {
+                    Assert.That(field, Is.Not.Null);
                     Assert.That(field.GetType(), Is.EqualTo(stype));
                 }
             }
