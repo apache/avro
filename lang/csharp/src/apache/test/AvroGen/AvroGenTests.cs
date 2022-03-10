@@ -295,16 +295,19 @@ namespace Avro.Test.AvroGen
 
                 // Compile
                 EmitResult compilationResult = compilation.Emit(compilerStream);
-                if (!compilationResult.Success)
-                {
-                    foreach (Diagnostic diagnostic in compilationResult.Diagnostics)
-                    {
-                        if (diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error)
-                        {
-                            TestContext.WriteLine($"{diagnostic.Id} - {diagnostic.GetMessage()} - {diagnostic.Location}");
-                        }
-                    }
-                }
+
+                //Note: Comment the following out to analyze the compiler errors if needed
+                //if (!compilationResult.Success)
+                //{
+                //    foreach (Diagnostic diagnostic in compilationResult.Diagnostics)
+                //    {
+                //        if (diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error)
+                //        {
+                //            TestContext.WriteLine($"{diagnostic.Id} - {diagnostic.GetMessage()} - {diagnostic.Location}");
+                //        }
+                //    }
+                //}
+
                 Assert.That(compilationResult.Success, Is.True);
 
                 if (!loadAssembly)
