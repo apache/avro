@@ -234,6 +234,8 @@ pub struct Name {
 
 /// Represents documentation for complex Avro schemas.
 pub type Documentation = Option<String>;
+pub type Fullname = String;
+pub type Names = HashMap<Fullname, Schema>;
 
 impl Name {
     /// Create a new `Name`.
@@ -293,7 +295,7 @@ impl Name {
     ///
     /// More information about fullnames can be found in the
     /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-    pub fn fullname(&self, default_namespace: Option<&str>) -> String {
+    pub fn fullname(&self, default_namespace: Option<&str>) -> Fullname {
         if self.name.contains('.') {
             self.name.clone()
         } else {
@@ -328,6 +330,64 @@ impl Eq for Name {}
 impl PartialEq for Name {
     fn eq(&self, other: &Name) -> bool {
         self.fullname(None).eq(&other.fullname(None))
+    }
+}
+
+struct ResolvedSchema {
+    schema_idx : HashMap<String, Schema>,
+    schema: Schema    
+}
+
+impl  From<Schema> for ResolvedSchema {
+    fn from(schema: Schema) -> Self {
+        let names = HashMap::new();
+        let mut rs = ResolvedSchema{schema_idx: names, schema};
+        Self::from_internal(&rs.schema, &mut rs.schema_idx, None);
+        return rs;
+    }
+}
+
+impl ResolvedSchema {
+    fn  from_internal(schema: &Schema, idx: &mut HashMap<String, Schema>, encolsing_namespace : Option<&str>) {
+        match schema {
+            Schema::Array(schema) | Schema::Map(schema) => 
+            {
+                Self::from_internal(schema, idx, encolsing_namespace)
+            },
+            Schema::Union(UnionSchema { schemas, .. }) => 
+            {
+                for schema in schemas {
+                    Self::from_internal(schema, idx, encolsing_namespace.clone())
+                }
+            },
+            Schema::Enum{name , ..} | Schema::Fixed{name, ..} => {
+                let fullname = name.fullname(encolsing_namespace);
+                if let Some(_) = idx.insert(fullname.clone(), schema.clone()) {
+                    panic!("Invalid Schema: Two schemas found with identical fullname: {}.", fullname);
+                }
+            },
+            Schema::Record {name, fields, .. } => {
+                let fullname = name.fullname(encolsing_namespace);
+                if let Some(_) = idx.insert(fullname.clone(), schema.clone()) {
+                    panic!("Invalid Schema: Two schemas found with identical fullname: {}.", fullname);
+                }
+                let encolsing_namespace = name.namespace
+                .as_ref()
+                .map(|s| s.as_ref())
+                .or(encolsing_namespace);
+                for field in fields {
+                    Self::from_internal(&field.schema, idx, encolsing_namespace)
+                }
+            },
+            Schema::Ref { name } => 
+            {
+                let fullname = name.fullname(encolsing_namespace);
+                if ! idx.contains_key(&fullname) {
+                    panic!("Invalid schema: Unable to find schema for reference {}. Make sure to use inherited namespace as needed.", fullname)
+                }
+            },
+            _ => ()
+        }
     }
 }
 
