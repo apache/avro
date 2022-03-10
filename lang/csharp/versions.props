@@ -57,7 +57,9 @@
     <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
     <MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.0.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
+    <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
     <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
