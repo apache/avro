@@ -99,6 +99,8 @@ matrix:
         - wget https://dot.net/v1/dotnet-install.sh
         - bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
         - bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+        # Hardcode .NET SDK 6.0 version until https://github.com/dotnet/sdk/issues/23972 is fixed
+        # Note: dotnet-install.sh incorrectly reports the latest .NET SDK 6.0 version as 6.0.103
         - bash ./dotnet-install.sh --version "6.0.201" --install-dir "$HOME/.dotnet" # 6.0
       before_script:
         - export PATH=$HOME/.dotnet:$PATH
