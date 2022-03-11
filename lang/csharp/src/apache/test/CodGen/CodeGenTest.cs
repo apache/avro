@@ -16,12 +16,14 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
 namespace Avro.Test.CodeGen
 {
     [TestFixture]
-
     class CodeGenTests
     {
 
@@ -29,6 +31,40 @@ namespace Avro.Test.CodeGen
         public void TestGetNullableTypeException()
         {
             Assert.Throws<ArgumentNullException>(() => Avro.CodeGen.GetNullableType(null));
+        }
+
+        [Test]
+        public void TestReservedKeywords()
+        {
+            // https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Syntax/SyntaxKindFacts.cs            
+
+            // Check if each items in CodeGenUtil.Instance.ReservedKeywords are keywords
+            foreach (string keyword in CodeGenUtil.Instance.ReservedKeywords)
+            {
+                Assert.That(SyntaxFacts.GetKeywordKind(keyword) != SyntaxKind.None, Is.True);
+            }
+
+            // Check if every reserved keyword is in CodeGenUtil.Instance.ReservedKeywords
+            foreach (SyntaxKind keywordKind in SyntaxFacts.GetReservedKeywordKinds())
+            {
+                Assert.That(CodeGenUtil.Instance.ReservedKeywords, Does.Contain(SyntaxFacts.GetText(keywordKind)));
+            }
+        }
+
+        [TestCase("a", "a")]
+        [TestCase("a.b", "a.b")]
+        [TestCase("a.b.c", "a.b.c")]
+        [TestCase("int", "@int")]
+        [TestCase("a.long.b", "a.@long.b")]
+        [TestCase("int.b.c", "@int.b.c")]
+        [TestCase("a.b.int", "a.b.@int")]
+        [TestCase("int.long.while", "@int.@long.@while")]
+        public void TestMangleUnMangle(string input, string mangled)
+        {
+            // Mangle
+            Assert.That(CodeGenUtil.Instance.Mangle(input), Is.EqualTo(mangled));
+            // Unmangle
+            Assert.That(CodeGenUtil.Instance.UnMangle(mangled), Is.EqualTo(input));
         }
 
         [TestFixture]
