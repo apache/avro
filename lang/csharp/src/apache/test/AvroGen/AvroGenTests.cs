@@ -495,7 +495,7 @@ namespace Avro.Test.AvroGen
             })]
         [TestCase(
             _nullableLogicalTypesArray,
-            "org.apache.avro.codegentest.testdata", "org.apache.@return.@int",
+            "org.apache.avro.codegentest.testdata", "org.apache.@return.@int", // Reserved keywords in namespace
             new string[]
             {
                 "org.apache.return.int.NullableLogicalTypesArray"
@@ -503,6 +503,17 @@ namespace Avro.Test.AvroGen
             new string[]
             {
                 "org/apache/return/int/NullableLogicalTypesArray.cs"
+            })]
+        [TestCase(
+            _nullableLogicalTypesArray,
+            "org.apache.avro.codegentest.testdata", "org.apache.value.partial", // Contextual keywords in namespace
+            new string[]
+            {
+                "org.apache.value.partial.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "org/apache/value/partial/NullableLogicalTypesArray.cs"
             })]
         [TestCase(@"
 {
