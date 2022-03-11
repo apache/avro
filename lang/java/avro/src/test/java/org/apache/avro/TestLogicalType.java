@@ -56,7 +56,7 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testDecimalWithNonByteArrayTypes() {
+  public void testDecimalWithInvalidTypes() {
     final LogicalType decimal = LogicalTypes.decimal(5, 2);
     // test simple types
     Schema[] nonBytes = new Schema[] { Schema.createRecord("Record", null, null, false),
