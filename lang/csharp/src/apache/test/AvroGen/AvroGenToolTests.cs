@@ -27,58 +27,10 @@ namespace Avro.Test.AvroGen
 
     class AvroGenToolTests
     {
-        class AvroGenToolResult
-        {
-            public int ExitCode { get; set; }
-            public string[] StdOut { get; set; }
-            public string[] StdErr { get; set; }
-        }
-
-        private AvroGenToolResult RunAvroGenTool(params string[] args)
-        {
-            // Save stdout and stderr
-            TextWriter conOut = Console.Out;
-            TextWriter conErr = Console.Error;
-
-            try
-            {
-                AvroGenToolResult result = new AvroGenToolResult();
-                StringBuilder strBuilderOut = new StringBuilder();
-                StringBuilder strBuilderErr = new StringBuilder();
-
-                using (StringWriter writerOut = new StringWriter(strBuilderOut))
-                using (StringWriter writerErr = new StringWriter(strBuilderErr))
-                {
-                    writerOut.NewLine = "\n";
-                    writerErr.NewLine = "\n";
-
-                    // Overwrite stdout and stderr to be able to capture console output
-                    Console.SetOut(writerOut);
-                    Console.SetError(writerErr);
-
-                    result.ExitCode = AvroGenTool.Main(args.ToArray());
-
-                    writerOut.Flush();
-                    writerErr.Flush();
-
-                    result.StdOut = strBuilderOut.Length == 0 ? Array.Empty<string>() : strBuilderOut.ToString().Split(writerOut.NewLine);
-                    result.StdErr = strBuilderErr.Length == 0 ? Array.Empty<string>() : strBuilderErr.ToString().Split(writerErr.NewLine);
-                }
-
-                return result;
-            }
-            finally
-            {
-                // Restore console
-                Console.SetOut(conOut);
-                Console.SetError(conErr);
-            }
-        }
-
         [Test]
         public void CommandLineNoArgs()
         {
-            AvroGenToolResult result = RunAvroGenTool(Array.Empty<string>());
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(Array.Empty<string>());
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.StdOut, Is.Not.Empty);
@@ -92,7 +44,7 @@ namespace Avro.Test.AvroGen
         [TestCase("-p", "whatever.avpr", ".", "-h")]
         public void CommandLineHelp(params string[] args)
         {
-            AvroGenToolResult result = RunAvroGenTool(args);
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(args);
 
             Assert.That(result.ExitCode, Is.EqualTo(0));
             Assert.That(result.StdOut, Is.Not.Empty);
@@ -113,7 +65,7 @@ namespace Avro.Test.AvroGen
         [TestCase("-s", "whatever.avsc", ".", "whatever")]
         public void CommandLineInvalidArgs(params string[] args)
         {
-            AvroGenToolResult result = RunAvroGenTool(args);
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(args);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.StdOut, Is.Not.Empty);

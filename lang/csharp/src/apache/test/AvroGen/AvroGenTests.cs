@@ -263,79 +263,14 @@ namespace Avro.Test.AvroGen
   ]
 }";
 
-        private Assembly CompileCharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName = null, bool loadAssembly = true)
-        {
-            // CReate random assenbly name if not specified
-            if (assemblyName == null)
-                assemblyName = Path.GetRandomFileName();
-
-            // Base path to assemblies .NET assemblies
-            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
-
-            using (var compilerStream = new MemoryStream())
-            {
-                List<string> assemblies = new List<string>()
-                {
-                    typeof(object).Assembly.Location,
-                    typeof(Schema).Assembly.Location,
-                    Path.Combine(assemblyPath, "System.Runtime.dll"),
-                    Path.Combine(assemblyPath, "netstandard.dll")
-                };
-
-                // Create compiler
-                CSharpCompilation compilation = CSharpCompilation
-                    .Create(assemblyName)
-                    .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                    .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
-                    .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
-                    {
-                        string sourceText = System.IO.File.ReadAllText(sourceFile);
-                        return CSharpSyntaxTree.ParseText(sourceText);
-                    }));
-
-                // Compile
-                EmitResult compilationResult = compilation.Emit(compilerStream);
-
-                //Note: Comment the following out to analyze the compiler errors if needed
-                //if (!compilationResult.Success)
-                //{
-                //    foreach (Diagnostic diagnostic in compilationResult.Diagnostics)
-                //    {
-                //        if (diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error)
-                //        {
-                //            TestContext.WriteLine($"{diagnostic.Id} - {diagnostic.GetMessage()} - {diagnostic.Location}");
-                //        }
-                //    }
-                //}
-
-                Assert.That(compilationResult.Success, Is.True);
-
-                if (!loadAssembly)
-                {
-                    return null;
-                }
-
-                compilerStream.Seek(0, SeekOrigin.Begin);
-                return Assembly.Load(compilerStream.ToArray());
-            }
-        }
-
         private Assembly TestSchema(
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
             IEnumerable<string> generatedFilesToCheck = null)
         {
-            string uniqueId = Guid.NewGuid().ToString();
-
-            string compiledAssemblyName = uniqueId;
-            string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, uniqueId);
-
             // Create temp folder
-            Directory.CreateDirectory(outputDir);
-
-            // Make sure to start with an empty working folder
-            Assert.That(new DirectoryInfo(outputDir), Is.Empty);
+            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
 
             try
             {
@@ -356,11 +291,11 @@ namespace Avro.Test.AvroGen
                 }
 
                 // Compile into netstandard library and load assembly
-                Assembly assembly = CompileCharpFilesIntoLibrary(
+                Assembly assembly = AvroGenHelper.CompileCSharpFilesIntoLibrary(
                     new DirectoryInfo(outputDir)
                         .EnumerateFiles("*.cs", SearchOption.AllDirectories)
                         .Select(fi => fi.FullName),
-                        compiledAssemblyName);
+                        uniqueId);
 
                 if (typeNamesToCheck != null)
                 {
@@ -589,11 +524,8 @@ namespace Avro.Test.AvroGen
         [TestCase(_nestedLogicalTypesUnionFixedDecimal, typeof(SchemaParseException))]
         public void NotSupportedSchema(string schema, Type expectedException)
         {
-            string uniqueId = Guid.NewGuid().ToString();
-            string outputDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, uniqueId);
-
             // Create temp folder
-            Directory.CreateDirectory(outputDir);
+            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
 
             try
             {

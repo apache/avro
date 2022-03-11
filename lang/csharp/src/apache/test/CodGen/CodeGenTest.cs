@@ -36,19 +36,22 @@ namespace Avro.Test.CodeGen
         [Test]
         public void TestReservedKeywords()
         {
-            // https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Syntax/SyntaxKindFacts.cs            
+            // https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Syntax/SyntaxKindFacts.cs
 
-            // Check if each items in CodeGenUtil.Instance.ReservedKeywords are keywords
+            // Check if all items in CodeGenUtil.Instance.ReservedKeywords are keywords
             foreach (string keyword in CodeGenUtil.Instance.ReservedKeywords)
             {
                 Assert.That(SyntaxFacts.GetKeywordKind(keyword) != SyntaxKind.None, Is.True);
             }
 
-            // Check if every reserved keyword is in CodeGenUtil.Instance.ReservedKeywords
+            // Check if all Roslyn defined keywords are in CodeGenUtil.Instance.ReservedKeywords
             foreach (SyntaxKind keywordKind in SyntaxFacts.GetReservedKeywordKinds())
             {
                 Assert.That(CodeGenUtil.Instance.ReservedKeywords, Does.Contain(SyntaxFacts.GetText(keywordKind)));
             }
+
+            // If this test fails, CodeGenUtil.ReservedKeywords list must be updated.
+            // This might happen if newer version of C# language defines new reserved keywords.
         }
 
         [TestCase("a", "a")]
@@ -58,7 +61,9 @@ namespace Avro.Test.CodeGen
         [TestCase("a.long.b", "a.@long.b")]
         [TestCase("int.b.c", "@int.b.c")]
         [TestCase("a.b.int", "a.b.@int")]
-        [TestCase("int.long.while", "@int.@long.@while")]
+        [TestCase("int.long.while", "@int.@long.@while")] // Reserved keywords
+        [TestCase("a.value.partial", "a.value.partial")] // Contextual keywords
+        [TestCase("a.value.b.int.c.while.longpartial", "a.value.b.@int.c.@while.longpartial")] // Rseserved and contextual keywords
         public void TestMangleUnMangle(string input, string mangled)
         {
             // Mangle
