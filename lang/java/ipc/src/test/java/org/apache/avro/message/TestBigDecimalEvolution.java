@@ -19,7 +19,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.LocalTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
 
@@ -34,16 +34,11 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestBigDecimalEvolution {
-
-  public static final double DELTA = 0.00000001;
-  private final MockTransceiver transceiver = new MockTransceiver();
 
   @Test
   public void bigDecimalEvolutionThroughLogicalType() throws Exception {
@@ -60,19 +55,21 @@ public class TestBigDecimalEvolution {
 
   private void verify(ReflectData clientData, ReflectData serverData) throws IOException {
     Protocol clientProtocol = serverData.getProtocol(BigDecimalProtocol.class);
-    ReflectRequestor clientRequestor = new ReflectRequestor(clientProtocol, transceiver, serverData);
     ReflectResponder clientResponder = new ReflectResponder(clientProtocol, null, serverData);
+    ReflectRequestor clientRequestor = new ReflectRequestor(clientProtocol, new LocalTransceiver(clientResponder),
+        serverData);
     Schema clientRequestSchema = serverData.getSchema(BDRequest.class);
     Schema clientResponseSchema = serverData.getSchema(BDResponse.class);
 
     Protocol serverProtocol = clientData.getProtocol(BigDecimalProtocol.class);
-    ReflectRequestor serverRequestor = new ReflectRequestor(serverProtocol, transceiver, clientData);
     ReflectResponder serverResponder = new ReflectResponder(serverProtocol, null, clientData);
+    ReflectRequestor serverRequestor = new ReflectRequestor(serverProtocol, new LocalTransceiver(serverResponder),
+        clientData);
     Schema serverRequestSchema = clientData.getSchema(BDRequest.class);
     Schema serverResponseSchema = clientData.getSchema(BDResponse.class);
 
     BDRequest originalRequest = new BDRequest();
-    originalRequest.setValue(new BigDecimal("123.321"));
+    originalRequest.setValue(new BigDecimal("123.54321"));
 
     BDRequest request = verifyRequest(originalRequest, serverRequestSchema, clientRequestSchema, serverProtocol,
         serverRequestor, clientResponder);
@@ -97,7 +94,7 @@ public class TestBigDecimalEvolution {
     assertTrue(obj instanceof BDRequest);
     BDRequest request = (BDRequest) obj;
 
-    assertEquals(originalRequest.getValue().doubleValue(), request.getValue().doubleValue(), DELTA);
+    assertEquals(originalRequest.getValue(), request.getValue());
     return request;
   }
 
@@ -116,26 +113,7 @@ public class TestBigDecimalEvolution {
     assertTrue(obj instanceof BDResponse);
 
     BDResponse response = (BDResponse) obj;
-    assertEquals(originalResponse.getValue().doubleValue(), response.getValue().doubleValue(), DELTA);
+    assertEquals(originalResponse.getValue(), response.getValue());
   }
 
-  private static class MockTransceiver extends Transceiver {
-
-    private List<ByteBuffer> buffers;
-
-    @Override
-    public String getRemoteName() throws IOException {
-      return "mock";
-    }
-
-    @Override
-    public List<ByteBuffer> readBuffers() throws IOException {
-      return buffers;
-    }
-
-    @Override
-    public void writeBuffers(List<ByteBuffer> buffers) throws IOException {
-      this.buffers = buffers;
-    }
-  }
 }

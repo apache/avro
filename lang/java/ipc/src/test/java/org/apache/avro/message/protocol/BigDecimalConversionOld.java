@@ -18,27 +18,12 @@
 package org.apache.avro.message.protocol;
 
 import org.apache.avro.Conversions;
-import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificData;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-import java.nio.ByteBuffer;
 
 public class BigDecimalConversionOld extends Conversions.DecimalConversion {
-  public static final MathContext DECIMAL_CONTEXT = new MathContext(16, RoundingMode.HALF_UP);
-  private static final int ROUNDING_SCALE = 5;
-
-  @Override
-  public ByteBuffer toBytes(BigDecimal value, Schema schema, LogicalType type) {
-    return super.toBytes(round(value), schema, type);
-  }
-
-  public static BigDecimal round(BigDecimal value) {
-    return value == null ? null : value.setScale(ROUNDING_SCALE, RoundingMode.HALF_UP);
-  }
 
   @Override
   public Schema getRecommendedSchema() {
