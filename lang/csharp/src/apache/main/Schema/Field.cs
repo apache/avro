@@ -106,6 +106,29 @@ namespace Avro
         internal static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class.
+        /// </summary>
+        /// <param name="schema">schema for the field type.</param>
+        /// <param name="name">name of the field.</param>
+        /// <param name="aliases">list of aliases for the name of the field.</param>
+        /// <param name="pos">position of the field.</param>
+        /// <param name="doc">documentation for the field.</param>
+        /// <param name="defaultValue">field's default value if it exists.</param>
+        /// <param name="sortorder">sort order of the field.</param>
+        /// <param name="customProperties">dictionary that provides access to custom properties.</param>
+        public Field(Schema schema,
+            string name,
+            int pos,
+            IList<string> aliases = null,
+            string doc = null,
+            JToken defaultValue = null,
+            SortOrder sortorder = SortOrder.ignore,
+            PropertyMap customProperties = null)
+            : this(schema, name, aliases, pos, doc, defaultValue, sortorder, customProperties)
+        {
+        }
+
+        /// <summary>
         /// A flag to indicate if reader schema has a field that is missing from writer schema and has a default value
         /// This is set in CanRead() which is always be called before deserializing data
         /// </summary>

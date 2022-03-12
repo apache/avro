@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Avro;
+using System.Linq;
 
 namespace Avro.Test
 {
@@ -140,8 +141,9 @@ namespace Avro.Test
         public void TestPrimitive(string s, Schema.Type type)
         {
             Schema sc = Schema.Parse(s);
-            Assert.IsTrue(sc is PrimitiveSchema);
-            Assert.AreEqual(type, sc.Tag);
+            Schema schema = new PrimitiveSchema(type, null);
+
+            Assert.AreEqual(sc, schema);
 
             testEquality(s, sc);
             testToString(sc);
@@ -290,13 +292,99 @@ namespace Avro.Test
             Assert.AreEqual(expectedDoc, roundTrip.Documentation);
         }
 
-        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
+        [TestCase]
+        public void TestRecordCreation()
+        {
+            string s = "{\"type\":\"record\",\"name\":\"Longs\",\"fields\":[{\"name\":\"value\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}";
+
+            var recordField = new Field(new PrimitiveSchema(Schema.Type.Long),
+                "value",
+                new List<string> { "oldName" },
+                0,
+                null,
+                "100",
+                Field.SortOrder.ignore,
+                null);
+
+            RecordSchema recordSchema = new RecordSchema("Longs",
+                new List<Field>
+                {
+                    recordField
+                });
+
+            var fieldByName = recordSchema["value"];
+            recordSchema.TryGetFieldAlias("oldName", out Field fieldByAlias);
+
+            Assert.AreEqual(s, recordSchema.ToString());
+            Assert.AreEqual(recordField, fieldByName);
+            Assert.AreEqual(recordField, fieldByAlias);
+        }
+
+        [TestCase]
+        public void TestRecordCreationWithDuplicateFields()
+        {
+            var recordField = new Field(new PrimitiveSchema(Schema.Type.Long),
+                "value",
+                new List<string> { "oldName" },
+                0,
+                null,
+                "100",
+                Field.SortOrder.ignore,
+                null);
+
+            Assert.Throws<AvroException>(() => new RecordSchema("Longs",
+                new List<Field>
+                {
+                    recordField,
+                    recordField
+                }));
+        }
+
+        [TestCase]
+        public void TestRecordCreationWithRecursiveRecord()
+        {
+            string schema = "{\"type\":\"record\",\"name\":\"LongList\",\"aliases\":[\"LinkedLongs\"],\"fields\":[{\"name\":\"value\",\"type\":\"long\"},{\"name\":\"next\",\"type\":[\"null\",\"LongList\"]}]}";
+
+            var recordSchema = new RecordSchema("LongList", new List<Field>(), null, new[] { "LinkedLongs" });
+
+            recordSchema.Fields = new List<Field>
+                {
+                    new Field(new PrimitiveSchema(Schema.Type.Long),
+                        "value",
+                        null,
+                        0,
+                        null,
+                        null,
+                        Field.SortOrder.ignore,
+                        null),
+                    new Field(new UnionSchema(
+                        new List<Schema>
+                        {
+                            new PrimitiveSchema(Schema.Type.Null), recordSchema
+                        }),
+                        "next",
+                        1)
+                };
+
+            Assert.AreEqual(schema, recordSchema.ToString());
+        }
+
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
+                new string[] { "A", "B" })]
+
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
             new string[] { "A", "B" })]
-        [TestCase("{\"type\": \"enum\",\"name\":\"Market\",\"symbols\":[\"UNKNOWN\",\"A\",\"B\"],\"default\":\"UNKNOWN\"}",
-            new string[] { "UNKNOWN", "A", "B" })]
-        public void TestEnum(string s, string[] symbols)
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"UNKNOWN\",\"A\",\"B\"],\"default\":\"UNKNOWN\"}",
+            new string[] { "UNKNOWN", "A", "B" }, "UNKNOWN")]
+        public void TestEnum(string s, string[] symbols, string defaultSymbol = null)
         {
             Schema sc = Schema.Parse(s);
+
+            Schema schema = new EnumSchema("Test", symbols, defaultSymbol: defaultSymbol);
+
+            Assert.AreEqual(sc, schema);
+            Assert.AreEqual(s, schema.ToString());
+
             Assert.AreEqual(Schema.Type.Enumeration, sc.Tag);
             EnumSchema es = sc as EnumSchema;
             Assert.AreEqual(symbols.Length, es.Count);
@@ -309,6 +397,16 @@ namespace Avro.Test
 
             testEquality(s, sc);
             testToString(sc, s);
+        }
+
+        [TestCase]
+        public void TestEnumCreation()
+        {
+            string expected = "{\"type\":\"enum\",\"name\":\"Test\",\"namespace\":\"namespace\",\"aliases\":[\"namespace.alias\"],\"symbols\":[\"A\",\"B\"]}";
+
+            Schema schema = new EnumSchema("Test", new[] { "A", "B" }, "namespace", new[] { "alias" }, null);
+
+            Assert.AreEqual(expected, schema.ToString());
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}", null)]
@@ -380,26 +478,56 @@ namespace Avro.Test
             testToString(sc);
         }
 
-        [TestCase("[\"string\", \"null\", \"long\"]", new string[] { "string", "null", "long" })]
-        public void TestUnion(string s, string[] types)
+        [TestCase("[\"string\", \"null\", \"long\"]",
+            new Schema.Type[] { Schema.Type.String, Schema.Type.Null, Schema.Type.Long })]
+        public void TestUnion(string s, Schema.Type[] types)
         {
             Schema sc = Schema.Parse(s);
+
+            UnionSchema schema = new UnionSchema(types.Select(t => (Schema)new PrimitiveSchema(t)).ToList());
+
             Assert.AreEqual(Schema.Type.Union, sc.Tag);
             UnionSchema us = sc as UnionSchema;
             Assert.AreEqual(types.Length, us.Count);
 
             for (int i = 0; i < us.Count; i++)
             {
-                Assert.AreEqual(types[i], us[i].Name);
+                Assert.AreEqual(types[i].ToString().ToLower(), us[i].Name);
             }
             testEquality(s, sc);
             testToString(sc);
         }
 
-        [TestCase("{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}", 1)]
+        [TestCase]
+        public void TestUnionCreation()
+        {
+            UnionSchema unionSchema = new UnionSchema(new List<Schema> { new PrimitiveSchema(Schema.Type.Null), new PrimitiveSchema(Schema.Type.String) });
+
+            CollectionAssert.AreEqual(new List<Schema> { new PrimitiveSchema(Schema.Type.Null), new PrimitiveSchema(Schema.Type.String) },
+                unionSchema.Schemas);
+        }
+
+        [TestCase]
+        public void TestUnionCreationWithDuplicateSchemas()
+        {
+            Assert.Throws<ArgumentException>(() => new UnionSchema(new List<Schema> { new PrimitiveSchema(Schema.Type.String), new PrimitiveSchema(Schema.Type.String) }));
+        }
+
+        [TestCase]
+        public void TestUnionNestedUnionCreation()
+        {
+            Assert.Throws<ArgumentException>(() => new UnionSchema(new List<Schema> { new UnionSchema(new List<Schema>()), new PrimitiveSchema(Schema.Type.String) }));
+        }
+
+        [TestCase("{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}", 1)]
         public void TestFixed(string s, int size)
         {
             Schema sc = Schema.Parse(s);
+            FixedSchema schema = new FixedSchema("Test", 1);
+
+            Assert.AreEqual(sc, schema);
+            Assert.AreEqual(s, schema.ToString());
+
             Assert.AreEqual(Schema.Type.Fixed, sc.Tag);
             FixedSchema fs = sc as FixedSchema;
             Assert.AreEqual(size, fs.Size);
@@ -415,6 +543,19 @@ namespace Avro.Test
             var fs = Schema.Parse(s) as FixedSchema;
             Assert.IsNotNull(fs);
             Assert.AreEqual(expectedDoc, fs.Documentation);
+        }
+
+        [TestCase]
+        public void TestFixedCreation()
+        {
+            string s = @"{""type"":""fixed"",""name"":""fixedName"",""namespace"":""space"",""aliases"":[""space.fixedOldName""],""size"":10}";
+
+            FixedSchema fixedSchema = new FixedSchema("fixedName", 10, "space", new[] { "fixedOldName" }, null);
+
+            Assert.AreEqual("fixedName", fixedSchema.Name);
+            Assert.AreEqual("space.fixedName", fixedSchema.Fullname);
+            Assert.AreEqual(10, fixedSchema.Size);
+            Assert.AreEqual(s, fixedSchema.ToString());
         }
 
         [TestCase("a", "o.a.h", ExpectedResult = "o.a.h.a")]

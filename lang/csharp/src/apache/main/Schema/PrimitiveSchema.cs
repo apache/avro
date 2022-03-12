@@ -17,6 +17,8 @@
  */
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Avro
@@ -30,8 +32,9 @@ namespace Avro
         /// Constructor for primitive schema
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="props">dictionary that provides access to custom properties</param>
-        private PrimitiveSchema(Type type, PropertyMap props) : base(type, props)
+        /// <param name="customProperties">dictionary that provides access to custom properties</param>
+        public PrimitiveSchema(Type type, PropertyMap customProperties = null)
+            : base(type, customProperties)
         {
         }
 

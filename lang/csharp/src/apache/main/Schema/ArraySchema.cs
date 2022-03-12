@@ -29,7 +29,7 @@ namespace Avro
         /// <summary>
         /// Schema for the array 'type' attribute
         /// </summary>
-        public Schema ItemSchema { get; set;  }
+        public Schema ItemSchema { get; set; }
 
         /// <summary>
         /// Static class to return a new instance of ArraySchema
@@ -48,11 +48,12 @@ namespace Avro
         }
 
         /// <summary>
-        /// Constructor
+        /// Initializes a new instance of the <see cref="ArraySchema"/> class.
         /// </summary>
-        /// <param name="items">schema for the array items type</param>
-        /// <param name="props">dictionary that provides access to custom properties</param>
-        private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
+        /// <param name="items">schema for the array items type.</param>
+        /// <param name="customAttributes">dictionary that provides access to custom properties.</param>
+        public ArraySchema(Schema items, PropertyMap customAttributes = null)
+            : base(Type.Array, customAttributes)
         {
             if (null == items) throw new ArgumentNullException(nameof(items));
             this.ItemSchema = items;

@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
@@ -46,6 +47,33 @@ namespace Avro
         /// Count of enum symbols
         /// </summary>
         public int Count { get { return Symbols.Count; } }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnumSchema"/> class.
+        /// </summary>
+        /// <param name="name">name of enum.</param>
+        /// <param name="space">namespace of enum.</param>
+        /// <param name="aliases">list of aliases for the name.</param>
+        /// <param name="symbols">list of enum symbols.</param>
+        /// <param name="customProperties">custom properties on this schema.</param>
+        /// <param name="doc">documentation for this named schema.</param>
+        /// <param name="defaultSymbol"></param>
+        public EnumSchema(string name,
+            IEnumerable<string> symbols,
+            string space = null,
+            IEnumerable<string> aliases = null,
+            PropertyMap customProperties = null,
+            string doc = null,
+            string defaultSymbol = null)
+            : this(new SchemaName(name, space, null, doc),
+                  Aliases.GetSchemaNames(aliases, name, space),
+                  symbols.ToList(),
+                  CreateSymbolsMap(symbols),
+                  customProperties,
+                  new SchemaNames(),
+                  doc, defaultSymbol)
+        {
+        }
 
         /// <summary>
         /// Static function to return new instance of EnumSchema
@@ -110,6 +138,21 @@ namespace Avro
             if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
                 throw new SchemaParseException($"Default symbol: {defaultSymbol} not found in symbols");
             Default = defaultSymbol;
+        }
+
+        private static IDictionary<string, int> CreateSymbolsMap(IEnumerable<string> symbols)
+        {
+            IDictionary<string, int> symbolMap = new Dictionary<string, int>();
+            int i = 0;
+            foreach (var symbol in symbols)
+            {
+                if (symbolMap.ContainsKey(symbol))
+                    throw new SchemaParseException($"Duplicate symbol: {symbol}");
+
+                symbolMap[symbol] = i++;
+            }
+
+            return symbolMap;
         }
 
         /// <summary>

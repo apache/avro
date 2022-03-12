@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -28,10 +29,28 @@ namespace Avro
     /// </summary>
     public class RecordSchema : NamedSchema
     {
+        private List<Field> fields;
+
         /// <summary>
         /// List of fields in the record
         /// </summary>
-        public List<Field> Fields { get; private set; }
+        public List<Field> Fields
+        {
+            get
+            {
+                return fields;
+            }
+
+            set
+            {
+                VerifyFieldsPositions(value);
+
+                fieldLookup = CreateFieldMap(fields);
+                fieldAliasLookup = CreateFieldMap(fields, true);
+
+                fields = value;
+            }
+        }
 
         /// <summary>
         /// Number of fields in the record
@@ -41,10 +60,110 @@ namespace Avro
         /// <summary>
         /// Map of field name and Field object for faster field lookups
         /// </summary>
-        private readonly IDictionary<string, Field> fieldLookup;
+        private IDictionary<string, Field> fieldLookup;
 
-        private readonly IDictionary<string, Field> fieldAliasLookup;
+        private IDictionary<string, Field> fieldAliasLookup;
         private bool request;
+
+        /// <summary>
+        /// Constructor for the record schema
+        /// </summary>
+        /// <param name="name">name of the record schema</param>
+        /// <param name="fields">list of fields for the record</param>
+        /// <param name="space">type of record schema, either record or error</param>
+        /// <param name="aliases">list of aliases for the record name</param>
+        /// <param name="customProperties">custom properties on this schema</param>
+        /// <param name="doc">documentation for this named schema</param>
+        public RecordSchema(string name,
+            List<Field> fields,
+            string space = null,
+            IEnumerable<string> aliases = null,
+            PropertyMap customProperties = null,
+            string doc = null)
+                                : this(Type.Record,
+                                      new SchemaName(name, space, null, doc),
+                                      Aliases.GetSchemaNames(aliases, name, space),
+                                      customProperties,
+                                      fields,
+                                      false,
+                                      CreateFieldMap(fields),
+                                      CreateFieldMap(fields, true),
+                                      new SchemaNames(),
+                                      doc)
+        {
+        }
+
+        private static IEnumerable<Schema> EnumerateSchemasRecursive(Schema schema)
+        {
+            yield return schema;
+            switch (schema.Tag)
+            {
+                case Type.Null:
+                    break;
+                case Type.Boolean:
+                    break;
+                case Type.Int:
+                    break;
+                case Type.Long:
+                    break;
+                case Type.Float:
+                    break;
+                case Type.Double:
+                    break;
+                case Type.Bytes:
+                    break;
+                case Type.String:
+                    break;
+                case Type.Record:
+                    var recordSchema = (RecordSchema)schema;
+                    recordSchema.Fields.SelectMany(f => EnumerateSchemasRecursive(f.Schema));
+                    break;
+                case Type.Enumeration:
+                    break;
+                case Type.Array:
+                    var arraySchema = (ArraySchema)schema;
+                    EnumerateSchemasRecursive(arraySchema.ItemSchema);
+                    break;
+                case Type.Map:
+                    var mapSchema = (MapSchema)schema;
+                    EnumerateSchemasRecursive(mapSchema.ValueSchema);
+                    break;
+                case Type.Union:
+                    var unionSchema = (UnionSchema)schema;
+                    foreach (var innerSchema in unionSchema.Schemas)
+                    {
+                        EnumerateSchemasRecursive(innerSchema);
+                    }
+
+                    break;
+                case Type.Fixed:
+                    break;
+                case Type.Error:
+                    break;
+                case Type.Logical:
+                    break;
+            }
+        }
+
+        private static IDictionary<string, Field> CreateFieldMap(List<Field> fields, bool includeAliases = false)
+        {
+            var map = new Dictionary<string, Field>();
+            if (fields != null)
+            {
+                foreach (Field field in fields)
+                {
+                    addToFieldMap(map, field.Name, field);
+
+                    if (includeAliases && field.Aliases != null)
+                    {
+                        foreach (var alias in field.Aliases)
+                            addToFieldMap(map, alias, field);
+                    }
+                }
+            }
+
+            return map;
+        }
 
         /// <summary>
         /// Static function to return new instance of the record schema
@@ -121,7 +240,7 @@ namespace Avro
         /// <param name="fieldAliasMap">map of field aliases and field objects</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props,
+        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props,
                                 List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names, string doc)
                                 : base(type, name, aliases, props, names, doc)
@@ -165,8 +284,17 @@ namespace Avro
         private static void addToFieldMap(Dictionary<string, Field> map, string name, Field field)
         {
             if (map.ContainsKey(name))
-                throw new SchemaParseException("field or alias " + name + " is a duplicate name");
+                throw new AvroException("field or alias " + name + " is a duplicate name");
             map.Add(name, field);
+        }
+
+        private void VerifyFieldsPositions(List<Field> fields)
+        {
+            for (int i = 0; i < fields.Count; i++)
+            {
+                if (fields[i].Pos != i)
+                    throw new AvroException($"Wrong position for field {fields[i].Name}. Expected {i} but was {fields[i].Pos}");
+            }
         }
 
         /// <summary>

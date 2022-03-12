@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace Avro
 {
@@ -71,11 +72,13 @@ namespace Avro
         /// Contructor for union schema
         /// </summary>
         /// <param name="schemas"></param>
-        /// <param name="props">dictionary that provides access to custom properties</param>
-        private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
+        /// <param name="customProperties">dictionary that provides access to custom properties</param>
+        public UnionSchema(List<Schema> schemas, PropertyMap customProperties = null)
+            : base(Type.Union, customProperties)
         {
             if (schemas == null)
                 throw new ArgumentNullException(nameof(schemas));
+            VerifyChildSchemas(schemas);
             this.Schemas = schemas;
         }
 
@@ -160,6 +163,18 @@ namespace Avro
             foreach (Schema schema in Schemas) result += 89 * schema.GetHashCode();
             result += getHashCode(Props);
             return result;
+        }
+
+        private void VerifyChildSchemas(List<Schema> schemas)
+        {
+            if (schemas.Any(schema => schema.Tag == Type.Union))
+                throw new ArgumentException("Unions may not immediately contain other unions", nameof(schemas));
+
+            var groupedByFullNames = schemas.GroupBy(schema => schema.Fullname);
+            IGrouping<string, Schema> duplicateType = groupedByFullNames.FirstOrDefault(x => x.Count() > 1);
+
+            if (duplicateType != null)
+                throw new ArgumentException($"Duplicate type in union: {duplicateType.Key}");
         }
     }
 }

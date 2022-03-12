@@ -68,8 +68,9 @@ namespace Avro
         /// Constructor for map schema class
         /// </summary>
         /// <param name="valueSchema">schema for map values type</param>
-        /// <param name="props">dictionary that provides access to custom properties</param>
-        private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
+        /// <param name="cutsomProperties">dictionary that provides access to custom properties</param>
+        public MapSchema(Schema valueSchema, PropertyMap cutsomProperties = null)
+            : base(Type.Map, cutsomProperties)
         {
             if (null == valueSchema) throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
             this.ValueSchema = valueSchema;

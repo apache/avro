@@ -33,6 +33,19 @@ namespace Avro
         public int Size { get; set; }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="FixedSchema"/> class.
+        /// </summary>
+        /// <param name="name">name of the fixed schema</param>
+        /// <param name="aliases">list of aliases for the name</param>
+        /// <param name="size">fixed size</param>
+        /// <param name="customProperties">custom properties on this schema</param>
+        /// <param name="doc">documentation for this named schema</param>
+        public FixedSchema(string name, int size, string space = null, IEnumerable<string> aliases = null, PropertyMap customProperties = null, string doc = null)
+            : this(new SchemaName(name, space, null, doc), Aliases.GetSchemaNames(aliases, name, space), size, customProperties, new SchemaNames(), doc)
+        {
+        }
+
+        /// <summary>
         /// Static function to return new instance of the fixed schema class
         /// </summary>
         /// <param name="jtok">JSON object for the fixed schema</param>
