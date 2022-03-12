@@ -38,6 +38,7 @@ namespace Avro
         /// <param name="name">name of the fixed schema</param>
         /// <param name="aliases">list of aliases for the name</param>
         /// <param name="size">fixed size</param>
+        /// <param name="space">namespace of fixed</param>
         /// <param name="customProperties">custom properties on this schema</param>
         /// <param name="doc">documentation for this named schema</param>
         public FixedSchema(string name, int size, string space = null, IEnumerable<string> aliases = null, PropertyMap customProperties = null, string doc = null)
