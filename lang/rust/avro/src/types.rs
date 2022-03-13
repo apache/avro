@@ -934,6 +934,7 @@ mod tests {
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed").unwrap(),
+            aliases: None,
             doc: None,
         };
 
@@ -947,6 +948,7 @@ mod tests {
     fn validate_enum() {
         let schema = Schema::Enum {
             name: Name::new("some_enum").unwrap(),
+            aliases: None,
             doc: None,
             symbols: vec![
                 "spades".to_string(),
@@ -964,6 +966,7 @@ mod tests {
 
         let other_schema = Schema::Enum {
             name: Name::new("some_other_enum").unwrap(),
+            aliases: None,
             doc: None,
             symbols: vec![
                 "hearts".to_string(),
@@ -988,6 +991,7 @@ mod tests {
         // }
         let schema = Schema::Record {
             name: Name::new("some_record").unwrap(),
+            aliases: None,
             doc: None,
             fields: vec![
                 RecordField {
@@ -1139,6 +1143,7 @@ mod tests {
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal").unwrap(),
+                    aliases: None,
                     size: 20,
                     doc: None
                 })

@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    schema::{Name, Schema},
+    schema::{Name, Schema, ResolvedSchema, Namespace},
     types::Value,
     util::{zig_i32, zig_i64},
 };
@@ -28,7 +28,9 @@ use std::{collections::HashMap, convert::TryInto};
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
 pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
-    encode_ref(value, schema, buffer)
+
+    let rs = ResolvedSchema::from(schema);
+    encode_ref(value, schema, rs.get_names(), &None,  buffer)
 }
 
 fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
@@ -50,24 +52,20 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
 /// **NOTE** This will not perform schema validation. The value is assumed to
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
-pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
+pub fn encode_ref(value: &Value, schema: &Schema, names: &HashMap<Name, &Schema>, enclosing_namespace: &Namespace, buffer: &mut Vec<u8>) {
     fn encode_ref0(
         value: &Value,
-        schema: &Schema,
+        schema: &Schema, 
+        names: &HashMap<Name, &Schema>,
         buffer: &mut Vec<u8>,
-        schemas_by_name: &mut HashMap<Name, Schema>,
+        enclosing_namespace: &Namespace,
     ) {
         match &schema {
             Schema::Ref { ref name } => {
-                let resolved = schemas_by_name.get(name).unwrap();
-                return encode_ref0(value, resolved, buffer, &mut schemas_by_name.clone());
+                let resolved = *names.get(&name.fully_qualified_name(enclosing_namespace)).unwrap();
+                return encode_ref0(value, resolved, names, buffer, enclosing_namespace,);
             }
-            Schema::Record { ref name, .. }
-            | Schema::Enum { ref name, .. }
-            | Schema::Fixed { ref name, .. } => {
-                schemas_by_name.insert(name.clone(), schema.clone());
-            }
-            _ => (),
+            _ => ()
         }
 
         match value {
@@ -126,21 +124,12 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             Value::Enum(i, _) => encode_int(*i as i32, buffer),
             Value::Union(idx, item) => {
                 if let Schema::Union(ref inner) = *schema {
-                    inner.schemas.iter().for_each(|s| match s {
-                        Schema::Record { name, .. }
-                        | Schema::Enum { name, .. }
-                        | Schema::Fixed { name, .. } => {
-                            schemas_by_name.insert(name.clone(), s.clone());
-                        }
-                        _ => (),
-                    });
-
                     let inner_schema = inner
                         .schemas
                         .get(*idx as usize)
                         .expect("Invalid Union validation occurred");
                     encode_long(*idx as i64, buffer);
-                    encode_ref0(&*item, inner_schema, buffer, schemas_by_name);
+                    encode_ref0(&*item, inner_schema,names, buffer, enclosing_namespace);
                 } else {
                     error!("invalid schema type for Union: {:?}", schema);
                 }
@@ -150,7 +139,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                     if !items.is_empty() {
                         encode_long(items.len() as i64, buffer);
                         for item in items.iter() {
-                            encode_ref0(item, inner, buffer, schemas_by_name);
+                            encode_ref0(item, inner, names, buffer, enclosing_namespace);
                         }
                     }
                     buffer.push(0u8);
@@ -164,7 +153,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
                         encode_long(items.len() as i64, buffer);
                         for (key, value) in items {
                             encode_bytes(key, buffer);
-                            encode_ref0(value, inner, buffer, schemas_by_name);
+                            encode_ref0(value, inner, names, buffer, enclosing_namespace);
                         }
                     }
                     buffer.push(0u8);
@@ -174,20 +163,20 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
             }
             Value::Record(fields) => {
                 if let Schema::Record {
+                    ref name,
                     fields: ref schema_fields,
                     ..
                 } = *schema
                 {
+                    let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
                     for (i, &(_, ref value)) in fields.iter().enumerate() {
-                        encode_ref0(value, &schema_fields[i].schema, buffer, schemas_by_name);
+                        encode_ref0(value, &schema_fields[i].schema, names, buffer, &record_namespace);
                     }
                 }
             }
         }
     }
-
-    let mut schemas_by_name = HashMap::new();
-    encode_ref0(value, schema, buffer, &mut schemas_by_name)
+    encode_ref0(value, schema, names, buffer, enclosing_namespace)
 }
 
 pub fn encode_to_vec(value: &Value, schema: &Schema) -> Vec<u8> {

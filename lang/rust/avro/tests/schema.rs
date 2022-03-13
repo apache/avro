@@ -845,6 +845,7 @@ fn test_parse_reused_record_schema_by_fullname() {
     match schema.unwrap() {
         Schema::Record {
             ref name,
+            aliases: _,
             doc: _,
             ref fields,
             lookup: _,
@@ -1088,7 +1089,7 @@ fn test_fullname_name_and_default_namespace_specified() {
     init();
     let name: Name =
         serde_json::from_str(r#"{"name": "a", "namespace": null, "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("b.c.d"));
+    let fullname = name.fullname(Some("b.c.d".into()));
     assert_eq!("b.c.d.a", fullname);
 }
 
@@ -1097,7 +1098,7 @@ fn test_fullname_fullname_and_default_namespace_specified() {
     init();
     let name: Name =
         serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": null, "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("a.b.c.d", fullname);
 }
 
@@ -1107,7 +1108,7 @@ fn test_fullname_fullname_namespace_and_default_namespace_specified() {
     let name: Name =
         serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.a", "aliases": null}"#)
             .unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("a.b.c.d", fullname);
 }
 
@@ -1116,7 +1117,7 @@ fn test_fullname_name_namespace_and_default_namespace_specified() {
     init();
     let name: Name =
         serde_json::from_str(r#"{"name": "a", "namespace": "o.a.a", "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("o.a.a.a", fullname);
 }
 

@@ -349,7 +349,7 @@ fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> Avro
     if !value.validate(schema) {
         return Err(Error::Validation);
     }
-    encode_ref(value, schema, buffer);
+    encode(value, schema, buffer);
     Ok(())
 }
 
@@ -521,6 +521,7 @@ mod tests {
         let size = 30;
         let inner = Schema::Fixed {
             name: Name::new("decimal").unwrap(),
+            aliases: None,
             doc: None,
             size,
         };
@@ -559,6 +560,7 @@ mod tests {
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
             name: Name::new("duration").unwrap(),
+            aliases: None,
             doc: None,
             size: 12,
         };

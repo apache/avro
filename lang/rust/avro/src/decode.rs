@@ -333,6 +333,7 @@ mod tests {
             size: 2,
             doc: None,
             name: Name::new("decimal").unwrap(),
+            aliases: None,
         });
         let schema = Schema::Decimal {
             inner,
@@ -357,6 +358,7 @@ mod tests {
         let inner = Box::new(Schema::Fixed {
             size: 13,
             name: Name::new("decimal").unwrap(),
+            aliases: None,
             doc: None,
         });
         let schema = Schema::Decimal {
