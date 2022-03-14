@@ -1509,6 +1509,7 @@ pub fn record_schema_for_fields(
         .collect();
     Schema::Record {
         name,
+        aliases: None, 
         doc,
         fields,
         lookup,

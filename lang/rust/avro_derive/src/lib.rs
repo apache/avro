@@ -29,11 +29,11 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     Ok(quote! {
         impl #impl_generics apache_avro::schema::AvroSchemaWithResolved for #ty #ty_generics #where_clause {
             fn get_schema_with_resolved(resolved_schemas: &mut HashMap<apache_avro::schema::Name, apache_avro::schema::Schema>) -> apache_avro::schema::Schema {
-                let name =  apache_avro::schema::Name::new(#schena_name);
+                let name =  apache_avro::schema::Name::new(#schena_name).expect(&format!("Unable to parse schema name {}", #schena_name)[..]);
                 if resolved_schemas.contains_key(&name) {
                     resolved_schemas.get(&name).unwrap().clone()
                 }else {
-                    resolved_schemas.insert(name.clone(), Schema::Ref{name});
+                    resolved_schemas.insert(name.clone(), Schema::Ref{name: name.clone()});
                     #schema_def
                 }
             }
@@ -80,7 +80,7 @@ fn get_data_struct_schema_def(
     let name = ident.to_string();
     Ok((name.clone(), quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
-        apache_avro::schema::record_schema_for_fields(apache_avro::schema::Name::new(#name), None, schema_fields)
+        apache_avro::schema::record_schema_for_fields(name, None, schema_fields)
     }))
 }
 
@@ -97,7 +97,7 @@ fn get_data_enum_schema_def(
         let name = ident.to_string();
         Ok((name.clone(), quote! {
             apache_avro::schema::Schema::Enum {
-                name: apache_avro::schema::Name::new(#name),
+                name: apache_avro::schema::Name::new(#name).expect(&format!("Unable to parse enum name for schema {}", #name)[..]),
                 doc: None,
                 symbols: vec![#(#symbols.to_owned()),*]
             }
