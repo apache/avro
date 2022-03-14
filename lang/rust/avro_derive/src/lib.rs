@@ -13,23 +13,29 @@ pub fn proc_macro_derive_avro_schema(input: proc_macro::TokenStream) -> proc_mac
 }
 
 fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
-    let schema_def = match &input.data {
+    let (schena_name, schema_def) = match &input.data {
         syn::Data::Struct(s) => get_data_struct_schema_def(s, &input.ident)?,
         syn::Data::Enum(e) => get_data_enum_schema_def(e, &input.ident)?,
         _ => {
             return Err(vec![Error::new(
                 input.ident.span(),
-                "AvroSchema derive only works for structs",
+                "AvroSchema derive only works for structs and simple enums ",
             )])
         }
     };
 
     let ty = &input.ident;
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl(); 
     Ok(quote! {
-        impl #impl_generics AvroSchema for #ty #ty_generics #where_clause {
-            fn get_schema() -> Schema {
-                #schema_def
+        impl #impl_generics apache_avro::schema::AvroSchemaWithResolved for #ty #ty_generics #where_clause {
+            fn get_schema_with_resolved(resolved_schemas: &mut HashMap<apache_avro::schema::Name, apache_avro::schema::Schema>) -> apache_avro::schema::Schema {
+                let name =  apache_avro::schema::Name::new(#schena_name);
+                if resolved_schemas.contains_key(&name) {
+                    resolved_schemas.get(&name).unwrap().clone()
+                }else {
+                    resolved_schemas.insert(name.clone(), Schema::Ref{name});
+                    #schema_def
+                }
             }
         }
     })
@@ -38,7 +44,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
 fn get_data_struct_schema_def(
     s: &syn::DataStruct,
     ident: &syn::Ident,
-) -> Result<TokenStream, Vec<Error>> {
+) -> Result<(String, TokenStream), Vec<Error>> {
     let mut record_field_exprs = vec![];
     match s.fields {
         syn::Fields::Named(ref a) => {
@@ -72,16 +78,16 @@ fn get_data_struct_schema_def(
         }
     }
     let name = ident.to_string();
-    Ok(quote! {
+    Ok((name.clone(), quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
         apache_avro::schema::record_schema_for_fields(apache_avro::schema::Name::new(#name), None, schema_fields)
-    })
+    }))
 }
 
 fn get_data_enum_schema_def(
     e: &syn::DataEnum,
     ident: &syn::Ident,
-) -> Result<TokenStream, Vec<Error>> {
+) -> Result<(String, TokenStream), Vec<Error>> {
     if e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
         let symbols: Vec<String> = e
             .variants
@@ -89,13 +95,13 @@ fn get_data_enum_schema_def(
             .map(|varient| varient.ident.to_string())
             .collect();
         let name = ident.to_string();
-        Ok(quote! {
+        Ok((name.clone(), quote! {
             apache_avro::schema::Schema::Enum {
                 name: apache_avro::schema::Name::new(#name),
                 doc: None,
                 symbols: vec![#(#symbols.to_owned()),*]
             }
-        })
+        }))
     } else {
         Err(vec![Error::new(
             ident.span(),
@@ -164,7 +170,7 @@ fn type_path_get_schema(p: &TypePath) -> Result<TokenStream, Vec<Error>> {
     match last.arguments.clone() {
         PathArguments::None => Ok(quote! {#(#all_but_last::)*#ident::get_schema()}),
         PathArguments::AngleBracketed(a) => {
-            Ok(quote! {#(#all_but_last::)*#ident::#a::get_schema()})
+            Ok(quote! {#(#all_but_last::)*#ident::#a::get_schema_with_resolved(resolved_schemas)})
         }
         PathArguments::Parenthesized(_) => unreachable!(),
     }

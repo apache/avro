@@ -1519,10 +1519,24 @@ pub trait AvroSchema {
     fn get_schema() -> Schema;
 }
 
+/// TODO Help me name this. The idea here that any previously parsed or constructed schema with a name is registered in resolved schemas and passed recursively to avoid infinite recursion
+pub trait AvroSchemaWithResolved {
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema;
+}
+
+impl<T> AvroSchema for T 
+where
+    T: AvroSchemaWithResolved 
+{
+    fn get_schema() -> Schema {
+       return T::get_schema_with_resolved(&mut HashMap::default())
+    }
+}
+
 macro_rules! impl_schema(
     ($type:ty, $variant_constructor:expr) => (
-        impl AvroSchema for $type {
-            fn get_schema() -> Schema {
+        impl AvroSchemaWithResolved for $type {
+            fn get_schema_with_resolved(_: &mut HashMap<Name, Schema>) -> Schema {
                 $variant_constructor
             }
         }
@@ -1532,6 +1546,7 @@ macro_rules! impl_schema(
 impl_schema!(i8, Schema::Int);
 impl_schema!(i16, Schema::Int);
 impl_schema!(i32, Schema::Int);
+impl_schema!(i64, Schema::Long);
 impl_schema!(u8, Schema::Int);
 impl_schema!(u16, Schema::Int);
 impl_schema!(f32, Schema::Float);
@@ -1540,24 +1555,23 @@ impl_schema!(char, Schema::String);
 impl_schema!(String, Schema::String);
 impl_schema!(uuid::Uuid, Schema::Uuid);
 impl_schema!(u32, Schema::Long);
-impl_schema!(u64, Schema::Long);
 impl_schema!(core::time::Duration, Schema::Duration);
 
-impl<T> AvroSchema for Vec<T>
+impl<T> AvroSchemaWithResolved for Vec<T>
 where
-    T: AvroSchema,
+    T: AvroSchemaWithResolved,
 {
-    fn get_schema() -> Schema {
-        Schema::Array(Box::new(T::get_schema()))
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        Schema::Array(Box::new(T::get_schema_with_resolved(resolved_schemas)))
     }
 }
 
-impl<T> AvroSchema for Option<T>
+impl<T> AvroSchemaWithResolved for Option<T>
 where
-    T: AvroSchema,
+    T: AvroSchemaWithResolved,
 {
-    fn get_schema() -> Schema {
-        let inner_schema = T::get_schema();
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        let inner_schema = T::get_schema_with_resolved(resolved_schemas);
         Schema::Union(UnionSchema {
             schemas: vec![Schema::Null, inner_schema.clone()],
             variant_index: vec![Schema::Null, inner_schema.clone()]
@@ -1569,21 +1583,30 @@ where
     }
 }
 
-impl<T> AvroSchema for Map<String, T>
+impl<T> AvroSchemaWithResolved for Map<String, T>
 where
-    T: AvroSchema,
+    T: AvroSchemaWithResolved,
 {
-    fn get_schema() -> Schema {
-        Schema::Map(Box::new(T::get_schema()))
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        Schema::Map(Box::new(T::get_schema_with_resolved(resolved_schemas)))
     }
 }
 
-impl<T> AvroSchema for HashMap<String, T>
+impl<T> AvroSchemaWithResolved for HashMap<String, T>
 where
-    T: AvroSchema,
+    T: AvroSchemaWithResolved,
 {
-    fn get_schema() -> Schema {
-        Schema::Map(Box::new(T::get_schema()))
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        Schema::Map(Box::new(T::get_schema_with_resolved(resolved_schemas)))
+    }
+}
+
+impl<T> AvroSchemaWithResolved for Box<T>
+where
+    T: AvroSchemaWithResolved,
+{
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        T::get_schema_with_resolved(resolved_schemas)
     }
 }
 

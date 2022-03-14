@@ -1,5 +1,5 @@
 use avro_derive::*;
-use apache_avro::schema::AvroSchema;
+use apache_avro::schema::{AvroSchema, AvroSchemaWithResolved};
 use apache_avro::{from_value, Reader, Schema, Writer};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
@@ -25,8 +25,12 @@ mod test_derive {
         let encoded = writer.into_inner().unwrap();
         let reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
         for res in reader {
-            let value = res.unwrap();
-            assert_eq!(obj, from_value::<T>(&value).unwrap());
+            match res {
+                Ok(value) => {
+                    assert_eq!(obj, from_value::<T>(&value).unwrap());
+                },
+                Err(e) => panic!("{}", e.to_string())
+            }
         }
     }
 
@@ -123,7 +127,7 @@ mod test_derive {
 
     /// Generic Containers
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test5<T: AvroSchema> {
+    struct Test5<T: AvroSchemaWithResolved> {
         a: String,
         b: Vec<T>,
         c: HashMap<String, T>,
@@ -173,6 +177,7 @@ mod test_derive {
             .into_iter()
             .collect(),
         };
+        println!("{}",Test5::<Test2>::get_schema().canonical_form());
         freeze_dry(test_generic);
     }
 
