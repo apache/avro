@@ -51,7 +51,7 @@ impl MapHelper for Map<String, Value> {
     }
 
     fn aliases(&self) -> Aliases {
-        // FIXME no warning with aliases isn't a json array of json strings
+        // FIXME no warning when aliases aren't a json array of json strings
         self.get("aliases")
             .and_then(|aliases| aliases.as_array())
             .and_then(|aliases| {
