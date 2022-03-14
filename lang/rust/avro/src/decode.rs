@@ -616,7 +616,7 @@ mod tests {
                 "outer_field_1".into(),
                 Value::Union(1, Box::new(middle_record_variation_2)),
             ),
-            ("outer_field_2".into(), inner_record.clone()),
+            ("outer_field_2".into(), inner_record),
         ]);
 
         let mut buf = Vec::new();
@@ -722,7 +722,7 @@ mod tests {
                 "outer_field_1".into(),
                 Value::Union(1, Box::new(middle_record_variation_2)),
             ),
-            ("outer_field_2".into(), inner_record.clone()),
+            ("outer_field_2".into(), inner_record),
         ]);
 
         let mut buf = Vec::new();

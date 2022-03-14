@@ -2547,7 +2547,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_record_name"] {
+        for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2585,7 +2585,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_record_name"] {
+        for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2618,7 +2618,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_enum_name"] {
+        for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2651,7 +2651,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_enum_name"] {
+        for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2684,7 +2684,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_fixed_name"] {
+        for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2717,7 +2717,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.inner_fixed_name"] {
+        for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2756,7 +2756,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "inner_space.inner_record_name"] {
+        for s in &["space.record_name", "inner_space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2790,7 +2790,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "inner_space.inner_enum_name"] {
+        for s in &["space.record_name", "inner_space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2824,7 +2824,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "inner_space.inner_fixed_name"] {
+        for s in &["space.record_name", "inner_space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -2874,7 +2874,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec![
+        for s in &[
             "space.record_name",
             "space.middle_record_name",
             "space.inner_record_name",
@@ -2929,7 +2929,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec![
+        for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
             "middle_namespace.inner_record_name",
@@ -2985,7 +2985,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec![
+        for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
             "inner_namespace.inner_record_name",
@@ -3027,7 +3027,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.in_array_record"] {
+        for s in &["space.record_name", "space.in_array_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
@@ -3065,7 +3065,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name", "space.in_map_record"] {
+        for s in &["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }

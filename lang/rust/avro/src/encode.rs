@@ -568,7 +568,7 @@ mod tests {
                 "outer_field_1".into(),
                 Value::Union(1, Box::new(middle_record_variation_2)),
             ),
-            ("outer_field_2".into(), inner_record.clone()),
+            ("outer_field_2".into(), inner_record),
         ]);
 
         // TODO add in error result wrapping to encoding flow
@@ -656,7 +656,7 @@ mod tests {
                 "outer_field_1".into(),
                 Value::Union(1, Box::new(middle_record_variation_2)),
             ),
-            ("outer_field_2".into(), inner_record.clone()),
+            ("outer_field_2".into(), inner_record),
         ]);
 
         // TODO add in error result wrapping to encoding flow
@@ -745,7 +745,7 @@ mod tests {
                 "outer_field_1".into(),
                 Value::Union(1, Box::new(middle_record_variation_2)),
             ),
-            ("outer_field_2".into(), inner_record.clone()),
+            ("outer_field_2".into(), inner_record),
         ]);
 
         // TODO add in error result wrapping to encoding flow
