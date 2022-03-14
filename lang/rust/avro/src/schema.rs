@@ -30,7 +30,7 @@ use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
     fmt,
-    hash::{Hash, Hasher},
+    hash::Hash,
     str::FromStr,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
@@ -249,10 +249,7 @@ impl Name {
     /// `aliases` will not be defined.
     pub fn new(name: &str) -> AvroResult<Name> {
         let (name, namespace) = Name::get_name_and_namespace(name)?;
-        Ok(Name {
-            name,
-            namespace,
-        })
+        Ok(Name { name, namespace })
     }
 
     fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
@@ -292,9 +289,7 @@ impl Name {
         if self.name.contains('.') {
             self.name.clone()
         } else {
-            let namespace = self
-                .namespace.clone()
-                .or(default_namespace);
+            let namespace = self.namespace.clone().or(default_namespace);
 
             match namespace {
                 Some(ref namespace) => format!("{}.{}", namespace, self.name),
@@ -303,22 +298,26 @@ impl Name {
         }
     }
 
-
     /// Return the fully qualified name needed for indexing or searching for the schema within a schema/schema env context. Puts the enclosing namespace into the name's namespace for clarity in schema/schema env parsing
     /// ```
+    /// use apache_avro::schema::Name;
+    ///
     /// assert_eq!(
-    /// Name::new("some_name").unwrap().fully_qualified_name(Some("some_namespace")),
-    /// Name::new("some_namespace.some_name") 
-    /// )
+    /// Name::new("some_name").unwrap().fully_qualified_name(&Some("some_namespace".into())),
+    /// Name::new("some_namespace.some_name").unwrap()
+    /// );
     /// assert_eq!(
-    /// Name::new("some_namespace.some_name").unwrap().fully_qualified_name(Some("other_namespace")),
-    /// Name::new("some_namespace.some_name") 
-    /// )
+    /// Name::new("some_namespace.some_name").unwrap().fully_qualified_name(&Some("other_namespace".into())),
+    /// Name::new("some_namespace.some_name").unwrap()
+    /// );
     /// ```
     pub fn fully_qualified_name(&self, enclosing_namespace: &Namespace) -> Name {
         Name {
             name: self.name.clone(),
-            namespace: self.namespace.to_owned().or(enclosing_namespace.clone()),
+            namespace: self
+                .namespace
+                .clone()
+                .or_else(|| enclosing_namespace.clone()),
         }
     }
 }
@@ -329,67 +328,72 @@ impl From<&str> for Name {
     }
 }
 
-
 pub struct ResolvedSchema<'s> {
-    names : HashMap<Name, &'s Schema>,
-    schema: &'s Schema    
+    names: HashMap<Name, &'s Schema>,
+    schema: &'s Schema,
 }
 
-impl <'s> From<&'s Schema> for ResolvedSchema<'s> {
+impl<'s> From<&'s Schema> for ResolvedSchema<'s> {
     fn from(schema: &'s Schema) -> Self {
         let names = HashMap::new();
-        let mut rs = ResolvedSchema{names, schema};
-        Self::from_internal(&rs.schema, &mut rs.names, &None);
-        return rs;
+        let mut rs = ResolvedSchema { names, schema };
+        Self::from_internal(rs.schema, &mut rs.names, &None);
+        rs
     }
 }
 
-impl <'s> ResolvedSchema<'s> {
-
+impl<'s> ResolvedSchema<'s> {
     pub fn get_names(&self) -> &HashMap<Name, &'s Schema> {
         &self.names
     }
 
     pub fn get_schema(&self) -> &Schema {
-        &self.schema
+        self.schema
     }
 
-    fn from_internal(schema: &'s Schema, idx: &mut HashMap<Name, &'s Schema>, enclosing_namespace : &Namespace) {
+    fn from_internal(
+        schema: &'s Schema,
+        idx: &mut HashMap<Name, &'s Schema>,
+        enclosing_namespace: &Namespace,
+    ) {
         match schema {
-            Schema::Array(schema) | Schema::Map(schema) => 
-            {
+            Schema::Array(schema) | Schema::Map(schema) => {
                 Self::from_internal(schema, idx, enclosing_namespace)
-            },
-            Schema::Union(UnionSchema { schemas, .. }) => 
-            {
+            }
+            Schema::Union(UnionSchema { schemas, .. }) => {
                 for schema in schemas {
                     Self::from_internal(schema, idx, enclosing_namespace)
                 }
-            },
-            Schema::Enum{name , ..} | Schema::Fixed{name, ..} => {
-                let fully_qualified_name = name.fully_qualified_name(&enclosing_namespace);
-                if let Some(_) = idx.insert(fully_qualified_name.clone(), schema) {
-                    panic!("Invalid Schema: Two schemas found with identical fullname: {}.", fully_qualified_name.fullname(None));
+            }
+            Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                if idx.insert(fully_qualified_name.clone(), schema).is_some() {
+                    panic!(
+                        "Invalid Schema: Two schemas found with identical fullname: {}.",
+                        fully_qualified_name.fullname(None)
+                    );
                 }
-            },
-            Schema::Record {name, fields, .. } => {
-                let fully_qualified_name = name.fully_qualified_name(&enclosing_namespace);
-                if let Some(_) = idx.insert(fully_qualified_name.clone(), schema) {
-                    panic!("Invalid Schema: Two schemas found with identical fullname: {}.", fully_qualified_name.fullname(None));
+            }
+            Schema::Record { name, fields, .. } => {
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                if idx.insert(fully_qualified_name.clone(), schema).is_some() {
+                    panic!(
+                        "Invalid Schema: Two schemas found with identical fullname: {}.",
+                        fully_qualified_name.fullname(None)
+                    );
                 }
                 let enclosing_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
                 for field in fields {
                     Self::from_internal(&field.schema, idx, &enclosing_namespace)
                 }
-            },
-            Schema::Ref { name } => 
-            {
+            }
+            Schema::Ref { name } => {
                 let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                if ! idx.contains_key(&fully_qualified_name) {
+                if !idx.contains_key(&fully_qualified_name) {
                     panic!("Invalid schema: Unable to find schema for reference {}. Make sure to use inherited namespace as needed.", fully_qualified_name.fullname(None))
                 }
-            },
-            _ => ()
+            }
+            _ => (),
         }
     }
 }
@@ -426,7 +430,12 @@ pub enum RecordFieldOrder {
 
 impl RecordField {
     /// Parse a `serde_json::Value` into a `RecordField`.
-    fn parse(field: &Map<String, Value>, position: usize, parser: &mut Parser, enclosing_namespace: &Namespace) -> AvroResult<Self> {
+    fn parse(
+        field: &Map<String, Value>,
+        position: usize,
+        parser: &mut Parser,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
         // TODO: "type" = "<record name>"
@@ -541,11 +550,11 @@ struct Parser {
     // A map of name -> Schema::Ref
     // Used to resolve cyclic references, i.e. when a
     // field's type is a reference to its record's type
-    resolving_schemas: HashMap<Name, Schema>,
+    resolving_schemas: Names,
     input_order: Vec<Name>,
     // A map of name -> fully parsed Schema
     // Used to avoid parsing the same schema twice
-    parsed_schemas: HashMap<Name, Schema>,
+    parsed_schemas: Names,
 }
 
 impl Schema {
@@ -669,7 +678,11 @@ impl Parser {
     /// Parse a `serde_json::Value` representing an Avro type whose Schema is known into a
     /// `Schema`. A Schema for a `serde_json::Value` is known if it is primitive or has
     /// been parsed previously by the parsed and stored in its map of parsed_schemas.
-    fn parse_known_schema(&mut self, name: &str, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_known_schema(
+        &mut self,
+        name: &str,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         match name {
             "null" => Ok(Schema::Null),
             "boolean" => Ok(Schema::Boolean),
@@ -692,7 +705,11 @@ impl Parser {
     ///
     /// This method allows schemas definitions that depend on other types to
     /// parse their dependencies (or look them up if already parsed).
-    fn fetch_schema_ref(&mut self, name: &str, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn fetch_schema_ref(
+        &mut self,
+        name: &str,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         fn get_schema_ref(parsed: &Schema) -> Schema {
             match &parsed {
                 Schema::Record { ref name, .. }
@@ -705,8 +722,8 @@ impl Parser {
         let name = Name::new(name)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
 
-        if let Some(parsed) = self.parsed_schemas.get(&fully_qualified_name) {
-            return Ok(get_schema_ref(parsed));
+        if self.parsed_schemas.get(&fully_qualified_name).is_some() {
+            return Ok(Schema::Ref { name });
         }
         if let Some(resolving_schema) = self.resolving_schemas.get(&fully_qualified_name) {
             return Ok(resolving_schema.clone());
@@ -715,6 +732,7 @@ impl Parser {
         let value = self
             .input_schemas
             .remove(&fully_qualified_name)
+            // TODO make a better descriptive error message here that conveys that a names schema cannot be found
             .ok_or_else(|| Error::ParsePrimitive(name.fullname(None)))?;
 
         // parsing a full schema from inside another schema. Other full schema will not inherit namespace
@@ -751,7 +769,11 @@ impl Parser {
     ///
     /// Avro supports "recursive" definition of types.
     /// e.g: {"type": {"type": "string"}}
-    fn parse_complex(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_complex(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         fn logical_verify_type(
             complex: &Map<String, Value>,
             kinds: &[SchemaKind],
@@ -892,7 +914,7 @@ impl Parser {
                     );
                 }
                 "duration" => {
-                    logical_verify_type(complex, &[SchemaKind::Fixed], self, enclosing_namespace,)?;
+                    logical_verify_type(complex, &[SchemaKind::Fixed], self, enclosing_namespace)?;
                     return Ok(Schema::Duration);
                 }
                 // In this case, of an unknown logical type, we just pass through to the underlying
@@ -942,9 +964,15 @@ impl Parser {
         }
     }
 
-    fn register_parsed_schema(&mut self, fully_qualified_name: &Name, schema: &Schema, aliases: &Aliases) {
+    fn register_parsed_schema(
+        &mut self,
+        fully_qualified_name: &Name,
+        schema: &Schema,
+        aliases: &Aliases,
+    ) {
         // FIXME, this should be globally aware, so if there is something overwriting something else then there is an ambiguois schema definition. An apropriate error should be thrown
-        self.parsed_schemas.insert(fully_qualified_name.clone(), schema.clone());
+        self.parsed_schemas
+            .insert(fully_qualified_name.clone(), schema.clone());
         self.resolving_schemas.remove(fully_qualified_name);
 
         let namespace = &fully_qualified_name.namespace;
@@ -963,10 +991,16 @@ impl Parser {
     }
 
     /// Returns already parsed schema or a schema that is currently being resolved.
-    fn get_already_seen_schema(&self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> Option<&Schema> {
+    fn get_already_seen_schema(
+        &self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> Option<&Schema> {
         match complex.get("type") {
             Some(Value::String(ref typ)) => {
-                let name = Name::new(typ.as_str()).unwrap().fully_qualified_name(enclosing_namespace);
+                let name = Name::new(typ.as_str())
+                    .unwrap()
+                    .fully_qualified_name(enclosing_namespace);
                 self.resolving_schemas
                     .get(&name)
                     .or_else(|| self.parsed_schemas.get(&name))
@@ -977,7 +1011,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro record type into a
     /// `Schema`.
-    fn parse_record(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_record(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
         let aliases = complex.aliases();
         let fields_opt = complex.get("fields");
@@ -989,7 +1027,7 @@ impl Parser {
         }
 
         let mut lookup = HashMap::new();
-        let fully_qualified_name =  name.fully_qualified_name(enclosing_namespace);
+        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
         let fields: Vec<RecordField> = fields_opt
@@ -1000,7 +1038,9 @@ impl Parser {
                     .iter()
                     .filter_map(|field| field.as_object())
                     .enumerate()
-                    .map(|(position, field)| RecordField::parse(field, position, self, &fully_qualified_name.namespace))
+                    .map(|(position, field)| {
+                        RecordField::parse(field, position, self, &fully_qualified_name.namespace)
+                    })
                     .collect::<Result<_, _>>()
             })?;
 
@@ -1022,7 +1062,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a
     /// `Schema`.
-    fn parse_enum(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_enum(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
         let aliases = complex.aliases();
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
@@ -1074,7 +1118,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
     /// `Schema`.
-    fn parse_array(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_array(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         complex
             .get("items")
             .ok_or(Error::GetArrayItemsField)
@@ -1084,7 +1132,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro map type into a
     /// `Schema`.
-    fn parse_map(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_map(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         complex
             .get("values")
             .ok_or(Error::GetMapValuesField)
@@ -1094,7 +1146,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro union type into a
     /// `Schema`.
-    fn parse_union(&mut self, items: &[Value], enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_union(
+        &mut self,
+        items: &[Value],
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         items
             .iter()
             .map(|v| self.parse(v, enclosing_namespace))
@@ -1104,7 +1160,11 @@ impl Parser {
 
     /// Parse a `serde_json::Value` representing a Avro fixed type into a
     /// `Schema`.
-    fn parse_fixed(&mut self, complex: &Map<String, Value>, enclosing_namespace: &Namespace) -> AvroResult<Schema> {
+    fn parse_fixed(
+        &mut self,
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let aliases = complex.aliases();
@@ -1125,7 +1185,7 @@ impl Parser {
             .ok_or(Error::GetFixedSizeField)?;
 
         let schema = Schema::Fixed {
-            name: name.clone(),
+            name,
             aliases: aliases.clone(),
             doc,
             size: size as usize,
@@ -2456,7 +2516,7 @@ mod tests {
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_record_inherited_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2487,14 +2547,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_record_name"] {
+        for s in vec!["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_record_qualified_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2525,14 +2585,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_record_name"] {
+        for s in vec!["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_enum_inherited_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2558,14 +2618,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_enum_name"] {
+        for s in vec!["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_enum_qualified_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2591,14 +2651,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_enum_name"] {
+        for s in vec!["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_fixed_inherited_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2624,14 +2684,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_fixed_name"] {
+        for s in vec!["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_fixed_qualified_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2657,14 +2717,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","space.inner_fixed_name"] {
+        for s in vec!["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_record_inner_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2696,14 +2756,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","inner_space.inner_record_name"] {
+        for s in vec!["space.record_name", "inner_space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_enum_inner_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2730,14 +2790,14 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","inner_space.inner_enum_name"] {
+        for s in vec!["space.record_name", "inner_space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }
 
     #[test]
     fn avro_3448_test_proper_resolution_inner_fixed_inner_namespace() {
-        let schema  = r#"
+        let schema = r#"
         {
           "name": "record_name",
           "namespace": "space",
@@ -2764,7 +2824,248 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::from(&schema);
-        for s in vec!["space.record_name","inner_space.inner_fixed_name"] {
+        for s in vec!["space.record_name", "inner_space.inner_fixed_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+    }
+
+    #[test]
+    fn avro_3448_test_proper_multi_level_resolution_inner_record_outer_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type":"record",
+                            "name":"middle_record_name",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "space.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::from(&schema);
+        for s in vec![
+            "space.record_name",
+            "space.middle_record_name",
+            "space.inner_record_name",
+        ] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+    }
+
+    #[test]
+    fn avro_3448_test_proper_multi_level_resolution_inner_record_middle_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type":"record",
+                            "name":"middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "middle_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::from(&schema);
+        for s in vec![
+            "space.record_name",
+            "middle_namespace.middle_record_name",
+            "middle_namespace.inner_record_name",
+        ] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+    }
+
+    #[test]
+    fn avro_3448_test_proper_multi_level_resolution_inner_record_inner_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type":"record",
+                            "name":"middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "namespace":"inner_namespace",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::from(&schema);
+        for s in vec![
+            "space.record_name",
+            "middle_namespace.middle_record_name",
+            "inner_namespace.inner_record_name",
+        ] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+    }
+
+    #[test]
+    fn avro_3448_test_proper_in_array_resolution_inherited_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": {
+                  "type":"array",
+                  "items":{
+                      "type":"record",
+                      "name":"in_array_record",
+                      "fields": [
+                          {
+                              "name":"array_record_field",
+                              "type":"string"
+                          }
+                      ]
+                  }
+              }
+            },
+            {
+                "name":"outer_field_2",
+                "type":"in_array_record"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::from(&schema);
+        for s in vec!["space.record_name", "space.in_array_record"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+    }
+
+    #[test]
+    fn avro_3448_test_proper_in_map_resolution_inherited_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": {
+                  "type":"map",
+                  "values":{
+                      "type":"record",
+                      "name":"in_map_record",
+                      "fields": [
+                          {
+                              "name":"map_record_field",
+                              "type":"string"
+                          }
+                      ]
+                  }
+              }
+            },
+            {
+                "name":"outer_field_2",
+                "type":"in_map_record"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::from(&schema);
+        for s in vec!["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
     }

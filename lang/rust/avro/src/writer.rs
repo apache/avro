@@ -17,7 +17,7 @@
 
 //! Logic handling writing in Avro format at user level.
 use crate::{
-    encode::{encode, encode_ref, encode_to_vec},
+    encode::{encode, encode_to_vec},
     schema::Schema,
     ser::Serializer,
     types::Value,

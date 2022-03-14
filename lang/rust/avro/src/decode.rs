@@ -18,7 +18,7 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::Schema,
+    schema::{Name, Namespace, ResolvedSchema, Schema},
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
@@ -68,10 +68,21 @@ fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
 
 /// Decode a `Value` from avro format given its `Schema`.
 pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
+    let rs = ResolvedSchema::from(schema);
+    decode_internal(schema, rs.get_names(), &None, reader)
+}
+
+fn decode_internal<R: Read>(
+    schema: &Schema,
+    names: &HashMap<Name, &Schema>,
+    enclosing_namespace: &Namespace,
+    reader: &mut R,
+) -> AvroResult<Value> {
     fn decode0<R: Read>(
         schema: &Schema,
         reader: &mut R,
-        schemas_by_name: &mut HashMap<String, Schema>,
+        names: &HashMap<Name, &Schema>,
+        enclosing_namespace: &Namespace,
     ) -> AvroResult<Value> {
         match *schema {
             Schema::Null => Ok(Value::Null),
@@ -93,21 +104,23 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 }
             }
             Schema::Decimal { ref inner, .. } => match &**inner {
-                Schema::Fixed { .. } => match decode0(inner, reader, schemas_by_name)? {
+                Schema::Fixed { .. } => match decode0(inner, reader, names, enclosing_namespace)? {
                     Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
                     value => Err(Error::FixedValue(value.into())),
                 },
-                Schema::Bytes => match decode0(inner, reader, schemas_by_name)? {
+                Schema::Bytes => match decode0(inner, reader, names, enclosing_namespace)? {
                     Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
                     value => Err(Error::BytesValue(value.into())),
                 },
                 schema => Err(Error::ResolveDecimalSchema(schema.into())),
             },
             Schema::Uuid => Ok(Value::Uuid(
-                Uuid::from_str(match decode0(&Schema::String, reader, schemas_by_name)? {
-                    Value::String(ref s) => s,
-                    value => return Err(Error::GetUuidFromStringValue(value.into())),
-                })
+                Uuid::from_str(
+                    match decode0(&Schema::String, reader, names, enclosing_namespace)? {
+                        Value::String(ref s) => s,
+                        value => return Err(Error::GetUuidFromStringValue(value.into())),
+                    },
+                )
                 .map_err(Error::ConvertStrToUuid)?,
             )),
             Schema::Int => decode_int(reader),
@@ -154,8 +167,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                     }
                 }
             }
-            Schema::Fixed { ref name, size, .. } => {
-                schemas_by_name.insert(name.name.clone(), schema.clone());
+            Schema::Fixed { size, .. } => {
                 let mut buf = vec![0u8; size];
                 reader
                     .read_exact(&mut buf)
@@ -173,7 +185,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
                     items.reserve(len);
                     for _ in 0..len {
-                        items.push(decode0(inner, reader, schemas_by_name)?);
+                        items.push(decode0(inner, reader, names, enclosing_namespace)?);
                     }
                 }
 
@@ -190,9 +202,9 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
                     items.reserve(len);
                     for _ in 0..len {
-                        match decode0(&Schema::String, reader, schemas_by_name)? {
+                        match decode0(&Schema::String, reader, names, enclosing_namespace)? {
                             Value::String(key) => {
-                                let value = decode0(inner, reader, schemas_by_name)?;
+                                let value = decode0(inner, reader, names, enclosing_namespace)?;
                                 items.insert(key, value);
                             }
                             value => return Err(Error::MapKeyType(value.into())),
@@ -214,7 +226,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                             index,
                             num_variants: variants.len(),
                         })?;
-                    let value = decode0(variant, reader, schemas_by_name)?;
+                    let value = decode0(variant, reader, names, enclosing_namespace)?;
                     Ok(Value::Union(index as u32, Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {
@@ -231,24 +243,24 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 ref fields,
                 ..
             } => {
-                schemas_by_name.insert(name.name.clone(), schema.clone());
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                 // Benchmarks indicate ~10% improvement using this method.
                 let mut items = Vec::with_capacity(fields.len());
                 for field in fields {
                     // TODO: This clone is also expensive. See if we can do away with it...
                     items.push((
                         field.name.clone(),
-                        decode0(&field.schema, reader, schemas_by_name)?,
+                        decode0(
+                            &field.schema,
+                            reader,
+                            names,
+                            &fully_qualified_name.namespace,
+                        )?,
                     ));
                 }
                 Ok(Value::Record(items))
             }
-            Schema::Enum {
-                ref name,
-                ref symbols,
-                ..
-            } => {
-                schemas_by_name.insert(name.name.clone(), schema.clone());
+            Schema::Enum { ref symbols, .. } => {
                 Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                     let index = usize::try_from(raw_index)
                         .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
@@ -266,24 +278,25 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 })
             }
             Schema::Ref { ref name } => {
-                let name = &name.name;
-                if let Some(resolved) = schemas_by_name.get(name.as_str()) {
-                    decode0(resolved, reader, &mut schemas_by_name.clone())
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                if let Some(resolved) = names.get(&fully_qualified_name) {
+                    decode0(resolved, reader, names, &fully_qualified_name.namespace)
                 } else {
-                    Err(Error::SchemaResolutionError(name.clone()))
+                    Err(Error::SchemaResolutionError(
+                        fully_qualified_name.fullname(None),
+                    ))
                 }
             }
         }
     }
-
-    let mut schemas_by_name: HashMap<String, Schema> = HashMap::new();
-    decode0(schema, reader, &mut schemas_by_name)
+    decode0(schema, reader, names, enclosing_namespace)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
         decode::decode,
+        encode::encode,
         schema::Schema,
         types::{
             Value,
@@ -375,5 +388,368 @@ mod tests {
         let mut bytes: &[u8] = &buffer[..];
         let result = decode(&schema, &mut bytes).unwrap();
         assert_eq!(result, value);
+    }
+
+    #[test]
+    fn test_avro_3448_recursive_definition_decode_union() {
+        // if encoding fails in this test check the corresponding test in encode
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":[ "null", {
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }]
+                },
+                {
+                    "name":"b",
+                    "type":"Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value1 = Value::Record(vec![
+            ("a".into(), Value::Union(1, Box::new(inner_value1))),
+            ("b".into(), inner_value2.clone()),
+        ]);
+        let mut buf = Vec::new();
+        encode(&outer_value1, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_value1,
+            decode(&schema, &mut bytes).expect("Unable to decode using recursive definitions")
+        );
+
+        let mut buf = Vec::new();
+        let outer_value2 = Value::Record(vec![
+            ("a".into(), Value::Union(0, Box::new(Value::Null))),
+            ("b".into(), inner_value2),
+        ]);
+        encode(&outer_value2, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_value2,
+            decode(&schema, &mut bytes).expect("Unable to decode using recursive definitions")
+        );
+    }
+
+    #[test]
+    fn test_avro_3448_recursive_definition_decode_array() {
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"array",
+                        "items": {
+                            "type":"record",
+                            "name": "Inner",
+                            "fields": [ {
+                                "name":"z",
+                                "type":"int"
+                            }]
+                        }
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": "Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            ("a".into(), Value::Array(vec![inner_value1])),
+            ("b".into(), inner_value2),
+        ]);
+        let mut buf = Vec::new();
+        encode(&outer_value, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_value,
+            decode(&schema, &mut bytes).expect("Failed to decode using recursive definitions")
+        )
+    }
+
+    #[test]
+    fn test_avro_3448_recursive_definition_decode_map() {
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"map",
+                        "values": {
+                            "type":"record",
+                            "name": "Inner",
+                            "fields": [ {
+                                "name":"z",
+                                "type":"int"
+                            }]
+                        }
+                    }
+                },
+                {
+                    "name":"b",
+                    "type": "Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
+        let outer_value = Value::Record(vec![
+            (
+                "a".into(),
+                Value::Map(vec![("akey".into(), inner_value1)].into_iter().collect()),
+            ),
+            ("b".into(), inner_value2),
+        ]);
+        let mut buf = Vec::new();
+        encode(&outer_value, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_value,
+            decode(&schema, &mut bytes).expect("Failed to decode using recursive definitions")
+        )
+    }
+
+    #[test]
+    fn test_avro_3448_proper_multi_level_decoding_middle_namespace() {
+        // if encoding fails in this test check the corresponding test in encode
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "middle_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
+        let middle_record_variation_1 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(0, Box::new(Value::Null)),
+        )]);
+        let middle_record_variation_2 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(1, Box::new(inner_record.clone())),
+        )]);
+        let outer_record_variation_1 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_2 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_1)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_3 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_2)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_1, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_1,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_2, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_2,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_3, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_3,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
+    }
+
+    #[test]
+    fn test_avro_3448_proper_multi_level_decoding_inner_namespace() {
+        // if encoding fails in this test check the corresponding test in encode
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "namespace":"inner_namespace",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
+        let middle_record_variation_1 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(0, Box::new(Value::Null)),
+        )]);
+        let middle_record_variation_2 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(1, Box::new(inner_record.clone())),
+        )]);
+        let outer_record_variation_1 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_2 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_1)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_3 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_2)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_1, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_1,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_2, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_2,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
+
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_3, &schema, &mut buf);
+        let mut bytes = &buf[..];
+        assert_eq!(
+            outer_record_variation_3,
+            decode(&schema, &mut bytes)
+                .expect("Failed to Decode with recursively defined namespace")
+        );
     }
 }

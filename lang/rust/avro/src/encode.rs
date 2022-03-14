@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    schema::{Name, Schema, ResolvedSchema, Namespace},
+    schema::{Name, Namespace, ResolvedSchema, Schema},
     types::Value,
     util::{zig_i32, zig_i64},
 };
@@ -28,9 +28,8 @@ use std::{collections::HashMap, convert::TryInto};
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
 pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
-
     let rs = ResolvedSchema::from(schema);
-    encode_ref(value, schema, rs.get_names(), &None,  buffer)
+    encode_ref(value, schema, rs.get_names(), &None, buffer)
 }
 
 fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
@@ -52,20 +51,25 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
 /// **NOTE** This will not perform schema validation. The value is assumed to
 /// be valid with regards to the schema. Schema are needed only to guide the
 /// encoding for complex type values.
-pub fn encode_ref(value: &Value, schema: &Schema, names: &HashMap<Name, &Schema>, enclosing_namespace: &Namespace, buffer: &mut Vec<u8>) {
+pub fn encode_ref(
+    value: &Value,
+    schema: &Schema,
+    names: &HashMap<Name, &Schema>,
+    enclosing_namespace: &Namespace,
+    buffer: &mut Vec<u8>,
+) {
     fn encode_ref0(
         value: &Value,
-        schema: &Schema, 
+        schema: &Schema,
         names: &HashMap<Name, &Schema>,
         buffer: &mut Vec<u8>,
         enclosing_namespace: &Namespace,
     ) {
-        match &schema {
-            Schema::Ref { ref name } => {
-                let resolved = *names.get(&name.fully_qualified_name(enclosing_namespace)).unwrap();
-                return encode_ref0(value, resolved, names, buffer, enclosing_namespace,);
-            }
-            _ => ()
+        if let Schema::Ref { ref name } = schema {
+            let resolved = *names
+                .get(&name.fully_qualified_name(enclosing_namespace))
+                .unwrap();
+            return encode_ref0(value, resolved, names, buffer, enclosing_namespace);
         }
 
         match value {
@@ -129,7 +133,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, names: &HashMap<Name, &Schema>
                         .get(*idx as usize)
                         .expect("Invalid Union validation occurred");
                     encode_long(*idx as i64, buffer);
-                    encode_ref0(&*item, inner_schema,names, buffer, enclosing_namespace);
+                    encode_ref0(&*item, inner_schema, names, buffer, enclosing_namespace);
                 } else {
                     error!("invalid schema type for Union: {:?}", schema);
                 }
@@ -170,7 +174,13 @@ pub fn encode_ref(value: &Value, schema: &Schema, names: &HashMap<Name, &Schema>
                 {
                     let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
                     for (i, &(_, ref value)) in fields.iter().enumerate() {
-                        encode_ref0(value, &schema_fields[i].schema, names, buffer, &record_namespace);
+                        encode_ref0(
+                            value,
+                            &schema_fields[i].schema,
+                            names,
+                            buffer,
+                            &record_namespace,
+                        );
                     }
                 }
             }
@@ -483,6 +493,270 @@ mod tests {
             ("b".into(), inner_value2),
         ]);
         encode(&outer_value2, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3448_proper_multi_level_encoding_outer_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "middle_record_name",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "space.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
+        let middle_record_variation_1 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(0, Box::new(Value::Null)),
+        )]);
+        let middle_record_variation_2 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(1, Box::new(inner_record.clone())),
+        )]);
+        let outer_record_variation_1 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_2 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_1)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_3 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_2)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+
+        // TODO add in error result wrapping to encoding flow
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_1, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_2, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_3, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3448_proper_multi_level_encoding_middle_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "middle_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
+        let middle_record_variation_1 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(0, Box::new(Value::Null)),
+        )]);
+        let middle_record_variation_2 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(1, Box::new(inner_record.clone())),
+        )]);
+        let outer_record_variation_1 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_2 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_1)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_3 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_2)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+
+        // TODO add in error result wrapping to encoding flow
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_1, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_2, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_3, &schema, &mut buf);
+        assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3448_proper_multi_level_encoding_inner_namespace() {
+        let schema = r#"
+        {
+          "name": "record_name",
+          "namespace": "space",
+          "type": "record",
+          "fields": [
+            {
+              "name": "outer_field_1",
+              "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "middle_record_name",
+                            "namespace":"middle_namespace",
+                            "fields":[
+                                {
+                                    "name":"middle_field_1",
+                                    "type":[
+                                        "null",
+                                        {
+                                            "type":"record",
+                                            "name":"inner_record_name",
+                                            "namespace":"inner_namespace",
+                                            "fields":[
+                                                {
+                                                    "name":"inner_field_1",
+                                                    "type":"double"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_namespace.inner_record_name"
+            }
+          ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
+        let middle_record_variation_1 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(0, Box::new(Value::Null)),
+        )]);
+        let middle_record_variation_2 = Value::Record(vec![(
+            "middle_field_1".into(),
+            Value::Union(1, Box::new(inner_record.clone())),
+        )]);
+        let outer_record_variation_1 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(0, Box::new(Value::Null)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_2 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_1)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+        let outer_record_variation_3 = Value::Record(vec![
+            (
+                "outer_field_1".into(),
+                Value::Union(1, Box::new(middle_record_variation_2)),
+            ),
+            ("outer_field_2".into(), inner_record.clone()),
+        ]);
+
+        // TODO add in error result wrapping to encoding flow
+        let mut buf = Vec::new();
+        encode(&outer_record_variation_1, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_2, &schema, &mut buf);
+        assert!(!buf.is_empty());
+        buf.drain(..);
+        encode(&outer_record_variation_3, &schema, &mut buf);
         assert!(!buf.is_empty());
     }
 }

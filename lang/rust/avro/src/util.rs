@@ -15,7 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::{AvroResult, Error, schema::{Aliases, Documentation}};
+use crate::{
+    schema::{Aliases, Documentation},
+    AvroResult, Error,
+};
 use serde_json::{Map, Value};
 use std::{convert::TryFrom, i64, io::Read, sync::Once};
 
@@ -49,16 +52,15 @@ impl MapHelper for Map<String, Value> {
 
     fn aliases(&self) -> Aliases {
         // FIXME no warning with aliases isn't a json array of json strings
-        self
-        .get("aliases")
-        .and_then(|aliases| aliases.as_array())
-        .and_then(|aliases| {
-            aliases
-                .iter()
-                .map(|alias| alias.as_str())
-                .map(|alias| alias.map(|a| a.to_string()))
-                .collect::<Option<_>>()
-        })
+        self.get("aliases")
+            .and_then(|aliases| aliases.as_array())
+            .and_then(|aliases| {
+                aliases
+                    .iter()
+                    .map(|alias| alias.as_str())
+                    .map(|alias| alias.map(|a| a.to_string()))
+                    .collect::<Option<_>>()
+            })
     }
 }
 
