@@ -212,12 +212,12 @@ namespace Avro
                 fields.Add(field);
                 try
                 {
-                    addToFieldMap(fieldMap, fieldName, field);
-                    addToFieldMap(fieldAliasMap, fieldName, field);
+                    addParsedFieldToFieldMap(fieldMap, fieldName, field);
+                    addParsedFieldToFieldMap(fieldAliasMap, fieldName, field);
 
                     if (null != field.Aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
                         foreach (string alias in field.Aliases)
-                            addToFieldMap(fieldAliasMap, alias, field);
+                            addParsedFieldToFieldMap(fieldAliasMap, alias, field);
                 }
                 catch (SchemaParseException e)
                 {
@@ -279,6 +279,13 @@ namespace Avro
                 throw new SchemaParseException($"'type' was not found for field: name at '{jfield.Path}'");
             var schema = Schema.ParseJson(jtype, names, encspace);
             return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
+        }
+
+        private static void addParsedFieldToFieldMap(Dictionary<string, Field> map, string name, Field field)
+        {
+            if (map.ContainsKey(name))
+                throw new SchemaParseException("field or alias " + name + " is a duplicate name");
+            map.Add(name, field);
         }
 
         private static void addToFieldMap(Dictionary<string, Field> map, string name, Field field)
