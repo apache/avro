@@ -29,7 +29,7 @@ namespace Avro
     /// </summary>
     public class RecordSchema : NamedSchema
     {
-        private List<Field> fields;
+        private List<Field> _fields;
 
         /// <summary>
         /// List of fields in the record
@@ -38,17 +38,17 @@ namespace Avro
         {
             get
             {
-                return fields;
+                return _fields;
             }
 
             set
             {
                 VerifyFieldsPositions(value);
 
-                fieldLookup = CreateFieldMap(fields);
-                fieldAliasLookup = CreateFieldMap(fields, true);
+                fieldLookup = CreateFieldMap(_fields);
+                fieldAliasLookup = CreateFieldMap(_fields, true);
 
-                fields = value;
+                _fields = value;
             }
         }
 
