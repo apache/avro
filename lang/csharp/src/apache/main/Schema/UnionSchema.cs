@@ -166,13 +166,17 @@ namespace Avro
         private void VerifyChildSchemas(List<Schema> schemas)
         {
             if (schemas.Any(schema => schema.Tag == Type.Union))
+            {
                 throw new ArgumentException("Unions may not immediately contain other unions", nameof(schemas));
+            }
 
-            var groupedByFullNames = schemas.GroupBy(schema => schema.Fullname);
+            IEnumerable<IGrouping<string, Schema>> groupedByFullNames = schemas.GroupBy(schema => schema.Fullname);
             IGrouping<string, Schema> duplicateType = groupedByFullNames.FirstOrDefault(x => x.Count() > 1);
 
             if (duplicateType != null)
+            {
                 throw new ArgumentException($"Duplicate type in union: {duplicateType.Key}");
+            }
         }
     }
 }

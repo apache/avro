@@ -25,9 +25,11 @@ namespace Avro
         internal static IList<SchemaName> GetSchemaNames(IEnumerable<string> aliases, string enclosingTypeName, string enclosingTypeNamespace)
         {
             if (aliases == null)
+            {
                 return null;
+            }
 
-            var enclosingSchemaName = new SchemaName(enclosingTypeName, enclosingTypeNamespace, null, null);
+            SchemaName enclosingSchemaName = new SchemaName(enclosingTypeName, enclosingTypeNamespace, null, null);
             return aliases.Select(alias => new SchemaName(alias, enclosingSchemaName.Namespace, null, null)).ToList();
         }
     }

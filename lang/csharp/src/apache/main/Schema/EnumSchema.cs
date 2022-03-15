@@ -147,7 +147,9 @@ namespace Avro
             foreach (var symbol in symbols)
             {
                 if (symbolMap.ContainsKey(symbol))
+                {
                     throw new SchemaParseException($"Duplicate symbol: {symbol}");
+                }
 
                 symbolMap[symbol] = i++;
             }
