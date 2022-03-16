@@ -140,6 +140,13 @@ namespace Avro
             Default = defaultSymbol;
         }
 
+        /// <summary>
+        /// Creates symbols map from specified list of symbols.
+        /// Symbol map contains the names of the symbols and their index.
+        /// </summary>
+        /// <param name="symbols">List of symbols</param>
+        /// <returns>Symbol map</returns>
+        /// <exception cref="AvroException">Is thrown if the symbols list contains duplicate symbols.</exception>
         private static IDictionary<string, int> CreateSymbolsMap(IEnumerable<string> symbols)
         {
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
@@ -148,7 +155,7 @@ namespace Avro
             {
                 if (symbolMap.ContainsKey(symbol))
                 {
-                    throw new SchemaParseException($"Duplicate symbol: {symbol}");
+                    throw new AvroException($"Duplicate symbol: {symbol}");
                 }
 
                 symbolMap[symbol] = i++;
