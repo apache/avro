@@ -74,25 +74,18 @@ if (AVRO_ADD_PROTECTOR_FLAGS)
 endif ()
 endif ()
 
-
 find_package (Boost 1.38 REQUIRED
     COMPONENTS filesystem iostreams program_options regex system)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
-    set(SNAPPY_PKG libsnappy)
     add_definitions(-DSNAPPY_CODEC_AVAILABLE)
     message("Enabled snappy codec")
 else (SNAPPY_FOUND)
-    set(SNAPPY_PKG "")
-    set(SNAPPY_LIBRARIES "")
-    set(SNAPPY_INCLUDE_DIR "")
     message("Disabled snappy codec. libsnappy not found.")
 endif (SNAPPY_FOUND)
 
 add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
-
-include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (AVRO_SOURCE_FILES
         impl/Compiler.cc impl/Node.cc impl/LogicalType.cc
@@ -111,13 +104,32 @@ set (AVRO_SOURCE_FILES
         impl/Resolver.cc impl/Validator.cc
         )
 
-add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
+add_library(avrocpp_o OBJECT ${AVRO_SOURCE_FILES})
+set_property(TARGET avrocpp_o PROPERTY POSITION_INDEPENDENT_CODE 1)
+target_include_directories(avrocpp_o
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>)
 
+add_library (avrocpp SHARED $<TARGET_OBJECTS:avrocpp_o>)
+target_link_libraries(avrocpp PUBLIC Boost::boost Boost::iostreams Boost::system)
+target_include_directories(avrocpp
+    PUBLIC $<INSTALL_INTERFACE:include>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/api>)
+if (SNAPPY_FOUND)
+    target_compile_definitions(avrocpp PUBLIC SNAPPY_CODEC_AVAILABLE)
+    target_link_libraries(avrocpp PUBLIC Snappy::Snappy)
+endif(SNAPPY_FOUND)
 set_property (TARGET avrocpp
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
 
-add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
-target_include_directories(avrocpp_s PRIVATE ${SNAPPY_INCLUDE_DIR})
+add_library (avrocpp_s STATIC $<TARGET_OBJECTS:avrocpp_o>)
+target_include_directories(avrocpp_s
+    PUBLIC $<INSTALL_INTERFACE:include>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/api>)
+target_link_libraries(avrocpp_s PUBLIC Boost::boost Boost::iostreams Boost::system)
+if (SNAPPY_FOUND)
+    target_compile_definitions(avrocpp_s PUBLIC SNAPPY_CODEC_AVAILABLE)
+    target_link_libraries(avrocpp_s PUBLIC Snappy::Snappy)
+endif(SNAPPY_FOUND)
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
@@ -128,12 +140,9 @@ set_target_properties (avrocpp PROPERTIES
 set_target_properties (avrocpp_s PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH})
 
-target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
-target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
-
 add_executable (precompile test/precompile.cc)
 
-target_link_libraries (precompile avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (precompile PRIVATE avrocpp_s)
 
 macro (gen file ns)
     add_custom_command (OUTPUT ${file}.hh
@@ -163,13 +172,14 @@ gen (primitivetypes pt)
 gen (cpp_reserved_words cppres)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
-target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_link_libraries (avrogencpp PRIVATE avrocpp_s Boost::program_options Boost::regex)
 
 enable_testing()
 
 macro (unittest name)
     add_executable (${name} test/${name}.cc)
-    target_link_libraries (${name} avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+    target_link_libraries (${name} PRIVATE avrocpp Boost::filesystem)
+    target_include_directories(${name} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
     add_test (NAME ${name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
 endmacro (unittest)
@@ -202,17 +212,39 @@ set (CPACK_PACKAGE_FILE_NAME "avrocpp-${AVRO_VERSION_MAJOR}")
 include (CPack)
 
 install (TARGETS avrocpp avrocpp_s
+    EXPORT "avroTargets"
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION lib)
 
-install (TARGETS avrogencpp RUNTIME DESTINATION bin)
+install (TARGETS avrogencpp
+    RUNTIME DESTINATION bin)
 
 install (DIRECTORY api/ DESTINATION include/avro
     FILES_MATCHING PATTERN *.hh)
+
+# install config files
+install(EXPORT avroTargets
+    NAMESPACE avro::
+    DESTINATION share/avro/cmake)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(avroConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/avroConfig.cmake
+    INSTALL_DESTINATION share/avro/cmake)
+
+write_basic_package_version_file(avroConfigVersion.cmake
+    VERSION "${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH}"
+    COMPATIBILITY SameMajorVersion)
+
+install(
+    FILES
+        ${CMAKE_BINARY_DIR}/avroConfig.cmake
+        ${CMAKE_BINARY_DIR}/avroConfigVersion.cmake
+    DESTINATION share/avro/cmake)
 
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
+
