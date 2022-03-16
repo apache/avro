@@ -216,6 +216,8 @@ namespace Avro
                     if (null != field.Aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
                         foreach (string alias in field.Aliases)
                             addParsedFieldToFieldMap(fieldAliasMap, alias, field);
+
+                    result._fields = fields;
                 }
                 catch (SchemaParseException e)
                 {
