@@ -170,8 +170,7 @@ namespace Avro
                 throw new ArgumentException("Unions may not immediately contain other unions", nameof(schemas));
             }
 
-            IEnumerable<IGrouping<string, Schema>> groupedByFullNames = schemas.GroupBy(schema => schema.Fullname);
-            IGrouping<string, Schema> duplicateType = groupedByFullNames.FirstOrDefault(x => x.Count() > 1);
+            IGrouping<string, Schema> duplicateType = schemas.GroupBy(schema => schema.Fullname).FirstOrDefault(x => x.Count() > 1);
 
             if (duplicateType != null)
             {
