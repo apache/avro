@@ -463,14 +463,7 @@ namespace Avro.Test
             [TestCase(null, null)]
             public void ParseTypeTest(string value, object expectedResult)
             {
-                if (expectedResult is Schema.Type expectedType)
-                {
-                    Assert.AreEqual(Schema.ParseType(value), expectedType);
-                }
-                else
-                {
-                    Assert.AreEqual(Schema.ParseType(value), expectedResult);
-                }
+                Assert.AreEqual(Schema.ParseType(value), expectedResult);
             }
 
             [TestCase("\"null\"", Schema.Type.Null)]
@@ -478,14 +471,7 @@ namespace Avro.Test
             [TestCase("\"\"", null)]
             public void ParseTypeRemoveQuotesTest(string value, object expectedResult)
             {
-                if (expectedResult is Schema.Type expectedType)
-                {
-                    Assert.AreEqual(Schema.ParseType(value, true), expectedType);
-                }
-                else
-                {
-                    Assert.AreEqual(Schema.ParseType(value, true), expectedResult);
-                }
+                Assert.AreEqual(Schema.ParseType(value, true), expectedResult);
             }
         }
     }
