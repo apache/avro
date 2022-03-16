@@ -129,6 +129,15 @@ namespace Avro
         }
 
         /// <summary>
+        /// Creates a new field based on the specified field, with a different position.
+        /// </summary>
+        /// <returns>A clone of this field with new position.</returns>
+        internal Field ChangePosition(int newPosition)
+        {
+            return new Field(Schema, Name, newPosition, Aliases, Documentation, DefaultValue, Ordering ?? SortOrder.ignore, Props);
+        }
+
+        /// <summary>
         /// A flag to indicate if reader schema has a field that is missing from writer schema and has a default value
         /// This is set in CanRead() which is always be called before deserializing data
         /// </summary>

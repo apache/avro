@@ -43,12 +43,10 @@ namespace Avro
 
             set
             {
-                VerifyFieldsPositions(value);
+                _fields = SetFieldsPositions(value);
 
                 fieldLookup = CreateFieldMap(_fields);
                 fieldAliasLookup = CreateFieldMap(_fields, true);
-
-                _fields = value;
             }
         }
 
@@ -295,13 +293,14 @@ namespace Avro
             map.Add(name, field);
         }
 
-        private void VerifyFieldsPositions(List<Field> fields)
+        /// <summary>
+        /// Clones the fields with updated positions. Updates the positions according to the order of the fields in the list.
+        /// </summary>
+        /// <param name="fields">List of fields</param>
+        /// <returns>New list of cloned fields with updated positions</returns>
+        private List<Field> SetFieldsPositions(List<Field> fields)
         {
-            for (int i = 0; i < fields.Count; i++)
-            {
-                if (fields[i].Pos != i)
-                    throw new AvroException($"Wrong position for field {fields[i].Name}. Expected {i} but was {fields[i].Pos}");
-            }
+            return fields.Select((field, i) => field.ChangePosition(i)).ToList();
         }
 
         /// <summary>
