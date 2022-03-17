@@ -148,15 +148,15 @@ namespace Avro
         private CodeAttributeDeclaration GetGeneratedCodeAttribute()
         {
             GeneratedCodeAttribute generatedCodeAttribute =
-            new GeneratedCodeAttribute(System.AppDomain.CurrentDomain.FriendlyName,
-            System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                new GeneratedCodeAttribute(System.AppDomain.CurrentDomain.FriendlyName,
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             CodeAttributeDeclaration codeAttributeDeclaration =
-            new CodeAttributeDeclaration(generatedCodeAttribute.GetType().Name,
-                new CodeAttributeArgument(
-                    new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
-                new CodeAttributeArgument(
-                    new CodePrimitiveExpression(generatedCodeAttribute.Version)));
+                new CodeAttributeDeclaration(generatedCodeAttribute.GetType().Name,
+                    new CodeAttributeArgument(
+                        new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
+                    new CodeAttributeArgument(
+                        new CodePrimitiveExpression(generatedCodeAttribute.Version)));
 
             return codeAttributeDeclaration;
         }
