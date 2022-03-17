@@ -409,6 +409,7 @@ impl Value {
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
+        // FIXME transition to using resolved Schema
         let mut schemas_by_name: HashMap<Name, Schema> = HashMap::new();
         self.resolve_internal(schema, &mut schemas_by_name)
     }
@@ -440,7 +441,7 @@ impl Value {
                     if let Some(resolved) = schemas_by_name.get(name) {
                         resolve0(value, resolved, &mut schemas_by_name.clone())
                     } else {
-                        Err(Error::SchemaResolutionError(name.fullname(None)))
+                        Err(Error::SchemaResolutionError(name.clone()))
                     }
                 }
                 Schema::Null => val.resolve_null(),

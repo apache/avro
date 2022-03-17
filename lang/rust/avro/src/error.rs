@@ -15,7 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::{schema::SchemaKind, types::ValueKind};
+use crate::{
+    schema::{Name, SchemaKind},
+    types::ValueKind,
+};
 use std::fmt;
 
 #[derive(thiserror::Error, Debug)]
@@ -378,13 +381,26 @@ pub enum Error {
 
     /// Error while resolving Schema::Ref
     #[error("Unresolved schema reference: {0}")]
-    SchemaResolutionError(String),
+    SchemaResolutionError(Name),
 
     #[error("The file metadata is already flushed.")]
     FileHeaderAlreadyWritten,
 
     #[error("Metadata keys starting with 'avro.' are reserved for internal usage: {0}.")]
     InvalidMetadataKey(String),
+
+    /// Error when two named schema have the same fully qualified name
+    #[error("Two named schema defined for same fullname: {0}.")]
+    AmbiguousSchemaDefinition(Name),
+
+    #[error("Signed decimal bytes length {0} not equal to fixed schema size {1}.")]
+    EncodeDecimalAsFixedError(usize, usize),
+
+    #[error("Can only encode value type {value_kind:?} as one of {supported_schema:?}")]
+    EncodeValueAsSchemaError {
+        value_kind: ValueKind,
+        supported_schema: Vec<SchemaKind>,
+    },
 }
 
 impl serde::ser::Error for Error {

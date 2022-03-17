@@ -68,7 +68,7 @@ fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
 
 /// Decode a `Value` from avro format given its `Schema`.
 pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
-    let rs = ResolvedSchema::from(schema);
+    let rs = ResolvedSchema::try_from(schema)?;
     decode_internal(schema, rs.get_names(), &None, reader)
 }
 
@@ -78,7 +78,7 @@ fn decode_internal<R: Read>(
     enclosing_namespace: &Namespace,
     reader: &mut R,
 ) -> AvroResult<Value> {
-    fn decode0<R: Read>(
+    fn decode_internal0<R: Read>(
         schema: &Schema,
         reader: &mut R,
         names: &HashMap<Name, &Schema>,
@@ -104,11 +104,14 @@ fn decode_internal<R: Read>(
                 }
             }
             Schema::Decimal { ref inner, .. } => match &**inner {
-                Schema::Fixed { .. } => match decode0(inner, reader, names, enclosing_namespace)? {
-                    Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
-                    value => Err(Error::FixedValue(value.into())),
-                },
-                Schema::Bytes => match decode0(inner, reader, names, enclosing_namespace)? {
+                Schema::Fixed { .. } => {
+                    match decode_internal0(inner, reader, names, enclosing_namespace)? {
+                        Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
+                        value => Err(Error::FixedValue(value.into())),
+                    }
+                }
+                Schema::Bytes => match decode_internal0(inner, reader, names, enclosing_namespace)?
+                {
                     Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
                     value => Err(Error::BytesValue(value.into())),
                 },
@@ -116,7 +119,7 @@ fn decode_internal<R: Read>(
             },
             Schema::Uuid => Ok(Value::Uuid(
                 Uuid::from_str(
-                    match decode0(&Schema::String, reader, names, enclosing_namespace)? {
+                    match decode_internal0(&Schema::String, reader, names, enclosing_namespace)? {
                         Value::String(ref s) => s,
                         value => return Err(Error::GetUuidFromStringValue(value.into())),
                     },
@@ -185,7 +188,7 @@ fn decode_internal<R: Read>(
 
                     items.reserve(len);
                     for _ in 0..len {
-                        items.push(decode0(inner, reader, names, enclosing_namespace)?);
+                        items.push(decode_internal0(inner, reader, names, enclosing_namespace)?);
                     }
                 }
 
@@ -202,9 +205,11 @@ fn decode_internal<R: Read>(
 
                     items.reserve(len);
                     for _ in 0..len {
-                        match decode0(&Schema::String, reader, names, enclosing_namespace)? {
+                        match decode_internal0(&Schema::String, reader, names, enclosing_namespace)?
+                        {
                             Value::String(key) => {
-                                let value = decode0(inner, reader, names, enclosing_namespace)?;
+                                let value =
+                                    decode_internal0(inner, reader, names, enclosing_namespace)?;
                                 items.insert(key, value);
                             }
                             value => return Err(Error::MapKeyType(value.into())),
@@ -226,7 +231,7 @@ fn decode_internal<R: Read>(
                             index,
                             num_variants: variants.len(),
                         })?;
-                    let value = decode0(variant, reader, names, enclosing_namespace)?;
+                    let value = decode_internal0(variant, reader, names, enclosing_namespace)?;
                     Ok(Value::Union(index as u32, Box::new(value)))
                 }
                 Err(Error::ReadVariableIntegerBytes(io_err)) => {
@@ -250,7 +255,7 @@ fn decode_internal<R: Read>(
                     // TODO: This clone is also expensive. See if we can do away with it...
                     items.push((
                         field.name.clone(),
-                        decode0(
+                        decode_internal0(
                             &field.schema,
                             reader,
                             names,
@@ -280,16 +285,14 @@ fn decode_internal<R: Read>(
             Schema::Ref { ref name } => {
                 let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                 if let Some(resolved) = names.get(&fully_qualified_name) {
-                    decode0(resolved, reader, names, &fully_qualified_name.namespace)
+                    decode_internal0(resolved, reader, names, &fully_qualified_name.namespace)
                 } else {
-                    Err(Error::SchemaResolutionError(
-                        fully_qualified_name.fullname(None),
-                    ))
+                    Err(Error::SchemaResolutionError(fully_qualified_name))
                 }
             }
         }
     }
-    decode0(schema, reader, names, enclosing_namespace)
+    decode_internal0(schema, reader, names, enclosing_namespace)
 }
 
 #[cfg(test)]
@@ -357,7 +360,7 @@ mod tests {
         let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
 
         let mut buffer = Vec::new();
-        encode(&value, &schema, &mut buffer);
+        encode(&value, &schema, &mut buffer).expect("message should encode");
 
         let mut bytes = &buffer[..];
         let result = decode(&schema, &mut bytes).unwrap();
@@ -384,7 +387,7 @@ mod tests {
         ));
         let mut buffer = Vec::<u8>::new();
 
-        encode(&value, &schema, &mut buffer);
+        encode(&value, &schema, &mut buffer).expect("message should encode");
         let mut bytes: &[u8] = &buffer[..];
         let result = decode(&schema, &mut bytes).unwrap();
         assert_eq!(result, value);
@@ -426,7 +429,7 @@ mod tests {
             ("b".into(), inner_value2.clone()),
         ]);
         let mut buf = Vec::new();
-        encode(&outer_value1, &schema, &mut buf);
+        encode(&outer_value1, &schema, &mut buf).expect("message should encode");
         assert!(!buf.is_empty());
         let mut bytes = &buf[..];
         assert_eq!(
@@ -439,7 +442,7 @@ mod tests {
             ("a".into(), Value::Union(0, Box::new(Value::Null))),
             ("b".into(), inner_value2),
         ]);
-        encode(&outer_value2, &schema, &mut buf);
+        encode(&outer_value2, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_value2,
@@ -485,7 +488,7 @@ mod tests {
             ("b".into(), inner_value2),
         ]);
         let mut buf = Vec::new();
-        encode(&outer_value, &schema, &mut buf);
+        encode(&outer_value, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_value,
@@ -534,7 +537,7 @@ mod tests {
             ("b".into(), inner_value2),
         ]);
         let mut buf = Vec::new();
-        encode(&outer_value, &schema, &mut buf);
+        encode(&outer_value, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_value,
@@ -620,7 +623,7 @@ mod tests {
         ]);
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_1, &schema, &mut buf);
+        encode(&outer_record_variation_1, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_1,
@@ -629,7 +632,7 @@ mod tests {
         );
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_2, &schema, &mut buf);
+        encode(&outer_record_variation_2, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_2,
@@ -638,7 +641,7 @@ mod tests {
         );
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_3, &schema, &mut buf);
+        encode(&outer_record_variation_3, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_3,
@@ -726,7 +729,7 @@ mod tests {
         ]);
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_1, &schema, &mut buf);
+        encode(&outer_record_variation_1, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_1,
@@ -735,7 +738,7 @@ mod tests {
         );
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_2, &schema, &mut buf);
+        encode(&outer_record_variation_2, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_2,
@@ -744,7 +747,7 @@ mod tests {
         );
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_3, &schema, &mut buf);
+        encode(&outer_record_variation_3, &schema, &mut buf).expect("message should encode");
         let mut bytes = &buf[..];
         assert_eq!(
             outer_record_variation_3,
