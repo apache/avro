@@ -45,6 +45,7 @@ namespace Avro
 
         private readonly IDictionary<string, Field> fieldAliasLookup;
         private bool request;
+        private RecordSchema lastMatchedSchema;
 
         /// <summary>
         /// Static function to return new instance of the record schema
@@ -302,23 +303,32 @@ namespace Avro
         /// <returns>true if this and writer schema are compatible based on the AVRO specification, false otherwise</returns>
         public override bool CanRead(Schema writerSchema)
         {
-            if ((writerSchema.Tag != Type.Record) && (writerSchema.Tag != Type.Error)) return false;
+            if ((writerSchema.Tag != Type.Record) && (writerSchema.Tag != Type.Error))
+            {
+                return false;
+            }
 
-            RecordSchema that = writerSchema as RecordSchema;
+            RecordSchema recordSchema = writerSchema as RecordSchema;
+
+            if (recordSchema.Equals(lastMatchedSchema))
+            {
+                return true;
+            }
+
             return protect(() => true, () =>
             {
-                if (!that.SchemaName.Equals(SchemaName))
-                    if (!InAliases(that.SchemaName))
+                if (!recordSchema.SchemaName.Equals(SchemaName))
+                    if (!InAliases(recordSchema.SchemaName))
                         return false;
 
                 foreach (Field f in this)
                 {
-                    Field f2 = that[f.Name];
+                    Field f2 = recordSchema[f.Name];
                     if (null == f2) // reader field not in writer field, check aliases of reader field if any match with a writer field
                         if (null != f.Aliases)
                             foreach (string alias in f.Aliases)
                             {
-                                f2 = that[alias];
+                                f2 = recordSchema[alias];
                                 if (null != f2) break;
                             }
 
@@ -328,8 +338,10 @@ namespace Avro
                     if (f2 != null && f.Schema.CanRead(f2.Schema)) continue;    // Both fields exist and are compatible.
                     return false;
                 }
+
+                lastMatchedSchema = recordSchema;
                 return true;
-            }, that);
+            }, recordSchema);
         }
 
         private class RecordSchemaPair
