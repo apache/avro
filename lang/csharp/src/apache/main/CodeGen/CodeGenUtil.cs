@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Text;
-using System.CodeDom;
 
 namespace Avro
 {
@@ -58,6 +59,14 @@ namespace Avro
         /// </value>
         public HashSet<string> ReservedKeywords { get; private set; }
 
+        /// <summary>
+        /// Gets the generated code attribute.
+        /// </summary>
+        /// <value>
+        /// The generated code attribute.
+        /// </value>
+        public CodeAttributeDeclaration GeneratedCodeAttribute { get; private set; }
+
         private const char At = '@';
         private const char Dot = '.';
 
@@ -73,6 +82,7 @@ namespace Avro
         {
             NamespaceImports = new CodeNamespaceImport[] {
                 new CodeNamespaceImport("System"),
+                new CodeNamespaceImport("System.CodeDom.Compiler"),
                 new CodeNamespaceImport("System.Collections.Generic"),
                 new CodeNamespaceImport("System.Text"),
                 new CodeNamespaceImport("global::Avro"),
@@ -97,6 +107,8 @@ namespace Avro
                 "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static",
                 "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong",
                 "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while", "value", "partial" };
+
+            GeneratedCodeAttribute = GetGeneratedCodeAttribute();
         }
 
         /// <summary>
@@ -131,6 +143,22 @@ namespace Avro
                 if (name[i] != At)
                     builder.Append(name[i]);
             return builder.ToString();
+        }
+
+        private CodeAttributeDeclaration GetGeneratedCodeAttribute()
+        {
+            GeneratedCodeAttribute generatedCodeAttribute =
+            new GeneratedCodeAttribute(System.AppDomain.CurrentDomain.FriendlyName,
+            System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
+
+            CodeAttributeDeclaration codeAttributeDeclaration =
+            new CodeAttributeDeclaration(generatedCodeAttribute.GetType().Name,
+                new CodeAttributeArgument(
+                    new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
+                new CodeAttributeArgument(
+                    new CodePrimitiveExpression(generatedCodeAttribute.Version)));
+
+            return codeAttributeDeclaration;
         }
     }
 }
