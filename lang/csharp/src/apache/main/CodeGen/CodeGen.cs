@@ -902,31 +902,28 @@ namespace Avro
         /// </exception>
         internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
         {
-            string typeValue;
-
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
                     return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(bool));
-                    return nullible ? $"{typeValue}?" : typeValue;
-
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(bool)) +
+                        $"{(nullible ? "?" : string.Empty)}";
                 case Schema.Type.Int:
-                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(int));
-                    return nullible ? $"{typeValue}?" : typeValue;
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(int)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Long:
-                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(long));
-                    return nullible ? $"{typeValue}?" : typeValue;
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(long)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Float:
-                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(float));
-                    return nullible ? $"{typeValue}?" : typeValue;
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(float)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Double:
-                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(double));
-                    return nullible ? $"{typeValue}?" : typeValue;
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(double)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Bytes:
                     return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(byte[]));
