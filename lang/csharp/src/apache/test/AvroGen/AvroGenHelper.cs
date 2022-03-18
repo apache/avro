@@ -80,7 +80,7 @@ namespace Avro.Test.AvroGen
 
         public static Assembly CompileCSharpFilesIntoLibrary(IEnumerable<string> sourceFiles, string assemblyName = null, bool loadAssembly = true)
         {
-            // CReate random assenbly name if not specified
+            // Create random assembly name if not specified
             if (assemblyName == null)
                 assemblyName = Path.GetRandomFileName();
 
