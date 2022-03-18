@@ -2,6 +2,8 @@
 title: "Credits"
 linkTitle: "Credits"
 weight: 2
+aliases:
+- /credits.html
 ---
 
 <!--
