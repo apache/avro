@@ -902,29 +902,36 @@ namespace Avro
         /// </exception>
         internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
         {
+            string typeValue;
+
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
                     return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    return nullible ? $"System.Nullable<{typeof(bool)}>" : typeof(bool).ToString();
+                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(bool));
+                    return nullible ? $"{typeValue}?" : typeValue;
 
                 case Schema.Type.Int:
-                    return nullible ? $"System.Nullable<{typeof(int)}>" : typeof(int).ToString();
+                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(int));
+                    return nullible ? $"{typeValue}?" : typeValue;
 
                 case Schema.Type.Long:
-                    return nullible ? $"System.Nullable<{typeof(long)}>" : typeof(long).ToString();
+                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(long));
+                    return nullible ? $"{typeValue}?" : typeValue;
 
                 case Schema.Type.Float:
-                    return nullible ? $"System.Nullable<{typeof(float)}>" : typeof(float).ToString();
+                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(float));
+                    return nullible ? $"{typeValue}?" : typeValue;
 
                 case Schema.Type.Double:
-                    return nullible ? $"System.Nullable<{typeof(double)}>" : typeof(double).ToString();
+                    typeValue = CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(double));
+                    return nullible ? $"{typeValue}?" : typeValue;
 
                 case Schema.Type.Bytes:
-                    return typeof(byte[]).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(byte[]));
                 case Schema.Type.String:
-                    return typeof(string).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(string));
 
                 case Schema.Type.Enumeration:
                     var namedSchema = schema as NamedSchema;

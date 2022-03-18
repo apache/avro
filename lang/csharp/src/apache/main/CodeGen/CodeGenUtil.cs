@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Text;
-using System.CodeDom;
+using Microsoft.CSharp;
 
 namespace Avro
 {
@@ -131,6 +133,18 @@ namespace Avro
                 if (name[i] != At)
                     builder.Append(name[i]);
             return builder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the simple type alias.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>If type is primitive it will return the C# keyword</returns>
+        public string GetSimpleTypeAlias(Type type)
+        {
+            CSharpCodeProvider cSharpCodeProvider = new CSharpCodeProvider();
+            CodeTypeReference codeTypeReference = new CodeTypeReference(type);
+            return type.IsPrimitive ? cSharpCodeProvider.GetTypeOutput(codeTypeReference) : type.FullName;
         }
     }
 }
