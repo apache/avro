@@ -91,8 +91,11 @@ pub enum Error {
     #[error("Enum symbol index out of bounds: {num_variants}")]
     EnumSymbolIndex { index: usize, num_variants: usize },
 
-    #[error("Enum symbol not found")]
-    GetEnumSymbol,
+    #[error("Enum symbol not found {0}")]
+    GetEnumSymbol(String),
+
+    #[error("Unable to decode enum index")]
+    GetEnumUnknonwIndexValue,
 
     #[error("Scale {scale} is greater than precision {precision}")]
     GetScaleAndPrecision { scale: usize, precision: usize },

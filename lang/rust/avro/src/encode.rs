@@ -16,15 +16,12 @@
 // under the License.
 
 use crate::{
-    schema::{Name, Namespace, ResolvedSchema, Schema, SchemaKind},
+    schema::{NamesRef, Namespace, ResolvedSchema, Schema, SchemaKind},
     types::{Value, ValueKind},
     util::{zig_i32, zig_i64},
     AvroResult, Error,
 };
-use std::{
-    collections::HashMap,
-    convert::{TryFrom, TryInto},
-};
+use std::convert::{TryFrom, TryInto};
 
 /// Encode a `Value` into avro format.
 ///
@@ -53,16 +50,15 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
 fn encode_internal(
     value: &Value,
     schema: &Schema,
-    names: &HashMap<Name, &Schema>,
+    names: &NamesRef,
     enclosing_namespace: &Namespace,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
     if let Schema::Ref { ref name } = schema {
+        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let resolved = *names
-            .get(&name.fully_qualified_name(enclosing_namespace))
-            .ok_or_else(|| {
-                Error::SchemaResolutionError(name.fully_qualified_name(enclosing_namespace))
-            })?;
+            .get(&fully_qualified_name)
+            .ok_or(Error::SchemaResolutionError(fully_qualified_name))?;
         return encode_internal(value, resolved, names, enclosing_namespace, buffer);
     }
 
@@ -124,8 +120,8 @@ fn encode_internal(
                 if let Some(index) = symbols.iter().position(|item| item == s) {
                     encode_int(index as i32, buffer);
                 } else {
-                    error!("Invalid symbol string");
-                    return Err(Error::GetEnumSymbol);
+                    error!("Invalid symbol string {:?}.", &s[..]);
+                    return Err(Error::GetEnumSymbol(s.clone()));
                 }
             }
             _ => {
@@ -224,20 +220,30 @@ pub fn encode_to_vec(value: &Value, schema: &Schema) -> AvroResult<Vec<u8>> {
 }
 
 #[cfg(test)]
-mod tests {
+#[allow(clippy::expect_fun_call)]
+pub(crate) mod tests {
     use super::*;
     use std::collections::HashMap;
+    pub(crate) fn success(value: &Value, schema: &Schema) -> String {
+        format!(
+            "Value: {:?}\n should encode with schema:\n{:?}",
+            &value, &schema
+        )
+    }
 
     #[test]
     fn test_encode_empty_array() {
         let mut buf = Vec::new();
         let empty: Vec<Value> = Vec::new();
         encode(
-            &Value::Array(empty),
+            &Value::Array(empty.clone()),
             &Schema::Array(Box::new(Schema::Int)),
             &mut buf,
         )
-        .expect("message should encode");
+        .expect(&success(
+            &Value::Array(empty),
+            &Schema::Array(Box::new(Schema::Int)),
+        ));
         assert_eq!(vec![0u8], buf);
     }
 
@@ -246,11 +252,14 @@ mod tests {
         let mut buf = Vec::new();
         let empty: HashMap<String, Value> = HashMap::new();
         encode(
-            &Value::Map(empty),
+            &Value::Map(empty.clone()),
             &Schema::Map(Box::new(Schema::Int)),
             &mut buf,
         )
-        .expect("message should encode");
+        .expect(&success(
+            &Value::Map(empty),
+            &Schema::Map(Box::new(Schema::Int)),
+        ));
         assert_eq!(vec![0u8], buf);
     }
 
@@ -287,7 +296,7 @@ mod tests {
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
         let outer_value =
             Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
-        encode(&outer_value, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value, &schema, &mut buf).expect(&success(&outer_value, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -335,7 +344,7 @@ mod tests {
                 Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
             ),
         ]);
-        encode(&outer_value, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value, &schema, &mut buf).expect(&success(&outer_value, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -380,7 +389,7 @@ mod tests {
                 Value::Map(vec![("akey".into(), inner_value2)].into_iter().collect()),
             ),
         ]);
-        encode(&outer_value, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value, &schema, &mut buf).expect(&success(&outer_value, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -427,7 +436,7 @@ mod tests {
         )]);
         let outer_value =
             Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
-        encode(&outer_value, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value, &schema, &mut buf).expect(&success(&outer_value, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -475,7 +484,7 @@ mod tests {
             ),
             ("b".into(), Value::Array(vec![inner_value1])),
         ]);
-        encode(&outer_value, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value, &schema, &mut buf).expect(&success(&outer_value, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -514,7 +523,7 @@ mod tests {
             ("a".into(), Value::Union(1, Box::new(inner_value1))),
             ("b".into(), inner_value2.clone()),
         ]);
-        encode(&outer_value1, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value1, &schema, &mut buf).expect(&success(&outer_value1, &schema));
         assert!(!buf.is_empty());
 
         buf.drain(..);
@@ -522,7 +531,7 @@ mod tests {
             ("a".into(), Value::Union(0, Box::new(Value::Null))),
             ("b".into(), inner_value2),
         ]);
-        encode(&outer_value2, &schema, &mut buf).expect("message should encode");
+        encode(&outer_value2, &schema, &mut buf).expect(&success(&outer_value1, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -602,13 +611,16 @@ mod tests {
         ]);
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_1, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_1, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_1, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_2, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_2, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_2, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_3, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_3, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_3, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -689,13 +701,16 @@ mod tests {
         ]);
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_1, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_1, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_1, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_2, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_2, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_2, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_3, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_3, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_3, &schema));
         assert!(!buf.is_empty());
     }
 
@@ -777,13 +792,16 @@ mod tests {
         ]);
 
         let mut buf = Vec::new();
-        encode(&outer_record_variation_1, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_1, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_1, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_2, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_2, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_2, &schema));
         assert!(!buf.is_empty());
         buf.drain(..);
-        encode(&outer_record_variation_3, &schema, &mut buf).expect("message should encode");
+        encode(&outer_record_variation_3, &schema, &mut buf)
+            .expect(&success(&outer_record_variation_3, &schema));
         assert!(!buf.is_empty());
     }
 }

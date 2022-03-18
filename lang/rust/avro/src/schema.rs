@@ -240,6 +240,8 @@ pub type Documentation = Option<String>;
 pub type Aliases = Option<Vec<String>>;
 /// Represents Schema lookup within a schema env
 pub(crate) type Names = HashMap<Name, Schema>;
+/// Represents Schema lookup within a schema
+pub(crate) type NamesRef<'a> = HashMap<Name, &'a Schema>;
 /// Represents the namespace for Named Schema
 pub type Namespace = Option<String>;
 
@@ -263,7 +265,7 @@ impl Name {
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
-    pub fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
             .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
@@ -334,7 +336,7 @@ impl fmt::Display for Name {
 }
 
 pub(crate) struct ResolvedSchema<'s> {
-    names_ref: HashMap<Name, &'s Schema>,
+    names_ref: NamesRef<'s>,
     root_schema: &'s Schema,
 }
 
@@ -353,13 +355,13 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub fn get_names(&self) -> &HashMap<Name, &'s Schema> {
+    pub fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
     fn from_internal(
         schema: &'s Schema,
-        names_ref: &mut HashMap<Name, &'s Schema>,
+        names_ref: &mut NamesRef<'s>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<()> {
         match schema {
@@ -391,7 +393,7 @@ impl<'s> ResolvedSchema<'s> {
                 {
                     Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
                 } else {
-                    let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
+                    let record_namespace = fully_qualified_name.namespace;
                     for field in fields {
                         Self::from_internal(&field.schema, names_ref, &record_namespace)?
                     }
