@@ -1,7 +1,8 @@
 ---
 title: "Java API"
 linkTitle: "Java API"
-weight: 4
+weight: 100
+manualLink: next/api/java/
 ---
 
 <!--
@@ -25,4 +26,4 @@ weight: 4
 
 -->
 
-The Javadocs could be found [here](https://avro.apache.org/docs/current/api/java/index.html)
+The Javadocs can be found <a href="next/api/java/">here</a>.
