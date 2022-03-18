@@ -95,7 +95,7 @@ pub enum Error {
     GetEnumSymbol(String),
 
     #[error("Unable to decode enum index")]
-    GetEnumUnknonwIndexValue,
+    GetEnumUnknownIndexValue,
 
     #[error("Scale {scale} is greater than precision {precision}")]
     GetScaleAndPrecision { scale: usize, precision: usize },

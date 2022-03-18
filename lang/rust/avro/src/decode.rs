@@ -267,7 +267,7 @@ fn decode_internal<R: Read>(
                     });
                 }
             } else {
-                return Err(Error::GetEnumUnknonwIndexValue);
+                return Err(Error::GetEnumUnknownIndexValue);
             })
         }
         Schema::Ref { ref name } => {
