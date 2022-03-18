@@ -3,6 +3,12 @@ title: Community
 menu:
   main:
     weight: 40
+aliases:
+- /irc.html
+- /issue_tracking.html
+- /mailing_lists.html
+- /mail/
+- /version_control.html
 ---
 
 <!--
