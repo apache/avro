@@ -1110,7 +1110,8 @@ namespace Avro
         /// Writes each types in each namespaces into individual files.
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
-        public virtual void WriteTypes(string outputdir)
+        /// <param name="createNamespaceDirectories">if set to <c>true</c> [create namespace directories].</param>
+        public virtual void WriteTypes(string outputdir, bool createNamespaceDirectories = true)
         {
             var cscp = new CSharpCodeProvider();
 
@@ -1125,9 +1126,12 @@ namespace Avro
                 var ns = nsc[i];
 
                 string dir = outputdir;
-                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                if (createNamespaceDirectories)
                 {
-                    dir = Path.Combine(dir, name);
+                    foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                    {
+                        dir = Path.Combine(dir, name);
+                    }
                 }
 
                 Directory.CreateDirectory(dir);
