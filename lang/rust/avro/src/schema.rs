@@ -355,7 +355,10 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub fn get_names(&self) -> &NamesRef<'s> {
+    pub(crate) fn get_root_schema(&self) -> &'s Schema {
+        self.root_schema
+    }
+    pub(crate) fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 

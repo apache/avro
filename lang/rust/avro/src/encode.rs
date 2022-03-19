@@ -47,7 +47,7 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
     zig_i32(i, buffer)
 }
 
-fn encode_internal(
+pub(crate) fn encode_internal(
     value: &Value,
     schema: &Schema,
     names: &NamesRef,
