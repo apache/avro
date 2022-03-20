@@ -498,16 +498,16 @@ namespace Avro.Test.AvroGen
             })]
         [TestCase(
             _schema_avro_2883,
-            "my.avro.ns", "your.whatever.namespace",
+            "my.avro.ns", "my.csharp.ns",
             new string[]
             {
-                "your.whatever.namespace.TestModel",
-                "your.whatever.namespace.EventType",
+                "my.csharp.ns.TestModel",
+                "my.csharp.ns.EventType",
             },
             new string[]
             {
-                "your/whatever/namespace/TestModel.cs",
-                "your/whatever/namespace/EventType.cs"
+                "my/csharp/ns/TestModel.cs",
+                "my/csharp/ns/EventType.cs"
             })]
         [TestCase(
             _schema_avro_3046,
