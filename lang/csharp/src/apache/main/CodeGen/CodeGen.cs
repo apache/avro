@@ -58,14 +58,6 @@ namespace Avro
         public IList<Protocol> Protocols { get; private set; }
 
         /// <summary>
-        /// Gets mapping of Avro namespaces to C# namespaces.
-        /// </summary>
-        /// <value>
-        /// The namespace mapping.
-        /// </value>
-        public IDictionary<string, string> NamespaceMapping { get; private set; }
-
-        /// <summary>
         /// Gets list of generated namespaces.
         /// </summary>
         /// <value>
@@ -80,7 +72,6 @@ namespace Avro
         {
             Schemas = new List<Schema>();
             Protocols = new List<Protocol>();
-            NamespaceMapping = new Dictionary<string, string>();
             NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         }
 
@@ -129,9 +120,7 @@ namespace Avro
 
             if (!NamespaceLookup.TryGetValue(name, out CodeNamespace ns))
             {
-                ns = NamespaceMapping.TryGetValue(name, out string csharpNamespace)
-                    ? new CodeNamespace(csharpNamespace)
-                    : new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+                ns = new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
 
                 foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
                 {
