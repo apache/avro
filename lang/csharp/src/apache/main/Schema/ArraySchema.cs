@@ -48,11 +48,22 @@ namespace Avro
         }
 
         /// <summary>
+        /// Creates a new <see cref="ArraySchema"/>
+        /// </summary>
+        /// <param name="items">Schema for the array items type</param>
+        /// <param name="customAttributes">Dictionary that provides access to custom properties</param>
+        /// <returns></returns>
+        public static ArraySchema Create(Schema items, PropertyMap customAttributes = null)
+        {
+            return new ArraySchema(items, customAttributes);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ArraySchema"/> class.
         /// </summary>
-        /// <param name="items">schema for the array items type.</param>
-        /// <param name="customAttributes">dictionary that provides access to custom properties.</param>
-        public ArraySchema(Schema items, PropertyMap customAttributes = null)
+        /// <param name="items">Schema for the array items type</param>
+        /// <param name="customAttributes">Dictionary that provides access to custom properties</param>
+        private ArraySchema(Schema items, PropertyMap customAttributes)
             : base(Type.Array, customAttributes)
         {
             if (null == items) throw new ArgumentNullException(nameof(items));

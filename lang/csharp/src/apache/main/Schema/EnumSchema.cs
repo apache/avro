@@ -31,7 +31,7 @@ namespace Avro
         /// <summary>
         /// List of strings representing the enum symbols
         /// </summary>
-        public IList<string> Symbols { get; private set;  }
+        public IList<string> Symbols { get; private set; }
 
         /// <summary>
         /// The default token to use when deserializing an enum when the provided token is not found
@@ -51,28 +51,29 @@ namespace Avro
         /// <summary>
         /// Initializes a new instance of the <see cref="EnumSchema"/> class.
         /// </summary>
-        /// <param name="name">name of enum.</param>
-        /// <param name="space">namespace of enum.</param>
-        /// <param name="aliases">list of aliases for the name.</param>
-        /// <param name="symbols">list of enum symbols.</param>
-        /// <param name="customProperties">custom properties on this schema.</param>
-        /// <param name="doc">documentation for this named schema.</param>
+        /// <param name="name">Name of enum</param>
+        /// <param name="space">Namespace of enum</param>
+        /// <param name="aliases">List of aliases for the name</param>
+        /// <param name="symbols">List of enum symbols</param>
+        /// <param name="customProperties">Custom properties on this schema</param>
+        /// <param name="doc">Documentation for this named schema</param>
         /// <param name="defaultSymbol"></param>
-        public EnumSchema(string name,
+        public static EnumSchema Create(string name,
             IEnumerable<string> symbols,
             string space = null,
             IEnumerable<string> aliases = null,
             PropertyMap customProperties = null,
             string doc = null,
             string defaultSymbol = null)
-            : this(new SchemaName(name, space, null, doc),
+        {
+            return new EnumSchema(new SchemaName(name, space, null, doc),
                   Aliases.GetSchemaNames(aliases, name, space),
                   symbols.ToList(),
                   CreateSymbolsMap(symbols),
                   customProperties,
                   new SchemaNames(),
-                  doc, defaultSymbol)
-        {
+                  doc,
+                  defaultSymbol);
         }
 
         /// <summary>
@@ -179,7 +180,7 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
-            if (null != Default) 
+            if (null != Default)
             {
                 writer.WritePropertyName("default");
                 writer.WriteValue(Default);

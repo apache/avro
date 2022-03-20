@@ -65,11 +65,22 @@ namespace Avro
         }
 
         /// <summary>
+        /// Creates a new instance of <see cref="MapSchema"/>
+        /// </summary>
+        /// <param name="valueSchema">Schema for map values type</param>
+        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
+        /// <returns></returns>
+        public static MapSchema Create(Schema valueSchema, PropertyMap cutsomProperties = null)
+        {
+            return new MapSchema(valueSchema, cutsomProperties);
+        }
+
+        /// <summary>
         /// Constructor for map schema class
         /// </summary>
-        /// <param name="valueSchema">schema for map values type</param>
-        /// <param name="cutsomProperties">dictionary that provides access to custom properties</param>
-        public MapSchema(Schema valueSchema, PropertyMap cutsomProperties = null)
+        /// <param name="valueSchema">Schema for map values type</param>
+        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
+        private MapSchema(Schema valueSchema, PropertyMap cutsomProperties)
             : base(Type.Map, cutsomProperties)
         {
             if (null == valueSchema) throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");

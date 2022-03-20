@@ -35,15 +35,15 @@ namespace Avro
         /// <summary>
         /// Initializes a new instance of the <see cref="FixedSchema"/> class.
         /// </summary>
-        /// <param name="name">name of the fixed schema</param>
-        /// <param name="aliases">list of aliases for the name</param>
-        /// <param name="size">fixed size</param>
-        /// <param name="space">namespace of fixed</param>
-        /// <param name="customProperties">custom properties on this schema</param>
-        /// <param name="doc">documentation for this named schema</param>
-        public FixedSchema(string name, int size, string space = null, IEnumerable<string> aliases = null, PropertyMap customProperties = null, string doc = null)
-            : this(new SchemaName(name, space, null, doc), Aliases.GetSchemaNames(aliases, name, space), size, customProperties, new SchemaNames(), doc)
+        /// <param name="name">Name of the fixed schema</param>
+        /// <param name="aliases">List of aliases for the name</param>
+        /// <param name="size">Fixed size</param>
+        /// <param name="space">Namespace of fixed</param>
+        /// <param name="customProperties">Custom properties on this schema</param>
+        /// <param name="doc">Documentation for this named schema</param>
+        public static FixedSchema Create(string name, int size, string space = null, IEnumerable<string> aliases = null, PropertyMap customProperties = null, string doc = null)
         {
+            return new FixedSchema(new SchemaName(name, space, null, doc), Aliases.GetSchemaNames(aliases, name, space), size, customProperties, new SchemaNames(), doc);
         }
 
         /// <summary>

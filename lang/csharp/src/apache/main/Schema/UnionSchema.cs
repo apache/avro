@@ -67,11 +67,22 @@ namespace Avro
         }
 
         /// <summary>
+        /// Creates a new <see cref="UnionSchema"/>
+        /// </summary>
+        /// <param name="schemas">The union schemas</param>
+        /// <param name="customProperties">Dictionary that provides access to custom properties</param>
+        /// <returns>New <see cref="UnionSchema"/></returns>
+        public static UnionSchema Create(List<Schema> schemas, PropertyMap customProperties = null)
+        {
+            return new UnionSchema(schemas, customProperties);
+        }
+
+        /// <summary>
         /// Contructor for union schema
         /// </summary>
         /// <param name="schemas"></param>
         /// <param name="customProperties">dictionary that provides access to custom properties</param>
-        public UnionSchema(List<Schema> schemas, PropertyMap customProperties = null)
+        private UnionSchema(List<Schema> schemas, PropertyMap customProperties)
             : base(Type.Union, customProperties)
         {
             if (schemas == null)

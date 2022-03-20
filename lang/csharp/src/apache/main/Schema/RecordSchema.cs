@@ -64,7 +64,7 @@ namespace Avro
         private bool request;
 
         /// <summary>
-        /// Constructor for the record schema
+        /// Creates a new instance of <see cref="RecordSchema"/>
         /// </summary>
         /// <param name="name">name of the record schema</param>
         /// <param name="fields">list of fields for the record</param>
@@ -72,23 +72,23 @@ namespace Avro
         /// <param name="aliases">list of aliases for the record name</param>
         /// <param name="customProperties">custom properties on this schema</param>
         /// <param name="doc">documentation for this named schema</param>
-        public RecordSchema(string name,
+        public static RecordSchema Create(string name,
             List<Field> fields,
             string space = null,
             IEnumerable<string> aliases = null,
             PropertyMap customProperties = null,
             string doc = null)
-                                : this(Type.Record,
-                                      new SchemaName(name, space, null, doc),
-                                      Aliases.GetSchemaNames(aliases, name, space),
-                                      customProperties,
-                                      fields,
-                                      false,
-                                      CreateFieldMap(fields),
-                                      CreateFieldMap(fields, true),
-                                      new SchemaNames(),
-                                      doc)
         {
+            return new RecordSchema(Type.Record,
+                  new SchemaName(name, space, null, doc),
+                  Aliases.GetSchemaNames(aliases, name, space),
+                  customProperties,
+                  fields,
+                  false,
+                  CreateFieldMap(fields),
+                  CreateFieldMap(fields, true),
+                  new SchemaNames(),
+                  doc);
         }
 
         private static IEnumerable<Schema> EnumerateSchemasRecursive(Schema schema)
@@ -268,7 +268,7 @@ namespace Avro
             var jorder = JsonHelper.GetOptionalString(jfield, "order");
             Field.SortOrder sortorder = Field.SortOrder.ignore;
             if (null != jorder)
-                sortorder = (Field.SortOrder) Enum.Parse(typeof(Field.SortOrder), jorder);
+                sortorder = (Field.SortOrder)Enum.Parse(typeof(Field.SortOrder), jorder);
 
             var aliases = Field.GetAliases(jfield);
             var props = Schema.GetProperties(jfield);

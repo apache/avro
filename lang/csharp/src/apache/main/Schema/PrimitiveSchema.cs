@@ -31,9 +31,20 @@ namespace Avro
         /// </summary>
         /// <param name="type"></param>
         /// <param name="customProperties">dictionary that provides access to custom properties</param>
-        public PrimitiveSchema(Type type, PropertyMap customProperties = null)
+        private PrimitiveSchema(Type type, PropertyMap customProperties)
             : base(type, customProperties)
         {
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="PrimitiveSchema"/>
+        /// </summary>
+        /// <param name="type">The primitive type to create</param>
+        /// <param name="customProperties">Dictionary that provides access to custom properties</param>
+        /// <returns></returns>
+        public static PrimitiveSchema Create(Type type, PropertyMap customProperties = null)
+        {
+            return new PrimitiveSchema(type, customProperties);
         }
 
         /// <summary>
