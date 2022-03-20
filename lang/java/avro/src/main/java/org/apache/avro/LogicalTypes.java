@@ -21,6 +21,7 @@ package org.apache.avro;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -30,6 +31,22 @@ public class LogicalTypes {
 
   private static final Logger LOG = LoggerFactory.getLogger(LogicalTypes.class);
 
+  /**
+   * Factory interface and SPI for logical types. A {@code LogicalTypeFactory} can
+   * be registered in two ways:
+   *
+   * <ol>
+   * <li>Manually, via {@link #register(LogicalTypeFactory)} or
+   * {@link #register(String, LogicalTypeFactory)}</li>
+   *
+   * <li>Automatically, when the {@code LogicalTypeFactory} implementation is a
+   * public class with a public no-arg constructor, is named in a file called
+   * {@code /META-INF/services/org.apache.avro.LogicalTypes$LogicalTypeFactory},
+   * and both are available in the classpath</li>
+   * </ol>
+   *
+   * @see ServiceLoader
+   */
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
 
@@ -39,6 +56,12 @@ public class LogicalTypes {
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
+
+  static {
+    for (LogicalTypeFactory logicalTypeFactory : ServiceLoader.load(LogicalTypeFactory.class)) {
+      register(logicalTypeFactory);
+    }
+  }
 
   /**
    * Register a logical type.

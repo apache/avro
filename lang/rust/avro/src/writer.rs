@@ -17,7 +17,7 @@
 
 //! Logic handling writing in Avro format at user level.
 use crate::{
-    encode::{encode, encode_ref, encode_to_vec},
+    encode::{encode, encode_to_vec},
     schema::Schema,
     ser::Serializer,
     types::Value,
@@ -266,7 +266,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Append a raw Avro Value to the payload avoiding to encode it again.
     fn append_raw(&mut self, value: &Value, schema: &Schema) -> AvroResult<usize> {
-        self.append_bytes(encode_to_vec(value, schema).as_ref())
+        self.append_bytes(encode_to_vec(value, schema)?.as_ref())
     }
 
     /// Append pure bytes to the payload.
@@ -309,7 +309,7 @@ impl<'a, W: Write> Writer<'a, W> {
             &metadata.into(),
             &Schema::Map(Box::new(Schema::Bytes)),
             &mut header,
-        );
+        )?;
         header.extend_from_slice(&self.marker);
 
         Ok(header)
@@ -341,7 +341,7 @@ fn write_avro_datum<T: Into<Value>>(
     if !avro.validate(schema) {
         return Err(Error::Validation);
     }
-    encode(&avro, schema, buffer);
+    encode(&avro, schema, buffer)?;
     Ok(())
 }
 
@@ -349,7 +349,7 @@ fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> Avro
     if !value.validate(schema) {
         return Err(Error::Validation);
     }
-    encode_ref(value, schema, buffer);
+    encode(value, schema, buffer)?;
     Ok(())
 }
 
@@ -520,7 +520,8 @@ mod tests {
     fn decimal_fixed() -> TestResult<()> {
         let size = 30;
         let inner = Schema::Fixed {
-            name: Name::new("decimal"),
+            name: Name::new("decimal").unwrap(),
+            aliases: None,
             doc: None,
             size,
         };
@@ -558,7 +559,8 @@ mod tests {
     #[test]
     fn duration() -> TestResult<()> {
         let inner = Schema::Fixed {
-            name: Name::new("duration"),
+            name: Name::new("duration").unwrap(),
+            aliases: None,
             doc: None,
             size: 12,
         };

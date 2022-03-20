@@ -1,7 +1,8 @@
 ---
 title: "C# API"
 linkTitle: "C# API"
-weight: 6
+weight: 103
+manualLink: next/api/csharp/html/
 ---
 
 <!--
@@ -25,4 +26,4 @@ weight: 6
 
 -->
 
-The C# API documentation could be found <a href="../external/csharp/index.html">here</a>.
+The C# API documentation can be found <a href="next/api/csharp/html/">here</a>.

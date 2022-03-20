@@ -17,6 +17,10 @@
  */
 package org.apache.avro;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -47,5 +51,18 @@ public class TestProtocol {
     assertNotNull(parsedStringProtocol);
     assertNotNull(parsedArrayOfStringProtocol);
     assertEquals(parsedStringProtocol.toString(), parsedArrayOfStringProtocol.toString());
+  }
+
+  @Test
+  public void testCopyMessage() {
+    Protocol p = new Protocol("P", "protocol", "foo");
+    Schema req1 = SchemaBuilder.record("foo.req1").fields().endRecord();
+    Protocol.Message m1 = p.createMessage("M", "message", singletonMap("foo", "bar"), req1);
+    Schema req2 = SchemaBuilder.record("foo.req2").fields().name("test").type().booleanType().noDefault().endRecord();
+
+    Protocol.Message m2 = p.createMessage(m1, req2);
+    assertEquals(m1.getName(), m2.getName());
+    assertEquals(m1.getDoc(), m2.getDoc());
+    assertEquals(m1.getProp("foo"), m2.getProp("foo"));
   }
 }
