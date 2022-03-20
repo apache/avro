@@ -124,10 +124,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 Ok(n)
             }
             None => {
-                if !self.attempted_resolve {
-                    self.attempted_resolve = true;
-                }
                 let rs = ResolvedSchema::try_from(self.schema)?;
+                self.attempted_resolve = true;
                 self.resolved_schema = Some(rs);
                 self.append_value_ref(value)
             }
