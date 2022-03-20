@@ -419,77 +419,69 @@ impl Value {
         schema: &Schema,
         schemas_by_name: &mut HashMap<Name, Schema>,
     ) -> AvroResult<Self> {
-        pub fn resolve0(
-            value: &mut Value,
-            schema: &Schema,
-            schemas_by_name: &mut HashMap<Name, Schema>,
-        ) -> AvroResult<Value> {
-            // Check if this schema is a union, and if the reader schema is not.
-            if SchemaKind::from(&value.clone()) == SchemaKind::Union
-                && SchemaKind::from(schema) != SchemaKind::Union
-            {
-                // Pull out the Union, and attempt to resolve against it.
-                let v = match value {
-                    Value::Union(_i, b) => &**b,
-                    _ => unreachable!(),
-                };
-                *value = v.clone();
-            }
-            let val: Value = value.clone();
-            match *schema {
-                Schema::Ref { ref name } => {
-                    if let Some(resolved) = schemas_by_name.get(name) {
-                        resolve0(value, resolved, &mut schemas_by_name.clone())
-                    } else {
-                        Err(Error::SchemaResolutionError(name.clone()))
-                    }
-                }
-                Schema::Null => val.resolve_null(),
-                Schema::Boolean => val.resolve_boolean(),
-                Schema::Int => val.resolve_int(),
-                Schema::Long => val.resolve_long(),
-                Schema::Float => val.resolve_float(),
-                Schema::Double => val.resolve_double(),
-                Schema::Bytes => val.resolve_bytes(),
-                Schema::String => val.resolve_string(),
-                Schema::Fixed { ref name, size, .. } => {
-                    schemas_by_name.insert(name.clone(), schema.clone());
-                    val.resolve_fixed(size)
-                }
-                Schema::Union(ref inner) => val.resolve_union(inner, schemas_by_name),
-                Schema::Enum {
-                    ref name,
-                    ref symbols,
-                    ..
-                } => {
-                    schemas_by_name.insert(name.clone(), schema.clone());
-                    val.resolve_enum(symbols)
-                }
-                Schema::Array(ref inner) => val.resolve_array(inner, schemas_by_name),
-                Schema::Map(ref inner) => val.resolve_map(inner, schemas_by_name),
-                Schema::Record {
-                    ref name,
-                    ref fields,
-                    ..
-                } => {
-                    schemas_by_name.insert(name.clone(), schema.clone());
-                    val.resolve_record(fields, schemas_by_name)
-                }
-                Schema::Decimal {
-                    scale,
-                    precision,
-                    ref inner,
-                } => val.resolve_decimal(precision, scale, inner),
-                Schema::Date => val.resolve_date(),
-                Schema::TimeMillis => val.resolve_time_millis(),
-                Schema::TimeMicros => val.resolve_time_micros(),
-                Schema::TimestampMillis => val.resolve_timestamp_millis(),
-                Schema::TimestampMicros => val.resolve_timestamp_micros(),
-                Schema::Duration => val.resolve_duration(),
-                Schema::Uuid => val.resolve_uuid(),
-            }
+        // Check if this schema is a union, and if the reader schema is not.
+        if SchemaKind::from(&self) == SchemaKind::Union
+            && SchemaKind::from(schema) != SchemaKind::Union
+        {
+            // Pull out the Union, and attempt to resolve against it.
+            let v = match self {
+                Value::Union(_i, b) => *b,
+                _ => unreachable!(),
+            };
+            self = v;
         }
-        resolve0(&mut self, schema, schemas_by_name)
+        match *schema {
+            Schema::Ref { ref name } => {
+                if let Some(resolved) = schemas_by_name.get(name) {
+                    self.resolve_internal(resolved, &mut schemas_by_name.clone())
+                } else {
+                    Err(Error::SchemaResolutionError(name.clone()))
+                }
+            }
+            Schema::Null => self.resolve_null(),
+            Schema::Boolean => self.resolve_boolean(),
+            Schema::Int => self.resolve_int(),
+            Schema::Long => self.resolve_long(),
+            Schema::Float => self.resolve_float(),
+            Schema::Double => self.resolve_double(),
+            Schema::Bytes => self.resolve_bytes(),
+            Schema::String => self.resolve_string(),
+            Schema::Fixed { ref name, size, .. } => {
+                schemas_by_name.insert(name.clone(), schema.clone());
+                self.resolve_fixed(size)
+            }
+            Schema::Union(ref inner) => self.resolve_union(inner, schemas_by_name),
+            Schema::Enum {
+                ref name,
+                ref symbols,
+                ..
+            } => {
+                schemas_by_name.insert(name.clone(), schema.clone());
+                self.resolve_enum(symbols)
+            }
+            Schema::Array(ref inner) => self.resolve_array(inner, schemas_by_name),
+            Schema::Map(ref inner) => self.resolve_map(inner, schemas_by_name),
+            Schema::Record {
+                ref name,
+                ref fields,
+                ..
+            } => {
+                schemas_by_name.insert(name.clone(), schema.clone());
+                self.resolve_record(fields, schemas_by_name)
+            }
+            Schema::Decimal {
+                scale,
+                precision,
+                ref inner,
+            } => self.resolve_decimal(precision, scale, inner),
+            Schema::Date => self.resolve_date(),
+            Schema::TimeMillis => self.resolve_time_millis(),
+            Schema::TimeMicros => self.resolve_time_micros(),
+            Schema::TimestampMillis => self.resolve_timestamp_millis(),
+            Schema::TimestampMicros => self.resolve_timestamp_micros(),
+            Schema::Duration => self.resolve_duration(),
+            Schema::Uuid => self.resolve_uuid(),
+        }   
     }
 
     fn resolve_uuid(self) -> Result<Self, Error> {
