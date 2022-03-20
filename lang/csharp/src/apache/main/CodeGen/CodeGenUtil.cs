@@ -82,7 +82,6 @@ namespace Avro
         {
             NamespaceImports = new CodeNamespaceImport[] {
                 new CodeNamespaceImport("System"),
-                new CodeNamespaceImport("System.CodeDom.Compiler"),
                 new CodeNamespaceImport("System.Collections.Generic"),
                 new CodeNamespaceImport("System.Text"),
                 new CodeNamespaceImport("global::Avro"),
@@ -152,7 +151,7 @@ namespace Avro
                 System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             CodeAttributeDeclaration codeAttributeDeclaration =
-                new CodeAttributeDeclaration(generatedCodeAttribute.GetType().Name,
+                new CodeAttributeDeclaration(generatedCodeAttribute.GetType().FullName,
                     new CodeAttributeArgument(
                         new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
                     new CodeAttributeArgument(
