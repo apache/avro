@@ -200,7 +200,7 @@ namespace Avro
         /// </summary>
         /// <param name="input">input schema or protocol definition.</param>
         /// <param name="namespaceMapping">namespace mappings object.</param>
-        public static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        private static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             if (namespaceMapping == null || input == null)
                 return input;
