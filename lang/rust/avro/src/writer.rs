@@ -37,8 +37,6 @@ pub struct Writer<'a, W> {
     writer: W,
     #[builder(default, setter(skip))]
     resolved_schema: Option<ResolvedSchema<'a>>,
-    #[builder(default = false, setter(skip))]
-    attempted_resolve: bool,
     #[builder(default = Codec::Null)]
     codec: Codec,
     #[builder(default = DEFAULT_BLOCK_SIZE)]
@@ -64,7 +62,6 @@ impl<'a, W: Write> Writer<'a, W> {
     pub fn new(schema: &'a Schema, writer: W) -> Self {
         let mut w = Self::builder().schema(schema).writer(writer).build();
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
-        w.attempted_resolve = true;
         w
     }
 
@@ -77,7 +74,6 @@ impl<'a, W: Write> Writer<'a, W> {
             .codec(codec)
             .build();
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
-        w.attempted_resolve = true;
         w
     }
 
@@ -125,7 +121,6 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             None => {
                 let rs = ResolvedSchema::try_from(self.schema)?;
-                self.attempted_resolve = true;
                 self.resolved_schema = Some(rs);
                 self.append_value_ref(value)
             }
