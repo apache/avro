@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Avro
 {
@@ -148,13 +149,13 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
+
+                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
+
                 Protocol protocol = Protocol.Parse(text);
 
                 CodeGen codegen = new CodeGen();
                 codegen.AddProtocol(protocol);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -174,13 +175,13 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
+
+                text = ReplaceMappedNamespacesInSchema(text, namespaceMapping);
+
                 Schema schema = Schema.Parse(text);
 
                 CodeGen codegen = new CodeGen();
                 codegen.AddSchema(schema);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -193,5 +194,49 @@ namespace Avro
 
             return 0;
         }
+
+        /// <summary>
+        /// Replace namespace(s) in schema or protocol definition.
+        /// </summary>
+        /// <param name="input">input schema or protocol definition.</param>
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        public static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (namespaceMapping == null || input == null)
+                return input;
+
+            // Replace namespace in "namespace" definitions: 
+            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
+            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
+            // Note: It keeps the original whitespaces
+            return Regex.Replace(input, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
+            {
+                // m.Groups[1]: whitespaces before ':'
+                // m.Groups[2]: whitespaces after ':'
+                // m.Groups[3]: the namespace
+
+                string ns = m.Groups[3].Value;
+
+                foreach (var mapping in namespaceMapping)
+                {
+                    // Full match
+                    if (mapping.Key == ns)
+                    {
+                        ns = mapping.Value;
+                        break;
+                    }
+                    else
+                    // Partial match
+                    if (ns.StartsWith($"{mapping.Key}."))
+                    {
+                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
+                        break;
+                    }
+                }
+
+                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
+            });
+        }
+
     }
 }
