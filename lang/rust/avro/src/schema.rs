@@ -228,7 +228,7 @@ impl From<&types::Value> for SchemaKind {
 ///
 /// More information about schema names can be found in the
 /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-#[derive(Clone, Debug, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Name {
     pub name: String,
     pub namespace: Namespace,
@@ -265,7 +265,7 @@ impl Name {
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
-    fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
+    pub(crate) fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
             .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
@@ -332,6 +332,25 @@ impl From<&str> for Name {
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.fullname(None)[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Name {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        serde_json::Value::deserialize(deserializer).and_then(|value| {
+            if let Value::Object(json) = value {
+                Name::parse(&json).map_err(serde::de::Error::custom)
+            } else {
+                use serde::de::Error;
+                Err(D::Error::custom(format!(
+                    "Expected a json object: {:?}",
+                    value
+                )))
+            }
+        })
     }
 }
 
