@@ -8,6 +8,9 @@ namespace Avro.test.Generic
     [TestFixture]
     public class GenericRecordTests
     {
+        private const string baseSchema = "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+            "[{\"name\":\"f2\",\"type\":\"int\"},{\"name\":\"f1\",\"type\":\"boolean\"}]}";
+
         [Test]
         public void TestAddByFieldNameThrows()
         {
@@ -188,10 +191,7 @@ namespace Avro.test.Generic
 
         private GenericRecord GetBaseGenericRecord()
         {
-            string schema = "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
-            "[{\"name\":\"f2\",\"type\":\"int\"},{\"name\":\"f1\",\"type\":\"boolean\"}]}";
-            RecordSchema testSchema = Schema.Parse(schema) as RecordSchema;
-
+            RecordSchema testSchema = Schema.Parse(baseSchema) as RecordSchema;
             GenericRecord genericRecord = new GenericRecord(testSchema);
             genericRecord.Add("f2", 1);
             genericRecord.Add("f1", true);
