@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,13 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGenTool
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -33,7 +33,7 @@ namespace Avro
             }
 
             // Print usage if help requested
-            if (args[0] == "-h" || args[0] == "--help")
+            if (args.Contains("-h") || args.Contains("--help"))
             {
                 Usage();
                 return 0;
@@ -140,9 +140,9 @@ namespace Avro
                 "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
                 "              May be specified multiple times to map multiple namespaces.\n",
                 AppDomain.CurrentDomain.FriendlyName);
-            return;
         }
-        static int GenProtocol(string infile, string outdir,
+
+        public static int GenProtocol(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
@@ -167,7 +167,8 @@ namespace Avro
 
             return 0;
         }
-        static int GenSchema(string infile, string outdir,
+
+        public static int GenSchema(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try

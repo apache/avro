@@ -54,19 +54,21 @@
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
 	Please sort the packages alphabetically
   -->
-	<PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-		<BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
-		<CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
-		<CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
-		<MicrosoftBuildFrameworkVersion>17.0.0</MicrosoftBuildFrameworkVersion>
-		<MicrosoftBuildUtilitiesCoreVersion>17.0.0</MicrosoftBuildUtilitiesCoreVersion>
-		<MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.0.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-		<MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
-		<MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
-		<NUnitVersion>3.13.2</NUnitVersion>
-		<NUnitConsoleRunnerVersion>3.14.0</NUnitConsoleRunnerVersion>
-		<NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
-		<ReportGeneratorVersion>5.0.4</ReportGeneratorVersion>
-		<StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
-	</PropertyGroup>
+  <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
+    <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
+    <CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
+	<CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
+    <MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
+    <NUnitVersion>3.13.2</NUnitVersion>
+    <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>
+    <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
+    <ReportGeneratorVersion>5.0.4</ReportGeneratorVersion>
+    <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
+  </PropertyGroup>
 </Project>
