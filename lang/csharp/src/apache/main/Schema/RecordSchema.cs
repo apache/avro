@@ -366,9 +366,9 @@ namespace Avro
          * we can detect it.
          *
          * The infinite loop happens in ToString(), Equals() and GetHashCode() methods.
-         * Though it does not happen for CanRead() because of the current implemenation of UnionSchema's can read,
-         * it could potenitally happen.
-         * We do a linear seach for the marker as we don't expect the list to be very long.
+         * Though it does not happen for CanRead() because of the current implementation of UnionSchema's can read,
+         * it could potentially happen.
+         * We do a linear search for the marker as we don't expect the list to be very long.
          */
         private T protect<T>(Function<T> bypass, Function<T> main, RecordSchema that)
         {
