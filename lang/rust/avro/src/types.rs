@@ -409,6 +409,7 @@ impl Value {
     /// in the Avro specification for the full set of rules of schema
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
+        // FIXME transition to using resolved Schema
         let mut schemas_by_name: HashMap<Name, Schema> = HashMap::new();
         self.resolve_internal(schema, &mut schemas_by_name)
     }
@@ -440,7 +441,7 @@ impl Value {
                     if let Some(resolved) = schemas_by_name.get(name) {
                         resolve0(value, resolved, &mut schemas_by_name.clone())
                     } else {
-                        Err(Error::SchemaResolutionError(name.fullname(None)))
+                        Err(Error::SchemaResolutionError(name.clone()))
                     }
                 }
                 Schema::Null => val.resolve_null(),
@@ -934,6 +935,7 @@ mod tests {
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed").unwrap(),
+            aliases: None,
             doc: None,
         };
 
@@ -947,6 +949,7 @@ mod tests {
     fn validate_enum() {
         let schema = Schema::Enum {
             name: Name::new("some_enum").unwrap(),
+            aliases: None,
             doc: None,
             symbols: vec![
                 "spades".to_string(),
@@ -964,6 +967,7 @@ mod tests {
 
         let other_schema = Schema::Enum {
             name: Name::new("some_other_enum").unwrap(),
+            aliases: None,
             doc: None,
             symbols: vec![
                 "hearts".to_string(),
@@ -988,6 +992,7 @@ mod tests {
         // }
         let schema = Schema::Record {
             name: Name::new("some_record").unwrap(),
+            aliases: None,
             doc: None,
             fields: vec![
                 RecordField {
@@ -1139,6 +1144,7 @@ mod tests {
                 scale: 1,
                 inner: Box::new(Schema::Fixed {
                     name: Name::new("decimal").unwrap(),
+                    aliases: None,
                     size: 20,
                     doc: None
                 })

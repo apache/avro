@@ -4,7 +4,6 @@ tags: ["java"]
 title: "Getting Started (Java)"
 linkTitle: "Getting Started (Java)"
 weight: 2
-avroversion: 3
 ---
 
 <!--

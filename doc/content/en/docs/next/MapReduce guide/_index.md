@@ -1,7 +1,7 @@
 ---
 title: "MapReduce guide"
 linkTitle: "MapReduce guide"
-weight: 7
+weight: 200
 ---
 
 <!--
