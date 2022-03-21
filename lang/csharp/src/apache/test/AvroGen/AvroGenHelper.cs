@@ -93,13 +93,10 @@ namespace Avro.Test.AvroGen
                 {
                     typeof(object).Assembly.Location,
                     typeof(Schema).Assembly.Location,
+                    typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location,
                     Path.Combine(assemblyPath, "System.Runtime.dll"),
                     Path.Combine(assemblyPath, "netstandard.dll")
                 };
-
-#if NETCOREAPP3_1
-                assemblies.Add(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location);
-#endif
 
                 // Create compiler
                 CSharpCompilation compilation = CSharpCompilation
