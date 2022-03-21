@@ -30,7 +30,7 @@ namespace Avro.Test.AvroGen
 {
     [TestFixture]
 
-    class AvroGenTests
+    class AvroGenSchemaTests
     {
         private const string _customConversionWithLogicalTypes = @"
 {
@@ -263,65 +263,6 @@ namespace Avro.Test.AvroGen
   ]
 }";
 
-        private Assembly TestSchema(
-            string schema,
-            IEnumerable<string> typeNamesToCheck = null,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
-            IEnumerable<string> generatedFilesToCheck = null)
-        {
-            // Create temp folder
-            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
-
-            try
-            {
-                // Save schema
-                string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
-                System.IO.File.WriteAllText(schemaFileName, schema);
-
-                // Generate from schema file
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
-
-                // Check if all generated files exist
-                if (generatedFilesToCheck != null)
-                {
-                    foreach (string generatedFile in generatedFilesToCheck)
-                    {
-                        Assert.That(new FileInfo(Path.Combine(outputDir, generatedFile)), Does.Exist);
-                    }
-                }
-
-                // Compile into netstandard library and load assembly
-                Assembly assembly = AvroGenHelper.CompileCSharpFilesIntoLibrary(
-                    new DirectoryInfo(outputDir)
-                        .EnumerateFiles("*.cs", SearchOption.AllDirectories)
-                        .Select(fi => fi.FullName),
-                        uniqueId);
-
-                if (typeNamesToCheck != null)
-                {
-                    // Check if the compiled code has the same number of types defined as the check list
-                    Assert.That(typeNamesToCheck.Count(), Is.EqualTo(assembly.DefinedTypes.Count()));
-
-                    // Check if types available in compiled assembly
-                    foreach (string typeName in typeNamesToCheck)
-                    {
-                        Type type = assembly.GetType(typeName);
-                        Assert.That(type, Is.Not.Null);
-
-                        // Instantiate
-                        object obj = Activator.CreateInstance(type);
-                        Assert.That(obj, Is.Not.Null);
-                    }
-                }
-
-                return assembly;
-            }
-            finally
-            {
-                Directory.Delete(outputDir, true);
-            }
-        }
-
         [TestCase(
             _logicalTypesWithDefaults,
             new string[]
@@ -414,7 +355,7 @@ namespace Avro.Test.AvroGen
             })]
         public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
         
         [TestCase(
@@ -489,7 +430,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> typeNamesToCheck,
             IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
         [TestCase(
@@ -516,7 +457,7 @@ namespace Avro.Test.AvroGen
             // !!! Once it is fixed, this test will fail and this test can be removed
             // https://issues.apache.org/jira/browse/AVRO-2883
             // https://issues.apache.org/jira/browse/AVRO-3046
-            Assert.Throws<AssertionException>(() => TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck));
+            Assert.Throws<AssertionException>(() => AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck));
         }
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
@@ -618,7 +559,7 @@ namespace Avro.Test.AvroGen
             new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
-            Assembly assembly = TestSchema(schema);
+            Assembly assembly = AvroGenHelper.TestSchema(schema);
 
             // Instantiate object
             Type type = assembly.GetType((string)result[0]);
