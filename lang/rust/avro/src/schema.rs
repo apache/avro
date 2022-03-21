@@ -188,8 +188,8 @@ impl SchemaKind {
     }
 }
 
-impl<'a> From<&'a types::Value> for SchemaKind {
-    fn from(value: &'a types::Value) -> Self {
+impl From<&types::Value> for SchemaKind {
+    fn from(value: &types::Value) -> Self {
         use crate::types::Value;
         match value {
             Value::Null => Self::Null,
@@ -355,7 +355,10 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub fn get_names(&self) -> &NamesRef<'s> {
+    pub(crate) fn get_root_schema(&self) -> &'s Schema {
+        self.root_schema
+    }
+    pub(crate) fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
