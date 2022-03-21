@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 
 namespace Avro
@@ -70,9 +71,7 @@ namespace Avro
 
         private const char At = '@';
         private const char Dot = '.';
-
-        private readonly string _assemblyInformationVersion = FileVersionInfo.GetVersionInfo(
-            System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion;
+        private readonly string _assemblyInformationVersion = GetInformationalVersion();
 
         /// <summary>
         /// Fully-qualified name of a <see cref="Object" /> type.
@@ -162,6 +161,16 @@ namespace Avro
                         new CodePrimitiveExpression(generatedCodeAttribute.Version)));
 
             return codeAttributeDeclaration;
+        }
+
+        private static string GetInformationalVersion()
+        {
+            System.Reflection.AssemblyInformationalVersionAttribute attribute =
+                (System.Reflection.AssemblyInformationalVersionAttribute)
+                System.Reflection.Assembly.GetExecutingAssembly()
+                .GetCustomAttribute(typeof(System.Reflection.AssemblyInformationalVersionAttribute));
+
+            return attribute.InformationalVersion;
         }
     }
 }
