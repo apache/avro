@@ -315,6 +315,62 @@ namespace Avro.Test.AvroGen
 }
 ";
 
+        private const string _myProtocol = @"
+{
+  ""protocol"" : ""MyProtocol"",
+  ""namespace"" : ""com.foo"",
+  ""types"" : [
+   {
+	""type"" : ""record"",
+	""name"" : ""A"",
+	""fields"" : [ { ""name"" : ""f1"", ""type"" : ""long"" } ]
+   },
+   {
+	""type"" : ""enum"",
+	""name"" : ""MyEnum"",
+	""symbols"" : [ ""A"", ""B"", ""C"" ]
+   },
+   {
+   ""type"": ""fixed"",
+   ""size"": 16,
+   ""name"": ""MyFixed""
+   },
+   {
+	""type"" : ""record"",
+	""name"" : ""Z"",
+	""fields"" :
+	    [
+		    { ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
+		    { ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
+		    { ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ] },
+		    { ""name"" : ""myUDouble"", ""type"" : [ ""double"", ""null"" ] },
+		    { ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ] },
+		    { ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ] },
+		    { ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ] },
+
+		    { ""name"" : ""myInt"", ""type"" : ""int"" },
+		    { ""name"" : ""myLong"", ""type"" : ""long"" },
+		    { ""name"" : ""myBool"", ""type"" : ""boolean"" },
+		    { ""name"" : ""myDouble"", ""type"" : ""double"" },
+		    { ""name"" : ""myFloat"", ""type"" : ""float"" },
+		    { ""name"" : ""myBytes"", ""type"" : ""bytes"" },
+		    { ""name"" : ""myString"", ""type"" : ""string"" },
+		    { ""name"" : ""myNull"", ""type"" : ""null"" },
+
+		    { ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
+		    { ""name"" : ""myA"", ""type"" : ""A"" },
+		    { ""name"" : ""myE"", ""type"" : ""MyEnum"" },
+		    { ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
+		    { ""name"" : ""myArray2"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""record"", ""name"" : ""newRec"", ""fields"" : [ { ""name"" : ""f1"", ""type"" : ""long""} ] } } },
+		    { ""name"" : ""myMap"", ""type"" : { ""type"" : ""map"", ""values"" : ""string"" } },
+		    { ""name"" : ""myMap2"", ""type"" : { ""type"" : ""map"", ""values"" : ""newRec"" } },
+		    { ""name"" : ""myObject"", ""type"" : [ ""MyEnum"", ""A"", ""null"" ] },
+            { ""name"" : ""myArray3"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""array"", ""items"" : [ ""double"", ""string"", ""null"" ] } } }
+	    ]
+    }
+   ]
+}";
+
         [TestCase(
             _baseball,
             new string[]
@@ -430,6 +486,28 @@ namespace Avro.Test.AvroGen
                 "org/avro/test/Протоколы.cs",
                 "org/avro/test/ПротоколыCallback.cs",
                 "org/avro/test/Структура.cs"
+            })]
+        [TestCase(
+            _myProtocol,
+            new string[]
+            {
+                "com.foo.A",
+                "com.foo.MyEnum",
+                "com.foo.MyFixed",
+                "com.foo.MyProtocol",
+                "com.foo.MyProtocolCallback",
+                "com.foo.newRec",
+                "com.foo.Z"
+            },
+            new string[]
+            {
+                "com/foo/A.cs",
+                "com/foo/MyEnum.cs",
+                "com/foo/MyFixed.cs",
+                "com/foo/MyProtocol.cs",
+                "com/foo/MyProtocolCallback.cs",
+                "com/foo/newRec.cs",
+                "com/foo/Z.cs"
             })]
         public void GenerateProtocol(string protocol, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
