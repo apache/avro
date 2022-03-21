@@ -341,10 +341,10 @@ impl<'de> Deserialize<'de> for Name {
         D: serde::de::Deserializer<'de>,
     {
         serde_json::Value::deserialize(deserializer).and_then(|value| {
+            use serde::de::Error;
             if let Value::Object(json) = value {
-                Name::parse(&json).map_err(serde::de::Error::custom)
+                Name::parse(&json).map_err(D::Error::custom)
             } else {
-                use serde::de::Error;
                 Err(D::Error::custom(format!(
                     "Expected a json object: {:?}",
                     value
