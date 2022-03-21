@@ -6,6 +6,9 @@ layout: project
 menu:
   main:
     weight: 1
+aliases:
+- /linkmap.html
+
 ---
 
 <!--
@@ -28,6 +31,5 @@ menu:
  under the License.
 
 -->
-
 
 Apache Avro project is a member of the Apache Software Foundation!
