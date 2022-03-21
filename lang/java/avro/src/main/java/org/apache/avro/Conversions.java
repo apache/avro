@@ -26,6 +26,7 @@ import org.apache.avro.generic.IndexedRecord;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -79,11 +80,20 @@ public class Conversions {
 
     @Override
     public BigDecimal fromCharSequence(CharSequence value, Schema schema, LogicalType type) {
-      return new BigDecimal(value.toString());
+      BigDecimal result = new BigDecimal(value.toString());
+      int scale = ((LogicalTypes.Decimal) type).getScale();
+      if (result.scale() != scale) {
+        return result.setScale(scale, RoundingMode.UNNECESSARY);
+      }
+      return result;
     }
 
     @Override
     public CharSequence toCharSequence(BigDecimal value, Schema schema, LogicalType type) {
+      int scale = ((LogicalTypes.Decimal) type).getScale();
+      if (scale != value.scale()) {
+        throw new AvroTypeException("Cannot encode decimal with scale " + value.scale() + " as scale " + scale);
+      }
       return value.toString();
     }
 
