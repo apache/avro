@@ -97,16 +97,20 @@ namespace Avro.Test.AvroGen
                     Path.Combine(assemblyPath, "netstandard.dll")
                 };
 
+#if NETCOREAPP3_1
+                assemblies.Add(typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location);
+#endif
+
                 // Create compiler
                 CSharpCompilation compilation = CSharpCompilation
-                    .Create(assemblyName)
-                    .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                    .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
-                    .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
-                    {
-                        string sourceText = System.IO.File.ReadAllText(sourceFile);
-                        return CSharpSyntaxTree.ParseText(sourceText);
-                    }));
+                .Create(assemblyName)
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
+                .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
+                {
+                    string sourceText = System.IO.File.ReadAllText(sourceFile);
+                    return CSharpSyntaxTree.ParseText(sourceText);
+                }));
 
                 // Compile
                 EmitResult compilationResult = compilation.Emit(compilerStream);
