@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CSharp;
 
 namespace Avro
@@ -56,6 +57,15 @@ namespace Avro
         /// The protocols.
         /// </value>
         public IList<Protocol> Protocols { get; private set; }
+
+        /// <summary>
+        /// Gets mapping of Avro namespaces to C# namespaces.
+        /// </summary>
+        /// <value>
+        /// The namespace mapping.
+        /// </value>
+        [Obsolete("NamespaceMapping is not used, use AddProtocol(string ...) or AddSchema(string ...) instead!")]
+        public IDictionary<string, string> NamespaceMapping { get; private set; }
 
         /// <summary>
         /// Gets list of generated namespaces.
@@ -95,11 +105,37 @@ namespace Avro
         }
 
         /// <summary>
+        /// Parses and adds a protocol object to generate code for.
+        /// </summary>
+        /// <param name="protocolText">The protocol.</param>
+        /// <param name="namespaceMapping">namespace mapping key value pairs.</param>
+        public virtual void AddProtocol(string protocolText, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            // Map namespaces
+            protocolText = ReplaceMappedNamespacesInSchema(protocolText, namespaceMapping);
+            Protocol protocol = Protocol.Parse(protocolText);
+            Protocols.Add(protocol);
+        }
+
+        /// <summary>
         /// Adds a schema object to generate code for.
         /// </summary>
         /// <param name="schema">schema object.</param>
         public virtual void AddSchema(Schema schema)
         {
+            Schemas.Add(schema);
+        }
+
+        /// <summary>
+        /// Parses and adds a schema object to generate code for.
+        /// </summary>
+        /// <param name="schemaText">schema object.</param>
+        /// <param name="namespaceMapping">namespace mapping key value pairs.</param>
+        public virtual void AddSchema(string schemaText, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            // Map namespaces
+            schemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
+            Schema schema = Schema.Parse(schemaText);
             Schemas.Add(schema);
         }
 
@@ -1141,6 +1177,49 @@ namespace Avro
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Replace namespace(s) in schema or protocol definition.
+        /// </summary>
+        /// <param name="input">input schema or protocol definition.</param>
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        private static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (namespaceMapping == null || input == null)
+                return input;
+
+            // Replace namespace in "namespace" definitions: 
+            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
+            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
+            // Note: It keeps the original whitespaces
+            return Regex.Replace(input, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
+            {
+                // m.Groups[1]: whitespaces before ':'
+                // m.Groups[2]: whitespaces after ':'
+                // m.Groups[3]: the namespace
+
+                string ns = m.Groups[3].Value;
+
+                foreach (var mapping in namespaceMapping)
+                {
+                    // Full match
+                    if (mapping.Key == ns)
+                    {
+                        ns = mapping.Value;
+                        break;
+                    }
+                    else
+                    // Partial match
+                    if (ns.StartsWith($"{mapping.Key}."))
+                    {
+                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
+                        break;
+                    }
+                }
+
+                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
+            });
         }
     }
 }
