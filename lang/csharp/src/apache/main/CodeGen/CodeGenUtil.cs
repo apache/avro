@@ -151,7 +151,7 @@ namespace Avro
                 System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
             CodeAttributeDeclaration codeAttributeDeclaration =
-                new CodeAttributeDeclaration(generatedCodeAttribute.GetType().FullName,
+                new CodeAttributeDeclaration($"global::{generatedCodeAttribute.GetType().FullName}",
                     new CodeAttributeArgument(
                         new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
                     new CodeAttributeArgument(
