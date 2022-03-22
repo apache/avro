@@ -1307,6 +1307,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 map.serialize_entry("symbols", symbols)?;
                 map.end()
@@ -1319,6 +1322,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 if let Some(ref docstr) = doc {
                     map.serialize_entry("doc", docstr)?;
@@ -3118,5 +3124,89 @@ mod tests {
         for s in &["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_enum_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"enum",
+                            "name":"inner_enum_name",
+                            "namespace": "inner_space",
+                            "symbols":["Extensive","Testing"]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_enum_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_enum_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_fixed_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"fixed",
+                            "name":"inner_fixed_name",
+                            "namespace": "inner_space",
+                            "size":54
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_fixed_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_fixed_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
     }
 }
