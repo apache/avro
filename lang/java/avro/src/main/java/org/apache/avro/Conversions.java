@@ -18,7 +18,6 @@
 
 package org.apache.avro;
 
-import java.math.RoundingMode;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
