@@ -3138,14 +3138,15 @@ mod tests {
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
 
         // confirm we have expected 2 full-names
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
 
         // convert Schema back to JSON string
-        let schema = serde_json::to_string(&schema).expect("test failed");
-        let _schema = Schema::parse_str(&schema).expect("test failed");
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
     }
 
     #[test]
@@ -3179,13 +3180,14 @@ mod tests {
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
 
         // confirm we have expected 2 full-names
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
 
         // convert Schema back to JSON string
-        let schema = serde_json::to_string(&schema).expect("test failed");
-        let _schema = Schema::parse_str(&schema).expect("test failed");
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
     }
 }
