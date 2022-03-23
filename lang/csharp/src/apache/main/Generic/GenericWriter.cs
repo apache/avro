@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Avro.IO;
 
@@ -288,7 +289,7 @@ namespace Avro.Generic
         /// <param name="value"></param>
         protected virtual void EnsureArrayObject(object value)
         {
-            if (value == null || !(value is Array)) throw TypeMismatch(value, "array", "Array");
+            if (value == null || !(value is IList)) throw TypeMismatch(value, "array", "Array");
         }
 
         /// <summary>
@@ -301,7 +302,7 @@ namespace Avro.Generic
         /// <returns>The array length of the given object</returns>
         protected virtual long GetArrayLength(object value)
         {
-            return (value as Array).Length;
+            return (value as IList).Count;
         }
 
         /// <summary>
@@ -315,7 +316,7 @@ namespace Avro.Generic
         /// <returns>The array element at the index</returns>
         protected virtual object GetArrayElement(object value, long index)
         {
-            return (value as Array).GetValue(index);
+            return (value as IList)[(int) index];
         }
 
         /// <summary>
@@ -493,7 +494,7 @@ namespace Avro.Generic
                     //return obj is GenericEnum && (obj as GenericEnum).Schema.Equals(s);
                     return obj is GenericEnum && (obj as GenericEnum).Schema.SchemaName.Equals((sc as EnumSchema).SchemaName);
                 case Schema.Type.Array:
-                    return obj is Array && !(obj is byte[]);
+                    return obj is IList && !(obj is byte[]);
                 case Schema.Type.Map:
                     return obj is IDictionary<string, object>;
                 case Schema.Type.Union:

@@ -24,9 +24,7 @@
 // ------------------------------------------------------------------------------
 namespace Avro.Test.Specific
 {
-	using System;
 	using System.Collections.Generic;
-	using System.Text;
 	using Avro;
 	using Avro.Specific;
 	

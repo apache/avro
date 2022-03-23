@@ -16,14 +16,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.IO;
 using Avro.IO;
 using Avro.Reflect;
 using NUnit.Framework;
-using System.Collections;
 
 namespace Avro.Test
 {

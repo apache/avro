@@ -17,7 +17,6 @@
  */
 using System;
 using System.IO;
-using System.Linq;
 using Avro.IO;
 using System.Collections.Generic;
 using Avro.Generic;
@@ -545,6 +544,38 @@ namespace Avro.Test.Generic
             var rec2 = makeRec(98);
 
             Assert.AreNotEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordAllow_List()
+        {
+            var schema = "{\"type\":\"array\",\"items\": {" +
+                         "\"type\":\"string\"}}";
+
+            var list = new List<string>
+            {
+                "one",
+                "two",
+                "three"
+            };
+
+            test(schema, list);
+        }
+
+        [Test]
+        public void TestRecordAllow_IList()
+        {
+            var schema = "{\"type\":\"array\",\"items\": {" +
+                         "\"type\":\"string\"}}";
+
+            IList<string> list = new string[]
+            {
+                "one",
+                "two",
+                "three"
+            };
+
+            test(schema, list);
         }
 
         private static GenericRecord mkRecord(object[] kv, RecordSchema s)
