@@ -87,11 +87,12 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
   }
 
   private Path getWorkPathFromCommitter(TaskAttemptContext context) throws IOException {
+    OutputCommitter committer = getOutputCommitter(context);
     try {
-      OutputCommitter committer = getOutputCommitter(context);
       return (Path) committer.getClass().getMethod("getWorkPath").invoke(committer);
     } catch (ReflectiveOperationException e) {
-      throw new AvroRuntimeException("Committer does not have method getWorkPath", e);
+      throw new AvroRuntimeException(
+          "Committer: " + committer.getClass().getName() + " does not have method getWorkPath", e);
     }
   }
 
