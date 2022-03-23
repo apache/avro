@@ -339,7 +339,9 @@ impl Value {
 
     fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
         match (self, schema) {
-            (_, &Schema::Ref { ref name }) => names.get(name).map_or(false, |s| self.validate(s)),
+            (_, &Schema::Ref { ref name }) => names
+                .get(name)
+                .map_or(false, |s| self.validate_internal(s, names)),
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
