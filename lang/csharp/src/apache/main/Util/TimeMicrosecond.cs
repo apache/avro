@@ -25,7 +25,7 @@ namespace Avro.Util
     /// </summary>
     public class TimeMicrosecond : LogicalUnixEpochType<TimeSpan>
     {
-        private static readonly TimeSpan _maxTime = new TimeSpan(23, 59, 59);
+        private static readonly TimeSpan _maxTime = new TimeSpan(24, 00, 00);
         private const long _ticksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
         
         /// <summary>
@@ -51,7 +51,7 @@ namespace Avro.Util
         {
             var time = (TimeSpan)logicalValue;
 
-            if (time > _maxTime)
+            if (time >= _maxTime)
                 throw new ArgumentOutOfRangeException(nameof(logicalValue), "A 'time-micros' value can only have the range '00:00:00' to '23:59:59'.");
 
             return (time - UnixEpochDateTime.TimeOfDay).Ticks / _ticksPerMicrosecond;
