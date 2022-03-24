@@ -132,7 +132,17 @@ namespace Avro.Test.Generic
         [TestCase()]
         public void TestLogical_TimeMicrosecond()
         {
-            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(3, 0, 0));
+            long ticksPerMicroSeconds = TimeSpan.TicksPerMillisecond / 1000;
+
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(3, 0, 0)); // 3 hours
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(1 * ticksPerMicroSeconds)); // 1 microsecond
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(10 * ticksPerMicroSeconds)); // 10 microseconds
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(100 * ticksPerMicroSeconds)); // 100 microseconds
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(1000 * ticksPerMicroSeconds)); // 1 millisecond
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(1001 * ticksPerMicroSeconds));  // 1 millisecond + 1 microsecond
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(10001 * ticksPerMicroSeconds)); // 10 millisecond + 1 microseconds
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(100001 * ticksPerMicroSeconds)); // 100 milliseconds + 1 microsecond
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(1000001 * ticksPerMicroSeconds)); // 1 second + 1 microsecond
         }
 
         [TestCase()]
@@ -144,7 +154,18 @@ namespace Avro.Test.Generic
         [TestCase()]
         public void TestLogical_TimestampMicrosecond()
         {
-            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
+            DateTime dateTime = new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc);
+            long ticksPerMicroSeconds = TimeSpan.TicksPerMillisecond / 1000;
+
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime);
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(1 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(10 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(100 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(1000 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(1001 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(10001 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(100001 * ticksPerMicroSeconds));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", dateTime.AddTicks(1000001 * ticksPerMicroSeconds));
         }
 
         [TestCase()]
