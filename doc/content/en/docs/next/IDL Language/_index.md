@@ -424,7 +424,7 @@ atom-language-avro 0.0.13 was released on 14 August 2015. It provides syntax hig
 It is available as [Atom.io package](https://atom.io/packages/atom-language-avro)
 and [GitHub](https://github.com/jonesetc/atom-language-avro)
 
-### ViM
+### Vim
 
 A `.avdl` detecting plugin by Gurpreet Atwal on [GitHub](https://github.com/gurpreetatwal/vim-avro) (Last change in December 2016)
 
