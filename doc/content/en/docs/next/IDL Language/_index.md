@@ -377,7 +377,7 @@ Additional examples may be found in the Avro source tree under the `src/test/idl
 
 ## IDE support
 
-There are several editores and IDEs that support Avro IDL files, usually via plugins.
+There are several editors and IDEs that support Avro IDL files, usually via plugins.
 
 ### JetBrains
 
