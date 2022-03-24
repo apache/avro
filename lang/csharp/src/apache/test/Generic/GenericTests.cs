@@ -37,6 +37,45 @@ namespace Avro.Test.Generic
             Assert.AreEqual(value, output);
         }
 
+        [Test]
+        public void ConvertsDefaultToLogicalType()
+        {
+            var writerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""Foo"",
+    ""fields"": [      
+    ]
+}";
+
+            var readerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""Foo"",
+    ""fields"": [
+        {
+            ""name"": ""x"",
+            ""type"": {
+                ""type"": ""int"",
+                ""logicalType"": ""date""
+            },
+            ""default"": 0
+        }
+    ]
+}";
+            var writerSchema = Schema.Parse(writerSchemaString);
+
+            Stream stream;
+
+            serialize(writerSchemaString,
+                mkRecord(new object[] { }, (RecordSchema) writerSchema),
+                out stream,
+                out _);
+
+            var output = deserialize<GenericRecord>(stream, writerSchema, Schema.Parse(readerSchemaString));
+
+            Assert.AreEqual(new DateTime(1970, 1, 1), output.GetValue(0));
+        }
+
+
         [TestCase("{\"type\": \"boolean\"}", true)]
         [TestCase("{\"type\": \"boolean\"}", false)]
 

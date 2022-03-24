@@ -24,6 +24,7 @@ using Avro.IO;
 using Avro.Specific;
 using Avro.Test.Specific;
 using System.Collections.Generic;
+using Avro.Generic;
 using Avro.Test.Specific.@return;
 
 #if !NETCOREAPP
@@ -439,6 +440,69 @@ namespace Avro.Test
             Assert.AreEqual("6", dstRecord.UserMatrix[1][0][1].name);
             Assert.AreEqual(0, dstRecord.UserMatrix[2].Count);
         }
+
+        private static void serializeGeneric<T>(string writerSchema, T actual, out Stream stream, out Schema ws)
+        {
+            var ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            ws = Schema.Parse(writerSchema);
+            GenericWriter<T> w = new GenericWriter<T>(ws);
+            w.Write(actual, e);
+            ms.Flush();
+            ms.Position = 0;
+            stream = ms;
+        }
+
+
+        [Test]
+        public void DeserializeToLogicalTypeWithDefault()
+        {
+            var writerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""RecordWithOptionalLogicalType"",
+    ""namespace"": ""Avro.Test.Specific.return"",
+    ""fields"": [      
+    ]}";
+
+            var writerSchema = Schema.Parse(writerSchemaString);
+
+            Stream stream;
+
+            serializeGeneric(writerSchemaString,
+                mkRecord(new object[] { }, (RecordSchema)writerSchema),
+                out stream,
+                out _);
+
+            RecordWithOptionalLogicalType output = deserialize<RecordWithOptionalLogicalType>(stream, writerSchema, RecordWithOptionalLogicalType._SCHEMA);
+
+            Assert.AreEqual(output.x, new DateTime(1970, 1, 11));
+
+        }
+
+        private static GenericRecord mkRecord(object[] kv, RecordSchema s)
+        {
+            GenericRecord input = new GenericRecord(s);
+            for (int i = 0; i < kv.Length; i += 2)
+            {
+                string fieldName = (string)kv[i];
+                object fieldValue = kv[i + 1];
+                Schema inner = s[fieldName].Schema;
+                if (inner is EnumSchema)
+                {
+                    GenericEnum ge = new GenericEnum(inner as EnumSchema, (string)fieldValue);
+                    fieldValue = ge;
+                }
+                else if (inner is FixedSchema)
+                {
+                    GenericFixed gf = new GenericFixed(inner as FixedSchema);
+                    gf.Value = (byte[])fieldValue;
+                    fieldValue = gf;
+                }
+                input.Add(s[fieldName].Pos, fieldValue);
+            }
+            return input;
+        }
+
 
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
         {
