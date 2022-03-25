@@ -64,7 +64,7 @@ public class IdlFile {
 
   public List<String> getWarnings(String importFile) {
     return warnings.stream()
-        .map(warning -> importFile + " " + Character.toLowerCase(warning.charAt(0)) + warning.substring(1))
+        .map(warning -> importFile + ' ' + Character.toLowerCase(warning.charAt(0)) + warning.substring(1))
         .collect(Collectors.toList());
   }
 
@@ -96,7 +96,7 @@ public class IdlFile {
       return result;
     }
     if (namespace != null && !name.contains(".")) {
-      result = namedSchemas.get(namespace + "." + name);
+      result = namedSchemas.get(namespace + '.' + name);
     }
     return result;
   }
@@ -111,9 +111,9 @@ public class IdlFile {
     } else {
       StringBuilder buffer = new StringBuilder();
       for (Schema schema : namedSchemas.values()) {
-        buffer.append(",").append(schema);
+        buffer.append(',').append(schema);
       }
-      buffer.append("]").setCharAt(0, '[');
+      buffer.append(']').setCharAt(0, '[');
       return buffer.toString();
     }
   }

@@ -56,8 +56,6 @@ public final class Schemas {
         switch (action) {
         case CONTINUE:
           break;
-        case SKIP_SUBTREE:
-          throw new UnsupportedOperationException();
         case SKIP_SIBLINGS:
           while (dq.peek() instanceof Schema) {
             dq.remove();
@@ -65,6 +63,7 @@ public final class Schemas {
           break;
         case TERMINATE:
           return visitor.get();
+        case SKIP_SUBTREE:
         default:
           throw new UnsupportedOperationException("Invalid action " + action);
         }
