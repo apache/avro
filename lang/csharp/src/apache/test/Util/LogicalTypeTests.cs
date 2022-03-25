@@ -45,6 +45,7 @@ namespace Avro.Test
             var schema = (LogicalSchema)Schema.Parse(@$"{{""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": {scale}}}");
 
             var avroDecimal = new Avro.Util.Decimal();
+            // CultureInfo.InvariantCulture ensures that "." is always accepted as the decimal point
             var decimalVal = (AvroDecimal)decimal.Parse(s, CultureInfo.InvariantCulture);
 
             // TestDecimal tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
@@ -68,6 +69,7 @@ namespace Avro.Test
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }");
 
             var avroDecimal = new Avro.Util.Decimal();
+            // CultureInfo.InvariantCulture ensures that "." is always accepted as the decimal point
             var decimalVal = (AvroDecimal)decimal.Parse(s, CultureInfo.InvariantCulture);
 
             var convertedDecimalVal = (AvroDecimal)avroDecimal.ConvertToLogicalValue(avroDecimal.ConvertToBaseValue(decimalVal, schema), schema);
