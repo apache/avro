@@ -17,14 +17,15 @@
  */
 package org.apache.avro;
 
-public class DummyLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+public class CustomTypeLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+
   @Override
   public LogicalType fromSchema(Schema schema) {
-    return LogicalTypes.date();
+    return new LogicalType(getTypeName());
   }
 
   @Override
   public String getTypeName() {
-    return "service-example";
+    return "custom";
   }
 }
