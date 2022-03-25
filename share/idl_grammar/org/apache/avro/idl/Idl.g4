@@ -21,6 +21,10 @@ grammar Idl;
 ** design, there are no actions in this grammar: this ensures the grammar is
 ** usable for any language supported by ANTLR.
 **
+** Some names, like BTrue & BFalse for booleans, may look a bit strange, but
+** that's because they can otherwise conflict with identifiers in target\
+** languages like Java, Python, etc.
+**
 ** Implementers can implement a listener or visitor to turn a parse result into
 ** a protocol and/or schema.
 */

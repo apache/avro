@@ -15,17 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 @namespace("org.foo")
 protocol Import {
-/* Name Value record */
-record ANameValue {
-  /** the name */
-  string name;
-  /** the value */
-  string value;
-  /* is the value a json object */
-  ValueType type = "PLAIN";
-}
-enum ValueType {JSON, BASE64BIN, PLAIN}
+  /* Name Value record */
+  record ANameValue {
+    /** the name */
+    string name;
+    /** the value */
+    string value;
+    /* is the value a json object */
+    ValueType type = "PLAIN";
+  }
+
+  enum ValueType {
+    JSON, BASE64BIN, PLAIN
+  }
 }

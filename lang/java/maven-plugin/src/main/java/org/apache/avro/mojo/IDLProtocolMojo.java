@@ -18,20 +18,16 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.compiler.idl.Idl;
+import org.apache.avro.compiler.idl.ParseException;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.GenericData;
-
-import org.apache.avro.idl.IdlFile;
-import org.apache.avro.idl.IdlReader;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
@@ -42,6 +38,14 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
  * @threadSafe
  */
 public class IDLProtocolMojo extends AbstractAvroMojo {
+  /**
+   * Use the classic JavaCC parser for <code>.avdl</code> files. If
+   * <code>false</code> (the default), use the new ANTLR parser instead.
+   *
+   * @parameter
+   */
+  private boolean useJavaCC = false;
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern <code>**&#47;*.avdl</code>
@@ -62,55 +66,37 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
 
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
-    try {
-      @SuppressWarnings("rawtypes")
-      List runtimeClasspathElements = project.getRuntimeClasspathElements();
+    File sourceFile = new File(sourceDirectory, filename);
 
-      List<URL> runtimeUrls = new ArrayList<>();
+    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    URL[] extraClasspath = new URL[] { sourceDirectory.toURI().toURL() };
+    ClassLoader classLoader = new URLClassLoader(extraClasspath, contextClassLoader);
 
-      // Add the source directory of avro files to the classpath so that
-      // imports can refer to other idl files as classpath resources
-      runtimeUrls.add(sourceDirectory.toURI().toURL());
-
-      // If runtimeClasspathElements is not empty values add its values to Idl path.
-      if (runtimeClasspathElements != null && !runtimeClasspathElements.isEmpty()) {
-        for (Object runtimeClasspathElement : runtimeClasspathElements) {
-          String element = (String) runtimeClasspathElement;
-          runtimeUrls.add(new File(element).toURI().toURL());
-        }
+    Protocol protocol;
+    if (useJavaCC) {
+      try (Idl idl = new Idl(sourceFile, classLoader)) {
+        final Protocol p = idl.CompilationUnit();
+        String json = p.toString(true);
+        protocol = Protocol.parse(json);
+      } catch (ParseException e) {
+        throw new IOException(e);
       }
-
-      final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-      URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]), contextClassLoader);
-      Thread.currentThread().setContextClassLoader(projPathLoader);
+    } else {
       try {
+        Thread.currentThread().setContextClassLoader(classLoader);
+
         IdlReader parser = new IdlReader();
-        IdlFile idlFile = parser.parse(sourceDirectory.toPath().resolve(filename));
+        IdlFile idlFile = parser.parse(sourceFile.toPath());
         for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
-        final Protocol protocol = idlFile.getProtocol();
-        final SpecificCompiler compiler = new SpecificCompiler(protocol);
-        compiler.setStringType(GenericData.StringType.valueOf(stringType));
-        compiler.setTemplateDir(templateDirectory);
-        compiler.setFieldVisibility(getFieldVisibility());
-        compiler.setCreateOptionalGetters(createOptionalGetters);
-        compiler.setGettersReturnOptional(gettersReturnOptional);
-        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-        compiler.setCreateSetters(createSetters);
-        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-        for (String customConversion : customConversions) {
-          compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
-        }
-        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-        compiler.compileToDestination(null, outputDirectory);
+        protocol = idlFile.getProtocol();
       } finally {
         Thread.currentThread().setContextClassLoader(contextClassLoader);
       }
-    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
-      throw new IOException(e);
     }
+
+    doCompile(sourceFile, protocol, outputDirectory);
   }
 
   @Override
