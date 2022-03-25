@@ -73,7 +73,8 @@ namespace Avro
                   customProperties,
                   new SchemaNames(),
                   doc,
-                  defaultSymbol);
+                  defaultSymbol,
+                  false);
         }
 
         /// <summary>
@@ -127,18 +128,24 @@ namespace Avro
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
         /// <param name="defaultSymbol">default symbol</param>
+        /// <param name="shouldThrowParseException">If true, will throw <see cref="SchemaParseException"/> in case of an error. If false, will throw <see cref="AvroException"/> in case of an error.</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
-                            string doc, string defaultSymbol)
+                            string doc, string defaultSymbol, bool shouldThrowParseException = true)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
-            if (null == name.Name) throw new SchemaParseException("name cannot be null for enum schema.");
+            if (null == name.Name) throw CreateException("name cannot be null for enum schema.", shouldThrowParseException);
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
 
             if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
-                throw new SchemaParseException($"Default symbol: {defaultSymbol} not found in symbols");
+                throw CreateException($"Default symbol: {defaultSymbol} not found in symbols", shouldThrowParseException);
             Default = defaultSymbol;
+        }
+
+        private Exception CreateException(string message, bool shouldCreateParseException)
+        {
+            return shouldCreateParseException ? new SchemaParseException(message) : new AvroException(message);
         }
 
         /// <summary>

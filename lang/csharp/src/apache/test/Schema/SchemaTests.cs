@@ -225,7 +225,7 @@ namespace Avro.Test
             Assert.True(recordSchema["f1"].Schema.ToString().Contains("metafield"));
 
             Assert.True(definedSchema.Equals(recordSchema["f1"].Schema));
-            Assert.AreEqual(definedSchema.GetHashCode(),recordSchema["f1"].Schema.GetHashCode());
+            Assert.AreEqual(definedSchema.GetHashCode(), recordSchema["f1"].Schema.GetHashCode());
         }
 
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\"," +
@@ -290,32 +290,53 @@ namespace Avro.Test
             Assert.AreEqual(expectedDoc, roundTrip.Documentation);
         }
 
-        [TestCase]
-        public void TestRecordCreation()
+        [TestCase("{\"type\":\"record\",\"name\":\"Longs\",\"fields\":[{\"name\":\"value\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}",
+            "Longs", null, null, null,
+            new[] { "value" }, new[] { Schema.Type.Long }, new[] { "100" }, new[] { "oldName" }, new string[] { null })]
+        [TestCase("{\"type\":\"record\",\"name\":\"Longs\",\"fields\":[{\"name\":\"value\",\"doc\":\"Field With Documentation\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}",
+            "Longs", null, null, null,
+            new[] { "value" }, new[] { Schema.Type.Long }, new[] { "100" }, new[] { "oldName" }, new string[] { "Field With Documentation" })]
+        [TestCase("{\"type\":\"record\",\"name\":\"Longs\",\"namespace\":\"space\",\"fields\":[{\"name\":\"value\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}",
+            "Longs", "space", null, null,
+            new[] { "value" }, new[] { Schema.Type.Long }, new[] { "100" }, new[] { "oldName" }, new string[] { null })]
+        [TestCase("{\"type\":\"record\",\"name\":\"Longs\",\"doc\":\"Record with alias\",\"namespace\":\"space\",\"aliases\":[\"space.RecordAlias\"],\"fields\":[{\"name\":\"value\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}",
+            "Longs", "space", "RecordAlias", "Record with alias",
+            new[] { "value" }, new[] { Schema.Type.Long }, new[] { "100" }, new[] { "oldName" }, new string[] { null })]
+        [TestCase("{\"type\":\"record\",\"name\":\"Longs\",\"doc\":\"Record with two fields\",\"namespace\":\"space\",\"aliases\":[\"space.RecordAlias\"],\"fields\":[{\"name\":\"value\",\"doc\":\"first field\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]},{\"name\":\"field2\",\"default\":\"true\",\"type\":\"boolean\"}]}",
+            "Longs", "space", "RecordAlias", "Record with two fields",
+            new[] { "value", "field2" }, new[] { Schema.Type.Long, Schema.Type.Boolean }, new[] { "100", "true" }, new[] { "oldName", null }, new string[] { "first field", null })]
+        public void TestRecordCreation(string expectedSchema, string name, string space, string alias, string documentation, string[] fieldsNames, Schema.Type[] fieldsTypes, object[] fieldsDefaultValues, string[] fieldsAliases, string[] fieldsDocs)
         {
-            string s = "{\"type\":\"record\",\"name\":\"Longs\",\"fields\":[{\"name\":\"value\",\"default\":\"100\",\"type\":\"long\",\"aliases\":[\"oldName\"]}]}";
-
-            var recordField = new Field(PrimitiveSchema.Create(Schema.Type.Long),
-                "value",
-                new List<string> { "oldName" },
-                0,
-                null,
-                "100",
+            IEnumerable<Field> recordFields = fieldsNames.Select((fieldName, i) => new Field(PrimitiveSchema.Create(fieldsTypes[i]),
+                fieldName,
+                fieldsAliases[i] == null? null: new List<string> { fieldsAliases[i] },
+                i,
+                fieldsDocs[i],
+                fieldsDefaultValues[i].ToString(),
                 Field.SortOrder.ignore,
-                null);
+                null));
 
-            RecordSchema recordSchema = RecordSchema.Create("Longs",
-                new List<Field>
+            string[] aliases = alias == null ? null : new[] { alias };
+
+            RecordSchema recordSchema = RecordSchema.Create(name, recordFields.ToList(), space, aliases, null, documentation);
+
+            for(int i = 0; i < fieldsNames.Length; i++)
+            {
+                var fieldByName = recordSchema[fieldsNames[i]];
+                if (fieldsAliases[i] != null)
                 {
-                    recordField
-                });
+                    recordSchema.TryGetFieldAlias(fieldsAliases[i], out Field fieldByAlias);
 
-            var fieldByName = recordSchema["value"];
-            recordSchema.TryGetFieldAlias("oldName", out Field fieldByAlias);
-
-            Assert.AreEqual(s, recordSchema.ToString());
-            Assert.AreEqual(recordField, fieldByName);
-            Assert.AreEqual(recordField, fieldByAlias);
+                    Assert.AreSame(fieldByAlias, fieldByName);
+                }
+                Assert.AreEqual(expectedSchema, recordSchema.ToString());
+                Assert.AreEqual(fieldsNames[i], fieldByName.Name);
+                Assert.AreEqual(i, fieldByName.Pos);
+                Assert.AreEqual(fieldsTypes[i], fieldByName.Schema.Tag);
+                Assert.AreEqual(fieldsDocs[i], fieldByName.Documentation);
+                Assert.AreEqual(fieldsDefaultValues[i], fieldByName.DefaultValue.ToString());
+                CollectionAssert.AreEqual(fieldsAliases[i] == null? null: new[] {fieldsAliases[i]}, fieldByName.Aliases);
+            }
         }
 
         [TestCase]
@@ -372,13 +393,26 @@ namespace Avro.Test
 
         [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
             new string[] { "A", "B" })]
-        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"symbols\":[\"UNKNOWN\",\"A\",\"B\"],\"default\":\"UNKNOWN\"}",
-            new string[] { "UNKNOWN", "A", "B" }, "UNKNOWN")]
-        public void TestEnum(string s, string[] symbols, string defaultSymbol = null)
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"doc\":\"Some explanation\",\"namespace\":\"mynamespace\",\"aliases\":[\"mynamespace.Alias\"],\"symbols\":[\"UNKNOWN\",\"A\",\"B\"],\"default\":\"UNKNOWN\",\"propertyKey\":\"propertyValue\"}",
+            new string[] { "UNKNOWN", "A", "B" }, "mynamespace", new string[] { "Alias" }, "Some explanation", true, "UNKNOWN")]
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"doc\":\"Some explanation\",\"namespace\":\"space\",\"aliases\":[\"internalNamespace.Alias\"],\"symbols\":[\"UNKNOWN\",\"A\",\"B\"]}",
+            new string[] { "UNKNOWN", "A", "B" }, "space", new string[] { "internalNamespace.Alias" }, "Some explanation")]
+        [TestCase("{\"type\":\"enum\",\"name\":\"Test\",\"doc\":\"Some explanation\",\"namespace\":\"space\",\"aliases\":[\"internalNamespace.Alias\"],\"symbols\":[]}",
+            new string[] { }, "space", new string[] { "internalNamespace.Alias" }, "Some explanation")]
+
+        public void TestEnum(string s, string[] symbols, string space = null, IEnumerable<string> aliases = null, string doc = null, bool? usePropertyMap = null, string defaultSymbol = null)
         {
             Schema sc = Schema.Parse(s);
 
-            Schema schema = EnumSchema.Create("Test", symbols, defaultSymbol: defaultSymbol);
+            PropertyMap propertyMap = new PropertyMap();
+            propertyMap.Add("propertyKey", "\"propertyValue\"");
+            Schema schema = EnumSchema.Create("Test",
+                symbols,
+                space,
+                aliases,
+                usePropertyMap == true ? propertyMap : null,
+                doc,
+                defaultSymbol);
 
             Assert.AreEqual(sc, schema);
             Assert.AreEqual(s, schema.ToString());
@@ -395,16 +429,6 @@ namespace Avro.Test
 
             testEquality(s, sc);
             testToString(sc, s);
-        }
-
-        [TestCase]
-        public void TestEnumCreation()
-        {
-            string expected = "{\"type\":\"enum\",\"name\":\"Test\",\"namespace\":\"namespace\",\"aliases\":[\"namespace.alias\"],\"symbols\":[\"A\",\"B\"]}";
-
-            Schema schema = EnumSchema.Create("Test", new[] { "A", "B" }, "namespace", new[] { "alias" }, null);
-
-            Assert.AreEqual(expected, schema.ToString());
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}", null)]
@@ -429,6 +453,34 @@ namespace Avro.Test
         public void TestEnumDefaultSymbolDoesntExist(string s)
         {
             Assert.Throws<SchemaParseException>(() => Schema.Parse(s));
+        }
+
+        [TestCase("name", new string[] { "A", "B" }, "s", new[] { "L1", "L2" }, "regular enum", null, "name", "s")]
+        [TestCase("s.name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "internal namespace", null, "name", "s")]
+        [TestCase("name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "no namespace", null, "name", null)]
+        [TestCase("name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "with default value", "A", "name", null)]
+        public void TestEnumCreation(string name, string[] symbols, string space, string[] aliases, string doc, string defaultSymbol, string expectedName, string expectedNamespace)
+        {
+            EnumSchema enumSchema = EnumSchema.Create(name, symbols, space, aliases, null, doc, defaultSymbol);
+
+            Assert.AreEqual(expectedName, enumSchema.Name);
+            CollectionAssert.AreEqual(symbols, enumSchema.Symbols);
+            Assert.AreEqual(expectedNamespace, enumSchema.Namespace);
+            Assert.AreEqual(Schema.Type.Enumeration, enumSchema.Tag);
+            Assert.AreEqual(doc, enumSchema.Documentation);
+            Assert.AreEqual(defaultSymbol, enumSchema.Default);
+        }
+
+        [TestCase(new object[] { "A", "A" })]
+        public void TestEnumCreationDuplicateSymbols(params string[] symbols)
+        {
+            Assert.Throws<AvroException>(() => EnumSchema.Create("Name", symbols));
+        }
+
+        [TestCase]
+        public void TestEnumCreationDefaultSymbolDoesntExists()
+        {
+            Assert.Throws<AvroException>(() => EnumSchema.Create("name", new[] { "A", "B" }, defaultSymbol: "C"));
         }
 
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}", "long")]
