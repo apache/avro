@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using NUnit.Framework;
 
 namespace Avro.test
