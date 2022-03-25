@@ -28,24 +28,24 @@ namespace Avro.Test
     class LogicalTypeTests
     {
         [TestCase("0", 0, new byte[] { 0 })]
-        [TestCase("101", 2, new byte[] { 101 })]
-        [TestCase("12345678912345678956", 2, new byte[] { 0, 171, 84, 169, 143, 129, 101, 36, 108 })]
+        [TestCase("1.01", 2, new byte[] { 101 })]
+        [TestCase("123456789123456789.56", 2, new byte[] { 0, 171, 84, 169, 143, 129, 101, 36, 108 })]
         [TestCase("1234", 0, new byte[] { 4, 210 })]
-        [TestCase("12345", 1, new byte[] { 48, 57 })]
-        [TestCase("123456", 2, new byte[] { 1, 226, 64 })]
+        [TestCase("1234.5", 1, new byte[] { 48, 57 })]
+        [TestCase("1234.56", 2, new byte[] { 1, 226, 64 })]
         [TestCase("-0", 0, new byte[] { 0 })]
-        [TestCase("-101", 2, new byte[] { 155 })]
-        [TestCase("-12345678912345678956", 2, new byte[] { 255, 84, 171, 86, 112, 126, 154, 219, 148 })]
+        [TestCase("-1.01", 2, new byte[] { 155 })]
+        [TestCase("-123456789123456789.56", 2, new byte[] { 255, 84, 171, 86, 112, 126, 154, 219, 148 })]
         [TestCase("-1234", 0, new byte[] { 251, 46 })]
-        [TestCase("-12345", 1, new byte[] { 207, 199 })]
-        [TestCase("-123456", 2, new byte[] { 254, 29, 192 })]
+        [TestCase("-1234.5", 1, new byte[] { 207, 199 })]
+        [TestCase("-1234.56", 2, new byte[] { 254, 29, 192 })]
         // This tests ensures that changes to Decimal.ConvertToBaseValue and ConvertToLogicalValue can be validated (bytes)
         public void TestDecimalConvert(string s, int scale, byte[] converted)
         {
             var schema = (LogicalSchema)Schema.Parse(@$"{{""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": {scale}}}");
 
             var avroDecimal = new Avro.Util.Decimal();
-            var decimalVal = new AvroDecimal(BigInteger.Parse(s), scale); 
+            var decimalVal = (AvroDecimal)decimal.Parse(s, CultureInfo.InvariantCulture);
 
             // TestDecimal tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
             // The following 2 tests are checking the conversions seperately
@@ -57,19 +57,18 @@ namespace Avro.Test
             Assert.AreEqual(decimalVal, (AvroDecimal)avroDecimal.ConvertToLogicalValue(converted, schema));
         }
 
-
-        [TestCase("123456")]
-        [TestCase("-123456")]
-        [TestCase("12345678912345678956")]
-        [TestCase("-12345678912345678956")]
-        [TestCase("00000000000000000101")]
-        [TestCase("-00000000000000000101")]
+        [TestCase("1234.56")]
+        [TestCase("-1234.56")]
+        [TestCase("123456789123456789.56")]
+        [TestCase("-123456789123456789.56")]
+        [TestCase("000000000000000001.01")]
+        [TestCase("-000000000000000001.01")]
         public void TestDecimal(string s)
         {
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }");
 
             var avroDecimal = new Avro.Util.Decimal();
-            var decimalVal = new AvroDecimal(BigInteger.Parse(s), 2); 
+            var decimalVal = (AvroDecimal)decimal.Parse(s, CultureInfo.InvariantCulture);
 
             var convertedDecimalVal = (AvroDecimal)avroDecimal.ConvertToLogicalValue(avroDecimal.ConvertToBaseValue(decimalVal, schema), schema);
 
