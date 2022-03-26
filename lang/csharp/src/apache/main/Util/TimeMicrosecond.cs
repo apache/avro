@@ -25,7 +25,7 @@ namespace Avro.Util
     /// </summary>
     public class TimeMicrosecond : LogicalUnixEpochType<TimeSpan>
     {
-        private static readonly TimeSpan _exclusiveUpperBound = new TimeSpan(24, 00, 00);
+        private static readonly TimeSpan _exclusiveUpperBound = TimeSpan.FromDays(1);
         private const long _ticksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
         
         /// <summary>
