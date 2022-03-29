@@ -210,6 +210,11 @@ namespace Avro.Test
         [TestCase("01:20:10.0019", "01:20:10.001", false)] // there is no rounding up
         [TestCase("23:59:59.999", "23:59:59.999", false)]
         [TestCase("01:00:00:00", null, true)]
+        [TestCase("-00:00:00.001", null, true)]
+        [TestCase("-00:00:00.000001", null, true)]
+        [TestCase("-00:00:00.0000001", null, true)]
+        [TestCase("-00:01", null, true)]
+        [TestCase("-999999.00:00:00", null, true)]
         public void TestTimeMillisecond(string s, string e, bool expectRangeError)
         {
             var timeMilliSchema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"time-millis\"}");
@@ -248,6 +253,11 @@ namespace Avro.Test
         [TestCase("01:20:10.0000009", "01:20:10", false)]
         [TestCase("23:59:59.999999", "23:59:59.999999", false)]
         [TestCase("01:00:00:00", null, true)]
+        [TestCase("-00:00:00.001", null, true)]
+        [TestCase("-00:00:00.000001", null, true)]
+        [TestCase("-00:00:00.0000001", null, true)]
+        [TestCase("-00:01", null, true)]
+        [TestCase("-999999.00:00:00", null, true)]
         public void TestTimeMicrosecond(string s, string e, bool expectRangeError)
         {
             var timeMicroSchema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"time-micros\"}");
