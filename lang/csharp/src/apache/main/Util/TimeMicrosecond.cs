@@ -60,7 +60,6 @@ namespace Avro.Util
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var noUs = (long)baseValue;
             var time = TimeSpan.FromTicks((long)baseValue * _ticksPerMicrosecond);
 
             ThrowIfOutOfRange(time, nameof(baseValue));
