@@ -357,7 +357,10 @@ fn write_value_ref_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
-    if !value.validate(resolved_schema.get_root_schema()) {
+    if !value.validate_internal(
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+    ) {
         return Err(Error::Validation);
     }
     encode_internal(
