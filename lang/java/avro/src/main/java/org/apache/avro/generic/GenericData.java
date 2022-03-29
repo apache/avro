@@ -152,8 +152,8 @@ public class GenericData {
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversions = conversionsByClass.computeIfAbsent(type, k -> new LinkedHashMap<>());
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type, k -> new LinkedHashMap<>());
+    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
