@@ -337,7 +337,7 @@ impl Value {
         self.validate_internal(schema, rs.get_names())
     }
 
-    fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
+    pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names
                 .get(name)
