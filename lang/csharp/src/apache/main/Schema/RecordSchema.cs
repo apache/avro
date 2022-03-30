@@ -132,7 +132,6 @@ namespace Avro
                     {
                         EnumerateSchemasRecursive(innerSchema);
                     }
-
                     break;
                 case Type.Fixed:
                     break;
