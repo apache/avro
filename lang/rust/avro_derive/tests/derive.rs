@@ -1,6 +1,6 @@
-use avro_derive::*;
 use apache_avro::schema::{AvroSchema, AvroSchemaWithResolved};
 use apache_avro::{from_value, Reader, Schema, Writer};
+use avro_derive::*;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::collections::HashMap;
@@ -28,21 +28,21 @@ mod test_derive {
             match res {
                 Ok(value) => {
                     assert_eq!(obj, from_value::<T>(&value).unwrap());
-                },
-                Err(e) => panic!("{}", e.to_string())
+                }
+                Err(e) => panic!("{}", e.to_string()),
             }
         }
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test1 {
+    struct TestBasic {
         a: i32,
         b: String,
     }
 
     #[test]
     fn test_smoke_test() {
-        let test = Test1 {
+        let test = TestBasic {
             a: 27,
             b: "foo".to_owned(),
         };
@@ -50,7 +50,19 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test2 {
+    #[namespace = "com.testing.namespace"]
+    struct TestBasicNamesapce {
+        a: i32,
+        b: String,
+    }
+
+    #[test]
+    fn test_basic_namesapce() {
+        println!("{:?}", TestBasicNamesapce::get_schema())
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct TestAllSupportedBaseTypes {
         //Basics test
         a: bool,
         b: i8,
@@ -66,7 +78,7 @@ mod test_derive {
 
     #[test]
     fn test_basic_types() {
-        let all_basic = Test2 {
+        let all_basic = TestAllSupportedBaseTypes {
             a: true,
             b: 8,
             c: 16,
@@ -82,14 +94,14 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test3 {
+    struct TestNested {
         a: i32,
-        b: Test2,
+        b: TestAllSupportedBaseTypes,
     }
 
     #[test]
     fn test_inner_struct() {
-        let all_basic = Test2 {
+        let all_basic = TestAllSupportedBaseTypes {
             a: true,
             b: 8,
             c: 16,
@@ -101,7 +113,7 @@ mod test_derive {
             i: 64.4444,
             j: "testing string".to_owned(),
         };
-        let inner_struct = Test3 {
+        let inner_struct = TestNested {
             a: -1600,
             b: all_basic,
         };
@@ -109,25 +121,25 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test4 {
+    struct TestOptional {
         a: Option<i32>,
     }
 
     #[test]
     fn test_optional_field_some() {
-        let optional_field = Test4 { a: Some(4) };
+        let optional_field = TestOptional { a: Some(4) };
         freeze_dry(optional_field);
     }
 
     #[test]
     fn test_optional_field_none() {
-        let optional_field = Test4 { a: None };
+        let optional_field = TestOptional { a: None };
         freeze_dry(optional_field);
     }
 
     /// Generic Containers
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test5<T: AvroSchemaWithResolved> {
+    struct TestGeneric<T: AvroSchemaWithResolved> {
         a: String,
         b: Vec<T>,
         c: HashMap<String, T>,
@@ -135,7 +147,7 @@ mod test_derive {
 
     #[test]
     fn test_generic_container_1() {
-        let test_generic = Test5::<i32> {
+        let test_generic = TestGeneric::<i32> {
             a: "testing".to_owned(),
             b: vec![0, 1, 2, 3],
             c: vec![("key".to_owned(), 3)].into_iter().collect(),
@@ -145,9 +157,9 @@ mod test_derive {
 
     #[test]
     fn test_generic_container_2() {
-        let test_generic = Test5::<Test2> {
+        let test_generic = TestGeneric::<TestAllSupportedBaseTypes> {
             a: "testing".to_owned(),
-            b: vec![Test2 {
+            b: vec![TestAllSupportedBaseTypes {
                 a: true,
                 b: 8,
                 c: 16,
@@ -161,7 +173,7 @@ mod test_derive {
             }],
             c: vec![(
                 "key".to_owned(),
-                Test2 {
+                TestAllSupportedBaseTypes {
                     a: true,
                     b: 8,
                     c: 16,
@@ -177,12 +189,15 @@ mod test_derive {
             .into_iter()
             .collect(),
         };
-        println!("{}",Test5::<Test2>::get_schema().canonical_form());
+        println!(
+            "{}",
+            TestGeneric::<TestAllSupportedBaseTypes>::get_schema().canonical_form()
+        );
         freeze_dry(test_generic);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    enum Basic {
+    enum TestAllowedEnum {
         A,
         B,
         C,
@@ -190,15 +205,15 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct Test6 {
-        a: Basic,
+    struct TestAllowedEnumNested {
+        a: TestAllowedEnum,
         b: String,
     }
 
     #[test]
     fn test_enum() {
-        let enum_included = Test6 {
-            a: Basic::B,
+        let enum_included = TestAllowedEnumNested {
+            a: TestAllowedEnum::B,
             b: "hey".to_owned(),
         };
         freeze_dry(enum_included);
@@ -206,42 +221,76 @@ mod test_derive {
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct ConsList {
-        value : i32,
-        next: Option<Box<ConsList>>
+        value: i32,
+        next: Option<Box<ConsList>>,
     }
 
     #[test]
     fn test_cons() {
         let list = ConsList {
-            value : 34,
-            next: Some(Box::new(
-                ConsList { value: 42, next: None }
-            ))
+            value: 34,
+            next: Some(Box::new(ConsList {
+                value: 42,
+                next: None,
+            })),
         };
         freeze_dry(list)
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct ConsListGeneric<T : AvroSchemaWithResolved> {
-        value : T,
-        next: Option<Box<ConsListGeneric<T>>>
+    struct ConsListGeneric<T: AvroSchemaWithResolved> {
+        value: T,
+        next: Option<Box<ConsListGeneric<T>>>,
     }
 
     #[test]
     fn test_cons_generic() {
-        let list = ConsListGeneric::<Test6> 
-        {
-            value : Test6 {
-                a: Basic::B ,
+        let list = ConsListGeneric::<TestAllowedEnumNested> {
+            value: TestAllowedEnumNested {
+                a: TestAllowedEnum::B,
                 b: "testing".into(),
             },
-            next: Some(Box::new(
-                ConsListGeneric::<Test6> { value: Test6{
-                    a: Basic::D,
+            next: Some(Box::new(ConsListGeneric::<TestAllowedEnumNested> {
+                value: TestAllowedEnumNested {
+                    a: TestAllowedEnum::D,
                     b: "testing2".into(),
-                }, next: None }
-            ))
+                },
+                next: None,
+            })),
         };
         freeze_dry(list)
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct TestArraysSimple {
+        a: [i32; 4],
+    }
+
+    #[test]
+    fn test_simple_array() {
+        let test = TestArraysSimple { a: [2, 3, 4, 5] };
+        freeze_dry(test)
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct TestComplexArray<T: AvroSchemaWithResolved> {
+        a: [T; 2],
+    }
+
+    #[test]
+    fn test_complex_array() {
+        let test = TestComplexArray::<TestBasic> {
+            a: [
+                TestBasic {
+                    a: 27,
+                    b: "foo".to_owned(),
+                },
+                TestBasic {
+                    a: 28,
+                    b: "bar".to_owned(),
+                },
+            ],
+        };
+        freeze_dry(test)
     }
 }

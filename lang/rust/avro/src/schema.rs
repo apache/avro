@@ -1500,6 +1500,7 @@ fn field_ordering_position(field: &str) -> Option<usize> {
 
 pub fn record_schema_for_fields(
     name: Name,
+    aliases: Aliases,
     doc: Documentation,
     fields: Vec<RecordField>,
 ) -> Schema {
@@ -1509,7 +1510,7 @@ pub fn record_schema_for_fields(
         .collect();
     Schema::Record {
         name,
-        aliases: None, 
+        aliases,
         doc,
         fields,
         lookup,
@@ -1522,15 +1523,15 @@ pub trait AvroSchema {
 
 /// TODO Help me name this. The idea here that any previously parsed or constructed schema with a name is registered in resolved schemas and passed recursively to avoid infinite recursion
 pub trait AvroSchemaWithResolved {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema;
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema;
 }
 
-impl<T> AvroSchema for T 
+impl<T> AvroSchema for T
 where
-    T: AvroSchemaWithResolved 
+    T: AvroSchemaWithResolved,
 {
     fn get_schema() -> Schema {
-       return T::get_schema_with_resolved(&mut HashMap::default())
+        return T::get_schema_with_resolved(&mut HashMap::default());
     }
 }
 
@@ -1555,8 +1556,8 @@ impl_schema!(f64, Schema::Double);
 impl_schema!(char, Schema::String);
 impl_schema!(String, Schema::String);
 impl_schema!(uuid::Uuid, Schema::Uuid);
-impl_schema!(u32, Schema::Long);
 impl_schema!(core::time::Duration, Schema::Duration);
+impl_schema!(&[u8], Schema::Bytes);
 
 impl<T> AvroSchemaWithResolved for Vec<T>
 where
