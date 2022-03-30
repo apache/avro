@@ -157,12 +157,13 @@ namespace Avro
                 new GeneratedCodeAttribute(System.AppDomain.CurrentDomain.FriendlyName,
                 _assemblyInformationVersion);
 
+            CodePrimitiveExpression tool = new CodePrimitiveExpression(generatedCodeAttribute.Tool);
+            CodePrimitiveExpression version = new CodePrimitiveExpression(generatedCodeAttribute.Version);
+
             CodeAttributeDeclaration codeAttributeDeclaration =
                 new CodeAttributeDeclaration($"global::{generatedCodeAttribute.GetType().FullName}",
-                    new CodeAttributeArgument(
-                        new CodePrimitiveExpression(generatedCodeAttribute.Tool)),
-                    new CodeAttributeArgument(
-                        new CodePrimitiveExpression(generatedCodeAttribute.Version)));
+                new CodeAttributeArgument(tool),
+                new CodeAttributeArgument(version));
 
             return codeAttributeDeclaration;
         }
