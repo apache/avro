@@ -10,6 +10,8 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
+    use std::{borrow::Cow, sync::Mutex};
+
     use super::*;
 
     /// Takes in a type that implements the right combination of traits and runs it through a Serde Cycle and asserts the result is the same
@@ -59,6 +61,18 @@ mod test_derive {
     #[test]
     fn test_basic_namesapce() {
         println!("{:?}", TestBasicNamesapce::get_schema())
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[namespace = "com.testing.complex.namespace"]
+    struct TestComplexNamespace {
+        a: TestBasicNamesapce,
+        b: String,
+    }
+
+    #[test]
+    fn test_complex_namespace() {
+        println!("{:?}", TestComplexNamespace::get_schema())
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -189,10 +203,6 @@ mod test_derive {
             .into_iter()
             .collect(),
         };
-        println!(
-            "{}",
-            TestGeneric::<TestAllSupportedBaseTypes>::get_schema().canonical_form()
-        );
         freeze_dry(test_generic);
     }
 
@@ -292,5 +302,38 @@ mod test_derive {
             ],
         };
         freeze_dry(test)
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct Testu8 {
+        a: Vec<u8>,
+        b: [u8; 2],
+    }
+    #[test]
+    fn test_bytes_handled() {
+        let test = Testu8 {
+            a: vec![1, 2],
+            b: [3, 4],
+        };
+        freeze_dry(test)
+        // don't check for schema equality to allow for transitioning to bytes or fixed types in the future
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema)]
+    struct TestSmartPointers<'a> {
+        a: Box<String>,
+        b: std::sync::Mutex<Vec<i64>>,
+        c: Cow<'a, i32>,
+    }
+
+    #[test]
+    fn test_smart_pointers() {
+        let test = TestSmartPointers {
+            a: Box::new("hey".into()),
+            b: Mutex::new(vec![42]),
+            c: Cow::Owned(32),
+        };
+        // test serde with manual equality
+        println!("{:?}", TestSmartPointers::get_schema())
     }
 }

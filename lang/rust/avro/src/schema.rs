@@ -32,6 +32,7 @@ use std::{
     fmt,
     hash::Hash,
     str::FromStr,
+    sync::Mutex,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
 
@@ -1557,7 +1558,6 @@ impl_schema!(char, Schema::String);
 impl_schema!(String, Schema::String);
 impl_schema!(uuid::Uuid, Schema::Uuid);
 impl_schema!(core::time::Duration, Schema::Duration);
-impl_schema!(&[u8], Schema::Bytes);
 
 impl<T> AvroSchemaWithResolved for Vec<T>
 where
@@ -1606,6 +1606,24 @@ where
 impl<T> AvroSchemaWithResolved for Box<T>
 where
     T: AvroSchemaWithResolved,
+{
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        T::get_schema_with_resolved(resolved_schemas)
+    }
+}
+
+impl<T> AvroSchemaWithResolved for Mutex<T>
+where
+    T: AvroSchemaWithResolved,
+{
+    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+        T::get_schema_with_resolved(resolved_schemas)
+    }
+}
+
+impl<T> AvroSchemaWithResolved for Cow<'_, T>
+where
+    T: AvroSchemaWithResolved + Clone,
 {
     fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
         T::get_schema_with_resolved(resolved_schemas)

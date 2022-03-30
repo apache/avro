@@ -2,8 +2,7 @@ use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::quote;
 
 use syn::{
-    parse_macro_input, Attribute, DeriveInput, Error, Lit, LitStr, Path, PathArguments, Type,
-    TypePath,
+    parse_macro_input, Attribute, DeriveInput, Error, Lit, Path, PathArguments, Type, TypePath,
 };
 
 #[proc_macro_derive(AvroSchema, attributes(namespace))]
