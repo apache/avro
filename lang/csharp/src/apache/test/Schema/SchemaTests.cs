@@ -459,6 +459,8 @@ namespace Avro.Test
         [TestCase("s.name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "internal namespace", null, "name", "s")]
         [TestCase("name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "no namespace", null, "name", null)]
         [TestCase("name", new string[] { "A", "B" }, null, new[] { "L1", "L2" }, "with default value", "A", "name", null)]
+        [TestCase("name", new string[] { "A1B2", "B4324" }, null, new[] { "L1", "L2" }, "with longer symbols", "B4324", "name", null)]
+        [TestCase("name", new string[] { "_A1B2_", "B4324" }, null, new[] { "L1", "L2" }, "underscore in symbols", "_A1B2_", "name", null)]
         public void TestEnumCreation(string name, string[] symbols, string space, string[] aliases, string doc, string defaultSymbol, string expectedName, string expectedNamespace)
         {
             EnumSchema enumSchema = EnumSchema.Create(name, symbols, space, aliases, null, doc, defaultSymbol);
@@ -471,16 +473,15 @@ namespace Avro.Test
             Assert.AreEqual(defaultSymbol, enumSchema.Default);
         }
 
-        [TestCase(new object[] { "A", "A" })]
-        public void TestEnumCreationDuplicateSymbols(params string[] symbols)
+        [TestCase(new[] {"A", "B"}, "C")]
+        [TestCase(new[] {null, "B"}, null)]
+        [TestCase(new[] {"", "B" }, null)]
+        [TestCase(new[] {"8", "B" }, null)]
+        [TestCase(new[] { "8", "B" }, null)]
+        [TestCase(new[] { "A", "A" }, null)]
+        public void TestEnumInvalidSymbols(string[] symbols, string defaultSymbol)
         {
-            Assert.Throws<AvroException>(() => EnumSchema.Create("Name", symbols));
-        }
-
-        [TestCase]
-        public void TestEnumCreationDefaultSymbolDoesntExists()
-        {
-            Assert.Throws<AvroException>(() => EnumSchema.Create("name", new[] { "A", "B" }, defaultSymbol: "C"));
+            Assert.Throws<AvroException>(() => EnumSchema.Create("name", symbols, defaultSymbol: defaultSymbol));
         }
 
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}", "long")]

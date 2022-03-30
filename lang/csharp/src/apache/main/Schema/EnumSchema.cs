@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -154,13 +155,18 @@ namespace Avro
         /// </summary>
         /// <param name="symbols">List of symbols</param>
         /// <returns>Symbol map</returns>
-        /// <exception cref="AvroException">Is thrown if the symbols list contains duplicate symbols.</exception>
+        /// <exception cref="AvroException">Is thrown if the symbols list contains invalid symbol name or duplicate symbols</exception>
         private static IDictionary<string, int> CreateSymbolsMap(IEnumerable<string> symbols)
         {
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
             int i = 0;
             foreach (var symbol in symbols)
             {
+                if (string.IsNullOrEmpty(symbol) || Regex.IsMatch(symbol, "[A-Za-z_][A-Za-z0-9_]*"))
+                {
+                    throw new AvroException($"Invalid symbol name: {symbol}");
+                }
+
                 if (symbolMap.ContainsKey(symbol))
                 {
                     throw new AvroException($"Duplicate symbol: {symbol}");
