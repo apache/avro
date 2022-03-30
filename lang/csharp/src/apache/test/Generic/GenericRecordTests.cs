@@ -124,7 +124,7 @@ namespace Avro.test.Generic
             GenericRecord genericRecord = GetBaseGenericRecord();
 
             // Key does not exist
-            Assert.Throws<KeyNotFoundException>(() => { object missingKey = genericRecord["badField"]; });
+            Assert.Throws<KeyNotFoundException>(() => { _ = genericRecord["badField"]; });
         }
 
         [Test]
