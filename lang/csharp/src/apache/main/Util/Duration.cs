@@ -103,7 +103,7 @@ namespace Avro.Util
             int days = BitConverter.ToInt32(buffer, 4);
             int milliseconds = BitConverter.ToInt32(buffer, 8);
 
-            return TimeSpan.FromMilliseconds((months * _daysInMonth + days) * _millisecondsInDay + milliseconds);
+            return TimeSpan.FromTicks(((months * _daysInMonth + days) * _millisecondsInDay + milliseconds) * TimeSpan.TicksPerMillisecond);
         }
     }
 }
