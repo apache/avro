@@ -47,9 +47,20 @@ namespace Avro
             JToken jtype = jtok["type"];
             if (null == jtype) throw new AvroTypeException("Logical Type does not have 'type'");
 
-            // Use Schema.ParseJson to get the schema for the underlying type, set checkLogicalType to false to avoid recursive calls.
-            // Schema.ParseJson(jtype ...) is not enough in case jtype is not a basic type (e.g. "fixed")
-            return new LogicalSchema(Schema.ParseJson(jtok, names, encspace, checkLogicalType: false), JsonHelper.GetRequiredString(jtok, "logicalType"),  props);
+            Schema baseSchema;
+
+            // Create base schema (logical types can be based on primitive types and fixed)
+
+            if ((string)jtype == "fixed")
+            {
+                baseSchema = FixedSchema.NewInstance(jtok, props, names, encspace);
+            }
+            else
+            {
+                baseSchema = Schema.ParseJson(jtype, names, encspace);
+            }
+
+            return new LogicalSchema(baseSchema, JsonHelper.GetRequiredString(jtok, "logicalType"),  props);
         }
 
         private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)

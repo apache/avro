@@ -153,9 +153,8 @@ namespace Avro
         /// <param name="jtok">JSON object</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
-        /// <param name="checkLogicalType">ignores logicalType if set to false</param>
         /// <returns>new Schema object</returns>
-        internal static Schema ParseJson(JToken jtok, SchemaNames names, string encspace, bool checkLogicalType = true)
+        internal static Schema ParseJson(JToken jtok, SchemaNames names, string encspace)
         {
             if (null == jtok) throw new ArgumentNullException("j", "j cannot be null.");
 
@@ -193,7 +192,7 @@ namespace Avro
                         return ArraySchema.NewInstance(jtok, props, names, encspace);
                     if (type.Equals("map", StringComparison.Ordinal))
                         return MapSchema.NewInstance(jtok, props, names, encspace);
-                    if (checkLogicalType && null != jo["logicalType"]) // logical type based on a primitive
+                    if (null != jo["logicalType"]) // logical type based on a primitive
                         return LogicalSchema.NewInstance(jtok, props, names, encspace);
 
                     Schema schema = PrimitiveSchema.NewInstance((string)type, props);
