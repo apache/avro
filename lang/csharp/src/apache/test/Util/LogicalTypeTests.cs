@@ -209,19 +209,29 @@ namespace Avro.Test
         [TestCase("01/01/2019 14:20:00.0001", "01/01/2019 14:20:00")]
         [TestCase("01/01/2019 14:20:00.0009", "01/01/2019 14:20:00")] // there is no rounding up
         [TestCase("01/01/2019 14:20:00.0019", "01/01/2019 14:20:00.001")] // there is no rounding up
-        [TestCase("2019-01-01T14:20:00Z", "2019-01-01T14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00.1Z", "01/01/2019 14:20:00.1Z")]
+        [TestCase("01/01/2019 14:20:00.01Z", "01/01/2019 14:20:00.01Z")]
+        [TestCase("01/01/2019 14:20:00.001Z", "01/01/2019 14:20:00.001Z")]
         public void TestLocalTimestampMillisecond(string s, string e)
         {
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"local-timestamp-millis\"}");
 
-            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
-            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
 
-            // If expected timestamp is UTC, convert it to local TZ, since the convertedDat will be in local TZ
-            if (expectedDate.Kind == DateTimeKind.Utc)
+            if (date.Kind != DateTimeKind.Utc)
             {
-                expectedDate = expectedDate.ToLocalTime();
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
             }
+
+            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (expectedDate.Kind != DateTimeKind.Utc)
+            {
+                expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            expectedDate = expectedDate.ToLocalTime();
 
             var avroLocalTimestampMilli = new LocalTimestampMillisecond();
             var convertedDate = (DateTime)avroLocalTimestampMilli.ConvertToLogicalValue(avroLocalTimestampMilli.ConvertToBaseValue(date, schema), schema);
@@ -241,20 +251,33 @@ namespace Avro.Test
         [TestCase("01/01/2019 14:20:00.0000001", "01/01/2019 14:20:00")]
         [TestCase("01/01/2019 14:20:00.0000009", "01/01/2019 14:20:00")] // there is no rounding up
         [TestCase("01/01/2019 14:20:00.0000019", "01/01/2019 14:20:00.000001")] // there is no rounding up
-        [TestCase("2019-01-01T14:20:00Z", "2019-01-01T14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00.1Z", "01/01/2019 14:20:00.1Z")]
+        [TestCase("01/01/2019 14:20:00.01Z", "01/01/2019 14:20:00.01Z")]
+        [TestCase("01/01/2019 14:20:00.001Z", "01/01/2019 14:20:00.001Z")]
+        [TestCase("01/01/2019 14:20:00.0001Z", "01/01/2019 14:20:00.0001Z")]
+        [TestCase("01/01/2019 14:20:00.00001Z", "01/01/2019 14:20:00.00001Z")]
+        [TestCase("01/01/2019 14:20:00.000001Z", "01/01/2019 14:20:00.000001Z")]
         public void TestLocalTimestampMicrosecond(string s, string e)
         {
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"local-timestamp-micros\"}");
 
-            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
-            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
 
-            // If expected timestamp is UTC, convert it to local TZ, since the convertedDat will be in local TZ
-            if (expectedDate.Kind == DateTimeKind.Utc)
+            if (date.Kind != DateTimeKind.Utc)
             {
-                expectedDate = expectedDate.ToLocalTime();
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
             }
 
+            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (expectedDate.Kind != DateTimeKind.Utc)
+            {
+                expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            expectedDate = expectedDate.ToLocalTime();
+            
             var avroLocalTimestampMicro = new LocalTimestampMicrosecond();
             var convertedDate = (DateTime)avroLocalTimestampMicro.ConvertToLogicalValue(avroLocalTimestampMicro.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
