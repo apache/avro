@@ -17,8 +17,6 @@
  */
 
 using System;
-using System.Globalization;
-using Avro.Generic;
 
 namespace Avro.Util
 {
