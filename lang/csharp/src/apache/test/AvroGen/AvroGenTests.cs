@@ -624,10 +624,12 @@ namespace Avro.Test.AvroGen
 			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
 			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
 			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
+            { ""name"" : ""nullibledecimalfixed"", ""type"" : [""null"", {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""ndf""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+            { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
 		]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
             Assembly assembly = TestSchema(schema);
