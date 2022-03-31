@@ -393,6 +393,16 @@ namespace Avro.Test.AvroGen
                 "org/apache/avro/codegentest/other/NestedOtherNamespaceRecord.cs"
             })]
         [TestCase(
+            _nestedLogicalTypesUnionFixedDecimal,
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnionFixedDecimal"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesUnionFixedDecimal.cs"
+            })]
+        [TestCase(
             _nullableLogicalTypes,
             new string[]
             {
@@ -521,7 +531,6 @@ namespace Avro.Test.AvroGen
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
         [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
-        [TestCase(_nestedLogicalTypesUnionFixedDecimal, typeof(SchemaParseException))]
         public void NotSupportedSchema(string schema, Type expectedException)
         {
             // Create temp folder
