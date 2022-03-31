@@ -53,7 +53,9 @@ namespace Avro.Util
             }
 
             if (((FixedSchema)schema.BaseSchema).Size != 12)
+            {
                 throw new AvroTypeException($"'{LogicalTypeName}' requires a 'size' property that is set to 12");
+            }
         }
 
         /// <inheritdoc/>      
