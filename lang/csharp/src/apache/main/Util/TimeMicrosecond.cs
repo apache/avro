@@ -26,7 +26,6 @@ namespace Avro.Util
     public class TimeMicrosecond : LogicalUnixEpochType<TimeSpan>
     {
         private static readonly TimeSpan _exclusiveUpperBound = TimeSpan.FromDays(1);
-        private const long _ticksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
 
         /// <summary>
         /// The logical type name for TimeMicrosecond.
@@ -53,14 +52,14 @@ namespace Avro.Util
 
             ThrowIfOutOfRange(time, nameof(logicalValue));
 
-            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time.Ticks / _ticksPerMicrosecond';
-            return (time - UnixEpochDateTime.TimeOfDay).Ticks / _ticksPerMicrosecond;
+            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time.Ticks / TicksPerMicrosecond';
+            return (time - UnixEpochDateTime.TimeOfDay).Ticks / TicksPerMicrosecond;
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var time = TimeSpan.FromTicks((long)baseValue * _ticksPerMicrosecond);
+            var time = TimeSpan.FromTicks((long)baseValue * TicksPerMicrosecond);
 
             ThrowIfOutOfRange(time, nameof(baseValue));
 
