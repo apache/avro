@@ -69,11 +69,11 @@ namespace Avro.Test
                 "-000000000000000001.01"
             )] string s, 
             [Values(
-                "\"type\": \"bytes\"",
-                "\"name\": \"Decimal\", \"type\": \"fixed\", \"size\": 16" // fixed base type requires a name
+                "\"bytes\"",
+                "{\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}"
             )] string baseType)
         {
-            var schema = (LogicalSchema)Schema.Parse($"{{{baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }}");
+            var schema = (LogicalSchema)Schema.Parse($"{{\"type\": {baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }}");
 
             var avroDecimal = new Avro.Util.Decimal();
             // CultureInfo.InvariantCulture ensures that "." is always accepted as the decimal point
@@ -97,11 +97,11 @@ namespace Avro.Test
             )] string s, 
             [Values(1, 2, 3, 4, 5, 6, 7, 8)] int scale,
             [Values(
-                "\"type\": \"bytes\"",
-                "\"name\": \"Decimal\", \"type\": \"fixed\", \"size\": 16" // fixed base type requires a name
+                "\"bytes\"",
+                "{\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}"
             )] string baseType)
         {
-            var schema = (LogicalSchema)Schema.Parse($"{{{baseType}, \"logicalType\": \"decimal\", \"precision\": 8, \"scale\": {scale} }}");
+            var schema = (LogicalSchema)Schema.Parse($"{{\"type\": {baseType}, \"logicalType\": \"decimal\", \"precision\": 8, \"scale\": {scale} }}");
 
             var avroDecimal = new Avro.Util.Decimal();
             var decimalVal = new AvroDecimal(BigInteger.Parse(s), scale);
@@ -111,11 +111,11 @@ namespace Avro.Test
             Assert.AreEqual(decimalVal, convertedDecimalVal);
         }
 
-        [TestCase("\"type\": \"bytes\"")]
-        [TestCase("\"name\": \"Decimal\", \"type\": \"fixed\", \"size\": 16")]
+        [TestCase("\"bytes\"")]
+        [TestCase("{\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}")]
         public void TestDecimalMinMax(string baseType)
         {
-            var schema = (LogicalSchema)Schema.Parse($"{{{baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 0 }}");
+            var schema = (LogicalSchema)Schema.Parse($"{{\"type\": {baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 0 }}");
 
             var avroDecimal = new Avro.Util.Decimal();
 
@@ -127,11 +127,11 @@ namespace Avro.Test
             }
         }
 
-        [TestCase("\"type\": \"bytes\"")]
-        [TestCase("\"name\": \"Decimal\", \"type\": \"fixed\", \"size\": 16")]
+        [TestCase("\"bytes\"")]
+        [TestCase("{\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}")]
         public void TestDecimalOutOfRangeException(string baseType)
         {
-            var schema = (LogicalSchema)Schema.Parse($"{{{baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }}");
+            var schema = (LogicalSchema)Schema.Parse($"{{\"type\": {baseType}, \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2 }}");
 
             var avroDecimal = new Avro.Util.Decimal();
             var decimalVal = (AvroDecimal)1234.567M; // scale of 3 should throw ArgumentOutOfRangeException

@@ -163,8 +163,11 @@ namespace Avro.Test.AvroGen
       ""type"": [""null"", {
         ""namespace"": ""org.apache.avro.codegentest.testdata"",
         ""name"": ""FixedInUnion"",
-        ""type"": ""fixed"",
-        ""size"": 12,
+        ""type"": {
+            ""type"": ""fixed"",
+            ""size"": 12,
+            ""name"": ""FixedName"",
+        },
         ""logicalType"": ""decimal"",
         ""precision"": 28,
         ""scale"": 15
