@@ -531,6 +531,18 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        [TestCase]
+        public void TestMapCreation()
+        {
+            PrimitiveSchema mapType = PrimitiveSchema.Create(Schema.Type.Float);
+            MapSchema mapSchema = MapSchema.CreateMap(mapType);
+
+            Assert.AreEqual("map", mapSchema.Fullname);
+            Assert.AreEqual("map", mapSchema.Name);
+            Assert.AreEqual(Schema.Type.Map, mapSchema.Tag);
+            Assert.AreEqual(mapType, mapSchema.ValueSchema);
+        }
+
         [TestCase("[\"string\", \"null\", \"long\"]",
             new Schema.Type[] { Schema.Type.String, Schema.Type.Null, Schema.Type.Long })]
         public void TestUnion(string s, Schema.Type[] types)

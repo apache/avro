@@ -36,10 +36,11 @@ namespace Avro
         /// Creates a new <see cref="MapSchema"/> from the given schema.
         /// </summary>
         /// <param name="type">Schema to create the map schema from.</param>
+        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
         /// <returns>A new <see cref="MapSchema"/>.</returns>
-        public static MapSchema CreateMap(Schema type)
+        public static MapSchema CreateMap(Schema type, PropertyMap cutsomProperties = null)
         {
-            return new MapSchema(type,null);
+            return new MapSchema(type, cutsomProperties);
         }
 
         /// <summary>
@@ -62,17 +63,6 @@ namespace Avro
             {
                 throw new SchemaParseException($"Error creating MapSchema at '{jtok.Path}'", e);
             }
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="MapSchema"/>
-        /// </summary>
-        /// <param name="valueSchema">Schema for map values type</param>
-        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
-        /// <returns></returns>
-        public static MapSchema Create(Schema valueSchema, PropertyMap cutsomProperties = null)
-        {
-            return new MapSchema(valueSchema, cutsomProperties);
         }
 
         /// <summary>
