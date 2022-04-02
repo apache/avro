@@ -128,7 +128,6 @@ namespace Avro
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
         /// <param name="defaultSymbol">default symbol</param>
-        /// <param name="shouldThrowParseException">If true, will throw <see cref="SchemaParseException"/> in case of an error. If false, will throw <see cref="AvroException"/> in case of an error.</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
                             string doc, string defaultSymbol)
