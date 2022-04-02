@@ -74,8 +74,7 @@ namespace Avro
                   customProperties,
                   new SchemaNames(),
                   doc,
-                  defaultSymbol,
-                  false);
+                  defaultSymbol);
         }
 
         /// <summary>
@@ -112,7 +111,7 @@ namespace Avro
                 return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
                     JsonHelper.GetOptionalString(jtok, "doc"), JsonHelper.GetOptionalString(jtok, "default"));
             }
-            catch (SchemaParseException e)
+            catch (AvroException e)
             {
                 throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
             }
@@ -132,21 +131,16 @@ namespace Avro
         /// <param name="shouldThrowParseException">If true, will throw <see cref="SchemaParseException"/> in case of an error. If false, will throw <see cref="AvroException"/> in case of an error.</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
-                            string doc, string defaultSymbol, bool shouldThrowParseException = true)
+                            string doc, string defaultSymbol)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
-            if (null == name.Name) throw CreateException("name cannot be null for enum schema.", shouldThrowParseException);
+            if (null == name.Name) throw new AvroException("name cannot be null for enum schema.");
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
 
             if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
-                throw CreateException($"Default symbol: {defaultSymbol} not found in symbols", shouldThrowParseException);
+                throw new AvroException($"Default symbol: {defaultSymbol} not found in symbols");
             Default = defaultSymbol;
-        }
-
-        private Exception CreateException(string message, bool shouldCreateParseException)
-        {
-            return shouldCreateParseException ? new SchemaParseException(message) : new AvroException(message);
         }
 
         /// <summary>
@@ -162,7 +156,7 @@ namespace Avro
             int i = 0;
             foreach (var symbol in symbols)
             {
-                if (ValidateSymbol(symbol))
+                if (ValidateSymbolName(symbol))
                 {
                     throw new AvroException($"Invalid symbol name: {symbol}");
                 }
@@ -178,7 +172,7 @@ namespace Avro
             return symbolMap;
         }
 
-        private static bool ValidateSymbol(string symbol) => string.IsNullOrEmpty(symbol) || !Regex.IsMatch(symbol, "^([A-Za-z_][A-Za-z0-9_]*)$");
+        private static bool ValidateSymbolName(string symbol) => string.IsNullOrEmpty(symbol) || !Regex.IsMatch(symbol, "^([A-Za-z_][A-Za-z0-9_]*)$");
 
         /// <summary>
         /// Writes enum schema in JSON format
