@@ -166,7 +166,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
             "i64" => quote! {apache_avro::schema::Schema::Long},
             "f32" => quote! {apache_avro::schema::Schema::Float},
             "f64" => quote! {apache_avro::schema::Schema::Double},
-            "String" => quote! {apache_avro::schema::Schema::String},
+            "String" | "str" => quote! {apache_avro::schema::Schema::String},
             "char" => {
                 return Err(vec![Error::new_spanned(
                     ty,
@@ -180,7 +180,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
             )])
             } //Can't guarentee serialization type
             _ => {
-                // Fails when the type does not implement AvroSchema directly or covered by blanket implementation
+                // Fails when the type does not implement AvroSchemaWithResolved directly or covered by blanket implementation
                 // TODO check and error report with something like https://docs.rs/quote/1.0.15/quote/macro.quote_spanned.html#example
                 return type_path_get_schema(p);
             }
@@ -189,38 +189,20 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
     } else if let Type::Array(ta) = ty {
         let inner_schema_expr = type_to_schema_expr(&ta.elem)?;
         Ok(quote! {apache_avro::schema::Schema::Array(Box::new(#inner_schema_expr))})
-    } else {
+    } else if let Type::Reference(tr) =  ty {
+        type_to_schema_expr(&tr.elem)
+    }
+    else {
         Err(vec![])
     }
 }
 
 /// Generates the schema def expression for fully qualified type paths using the associated function
-/// - `A -> A::get_schema()`
-/// - `A<T> -> A::<T>::get_schema()`
-/// - `crate::mod::mod::A<T> -> crate::mod::mod::A::<T>:get_schema()`
-/// TODO review if need to implement as
-/// - `A -> <A as AvroSchema>::get_schema()`
-/// - `A<T> -> <A<T> as AvroSchema>::get_schema()`
+/// - `A -> <A as AvroSchemaWithResolved>::get_schema()`
+/// - `A<T> -> <A<T> as AvroSchemaWithResolved>::get_schema()`
 ///
 fn type_path_get_schema(p: &TypePath) -> Result<TokenStream, Vec<Error>> {
-    let last = p.path.segments.last().unwrap(); // inside a stuct the type must always be defined / have a last path segment
-    let mut it = p.path.segments.iter().peekable();
-    let mut all_but_last = vec![];
-    while let Some(path_seg) = it.next() {
-        if let Some(_) = it.peek() {
-            //not the last
-            all_but_last.push(path_seg.clone());
-        }
-    }
-
-    let ident = last.ident.clone();
-    match last.arguments.clone() {
-        PathArguments::None => Ok(quote! {#(#all_but_last::)*#ident::get_schema()}),
-        PathArguments::AngleBracketed(a) => {
-            Ok(quote! {#(#all_but_last::)*#ident::#a::get_schema_with_resolved(resolved_schemas)})
-        }
-        PathArguments::Parenthesized(_) => unreachable!(),
-    }
+    Ok(quote!{<#p as AvroSchemaWithResolved>::get_schema_with_resolved(resolved_schemas)})
 }
 
 /// Stolen from serde
@@ -331,5 +313,24 @@ mod tests {
             }
             Err(_) => assert!(false),
         };
+    }
+
+    #[test]
+    fn test_reference() {
+        let test_reference_struct = quote! {
+            struct A<'a> {
+                a: &'a Vec<i32>,
+                b: &'static str
+            }
+        };
+
+        match syn::parse2::<DeriveInput>(test_reference_struct) {
+            Ok(mut input) => {
+                println!("{}", derive_avro_schema(&mut input).unwrap());
+                assert!(derive_avro_schema(&mut input).is_ok())
+            }
+            Err(_) => assert!(false),
+        };
+
     }
 }

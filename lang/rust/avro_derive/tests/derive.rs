@@ -10,30 +10,57 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use std::{borrow::Cow, sync::Mutex};
+    use std::{borrow::{Cow, Borrow}, sync::Mutex};
 
     use super::*;
 
     /// Takes in a type that implements the right combination of traits and runs it through a Serde Cycle and asserts the result is the same
-    fn freeze_dry<T>(obj: T)
+    fn freeze_dry_assert<T>(obj: T)
     where
         T: std::fmt::Debug + Serialize + DeserializeOwned + AvroSchema + Clone + PartialEq,
     {
+        let encoded = freeze(obj.clone());
+        let dried : T = dry(encoded);
+        assert_eq!(obj, dried);
+    }
+
+    fn freeze_dry<T>(obj: T) -> T
+    where
+        T: Serialize + DeserializeOwned + AvroSchema,
+    {
+        dry(freeze(obj))
+    }
+
+    // serialize
+    fn freeze<T>(obj: T) ->  Vec<u8>
+    where 
+        T: Serialize + AvroSchema, 
+    {
         let schema = T::get_schema();
         let mut writer = Writer::new(&schema, Vec::new());
-        if let Err(e) = writer.append_ser(obj.clone()) {
+        if let Err(e) = writer.append_ser(obj) {
             panic!("{}", e.to_string());
         }
-        let encoded = writer.into_inner().unwrap();
+        writer.into_inner().unwrap()
+    }
+
+    // deserialize
+    fn dry<T>(encoded: Vec<u8>) ->  T
+    where 
+        T: DeserializeOwned + AvroSchema, 
+    {
+        assert!(!encoded.is_empty());
+        let schema = T::get_schema();
         let reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
         for res in reader {
             match res {
                 Ok(value) => {
-                    assert_eq!(obj, from_value::<T>(&value).unwrap());
+                    return from_value::<T>(&value).unwrap();
                 }
                 Err(e) => panic!("{}", e.to_string()),
             }
         }
+        unreachable!()
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -48,7 +75,7 @@ mod test_derive {
             a: 27,
             b: "foo".to_owned(),
         };
-        freeze_dry(test);
+        freeze_dry_assert(test);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -104,7 +131,7 @@ mod test_derive {
             i: 64.4444,
             j: "testing string".to_owned(),
         };
-        freeze_dry(all_basic);
+        freeze_dry_assert(all_basic);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -131,7 +158,7 @@ mod test_derive {
             a: -1600,
             b: all_basic,
         };
-        freeze_dry(inner_struct);
+        freeze_dry_assert(inner_struct);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -142,13 +169,13 @@ mod test_derive {
     #[test]
     fn test_optional_field_some() {
         let optional_field = TestOptional { a: Some(4) };
-        freeze_dry(optional_field);
+        freeze_dry_assert(optional_field);
     }
 
     #[test]
     fn test_optional_field_none() {
         let optional_field = TestOptional { a: None };
-        freeze_dry(optional_field);
+        freeze_dry_assert(optional_field);
     }
 
     /// Generic Containers
@@ -166,7 +193,7 @@ mod test_derive {
             b: vec![0, 1, 2, 3],
             c: vec![("key".to_owned(), 3)].into_iter().collect(),
         };
-        freeze_dry(test_generic);
+        freeze_dry_assert(test_generic);
     }
 
     #[test]
@@ -203,7 +230,7 @@ mod test_derive {
             .into_iter()
             .collect(),
         };
-        freeze_dry(test_generic);
+        freeze_dry_assert(test_generic);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -226,7 +253,7 @@ mod test_derive {
             a: TestAllowedEnum::B,
             b: "hey".to_owned(),
         };
-        freeze_dry(enum_included);
+        freeze_dry_assert(enum_included);
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -244,7 +271,7 @@ mod test_derive {
                 next: None,
             })),
         };
-        freeze_dry(list)
+        freeze_dry_assert(list)
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -268,7 +295,7 @@ mod test_derive {
                 next: None,
             })),
         };
-        freeze_dry(list)
+        freeze_dry_assert(list)
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -279,7 +306,7 @@ mod test_derive {
     #[test]
     fn test_simple_array() {
         let test = TestArraysSimple { a: [2, 3, 4, 5] };
-        freeze_dry(test)
+        freeze_dry_assert(test)
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -301,7 +328,7 @@ mod test_derive {
                 },
             ],
         };
-        freeze_dry(test)
+        freeze_dry_assert(test)
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
@@ -315,7 +342,7 @@ mod test_derive {
             a: vec![1, 2],
             b: [3, 4],
         };
-        freeze_dry(test)
+        freeze_dry_assert(test)
         // don't check for schema equality to allow for transitioning to bytes or fixed types in the future
     }
 
@@ -333,7 +360,25 @@ mod test_derive {
             b: Mutex::new(vec![42]),
             c: Cow::Owned(32),
         };
-        // test serde with manual equality
-        println!("{:?}", TestSmartPointers::get_schema())
+        // test serde with manual equality for mutex
+        let test = freeze_dry(test);
+        assert_eq!(Box::new("hey".into()),test.a);
+        assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
+        assert_eq!(Cow::Owned::<i32>(32), test.c);
+    }
+
+    #[derive(Debug, Serialize, AvroSchema, Clone, PartialEq)]
+    struct TestReference<'a> {
+        a: &'a Vec<i32>,
+        b: &'static str,
+        c: &'a f64
+    }
+
+    #[test]
+    fn test_reference_struct() {
+        let a = vec![34];
+        let c = 4.55555555;
+        let test = TestReference { a: &a, b: "testing_static", c: &c};
+        freeze(test);
     }
 }
