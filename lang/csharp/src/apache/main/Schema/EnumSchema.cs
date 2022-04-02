@@ -162,7 +162,7 @@ namespace Avro
             int i = 0;
             foreach (var symbol in symbols)
             {
-                if (string.IsNullOrEmpty(symbol) || Regex.IsMatch(symbol, "[A-Za-z_][A-Za-z0-9_]*"))
+                if (ValidateSymbol(symbol))
                 {
                     throw new AvroException($"Invalid symbol name: {symbol}");
                 }
@@ -177,6 +177,8 @@ namespace Avro
 
             return symbolMap;
         }
+
+        private static bool ValidateSymbol(string symbol) => string.IsNullOrEmpty(symbol) || !Regex.IsMatch(symbol, "^([A-Za-z_][A-Za-z0-9_]*)$");
 
         /// <summary>
         /// Writes enum schema in JSON format

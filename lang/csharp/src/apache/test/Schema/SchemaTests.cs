@@ -479,6 +479,8 @@ namespace Avro.Test
         [TestCase(new[] {"8", "B" }, null)]
         [TestCase(new[] { "8", "B" }, null)]
         [TestCase(new[] { "A", "A" }, null)]
+        [TestCase(new[] { " ", "A" }, null)]
+        [TestCase(new[] { "9A23", "A" }, null)]
         public void TestEnumInvalidSymbols(string[] symbols, string defaultSymbol)
         {
             Assert.Throws<AvroException>(() => EnumSchema.Create("name", symbols, defaultSymbol: defaultSymbol));
