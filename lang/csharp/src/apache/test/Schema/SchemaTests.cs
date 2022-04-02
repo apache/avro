@@ -477,10 +477,10 @@ namespace Avro.Test
         [TestCase(new[] {null, "B"}, null)]
         [TestCase(new[] {"", "B" }, null)]
         [TestCase(new[] {"8", "B" }, null)]
-        [TestCase(new[] { "8", "B" }, null)]
-        [TestCase(new[] { "A", "A" }, null)]
-        [TestCase(new[] { " ", "A" }, null)]
-        [TestCase(new[] { "9A23", "A" }, null)]
+        [TestCase(new[] {"8", "B" }, null)]
+        [TestCase(new[] {"A", "A" }, null)]
+        [TestCase(new[] {" ", "A" }, null)]
+        [TestCase(new[] {"9A23", "A" }, null)]
         public void TestEnumInvalidSymbols(string[] symbols, string defaultSymbol)
         {
             Assert.Throws<AvroException>(() => EnumSchema.Create("name", symbols, defaultSymbol: defaultSymbol));
@@ -496,6 +496,23 @@ namespace Avro.Test
 
             testEquality(s, sc);
             testToString(sc);
+        }
+
+        [TestCase]
+        public void TestArrayCreation()
+        {
+            PrimitiveSchema itemsSchema = PrimitiveSchema.Create(Schema.Type.String);
+            ArraySchema arraySchema = ArraySchema.Create(itemsSchema);
+
+            Assert.AreEqual("array", arraySchema.Name);
+            Assert.AreEqual(Schema.Type.Array, arraySchema.Tag);
+            Assert.AreEqual(itemsSchema, arraySchema.ItemSchema);
+        }
+
+        [TestCase]
+        public void TestInvalidArrayCreation()
+        {
+            Assert.Throws<ArgumentNullException>(() => ArraySchema.Create(null));
         }
 
         [TestCase("{\"type\": \"int\", \"logicalType\": \"date\"}", "int", "date")]
@@ -541,6 +558,12 @@ namespace Avro.Test
             Assert.AreEqual("map", mapSchema.Name);
             Assert.AreEqual(Schema.Type.Map, mapSchema.Tag);
             Assert.AreEqual(mapType, mapSchema.ValueSchema);
+        }
+
+        [TestCase]
+        public void TestInvalidMapCreation()
+        {
+            Assert.Throws<ArgumentNullException>(() => MapSchema.CreateMap(null));
         }
 
         [TestCase("[\"string\", \"null\", \"long\"]",
