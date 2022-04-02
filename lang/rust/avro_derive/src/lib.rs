@@ -1,9 +1,7 @@
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::quote;
 
-use syn::{
-    parse_macro_input, Attribute, DeriveInput, Error, Lit, Path, PathArguments, Type, TypePath,
-};
+use syn::{parse_macro_input, Attribute, DeriveInput, Error, Lit, Path, Type, TypePath};
 
 #[proc_macro_derive(AvroSchema, attributes(namespace))]
 // Templated from Serde
@@ -18,8 +16,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     let namespace = get_namespace_from_attributes(&input.attrs)?;
     let full_schema_name = vec![namespace, Some(input.ident.to_string())]
         .into_iter()
-        .filter(Option::is_some)
-        .map(Option::unwrap)
+        .flatten()
         .collect::<Vec<String>>()
         .join(".");
     let schema_def = match &input.data {
@@ -52,17 +49,14 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     })
 }
 
-fn get_namespace_from_attributes(attrs: &Vec<Attribute>) -> Result<Option<String>, Vec<Error>> {
+fn get_namespace_from_attributes(attrs: &[Attribute]) -> Result<Option<String>, Vec<Error>> {
     let namespace_attr_path_constant: Path = syn::parse2::<Path>(quote! {namespace}).unwrap();
-    let namespace_parsing_error_constanst =
+    const NAMESPACE_PARSING_ERROR_CONSTANST: &str =
         "Namespace attribute must be in form #[namespace = \"com.testing.namespace\"]";
-    // parse out namespace if present. Require strict syntax
+    // parse out namespace if present. Requires strict syntax
     for attr in attrs {
         if namespace_attr_path_constant == attr.path {
-            // println!("{:?}", attr.tokens);
             let mut input_tokens = attr.tokens.clone().into_iter();
-            let error_constant =
-                Error::new_spanned(&attr.tokens, namespace_parsing_error_constanst);
             if let (
                 Some(TokenTree::Punct(punct)),
                 Some(TokenTree::Literal(namespace_literal)),
@@ -78,14 +72,17 @@ fn get_namespace_from_attributes(attrs: &Vec<Attribute>) -> Result<Option<String
                     }
                 }
             }
-            return Err(vec![error_constant]);
+            return Err(vec![Error::new_spanned(
+                &attr.tokens,
+                NAMESPACE_PARSING_ERROR_CONSTANST,
+            )]);
         }
     }
     Ok(None)
 }
 
 fn get_data_struct_schema_def(
-    full_schema_name: &String,
+    full_schema_name: &str,
     s: &syn::DataStruct,
     error_span: Span,
 ) -> Result<TokenStream, Vec<Error>> {
@@ -123,13 +120,13 @@ fn get_data_struct_schema_def(
     }
     Ok(quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
-        let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]);
+        let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to struct name for schema {}", #full_schema_name)[..]);
         apache_avro::schema::record_schema_for_fields(name, None, None, schema_fields)
     })
 }
 
 fn get_data_enum_schema_def(
-    full_schema_name: &String,
+    full_schema_name: &str,
     e: &syn::DataEnum,
     error_span: Span,
 ) -> Result<TokenStream, Vec<Error>> {
@@ -182,27 +179,28 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
             _ => {
                 // Fails when the type does not implement AvroSchemaWithResolved directly or covered by blanket implementation
                 // TODO check and error report with something like https://docs.rs/quote/1.0.15/quote/macro.quote_spanned.html#example
-                return type_path_get_schema(p);
+                type_path_schema_expr(p)
             }
         };
         Ok(schema)
     } else if let Type::Array(ta) = ty {
         let inner_schema_expr = type_to_schema_expr(&ta.elem)?;
         Ok(quote! {apache_avro::schema::Schema::Array(Box::new(#inner_schema_expr))})
-    } else if let Type::Reference(tr) =  ty {
+    } else if let Type::Reference(tr) = ty {
         type_to_schema_expr(&tr.elem)
-    }
-    else {
-        Err(vec![])
+    } else {
+        Err(vec![Error::new_spanned(
+            ty,
+            format!("Unable to generate schema for type: {:?}", ty),
+        )])
     }
 }
 
 /// Generates the schema def expression for fully qualified type paths using the associated function
-/// - `A -> <A as AvroSchemaWithResolved>::get_schema()`
-/// - `A<T> -> <A<T> as AvroSchemaWithResolved>::get_schema()`
-///
-fn type_path_get_schema(p: &TypePath) -> Result<TokenStream, Vec<Error>> {
-    Ok(quote!{<#p as AvroSchemaWithResolved>::get_schema_with_resolved(resolved_schemas)})
+/// - `A -> <A as AvroSchemaWithResolved>::get_schema_with_resolved()`
+/// - `A<T> -> <A<T> as AvroSchemaWithResolved>::get_schema_with_resolved()`
+fn type_path_schema_expr(p: &TypePath) -> TokenStream {
+    quote! {<#p as apache_avro::schema::AvroSchemaWithResolved>::get_schema_with_resolved(resolved_schemas)}
 }
 
 /// Stolen from serde
@@ -226,10 +224,12 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                println!("{}", derive_avro_schema(&mut input).unwrap());
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -243,7 +243,10 @@ mod tests {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -257,7 +260,10 @@ mod tests {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -270,10 +276,12 @@ mod tests {
         };
         match syn::parse2::<DeriveInput>(stuct_with_optional) {
             Ok(mut input) => {
-                println!("{}", derive_avro_schema(&mut input).unwrap());
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -289,10 +297,12 @@ mod tests {
         };
         match syn::parse2::<DeriveInput>(basic_enum) {
             Ok(mut input) => {
-                println!("{}", derive_avro_schema(&mut input).unwrap());
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -308,10 +318,12 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                //println!("{}", derive_avro_schema(&mut input).unwrap());
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
     }
 
@@ -326,11 +338,12 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_reference_struct) {
             Ok(mut input) => {
-                println!("{}", derive_avro_schema(&mut input).unwrap());
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
-            Err(_) => assert!(false),
+            Err(error) => panic!(
+                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
         };
-
     }
 }

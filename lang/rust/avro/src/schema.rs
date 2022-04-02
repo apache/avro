@@ -1532,7 +1532,7 @@ where
     T: AvroSchemaWithResolved,
 {
     fn get_schema() -> Schema {
-        return T::get_schema_with_resolved(&mut HashMap::default());
+        T::get_schema_with_resolved(&mut HashMap::default())
     }
 }
 
@@ -1576,7 +1576,7 @@ where
         let inner_schema = T::get_schema_with_resolved(resolved_schemas);
         Schema::Union(UnionSchema {
             schemas: vec![Schema::Null, inner_schema.clone()],
-            variant_index: vec![Schema::Null, inner_schema.clone()]
+            variant_index: vec![Schema::Null, inner_schema]
                 .iter()
                 .enumerate()
                 .map(|(idx, s)| (SchemaKind::from(s), idx))

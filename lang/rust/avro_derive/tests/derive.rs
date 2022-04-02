@@ -10,7 +10,10 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use std::{borrow::{Cow, Borrow}, sync::Mutex};
+    use std::{
+        borrow::{Borrow, Cow},
+        sync::Mutex,
+    };
 
     use super::*;
 
@@ -20,7 +23,7 @@ mod test_derive {
         T: std::fmt::Debug + Serialize + DeserializeOwned + AvroSchema + Clone + PartialEq,
     {
         let encoded = freeze(obj.clone());
-        let dried : T = dry(encoded);
+        let dried: T = dry(encoded);
         assert_eq!(obj, dried);
     }
 
@@ -32,9 +35,9 @@ mod test_derive {
     }
 
     // serialize
-    fn freeze<T>(obj: T) ->  Vec<u8>
-    where 
-        T: Serialize + AvroSchema, 
+    fn freeze<T>(obj: T) -> Vec<u8>
+    where
+        T: Serialize + AvroSchema,
     {
         let schema = T::get_schema();
         let mut writer = Writer::new(&schema, Vec::new());
@@ -45,9 +48,9 @@ mod test_derive {
     }
 
     // deserialize
-    fn dry<T>(encoded: Vec<u8>) ->  T
-    where 
-        T: DeserializeOwned + AvroSchema, 
+    fn dry<T>(encoded: Vec<u8>) -> T
+    where
+        T: DeserializeOwned + AvroSchema,
     {
         assert!(!encoded.is_empty());
         let schema = T::get_schema();
@@ -347,6 +350,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
+    #[allow(clippy::box_collection)]
     struct TestSmartPointers<'a> {
         a: Box<String>,
         b: std::sync::Mutex<Vec<i64>>,
@@ -362,7 +366,7 @@ mod test_derive {
         };
         // test serde with manual equality for mutex
         let test = freeze_dry(test);
-        assert_eq!(Box::new("hey".into()),test.a);
+        assert_eq!(Box::new("hey".into()), test.a);
         assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
         assert_eq!(Cow::Owned::<i32>(32), test.c);
     }
@@ -371,14 +375,18 @@ mod test_derive {
     struct TestReference<'a> {
         a: &'a Vec<i32>,
         b: &'static str,
-        c: &'a f64
+        c: &'a f64,
     }
 
     #[test]
     fn test_reference_struct() {
         let a = vec![34];
         let c = 4.55555555;
-        let test = TestReference { a: &a, b: "testing_static", c: &c};
+        let test = TestReference {
+            a: &a,
+            b: "testing_static",
+            c: &c,
+        };
         freeze(test);
     }
 }
