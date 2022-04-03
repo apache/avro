@@ -36,11 +36,11 @@ namespace Avro
         /// Creates a new <see cref="MapSchema"/> from the given schema.
         /// </summary>
         /// <param name="type">Schema to create the map schema from.</param>
-        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
+        /// <param name="custsomProperties">Dictionary that provides access to custom properties</param>
         /// <returns>A new <see cref="MapSchema"/>.</returns>
-        public static MapSchema CreateMap(Schema type, PropertyMap cutsomProperties = null)
+        public static MapSchema CreateMap(Schema type, PropertyMap custsomProperties = null)
         {
-            return new MapSchema(type, cutsomProperties);
+            return new MapSchema(type, custsomProperties);
         }
 
         /// <summary>
