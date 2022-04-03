@@ -37,7 +37,7 @@ VALID_TYPE_SCHEMA_TYPES = ("enum", "record", "error", "fixed")
 
 
 class MessageObject(TypedDict, total=False):
-    request: Sequence[Mapping[str, object]]
+    request: Sequence[avro.schema.PropsType]
     response: Union[str, object]
     errors: Optional[Sequence[str]]
 
@@ -214,10 +214,10 @@ class Message:
             to_dump = MessageObject()
         except NameError:
             to_dump = {}
-        to_dump["request"] = self.request.to_json(names)
+        to_dump["request"] = cast(Sequence[avro.schema.PropsType], self.request.to_json(names))
         to_dump["response"] = self.response.to_json(names)
         if self.errors:
-            to_dump["errors"] = self.errors.to_json(names)
+            to_dump["errors"] = cast(Sequence[str], self.errors.to_json(names))
 
         return to_dump
 

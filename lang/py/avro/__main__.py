@@ -141,8 +141,7 @@ def iter_json(info: Iterable[AnyStr], _: Any) -> Generator[object, None, None]:
             yield json.loads(row)
 
 
-def convert(value: str, field: avro.schema.Field) -> Union[int, float, str, bytes, bool, None]:
-    type_ = field.type.type
+def _cast(type_: str, value: str) -> Union[int, float, str, bytes, bool, None]:
     if type_ in ("int", "long"):
         return int(value)
     if type_ in ("float", "double"):
@@ -155,15 +154,20 @@ def convert(value: str, field: avro.schema.Field) -> Union[int, float, str, byte
         return value.lower() in ("1", "t", "true")
     if type_ == "null":
         return None
-    if type_ == "union":
-        return convert_union(value, field)
     raise avro.errors.UsageError("No valid conversion type")
 
 
+def convert(value: str, field: avro.schema.Field) -> Union[int, float, str, bytes, bool, None]:
+    type_ = field.type.type
+    return convert_union(value, field) if type_ == "union" else _cast(type_, value)
+
+
 def convert_union(value: str, field: avro.schema.Field) -> Union[int, float, str, bytes, bool, None]:
-    for name in (s.name for s in field.type.schemas):
+    schemas = cast(avro.schema.UnionSchema, field.type).schemas
+    types = (schema.type for schema in schemas)
+    for type_ in types:
         try:
-            return convert(value, name)
+            return _cast(type_, value)
         except ValueError:
             continue
     raise avro.errors.UsageError("Exhausted Union Schema without finding a match")
