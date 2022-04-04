@@ -25,8 +25,8 @@ namespace Avro.Util
     /// </summary>
     public class Duration : LogicalUnixEpochType<TimeSpan>
     {
-        private const long _millisecondsInDay = 86400000L;
         private const long _daysInMonth = 30L;
+        private const long _millisecondsInDay = 86400000L;
         private const long _millisecondsInMonth = _millisecondsInDay * _daysInMonth;
 
         /// <summary>
