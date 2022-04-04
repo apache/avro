@@ -177,7 +177,10 @@ namespace Avro.Specific
                             // Change the search to look for Types by both NAME and FULLNAME
                             foreach (Type t in assembly.GetTypes())
                             {
-                                if (name == t.Name || name == t.FullName || CodeGenUtil.Instance.UnMangle(name) == t.FullName)
+                                if (name == t.Name ||
+                                name == t.FullName ||
+                                CodeGenUtil.Instance.UnMangle(name) == t.FullName ||
+                                name == CodeGenUtil.Instance.GetSimpleTypeAlias(t))
                                 {
                                     type = t;
                                     break;
@@ -230,6 +233,7 @@ namespace Avro.Specific
         {
             const string nullablePrefix = "Nullable<";
             const string fullNullablePrefix = "System.Nullable<";
+            const string nullableSuffix = "?";
 
             if (name.StartsWith(fullNullablePrefix, StringComparison.Ordinal))
             {
@@ -242,6 +246,12 @@ namespace Avro.Specific
             {
                 itemTypeName = name.Substring(
                     nullablePrefix.Length, name.Length - nullablePrefix.Length - 1);
+                return true;
+            }
+
+            if(name.EndsWith(nullableSuffix, StringComparison.Ordinal))
+            {
+                itemTypeName = name.Substring(0, name.Length - nullableSuffix.Length);
                 return true;
             }
 

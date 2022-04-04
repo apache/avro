@@ -907,24 +907,28 @@ namespace Avro
                 case Schema.Type.Null:
                     return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    return nullible ? $"System.Nullable<{typeof(bool)}>" : typeof(bool).ToString();
-
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(bool)) +
+                        $"{(nullible ? "?" : string.Empty)}";
                 case Schema.Type.Int:
-                    return nullible ? $"System.Nullable<{typeof(int)}>" : typeof(int).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(int)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Long:
-                    return nullible ? $"System.Nullable<{typeof(long)}>" : typeof(long).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(long)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Float:
-                    return nullible ? $"System.Nullable<{typeof(float)}>" : typeof(float).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(float)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Double:
-                    return nullible ? $"System.Nullable<{typeof(double)}>" : typeof(double).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(double)) +
+                        $"{(nullible ? "?" : string.Empty)}";
 
                 case Schema.Type.Bytes:
-                    return typeof(byte[]).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(byte[]));
                 case Schema.Type.String:
-                    return typeof(string).ToString();
+                    return CodeGenUtil.Instance.GetSimpleTypeAlias(typeof(string));
 
                 case Schema.Type.Enumeration:
                     var namedSchema = schema as NamedSchema;
