@@ -362,25 +362,53 @@ class BinaryDecoder:
         microseconds = self.read_long()
         return self._build_time_object(microseconds, 1)
 
-    def read_timestamp_millis_from_long(self) -> datetime.datetime:
+    def _read_timestamp_millis_from_long(self, tz: bool) -> datetime.datetime:
         """
         long is decoded as python datetime object which represents
         the number of milliseconds from the unix epoch, 1 January 1970.
         """
         timestamp_millis = self.read_long()
         timedelta = datetime.timedelta(microseconds=timestamp_millis * 1000)
-        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
+        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc if tz else None)
         return unix_epoch_datetime + timedelta
 
-    def read_timestamp_micros_from_long(self) -> datetime.datetime:
+    def _read_timestamp_micros_from_long(self, tz: bool) -> datetime.datetime:
         """
         long is decoded as python datetime object which represents
         the number of microseconds from the unix epoch, 1 January 1970.
         """
         timestamp_micros = self.read_long()
         timedelta = datetime.timedelta(microseconds=timestamp_micros)
-        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
+        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc if tz else None)
         return unix_epoch_datetime + timedelta
+
+    def read_local_timestamp_micros_from_long(self) -> datetime.datetime:
+        """
+        long is decoded as python datetime object which represents
+        the number of microseconds from the unix epoch, 1 January 1970 with no timezone.
+        """
+        return self._read_timestamp_micros_from_long(tz=False)
+
+    def read_local_timestamp_millis_from_long(self) -> datetime.datetime:
+        """
+        long is decoded as python datetime object which represents
+        the number of milliseconds from the unix epoch, 1 January 1970 with no timezone.
+        """
+        return self._read_timestamp_millis_from_long(tz=False)
+
+    def read_timestamp_micros_from_long(self) -> datetime.datetime:
+        """
+        long is decoded as python datetime object which represents
+        the number of microseconds from the unix epoch, 1 January 1970 UTC.
+        """
+        return self._read_timestamp_micros_from_long(tz=True)
+
+    def read_timestamp_millis_from_long(self) -> datetime.datetime:
+        """
+        long is decoded as python datetime object which represents
+        the number of milliseconds from the unix epoch, 1 January 1970 UTC.
+        """
+        return self._read_timestamp_millis_from_long(tz=True)
 
     def skip_null(self) -> None:
         pass
@@ -586,25 +614,55 @@ class BinaryEncoder:
     def _timedelta_total_microseconds(self, timedelta_: datetime.timedelta) -> int:
         return timedelta_.microseconds + (timedelta_.seconds + timedelta_.days * 24 * 3600) * 10**6
 
-    def write_timestamp_millis_long(self, datum: datetime.datetime) -> None:
+    def _write_timestamp_millis_long(self, datum: datetime.datetime, tz: bool) -> None:
         """
         Encode python datetime object as long.
         It stores the number of milliseconds from midnight of unix epoch, 1 January 1970.
         """
-        datum = datum.astimezone(tz=avro.timezones.utc)
-        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
+        if tz:
+            datum = datum.astimezone(tz=avro.timezones.utc)
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc if tz else None)
         milliseconds = self._timedelta_total_microseconds(timedelta) // 1000
         self.write_long(milliseconds)
 
-    def write_timestamp_micros_long(self, datum: datetime.datetime) -> None:
+    def write_timestamp_millis_long(self, datum: datetime.datetime) -> None:
+        """
+        Encode python datetime object as long.
+        It stores the number of milliseconds from midnight of unix epoch, 1 January 1970 UTC.
+        """
+        return self._write_timestamp_millis_long(datum, tz=True)
+
+    def write_local_timestamp_millis_long(self, datum: datetime.datetime) -> None:
+        """
+        Encode python datetime object as long.
+        It stores the number of milliseconds from midnight of unix epoch, 1 January 1970 without a timezone.
+        """
+        return self._write_timestamp_millis_long(datum, tz=False)
+
+    def _write_timestamp_micros_long(self, datum: datetime.datetime, tz: bool) -> None:
         """
         Encode python datetime object as long.
         It stores the number of microseconds from midnight of unix epoch, 1 January 1970.
         """
-        datum = datum.astimezone(tz=avro.timezones.utc)
-        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
+        if tz:
+            datum = datum.astimezone(tz=avro.timezones.utc)
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc if tz else None)
         microseconds = self._timedelta_total_microseconds(timedelta)
         self.write_long(microseconds)
+
+    def write_timestamp_micros_long(self, datum: datetime.datetime) -> None:
+        """
+        Encode python datetime object as long.
+        It stores the number of microseconds from midnight of unix epoch, 1 January 1970 UTC.
+        """
+        return self._write_timestamp_micros_long(datum, tz=True)
+
+    def write_local_timestamp_micros_long(self, datum: datetime.datetime) -> None:
+        """
+        Encode python datetime object as long.
+        It stores the number of microseconds from midnight of unix epoch, 1 January 1970 without a timezone.
+        """
+        return self._write_timestamp_micros_long(datum, tz=False)
 
 
 #
@@ -681,12 +739,16 @@ class DatumReader:
                 return decoder.read_time_millis_from_int()
             return decoder.read_int()
         if writers_schema.type == "long":
-            if logical_type == avro.constants.TIME_MICROS:
-                return decoder.read_time_micros_from_long()
-            if logical_type == avro.constants.TIMESTAMP_MILLIS:
-                return decoder.read_timestamp_millis_from_long()
+            if logical_type == avro.constants.LOCAL_TIMESTAMP_MICROS:
+                return decoder.read_local_timestamp_micros_from_long()
+            if logical_type == avro.constants.LOCAL_TIMESTAMP_MILLIS:
+                return decoder.read_local_timestamp_millis_from_long()
             if logical_type == avro.constants.TIMESTAMP_MICROS:
                 return decoder.read_timestamp_micros_from_long()
+            if logical_type == avro.constants.TIMESTAMP_MILLIS:
+                return decoder.read_timestamp_millis_from_long()
+            if logical_type == avro.constants.TIME_MICROS:
+                return decoder.read_time_micros_from_long()
             return decoder.read_long()
         if writers_schema.type == "float":
             return decoder.read_float()
@@ -1045,6 +1107,14 @@ class DatumWriter:
                 if isinstance(datum, datetime.time):
                     return encoder.write_time_micros_long(datum)
                 warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a time type"))
+            elif logical_type == avro.constants.LOCAL_TIMESTAMP_MILLIS:
+                if isinstance(datum, datetime.datetime):
+                    return encoder.write_local_timestamp_millis_long(datum)
+                warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a datetime type"))
+            elif logical_type == avro.constants.LOCAL_TIMESTAMP_MICROS:
+                if isinstance(datum, datetime.datetime):
+                    return encoder.write_local_timestamp_micros_long(datum)
+                warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a datetime type"))
             elif logical_type == avro.constants.TIMESTAMP_MILLIS:
                 if isinstance(datum, datetime.datetime):
                     return encoder.write_timestamp_millis_long(datum)

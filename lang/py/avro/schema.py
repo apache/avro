@@ -978,11 +978,6 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
         return self if isinstance(datum, datetime.time) else None
 
 
-#
-# time-micros Type
-#
-
-
 class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, avro.constants.TIME_MICROS)
@@ -996,12 +991,16 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
         return self if isinstance(datum, datetime.time) else None
 
 
-#
-# timestamp-millis Type
-#
-
-
 class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
+    """Timestamp (millisecond precision)
+
+    The timestamp-millis logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
+
+    A timestamp-millis logical type annotates an Avro long, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+
+    (The only difference between the local and global timestamp logical schema types is the name. The decoder uses the name to determine whether or not to include a timezone in the decoded value.)
+    """
+
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MILLIS)
         PrimitiveSchema.__init__(self, "long", other_props)
@@ -1013,12 +1012,27 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
         return self if isinstance(datum, datetime.datetime) and _is_timezone_aware_datetime(datum) else None
 
 
-#
-# timestamp-micros Type
-#
+class LocalTimestampMillisSchema(TimestampMillisSchema):
+    """Local timestamp (millisecond precision)
+
+    The local-timestamp-millis logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
+
+    A local-timestamp-millis logical type annotates an Avro long, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
+
+    (The only difference between the local and global timestamp logical schema types is the name. The decoder uses the name to determine whether or not to include a timezone in the decoded value.)
+    """
 
 
 class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
+    """Timestamp (microsecond precision)
+
+    The timestamp-micros logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
+
+    A timestamp-micros logical type annotates an Avro long, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+
+    (The only difference between the local and global timestamp logical schema types is the name. The decoder uses the name to determine whether or not to include a timezone in the decoded value.)
+    """
+
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MICROS)
         PrimitiveSchema.__init__(self, "long", other_props)
@@ -1028,6 +1042,17 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 
     def validate(self, datum):
         return self if isinstance(datum, datetime.datetime) and _is_timezone_aware_datetime(datum) else None
+
+
+class LocalTimestampMicrosSchema(TimestampMicrosSchema):
+    """Local timestamp (microsecond precision)
+
+    The local-timestamp-micros logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
+
+    A local-timestamp-micros logical type annotates an Avro long, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
+
+    (The only difference between the local and global timestamp logical schema types is the name. The decoder uses the name to determine whether or not to include a timezone in the decoded value.)
+    """
 
 
 #
@@ -1079,6 +1104,8 @@ def make_logical_schema(logical_type, type_, other_props):
         (avro.constants.DECIMAL, "bytes"): make_bytes_decimal_schema,
         # The fixed decimal schema is handled later by returning None now.
         (avro.constants.DECIMAL, "fixed"): lambda x: None,
+        (avro.constants.LOCAL_TIMESTAMP_MICROS, "long"): LocalTimestampMicrosSchema,
+        (avro.constants.LOCAL_TIMESTAMP_MILLIS, "long"): LocalTimestampMillisSchema,
         (avro.constants.TIMESTAMP_MICROS, "long"): TimestampMicrosSchema,
         (avro.constants.TIMESTAMP_MILLIS, "long"): TimestampMillisSchema,
         (avro.constants.TIME_MICROS, "long"): TimeMicrosSchema,
