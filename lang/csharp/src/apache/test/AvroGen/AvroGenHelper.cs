@@ -100,14 +100,14 @@ namespace Avro.Test.AvroGen
 
                 // Create compiler
                 CSharpCompilation compilation = CSharpCompilation
-                .Create(assemblyName)
-                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
-                .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
-                .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
-                {
-                    string sourceText = System.IO.File.ReadAllText(sourceFile);
-                    return CSharpSyntaxTree.ParseText(sourceText);
-                }));
+                    .Create(assemblyName)
+                    .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                    .AddReferences(assemblies.Select(path => MetadataReference.CreateFromFile(path)))
+                    .AddSyntaxTrees(sourceFiles.Select(sourceFile =>
+                    {
+                        string sourceText = System.IO.File.ReadAllText(sourceFile);
+                        return CSharpSyntaxTree.ParseText(sourceText);
+                    }));
 
                 // Compile
                 EmitResult compilationResult = compilation.Emit(compilerStream);
