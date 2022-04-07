@@ -491,7 +491,7 @@ namespace Avro.Test
         {
             Schema sc = Schema.Parse(s);
             Assert.AreEqual(Schema.Type.Array, sc.Tag);
-            ArraySchema ars = sc as ArraySchema;
+            ArraySchema ars = (ArraySchema)sc;
             Assert.AreEqual(item, ars.ItemSchema.Name);
 
             testEquality(s, sc);
@@ -541,7 +541,7 @@ namespace Avro.Test
         {
             Schema sc = Schema.Parse(s);
             Assert.AreEqual(Schema.Type.Map, sc.Tag);
-            MapSchema ms = sc as MapSchema;
+            MapSchema ms = (MapSchema)sc;
             Assert.AreEqual(value, ms.ValueSchema.Name);
 
             testEquality(s, sc);
@@ -573,9 +573,10 @@ namespace Avro.Test
             Schema sc = Schema.Parse(s);
 
             UnionSchema schema = UnionSchema.Create(types.Select(t => (Schema)PrimitiveSchema.Create(t)).ToList());
-
+            Assert.AreEqual(sc, schema);
+            
             Assert.AreEqual(Schema.Type.Union, sc.Tag);
-            UnionSchema us = sc as UnionSchema;
+            UnionSchema us = (UnionSchema)sc;
             Assert.AreEqual(types.Length, us.Count);
 
             for (int i = 0; i < us.Count; i++)

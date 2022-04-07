@@ -103,7 +103,7 @@ namespace Avro
         /// <summary>
         /// Static comparer object for JSON objects such as the fields default value
         /// </summary>
-        internal static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
+        internal readonly static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Field"/> class.

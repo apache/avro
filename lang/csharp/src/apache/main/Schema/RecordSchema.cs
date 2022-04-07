@@ -61,7 +61,7 @@ namespace Avro
         private IDictionary<string, Field> fieldLookup;
 
         private IDictionary<string, Field> fieldAliasLookup;
-        private bool request;
+        private readonly bool request;
 
         /// <summary>
         /// Creates a new instance of <see cref="RecordSchema"/>
