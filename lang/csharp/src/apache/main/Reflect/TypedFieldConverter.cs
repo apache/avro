@@ -51,7 +51,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public object FromAvroType(object o, Schema s)
         {
-            if (!typeof(TAvro).IsAssignableFrom(o.GetType()))
+            if (o != null && !typeof(TAvro).IsAssignableFrom(o.GetType()))
             {
                 throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TAvro).Name}, object {o.ToString()}");
             }
@@ -85,7 +85,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public object ToAvroType(object o, Schema s)
         {
-            if (!typeof(TProperty).IsAssignableFrom(o.GetType()))
+            if (o != null && !typeof(TProperty).IsAssignableFrom(o.GetType()))
             {
                 throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TProperty).Name}, object {o.ToString()}");
             }

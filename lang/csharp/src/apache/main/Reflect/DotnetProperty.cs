@@ -24,7 +24,7 @@ namespace Avro.Reflect
 {
     internal class DotnetProperty
     {
-        private PropertyInfo _property;
+        private readonly PropertyInfo _property;
 
         public IAvroFieldConverter Converter { get; set; }
 
@@ -79,29 +79,19 @@ namespace Avro.Reflect
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema,  IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
-            Converter = converter;
+            Converter = converter ?? cache.GetDefaultConverter(schema, _property.PropertyType);
 
-            if (!IsPropertyCompatible(schemaTag))
+            if (!IsPropertyCompatible(schema.Tag))
             {
-                if (Converter == null)
-                {
-                    var c = cache.GetDefaultConverter(schemaTag, _property.PropertyType);
-                    if (c != null)
-                    {
-                        Converter = c;
-                        return;
-                    }
-                }
-
-                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schemaTag}");
+                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schema.Tag}");
             }
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, ClassCache cache)
-            : this(property, schemaTag, null, cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
+            : this(property, schema, null, cache)
         {
         }
 

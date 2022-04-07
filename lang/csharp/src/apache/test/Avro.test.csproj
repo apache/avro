@@ -22,6 +22,8 @@
     <TargetFrameworks>$(DefaultUnitTestTargetFrameworks)</TargetFrameworks>
     <RootNamespace>Avro.test</RootNamespace>
     <AssemblyName>Avro.test</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
