@@ -116,8 +116,20 @@ namespace Avro
             if (s is UnionSchema) throw new AvroException("Cannot find a match against union schema");
             // Try exact match.
             // CanRead might find a compatible schema which can read. e.g. double and long
-            for (int i = 0; i < Count; i++) if (Schemas[i].Equals(s)) return i;
-            for (int i = 0; i < Count; i++) if (Schemas[i].CanRead(s)) return i;
+            for (int i = 0; i < Count; i++)
+            {
+                if (Schemas[i].Equals(s))
+                {
+                    return i;
+                }
+            }
+            for (int i = 0; i < Count; i++)
+            {
+                if (Schemas[i].CanRead(s))
+                {
+                    return i;
+                }
+            }
             return -1;
         }
 
