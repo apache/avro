@@ -292,6 +292,19 @@ namespace Avro.Test
             Assert.AreEqual(value.GetType(), rec2.Property.GetType());
         }
 
+        [TestCase(0)]
+        [TestCase(100)]
+        [TestCase(-100)]
+        [TestCase(0.0f)]
+        [TestCase(100.0f)]
+        [TestCase(-100.0f)]
+        [TestCase("0")]
+        [TestCase("100")]
+        public void TestDoubleLongUnionNoMatchException(object value)
+        {
+            Assert.Throws<AvroException>(() => serialize(DoubleLongUnionRecord._SCHEMA, new DoubleLongUnionRecord() { Property = value }));
+        }
+
         [Test]
         public void TestArrayWithReservedWords()
         {
