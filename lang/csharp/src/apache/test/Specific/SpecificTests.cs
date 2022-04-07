@@ -272,6 +272,25 @@ namespace Avro.Test
             Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
         }
 
+        [TestCase(0L)]
+        [TestCase(100L)]
+        [TestCase(-100L)]
+        [TestCase(0.0)]
+        [TestCase(100.0)]
+        [TestCase(-100.0)]
+        public void TestDoubleLongUnion(object value)
+        {
+            var testRecord = new DoubleLongUnionRecord();
+            testRecord.Property = value;
+
+            // serialize
+            var stream = serialize(DoubleLongUnionRecord._SCHEMA, testRecord);
+
+            // deserialize
+            var rec2 = deserialize<DoubleLongUnionRecord>(stream, DoubleLongUnionRecord._SCHEMA, DoubleLongUnionRecord._SCHEMA);
+            Assert.AreEqual(value, rec2.Property);
+            Assert.AreEqual(value.GetType(), rec2.Property.GetType());
+        }
 
         [Test]
         public void TestArrayWithReservedWords()
