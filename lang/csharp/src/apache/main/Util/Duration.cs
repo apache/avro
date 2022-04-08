@@ -23,12 +23,8 @@ namespace Avro.Util
     /// <summary>
     /// The 'duration' logical type.
     /// </summary>
-    public class Duration : LogicalUnixEpochType<TimeSpan>
+    public class Duration : LogicalType
     {
-        private const long _daysInMonth = 30L;
-        private const long _millisecondsInDay = 86400000L;
-        private const long _millisecondsInMonth = _millisecondsInDay * _daysInMonth;
-
         /// <summary>
         /// The logical type name for Duration.
         /// </summary>
@@ -59,21 +55,13 @@ namespace Avro.Util
         /// <inheritdoc/>      
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            long totalMilliseconds = (long)((TimeSpan)logicalValue).TotalMilliseconds;
-            
-            int months = (int)(totalMilliseconds / _millisecondsInMonth);
-            totalMilliseconds -= months * _millisecondsInMonth;
-
-            int days = (int)(totalMilliseconds / _millisecondsInDay);
-            totalMilliseconds -= days * _millisecondsInDay;
-
-            int milliseconds = (int)totalMilliseconds;
+            AvroDuration duration = (AvroDuration)logicalValue;
 
             byte[] baseValue = new byte[12];
 
-            BitConverter.GetBytes(months).CopyTo(baseValue, 0);
-            BitConverter.GetBytes(days).CopyTo(baseValue, 4);
-            BitConverter.GetBytes(milliseconds).CopyTo(baseValue, 8);
+            BitConverter.GetBytes(duration.Months).CopyTo(baseValue, 0);
+            BitConverter.GetBytes(duration.Days).CopyTo(baseValue, 4);
+            BitConverter.GetBytes(duration.Milliseconds).CopyTo(baseValue, 8);
 
             if (!BitConverter.IsLittleEndian)
             {
@@ -101,7 +89,19 @@ namespace Avro.Util
             int days = BitConverter.ToInt32(buffer, 4);
             int milliseconds = BitConverter.ToInt32(buffer, 8);
 
-            return TimeSpan.FromTicks(((months * _daysInMonth + days) * _millisecondsInDay + milliseconds) * TimeSpan.TicksPerMillisecond);
+            return new AvroDuration(months, days, milliseconds);
+        }
+
+        /// <inheritdoc/>
+        public override Type GetCSharpType(bool nullible)
+        {
+            return nullible ? typeof(AvroDuration?) : typeof(AvroDuration);
+        }
+
+        /// <inheritdoc/>
+        public override bool IsInstanceOfLogicalType(object logicalValue)
+        {
+            return logicalValue is AvroDuration;
         }
     }
 }

@@ -273,70 +273,50 @@ namespace Avro.Test
             }
         }
 
-        [TestCase("00:00:00", "00:00:00")]
-        [TestCase("00:00:00.1", "00:00:00.1")]
-        [TestCase("00:00:00.01", "00:00:00.01")]
-        [TestCase("00:00:00.001", "00:00:00.001")]
-        [TestCase("00:00:00.0001", "00:00:00")]
-        [TestCase("00:00:00.00001", "00:00:00")]
-        [TestCase("00:00:00.000001", "00:00:00")]
-        [TestCase("00:00:00.0000001", "00:00:00")]
-        [TestCase("00:00:00.00000001", "00:00:00")]
-        [TestCase("01:20:10", "01:20:10")]
-        [TestCase("23:00:00", "23:00:00")]
-        [TestCase("23:59:00", "23:59:00")]
-        [TestCase("23:59:59", "23:59:59")]
-        [TestCase("01:20:10", "01:20:10")]
-        [TestCase("01:20:10.1", "01:20:10.1")]
-        [TestCase("01:20:10.01", "01:20:10.01")]
-        [TestCase("01:20:10.001", "01:20:10.001")]
-        [TestCase("23:59:59.999", "23:59:59.999")]
-        [TestCase("01.00:00:00", "01.00:00:00")]
-        [TestCase("1234.00:00:00", "1234.00:00:00")]
-        [TestCase("123456.01:02:03", "123456.01:02:03")]
-        [TestCase("123456.01:02:03.4", "123456.01:02:03.4")]
-        [TestCase("123456.01:02:03.45", "123456.01:02:03.45")]
-        [TestCase("123456.01:02:03.456", "123456.01:02:03.456")]
-        [TestCase("123456.01:02:03.4567", "123456.01:02:03.456")]
-        [TestCase("123456.01:02:03.4568", "123456.01:02:03.456")]
-        [TestCase("123456.01:02:03.45689", "123456.01:02:03.456")]
-        public void TestDuration(string s, string e)
+        [TestCase(0, 0, 0)]
+        [TestCase(0, 0, 1)]
+        [TestCase(0, 1, 0)]
+        [TestCase(0, 1, 1)]
+        [TestCase(1, 0, 0)]
+        [TestCase(1, 0, 1)]
+        [TestCase(1, 1, 0)]
+        [TestCase(1, 1, 1)]
+        [TestCase(999, 9999, 99999)]
+        public void TestDuration(int months, int days, int milliseconds)
         {
             var durationSchema = (LogicalSchema)Schema.Parse("{\"type\": {\"type\": \"fixed\", \"size\": 12, \"name\": \"n\"}, \"logicalType\": \"duration\"}");
 
-            var time = TimeSpan.Parse(s);
+            var avroDuration = new AvroDuration(months, days, milliseconds);
 
-            var expectedTime = TimeSpan.Parse(e);
-            
-            var avroDuration = new Duration();
+            var duration = new Duration();
 
-            var convertedTime = (TimeSpan)avroDuration.ConvertToLogicalValue(avroDuration.ConvertToBaseValue(time, durationSchema), durationSchema);
-            Assert.AreEqual(expectedTime, convertedTime);
+            var convertedDuration = (AvroDuration)duration.ConvertToLogicalValue(duration.ConvertToBaseValue(avroDuration, durationSchema), durationSchema);
+            Assert.AreEqual(avroDuration, convertedDuration);
         }
 
-        [TestCase("00:00:00.001", new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 })]
-        [TestCase("00:00:00.999", new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
-        [TestCase("00:00:01.999", new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcf, 0x07, 0x00, 0x00 })]
-        [TestCase("1.00:00:00.999", new byte[] { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
-        [TestCase("30.00:00:00.999", new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
-        [TestCase("31.00:00:00.999", new byte[] { 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(0, 0, 1, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 })]
+        [TestCase(0, 0, 999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(0, 0, 1999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcf, 0x07, 0x00, 0x00 })]
+        [TestCase(0, 1, 999, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(1, 0, 999, new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
+        [TestCase(1, 1, 999, new byte[] { 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe7, 0x03, 0x00, 0x00 })]
         // This tests ensures that changes to Duration.ConvertToBaseValue and ConvertToLogicalValue can be validated (bytes)
-        public void TestDurationConvert(string s, byte[] converted)
+        public void TestDurationConvert(int months, int days, int milliseconds, byte[] converted)
         {
             var durationSchema = (LogicalSchema)Schema.Parse("{\"type\": {\"type\": \"fixed\", \"size\": 12, \"name\": \"n\"}, \"logicalType\": \"duration\"}");
 
-            var time = TimeSpan.Parse(s);
+            var avroDuration = new AvroDuration(months, days, milliseconds);
             
-            var avroDuration = new Duration();
+            var duration = new Duration();
 
             // TestDecimal tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
             // The following 2 tests are checking the conversions seperately
 
             // Validate Duration.ConvertToBaseValue
-            Assert.AreEqual(converted, avroDuration.ConvertToBaseValue(time, durationSchema));
+            Assert.AreEqual(converted, duration.ConvertToBaseValue(avroDuration, durationSchema));
 
             // Validate Duration.ConvertToLogicalValue
-            Assert.AreEqual(time, avroDuration.ConvertToLogicalValue(converted, durationSchema));
+            Assert.AreEqual(avroDuration, duration.ConvertToLogicalValue(converted, durationSchema));
         }
 
         [TestCase("633a6cf0-52cb-43aa-b00a-658510720958")]
