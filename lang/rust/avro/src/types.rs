@@ -338,10 +338,23 @@ impl Value {
     }
 
     pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
-        match (self, schema) {
-            (_, &Schema::Ref { ref name }) => names
-                .get(name)
-                .map_or(false, |s| self.validate_internal(s, names)),
+        let mut parent_or_leaf_check = true;
+        let mut reason = String::new();
+        let res = match (self, schema) {
+            (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
+                || {
+                    reason = format!(
+                        "Unresolved schema reference: '{}'. Parsed names: {:?}",
+                        name,
+                        names.keys()
+                    );
+                    false
+                },
+                |s| {
+                    parent_or_leaf_check = false;
+                    self.validate_internal(s, names)
+                },
+            ),
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
@@ -365,50 +378,129 @@ impl Value {
             (&Value::Bytes(_), &Schema::Decimal { .. }) => true,
             (&Value::String(_), &Schema::String) => true,
             (&Value::String(_), &Schema::Uuid) => true,
-            (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => n == size,
-            (&Value::Bytes(ref b), &Schema::Fixed { size, .. }) => b.len() == size,
-            (&Value::Fixed(n, _), &Schema::Duration) => n == 12,
+            (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => {
+                let res = n == size;
+                if !res {
+                    reason = format!(
+                        "The value's size ({}) is different than the schema's size ({})",
+                        n, size
+                    );
+                }
+                res
+            }
+            (&Value::Bytes(ref b), &Schema::Fixed { size, .. }) => {
+                let res = b.len() == size;
+                if !res {
+                    reason = format!(
+                        "The bytes' length ({}) is different than the schema's size ({})",
+                        b.len(),
+                        size
+                    );
+                }
+                res
+            }
+            (&Value::Fixed(n, _), &Schema::Duration) => {
+                let res = n == 12;
+                if !res {
+                    reason = format!(
+                        "The value's size ('{}') must be exactly 12 to be a Duration",
+                        n
+                    );
+                }
+                res
+            }
             // TODO: check precision against n
             (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => true,
-            (&Value::String(ref s), &Schema::Enum { ref symbols, .. }) => symbols.contains(s),
+            (&Value::String(ref s), &Schema::Enum { ref symbols, .. }) => {
+                let res = symbols.contains(s);
+                if !res {
+                    reason = format!("'{}' is not a member of the possible symbols", s);
+                }
+                res
+            }
             (&Value::Enum(i, ref s), &Schema::Enum { ref symbols, .. }) => symbols
                 .get(i as usize)
-                .map(|ref symbol| symbol == &s)
-                .unwrap_or(false),
+                .map(|ref symbol| {
+                    let res = symbol == &s;
+                    if !res {
+                        reason = format!("Symbol '{}' is not at position '{}'", s, i);
+                    }
+                    res
+                })
+                .unwrap_or_else(|| {
+                    reason = format!("No symbol at position '{}'", i);
+                    false
+                }),
             // (&Value::Union(None), &Schema::Union(_)) => true,
             (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
                 .variants()
                 .get(i as usize)
-                .map(|schema| value.validate_internal(schema, names))
+                .map(|schema| {
+                    parent_or_leaf_check = false;
+                    value.validate_internal(schema, names)
+                })
                 .unwrap_or(false),
-            (&Value::Array(ref items), &Schema::Array(ref inner)) => items
-                .iter()
-                .all(|item| item.validate_internal(inner, names)),
-            (&Value::Map(ref items), &Schema::Map(ref inner)) => items
-                .iter()
-                .all(|(_, value)| value.validate_internal(inner, names)),
+            (&Value::Array(ref items), &Schema::Array(ref inner)) => items.iter().all(|item| {
+                parent_or_leaf_check = false;
+                item.validate_internal(inner, names)
+            }),
+            (&Value::Map(ref items), &Schema::Map(ref inner)) => items.iter().all(|(_, value)| {
+                parent_or_leaf_check = false;
+                value.validate_internal(inner, names)
+            }),
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
-                fields.len() == record_fields.len()
+                let len_check = fields.len() == record_fields.len();
+                if !len_check {
+                    reason = format!(
+                        "The value's records length ({}) is different than the schema's ({})",
+                        record_fields.len(),
+                        fields.len()
+                    );
+                }
+                len_check
                     && fields.iter().zip(record_fields.iter()).all(
                         |(field, &(ref name, ref value))| {
-                            field.name == *name && value.validate_internal(&field.schema, names)
+                            let name_match = field.name == *name;
+                            if !name_match {
+                                reason = format!(
+                                "Value's name '{}' does not match the expected field's name '{}'",
+                                name, field.name
+                            );
+                            }
+                            name_match && {
+                                parent_or_leaf_check = false;
+                                value.validate_internal(&field.schema, names)
+                            }
                         },
                     )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().all(|field| {
                     if let Some(item) = items.get(&field.name) {
+                        parent_or_leaf_check = false;
                         item.validate_internal(&field.schema, names)
                     } else {
+                        reason = format!(
+                            "Field with name '{:?}' is not a member of the map items",
+                            field.name
+                        );
                         false
                     }
                 })
             }
-            (v, s) => {
-                error!("Unsupported value-schema combination:\n{:?}\n{:?}", v, s);
+            (_v, _s) => {
+                reason = "Unsupported value-schema combination".to_string();
                 false
             }
+        };
+
+        if !res && parent_or_leaf_check {
+            error!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                self, schema, reason
+            );
         }
+        res
     }
 
     /// Attempt to perform schema resolution on the value, with the given
@@ -827,8 +919,17 @@ mod tests {
     };
     use uuid::Uuid;
 
+    fn init() {
+        let _ = env_logger::builder()
+            .filter_level(log::LevelFilter::Trace)
+            .is_test(true)
+            .try_init();
+    }
+
     #[test]
     fn validate() {
+        init();
+
         let value_schema_valid = vec![
             (Value::Int(42), Schema::Int, true),
             (Value::Int(42), Schema::Boolean, false),
@@ -878,15 +979,65 @@ mod tests {
                 false,
             ),
             (Value::Record(vec![]), Schema::Null, false),
+            (
+                Value::Fixed(12, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
+                Schema::Duration,
+                true,
+            ),
+            (
+                Value::Fixed(11, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+                Schema::Duration,
+                false,
+            ),
+            (
+                Value::Record(vec![("unknown_field_name".to_string(), Value::Null)]),
+                Schema::Record {
+                    name: Name::new("record_name").unwrap(),
+                    aliases: None,
+                    doc: None,
+                    fields: vec![RecordField {
+                        name: "field_name".to_string(),
+                        doc: None,
+                        default: None,
+                        schema: Schema::Int,
+                        order: RecordFieldOrder::Ignore,
+                        position: 0,
+                    }],
+                    lookup: Default::default(),
+                },
+                false,
+            ),
+            (
+                Value::Record(vec![("field_name".to_string(), Value::Null)]),
+                Schema::Record {
+                    name: Name::new("record_name").unwrap(),
+                    aliases: None,
+                    doc: None,
+                    fields: vec![RecordField {
+                        name: "field_name".to_string(),
+                        doc: None,
+                        default: None,
+                        schema: Schema::Ref {
+                            name: Name::new("missing").unwrap(),
+                        },
+                        order: RecordFieldOrder::Ignore,
+                        position: 0,
+                    }],
+                    lookup: Default::default(),
+                },
+                false,
+            ),
         ];
 
         for (value, schema, valid) in value_schema_valid.into_iter() {
-            assert_eq!(valid, value.validate(&schema));
+            assert_eq!(valid, value.validate_internal(&schema, &HashMap::default()));
         }
     }
 
     #[test]
     fn validate_fixed() {
+        init();
+
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed").unwrap(),
@@ -902,6 +1053,8 @@ mod tests {
 
     #[test]
     fn validate_enum() {
+        init();
+
         let schema = Schema::Enum {
             name: Name::new("some_enum").unwrap(),
             aliases: None,
@@ -937,6 +1090,8 @@ mod tests {
 
     #[test]
     fn validate_record() {
+        init();
+
         use std::collections::HashMap;
         // {
         //    "type": "record",
@@ -1038,6 +1193,8 @@ mod tests {
 
     #[test]
     fn resolve_bytes_ok() {
+        init();
+
         let value = Value::Array(vec![Value::Int(0), Value::Int(42)]);
         assert_eq!(
             value.resolve(&Schema::Bytes).unwrap(),
@@ -1047,12 +1204,15 @@ mod tests {
 
     #[test]
     fn resolve_bytes_failure() {
+        init();
+
         let value = Value::Array(vec![Value::Int(2000), Value::Int(-42)]);
         assert!(value.resolve(&Schema::Bytes).is_err());
     }
 
     #[test]
     fn resolve_decimal_bytes() {
+        init();
         let value = Value::Decimal(Decimal::from(vec![1, 2]));
         value
             .clone()
@@ -1067,6 +1227,8 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_scale() {
+        init();
+
         let value = Value::Decimal(Decimal::from(vec![1]));
         assert!(value
             .resolve(&Schema::Decimal {
@@ -1079,6 +1241,8 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_precision_for_length() {
+        init();
+
         let value = Value::Decimal(Decimal::from((1u8..=8u8).rev().collect::<Vec<_>>()));
         assert!(value
             .resolve(&Schema::Decimal {
@@ -1091,6 +1255,8 @@ mod tests {
 
     #[test]
     fn resolve_decimal_fixed() {
+        init();
+
         let value = Value::Decimal(Decimal::from(vec![1, 2]));
         assert!(value
             .clone()
@@ -1110,6 +1276,8 @@ mod tests {
 
     #[test]
     fn resolve_date() {
+        init();
+
         let value = Value::Date(2345);
         assert!(value.clone().resolve(&Schema::Date).is_ok());
         assert!(value.resolve(&Schema::String).is_err());
@@ -1117,6 +1285,8 @@ mod tests {
 
     #[test]
     fn resolve_time_millis() {
+        init();
+
         let value = Value::TimeMillis(10);
         assert!(value.clone().resolve(&Schema::TimeMillis).is_ok());
         assert!(value.resolve(&Schema::TimeMicros).is_err());
@@ -1124,6 +1294,8 @@ mod tests {
 
     #[test]
     fn resolve_time_micros() {
+        init();
+
         let value = Value::TimeMicros(10);
         assert!(value.clone().resolve(&Schema::TimeMicros).is_ok());
         assert!(value.resolve(&Schema::TimeMillis).is_err());
@@ -1131,6 +1303,8 @@ mod tests {
 
     #[test]
     fn resolve_timestamp_millis() {
+        init();
+
         let value = Value::TimestampMillis(10);
         assert!(value.clone().resolve(&Schema::TimestampMillis).is_ok());
         assert!(value.resolve(&Schema::Float).is_err());
@@ -1141,6 +1315,8 @@ mod tests {
 
     #[test]
     fn resolve_timestamp_micros() {
+        init();
+
         let value = Value::TimestampMicros(10);
         assert!(value.clone().resolve(&Schema::TimestampMicros).is_ok());
         assert!(value.resolve(&Schema::Int).is_err());
@@ -1151,6 +1327,8 @@ mod tests {
 
     #[test]
     fn resolve_duration() {
+        init();
+
         let value = Value::Duration(Duration::new(
             Months::new(10),
             Days::new(5),
@@ -1163,6 +1341,8 @@ mod tests {
 
     #[test]
     fn resolve_uuid() {
+        init();
+
         let value = Value::Uuid(Uuid::parse_str("1481531d-ccc9-46d9-a56f-5b67459c0537").unwrap());
         assert!(value.clone().resolve(&Schema::Uuid).is_ok());
         assert!(value.resolve(&Schema::TimestampMicros).is_err());
@@ -1170,6 +1350,8 @@ mod tests {
 
     #[test]
     fn json_from_avro() {
+        init();
+
         assert_eq!(JsonValue::try_from(Value::Null).unwrap(), JsonValue::Null);
         assert_eq!(
             JsonValue::try_from(Value::Boolean(true)).unwrap(),
@@ -1330,6 +1512,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_record() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1366,6 +1550,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_array() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1414,6 +1600,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_map() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1459,6 +1647,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_record_wrapper() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1504,6 +1694,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_map_and_array() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1552,6 +1744,8 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_union() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1595,6 +1789,8 @@ mod tests {
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_outer_namespace() {
+        init();
+
         let schema = r#"
         {
           "name": "record_name",
@@ -1681,6 +1877,8 @@ mod tests {
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_middle_namespace() {
+        init();
+
         let schema = r#"
         {
           "name": "record_name",
@@ -1768,6 +1966,8 @@ mod tests {
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_inner_namespace() {
+        init();
+
         let schema = r#"
         {
           "name": "record_name",
@@ -1857,6 +2057,8 @@ mod tests {
 
     #[test]
     fn test_avro_3460_validation_with_refs() {
+        init();
+
         let schema = Schema::parse_str(
             r#"
         {
@@ -1908,6 +2110,7 @@ mod tests {
 
     #[test]
     fn test_avro_3460_validation_with_refs_real_struct() {
+        init();
         use crate::ser::Serializer;
         use serde::Serialize;
 
