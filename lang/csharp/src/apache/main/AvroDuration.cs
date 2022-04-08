@@ -173,7 +173,7 @@ namespace Avro
         /// </returns>
         public override int GetHashCode()
         {
-            return Months.GetHashCode() ^ Days.GetHashCode() ^ Milliseconds.GetHashCode();
+            return Months ^ Days ^ Milliseconds;
         }
 
         /// <summary>
