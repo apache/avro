@@ -1,7 +1,7 @@
 ---
 title: "IDL Language"
 linkTitle: "IDL Language"
-weight: 8
+weight: 201
 ---
 
 <!--
@@ -374,3 +374,60 @@ protocol Simple {
 }
 ```
 Additional examples may be found in the Avro source tree under the `src/test/idl/input` directory.
+
+## IDE support
+
+There are several editors and IDEs that support Avro IDL files, usually via plugins.
+
+### JetBrains
+
+Apache Avro IDL Schema Support 203.1.2 was released in 9 December 2021.
+
+Features:
+* Syntax Highlighting
+* Code Completion
+* Code Formatting
+* Error Highlighting
+* Inspections & quick fixes
+* JSON schemas for .avpr and .avsc files
+
+It's available via the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/15728-apache-avro-idl-schema-support)
+and on [GitHub](https://github.com/opwvhk/avro-schema-support).
+
+The plugin supports almost the all JetBrains products: IntelliJ IDEA, PyCharm, WebStorm, Android Studio, AppCode, GoLand, Rider, CLion, RubyMine, PhpStorm, DataGrip, DataSpell, MPS, Code With Me Guest and JetBrains Client.
+
+Only JetBrains Gateway does not support this plugin directly. But the backend (JetBrains) IDE that it connects to does.
+
+### Eclipse
+
+Avroclipse 0.0.11 was released on 4 December 2019.
+
+Features:
+* Syntax Highlighting
+* Error Highlighting
+* Code Completion
+
+It is available on the [Eclipse Marketplace](https://marketplace.eclipse.org/content/avroclipse)
+and [GitHub](https://github.com/dvdkruk/avroclipse).
+
+### Visual Studio Code
+
+avro-idl 0.5.0 was released on 16 June 2021. It provides syntax highlighting.
+
+It is available on the [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.avro)
+and [GitHub](https://github.com/Jason3S/vscode-avro-ext)
+
+### Atom.io
+
+atom-language-avro 0.0.13 was released on 14 August 2015. It provides syntax highlighting.
+
+It is available as [Atom.io package](https://atom.io/packages/atom-language-avro)
+and [GitHub](https://github.com/jonesetc/atom-language-avro)
+
+### Vim
+
+A `.avdl` detecting plugin by Gurpreet Atwal on [GitHub](https://github.com/gurpreetatwal/vim-avro) (Last change in December 2016)
+
+[avro-idl.vim](https://github.com/apache/avro/blob/master/share/editors/avro-idl.vim) in the Avro repository `share/editors` directory (last change in September 2010)
+
+Both provide syntax highlighting.

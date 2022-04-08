@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,19 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.avro;
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+public class DummyLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+  @Override
+  public LogicalType fromSchema(Schema schema) {
+    return LogicalTypes.date();
+  }
 
-[assembly: AssemblyTitle("Avro.codegen")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Apache")]
-[assembly: AssemblyProduct("Avro.codegen")]
-[assembly: AssemblyCopyright("Copyright © Apache 2013")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-[assembly: ComVisible(false)]
-[assembly: Guid("3C23DD33-DD4F-42B1-B71F-8F9C86929E58")]
-[assembly: AssemblyVersion("0.9.0.0")]
-[assembly: AssemblyFileVersion("0.9.0.0")]
+  @Override
+  public String getTypeName() {
+    return "service-example";
+  }
+}

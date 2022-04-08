@@ -26,6 +26,9 @@ import org.hamcrest.collection.IsMapContaining;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+
 public class TestLogicalType {
 
   @Test
@@ -285,14 +288,20 @@ public class TestLogicalType {
         IsMapContaining.hasEntry("logicalTypeName", factory));
   }
 
+  @Test
+  public void testRegisterLogicalTypeFactoryByServiceLoader() {
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
+        IsMapContaining.hasEntry(equalTo("service-example"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
+  }
+
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
-    Assert.assertTrue("Should be equal (forward): " + message, o1.equals(o2));
-    Assert.assertTrue("Should be equal (reverse): " + message, o2.equals(o1));
+    Assert.assertEquals("Should be equal (forward): " + message, o1, o2);
+    Assert.assertEquals("Should be equal (reverse): " + message, o2, o1);
   }
 
   public static void assertEqualsFalse(String message, Object o1, Object o2) {
-    Assert.assertFalse("Should be equal (forward): " + message, o1.equals(o2));
-    Assert.assertFalse("Should be equal (reverse): " + message, o2.equals(o1));
+    Assert.assertNotEquals("Should be equal (forward): " + message, o1, o2);
+    Assert.assertNotEquals("Should be equal (reverse): " + message, o2, o1);
   }
 
   /**
@@ -305,7 +314,7 @@ public class TestLogicalType {
    * @param callable           A Callable that is expected to throw the exception
    */
   public static void assertThrows(String message, Class<? extends Exception> expected, String containedInMessage,
-      Callable callable) {
+      Callable<?> callable) {
     try {
       callable.call();
       Assert.fail("No exception was thrown (" + message + "), expected: " + expected.getName());
