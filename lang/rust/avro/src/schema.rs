@@ -1499,6 +1499,7 @@ fn field_ordering_position(field: &str) -> Option<usize> {
         .map(|pos| pos + 1)
 }
 
+// TODO AVRO-3479 Add proper docs
 pub fn record_schema_for_fields(
     name: Name,
     aliases: Aliases,
@@ -1518,6 +1519,7 @@ pub fn record_schema_for_fields(
     }
 }
 
+// TODO AVRO-3479 Add proper docs
 pub trait AvroSchema {
     fn get_schema() -> Schema;
 }
@@ -1539,7 +1541,7 @@ where
 macro_rules! impl_schema(
     ($type:ty, $variant_constructor:expr) => (
         impl AvroSchemaWithResolved for $type {
-            fn get_schema_with_resolved(_: &mut HashMap<Name, Schema>) -> Schema {
+            fn get_schema_with_resolved(_: &mut Names) -> Schema {
                 $variant_constructor
             }
         }
@@ -1563,7 +1565,7 @@ impl<T> AvroSchemaWithResolved for Vec<T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         Schema::Array(Box::new(T::get_schema_with_resolved(resolved_schemas)))
     }
 }
@@ -1572,7 +1574,7 @@ impl<T> AvroSchemaWithResolved for Option<T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         let inner_schema = T::get_schema_with_resolved(resolved_schemas);
         Schema::Union(UnionSchema {
             schemas: vec![Schema::Null, inner_schema.clone()],
@@ -1589,7 +1591,7 @@ impl<T> AvroSchemaWithResolved for Map<String, T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         Schema::Map(Box::new(T::get_schema_with_resolved(resolved_schemas)))
     }
 }
@@ -1598,7 +1600,7 @@ impl<T> AvroSchemaWithResolved for HashMap<String, T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         Schema::Map(Box::new(T::get_schema_with_resolved(resolved_schemas)))
     }
 }
@@ -1607,7 +1609,7 @@ impl<T> AvroSchemaWithResolved for Box<T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         T::get_schema_with_resolved(resolved_schemas)
     }
 }
@@ -1616,7 +1618,7 @@ impl<T> AvroSchemaWithResolved for Mutex<T>
 where
     T: AvroSchemaWithResolved,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         T::get_schema_with_resolved(resolved_schemas)
     }
 }
@@ -1625,7 +1627,7 @@ impl<T> AvroSchemaWithResolved for Cow<'_, T>
 where
     T: AvroSchemaWithResolved + Clone,
 {
-    fn get_schema_with_resolved(resolved_schemas: &mut HashMap<Name, Schema>) -> Schema {
+    fn get_schema_with_resolved(resolved_schemas: &mut Names) -> Schema {
         T::get_schema_with_resolved(resolved_schemas)
     }
 }

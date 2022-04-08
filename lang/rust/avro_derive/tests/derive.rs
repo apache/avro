@@ -15,11 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::schema::{AvroSchema, AvroSchemaWithResolved};
-use apache_avro::{from_value, Reader, Schema, Writer};
+use apache_avro::{
+    from_value,
+    schema::{AvroSchema, AvroSchemaWithResolved},
+    Reader, Schema, Writer,
+};
 use avro_derive::*;
-use serde::de::DeserializeOwned;
-use serde::ser::Serialize;
+use serde::{de::DeserializeOwned, ser::Serialize};
 use std::collections::HashMap;
 
 #[macro_use]
@@ -107,6 +109,7 @@ mod test_derive {
 
     #[test]
     fn test_basic_namesapce() {
+        // TODO assert the schema and its namespace
         println!("{:?}", TestBasicNamesapce::get_schema())
     }
 
@@ -119,6 +122,7 @@ mod test_derive {
 
     #[test]
     fn test_complex_namespace() {
+        // TODO assert the schema and the namespaces
         println!("{:?}", TestComplexNamespace::get_schema())
     }
 
@@ -139,16 +143,17 @@ mod test_derive {
 
     #[test]
     fn test_basic_types() {
+        // TODO mgrigorov Use property based testing in the future
         let all_basic = TestAllSupportedBaseTypes {
             a: true,
-            b: 8,
-            c: 16,
-            d: 32,
-            e: 8,
-            f: 16,
-            g: 64,
-            h: 32.3333,
-            i: 64.4444,
+            b: 8_i8,
+            c: 16_i16,
+            d: 32_i32,
+            e: 8_u8,
+            f: 16_u16,
+            g: 64_i64,
+            h: 32.3333_f32,
+            i: 64.4444_f64,
             j: "testing string".to_owned(),
         };
         freeze_dry_assert(all_basic);
@@ -162,16 +167,17 @@ mod test_derive {
 
     #[test]
     fn test_inner_struct() {
+        // TODO mgrigorov Use property based testing in the future
         let all_basic = TestAllSupportedBaseTypes {
             a: true,
-            b: 8,
-            c: 16,
-            d: 32,
-            e: 8,
-            f: 16,
-            g: 64,
-            h: 32.3333,
-            i: 64.4444,
+            b: 8_i8,
+            c: 16_i16,
+            d: 32_i32,
+            e: 8_u8,
+            f: 16_u16,
+            g: 64_i64,
+            h: 32.3333_f32,
+            i: 64.4444_f64,
             j: "testing string".to_owned(),
         };
         let inner_struct = TestNested {
@@ -222,28 +228,28 @@ mod test_derive {
             a: "testing".to_owned(),
             b: vec![TestAllSupportedBaseTypes {
                 a: true,
-                b: 8,
-                c: 16,
-                d: 32,
-                e: 8,
-                f: 16,
-                g: 64,
-                h: 32.3333,
-                i: 64.4444,
+                b: 8_i8,
+                c: 16_i16,
+                d: 32_i32,
+                e: 8_u8,
+                f: 16_u16,
+                g: 64_i64,
+                h: 32.3333_f32,
+                i: 64.4444_f64,
                 j: "testing string".to_owned(),
             }],
             c: vec![(
                 "key".to_owned(),
                 TestAllSupportedBaseTypes {
                     a: true,
-                    b: 8,
-                    c: 16,
-                    d: 32,
-                    e: 8,
-                    f: 16,
-                    g: 64,
-                    h: 32.3333,
-                    i: 64.4444,
+                    b: 8_i8,
+                    c: 16_i16,
+                    d: 32_i32,
+                    e: 8_u8,
+                    f: 16_u16,
+                    g: 64_i64,
+                    h: 32.3333_f32,
+                    i: 64.4444_f64,
                     j: "testing string".to_owned(),
                 },
             )]
@@ -367,6 +373,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
+    #[allow(unknown_lints)] // Rust 1.51.0 (MSRV) does not support #[allow(clippy::box_collection)]
     #[allow(clippy::box_collection)]
     struct TestSmartPointers<'a> {
         a: Box<String>,
@@ -398,7 +405,7 @@ mod test_derive {
     #[test]
     fn test_reference_struct() {
         let a = vec![34];
-        let c = 4.55555555;
+        let c = 4.55555555_f64;
         let test = TestReference {
             a: &a,
             b: "testing_static",
