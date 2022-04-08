@@ -416,7 +416,7 @@ namespace Avro.Test.AvroGen
         {
             TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
-        
+
         [TestCase(
             _nullableLogicalTypesArray,
             "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
@@ -612,10 +612,12 @@ namespace Avro.Test.AvroGen
 			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
 			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
 			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+			{ ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
+			{ ""name"" : ""nullibleduration"", ""type"" : [""null"", {""type"": { ""type"": ""fixed"", ""size"": 12, ""name"": ""_nullibleduration""}, ""logicalType"": ""duration""}] },
+			{ ""name"" : ""duration"", ""type"" : {""type"": { ""type"": ""fixed"", ""size"": 12, ""name"": ""_duration""}, ""logicalType"": ""duration""} }
 		]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDuration?), typeof(AvroDuration) })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
             Assembly assembly = TestSchema(schema);
