@@ -40,6 +40,13 @@ namespace Avro.Test
             Assert.AreEqual(milliseconds, duration2.Milliseconds);
 
             Assert.AreEqual(duration1, duration2);
+            Assert.True(duration1 == duration2);
+
+            duration1.Milliseconds++;
+
+            Assert.AreNotEqual(duration1, duration2);
+            Assert.False(duration1 == duration2);
+
         }
 
         [TestCase(0, 0, 0, 0, 0, 1)]
@@ -53,18 +60,27 @@ namespace Avro.Test
             Assert.AreNotEqual(duration, durationOther);
         }
 
-        [TestCase(0, 0, 0, 0, 0, 1, ExpectedResult = -1)]
-        [TestCase(0, 0, 1, 0, 1, 0, ExpectedResult = -1)]
-        [TestCase(10, 0, 0, 10, 0, 1, ExpectedResult = -1)]
-        [TestCase(0, 0, 0, 0, 0, 0, ExpectedResult = 0)]
-        [TestCase(0, 0, 1, 0, 0, 1, ExpectedResult = 0)]
-        [TestCase(0, 0, 2, 0, 0, 1, ExpectedResult = 1)]
-        [TestCase(0, 1, 1, 0, 1, 0, ExpectedResult = 1)]
-        [TestCase(1, 1, 0, 0, 1, 0, ExpectedResult = 1)]
-        [TestCase(10, 0, 1, 10, 0, 0, ExpectedResult = 1)]
-        public int TestAvroDurationCompareTo(int months, int days, int milliseconds, int monthsOther, int daysOther, int millisecondsOther)
+        [TestCase(0, 0, 0, 0, 0, 1, -1)]
+        [TestCase(0, 0, 1, 0, 1, 0, -1)]
+        [TestCase(10, 0, 0, 10, 0, 1, -1)]
+        [TestCase(0, 0, 0, 0, 0, 0, 0)]
+        [TestCase(0, 0, 1, 0, 0, 1, 0)]
+        [TestCase(0, 0, 2, 0, 0, 1, 1)]
+        [TestCase(0, 1, 1, 0, 1, 0, 1)]
+        [TestCase(1, 1, 0, 0, 1, 0, 1)]
+        [TestCase(10, 0, 1, 10, 0, 0, 1)]
+        public void TestAvroDurationCompare(int months, int days, int milliseconds, int monthsOther, int daysOther, int millisecondsOther, int expectedCompareTo)
         {
-            return new AvroDuration(months, days, milliseconds).CompareTo(new AvroDuration(monthsOther, daysOther, millisecondsOther));
+            AvroDuration duration = new AvroDuration(months, days, milliseconds);
+            AvroDuration durationOther = new AvroDuration(monthsOther, daysOther, millisecondsOther);
+
+            Assert.AreEqual(expectedCompareTo, duration.CompareTo(durationOther));
+            Assert.AreEqual(expectedCompareTo < 0, duration < durationOther);
+            Assert.AreEqual(expectedCompareTo <= 0, duration <= durationOther);
+            Assert.AreEqual(expectedCompareTo > 0, duration > durationOther);
+            Assert.AreEqual(expectedCompareTo >= 0, duration >= durationOther);
+            Assert.AreEqual(expectedCompareTo == 0, duration == durationOther);
+            Assert.AreEqual(expectedCompareTo != 0, duration != durationOther);
         }
     }
 }
