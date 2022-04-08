@@ -28,9 +28,9 @@ namespace Avro
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroDuration" /> struct.
         /// </summary>
-        /// <param name="months">Months.</param>
-        /// <param name="days">Days.</param>
-        /// <param name="milliseconds">Milliseconds.</param>
+        /// <param name="months">Number of months.</param>
+        /// <param name="days">Number of days.</param>
+        /// <param name="milliseconds">Number of milliseconds.</param>
         public AvroDuration(int months, int days, int milliseconds)
         {
             Months = months;
@@ -213,11 +213,15 @@ namespace Avro
 
             rc = Months.CompareTo(other.Months);
             if (rc != 0)
+            {
                 return rc;
+            }
 
             rc = Days.CompareTo(other.Days);
             if (rc != 0)
+            {
                 return rc;
+            }
 
             return Milliseconds.CompareTo(other.Milliseconds);
         }

@@ -309,7 +309,7 @@ namespace Avro.Test
             
             var duration = new Duration();
 
-            // TestDecimal tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
+            // TestDuration tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
             // The following 2 tests are checking the conversions seperately
 
             // Validate Duration.ConvertToBaseValue
