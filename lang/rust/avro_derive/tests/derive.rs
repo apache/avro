@@ -399,7 +399,7 @@ mod test_derive {
             "fields":[
                 {
                     "name":"a",
-                    "type":["int","null"]
+                    "type":["null","int"]
                 }
             ]
         }
@@ -837,7 +837,7 @@ mod test_derive {
                     "name":"b",
                     "type":{
                         "type":"array",
-                        "items":"int"
+                        "items":"long"
                     }
                 },
                 {
