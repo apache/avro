@@ -23,7 +23,7 @@ namespace Avro.Util
     /// <summary>
     /// The 'duration' logical type.
     /// </summary>
-    public class Duration : LogicalType
+    public class Duration : LogicalType<AvroDuration>
     {
         /// <summary>
         /// The logical type name for Duration.
@@ -90,18 +90,6 @@ namespace Avro.Util
             int milliseconds = BitConverter.ToInt32(buffer, 8);
 
             return new AvroDuration(months, days, milliseconds);
-        }
-
-        /// <inheritdoc/>
-        public override Type GetCSharpType(bool nullible)
-        {
-            return nullible ? typeof(AvroDuration?) : typeof(AvroDuration);
-        }
-
-        /// <inheritdoc/>
-        public override bool IsInstanceOfLogicalType(object logicalValue)
-        {
-            return logicalValue is AvroDuration;
         }
     }
 }

@@ -209,22 +209,11 @@ namespace Avro
         /// </returns>
         public int CompareTo(AvroDuration other)
         {
-            int rc;
-
-            rc = Months.CompareTo(other.Months);
-            if (rc != 0)
-            {
-                return rc;
-            }
-
-            rc = Days.CompareTo(other.Days);
-            if (rc != 0)
-            {
-                return rc;
-            }
-
-            return Milliseconds.CompareTo(other.Milliseconds);
+            return TotalMilliseconds.CompareTo(other.TotalMilliseconds);
         }
+
+        // This is not a perfect total milliseconds value, because it assumes that every month has 30 days.
+        private long TotalMilliseconds => (Months * 30L + Days) * 24L * 3600000L + Milliseconds;
 
         /// <summary>
         /// Returns a value that indicates whether the current <see cref="AvroDuration" /> has the same

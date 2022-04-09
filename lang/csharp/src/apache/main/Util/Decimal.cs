@@ -26,7 +26,7 @@ namespace Avro.Util
     /// <summary>
     /// The 'decimal' logical type.
     /// </summary>
-    public class Decimal : LogicalType
+    public class Decimal : LogicalType<AvroDecimal>
     {
         /// <summary>
         /// The logical type name for Decimal.
@@ -93,18 +93,6 @@ namespace Avro.Util
             Array.Reverse(buffer);
 
             return new AvroDecimal(new BigInteger(buffer), GetScalePropertyValueFromSchema(schema));
-        }
-
-        /// <inheritdoc/>
-        public override Type GetCSharpType(bool nullible)
-        {
-            return nullible ? typeof(AvroDecimal?) : typeof(AvroDecimal);
-        }
-
-        /// <inheritdoc/>
-        public override bool IsInstanceOfLogicalType(object logicalValue)
-        {
-            return logicalValue is AvroDecimal;
         }
 
         private static int GetScalePropertyValueFromSchema(Schema schema, int defaultVal = 0)

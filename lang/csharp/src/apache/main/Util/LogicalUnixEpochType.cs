@@ -23,7 +23,7 @@ namespace Avro.Util
     /// <summary>
     /// Base for all logical type implementations that are based on the Unix Epoch date/time.
     /// </summary>
-    public abstract class LogicalUnixEpochType<T> : LogicalType
+    public abstract class LogicalUnixEpochType<T> : LogicalType<T>
         where T : struct
     {
         /// <summary>
@@ -37,18 +37,6 @@ namespace Avro.Util
         /// <param name="name">The logical type name.</param>
         protected LogicalUnixEpochType(string name)
             : base(name)
-        { }
-
-        /// <inheritdoc/>
-        public override Type GetCSharpType(bool nullible)
-        {
-            return nullible ? typeof(T?) : typeof(T);
-        }
-
-        /// <inheritdoc/>
-        public override bool IsInstanceOfLogicalType(object logicalValue)
-        {
-            return logicalValue is T;
-        }
+        {}
     }
 }

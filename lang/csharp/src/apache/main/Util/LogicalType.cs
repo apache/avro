@@ -44,7 +44,8 @@ namespace Avro.Util
         /// </summary>
         /// <param name="schema">The schema to be validated.</param>
         public virtual void ValidateSchema(LogicalSchema schema)
-        { }
+        {
+        }
 
         /// <summary>
         /// Converts a logical value to an instance of its base type.
@@ -73,5 +74,33 @@ namespace Avro.Util
         /// </summary>
         /// <param name="logicalValue">The logical value to test.</param>
         public abstract bool IsInstanceOfLogicalType(object logicalValue);
+    }
+
+    /// <summary>
+    /// Base for all logical type implementations that are based on a struct type.
+    /// </summary>
+    public abstract class LogicalType<T> : LogicalType
+        where T : struct
+    {
+        /// <summary>
+        /// Initializes the base logical type.
+        /// </summary>
+        /// <param name="name">The logical type name.</param>
+        protected LogicalType(string name)
+            : base(name)
+        {
+        }
+
+        /// <inheritdoc/>
+        public override Type GetCSharpType(bool nullible)
+        {
+            return nullible ? typeof(T?) : typeof(T);
+        }
+
+        /// <inheritdoc/>
+        public override bool IsInstanceOfLogicalType(object logicalValue)
+        {
+            return logicalValue is T;
+        }
     }
 }
