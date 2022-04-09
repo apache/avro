@@ -137,7 +137,7 @@ fn get_data_struct_schema_def(
     }
     Ok(quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
-        let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to struct name for schema {}", #full_schema_name)[..]);
+        let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse struct name for schema {}", #full_schema_name)[..]);
         apache_avro::schema::record_schema_for_fields(name, None, None, schema_fields)
     })
 }
@@ -228,7 +228,6 @@ fn to_compile_errors(errors: Vec<syn::Error>) -> proc_macro2::TokenStream {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     #[test]
     fn basic_case() {
@@ -285,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn optional_type_generating() {
+    fn struct_with_optional() {
         let stuct_with_optional = quote! {
             struct Test4 {
                 a : Option<i32>
@@ -335,7 +334,11 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok())
+                assert!(derive_avro_schema(&mut input).is_ok());
+                assert!(derive_avro_schema(&mut input)
+                    .unwrap()
+                    .to_string()
+                    .contains("namespace.testing"))
             }
             Err(error) => panic!(
                 "Failied to parse as derive input when it should be able to. Error: {:?}",
@@ -358,7 +361,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
