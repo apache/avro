@@ -439,7 +439,10 @@ impl Value {
                     parent_or_leaf_check = false;
                     value.validate_internal(schema, names)
                 })
-                .unwrap_or(false),
+                .unwrap_or_else(|| {
+                    reason = format!("No schema in the union at position '{}'", i);
+                    false
+                }),
             (&Value::Array(ref items), &Schema::Array(ref inner)) => items.iter().all(|item| {
                 parent_or_leaf_check = false;
                 item.validate_internal(inner, names)
@@ -967,6 +970,11 @@ mod tests {
                     UnionSchema::new(vec![Schema::Null, Schema::TimestampMillis]).unwrap(),
                 ),
                 true,
+            ),
+            (
+                Value::Union(2, Box::new(Value::Long(1_i64))),
+                Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
+                false,
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
