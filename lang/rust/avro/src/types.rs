@@ -920,36 +920,70 @@ mod tests {
         schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
         types::Value,
     };
+    use log::{Level, LevelFilter, Metadata};
     use uuid::Uuid;
 
+    use ref_thread_local::{ref_thread_local, RefThreadLocal};
+
+    ref_thread_local! {
+        static managed LOG_MESSAGES: Vec<String> = Vec::new();
+    }
+
+    struct TestLogger;
+
+    impl log::Log for TestLogger {
+        fn enabled(&self, metadata: &Metadata) -> bool {
+            metadata.level() <= Level::Info
+        }
+
+        fn log(&self, record: &log::Record) {
+            if self.enabled(record.metadata()) {
+                let mut msgs = LOG_MESSAGES.borrow_mut();
+                msgs.push(format!("{}", record.args()));
+            }
+        }
+        fn flush(&self) {}
+    }
+
+    static TEST_LOGGER: TestLogger = TestLogger;
     fn init() {
-        let _ = env_logger::builder()
-            .filter_level(log::LevelFilter::Trace)
-            .is_test(true)
-            .try_init();
+        let _ = log::set_logger(&TEST_LOGGER);
+        log::set_max_level(LevelFilter::Info);
+    }
+
+    fn assert_log_message(expected_message: &str) {
+        let mut msgs = LOG_MESSAGES.borrow_mut();
+        assert_eq!(msgs.pop().unwrap(), expected_message);
     }
 
     #[test]
     fn validate() {
         init();
-
         let value_schema_valid = vec![
-            (Value::Int(42), Schema::Int, true),
-            (Value::Int(42), Schema::Boolean, false),
+            (Value::Int(42), Schema::Int, true, ""),
+            (
+                Value::Int(42),
+                Schema::Boolean,
+                false,
+                "Invalid value: Int(42) for schema: Boolean. Reason: Unsupported value-schema combination",
+            ),
             (
                 Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
+                "",
             ),
             (
                 Value::Union(1, Box::new(Value::Int(42))),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 true,
+                "",
             ),
             (
                 Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int]).unwrap()),
                 false,
+                "Invalid value: Null for schema: Double. Reason: Unsupported value-schema combination",
             ),
             (
                 Value::Union(3, Box::new(Value::Int(42))),
@@ -963,6 +997,7 @@ mod tests {
                     .unwrap(),
                 ),
                 true,
+                "",
             ),
             (
                 Value::Union(1, Box::new(Value::Long(42i64))),
@@ -970,32 +1005,38 @@ mod tests {
                     UnionSchema::new(vec![Schema::Null, Schema::TimestampMillis]).unwrap(),
                 ),
                 true,
+                "",
             ),
             (
                 Value::Union(2, Box::new(Value::Long(1_i64))),
                 Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int]).unwrap()),
                 false,
+                "Invalid value: Union(2, Long(1)) for schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }). Reason: No schema in the union at position '2'",
             ),
             (
                 Value::Array(vec![Value::Long(42i64)]),
                 Schema::Array(Box::new(Schema::Long)),
                 true,
+                "",
             ),
             (
                 Value::Array(vec![Value::Boolean(true)]),
                 Schema::Array(Box::new(Schema::Long)),
                 false,
+                "Invalid value: Boolean(true) for schema: Long. Reason: Unsupported value-schema combination",
             ),
-            (Value::Record(vec![]), Schema::Null, false),
+            (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
             (
                 Value::Fixed(12, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
                 Schema::Duration,
                 true,
+                "",
             ),
             (
                 Value::Fixed(11, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
                 Schema::Duration,
                 false,
+                "Invalid value: Fixed(11, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) for schema: Duration. Reason: The value's size ('11') must be exactly 12 to be a Duration",
             ),
             (
                 Value::Record(vec![("unknown_field_name".to_string(), Value::Null)]),
@@ -1014,6 +1055,7 @@ mod tests {
                     lookup: Default::default(),
                 },
                 false,
+                "Invalid value: Record([(\"unknown_field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Int, order: Ignore, position: 0 }], lookup: {} }. Reason: Value's name 'unknown_field_name' does not match the expected field's name 'field_name'",
             ),
             (
                 Value::Record(vec![("field_name".to_string(), Value::Null)]),
@@ -1034,11 +1076,15 @@ mod tests {
                     lookup: Default::default(),
                 },
                 false,
+                "Invalid value: Null for schema: Ref { name: Name { name: \"missing\", namespace: None } }. Reason: Unresolved schema reference: 'missing'. Parsed names: []",
             ),
         ];
 
-        for (value, schema, valid) in value_schema_valid.into_iter() {
+        for (value, schema, valid, expected_err_message) in value_schema_valid.into_iter() {
             assert_eq!(valid, value.validate_internal(&schema, &HashMap::default()));
+            if !valid {
+                assert_log_message(expected_err_message);
+            }
         }
     }
 
@@ -1054,9 +1100,26 @@ mod tests {
         };
 
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
-        assert!(!Value::Fixed(5, vec![0, 0, 0, 0, 0]).validate(&schema));
+        let value = Value::Fixed(5, vec![0, 0, 0, 0, 0]);
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "The value's size (5) is different than the schema's size (4)"
+            )
+            .as_str(),
+        );
+
         assert!(Value::Bytes(vec![0, 0, 0, 0]).validate(&schema));
-        assert!(!Value::Bytes(vec![0, 0, 0, 0, 0]).validate(&schema));
+        let value = Value::Bytes(vec![0, 0, 0, 0, 0]);
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "The bytes' length (5) is different than the schema's size (4)"
+            )
+            .as_str(),
+        );
     }
 
     #[test]
@@ -1078,8 +1141,25 @@ mod tests {
         assert!(Value::Enum(0, "spades".to_string()).validate(&schema));
         assert!(Value::String("spades".to_string()).validate(&schema));
 
-        assert!(!Value::Enum(1, "spades".to_string()).validate(&schema));
-        assert!(!Value::String("lorem".to_string()).validate(&schema));
+        let value = Value::Enum(1, "spades".to_string());
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "Symbol 'spades' is not at position '1'"
+            )
+            .as_str(),
+        );
+
+        let value = Value::String("lorem".to_string());
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "'lorem' is not a member of the possible symbols"
+            )
+            .as_str(),
+        );
 
         let other_schema = Schema::Enum {
             name: Name::new("some_other_enum").unwrap(),
@@ -1093,13 +1173,19 @@ mod tests {
             ],
         };
 
-        assert!(!Value::Enum(0, "spades".to_string()).validate(&other_schema));
+        let value = Value::Enum(0, "spades".to_string());
+        assert!(!value.validate(&other_schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, other_schema, "Symbol 'spades' is not at position '0'"
+            )
+            .as_str(),
+        );
     }
 
     #[test]
     fn validate_record() {
-        init();
-
         use std::collections::HashMap;
         // {
         //    "type": "record",
@@ -1201,8 +1287,6 @@ mod tests {
 
     #[test]
     fn resolve_bytes_ok() {
-        init();
-
         let value = Value::Array(vec![Value::Int(0), Value::Int(42)]);
         assert_eq!(
             value.resolve(&Schema::Bytes).unwrap(),
@@ -1212,15 +1296,12 @@ mod tests {
 
     #[test]
     fn resolve_bytes_failure() {
-        init();
-
         let value = Value::Array(vec![Value::Int(2000), Value::Int(-42)]);
         assert!(value.resolve(&Schema::Bytes).is_err());
     }
 
     #[test]
     fn resolve_decimal_bytes() {
-        init();
         let value = Value::Decimal(Decimal::from(vec![1, 2]));
         value
             .clone()
@@ -1235,8 +1316,6 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_scale() {
-        init();
-
         let value = Value::Decimal(Decimal::from(vec![1]));
         assert!(value
             .resolve(&Schema::Decimal {
@@ -1249,8 +1328,6 @@ mod tests {
 
     #[test]
     fn resolve_decimal_invalid_precision_for_length() {
-        init();
-
         let value = Value::Decimal(Decimal::from((1u8..=8u8).rev().collect::<Vec<_>>()));
         assert!(value
             .resolve(&Schema::Decimal {
@@ -1263,8 +1340,6 @@ mod tests {
 
     #[test]
     fn resolve_decimal_fixed() {
-        init();
-
         let value = Value::Decimal(Decimal::from(vec![1, 2]));
         assert!(value
             .clone()
@@ -1284,8 +1359,6 @@ mod tests {
 
     #[test]
     fn resolve_date() {
-        init();
-
         let value = Value::Date(2345);
         assert!(value.clone().resolve(&Schema::Date).is_ok());
         assert!(value.resolve(&Schema::String).is_err());
@@ -1293,8 +1366,6 @@ mod tests {
 
     #[test]
     fn resolve_time_millis() {
-        init();
-
         let value = Value::TimeMillis(10);
         assert!(value.clone().resolve(&Schema::TimeMillis).is_ok());
         assert!(value.resolve(&Schema::TimeMicros).is_err());
@@ -1302,8 +1373,6 @@ mod tests {
 
     #[test]
     fn resolve_time_micros() {
-        init();
-
         let value = Value::TimeMicros(10);
         assert!(value.clone().resolve(&Schema::TimeMicros).is_ok());
         assert!(value.resolve(&Schema::TimeMillis).is_err());
@@ -1311,8 +1380,6 @@ mod tests {
 
     #[test]
     fn resolve_timestamp_millis() {
-        init();
-
         let value = Value::TimestampMillis(10);
         assert!(value.clone().resolve(&Schema::TimestampMillis).is_ok());
         assert!(value.resolve(&Schema::Float).is_err());
@@ -1323,8 +1390,6 @@ mod tests {
 
     #[test]
     fn resolve_timestamp_micros() {
-        init();
-
         let value = Value::TimestampMicros(10);
         assert!(value.clone().resolve(&Schema::TimestampMicros).is_ok());
         assert!(value.resolve(&Schema::Int).is_err());
@@ -1335,8 +1400,6 @@ mod tests {
 
     #[test]
     fn resolve_duration() {
-        init();
-
         let value = Value::Duration(Duration::new(
             Months::new(10),
             Days::new(5),
@@ -1349,8 +1412,6 @@ mod tests {
 
     #[test]
     fn resolve_uuid() {
-        init();
-
         let value = Value::Uuid(Uuid::parse_str("1481531d-ccc9-46d9-a56f-5b67459c0537").unwrap());
         assert!(value.clone().resolve(&Schema::Uuid).is_ok());
         assert!(value.resolve(&Schema::TimestampMicros).is_err());
@@ -1358,8 +1419,6 @@ mod tests {
 
     #[test]
     fn json_from_avro() {
-        init();
-
         assert_eq!(JsonValue::try_from(Value::Null).unwrap(), JsonValue::Null);
         assert_eq!(
             JsonValue::try_from(Value::Boolean(true)).unwrap(),
@@ -1520,8 +1579,6 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_record() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1553,13 +1610,11 @@ mod tests {
         let outer = Value::Record(vec![("a".into(), inner_value1), ("b".into(), inner_value2)]);
         outer
             .resolve(&schema)
-            .expect("Record definition defined in one field must be availible in other field");
+            .expect("Record definition defined in one field must be available in other field");
     }
 
     #[test]
     fn test_avro_3433_recursive_resolves_array() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1603,13 +1658,11 @@ mod tests {
         ]);
         outer_value
             .resolve(&schema)
-            .expect("Record defined in array definition must be resolveable from map");
+            .expect("Record defined in array definition must be resolvable from map");
     }
 
     #[test]
     fn test_avro_3433_recursive_resolves_map() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1655,8 +1708,6 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_record_wrapper() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1702,8 +1753,6 @@ mod tests {
 
     #[test]
     fn test_avro_3433_recursive_resolves_map_and_array() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1747,13 +1796,11 @@ mod tests {
         ]);
         outer_value
             .resolve(&schema)
-            .expect("Record defined in map definition must be resolveable from array");
+            .expect("Record defined in map definition must be resolvable from array");
     }
 
     #[test]
     fn test_avro_3433_recursive_resolves_union() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -1788,17 +1835,15 @@ mod tests {
         ]);
         outer1
             .resolve(&schema)
-            .expect("Record definition defined in union must be resolvabled in other field");
+            .expect("Record definition defined in union must be resolved in other field");
         let outer2 = Value::Record(vec![("a".into(), Value::Null), ("b".into(), inner_value2)]);
         outer2
             .resolve(&schema)
-            .expect("Record definition defined in union must be resolvabled in other field");
+            .expect("Record definition defined in union must be resolved in other field");
     }
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_outer_namespace() {
-        init();
-
         let schema = r#"
         {
           "name": "record_name",
@@ -1885,8 +1930,6 @@ mod tests {
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_middle_namespace() {
-        init();
-
         let schema = r#"
         {
           "name": "record_name",
@@ -1974,8 +2017,6 @@ mod tests {
 
     #[test]
     fn test_avro_3461_test_multi_level_resolve_inner_namespace() {
-        init();
-
         let schema = r#"
         {
           "name": "record_name",
@@ -2065,8 +2106,6 @@ mod tests {
 
     #[test]
     fn test_avro_3460_validation_with_refs() {
-        init();
-
         let schema = Schema::parse_str(
             r#"
         {
@@ -2118,7 +2157,6 @@ mod tests {
 
     #[test]
     fn test_avro_3460_validation_with_refs_real_struct() {
-        init();
         use crate::ser::Serializer;
         use serde::Serialize;
 
