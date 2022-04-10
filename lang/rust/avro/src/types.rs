@@ -334,176 +334,170 @@ impl Value {
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
         let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
-        self.validate_internal(schema, rs.get_names())
+        let res = self.validate_internal(schema, rs.get_names());
+        match res {
+            Some(error_msg) => {
+                error!(
+                    "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                    self, schema, error_msg
+                );
+                false
+            }
+            None => true,
+        }
     }
 
-    pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
-        let mut parent_or_leaf_check = true;
-        let mut reason = String::new();
-        let res = match (self, schema) {
+    fn accumulate(accumulator: Option<String>, other: Option<String>) -> Option<String> {
+        match (accumulator, other) {
+            (None, None) => None,
+            (None, Some(reason)) => Some(reason),
+            (Some(reason), None) => Some(reason),
+            (Some(reason1), Some(reason2)) => Some(format!("{}\n{}", reason1, reason2)),
+        }
+    }
+
+    pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> Option<String> {
+        match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
-                    reason = format!(
+                    return Some(format!(
                         "Unresolved schema reference: '{}'. Parsed names: {:?}",
                         name,
                         names.keys()
-                    );
-                    false
+                    ));
                 },
-                |s| {
-                    parent_or_leaf_check = false;
-                    self.validate_internal(s, names)
-                },
+                |s| self.validate_internal(s, names),
             ),
-            (&Value::Null, &Schema::Null) => true,
-            (&Value::Boolean(_), &Schema::Boolean) => true,
-            (&Value::Int(_), &Schema::Int) => true,
-            (&Value::Int(_), &Schema::Date) => true,
-            (&Value::Int(_), &Schema::TimeMillis) => true,
-            (&Value::Long(_), &Schema::Long) => true,
-            (&Value::Long(_), &Schema::TimeMicros) => true,
-            (&Value::Long(_), &Schema::TimestampMillis) => true,
-            (&Value::Long(_), &Schema::TimestampMicros) => true,
-            (&Value::TimestampMicros(_), &Schema::TimestampMicros) => true,
-            (&Value::TimestampMillis(_), &Schema::TimestampMillis) => true,
-            (&Value::TimeMicros(_), &Schema::TimeMicros) => true,
-            (&Value::TimeMillis(_), &Schema::TimeMillis) => true,
-            (&Value::Date(_), &Schema::Date) => true,
-            (&Value::Decimal(_), &Schema::Decimal { .. }) => true,
-            (&Value::Duration(_), &Schema::Duration) => true,
-            (&Value::Uuid(_), &Schema::Uuid) => true,
-            (&Value::Float(_), &Schema::Float) => true,
-            (&Value::Double(_), &Schema::Double) => true,
-            (&Value::Bytes(_), &Schema::Bytes) => true,
-            (&Value::Bytes(_), &Schema::Decimal { .. }) => true,
-            (&Value::String(_), &Schema::String) => true,
-            (&Value::String(_), &Schema::Uuid) => true,
+            (&Value::Null, &Schema::Null) => None,
+            (&Value::Boolean(_), &Schema::Boolean) => None,
+            (&Value::Int(_), &Schema::Int) => None,
+            (&Value::Int(_), &Schema::Date) => None,
+            (&Value::Int(_), &Schema::TimeMillis) => None,
+            (&Value::Long(_), &Schema::Long) => None,
+            (&Value::Long(_), &Schema::TimeMicros) => None,
+            (&Value::Long(_), &Schema::TimestampMillis) => None,
+            (&Value::Long(_), &Schema::TimestampMicros) => None,
+            (&Value::TimestampMicros(_), &Schema::TimestampMicros) => None,
+            (&Value::TimestampMillis(_), &Schema::TimestampMillis) => None,
+            (&Value::TimeMicros(_), &Schema::TimeMicros) => None,
+            (&Value::TimeMillis(_), &Schema::TimeMillis) => None,
+            (&Value::Date(_), &Schema::Date) => None,
+            (&Value::Decimal(_), &Schema::Decimal { .. }) => None,
+            (&Value::Duration(_), &Schema::Duration) => None,
+            (&Value::Uuid(_), &Schema::Uuid) => None,
+            (&Value::Float(_), &Schema::Float) => None,
+            (&Value::Double(_), &Schema::Double) => None,
+            (&Value::Bytes(_), &Schema::Bytes) => None,
+            (&Value::Bytes(_), &Schema::Decimal { .. }) => None,
+            (&Value::String(_), &Schema::String) => None,
+            (&Value::String(_), &Schema::Uuid) => None,
             (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => {
-                let res = n == size;
-                if !res {
-                    reason = format!(
+                if n != size {
+                    Some(format!(
                         "The value's size ({}) is different than the schema's size ({})",
                         n, size
-                    );
+                    ))
+                } else {
+                    None
                 }
-                res
             }
             (&Value::Bytes(ref b), &Schema::Fixed { size, .. }) => {
-                let res = b.len() == size;
-                if !res {
-                    reason = format!(
+                if b.len() != size {
+                    Some(format!(
                         "The bytes' length ({}) is different than the schema's size ({})",
                         b.len(),
                         size
-                    );
+                    ))
+                } else {
+                    None
                 }
-                res
             }
             (&Value::Fixed(n, _), &Schema::Duration) => {
-                let res = n == 12;
-                if !res {
-                    reason = format!(
+                if n != 12 {
+                    Some(format!(
                         "The value's size ('{}') must be exactly 12 to be a Duration",
                         n
-                    );
+                    ))
+                } else {
+                    None
                 }
-                res
             }
             // TODO: check precision against n
-            (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => true,
+            (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => None,
             (&Value::String(ref s), &Schema::Enum { ref symbols, .. }) => {
-                let res = symbols.contains(s);
-                if !res {
-                    reason = format!("'{}' is not a member of the possible symbols", s);
+                if !symbols.contains(s) {
+                    Some(format!("'{}' is not a member of the possible symbols", s))
+                } else {
+                    None
                 }
-                res
             }
             (&Value::Enum(i, ref s), &Schema::Enum { ref symbols, .. }) => symbols
                 .get(i as usize)
                 .map(|ref symbol| {
-                    let res = symbol == &s;
-                    if !res {
-                        reason = format!("Symbol '{}' is not at position '{}'", s, i);
+                    if symbol != &s {
+                        Some(format!("Symbol '{}' is not at position '{}'", s, i))
+                    } else {
+                        None
                     }
-                    res
                 })
-                .unwrap_or_else(|| {
-                    reason = format!("No symbol at position '{}'", i);
-                    false
-                }),
-            // (&Value::Union(None), &Schema::Union(_)) => true,
+                .unwrap_or_else(|| Some(format!("No symbol at position '{}'", i))),
+            // (&Value::Union(None), &Schema::Union(_)) => None,
             (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
                 .variants()
                 .get(i as usize)
-                .map(|schema| {
-                    parent_or_leaf_check = false;
-                    value.validate_internal(schema, names)
+                .map(|schema| value.validate_internal(schema, names))
+                .unwrap_or_else(|| Some(format!("No schema in the union at position '{}'", i))),
+            (&Value::Array(ref items), &Schema::Array(ref inner)) => {
+                items.iter().fold(None, |acc, item| {
+                    Value::accumulate(acc, item.validate_internal(inner, names))
                 })
-                .unwrap_or_else(|| {
-                    reason = format!("No schema in the union at position '{}'", i);
-                    false
-                }),
-            (&Value::Array(ref items), &Schema::Array(ref inner)) => items.iter().all(|item| {
-                parent_or_leaf_check = false;
-                item.validate_internal(inner, names)
-            }),
-            (&Value::Map(ref items), &Schema::Map(ref inner)) => items.iter().all(|(_, value)| {
-                parent_or_leaf_check = false;
-                value.validate_internal(inner, names)
-            }),
+            }
+            (&Value::Map(ref items), &Schema::Map(ref inner)) => {
+                items.iter().fold(None, |acc, (_, value)| {
+                    Value::accumulate(acc, value.validate_internal(inner, names))
+                })
+            }
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
-                let len_check = fields.len() == record_fields.len();
-                if !len_check {
-                    reason = format!(
+                if fields.len() != record_fields.len() {
+                    return Some(format!(
                         "The value's records length ({}) is different than the schema's ({})",
                         record_fields.len(),
                         fields.len()
-                    );
+                    ));
                 }
-                len_check
-                    && fields.iter().zip(record_fields.iter()).all(
-                        |(field, &(ref name, ref value))| {
-                            let name_match = field.name == *name;
-                            if !name_match {
-                                reason = format!(
+
+                fields.iter().zip(record_fields.iter()).fold(
+                    None,
+                    |acc, (field, &(ref name, ref value))| {
+                        if field.name != *name {
+                            return Some(format!(
                                 "Value's name '{}' does not match the expected field's name '{}'",
                                 name, field.name
-                            );
-                            }
-                            name_match && {
-                                parent_or_leaf_check = false;
-                                value.validate_internal(&field.schema, names)
-                            }
-                        },
-                    )
+                            ));
+                        }
+                        let res = value.validate_internal(&field.schema, names);
+                        Value::accumulate(acc, res)
+                    },
+                )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
-                fields.iter().all(|field| {
+                fields.iter().fold(None, |acc, field| {
                     if let Some(item) = items.get(&field.name) {
-                        parent_or_leaf_check = false;
-                        item.validate_internal(&field.schema, names)
+                        let res = item.validate_internal(&field.schema, names);
+                        Value::accumulate(acc, res)
                     } else {
-                        reason = format!(
-                            "Field with name '{:?}' is not a member of the map items",
-                            field.name
-                        );
-                        false
+                        Value::accumulate(
+                            acc,
+                            Some(format!(
+                                "Field with name '{:?}' is not a member of the map items",
+                                field.name
+                            )),
+                        )
                     }
                 })
             }
-            (_v, _s) => {
-                reason = "Unsupported value-schema combination".to_string();
-                false
-            }
-        };
-
-        if !res && parent_or_leaf_check {
-            error!(
-                "Invalid value: {:?} for schema: {:?}. Reason: {}",
-                self, schema, reason
-            );
+            (_v, _s) => Some("Unsupported value-schema combination".to_string()),
         }
-        res
     }
 
     /// Attempt to perform schema resolution on the value, with the given
@@ -926,6 +920,9 @@ mod tests {
     use ref_thread_local::{ref_thread_local, RefThreadLocal};
 
     ref_thread_local! {
+        // The unit tests run in parallel
+        // We need to keep the log messages in a thread-local variable
+        // and clear them after assertion
         static managed LOG_MESSAGES: Vec<String> = Vec::new();
     }
 
@@ -954,6 +951,7 @@ mod tests {
     fn assert_log_message(expected_message: &str) {
         let mut msgs = LOG_MESSAGES.borrow_mut();
         assert_eq!(msgs.pop().unwrap(), expected_message);
+        msgs.clear();
     }
 
     #[test]
@@ -983,7 +981,7 @@ mod tests {
                 Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int]).unwrap()),
                 false,
-                "Invalid value: Null for schema: Double. Reason: Unsupported value-schema combination",
+                "Invalid value: Union(0, Null) for schema: Union(UnionSchema { schemas: [Double, Int], variant_index: {Int: 1, Double: 0} }). Reason: Unsupported value-schema combination",
             ),
             (
                 Value::Union(3, Box::new(Value::Int(42))),
@@ -1023,7 +1021,7 @@ mod tests {
                 Value::Array(vec![Value::Boolean(true)]),
                 Schema::Array(Box::new(Schema::Long)),
                 false,
-                "Invalid value: Boolean(true) for schema: Long. Reason: Unsupported value-schema combination",
+                "Invalid value: Array([Boolean(true)]) for schema: Array(Long). Reason: Unsupported value-schema combination",
             ),
             (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
             (
@@ -1076,14 +1074,21 @@ mod tests {
                     lookup: Default::default(),
                 },
                 false,
-                "Invalid value: Null for schema: Ref { name: Name { name: \"missing\", namespace: None } }. Reason: Unresolved schema reference: 'missing'. Parsed names: []",
+                "Invalid value: Record([(\"field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Ref { name: Name { name: \"missing\", namespace: None } }, order: Ignore, position: 0 }], lookup: {} }. Reason: Unresolved schema reference: 'missing'. Parsed names: []",
             ),
         ];
 
         for (value, schema, valid, expected_err_message) in value_schema_valid.into_iter() {
-            assert_eq!(valid, value.validate_internal(&schema, &HashMap::default()));
+            let err_message = value.validate_internal(&schema, &HashMap::default());
+            assert_eq!(valid, err_message.is_none());
             if !valid {
-                assert_log_message(expected_err_message);
+                let full_err_message = format!(
+                    "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                    value,
+                    schema,
+                    err_message.unwrap()
+                );
+                assert_eq!(expected_err_message, full_err_message);
             }
         }
     }
@@ -1186,6 +1191,8 @@ mod tests {
 
     #[test]
     fn validate_record() {
+        init();
+
         use std::collections::HashMap;
         // {
         //    "type": "record",
@@ -1225,30 +1232,42 @@ mod tests {
         ])
         .validate(&schema));
 
-        assert!(!Value::Record(vec![
+        let value = Value::Record(vec![
             ("b".to_string(), Value::String("foo".to_string())),
             ("a".to_string(), Value::Long(42i64)),
-        ])
-        .validate(&schema));
+        ]);
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "Value's name 'a' does not match the expected field's name 'b'"
+            )
+            .as_str(),
+        );
 
-        assert!(!Value::Record(vec![
+        let value = Value::Record(vec![
             ("a".to_string(), Value::Boolean(false)),
             ("b".to_string(), Value::String("foo".to_string())),
-        ])
-        .validate(&schema));
+        ]);
+        assert!(!value.validate(&schema));
+        assert_log_message("Invalid value: Record([(\"a\", Boolean(false)), (\"b\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Unsupported value-schema combination");
 
-        assert!(!Value::Record(vec![
+        let value = Value::Record(vec![
             ("a".to_string(), Value::Long(42i64)),
             ("c".to_string(), Value::String("foo".to_string())),
-        ])
-        .validate(&schema));
+        ]);
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            "Invalid value: Record([(\"a\", Long(42)), (\"c\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Value's name 'c' does not match the expected field's name 'b'"
+        );
 
-        assert!(!Value::Record(vec![
+        let value = Value::Record(vec![
             ("a".to_string(), Value::Long(42i64)),
             ("b".to_string(), Value::String("foo".to_string())),
             ("c".to_string(), Value::Null),
-        ])
-        .validate(&schema));
+        ]);
+        assert!(!value.validate(&schema));
+        assert_log_message("Invalid value: Record([(\"a\", Long(42)), (\"b\", String(\"foo\")), (\"c\", Null)]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: The value's records length (3) is different than the schema's (2)");
 
         assert!(Value::Map(
             vec![

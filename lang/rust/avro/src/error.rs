@@ -51,6 +51,10 @@ pub enum Error {
     #[error("Value does not match schema")]
     Validation,
 
+    /// Describes errors happened while validating Avro data.
+    #[error("Value does not match schema: Reason: {0}")]
+    ValidationWithReason(String),
+
     #[error("Unable to allocate {desired} bytes (maximum allowed: {maximum})")]
     MemoryAllocation { desired: usize, maximum: usize },
 
