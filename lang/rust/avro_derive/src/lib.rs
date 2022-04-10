@@ -52,13 +52,14 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     let ty = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
-        impl #impl_generics apache_avro::schema::AvroSchemaWithResolved for #ty #ty_generics #where_clause {
-            fn get_schema_with_resolved(resolved_schemas: &mut HashMap<apache_avro::schema::Name, apache_avro::schema::Schema>) -> apache_avro::schema::Schema {
-                let name =  apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse schema name {}", #full_schema_name)[..]);
-                if resolved_schemas.contains_key(&name) {
-                    resolved_schemas.get(&name).unwrap().clone()
-                }else {
-                    resolved_schemas.insert(name.clone(), Schema::Ref{name: name.clone()});
+        impl #impl_generics apache_avro::schema::AvroSchemaComponent for #ty #ty_generics #where_clause {
+            fn get_schema_in_ctxt(named_schemas: &mut HashMap<apache_avro::schema::Name, apache_avro::schema::Schema>, enclosing_namespace: &Option<String>) -> apache_avro::schema::Schema {
+                let name =  apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse schema name {}", #full_schema_name)[..]).fully_qualified_name(enclosing_namespace);
+                let enclosing_namespace = &name.namespace;
+                if named_schemas.contains_key(&name) {
+                    apache_avro::schema::Schema::Ref{name: name.clone()}
+                } else {
+                    named_schemas.insert(name.clone(), apache_avro::schema::Schema::Ref{name: name.clone()});
                     #schema_def
                 }
             }
@@ -194,7 +195,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
             )])
             } //Can't guarentee serialization type
             _ => {
-                // Fails when the type does not implement AvroSchemaWithResolved directly or covered by blanket implementation
+                // Fails when the type does not implement AvroSchemaComponent directly
                 // TODO check and error report with something like https://docs.rs/quote/1.0.15/quote/macro.quote_spanned.html#example
                 type_path_schema_expr(p)
             }
@@ -214,10 +215,10 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
 }
 
 /// Generates the schema def expression for fully qualified type paths using the associated function
-/// - `A -> <A as AvroSchemaWithResolved>::get_schema_with_resolved()`
-/// - `A<T> -> <A<T> as AvroSchemaWithResolved>::get_schema_with_resolved()`
+/// - `A -> <A as AvroSchemaComponent>::get_schema_in_ctxt()`
+/// - `A<T> -> <A<T> as AvroSchemaComponent>::get_schema_in_ctxt()`
 fn type_path_schema_expr(p: &TypePath) -> TokenStream {
-    quote! {<#p as apache_avro::schema::AvroSchemaWithResolved>::get_schema_with_resolved(resolved_schemas)}
+    quote! {<#p as apache_avro::schema::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}
 }
 
 /// Stolen from serde

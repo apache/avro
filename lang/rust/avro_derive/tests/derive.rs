@@ -17,7 +17,7 @@
 
 use apache_avro::{
     from_value,
-    schema::{AvroSchema, AvroSchemaWithResolved},
+    schema::{AvroSchema, AvroSchemaComponent},
     Reader, Schema, Writer,
 };
 use avro_derive::*;
@@ -418,7 +418,7 @@ mod test_derive {
 
     /// Generic Containers
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct TestGeneric<T: AvroSchemaWithResolved> {
+    struct TestGeneric<T: AvroSchemaComponent> {
         a: String,
         b: Vec<T>,
         c: HashMap<String, T>,
@@ -657,7 +657,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct ConsListGeneric<T: AvroSchemaWithResolved> {
+    struct ConsListGeneric<T: AvroSchemaComponent> {
         value: T,
         next: Option<Box<ConsListGeneric<T>>>,
     }
@@ -747,7 +747,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    struct TestComplexArray<T: AvroSchemaWithResolved> {
+    struct TestComplexArray<T: AvroSchemaComponent> {
         a: [T; 2],
     }
 

@@ -34,7 +34,7 @@ Add the "derive" feature to your apache-avro dependency inside cargo.toml
 apache-avro = { version = "X.Y.Z", features = ["derive"] }
 ```
 
-Add to your struct
+Add to your data model
 ```rust
 #[derive(AvroSchema)]
 struct Test {
