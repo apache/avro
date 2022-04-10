@@ -334,8 +334,7 @@ impl Value {
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
         let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
-        let res = self.validate_internal(schema, rs.get_names());
-        match res {
+        match self.validate_internal(schema, rs.get_names()) {
             Some(error_msg) => {
                 error!(
                     "Invalid value: {:?} for schema: {:?}. Reason: {}",
@@ -956,7 +955,6 @@ mod tests {
 
     #[test]
     fn validate() {
-        init();
         let value_schema_valid = vec![
             (Value::Int(42), Schema::Int, true, ""),
             (
