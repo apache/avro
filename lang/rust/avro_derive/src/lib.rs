@@ -15,22 +15,74 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use proc_macro2::{Span, TokenStream, TokenTree};
+extern crate darling;
+
+use darling::FromDeriveInput;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use syn::{parse_macro_input, Attribute, DeriveInput, Error, Lit, Path, Type, TypePath};
+use syn::{parse_macro_input, Attribute, DeriveInput, Error, Type, TypePath};
 
-#[proc_macro_derive(AvroSchema, attributes(namespace))]
+#[derive(Clone, Debug, FromDeriveInput)]
+#[darling(
+    attributes(avro),
+    forward_attrs(allow, doc, cfg),
+    and_then = "AvroSchemaAttrs::post_process"
+)]
+struct AvroSchemaAttrs {
+    ident: syn::Ident,
+    attrs: Vec<Attribute>,
+    #[darling(default)]
+    namespace: Option<String>,
+    // aliases: Vec<String>,
+    #[darling(default)]
+    doc: Option<String>,
+}
+
+impl AvroSchemaAttrs {
+    fn post_process(self) -> darling::Result<Self> {
+        let doc = if self.doc.is_none() {
+            self.attrs
+                .iter()
+                .find(|attr| attr.path.is_ident("doc"))
+                .map(|attr| {
+                    let mut tokens = attr.tokens.clone().into_iter();
+                    tokens.next(); // skip the Punct
+                    let to_trim: &[char] = &['"', ' '];
+                    tokens
+                        .next() // use the Literal
+                        .unwrap()
+                        .to_string()
+                        .trim_matches(to_trim)
+                        .to_string()
+                })
+        } else {
+            self.doc
+        };
+        Ok(Self {
+            ident: self.ident,
+            attrs: self.attrs,
+            namespace: self.namespace,
+            doc,
+        })
+    }
+}
+
+#[proc_macro_derive(AvroSchema, attributes(avro))]
 // Templated from Serde
 pub fn proc_macro_derive_avro_schema(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
-    derive_avro_schema(&mut input)
+    let avro_attrs: darling::Result<AvroSchemaAttrs> = FromDeriveInput::from_derive_input(&input);
+    derive_avro_schema(&mut input, avro_attrs.unwrap())
         .unwrap_or_else(to_compile_errors)
         .into()
 }
 
-fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
-    let namespace = get_namespace_from_attributes(&input.attrs)?;
+fn derive_avro_schema(
+    input: &mut DeriveInput,
+    avro_attrs: AvroSchemaAttrs,
+) -> Result<TokenStream, Vec<syn::Error>> {
+    let namespace = avro_attrs.namespace.clone();
     let full_schema_name = vec![namespace, Some(input.ident.to_string())]
         .into_iter()
         .flatten()
@@ -38,9 +90,11 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
         .join(".");
     let schema_def = match &input.data {
         syn::Data::Struct(s) => {
-            get_data_struct_schema_def(&full_schema_name, s, input.ident.span())?
+            get_data_struct_schema_def(&full_schema_name, s, input.ident.span(), &avro_attrs)?
         }
-        syn::Data::Enum(e) => get_data_enum_schema_def(&full_schema_name, e, input.ident.span())?,
+        syn::Data::Enum(e) => {
+            get_data_enum_schema_def(&full_schema_name, e, input.ident.span(), &avro_attrs)?
+        }
         _ => {
             return Err(vec![Error::new(
                 input.ident.span(),
@@ -67,44 +121,14 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     })
 }
 
-fn get_namespace_from_attributes(attrs: &[Attribute]) -> Result<Option<String>, Vec<Error>> {
-    let namespace_attr_path_constant: Path = syn::parse2::<Path>(quote! {namespace}).unwrap();
-    const NAMESPACE_PARSING_ERROR_CONSTANT: &str =
-        "Namespace attribute must be in form #[namespace = \"com.testing.namespace\"]";
-    // parse out namespace if present. Requires strict syntax
-    for attr in attrs {
-        if namespace_attr_path_constant == attr.path {
-            let mut input_tokens = attr.tokens.clone().into_iter();
-            if let (
-                Some(TokenTree::Punct(punct)),
-                Some(TokenTree::Literal(namespace_literal)),
-                None,
-            ) = (
-                input_tokens.next(),
-                input_tokens.next(),
-                input_tokens.next(),
-            ) {
-                if punct.as_char() == '=' {
-                    if let Lit::Str(lit_str) = Lit::new(namespace_literal) {
-                        return Ok(Some(lit_str.value()));
-                    }
-                }
-            }
-            return Err(vec![Error::new_spanned(
-                &attr.tokens,
-                NAMESPACE_PARSING_ERROR_CONSTANT,
-            )]);
-        }
-    }
-    Ok(None)
-}
-
 fn get_data_struct_schema_def(
     full_schema_name: &str,
     s: &syn::DataStruct,
     error_span: Span,
+    avro_attrs: &AvroSchemaAttrs,
 ) -> Result<TokenStream, Vec<Error>> {
     let mut record_field_exprs = vec![];
+    let _doc = avro_attrs.doc.clone(); // TODO: add doc to the quote below
     match s.fields {
         syn::Fields::Named(ref a) => {
             for (position, field) in a.named.iter().enumerate() {
@@ -114,7 +138,7 @@ fn get_data_struct_schema_def(
                 record_field_exprs.push(quote! {
                     apache_avro::schema::RecordField {
                             name: #name.to_string(),
-                            doc: Option::None,
+                            doc: None,
                             default: Option::None,
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
@@ -147,12 +171,14 @@ fn get_data_enum_schema_def(
     full_schema_name: &str,
     e: &syn::DataEnum,
     error_span: Span,
+    avro_attrs: &AvroSchemaAttrs,
 ) -> Result<TokenStream, Vec<Error>> {
+    let _doc = avro_attrs.doc.clone(); // TODO: add doc to the quote below
     if e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
         let symbols: Vec<String> = e
             .variants
             .iter()
-            .map(|varient| varient.ident.to_string())
+            .map(|variant| variant.ident.to_string())
             .collect();
         Ok(quote! {
             apache_avro::schema::Schema::Enum {
@@ -185,15 +211,15 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<Error>> {
             "char" => {
                 return Err(vec![Error::new_spanned(
                     ty,
-                    "AvroSchema: Cannot guarentee sucessful deserialization of this type",
+                    "AvroSchema: Cannot guarantee successful deserialization of this type",
                 )])
             }
             "u32" | "u64" => {
                 return Err(vec![Error::new_spanned(
                 ty,
-                "Cannot guarentee sucessful serialization of this type due to overflow concerns",
+                "Cannot guarantee successful serialization of this type due to overflow concerns",
             )])
-            } //Can't guarentee serialization type
+            } //Can't guarantee serialization type
             _ => {
                 // Fails when the type does not implement AvroSchemaComponent directly
                 // TODO check and error report with something like https://docs.rs/quote/1.0.15/quote/macro.quote_spanned.html#example
@@ -241,7 +267,8 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
@@ -258,7 +285,8 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_tuple_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_err())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_err())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
@@ -275,7 +303,8 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_tuple_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_err())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_err())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
@@ -293,7 +322,8 @@ mod tests {
         };
         match syn::parse2::<DeriveInput>(struct_with_optional) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
@@ -314,7 +344,8 @@ mod tests {
         };
         match syn::parse2::<DeriveInput>(basic_enum) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
@@ -326,7 +357,7 @@ mod tests {
     #[test]
     fn test_namespace() {
         let test_struct = quote! {
-            #[namespace = "namespace.testing"]
+            #[avro(namespace = "namespace.testing")]
             struct A {
                 a: i32,
                 b: String
@@ -335,8 +366,10 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok());
-                assert!(derive_avro_schema(&mut input)
+                let avro_attrs: AvroSchemaAttrs =
+                    FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs.clone()).is_ok());
+                assert!(derive_avro_schema(&mut input, avro_attrs)
                     .unwrap()
                     .to_string()
                     .contains("namespace.testing"))
@@ -359,7 +392,8 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_reference_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok())
+                let avro_attrs = FromDeriveInput::from_derive_input(&input).unwrap();
+                assert!(derive_avro_schema(&mut input, avro_attrs).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",

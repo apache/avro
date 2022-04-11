@@ -82,6 +82,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro()]
     struct TestBasic {
         a: i32,
         b: String,
@@ -114,8 +115,9 @@ mod test_derive {
         serde_assert(test);
     }
 
+    /// Test some Rustdoc
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    #[namespace = "com.testing.namespace"]
+    #[avro(namespace = "com.testing.namespace")]
     struct TestBasicNamespace {
         a: i32,
         b: String,
@@ -149,7 +151,7 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    #[namespace = "com.testing.complex.namespace"]
+    #[avro(namespace = "com.testing.complex.namespace")]
     struct TestComplexNamespace {
         a: TestBasicNamespace,
         b: String,
