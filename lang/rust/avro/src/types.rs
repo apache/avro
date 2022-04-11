@@ -929,7 +929,7 @@ mod tests {
 
     impl log::Log for TestLogger {
         fn enabled(&self, metadata: &Metadata) -> bool {
-            metadata.level() <= Level::Info
+            metadata.level() <= Level::Error
         }
 
         fn log(&self, record: &log::Record) {
@@ -938,10 +938,12 @@ mod tests {
                 msgs.push(format!("{}", record.args()));
             }
         }
+
         fn flush(&self) {}
     }
 
     static TEST_LOGGER: TestLogger = TestLogger;
+
     fn init() {
         let _ = log::set_logger(&TEST_LOGGER);
         log::set_max_level(LevelFilter::Info);
