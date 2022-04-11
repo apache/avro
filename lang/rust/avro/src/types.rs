@@ -1154,6 +1154,16 @@ mod tests {
             .as_str(),
         );
 
+        let value = Value::Enum(1000, "spades".to_string());
+        assert!(!value.validate(&schema));
+        assert_log_message(
+            format!(
+                "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                value, schema, "No symbol at position '1000'"
+            )
+            .as_str(),
+        );
+
         let value = Value::String("lorem".to_string());
         assert!(!value.validate(&schema));
         assert_log_message(
