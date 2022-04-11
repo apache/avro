@@ -5,6 +5,12 @@
   "version" : "1.0.5",
   "types" : [ {
     "type" : "enum",
+    "name" : "AorB",
+    "namespace" : "org.foo",
+    "symbols" : ["A", "B"],
+    "default" : "A"
+  }, {
+    "type" : "enum",
     "name" : "Position",
     "namespace" : "avro.examples.baseball",
     "symbols" : [ "P", "C", "B1", "B2", "B3", "SS", "LF", "CF", "RF", "DH" ]
@@ -66,7 +72,10 @@
       "response" : "null"
     },
     "bar" : {
-      "request" : [ ],
+      "request" : [ {
+        "name" : "choice",
+        "type" : "org.foo.AorB"
+      } ],
       "response" : "null"
     }
   }

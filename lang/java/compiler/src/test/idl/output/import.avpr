@@ -3,6 +3,11 @@
   "namespace" : "org.foo",
   "doc" : "Licensed to the Apache Software Foundation (ASF) under one\nor more contributor license agreements.  See the NOTICE file\ndistributed with this work for additional information\nregarding copyright ownership.  The ASF licenses this file\nto you under the Apache License, Version 2.0 (the\n\"License\"); you may not use this file except in compliance\nwith the License.  You may obtain a copy of the License at\n\n    https://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.",
   "types" : [ {
+   "type" : "enum",
+   "name" : "AorB",
+   "symbols" : ["A", "B"],
+   "default" : "A"
+  }, {
     "type" : "enum",
     "name" : "Position",
     "namespace" : "avro.examples.baseball",
@@ -111,7 +116,10 @@
       "response" : "null"
     },
     "bar" : {
-      "request" : [ ],
+      "request" : [ {
+        "name" : "choice",
+        "type" : "AorB"
+      } ],
       "response" : "null"
     },
     "bazm" : {
