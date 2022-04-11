@@ -24,7 +24,7 @@ A proc-macro module for automatically deriving the avro schema for structs or en
 
 ```rust
 pub trait AvroSchema {
-    // constructs the shema for the type
+    // constructs the schema for the type
     fn get_schema() -> Schema;
 }
 ```

@@ -985,7 +985,8 @@ impl Parser {
         schema: &Schema,
         aliases: &Aliases,
     ) {
-        // FIXME, this should be globally aware, so if there is something overwriting something else then there is an ambiguois schema definition. An apropriate error should be thrown
+        // FIXME, this should be globally aware, so if there is something overwriting something
+        // else then there is an ambiguous schema definition. An appropriate error should be thrown
         self.parsed_schemas
             .insert(fully_qualified_name.clone(), schema.clone());
         self.resolving_schemas.remove(fully_qualified_name);
@@ -1519,26 +1520,32 @@ pub fn record_schema_for_fields(
     }
 }
 
-/// Trait for types that serve as an avro data model. Derive implementation availible through `derive` feature. Do not implement directly, implement [`AvroSchemaComponent`] to get this trait through a blanket implementation.
+/// Trait for types that serve as an Avro data model. Derive implementation available
+/// through `derive` feature. Do not implement directly, implement [`AvroSchemaComponent`]
+/// to get this trait through a blanket implementation.
 pub trait AvroSchema {
     fn get_schema() -> Schema;
 }
 
-/// Trait for types that serve as fully defined components inside an avro data model. Derive implementation availible through `derive` feature. This is what is implemented by the `derive(AvroSchema)` macro.
+/// Trait for types that serve as fully defined components inside an Avro data model. Derive
+/// implementation available through `derive` feature. This is what is implemented by
+/// the `derive(AvroSchema)` macro.
 ///
 /// # Implementation guide
 ///
 ///### Simple implementation
-/// To construct a non named simple schema, it is possible to ignore the input argument making the general form implementation look like
+/// To construct a non named simple schema, it is possible to ignore the input argument making the
+/// general form implementation look like
 /// ```ignore
 /// impl AvroSchemaComponent for AType {
-///     fn get_schema_in_ctxt(_: &mut Names, _:&Namespace) -> Schema {
+///     fn get_schema_in_ctxt(_: &mut Names, _: &Namespace) -> Schema {
 ///        Schema::?
 ///    }
 ///}
 /// ```
 /// ### Passthrough implementation
-/// To construct a schema for a Type that acts as in "inner" type, such as for smart points, simply pass through the arguments to the inner type
+/// To construct a schema for a Type that acts as in "inner" type, such as for smart pointers, simply
+/// pass through the arguments to the inner type
 /// ```ignore
 /// impl AvroSchemaComponent for PassthroughType {
 ///     fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace) -> Schema {
@@ -1547,12 +1554,15 @@ pub trait AvroSchema {
 ///}
 /// ```
 ///### Complex implementation
-/// To implement this for Named schema there is a general form needed to avoid creating invalid schemas or infinite loops.
+/// To implement this for Named schema there is a general form needed to avoid creating invalid
+/// schemas or infinite loops.
 /// ```ignore
 /// impl AvroSchemaComponent for ComplexType {
 ///     fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace) -> Schema {
-///         // Create the fully qualified name for your type give then enclosing namesapce
-///         let name =  apache_avro::schema::Name::new("MyName").expect("Unable to parse schema name").fully_qualified_name(enclosing_namespace);
+///         // Create the fully qualified name for your type given the enclosing namespace
+///         let name =  apache_avro::schema::Name::new("MyName")
+///             .expect("Unable to parse schema name")
+///             .fully_qualified_name(enclosing_namespace);
 ///         let enclosing_namespace = &name.namespace;
 ///         // Check, if your name is already defined, and if so, return a ref to that name
 ///         if named_schemas.contains_key(&name) {
@@ -2743,7 +2753,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2782,7 +2792,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2816,7 +2826,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2850,7 +2860,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2884,7 +2894,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2918,7 +2928,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2958,7 +2968,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2993,7 +3003,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -3028,7 +3038,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -3079,7 +3089,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "space.middle_record_name",
@@ -3135,7 +3145,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
@@ -3192,7 +3202,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
@@ -3235,7 +3245,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.in_array_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -3274,7 +3284,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
