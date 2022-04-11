@@ -24,6 +24,8 @@ using Avro.IO;
 using Avro.Specific;
 using Avro.Test.Specific;
 using System.Collections.Generic;
+using Avro.Generic;
+using Avro.Test.Generic;
 using Avro.Test.Specific.@return;
 
 #if !NETCOREAPP
@@ -440,6 +442,43 @@ namespace Avro.Test
             Assert.AreEqual(0, dstRecord.UserMatrix[2].Count);
         }
 
+        private static void serializeGeneric<T>(string writerSchema, T actual, out Stream stream, out Schema ws)
+        {
+            var ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            ws = Schema.Parse(writerSchema);
+            GenericWriter<T> w = new GenericWriter<T>(ws);
+            w.Write(actual, e);
+            ms.Flush();
+            ms.Position = 0;
+            stream = ms;
+        }
+        
+        [Test]
+        public void DeserializeToLogicalTypeWithDefault()
+        {
+            var writerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""RecordWithOptionalLogicalType"",
+    ""namespace"": ""Avro.Test.Specific.return"",
+    ""fields"": [      
+    ]}";
+
+            var writerSchema = Schema.Parse(writerSchemaString);
+
+            Stream stream;
+
+            serializeGeneric(writerSchemaString,
+                GenericTests.MkRecord(new object[] { }, (RecordSchema)writerSchema),
+                out stream,
+                out _);
+
+            RecordWithOptionalLogicalType output = deserialize<RecordWithOptionalLogicalType>(stream, writerSchema, RecordWithOptionalLogicalType._SCHEMA);
+
+            Assert.AreEqual(output.x, new DateTime(1970, 1, 11));
+
+        }
+        
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
         {
             long initialPos = ms.Position;

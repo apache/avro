@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Avro
 {
@@ -36,6 +37,15 @@ namespace Avro
             if (args.Contains("-h") || args.Contains("--help"))
             {
                 Usage();
+                return 0;
+            }
+
+            if (args.Contains("--version") || args.Contains("-V"))
+            {
+                // Print version information
+                // Note: Use InformationalVersion attributre
+                // It is capable to include semver prerelease information label (if prerelease), e.g. 1.x.y-beta.z
+                Console.WriteLine(typeof(AvroGenTool).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
                 return 0;
             }
 
@@ -135,10 +145,11 @@ namespace Avro
                 "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
-                "  -h --help   Show this screen.\n" +
-                "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
-                "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
-                "              May be specified multiple times to map multiple namespaces.\n",
+                "  -h --help        Show this screen.\n" +
+                "  -V --version     Show version.\n" +
+                "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
+                "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
+                "                   May be specified multiple times to map multiple namespaces.\n",
                 AppDomain.CurrentDomain.FriendlyName);
         }
 

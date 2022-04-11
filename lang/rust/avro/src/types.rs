@@ -333,8 +333,15 @@ impl Value {
     /// See the [Avro specification](https://avro.apache.org/docs/current/spec.html)
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
+        let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
+        self.validate_internal(schema, rs.get_names())
+    }
+
+    pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> bool {
         match (self, schema) {
-            (_, &Schema::Ref { name: _ }) => true,
+            (_, &Schema::Ref { ref name }) => names
+                .get(name)
+                .map_or(false, |s| self.validate_internal(s, names)),
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
@@ -372,26 +379,26 @@ impl Value {
             (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
                 .variants()
                 .get(i as usize)
-                .map(|schema| value.validate(schema))
+                .map(|schema| value.validate_internal(schema, names))
                 .unwrap_or(false),
-            (&Value::Array(ref items), &Schema::Array(ref inner)) => {
-                items.iter().all(|item| item.validate(inner))
-            }
-            (&Value::Map(ref items), &Schema::Map(ref inner)) => {
-                items.iter().all(|(_, value)| value.validate(inner))
-            }
+            (&Value::Array(ref items), &Schema::Array(ref inner)) => items
+                .iter()
+                .all(|item| item.validate_internal(inner, names)),
+            (&Value::Map(ref items), &Schema::Map(ref inner)) => items
+                .iter()
+                .all(|(_, value)| value.validate_internal(inner, names)),
             (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
                 fields.len() == record_fields.len()
                     && fields.iter().zip(record_fields.iter()).all(
                         |(field, &(ref name, ref value))| {
-                            field.name == *name && value.validate(&field.schema)
+                            field.name == *name && value.validate_internal(&field.schema, names)
                         },
                     )
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().all(|field| {
                     if let Some(item) = items.get(&field.name) {
-                        item.validate(&field.schema)
+                        item.validate_internal(&field.schema, names)
                     } else {
                         false
                     }
@@ -1846,5 +1853,145 @@ mod tests {
         outer_record_variation_3
             .resolve(&schema)
             .expect("Should be able to resolve value to the schema that is it's definition");
+    }
+
+    #[test]
+    fn test_avro_3460_validation_with_refs() {
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let inner_value_right = Value::Record(vec![("z".into(), Value::Int(3))]);
+        let inner_value_wrong1 = Value::Record(vec![("z".into(), Value::Null)]);
+        let inner_value_wrong2 = Value::Record(vec![("a".into(), Value::String("testing".into()))]);
+        let outer1 = Value::Record(vec![
+            ("a".into(), inner_value_right.clone()),
+            ("b".into(), inner_value_wrong1),
+        ]);
+
+        let outer2 = Value::Record(vec![
+            ("a".into(), inner_value_right),
+            ("b".into(), inner_value_wrong2),
+        ]);
+
+        assert!(
+            !outer1.validate(&schema),
+            "field b record is invalid against the schema"
+        ); // this should pass, but doesn't
+        assert!(
+            !outer2.validate(&schema),
+            "field b record is invalid against the schema"
+        ); // this should pass, but doesn't
+    }
+
+    #[test]
+    fn test_avro_3460_validation_with_refs_real_struct() {
+        use crate::ser::Serializer;
+        use serde::Serialize;
+
+        #[derive(Serialize, Clone)]
+        struct TestInner {
+            z: i32,
+        }
+
+        #[derive(Serialize)]
+        struct TestRefSchemaStruct1 {
+            a: TestInner,
+            b: String, // could be literally anything
+        }
+
+        #[derive(Serialize)]
+        struct TestRefSchemaStruct2 {
+            a: TestInner,
+            b: i32, // could be literally anything
+        }
+
+        #[derive(Serialize)]
+        struct TestRefSchemaStruct3 {
+            a: TestInner,
+            b: Option<TestInner>, // could be literally anything
+        }
+
+        let schema = Schema::parse_str(
+            r#"
+        {
+            "type":"record",
+            "name":"TestStruct",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":{
+                        "type":"record",
+                        "name": "Inner",
+                        "fields": [ {
+                            "name":"z",
+                            "type":"int"
+                        }]
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"Inner"
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let test_inner = TestInner { z: 3 };
+        let test_outer1 = TestRefSchemaStruct1 {
+            a: test_inner.clone(),
+            b: "testing".into(),
+        };
+        let test_outer2 = TestRefSchemaStruct2 {
+            a: test_inner.clone(),
+            b: 24,
+        };
+        let test_outer3 = TestRefSchemaStruct3 {
+            a: test_inner,
+            b: None,
+        };
+
+        let mut ser = Serializer::default();
+        let test_outer1: Value = test_outer1.serialize(&mut ser).unwrap();
+        let mut ser = Serializer::default();
+        let test_outer2: Value = test_outer2.serialize(&mut ser).unwrap();
+        let mut ser = Serializer::default();
+        let test_outer3: Value = test_outer3.serialize(&mut ser).unwrap();
+
+        assert!(
+            !test_outer1.validate(&schema),
+            "field b record is invalid against the schema"
+        ); // this should pass, but doesn't
+        assert!(
+            !test_outer2.validate(&schema),
+            "field b record is invalid against the schema"
+        ); // this should pass, but doesn't
+        assert!(
+            !test_outer3.validate(&schema),
+            "field b record is invalid against the schema"
+        ); // this should pass, but doesn't
     }
 }
