@@ -1287,6 +1287,14 @@ mod tests {
         )
         .validate(&schema));
 
+        assert!(!Value::Map(
+            vec![("c".to_string(), Value::Long(123_i64)),]
+                .into_iter()
+                .collect()
+        )
+        .validate(&schema));
+        assert_log_message("Invalid value: Map({\"c\": Long(123)}) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Field with name '\"a\"' is not a member of the map items\nField with name '\"b\"' is not a member of the map items");
+
         let union_schema = Schema::Union(UnionSchema::new(vec![Schema::Null, schema]).unwrap());
 
         assert!(Value::Union(
