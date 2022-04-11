@@ -69,7 +69,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
 
 fn get_namespace_from_attributes(attrs: &[Attribute]) -> Result<Option<String>, Vec<Error>> {
     let namespace_attr_path_constant: Path = syn::parse2::<Path>(quote! {namespace}).unwrap();
-    const NAMESPACE_PARSING_ERROR_CONSTANST: &str =
+    const NAMESPACE_PARSING_ERROR_CONSTANT: &str =
         "Namespace attribute must be in form #[namespace = \"com.testing.namespace\"]";
     // parse out namespace if present. Requires strict syntax
     for attr in attrs {
@@ -92,7 +92,7 @@ fn get_namespace_from_attributes(attrs: &[Attribute]) -> Result<Option<String>, 
             }
             return Err(vec![Error::new_spanned(
                 &attr.tokens,
-                NAMESPACE_PARSING_ERROR_CONSTANST,
+                NAMESPACE_PARSING_ERROR_CONSTANT,
             )]);
         }
     }
@@ -117,7 +117,7 @@ fn get_data_struct_schema_def(
                             doc: Option::None,
                             default: Option::None,
                             schema: #schema_expr,
-                            order: apache_avro::schema::RecordFieldOrder::Ignore,
+                            order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
                         }
                 });
@@ -244,7 +244,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
@@ -261,7 +261,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
@@ -278,7 +278,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
@@ -286,17 +286,17 @@ mod tests {
 
     #[test]
     fn struct_with_optional() {
-        let stuct_with_optional = quote! {
+        let struct_with_optional = quote! {
             struct Test4 {
                 a : Option<i32>
             }
         };
-        match syn::parse2::<DeriveInput>(stuct_with_optional) {
+        match syn::parse2::<DeriveInput>(struct_with_optional) {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
@@ -317,7 +317,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };
@@ -342,7 +342,7 @@ mod tests {
                     .contains("namespace.testing"))
             }
             Err(error) => panic!(
-                "Failied to parse as derive input when it should be able to. Error: {:?}",
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
                 error
             ),
         };

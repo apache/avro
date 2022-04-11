@@ -116,17 +116,17 @@ mod test_derive {
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[namespace = "com.testing.namespace"]
-    struct TestBasicNamesapce {
+    struct TestBasicNamespace {
         a: i32,
         b: String,
     }
 
     #[test]
-    fn test_basic_namesapce() {
+    fn test_basic_namespace() {
         let schema = r#"
         {
             "type":"record",
-            "name":"com.testing.namespace.TestBasicNamesapce",
+            "name":"com.testing.namespace.TestBasicNamespace",
             "fields":[
                 {
                     "name":"a",
@@ -140,8 +140,8 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        assert_eq!(schema, TestBasicNamesapce::get_schema());
-        if let Schema::Record { name, .. } = TestBasicNamesapce::get_schema() {
+        assert_eq!(schema, TestBasicNamespace::get_schema());
+        if let Schema::Record { name, .. } = TestBasicNamespace::get_schema() {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap())
         } else {
             panic!("TestBasicNamespace schema must be a record schema")
@@ -151,7 +151,7 @@ mod test_derive {
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[namespace = "com.testing.complex.namespace"]
     struct TestComplexNamespace {
-        a: TestBasicNamesapce,
+        a: TestBasicNamespace,
         b: String,
     }
 
@@ -166,7 +166,7 @@ mod test_derive {
                     "name":"a",
                     "type":{
                         "type":"record",
-                        "name":"com.testing.namespace.TestBasicNamesapce",
+                        "name":"com.testing.namespace.TestBasicNamespace",
                         "fields":[
                             {
                                 "name":"a",
