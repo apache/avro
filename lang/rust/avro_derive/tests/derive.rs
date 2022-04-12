@@ -115,7 +115,6 @@ mod test_derive {
         serde_assert(test);
     }
 
-    /// Test some Rustdoc
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(namespace = "com.testing.namespace")]
     struct TestBasicNamespace {
@@ -905,5 +904,45 @@ mod test_derive {
             c: &c,
         };
         ser(test);
+    }
+
+    /// Test some Rustdoc
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
+    struct TestBasicWithAttributes {
+        #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
+        a: i32,
+        #[avro(doc = "Full lyrics of Bohemian Rhapsody")]
+        b: String,
+    }
+
+    #[test]
+    fn test_basic_with_attributes() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"com.testing.namespace.TestBasicWithAttributes",
+            "doc":"A Documented Record",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int",
+                    "doc":"Milliseconds since Queen released Bohemian Rhapsody"
+                },
+                {
+                    "name":"b",
+                    "type": "string",
+                    "doc": "Full lyrics of Bohemian Rhapsody"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, .. } = TestBasicWithAttributes::get_schema() {
+            assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap())
+        } else {
+            panic!("TestBasicNamespace schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithAttributes::get_schema());
     }
 }
