@@ -349,8 +349,8 @@ impl Value {
     fn accumulate(accumulator: Option<String>, other: Option<String>) -> Option<String> {
         match (accumulator, other) {
             (None, None) => None,
-            (None, Some(reason)) => Some(reason),
-            (Some(reason), None) => Some(reason),
+            (None, s @ Some(_)) => s,
+            (s @ Some(_), None) => s,
             (Some(reason1), Some(reason2)) => Some(format!("{}\n{}", reason1, reason2)),
         }
     }
