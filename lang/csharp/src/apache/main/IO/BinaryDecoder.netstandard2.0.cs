@@ -34,7 +34,7 @@ namespace Avro.IO
         /// <summary>
         /// A float is written as 4 bytes.
         /// The float is converted into a 32-bit integer using a method equivalent to
-        /// Java's floatToIntBits and then encoded in little-little-endian format.
+        /// Java's floatToIntBits and then encoded in little-endian format.
         /// </summary>
         /// <returns></returns>
         public float ReadFloat()
