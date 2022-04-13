@@ -54,22 +54,22 @@
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
 	Please sort the packages alphabetically
   -->
-  <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-    <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
-    <CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
-	<CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <!-- When .NET 7 SDK is released or the package is is not in preview, update this version -->
-    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' != 'net7.0'">6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
-    <NUnitVersion>3.13.2</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
-    <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
-  </PropertyGroup>
+	<PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
+		<BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
+		<CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
+		<CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
+		<MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
+		<MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
+		<MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
+		<MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
+		<MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
+		<!-- When .NET 7 SDK is released or the package is is not in preview, update this version -->
+		<MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' != 'net7.0'">6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+		<MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
+		<MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
+		<NUnitVersion>3.13.2</NUnitVersion>
+		<NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>
+		<NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
+		<StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
+	</PropertyGroup>
 </Project>
