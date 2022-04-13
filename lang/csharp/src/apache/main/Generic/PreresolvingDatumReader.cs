@@ -619,7 +619,7 @@ namespace Avro.Generic
             /// Hint that the array should be able to handle at least targetSize elements. The array
             /// is not required to be resized
             /// </summary>
-            /// <param name="array">Array object who needs to support targetSize elements. This is guaranteed to be somthing returned by
+            /// <param name="array">Array object who needs to support targetSize elements. This is guaranteed to be something returned by
             /// a previous call to CreateArray().</param>
             /// <param name="targetSize">The new size.</param>
             void EnsureSize(ref object array, int targetSize);
@@ -627,7 +627,7 @@ namespace Avro.Generic
             /// <summary>
             /// Resizes the array to the new value.
             /// </summary>
-            /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+            /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
             /// a previous call to CreateArray().</param>
             /// <param name="targetSize">The new size.</param>
             void Resize(ref object array, int targetSize);
