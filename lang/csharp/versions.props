@@ -63,7 +63,9 @@
     <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <!-- When .NET 7 SDK is released or the package is is not in preview, update this version -->
+    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' != 'net7.0'">6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>

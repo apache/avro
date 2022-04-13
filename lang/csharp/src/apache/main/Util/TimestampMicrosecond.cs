@@ -25,6 +25,8 @@ namespace Avro.Util
     /// </summary>
     public class TimestampMicrosecond : LogicalUnixEpochType<DateTime>
     {
+        private const long _ticksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
+
         /// <summary>
         /// The logical type name for TimestampMicrosecond.
         /// </summary>
@@ -47,14 +49,13 @@ namespace Avro.Util
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).ToUniversalTime();
-            return (long)((date - UnixEpochDateTime).TotalMilliseconds * 1000);
+            return (date - UnixEpochDateTime).Ticks / _ticksPerMicrosecond;
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var noMs = (long)baseValue / 1000;
-            return UnixEpochDateTime.AddMilliseconds(noMs);
+            return UnixEpochDateTime.AddTicks((long)baseValue * _ticksPerMicrosecond);
         }
     }
 }
