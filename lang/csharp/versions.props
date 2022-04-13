@@ -70,7 +70,6 @@
     <NUnitVersion>3.13.2</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
-    <ReportGeneratorVersion>5.0.4</ReportGeneratorVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>
