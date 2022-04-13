@@ -841,4 +841,19 @@ public class TestSchemaBuilder {
     Assert.assertEquals("Schema is able to be successfully created as is without validation", defaultValue,
         schema.getField(fieldName).defaultValue().asText());
   }
+
+  /**
+   * https://issues.apache.org/jira/browse/AVRO-1965
+   */
+  @Test
+  public void testNamespaceDefaulting() {
+    Schema d = SchemaBuilder.builder().intType();
+    Schema c = SchemaBuilder.record("c").fields().name("d").type(d).noDefault().endRecord();
+    Schema b = SchemaBuilder.record("b").fields().name("c").type(c).noDefault().endRecord();
+
+    Schema a1 = SchemaBuilder.record("default.a").fields().name("b").type(b).noDefault().endRecord();
+    Schema a2 = new Schema.Parser().parse(a1.toString());
+
+    Assert.assertEquals(a2, a1);
+  }
 }

@@ -37,17 +37,17 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <hadoop.version>3.3.1</hadoop.version>
+    <hadoop.version>3.3.2</hadoop.version>
     <jackson.version>2.12.5</jackson.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.44.v20210927</jetty.version>
+    <jetty.version>9.4.46.v20220331</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
-    <netty.version>4.1.72.Final</netty.version>
+    <netty.version>4.1.75.Final</netty.version>
     <protobuf.version>3.19.4</protobuf.version>
     <thrift.version>0.15.0</thrift.version>
     <slf4j.version>1.7.33</slf4j.version>
-    <reload4j.version>1.2.18.0</reload4j.version>
+    <reload4j.version>1.2.19</reload4j.version>
     <snappy.version>1.1.8.4</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
@@ -56,9 +56,9 @@
     <commons-compress.version>1.21</commons-compress.version>
     <commons-text.version>1.9</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
-    <mockito.version>4.2.0</mockito.version>
+    <mockito.version>4.3.1</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.44.0</grpc.version>
+    <grpc.version>1.45.0</grpc.version>
     <zstd-jni.version>1.5.1-1</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>

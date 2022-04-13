@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace Avro.File
 {
@@ -101,6 +102,26 @@ namespace Avro.File
             /// Codec that does not perform any compression.
             /// </summary>
             Null,
+
+            /// <summary>
+            /// Codec type that implements the "Snappy" compression algorithm.
+            /// </summary>
+            Snappy,
+
+            /// <summary>
+            /// Codec type that implements the "BZip2" compression algorithm.
+            /// </summary>
+            BZip2,
+
+            /// <summary>
+            /// Codec type that implements the "XZ" compression algorithm.
+            /// </summary>
+            XZ,
+
+            /// <summary>
+            /// Codec type that implements the "Zstandard" compression algorithm.
+            /// </summary>
+            Zstandard
         }
 
         /// <summary>
@@ -138,9 +159,20 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
-                default:
+                case Type.Null:
                     return new NullCodec();
+                case Type.Snappy:
+                case Type.BZip2:
+                case Type.XZ:
+                case Type.Zstandard:
+                    {
+                        // Create codec dynamically from "Avro.File.CODECNAME" assembly
+                        Assembly assembly = Assembly.Load($"Avro.File.{codecType}");
+                        return assembly.CreateInstance($"Avro.File.{codecType}.{codecType}Codec") as Codec;
+                    }
             }
+
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>
@@ -150,6 +182,13 @@ namespace Avro.File
         /// <returns>Codec based on type.</returns>
         public static Codec CreateCodecFromString(string codecType)
         {
+            if (codecType == null)
+            {
+                // If codec is absent, it is assumed to be "null"
+                // https://avro.apache.org/docs/current/spec.html
+                return CreateCodec(Type.Null);
+            }
+
             foreach (var resolver in _codecResolvers)
             {
                 var candidateCodec = resolver(codecType);
@@ -162,10 +201,20 @@ namespace Avro.File
             switch (codecType)
             {
                 case DataFileConstants.DeflateCodec:
-                    return new DeflateCodec();
-                default:
-                    return new NullCodec();
+                    return CreateCodec(Type.Deflate);
+                case DataFileConstants.NullCodec:
+                    return CreateCodec(Type.Null);
+                case DataFileConstants.SnappyCodec:
+                    return CreateCodec(Type.Snappy);
+                case DataFileConstants.BZip2Codec:
+                    return CreateCodec(Type.BZip2);
+                case DataFileConstants.XZCodec:
+                    return CreateCodec(Type.XZ);
+                case DataFileConstants.ZstandardCodec:
+                    return CreateCodec(Type.Zstandard);
             }
+
+            throw new AvroRuntimeException($"Unrecognized codec: {codecType}");
         }
 
         /// <summary>

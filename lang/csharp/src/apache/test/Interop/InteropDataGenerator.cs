@@ -86,6 +86,7 @@ namespace Avro.Test.Interop
                 var codec = Codec.CreateCodecFromString(codecName);
                 using (var dataFileWriter = DataFileWriter<GenericRecord>.OpenWriter(datumWriter, outputPath, codec))
                 {
+                    dataFileWriter.SetMeta("user_metadata", "someByteArray");
                     dataFileWriter.Append(record);
                 }
             }

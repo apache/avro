@@ -31,6 +31,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.MapUtil;
+import org.apache.avro.util.SchemaUtil;
 import org.apache.avro.util.internal.ClassValueCache;
 
 import java.io.ObjectInput;
@@ -190,7 +191,7 @@ public class SpecificData extends GenericData {
 
   /**
    * Retrieve the current value of the custom-coders feature flag. Defaults to
-   * <code>true</code>, but this default can be overriden using the system
+   * <code>true</code>, but this default can be overridden using the system
    * property <code>org.apache.avro.specific.use_custom_coders</code>, and can be
    * set dynamically by {@link SpecificData#useCustomCoders()}. See <a
    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting
@@ -380,8 +381,8 @@ public class SpecificData extends GenericData {
       } else if (Map.class.isAssignableFrom(raw)) { // map
         java.lang.reflect.Type key = params[0];
         java.lang.reflect.Type value = params[1];
-        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class) key)))
-          throw new AvroTypeException("Map key class not CharSequence: " + key);
+        if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
+          throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
       } else {
         return createSchema(raw, names);

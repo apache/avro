@@ -94,11 +94,12 @@ matrix:
           update: true
           packages:
             - wget
+            - libzstd-dev
       install:
         - wget https://dot.net/v1/dotnet-install.sh
-        - bash ./dotnet-install.sh --version "3.1.402" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux"   # 3.1
-        - bash ./dotnet-install.sh --version "5.0.101" --install-dir "$HOME/.dotnet" --architecture "arm64" --os "linux" # 5.0
-        - bash ./dotnet-install.sh --channel Current # 6.0
+        - bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
+        - bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+        - bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
       before_script:
         - export PATH=$HOME/.dotnet:$PATH
         - dotnet --list-sdks
@@ -204,7 +205,7 @@ matrix:
       install:
         - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
         - php -r "if (hash_file('sha384', 'composer-setup.php') === '906a84df04cea2aa72f40b5f787e49f22d4c2f19492ac310e8cba5b96ac8b64115ac402c8cd292b8a03482574915d1a8') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-        - php composer-setup.php
+        - php composer-setup.php --version=2.2.5
         - php -r "unlink('composer-setup.php');"
         - sudo mv composer.phar /usr/local/bin/composer
         # remove Composer 1 pre-installed by TravisCI and use Composer 2 installed manually above

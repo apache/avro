@@ -54,6 +54,10 @@ my $datum = {
     },
 };
 
+my $metadata = {
+    user_metadata => 'someByteArray'
+};
+
 while (my ($codec, $enabled) = each(%Avro::DataFile::ValidCodec)) {
     next unless $enabled;
     my $outdir = '../../build/interop/data';
@@ -65,6 +69,7 @@ while (my ($codec, $enabled) = each(%Avro::DataFile::ValidCodec)) {
     my $writer = Avro::DataFileWriter->new(
         fh => $fh,
         codec => $codec,
+        metadata => $metadata,
         writer_schema => $writer_schema
     );
     $writer->print($datum);

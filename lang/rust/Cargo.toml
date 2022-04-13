@@ -15,69 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[package]
-name = "apache-avro"
-version = "0.14.0"
-authors = ["Apache Avro team <dev@avro.apache.org>"]
-description = "A library for working with Apache Avro in Rust"
-license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/apache/avro"
-edition = "2018"
-keywords = ["avro", "data", "serialization"]
-categories = ["encoding"]
-documentation = "https://docs.rs/apache-avro"
-
-[features]
-snappy = ["crc32fast", "snap"]
-zstandard = ["zstd"]
-bzip = ["bzip2"]
-xz = ["xz2"]
-
-[lib]
-path = "src/lib.rs"
-# disable benchmarks to allow passing criterion arguments to `cargo bench`
-bench = false
-
-[[bench]]
-name = "serde"
-harness = false
-
-[[bench]]
-name = "serde_json"
-harness = false
-
-[[bench]]
-name = "single"
-harness = false
-
-[dependencies]
-byteorder = "1.4.3"
-bzip2 = { version = "0.4.3", optional = true }
-crc32fast = { version = "1.2.1", optional = true }
-digest = "0.10.1"
-libflate = "1.1.1"
-xz2 = { version = "0.1.6", optional = true }
-num-bigint = "0.4.2"
-rand = "0.8.4"
-regex = "1.5.4"
-serde_json = "1.0.67"
-serde = { version = "1.0.130", features = ["derive"] }
-snap = { version = "1.0.5", optional = true }
-strum = "0.23.0"
-strum_macros = "0.23.1"
-thiserror = "1.0.29"
-typed-builder = "0.9.1"
-uuid = { version = "0.8.2", features = ["serde", "v4"] }
-zerocopy = "0.6.1"
-lazy_static = "1.1.1"
-log = "0.4.14"
-zstd = { version = "0.10.0+zstd.1.5.0" , optional = true }
-
-[dev-dependencies]
-md-5 = "0.10.0"
-sha2 = "0.10.1"
-criterion = "0.3.5"
-anyhow = "1.0.44"
-hex-literal = "0.3.3"
-env_logger = "0.9.0"
+[workspace]
+members = [
+    "avro",
+]

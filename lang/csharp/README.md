@@ -17,15 +17,20 @@ Install-Package Apache.Avro
 
 ## Project Target Frameworks
 
-| Project         | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  | .NET 6.0  |
-|:---------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|:---------:|
-| Avro.codegen    | Exe        |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.ipc        | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.ipc.test   | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.main       | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.msbuild    | Library    | ✔️                 | ✔️               |               |           |           |
-| Avro.perf       | Exe        |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.test       | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Project             | Published to nuget.org     | Type       | .NET Standard 2.0  | .NET Standard 2.1 | .NET Core 3.1 | .NET 5.0  | .NET 6.0  |
+|:-------------------:|:--------------------------:|:----------:|:------------------:|:-----------------:|:-------------:|:---------:|:---------:|
+| Avro.main           | Apache.Avro                | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.File.Snappy    | Apache.Avro.File.Snappy    | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.File.BZip2     | Apache.Avro.File.BZip2     | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.File.XZ        | Apache.Avro.File.XZ        | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.File.Zstandard | Apache.Avro.File.Zstandard | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.codegen        | Apache.Avro.Tools          |  Exe        |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.ipc            |                            | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.ipc.test       |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.msbuild        |                            | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.perf           |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.test           |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.benchmark      |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 
 ## Dependency package version strategy
 
