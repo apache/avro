@@ -26,6 +26,7 @@ Notes
  - :exclamation: Not defined :exclamation: means we have not set a preference
  - There are cases where it is not explicitly defined in the .editorconfig, but there is a default option
  - The project currently targets a framework that uses C# 7.3
+ - When violating a formatting rule it may show up as an IDE0055 Fix formatting violation.
 
 ## New line preferences
 
