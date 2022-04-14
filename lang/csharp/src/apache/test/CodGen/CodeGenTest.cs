@@ -63,7 +63,7 @@ namespace Avro.Test.CodeGen
         [TestCase("a.b.int", "a.b.@int")]
         [TestCase("int.long.while", "@int.@long.@while")] // Reserved keywords
         [TestCase("a.value.partial", "a.value.partial")] // Contextual keywords
-        [TestCase("a.value.b.int.c.while.longpartial", "a.value.b.@int.c.@while.longpartial")] // Rseserved and contextual keywords
+        [TestCase("a.value.b.int.c.while.longpartial", "a.value.b.@int.c.@while.longpartial")] // Reserved and contextual keywords
         public void TestMangleUnMangle(string input, string mangled)
         {
             // Mangle

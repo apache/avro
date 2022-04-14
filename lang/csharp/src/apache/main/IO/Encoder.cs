@@ -19,7 +19,7 @@
 namespace Avro.IO
 {
     /// <summary>
-    /// Defines the interface for a class that provies low-level support for serializing Avro
+    /// Defines the interface for a class that provides low-level support for serializing Avro
     /// values.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
