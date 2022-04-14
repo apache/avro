@@ -23,7 +23,7 @@ The following instructions should be followed in order to create a code coverage
 
 1. Open a command prompt
 2. Install ReportGenerator globally
-	a. Run the following command line: `dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.4 --add-source https://www.nuget.org/packages/`
+	a. Run the following command line: `dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.4 --add-source https://www.nuget.org/packages/ `
 	b. The latest version can be found at [Nuget ReportGenerator](https://www.nuget.org/packages/dotnet-reportgenerator-globaltool/)
 3. Navigate to the test project `avro\lang\csharp\src\apache\test`
 4. Run the following test command `dotnet test --results-directory ./TestResults --collect:"XPlat Code Coverage"`
