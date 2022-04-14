@@ -71,8 +71,7 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
         {
-            if (null == valueSchema) throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
-            this.ValueSchema = valueSchema;
+            ValueSchema = valueSchema ?? throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
         }
 
         /// <summary>

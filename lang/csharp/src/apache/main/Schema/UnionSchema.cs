@@ -74,9 +74,7 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
         {
-            if (schemas == null)
-                throw new ArgumentNullException(nameof(schemas));
-            this.Schemas = schemas;
+            Schemas = schemas ?? throw new ArgumentNullException(nameof(schemas));
         }
 
         /// <summary>
