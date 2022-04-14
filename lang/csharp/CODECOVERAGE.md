@@ -28,4 +28,4 @@ The following instructions should be followed in order to create a code coverage
 3. Navigate to the test project `avro\lang\csharp\src\apache\test`
 4. Run the following test command `dotnet test --results-directory ./TestResults --collect:"XPlat Code Coverage"`
 5. Generate the report with the following command `ReportGenerator "-reports:./TestResults/*/coverage.cobertura.xml" "-targetdir:./Coverage/" -reporttypes:HTML`
-6. Open Report under /Coverage/index.html
+6. Open Report under `avro\lang\csharp\src\apache\test\Coverage\index.html`
