@@ -68,7 +68,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Contructor for union schema
+        /// Constructor for union schema
         /// </summary>
         /// <param name="schemas"></param>
         /// <param name="props">dictionary that provides access to custom properties</param>
