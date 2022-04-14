@@ -49,7 +49,7 @@ namespace Avro.Test
             var decimalVal = (AvroDecimal)decimal.Parse(s, CultureInfo.InvariantCulture);
 
             // TestDecimal tests ConvertToLogicalValue(ConvertToBaseValue(...)) which might hide symmetrical breaking changes in both functions
-            // The following 2 tests are checking the conversions seperately
+            // The following 2 tests are checking the conversions separately
 
             // Validate Decimal.ConvertToBaseValue
             Assert.AreEqual(converted, avroDecimal.ConvertToBaseValue(decimalVal, schema));
