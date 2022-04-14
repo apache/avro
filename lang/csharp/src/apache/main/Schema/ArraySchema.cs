@@ -54,8 +54,7 @@ namespace Avro
         /// <param name="props">dictionary that provides access to custom properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
-            if (null == items) throw new ArgumentNullException(nameof(items));
-            this.ItemSchema = items;
+            ItemSchema = items ?? throw new ArgumentNullException(nameof(items));
         }
 
         /// <summary>
