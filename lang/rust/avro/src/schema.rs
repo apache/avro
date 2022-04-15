@@ -1521,7 +1521,7 @@ pub fn record_schema_for_fields(
 }
 
 /// Trait for types that serve as an Avro data model. Derive implementation available
-/// through `derive` feature. Do not implement directly, implement [`AvroSchemaComponent`]
+/// through `derive` feature. Do not implement directly, implement [`derive::AvroSchemaComponent`]
 /// to get this trait through a blanket implementation.
 pub trait AvroSchema {
     fn get_schema() -> Schema;
