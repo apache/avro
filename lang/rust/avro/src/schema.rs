@@ -1499,26 +1499,6 @@ fn field_ordering_position(field: &str) -> Option<usize> {
         .map(|pos| pos + 1)
 }
 
-/// Create a record schema with a proper lookup table given all other inputs
-pub fn record_schema_for_fields(
-    name: Name,
-    aliases: Aliases,
-    doc: Documentation,
-    fields: Vec<RecordField>,
-) -> Schema {
-    let lookup: HashMap<String, usize> = fields
-        .iter()
-        .map(|field| (field.name.to_owned(), field.position))
-        .collect();
-    Schema::Record {
-        name,
-        aliases,
-        doc,
-        fields,
-        lookup,
-    }
-}
-
 /// Trait for types that serve as an Avro data model. Derive implementation available
 /// through `derive` feature. Do not implement directly, implement [`derive::AvroSchemaComponent`]
 /// to get this trait through a blanket implementation.

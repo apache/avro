@@ -146,7 +146,17 @@ fn get_data_struct_schema_def(
     Ok(quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
         let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse struct name for schema {}", #full_schema_name)[..]);
-        apache_avro::schema::record_schema_for_fields(name, None, #record_doc, schema_fields)
+        let lookup: HashMap<String, usize> = schema_fields
+            .iter()
+            .map(|field| (field.name.to_owned(), field.position))
+            .collect();
+        apache_avro::schema::Schema::Record {
+            name,
+            aliases: None,
+            doc: #record_doc,
+            fields: schema_fields,
+            lookup,
+        }
     })
 }
 
