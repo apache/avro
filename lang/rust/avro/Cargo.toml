@@ -33,6 +33,7 @@ snappy = ["crc32fast", "snap"]
 zstandard = ["zstd"]
 bzip = ["bzip2"]
 xz = ["xz2"]
+derive = ["avro_derive" ]
 
 [lib]
 path = "src/lib.rs"
@@ -73,6 +74,7 @@ zerocopy = "0.6.1"
 lazy_static = "1.4.0"
 log = "0.4.14"
 zstd = { version = "0.11.0+zstd.1.5.2", optional = true }
+avro_derive = { path = "../avro_derive", optional = true }
 
 [dev-dependencies]
 md-5 = "0.10.1"

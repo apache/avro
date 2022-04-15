@@ -17,7 +17,7 @@
 
 use apache_avro::{
     from_value,
-    schema::{AvroSchema, AvroSchemaComponent},
+    schema::{derive::AvroSchemaComponent, AvroSchema},
     Reader, Schema, Writer,
 };
 use avro_derive::*;

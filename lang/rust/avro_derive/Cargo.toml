@@ -31,4 +31,4 @@ darling = "0.13.4"
 
 [dev-dependencies]
 serde = { version = "1.0.130", features = ["derive"] }
-apache-avro = { path = "../avro" }
+apache-avro = { path = "../avro", features = ["derive"] }
