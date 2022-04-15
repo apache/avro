@@ -82,7 +82,6 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
-    #[avro()]
     struct TestBasic {
         a: i32,
         b: String,
@@ -199,13 +198,13 @@ mod test_derive {
                 .filter(|field| field.name == "a")
                 .map(|field| &field.schema)
                 .next();
-            if let Option::Some(Schema::Record { name, .. }) = inner_schema {
+            if let Some(Schema::Record { name, .. }) = inner_schema {
                 assert_eq!(
                     "com.testing.namespace".to_owned(),
                     name.namespace.clone().unwrap()
                 )
             } else {
-                panic!("Field a must have record schema")
+                panic!("Field 'a' must have a record schema")
             }
         } else {
             panic!("TestComplexNamespace schema must be a record schema")
@@ -819,7 +818,7 @@ mod test_derive {
     #[allow(clippy::box_collection)]
     struct TestSmartPointers<'a> {
         a: Box<String>,
-        b: std::sync::Mutex<Vec<i64>>,
+        b: Mutex<Vec<i64>>,
         c: Cow<'a, i32>,
     }
 
@@ -949,7 +948,7 @@ mod test_derive {
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
-    struct TestBasicWithOutterDocAttributes {
+    struct TestBasicWithOuterDocAttributes {
         #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
         a: i32,
         #[avro(doc = "Full lyrics of Bohemian Rhapsody")]
@@ -961,7 +960,7 @@ mod test_derive {
         let schema = r#"
         {
             "type":"record",
-            "name":"com.testing.namespace.TestBasicWithOutterDocAttributes",
+            "name":"com.testing.namespace.TestBasicWithOuterDocAttributes",
             "doc":"A Documented Record",
             "fields":[
                 {
@@ -978,13 +977,13 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithOutterDocAttributes::get_schema() {
+        if let Schema::Record { name, doc, .. } = TestBasicWithOuterDocAttributes::get_schema() {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
-            panic!("TestBasicWithOutterDocAttributes schema must be a record schema")
+            panic!("TestBasicWithOuterDocAttributes schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithOutterDocAttributes::get_schema());
+        assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
