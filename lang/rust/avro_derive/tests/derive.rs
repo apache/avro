@@ -20,7 +20,7 @@ use apache_avro::{
     schema::{derive::AvroSchemaComponent, AvroSchema},
     Reader, Schema, Writer,
 };
-use avro_derive::*;
+use apache_avro_derive::*;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use std::collections::HashMap;
 
