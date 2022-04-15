@@ -35,7 +35,7 @@ proc-macro = true
 syn = {version= "1.0.60", features=["full", "fold"]}
 quote = "1.0.8"
 proc-macro2 = "1.0"
-darling = "0.13.4"
+darling = "0.14.0"
 
 [dev-dependencies]
 serde = { version = "1.0.130", features = ["derive"] }
