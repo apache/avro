@@ -32,7 +32,6 @@ use std::{
     fmt,
     hash::Hash,
     str::FromStr,
-    sync::Mutex,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
 
@@ -1692,7 +1691,7 @@ pub mod derive {
         }
     }
 
-    impl<T> AvroSchemaComponent for Mutex<T>
+    impl<T> AvroSchemaComponent for std::sync::Mutex<T>
     where
         T: AvroSchemaComponent,
     {
