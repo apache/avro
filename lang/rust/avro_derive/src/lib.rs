@@ -21,7 +21,9 @@ use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use syn::{parse_macro_input, spanned::Spanned, DeriveInput, Error, Type, TypePath};
+use syn::{
+    parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Error, Type, TypePath,
+};
 
 #[derive(FromAttributes)]
 #[darling(attributes(avro))]
@@ -59,13 +61,17 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
     let schema_def = match &input.data {
         syn::Data::Struct(s) => get_data_struct_schema_def(
             &full_schema_name,
-            named_type_options.doc,
+            named_type_options
+                .doc
+                .or_else(|| extract_outer_doc(&input.attrs)),
             s,
             input.ident.span(),
         )?,
         syn::Data::Enum(e) => get_data_enum_schema_def(
             &full_schema_name,
-            named_type_options.doc,
+            named_type_options
+                .doc
+                .or_else(|| extract_outer_doc(&input.attrs)),
             e,
             input.ident.span(),
         )?,
@@ -196,7 +202,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
                 ty,
                 "Cannot guarantee successful serialization of this type due to overflow concerns",
             )])
-            } //Can't guarantee serialization type
+            } // Can't guarantee serialization type
             _ => {
                 // Fails when the type does not implement AvroSchemaComponent directly
                 // TODO check and error report with something like https://docs.rs/quote/1.0.15/quote/macro.quote_spanned.html#example
@@ -230,9 +236,33 @@ fn to_compile_errors(errors: Vec<syn::Error>) -> proc_macro2::TokenStream {
     quote!(#(#compile_errors)*)
 }
 
+fn extract_outer_doc(attributes: &[Attribute]) -> Option<String> {
+    let doc = attributes
+        .iter()
+        .filter(|attr| attr.style == AttrStyle::Outer && attr.path.is_ident("doc"))
+        .map(|attr| {
+            let mut tokens = attr.tokens.clone().into_iter();
+            tokens.next(); // skip the Punct
+            let to_trim: &[char] = &['"', ' '];
+            tokens
+                .next() // use the Literal
+                .unwrap()
+                .to_string()
+                .trim_matches(to_trim)
+                .to_string()
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    if doc.is_empty() {
+        None
+    } else {
+        Some(doc)
+    }
+}
+
 fn preserve_optional(op: Option<impl quote::ToTokens>) -> TokenStream {
     match op {
-        Some(tt) => quote! {Some(#tt.to_owned())},
+        Some(tt) => quote! {Some(#tt.into())},
         None => quote! {None},
     }
 }
@@ -340,6 +370,27 @@ mod tests {
     }
 
     #[test]
+    fn test_non_basic_enum() {
+        let non_basic_enum = quote! {
+            enum Basic {
+                A(i32),
+                B,
+                C,
+                D
+            }
+        };
+        match syn::parse2::<DeriveInput>(non_basic_enum) {
+            Ok(mut input) => {
+                assert!(derive_avro_schema(&mut input).is_err())
+            }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
+        };
+    }
+
+    #[test]
     fn test_namespace() {
         let test_struct = quote! {
             #[avro(namespace = "namespace.testing")]
@@ -382,5 +433,12 @@ mod tests {
                 error
             ),
         };
+    }
+
+    #[test]
+    fn test_trait_cast() {
+        assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{i32}).unwrap()).to_string(), quote!{<i32 as apache_avro::schema::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
+        assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{Vec<T>}).unwrap()).to_string(), quote!{<Vec<T> as apache_avro::schema::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
+        assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{AnyType}).unwrap()).to_string(), quote!{<AnyType as apache_avro::schema::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
     }
 }

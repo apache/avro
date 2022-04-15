@@ -906,7 +906,6 @@ mod test_derive {
         ser(test);
     }
 
-    /// Test some Rustdoc
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
     struct TestBasicWithAttributes {
@@ -938,11 +937,99 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = TestBasicWithAttributes::get_schema() {
-            assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap())
+        if let Schema::Record { name, doc, .. } = TestBasicWithAttributes::get_schema() {
+            assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
+            assert_eq!("A Documented Record", doc.unwrap())
         } else {
-            panic!("TestBasicNamespace schema must be a record schema")
+            panic!("TestBasicWithAttributes schema must be a record schema")
         }
         assert_eq!(schema, TestBasicWithAttributes::get_schema());
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(namespace = "com.testing.namespace")]
+    /// A Documented Record
+    struct TestBasicWithOutterDocAttributes {
+        #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
+        a: i32,
+        #[avro(doc = "Full lyrics of Bohemian Rhapsody")]
+        b: String,
+    }
+
+    #[test]
+    fn test_basic_with_out_doc_attributes() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"com.testing.namespace.TestBasicWithOutterDocAttributes",
+            "doc":"A Documented Record",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int",
+                    "doc":"Milliseconds since Queen released Bohemian Rhapsody"
+                },
+                {
+                    "name":"b",
+                    "type": "string",
+                    "doc": "Full lyrics of Bohemian Rhapsody"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, doc, .. } = TestBasicWithOutterDocAttributes::get_schema() {
+            assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
+            assert_eq!("A Documented Record", doc.unwrap())
+        } else {
+            panic!("TestBasicWithOutterDocAttributes schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithOutterDocAttributes::get_schema());
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(namespace = "com.testing.namespace")]
+    /// A Documented Record
+    /// that spans
+    /// multiple lines
+    struct TestBasicWithLargeDoc {
+        #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
+        a: i32,
+        #[avro(doc = "Full lyrics of Bohemian Rhapsody")]
+        b: String,
+    }
+
+    #[test]
+    fn test_basic_with_large_doc() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"com.testing.namespace.TestBasicWithLargeDoc",
+            "doc":"A Documented Record",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int",
+                    "doc":"Milliseconds since Queen released Bohemian Rhapsody"
+                },
+                {
+                    "name":"b",
+                    "type": "string",
+                    "doc": "Full lyrics of Bohemian Rhapsody"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, doc, .. } = TestBasicWithLargeDoc::get_schema() {
+            assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
+            assert_eq!(
+                "A Documented Record\nthat spans\nmultiple lines",
+                doc.unwrap()
+            )
+        } else {
+            panic!("TestBasicWithLargeDoc schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithLargeDoc::get_schema());
     }
 }
