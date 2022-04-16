@@ -27,7 +27,7 @@ namespace Avro.Reflect
         /// Return the name of the array helper
         /// </summary>
         /// <param name="ars">this</param>
-        /// <returns>value of the helper metadata - null if it isnt present</returns>
+        /// <returns>value of the helper metadata - null if it isn't present</returns>
         public static string GetHelper(this ArraySchema ars)
         {
             string s = null;

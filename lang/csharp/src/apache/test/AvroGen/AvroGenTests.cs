@@ -21,8 +21,6 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Avro.Specific;
 
@@ -312,6 +310,13 @@ namespace Avro.Test.AvroGen
                         object obj = Activator.CreateInstance(type);
                         Assert.That(obj, Is.Not.Null);
                     }
+                }
+
+                // Verify GeneratedCodeAttribute
+                foreach(System.Reflection.TypeInfo definedType in assembly.DefinedTypes)
+                {
+                    var generatedAttributes = definedType.CustomAttributes.Where(x => x.AttributeType.FullName == "System.CodeDom.Compiler.GeneratedCodeAttribute");
+                    Assert.That(generatedAttributes, Is.Not.Null);
                 }
 
                 return assembly;

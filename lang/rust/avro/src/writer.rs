@@ -17,15 +17,15 @@
 
 //! Logic handling writing in Avro format at user level.
 use crate::{
-    encode::{encode, encode_to_vec},
-    schema::Schema,
+    encode::{encode, encode_internal, encode_to_vec},
+    schema::{ResolvedSchema, Schema},
     ser::Serializer,
     types::Value,
     AvroResult, Codec, Error,
 };
 use rand::random;
 use serde::Serialize;
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, convert::TryFrom, io::Write};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
@@ -35,6 +35,8 @@ const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
 pub struct Writer<'a, W> {
     schema: &'a Schema,
     writer: W,
+    #[builder(default, setter(skip))]
+    resolved_schema: Option<ResolvedSchema<'a>>,
     #[builder(default = Codec::Null)]
     codec: Codec,
     #[builder(default = DEFAULT_BLOCK_SIZE)]
@@ -58,17 +60,21 @@ impl<'a, W: Write> Writer<'a, W> {
     /// to.
     /// No compression `Codec` will be used.
     pub fn new(schema: &'a Schema, writer: W) -> Self {
-        Self::builder().schema(schema).writer(writer).build()
+        let mut w = Self::builder().schema(schema).writer(writer).build();
+        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
     }
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
     /// `io::Write` trait to write to.
     pub fn with_codec(schema: &'a Schema, writer: W, codec: Codec) -> Self {
-        Self::builder()
+        let mut w = Self::builder()
             .schema(schema)
             .writer(writer)
             .codec(codec)
-            .build()
+            .build();
+        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
     }
 
     /// Get a reference to the `Schema` associated to a `Writer`.
@@ -88,15 +94,7 @@ impl<'a, W: Write> Writer<'a, W> {
         let n = self.maybe_write_header()?;
 
         let avro = value.into();
-        write_value_ref(self.schema, &avro, &mut self.buffer)?;
-
-        self.num_values += 1;
-
-        if self.buffer.len() >= self.block_size {
-            return self.flush().map(|b| b + n);
-        }
-
-        Ok(n)
+        self.append_value_ref(&avro).map(|m| m + n)
     }
 
     /// Append a compatible value to a `Writer`, also performing schema validation.
@@ -109,15 +107,24 @@ impl<'a, W: Write> Writer<'a, W> {
     pub fn append_value_ref(&mut self, value: &Value) -> AvroResult<usize> {
         let n = self.maybe_write_header()?;
 
-        write_value_ref(self.schema, value, &mut self.buffer)?;
+        // Lazy init for users using the builder pattern with error throwing
+        match self.resolved_schema {
+            Some(ref rs) => {
+                write_value_ref_resolved(rs, value, &mut self.buffer)?;
+                self.num_values += 1;
 
-        self.num_values += 1;
+                if self.buffer.len() >= self.block_size {
+                    return self.flush().map(|b| b + n);
+                }
 
-        if self.buffer.len() >= self.block_size {
-            return self.flush().map(|b| b + n);
+                Ok(n)
+            }
+            None => {
+                let rs = ResolvedSchema::try_from(self.schema)?;
+                self.resolved_schema = Some(rs);
+                self.append_value_ref(value)
+            }
         }
-
-        Ok(n)
     }
 
     /// Append anything implementing the `Serialize` trait to a `Writer` for
@@ -345,11 +352,24 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
-fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> AvroResult<()> {
-    if !value.validate(schema) {
-        return Err(Error::Validation);
+fn write_value_ref_resolved(
+    resolved_schema: &ResolvedSchema,
+    value: &Value,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    if let Some(err) = value.validate_internal(
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+    ) {
+        return Err(Error::ValidationWithReason(err));
     }
-    encode(value, schema, buffer)?;
+    encode_internal(
+        value,
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+        &None,
+        buffer,
+    )?;
     Ok(())
 }
 

@@ -27,7 +27,7 @@ use serde::{
 use serde_json::{Map, Value};
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     convert::{TryFrom, TryInto},
     fmt,
     hash::Hash,
@@ -68,7 +68,7 @@ impl fmt::Display for SchemaFingerprint {
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
 #[derive(Clone, Debug, EnumDiscriminants)]
-#[strum_discriminants(name(SchemaKind), derive(Hash))]
+#[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
     Null,
@@ -188,8 +188,8 @@ impl SchemaKind {
     }
 }
 
-impl<'a> From<&'a types::Value> for SchemaKind {
-    fn from(value: &'a types::Value) -> Self {
+impl From<&types::Value> for SchemaKind {
+    fn from(value: &types::Value) -> Self {
         use crate::types::Value;
         match value {
             Value::Null => Self::Null,
@@ -228,7 +228,7 @@ impl<'a> From<&'a types::Value> for SchemaKind {
 ///
 /// More information about schema names can be found in the
 /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-#[derive(Clone, Debug, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Name {
     pub name: String,
     pub namespace: Namespace,
@@ -265,7 +265,7 @@ impl Name {
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
-    fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
+    pub(crate) fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
             .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
@@ -335,6 +335,25 @@ impl fmt::Display for Name {
     }
 }
 
+impl<'de> Deserialize<'de> for Name {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        serde_json::Value::deserialize(deserializer).and_then(|value| {
+            use serde::de::Error;
+            if let Value::Object(json) = value {
+                Name::parse(&json).map_err(D::Error::custom)
+            } else {
+                Err(D::Error::custom(format!(
+                    "Expected a json object: {:?}",
+                    value
+                )))
+            }
+        })
+    }
+}
+
 pub(crate) struct ResolvedSchema<'s> {
     names_ref: NamesRef<'s>,
     root_schema: &'s Schema,
@@ -355,7 +374,10 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub fn get_names(&self) -> &NamesRef<'s> {
+    pub(crate) fn get_root_schema(&self) -> &'s Schema {
+        self.root_schema
+    }
+    pub(crate) fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
@@ -481,12 +503,12 @@ pub struct UnionSchema {
     // schema index given a value.
     // **NOTE** that this approach does not work for named types, and will have to be modified
     // to support that. A simple solution is to also keep a mapping of the names used.
-    variant_index: HashMap<SchemaKind, usize>,
+    variant_index: BTreeMap<SchemaKind, usize>,
 }
 
 impl UnionSchema {
     pub(crate) fn new(schemas: Vec<Schema>) -> AvroResult<Self> {
-        let mut vindex = HashMap::new();
+        let mut vindex = BTreeMap::new();
         for (i, schema) in schemas.iter().enumerate() {
             if let Schema::Union(_) = schema {
                 return Err(Error::GetNestedUnion);
@@ -1286,6 +1308,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 map.serialize_entry("symbols", symbols)?;
                 map.end()
@@ -1298,6 +1323,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 if let Some(ref docstr) = doc {
                     map.serialize_entry("doc", docstr)?;
@@ -3295,5 +3323,89 @@ mod tests {
         for s in &["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_enum_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"enum",
+                            "name":"inner_enum_name",
+                            "namespace": "inner_space",
+                            "symbols":["Extensive","Testing"]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_enum_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_enum_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_fixed_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"fixed",
+                            "name":"inner_fixed_name",
+                            "namespace": "inner_space",
+                            "size":54
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_fixed_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_fixed_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
     }
 }
