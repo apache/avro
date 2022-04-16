@@ -1588,6 +1588,7 @@ pub mod derive {
     impl_schema!(i64, Schema::Long);
     impl_schema!(u8, Schema::Int);
     impl_schema!(u16, Schema::Int);
+    impl_schema!(u32, Schema::Long);
     impl_schema!(f32, Schema::Float);
     impl_schema!(f64, Schema::Double);
     impl_schema!(String, Schema::String);

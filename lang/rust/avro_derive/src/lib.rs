@@ -207,7 +207,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
                     "AvroSchema: Cannot guarantee successful deserialization of this type",
                 )])
             }
-            "u32" | "u64" => {
+            "u64" => {
                 return Err(vec![syn::Error::new_spanned(
                 ty,
                 "Cannot guarantee successful serialization of this type due to overflow concerns",

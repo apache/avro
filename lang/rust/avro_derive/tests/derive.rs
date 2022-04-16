@@ -1031,4 +1031,36 @@ mod test_derive {
         }
         assert_eq!(schema, TestBasicWithLargeDoc::get_schema());
     }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct TestBasicWithU32 {
+        a: u32,
+    }
+
+    #[test]
+    fn test_basic_with_u32() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithU32",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"long"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, .. } = TestBasicWithU32::get_schema() {
+            assert_eq!("TestBasicWithU32", name.fullname(None))
+        } else {
+            panic!("TestBasicWithU32 schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithU32::get_schema());
+
+        serde_assert(TestBasicWithU32 { a: u32::MAX });
+        serde_assert(TestBasicWithU32 { a: u32::MIN });
+        serde_assert(TestBasicWithU32 { a: 1_u32 });
+    }
 }

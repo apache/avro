@@ -338,6 +338,7 @@ impl Value {
             (&Value::Int(_), &Schema::Int) => true,
             (&Value::Int(_), &Schema::Date) => true,
             (&Value::Int(_), &Schema::TimeMillis) => true,
+            (&Value::Int(_), &Schema::Long) => true,
             (&Value::Long(_), &Schema::Long) => true,
             (&Value::Long(_), &Schema::TimeMicros) => true,
             (&Value::Long(_), &Schema::TimestampMillis) => true,
