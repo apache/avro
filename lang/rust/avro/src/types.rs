@@ -372,6 +372,7 @@ impl Value {
             (&Value::Int(_), &Schema::Int) => None,
             (&Value::Int(_), &Schema::Date) => None,
             (&Value::Int(_), &Schema::TimeMillis) => None,
+            (&Value::Int(_), &Schema::Long) => None,
             (&Value::Long(_), &Schema::Long) => None,
             (&Value::Long(_), &Schema::TimeMicros) => None,
             (&Value::Long(_), &Schema::TimestampMillis) => None,
