@@ -1063,4 +1063,40 @@ mod test_derive {
         serde_assert(TestBasicWithU32 { a: u32::MIN });
         serde_assert(TestBasicWithU32 { a: 1_u32 });
     }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(alias = "a", alias = "b", alias = "c")]
+    struct TestBasicWithAliases {
+        a: i32,
+    }
+
+    #[test]
+    fn test_basic_with_aliases() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithAliases",
+            "aliases":["a", "b", "c"],
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, aliases, .. } = TestBasicWithAliases::get_schema() {
+            assert_eq!("TestBasicWithAliases", name.fullname(None));
+            assert_eq!(
+                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                aliases
+            );
+        } else {
+            panic!("TestBasicWithAliases schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithAliases::get_schema());
+
+        serde_assert(TestBasicWithAliases { a: i32::MAX });
+    }
 }
