@@ -1063,4 +1063,78 @@ mod test_derive {
         serde_assert(TestBasicWithU32 { a: u32::MIN });
         serde_assert(TestBasicWithU32 { a: 1_u32 });
     }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(alias = "a", alias = "b", alias = "c")]
+    struct TestBasicWithAliases {
+        a: i32,
+    }
+
+    #[test]
+    fn test_basic_with_aliases() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithAliases",
+            "aliases":["a", "b", "c"],
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, aliases, .. } = TestBasicWithAliases::get_schema() {
+            assert_eq!("TestBasicWithAliases", name.fullname(None));
+            assert_eq!(
+                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                aliases
+            );
+        } else {
+            panic!("TestBasicWithAliases schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithAliases::get_schema());
+
+        serde_assert(TestBasicWithAliases { a: i32::MAX });
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(alias = "d")]
+    #[avro(alias = "e")]
+    #[avro(alias = "f")]
+    struct TestBasicWithAliases2 {
+        a: i32,
+    }
+
+    #[test]
+    fn test_basic_with_aliases2() {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithAliases2",
+            "aliases":["d", "e", "f"],
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, aliases, .. } = TestBasicWithAliases2::get_schema() {
+            assert_eq!("TestBasicWithAliases2", name.fullname(None));
+            assert_eq!(
+                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                aliases
+            );
+        } else {
+            panic!("TestBasicWithAliases2 schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithAliases2::get_schema());
+
+        serde_assert(TestBasicWithAliases2 { a: i32::MAX });
+    }
 }
