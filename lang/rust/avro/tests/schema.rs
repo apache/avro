@@ -17,6 +17,7 @@
 
 use apache_avro::{
     schema::{Name, RecordField},
+    to_avro_datum, to_value,
     types::{Record, Value},
     Codec, Error, Reader, Schema, Writer,
 };
@@ -1311,3 +1312,34 @@ fn test_decimal_valid_type_attributes() {
     assert_eq!(0, bytes_decimal.get_attribute("scale"));
 }
 */
+
+#[test]
+fn avro_old_issue_47() {
+    init();
+    let schema_str = r#"
+    {
+      "type": "record",
+      "name": "my_record",
+      "fields": [
+        {"name": "a", "type": "long"},
+        {"name": "b", "type": "string"}
+      ]
+    }"#;
+    let schema = Schema::parse_str(schema_str).unwrap();
+
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Deserialize, Serialize)]
+    pub struct MyRecord {
+        b: String,
+        a: i64,
+    }
+
+    let record = MyRecord {
+        b: "hello".to_string(),
+        a: 1,
+    };
+
+    let res = to_avro_datum(&schema, to_value(record).unwrap()).unwrap();
+    dbg!(res);
+}
