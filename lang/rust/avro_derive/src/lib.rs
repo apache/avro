@@ -75,6 +75,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
             named_type_options
                 .doc
                 .or_else(|| extract_outer_doc(&input.attrs)),
+            named_type_options.alias,
             e,
             input.ident.span(),
         )?,
@@ -168,10 +169,12 @@ fn get_data_struct_schema_def(
 fn get_data_enum_schema_def(
     full_schema_name: &str,
     doc: Option<String>,
+    aliases: Vec<String>,
     e: &syn::DataEnum,
     error_span: Span,
 ) -> Result<TokenStream, Vec<syn::Error>> {
     let doc = preserve_optional(doc);
+    let enum_aliases = preserve_vec(aliases);
     if e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
         let symbols: Vec<String> = e
             .variants
@@ -181,7 +184,7 @@ fn get_data_enum_schema_def(
         Ok(quote! {
             apache_avro::schema::Schema::Enum {
                 name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
-                aliases: None,
+                aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*]
             }
