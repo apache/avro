@@ -1313,6 +1313,7 @@ fn test_decimal_valid_type_attributes() {
 }
 */
 
+// https://github.com/flavray/avro-rs/issues/47
 #[test]
 fn avro_old_issue_47() {
     init();
@@ -1340,6 +1341,5 @@ fn avro_old_issue_47() {
         a: 1,
     };
 
-    let res = to_avro_datum(&schema, to_value(record).unwrap()).unwrap();
-    dbg!(res);
+    let _ = to_avro_datum(&schema, to_value(record).unwrap()).unwrap();
 }
