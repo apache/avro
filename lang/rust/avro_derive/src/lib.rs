@@ -39,6 +39,8 @@ struct NamedTypeOptions {
     namespace: Option<String>,
     #[darling(default)]
     doc: Option<String>,
+    #[darling(multiple)]
+    alias: Vec<String>,
 }
 
 #[proc_macro_derive(AvroSchema, attributes(avro))]
@@ -64,6 +66,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
             named_type_options
                 .doc
                 .or_else(|| extract_outer_doc(&input.attrs)),
+            named_type_options.alias,
             s,
             input.ident.span(),
         )?,
@@ -104,6 +107,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
 fn get_data_struct_schema_def(
     full_schema_name: &str,
     record_doc: Option<String>,
+    aliases: Vec<String>,
     s: &syn::DataStruct,
     error_span: Span,
 ) -> Result<TokenStream, Vec<syn::Error>> {
@@ -143,6 +147,7 @@ fn get_data_struct_schema_def(
         }
     }
     let record_doc = preserve_optional(record_doc);
+    let record_aliases = preserve_vec(aliases);
     Ok(quote! {
         let schema_fields = vec![#(#record_field_exprs),*];
         let name = apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse struct name for schema {}", #full_schema_name)[..]);
@@ -152,7 +157,7 @@ fn get_data_struct_schema_def(
             .collect();
         apache_avro::schema::Schema::Record {
             name,
-            aliases: None,
+            aliases: #record_aliases,
             doc: #record_doc,
             fields: schema_fields,
             lookup,
@@ -274,6 +279,15 @@ fn preserve_optional(op: Option<impl quote::ToTokens>) -> TokenStream {
     match op {
         Some(tt) => quote! {Some(#tt.into())},
         None => quote! {None},
+    }
+}
+
+fn preserve_vec(op: Vec<impl quote::ToTokens>) -> TokenStream {
+    let items: Vec<TokenStream> = op.iter().map(|tt| quote! {#tt.into()}).collect();
+    if items.is_empty() {
+        quote! {None}
+    } else {
+        quote! {Some(vec![#(#items),*])}
     }
 }
 
