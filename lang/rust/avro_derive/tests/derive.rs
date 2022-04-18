@@ -1066,16 +1066,16 @@ mod test_derive {
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
-    struct TestBasicWithAliases {
+    struct TestBasicStructWithAliases {
         a: i32,
     }
 
     #[test]
-    fn test_basic_with_aliases() {
+    fn test_basic_struct_with_aliases() {
         let schema = r#"
         {
             "type":"record",
-            "name":"TestBasicWithAliases",
+            "name":"TestBasicStructWithAliases",
             "aliases":["a", "b", "c"],
             "fields":[
                 {
@@ -1086,34 +1086,34 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicWithAliases::get_schema() {
-            assert_eq!("TestBasicWithAliases", name.fullname(None));
+        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases::get_schema() {
+            assert_eq!("TestBasicStructWithAliases", name.fullname(None));
             assert_eq!(
                 Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
                 aliases
             );
         } else {
-            panic!("TestBasicWithAliases schema must be a record schema")
+            panic!("TestBasicStructWithAliases schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithAliases::get_schema());
+        assert_eq!(schema, TestBasicStructWithAliases::get_schema());
 
-        serde_assert(TestBasicWithAliases { a: i32::MAX });
+        serde_assert(TestBasicStructWithAliases { a: i32::MAX });
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
-    struct TestBasicWithAliases2 {
+    struct TestBasicStructWithAliases2 {
         a: i32,
     }
 
     #[test]
-    fn test_basic_with_aliases2() {
+    fn test_basic_struct_with_aliases2() {
         let schema = r#"
         {
             "type":"record",
-            "name":"TestBasicWithAliases2",
+            "name":"TestBasicStructWithAliases2",
             "aliases":["d", "e", "f"],
             "fields":[
                 {
@@ -1124,17 +1124,89 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicWithAliases2::get_schema() {
-            assert_eq!("TestBasicWithAliases2", name.fullname(None));
+        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases2::get_schema() {
+            assert_eq!("TestBasicStructWithAliases2", name.fullname(None));
             assert_eq!(
                 Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
                 aliases
             );
         } else {
-            panic!("TestBasicWithAliases2 schema must be a record schema")
+            panic!("TestBasicStructWithAliases2 schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithAliases2::get_schema());
+        assert_eq!(schema, TestBasicStructWithAliases2::get_schema());
 
-        serde_assert(TestBasicWithAliases2 { a: i32::MAX });
+        serde_assert(TestBasicStructWithAliases2 { a: i32::MAX });
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(alias = "a", alias = "b", alias = "c")]
+    enum TestBasicEnumWithAliases {
+        A,
+        B,
+    }
+
+    #[test]
+    fn test_basic_enum_with_aliases() {
+        let schema = r#"
+        {
+            "type":"enum",
+            "name":"TestBasicEnumWithAliases",
+            "aliases":["a", "b", "c"],
+            "symbols":[
+                "A",
+                "B"
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases::get_schema() {
+            assert_eq!("TestBasicEnumWithAliases", name.fullname(None));
+            assert_eq!(
+                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                aliases
+            );
+        } else {
+            panic!("TestBasicEnumWithAliases schema must be an enum schema")
+        }
+        assert_eq!(schema, TestBasicEnumWithAliases::get_schema());
+
+        serde_assert(TestBasicEnumWithAliases::A);
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[avro(alias = "d")]
+    #[avro(alias = "e")]
+    #[avro(alias = "f")]
+    enum TestBasicEnumWithAliases2 {
+        A,
+        B,
+    }
+
+    #[test]
+    fn test_basic_enum_with_aliases2() {
+        let schema = r#"
+        {
+            "type":"enum",
+            "name":"TestBasicEnumWithAliases2",
+            "aliases":["d", "e", "f"],
+            "symbols":[
+                "A",
+                "B"
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases2::get_schema() {
+            assert_eq!("TestBasicEnumWithAliases2", name.fullname(None));
+            assert_eq!(
+                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                aliases
+            );
+        } else {
+            panic!("TestBasicEnumWithAliases2 schema must be an enum schema")
+        }
+        assert_eq!(schema, TestBasicEnumWithAliases2::get_schema());
+
+        serde_assert(TestBasicEnumWithAliases2::B);
     }
 }
