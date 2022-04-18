@@ -565,12 +565,6 @@ lazy_static! {
         EXAMPLES.iter().copied().filter(|s| s.1).collect();
 }
 
-/*
-// TODO: (#92) properly support recursive types and uncomment
-
-This test is failing unwrapping the outer schema with ParseSchemaError("Unknown type: X"). It seems
-that recursive types are not properly supported.
-
 #[test]
 fn test_correct_recursive_extraction() {
     init();
@@ -594,21 +588,31 @@ fn test_correct_recursive_extraction() {
         ]
     }"#;
     let outer_schema = Schema::parse_str(raw_outer_schema).unwrap();
-    if let Schema::Record { fields: outer_fields, .. } = outer_schema {
-        let raw_inner_schema = outer_fields[0].schema.canonical_form();
-        let inner_schema = Schema::parse_str(raw_inner_schema.as_str()).unwrap();
-        if let Schema::Record { fields: inner_fields, .. } = inner_schema {
-            if let Schema::Record {name: recursive_type, .. } = &inner_fields[0].schema {
+    if let Schema::Record {
+        fields: outer_fields,
+        ..
+    } = outer_schema
+    {
+        let inner_schema = &outer_fields[0].schema;
+        if let Schema::Record {
+            fields: inner_fields,
+            ..
+        } = inner_schema
+        {
+            if let Schema::Record {
+                name: recursive_type,
+                ..
+            } = &inner_fields[0].schema
+            {
                 assert_eq!("X", recursive_type.name.as_str());
             }
         } else {
-            panic!("inner schema {} should have been a record", raw_inner_schema)
+            panic!("inner schema {:?} should have been a record", inner_schema)
         }
     } else {
-        panic!("outer schema {} should have been a record", raw_outer_schema)
+        panic!("outer schema {:?} should have been a record", outer_schema)
     }
 }
-*/
 
 #[test]
 fn test_parse() {
