@@ -513,36 +513,5 @@ namespace Avro.Test.AvroGen
         {
             AvroGenHelper.TestProtocol(protocol, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
-
-        [TestCase(
-            _baseball,
-            "avro.examples.baseball", "Examples",
-            new string[]
-            {
-                "Examples.Baseball",
-                "Examples.BaseballCallback",
-                "Examples.Player",
-                "Examples.Position"
-            },
-            new string[]
-            {
-                "Examples/Baseball.cs",
-                "Examples/BaseballCallback.cs",
-                "Examples/Player.cs",
-                "Examples/Position.cs"
-            })]
-        public void GenerateProtocolWithNamespaceMapping_Bug_AVRO_2883(
-            string protocol,
-            string namespaceMappingFrom,
-            string namespaceMappingTo,
-            IEnumerable<string> typeNamesToCheck,
-            IEnumerable<string> generatedFilesToCheck)
-        {
-            // !!! This is a bug which must be fixed
-            // !!! Once it is fixed, this test will fail and this test can be removed
-            // https://issues.apache.org/jira/browse/AVRO-2883
-            // https://issues.apache.org/jira/browse/AVRO-3046
-            Assert.Throws<AssertionException>(() => AvroGenHelper.TestProtocol(protocol, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck));
-        }
     }
 }
