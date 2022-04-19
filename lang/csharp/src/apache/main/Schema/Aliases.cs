@@ -1,4 +1,4 @@
-/*  
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,33 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Avro.Reflect
+namespace Avro
 {
-    /// <summary>
-    /// Extension methods for ArraySchema - make helper metadata look more like a property
-    /// </summary>
-    public static class ArraySchemaExtensions
+    internal static class Aliases
     {
-        /// <summary>
-        /// Return the name of the array helper
-        /// </summary>
-        /// <param name="ars">this</param>
-        /// <returns>value of the helper metadata - null if it isn't present</returns>
-        public static string GetHelper(this ArraySchema ars)
+        internal static IList<SchemaName> GetSchemaNames(IEnumerable<string> aliases, string enclosingTypeName, string enclosingTypeNamespace)
         {
-            string s = null;
-            s = ars.GetProperty("helper");
-            if (s != null && s.Length > 2)
+            if (aliases == null)
             {
-                s = s.Substring(1, s.Length - 2);
-            }
-            else
-            {
-                s = null;
+                return null;
             }
 
-            return s;
+            SchemaName enclosingSchemaName = new SchemaName(enclosingTypeName, enclosingTypeNamespace, null, null);
+            return aliases.Select(alias => new SchemaName(alias, enclosingSchemaName.Namespace, null, null)).ToList();
         }
     }
 }

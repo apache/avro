@@ -93,6 +93,7 @@ namespace Avro.Test.AvroGen
                 {
                     typeof(object).Assembly.Location,
                     typeof(Schema).Assembly.Location,
+                    typeof(System.CodeDom.Compiler.GeneratedCodeAttribute).Assembly.Location,
                     Path.Combine(assemblyPath, "System.Runtime.dll"),
                     Path.Combine(assemblyPath, "netstandard.dll")
                 };

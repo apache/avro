@@ -43,7 +43,7 @@ namespace Avro
             if (args.Contains("--version") || args.Contains("-V"))
             {
                 // Print version information
-                // Note: Use InformationalVersion attributre
+                // Note: Use InformationalVersion attribute
                 // It is capable to include semver prerelease information label (if prerelease), e.g. 1.x.y-beta.z
                 Console.WriteLine(typeof(AvroGenTool).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
                 return 0;
@@ -159,13 +159,9 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Protocol protocol = Protocol.Parse(text);
 
                 CodeGen codegen = new CodeGen();
-                codegen.AddProtocol(protocol);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddProtocol(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -185,13 +181,8 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Schema schema = Schema.Parse(text);
-
                 CodeGen codegen = new CodeGen();
-                codegen.AddSchema(schema);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddSchema(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);

@@ -21,8 +21,6 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 using NUnit.Framework;
 using Avro.Specific;
 
@@ -266,6 +264,51 @@ namespace Avro.Test.AvroGen
   ]
 }";
 
+        // https://issues.apache.org/jira/browse/AVRO-2883
+        private const string _schema_avro_2883 = @"
+{
+  ""type"" : ""record"",
+  ""name"" : ""TestModel"",
+  ""namespace"" : ""my.avro.ns"",
+  ""fields"" : [ {
+    ""name"" : ""eventType"",
+    ""type"" : {
+      ""type"" : ""enum"",
+      ""name"" : ""EventType"",
+      ""symbols"" : [ ""CREATE"", ""UPDATE"", ""DELETE"" ]
+    }
+} ]
+}";
+
+        // https://issues.apache.org/jira/browse/AVRO-3046
+        private const string _schema_avro_3046 = @"
+{
+  ""type"": ""record"",
+  ""name"": ""ExampleRecord"",
+  ""namespace"": ""com.example"",
+  ""fields"": [
+    {
+      ""name"": ""Id"",
+      ""type"": ""string"",
+      ""logicalType"": ""UUID""
+    },
+    {
+      ""name"": ""InnerRecord"",
+      ""type"": {
+        ""type"": ""record"",
+        ""name"": ""InnerRecord"",
+        ""fields"": [
+          {
+            ""name"": ""Id"",
+            ""type"": ""string"",
+            ""logicalType"": ""UUID""
+          }
+        ]
+      }
+    }
+  ]
+}";
+
         private Assembly TestSchema(
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
@@ -315,6 +358,13 @@ namespace Avro.Test.AvroGen
                         object obj = Activator.CreateInstance(type);
                         Assert.That(obj, Is.Not.Null);
                     }
+                }
+
+                // Verify GeneratedCodeAttribute
+                foreach(System.Reflection.TypeInfo definedType in assembly.DefinedTypes)
+                {
+                    var generatedAttributes = definedType.CustomAttributes.Where(x => x.AttributeType.FullName == "System.CodeDom.Compiler.GeneratedCodeAttribute");
+                    Assert.That(generatedAttributes, Is.Not.Null);
                 }
 
                 return assembly;
@@ -425,11 +475,23 @@ namespace Avro.Test.AvroGen
             {
                 "org/apache/avro/codegentest/testdata/NullableLogicalTypesArray.cs"
             })]
+        [TestCase(
+            _schema_avro_2883,
+            new string[]
+            {
+                "my.avro.ns.TestModel",
+                "my.avro.ns.EventType",
+            },
+            new string[]
+            {
+                "my/avro/ns/TestModel.cs",
+                "my/avro/ns/EventType.cs"
+            })]
         public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
             TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
-        
+
         [TestCase(
             _nullableLogicalTypesArray,
             "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
@@ -440,6 +502,45 @@ namespace Avro.Test.AvroGen
             new string[]
             {
                 "org/apache/csharp/codegentest/testdata/NullableLogicalTypesArray.cs"
+            })]
+        [TestCase(
+            _nestedLogicalTypesUnion,
+            "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
+            new string[]
+            {
+                "org.apache.csharp.codegentest.testdata.NestedLogicalTypesUnion",
+                "org.apache.csharp.codegentest.testdata.RecordInUnion"
+            },
+            new string[]
+            {
+                "org/apache/csharp/codegentest/testdata/NestedLogicalTypesUnion.cs",
+                "org/apache/csharp/codegentest/testdata/RecordInUnion.cs"
+            })]
+        [TestCase(
+            _schema_avro_2883,
+            "my.avro.ns", "my.csharp.ns",
+            new string[]
+            {
+                "my.csharp.ns.TestModel",
+                "my.csharp.ns.EventType",
+            },
+            new string[]
+            {
+                "my/csharp/ns/TestModel.cs",
+                "my/csharp/ns/EventType.cs"
+            })]
+        [TestCase(
+            _schema_avro_3046,
+            "com.example", "Example",
+            new string[]
+            {
+                "Example.ExampleRecord",
+                "Example.InnerRecord",
+            },
+            new string[]
+            {
+                "Example/ExampleRecord.cs",
+                "Example/InnerRecord.cs"
             })]
         [TestCase(
             _nullableLogicalTypesArray,
@@ -505,33 +606,6 @@ namespace Avro.Test.AvroGen
             TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
-        [TestCase(
-            _nestedLogicalTypesUnion,
-            "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
-            new string[]
-            {
-                "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion",
-                "org.apache.avro.codegentest.testdata.RecordInUnion"
-            },
-            new string[]
-            {
-                "org/apache/csharp/codegentest/testdata/NestedLogicalTypesUnion.cs",
-                "org/apache/csharp/codegentest/testdata/RecordInUnion.cs"
-            })]
-        public void GenerateSchemaWithNamespaceMapping_Bug_AVRO_2883(
-            string schema,
-            string namespaceMappingFrom,
-            string namespaceMappingTo,
-            IEnumerable<string> typeNamesToCheck,
-            IEnumerable<string> generatedFilesToCheck)
-        {
-            // !!! This is a bug which must be fixed
-            // !!! Once it is fixed, this test will fail and this test can be removed
-            // https://issues.apache.org/jira/browse/AVRO-2883
-            // https://issues.apache.org/jira/browse/AVRO-3046
-            Assert.Throws<AssertionException>(() => TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck));
-        }
-
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
         [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
         public void NotSupportedSchema(string schema, Type expectedException)
@@ -559,7 +633,7 @@ namespace Avro.Test.AvroGen
     ""name"" : ""ClassKeywords"",
     ""namespace"" : ""com.base"",
     ""fields"" :
-        [ 	
+        [
             { ""name"" : ""int"", ""type"" : ""int"" },
             { ""name"" : ""base"", ""type"" : ""long"" },
             { ""name"" : ""event"", ""type"" : ""boolean"" },
@@ -590,7 +664,7 @@ namespace Avro.Test.AvroGen
     ""name"" : ""SchemaObject"",
     ""namespace"" : ""schematest"",
     ""fields"" :
-        [ 	
+        [
             { ""name"" : ""myobject"", ""type"" :
                 [
                     ""null"",
@@ -608,28 +682,51 @@ namespace Avro.Test.AvroGen
             new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
         [TestCase(@"
 {
-	""type"" : ""record"",
-	""name"" : ""LogicalTypes"",
-	""namespace"" : ""schematest"",
-	""fields"" :
-		[ 	
-			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
-			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
-			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
-			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
-			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
-			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
-			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
-			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
-			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
-			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
-			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
-            { ""name"" : ""nullibledecimalfixed"", ""type"" : [""null"", {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""ndf""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-            { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
-		]
+  ""type"" : ""record"",
+  ""name"" : ""LogicalTypes"",
+  ""namespace"" : ""schematest"",
+  ""fields"" :
+    [
+      { ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+      { ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+      { ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+      { ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+      { ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+      { ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+      { ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+      { ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+      { ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+      { ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+      { ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+      { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
+      { ""name"" : ""nullibledecimalfixed"", ""type"" : [""null"", {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""ndf""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+      { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+    ]
 }",
             new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+        [TestCase(@"
+{
+  ""namespace"": ""enum.base"",
+  ""type"": ""record"",
+  ""name"": ""EnumInDifferentNamespace"",
+  ""doc"": ""Test enum with a default value in a different namespace"",
+  ""fields"": [
+    {
+      ""name"": ""anEnum"",
+      ""type"": {
+        ""namespace"": ""enum.base.other"",
+        ""type"": ""enum"",
+        ""name"": ""AnEnum"",
+        ""symbols"": [
+          ""A"",
+          ""B""
+        ],
+        ""default"": ""A""
+      }
+    }
+  ]
+}",
+            new object[] { "enum.base.EnumInDifferentNamespace", "enum.base.other.AnEnum" })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
             Assembly assembly = TestSchema(schema);

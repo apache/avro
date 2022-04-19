@@ -22,7 +22,7 @@
     <OutputType>Exe</OutputType>
     <!--
     Support .NET Core 3.1 (LTS), .NET 5.0, .NET 6.0 (LTS)
-    When installing with 'dotnet tool install', the proper/supported framwork will be selected,
+    When installing with 'dotnet tool install', the proper/supported framework will be selected,
     unless framework is explicitly specified with 'dotnet tool install'
     https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install
     -->
@@ -53,15 +53,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
-
-  <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="System.CodeDom" Version="$(SystemCodeDomVersion)" />
-    <PackageReference Include="System.Reflection" Version="$(SystemReflectionVersion)" />
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="$(SystemReflectionEmitILGenerationVersion)" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="$(SystemReflectionEmitLightweightVersion)" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
