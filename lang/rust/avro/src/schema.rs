@@ -106,7 +106,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         fields: Vec<RecordField>,
-        lookup: HashMap<String, usize>,
+        lookup: BTreeMap<String, usize>,
     },
     /// An `enum` Avro schema.
     Enum {
@@ -1063,7 +1063,7 @@ impl Parser {
             }
         }
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
@@ -1856,7 +1856,7 @@ mod tests {
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
-            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+            lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 
         assert_eq!(schema_c, schema_c_expected);
@@ -1910,7 +1910,7 @@ mod tests {
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
-            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+            lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 
         assert_eq!(schema_option_a, schema_option_a_expected);
@@ -1932,7 +1932,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("a".to_owned(), 0);
         lookup.insert("b".to_owned(), 1);
 
@@ -1988,10 +1988,10 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("recordField".to_owned(), 0);
 
-        let mut node_lookup = HashMap::new();
+        let mut node_lookup = BTreeMap::new();
         node_lookup.insert("children".to_owned(), 1);
         node_lookup.insert("label".to_owned(), 0);
 
@@ -2159,7 +2159,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2225,7 +2225,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2289,7 +2289,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("enum".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2364,7 +2364,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("fixed".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 

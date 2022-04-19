@@ -159,13 +159,9 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Protocol protocol = Protocol.Parse(text);
 
                 CodeGen codegen = new CodeGen();
-                codegen.AddProtocol(protocol);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddProtocol(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -185,13 +181,8 @@ namespace Avro
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Schema schema = Schema.Parse(text);
-
                 CodeGen codegen = new CodeGen();
-                codegen.AddSchema(schema);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddSchema(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
