@@ -36,7 +36,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\..\.editorconfig = ..\..\.editorconfig
 		.gitignore = .gitignore
 		Avro.ruleset = Avro.ruleset
-		build.ps1 = build.ps1
 		build.sh = build.sh
 		common.props = common.props
 		versions.props = versions.props
@@ -44,6 +43,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		CodeAnalysis.test.globalconfig = CodeAnalysis.test.globalconfig
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.benchmark", "src\apache\benchmark\Avro.benchmark.csproj", "{29271A29-9E89-47B1-A0CA-DD6704C89570}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,6 +108,18 @@ Global
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|x86.ActiveCfg = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Debug|x86.Build.0 = Debug|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|x86.ActiveCfg = Release|Any CPU
+		{29271A29-9E89-47B1-A0CA-DD6704C89570}.Release|x86.Build.0 = Release|Any CPU
 		{FFA119B2-0D60-4090-B5A6-ECA718138812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FFA119B2-0D60-4090-B5A6-ECA718138812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFA119B2-0D60-4090-B5A6-ECA718138812}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU

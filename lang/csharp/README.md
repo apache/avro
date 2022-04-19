@@ -30,6 +30,7 @@ Install-Package Apache.Avro
 | Avro.msbuild        |                            | Library    | ✔️                 | ✔️               |               |           |           |
 | Avro.perf           |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 | Avro.test           |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
+| Avro.benchmark      |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 
 ## Dependency package version strategy
 
@@ -41,3 +42,7 @@ In short, we should only update the version of the dependencies in our libraries
 ## Notes
 
 The [LICENSE](./LICENSE) and [NOTICE](./NOTICE) files in the lang/csharp source directory are used to build the binary distribution. The [LICENSE.txt](../../LICENSE.txt) and [NOTICE.txt](../../NOTICE.txt) information for the Avro C# source distribution is in the root directory.
+
+## Styling Guidelines
+
+Can be found in [STYLING](./STYLING.MD).

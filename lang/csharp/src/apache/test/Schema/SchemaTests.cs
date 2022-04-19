@@ -88,6 +88,7 @@ namespace Avro.Test
         // Array
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}")]
         [TestCase("{\"type\": \"array\",\"items\": {\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}}")]
+        [TestCase("{\"type\": \"array\"}", typeof(AvroTypeException), Description = "No Items")]
 
         // Map
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}")]
@@ -668,6 +669,44 @@ namespace Avro.Test
         {
             var schema = Schema.Parse(schemaJson);
             Assert.AreEqual(schema.ToString(), expectedSchemaJson);
+        }
+
+        [TestFixture]
+        public class SchemaTypeExtensionsTests
+        {
+            [TestCase("null", Schema.Type.Null)]
+            [TestCase("boolean", Schema.Type.Boolean)]
+            [TestCase("int", Schema.Type.Int)]
+            [TestCase("long", Schema.Type.Long)]
+            [TestCase("float", Schema.Type.Float)]
+            [TestCase("double", Schema.Type.Double)]
+            [TestCase("bytes", Schema.Type.Bytes)]
+            [TestCase("string", Schema.Type.String)]
+            [TestCase("record", Schema.Type.Record)]
+            [TestCase("enumeration", Schema.Type.Enumeration)]
+            [TestCase("array", Schema.Type.Array)]
+            [TestCase("map", Schema.Type.Map)]
+            [TestCase("union", Schema.Type.Union)]
+            [TestCase("fixed", Schema.Type.Fixed)]
+            [TestCase("error", Schema.Type.Error)]
+            [TestCase("logical", Schema.Type.Logical)]
+            [TestCase("Logical", null)]
+            [TestCase("InvalidValue", null)]
+            [TestCase("\"null\"", null)]
+            [TestCase("", null)]
+            [TestCase(null, null)]
+            public void ParseTypeTest(string value, object expectedResult)
+            {
+                Assert.AreEqual(Schema.ParseType(value), expectedResult);
+            }
+
+            [TestCase("\"null\"", Schema.Type.Null)]
+            [TestCase("\"nu\"ll\"", null)]
+            [TestCase("\"\"", null)]
+            public void ParseTypeRemoveQuotesTest(string value, object expectedResult)
+            {
+                Assert.AreEqual(Schema.ParseType(value, true), expectedResult);
+            }
         }
     }
 }

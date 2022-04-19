@@ -400,6 +400,7 @@ namespace Avro
             ctd.IsPartial = true;
             ctd.Attributes = MemberAttributes.Public;
             ctd.BaseTypes.Add("SpecificFixed");
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             if (fixedSchema.Documentation != null)
             {
@@ -463,6 +464,7 @@ namespace Avro
             CodeTypeDeclaration ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(enumschema.Name));
             ctd.IsEnum = true;
             ctd.Attributes = MemberAttributes.Public;
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             if (enumschema.Documentation != null)
             {
@@ -505,6 +507,7 @@ namespace Avro
             ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
             ctd.IsClass = true;
             ctd.BaseTypes.Add("Avro.Specific.ISpecificProtocol");
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             AddProtocolDocumentation(protocol, ctd);
 
@@ -583,6 +586,7 @@ namespace Avro
             ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
             ctd.IsClass = true;
             ctd.BaseTypes.Add(protocolNameMangled);
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             // Need to override
             AddProtocolDocumentation(protocol, ctd);
@@ -729,6 +733,7 @@ namespace Avro
                 isError ? typeof(Specific.SpecificException) : typeof(Specific.ISpecificRecord),
                 CodeTypeReferenceOptions.GlobalReference);
             ctd.BaseTypes.Add(baseTypeReference);
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
@@ -779,7 +784,7 @@ namespace Avro
                 codeField.Attributes = MemberAttributes.Private;
                 if (field.Schema is EnumSchema es && es.Default != null)
                 {
-                    codeField.InitExpression = new CodeTypeReferenceExpression($"{es.Name}.{es.Default}");
+                    codeField.InitExpression = new CodeTypeReferenceExpression($"{es.Namespace}.{es.Name}.{es.Default}");
                 }
 
                 // Process field documentation if it exist and add to the field

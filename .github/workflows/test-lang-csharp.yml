@@ -28,6 +28,10 @@ defaults:
   run:
     working-directory: lang/csharp
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -57,6 +61,19 @@ jobs:
         run: ./build.sh lint
 
       - name: Test
+        run: ./build.sh test
+
+      # Build and test against .NET 7
+      # .NET 7 is not released yet, however this is a good way to test if the project is ready for the release
+      # Once .NET 7 is officially released, this can be removed and 7.0.x can be used instead above
+      - name: Install .NET SDK 7.0 (pre-release)
+        uses: actions/setup-dotnet@v1
+        with:
+          include-prerelease: true
+          dotnet-version: |
+            7.0.x
+      
+      - name: Test .NET 7.0 (pre-release)
         run: ./build.sh test
 
   interop:

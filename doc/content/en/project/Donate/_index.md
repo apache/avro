@@ -2,6 +2,7 @@
 title: "Donate"
 linkTitle: "Donate"
 weight: 6
+manualLink: https://www.apache.org/foundation/sponsorship.html
 ---
 
 <!--

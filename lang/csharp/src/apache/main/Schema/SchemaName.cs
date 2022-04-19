@@ -64,7 +64,7 @@ namespace Avro
         /// <param name="name">name of the schema</param>
         /// <param name="space">namespace of the schema</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
-        /// <param name="documentation">documentation o fthe schema</param>
+        /// <param name="documentation">documentation of the schema</param>
         public SchemaName(String name, String space, String encspace, String documentation)
         {
             if (name == null)
