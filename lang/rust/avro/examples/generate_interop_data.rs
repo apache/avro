@@ -78,6 +78,8 @@ fn main() -> anyhow::Result<()> {
     let schema_str = std::fs::read_to_string("../../share/test/schemas/interop.avsc")
         .expect("Unable to read the interop Avro schema");
     let schema = Schema::parse_str(schema_str.as_str())?;
+    let data_folder = "../../build/interop/data";
+    std::fs::create_dir_all(data_folder)?;
 
     for codec in Codec::iter() {
         let codec_name = <&str>::from(codec);
@@ -87,7 +89,7 @@ fn main() -> anyhow::Result<()> {
             format!("_{}", codec_name)
         };
 
-        let file_name = format!("../../build/interop/data/rust{}.avro", suffix);
+        let file_name = format!("{}/rust{}.avro", data_folder, suffix);
         let output_file = std::fs::File::create(&file_name)?;
 
         let mut writer = Writer::with_codec(&schema, BufWriter::new(output_file), codec);

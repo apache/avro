@@ -32,7 +32,7 @@
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
 
-    <!-- The following pacakges are required for the extra codec libraries. These are not direct dependencies of the Avro.main library. -->
+    <!-- The following packages are required for the extra codec libraries. These are not direct dependencies of the Avro.main library. -->
     <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
     <IronSnappyVersion>1.3.0</IronSnappyVersion>
     <JovelerCompressionXZVersion>4.1.0</JovelerCompressionXZVersion>
@@ -40,7 +40,7 @@
   </PropertyGroup>
 
   <!--
-    These package versions are the bare minimum requriement. Only update the version of these dependencies,
+    These package versions are the bare minimum requirement. Only update the version of these dependencies,
     if functionality requires it. Leave it up to the users of the library as to whether or not they want the 
     latest and greatest of a particularly dependency.
     !!! ONLY UPDATE IF FUNCTIONALITY REQUIRES IT !!!
@@ -52,15 +52,20 @@
 
   <!--
     These packages are used for building, testing and code analysis. Most likely they are safe to upgrade
+	Please sort the packages alphabetically
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
     <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
+    <CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
+    <CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
     <MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion>6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <!-- When .NET 7 SDK is released or the package is not in preview, update this version -->
+    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' != 'net7.0'">6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
     <NUnitVersion>3.13.2</NUnitVersion>
     <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>

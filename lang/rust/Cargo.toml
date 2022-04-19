@@ -18,4 +18,5 @@
 [workspace]
 members = [
     "avro",
+    "avro_derive"
 ]

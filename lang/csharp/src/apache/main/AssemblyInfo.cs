@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,19 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Runtime.CompilerServices;
 
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-[assembly: AssemblyTitle("Avro.codegen")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Apache")]
-[assembly: AssemblyProduct("Avro.codegen")]
-[assembly: AssemblyCopyright("Copyright © Apache 2013")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-[assembly: ComVisible(false)]
-[assembly: Guid("3C23DD33-DD4F-42B1-B71F-8F9C86929E58")]
-[assembly: AssemblyVersion("0.9.0.0")]
-[assembly: AssemblyFileVersion("0.9.0.0")]
+[assembly: InternalsVisibleTo("Avro.test, PublicKey=00240000048000009400000006020000002400005253413100040000010001001145636d1b96168c2781abfd60478f45d010fe83dd0f318404cbf67252bca8cd827f24648d47ff682f35e60307c05d3cd89f0b063729cf8d2ebe6510b9e7d295dec6707ec91719d859458981f7ca1cbbea79b702b2fb64d1dbf0881887315345b70fa50fcf91b59e6a937c8d23919d409ee2f1f234cc4c8dbf5a29d3d670f3c9")]

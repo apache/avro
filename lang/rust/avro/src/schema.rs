@@ -27,7 +27,7 @@ use serde::{
 use serde_json::{Map, Value};
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     convert::{TryFrom, TryInto},
     fmt,
     hash::Hash,
@@ -68,7 +68,7 @@ impl fmt::Display for SchemaFingerprint {
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
 #[derive(Clone, Debug, EnumDiscriminants)]
-#[strum_discriminants(name(SchemaKind), derive(Hash))]
+#[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
     Null,
@@ -106,7 +106,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         fields: Vec<RecordField>,
-        lookup: HashMap<String, usize>,
+        lookup: BTreeMap<String, usize>,
     },
     /// An `enum` Avro schema.
     Enum {
@@ -228,7 +228,7 @@ impl From<&types::Value> for SchemaKind {
 ///
 /// More information about schema names can be found in the
 /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-#[derive(Clone, Debug, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Name {
     pub name: String,
     pub namespace: Namespace,
@@ -265,7 +265,7 @@ impl Name {
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
-    fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
+    pub(crate) fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
             .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
@@ -312,7 +312,7 @@ impl Name {
     /// Name::new("some_namespace.some_name").unwrap()
     /// );
     /// ```
-    pub(crate) fn fully_qualified_name(&self, enclosing_namespace: &Namespace) -> Name {
+    pub fn fully_qualified_name(&self, enclosing_namespace: &Namespace) -> Name {
         Name {
             name: self.name.clone(),
             namespace: self
@@ -332,6 +332,25 @@ impl From<&str> for Name {
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.fullname(None)[..])
+    }
+}
+
+impl<'de> Deserialize<'de> for Name {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        serde_json::Value::deserialize(deserializer).and_then(|value| {
+            use serde::de::Error;
+            if let Value::Object(json) = value {
+                Name::parse(&json).map_err(D::Error::custom)
+            } else {
+                Err(D::Error::custom(format!(
+                    "Expected a json object: {:?}",
+                    value
+                )))
+            }
+        })
     }
 }
 
@@ -484,12 +503,12 @@ pub struct UnionSchema {
     // schema index given a value.
     // **NOTE** that this approach does not work for named types, and will have to be modified
     // to support that. A simple solution is to also keep a mapping of the names used.
-    variant_index: HashMap<SchemaKind, usize>,
+    variant_index: BTreeMap<SchemaKind, usize>,
 }
 
 impl UnionSchema {
     pub(crate) fn new(schemas: Vec<Schema>) -> AvroResult<Self> {
-        let mut vindex = HashMap::new();
+        let mut vindex = BTreeMap::new();
         for (i, schema) in schemas.iter().enumerate() {
             if let Schema::Union(_) = schema {
                 return Err(Error::GetNestedUnion);
@@ -987,7 +1006,8 @@ impl Parser {
         schema: &Schema,
         aliases: &Aliases,
     ) {
-        // FIXME, this should be globally aware, so if there is something overwriting something else then there is an ambiguois schema definition. An apropriate error should be thrown
+        // FIXME, this should be globally aware, so if there is something overwriting something
+        // else then there is an ambiguous schema definition. An appropriate error should be thrown
         self.parsed_schemas
             .insert(fully_qualified_name.clone(), schema.clone());
         self.resolving_schemas.remove(fully_qualified_name);
@@ -1043,7 +1063,7 @@ impl Parser {
             }
         }
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
@@ -1288,6 +1308,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 map.serialize_entry("symbols", symbols)?;
                 map.end()
@@ -1300,6 +1323,9 @@ impl Serialize for Schema {
             } => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
+                if let Some(ref n) = name.namespace {
+                    map.serialize_entry("namespace", n)?;
+                }
                 map.serialize_entry("name", &name.name)?;
                 if let Some(ref docstr) = doc {
                     map.serialize_entry("doc", docstr)?;
@@ -1501,6 +1527,204 @@ fn field_ordering_position(field: &str) -> Option<usize> {
         .map(|pos| pos + 1)
 }
 
+/// Trait for types that serve as an Avro data model. Derive implementation available
+/// through `derive` feature. Do not implement directly, implement [`derive::AvroSchemaComponent`]
+/// to get this trait through a blanket implementation.
+pub trait AvroSchema {
+    fn get_schema() -> Schema;
+}
+
+#[cfg(feature = "derive")]
+pub mod derive {
+    use super::*;
+
+    /// Trait for types that serve as fully defined components inside an Avro data model. Derive
+    /// implementation available through `derive` feature. This is what is implemented by
+    /// the `derive(AvroSchema)` macro.
+    ///
+    /// # Implementation guide
+    ///
+    ///### Simple implementation
+    /// To construct a non named simple schema, it is possible to ignore the input argument making the
+    /// general form implementation look like
+    /// ```ignore
+    /// impl AvroSchemaComponent for AType {
+    ///     fn get_schema_in_ctxt(_: &mut Names, _: &Namespace) -> Schema {
+    ///        Schema::?
+    ///    }
+    ///}
+    /// ```
+    /// ### Passthrough implementation
+    /// To construct a schema for a Type that acts as in "inner" type, such as for smart pointers, simply
+    /// pass through the arguments to the inner type
+    /// ```ignore
+    /// impl AvroSchemaComponent for PassthroughType {
+    ///     fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace) -> Schema {
+    ///        InnerType::get_schema_in_ctxt(names, enclosing_namespace)
+    ///    }
+    ///}
+    /// ```
+    ///### Complex implementation
+    /// To implement this for Named schema there is a general form needed to avoid creating invalid
+    /// schemas or infinite loops.
+    /// ```ignore
+    /// impl AvroSchemaComponent for ComplexType {
+    ///     fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace) -> Schema {
+    ///         // Create the fully qualified name for your type given the enclosing namespace
+    ///         let name =  apache_avro::schema::Name::new("MyName")
+    ///             .expect("Unable to parse schema name")
+    ///             .fully_qualified_name(enclosing_namespace);
+    ///         let enclosing_namespace = &name.namespace;
+    ///         // Check, if your name is already defined, and if so, return a ref to that name
+    ///         if named_schemas.contains_key(&name) {
+    ///             apache_avro::schema::Schema::Ref{name: name.clone()}
+    ///         } else {
+    ///             named_schemas.insert(name.clone(), apache_avro::schema::Schema::Ref{name: name.clone()});
+    ///             // YOUR SCHEMA DEFINITION HERE with the name equivalent to "MyName".
+    ///             // For non-simple sub types delegate to their implementation of AvroSchemaComponent
+    ///         }
+    ///    }
+    ///}
+    /// ```
+    pub trait AvroSchemaComponent {
+        fn get_schema_in_ctxt(named_schemas: &mut Names, enclosing_namespace: &Namespace)
+            -> Schema;
+    }
+
+    impl<T> AvroSchema for T
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema() -> Schema {
+            T::get_schema_in_ctxt(&mut HashMap::default(), &Option::None)
+        }
+    }
+
+    macro_rules! impl_schema(
+        ($type:ty, $variant_constructor:expr) => (
+            impl AvroSchemaComponent for $type {
+                fn get_schema_in_ctxt(_: &mut Names, _: &Namespace) -> Schema {
+                    $variant_constructor
+                }
+            }
+        );
+    );
+
+    impl_schema!(i8, Schema::Int);
+    impl_schema!(i16, Schema::Int);
+    impl_schema!(i32, Schema::Int);
+    impl_schema!(i64, Schema::Long);
+    impl_schema!(u8, Schema::Int);
+    impl_schema!(u16, Schema::Int);
+    impl_schema!(u32, Schema::Long);
+    impl_schema!(f32, Schema::Float);
+    impl_schema!(f64, Schema::Double);
+    impl_schema!(String, Schema::String);
+    impl_schema!(uuid::Uuid, Schema::Uuid);
+    impl_schema!(core::time::Duration, Schema::Duration);
+
+    impl<T> AvroSchemaComponent for Vec<T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            Schema::Array(Box::new(T::get_schema_in_ctxt(
+                named_schemas,
+                enclosing_namespace,
+            )))
+        }
+    }
+
+    impl<T> AvroSchemaComponent for Option<T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            let inner_schema = T::get_schema_in_ctxt(named_schemas, enclosing_namespace);
+            Schema::Union(UnionSchema {
+                schemas: vec![Schema::Null, inner_schema.clone()],
+                variant_index: vec![Schema::Null, inner_schema]
+                    .iter()
+                    .enumerate()
+                    .map(|(idx, s)| (SchemaKind::from(s), idx))
+                    .collect(),
+            })
+        }
+    }
+
+    impl<T> AvroSchemaComponent for Map<String, T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            Schema::Map(Box::new(T::get_schema_in_ctxt(
+                named_schemas,
+                enclosing_namespace,
+            )))
+        }
+    }
+
+    impl<T> AvroSchemaComponent for HashMap<String, T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            Schema::Map(Box::new(T::get_schema_in_ctxt(
+                named_schemas,
+                enclosing_namespace,
+            )))
+        }
+    }
+
+    impl<T> AvroSchemaComponent for Box<T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            T::get_schema_in_ctxt(named_schemas, enclosing_namespace)
+        }
+    }
+
+    impl<T> AvroSchemaComponent for std::sync::Mutex<T>
+    where
+        T: AvroSchemaComponent,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            T::get_schema_in_ctxt(named_schemas, enclosing_namespace)
+        }
+    }
+
+    impl<T> AvroSchemaComponent for Cow<'_, T>
+    where
+        T: AvroSchemaComponent + Clone,
+    {
+        fn get_schema_in_ctxt(
+            named_schemas: &mut Names,
+            enclosing_namespace: &Namespace,
+        ) -> Schema {
+            T::get_schema_in_ctxt(named_schemas, enclosing_namespace)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1632,7 +1856,7 @@ mod tests {
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
-            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+            lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 
         assert_eq!(schema_c, schema_c_expected);
@@ -1686,7 +1910,7 @@ mod tests {
                 order: RecordFieldOrder::Ignore,
                 position: 0,
             }],
-            lookup: HashMap::from_iter(vec![("field_one".to_string(), 0)]),
+            lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
         };
 
         assert_eq!(schema_option_a, schema_option_a_expected);
@@ -1708,7 +1932,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("a".to_owned(), 0);
         lookup.insert("b".to_owned(), 1);
 
@@ -1764,10 +1988,10 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("recordField".to_owned(), 0);
 
-        let mut node_lookup = HashMap::new();
+        let mut node_lookup = BTreeMap::new();
         node_lookup.insert("children".to_owned(), 1);
         node_lookup.insert("label".to_owned(), 0);
 
@@ -1935,7 +2159,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2001,7 +2225,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2065,7 +2289,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("enum".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2140,7 +2364,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut lookup = HashMap::new();
+        let mut lookup = BTreeMap::new();
         lookup.insert("fixed".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
@@ -2564,7 +2788,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2603,7 +2827,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2637,7 +2861,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2671,7 +2895,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2705,7 +2929,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2739,7 +2963,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2779,7 +3003,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_record_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2814,7 +3038,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_enum_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2849,7 +3073,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "inner_space.inner_fixed_name"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -2900,7 +3124,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "space.middle_record_name",
@@ -2956,7 +3180,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
@@ -3013,7 +3237,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 3);
+        assert_eq!(rs.get_names().len(), 3);
         for s in &[
             "space.record_name",
             "middle_namespace.middle_record_name",
@@ -3056,7 +3280,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.in_array_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
@@ -3095,9 +3319,93 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
-        assert!(rs.get_names().len() == 2);
+        assert_eq!(rs.get_names().len(), 2);
         for s in &["space.record_name", "space.in_map_record"] {
             assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
         }
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_enum_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"enum",
+                            "name":"inner_enum_name",
+                            "namespace": "inner_space",
+                            "symbols":["Extensive","Testing"]
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_enum_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_enum_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
+    }
+
+    #[test]
+    fn avro_3466_test_to_json_inner_fixed_inner_namespace() {
+        let schema = r#"
+        {
+        "name": "record_name",
+        "namespace": "space",
+        "type": "record",
+        "fields": [
+            {
+            "name": "outer_field_1",
+            "type": [
+                        "null",
+                        {
+                            "type":"fixed",
+                            "name":"inner_fixed_name",
+                            "namespace": "inner_space",
+                            "size":54
+                        }
+                    ]
+            },
+            {
+                "name": "outer_field_2",
+                "type" : "inner_space.inner_fixed_name"
+            }
+        ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let rs = ResolvedSchema::try_from(&schema).expect("Schema didn't successfully parse");
+
+        // confirm we have expected 2 full-names
+        assert_eq!(rs.get_names().len(), 2);
+        for s in &["space.record_name", "inner_space.inner_fixed_name"] {
+            assert!(rs.get_names().contains_key(&Name::new(s).unwrap()));
+        }
+
+        // convert Schema back to JSON string
+        let schema_str = serde_json::to_string(&schema).expect("test failed");
+        let _schema = Schema::parse_str(&schema_str).expect("test failed");
+        assert_eq!(schema, _schema);
     }
 }
