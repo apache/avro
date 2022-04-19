@@ -421,7 +421,7 @@ namespace Avro.Test.AvroGen
         {
             TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
-        
+
         [TestCase(
             _nullableLogicalTypesArray,
             "org.apache.avro.codegentest.testdata", "org.apache.csharp.codegentest.testdata",
@@ -552,7 +552,7 @@ namespace Avro.Test.AvroGen
     ""name"" : ""ClassKeywords"",
     ""namespace"" : ""com.base"",
     ""fields"" :
-        [ 	
+        [
             { ""name"" : ""int"", ""type"" : ""int"" },
             { ""name"" : ""base"", ""type"" : ""long"" },
             { ""name"" : ""event"", ""type"" : ""boolean"" },
@@ -583,7 +583,7 @@ namespace Avro.Test.AvroGen
     ""name"" : ""SchemaObject"",
     ""namespace"" : ""schematest"",
     ""fields"" :
-        [ 	
+        [
             { ""name"" : ""myobject"", ""type"" :
                 [
                     ""null"",
@@ -605,7 +605,7 @@ namespace Avro.Test.AvroGen
 	""name"" : ""LogicalTypes"",
 	""namespace"" : ""schematest"",
 	""fields"" :
-		[ 	
+		[
 			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
 			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
 			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
@@ -621,6 +621,29 @@ namespace Avro.Test.AvroGen
 		]
 }",
             new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+        [TestCase(@"
+{
+  ""namespace"": ""enum.base"",
+  ""type"": ""record"",
+  ""name"": ""EnumInDifferentNamespace"",
+  ""doc"": ""Test enum with a default value in a different namespace"",
+  ""fields"": [
+    {
+      ""name"": ""anEnum"",
+      ""type"": {
+        ""namespace"": ""enum.base.other"",
+        ""type"": ""enum"",
+        ""name"": ""AnEnum"",
+        ""symbols"": [
+          ""A"",
+          ""B""
+        ],
+        ""default"": ""A""
+      }
+    }
+  ]
+}",
+            new object[] { "enum.base.EnumInDifferentNamespace", "enum.base.other.AnEnum" })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
             Assembly assembly = TestSchema(schema);
