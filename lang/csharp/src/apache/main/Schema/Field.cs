@@ -103,7 +103,39 @@ namespace Avro
         /// <summary>
         /// Static comparer object for JSON objects such as the fields default value
         /// </summary>
-        internal static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
+        internal readonly static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class.
+        /// </summary>
+        /// <param name="schema">schema for the field type.</param>
+        /// <param name="name">name of the field.</param>
+        /// <param name="aliases">list of aliases for the name of the field.</param>
+        /// <param name="pos">position of the field.</param>
+        /// <param name="doc">documentation for the field.</param>
+        /// <param name="defaultValue">field's default value if it exists.</param>
+        /// <param name="sortorder">sort order of the field.</param>
+        /// <param name="customProperties">dictionary that provides access to custom properties.</param>
+        public Field(Schema schema,
+            string name,
+            int pos,
+            IList<string> aliases = null,
+            string doc = null,
+            JToken defaultValue = null,
+            SortOrder sortorder = SortOrder.ignore,
+            PropertyMap customProperties = null)
+            : this(schema, name, aliases, pos, doc, defaultValue, sortorder, customProperties)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new field based on the specified field, with a different position.
+        /// </summary>
+        /// <returns>A clone of this field with new position.</returns>
+        internal Field ChangePosition(int newPosition)
+        {
+            return new Field(Schema, Name, newPosition, Aliases, Documentation, DefaultValue, Ordering ?? SortOrder.ignore, Props);
+        }
 
         /// <summary>
         /// A flag to indicate if reader schema has a field that is missing from writer schema and has a default value
