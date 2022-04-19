@@ -30,6 +30,8 @@ use syn::{
 struct FieldOptions {
     #[darling(default)]
     doc: Option<String>,
+    #[darling(default)]
+    default: Option<String>,
 }
 
 #[derive(FromAttributes)]
@@ -117,16 +119,24 @@ fn get_data_struct_schema_def(
         syn::Fields::Named(ref a) => {
             for (position, field) in a.named.iter().enumerate() {
                 let name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
-                let field_documented =
+                let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
-                let doc = preserve_optional(field_documented.doc);
+                let doc = preserve_optional(field_attrs.doc);
+                let default_value = match field_attrs.default {
+                    Some(default_value) => {
+                        quote! {
+                            Some(serde_json::from_str(#default_value).expect(format!("Invalid JSON: {:?}", #default_value).as_str()))
+                        }
+                    }
+                    None => quote! { None },
+                };
                 let schema_expr = type_to_schema_expr(&field.ty)?;
                 let position = position;
                 record_field_exprs.push(quote! {
                     apache_avro::schema::RecordField {
                             name: #name.to_string(),
                             doc: #doc,
-                            default: Option::None,
+                            default: #default_value,
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
@@ -186,7 +196,7 @@ fn get_data_enum_schema_def(
                 name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
                 aliases: #enum_aliases,
                 doc: #doc,
-                symbols: vec![#(#symbols.to_owned()),*]
+                symbols: vec![#(#symbols.to_owned()),*],
             }
         })
     } else {
