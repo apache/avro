@@ -572,7 +572,7 @@ namespace Avro.Test
         }
 
         /// <summary>
-        /// Asserts that two lists are equal, delegating the work of comapring
+        /// Asserts that two lists are equal, delegating the work of comparing
         /// <see cref="ISpecificRecord"/> entries to
         /// <see cref="AssertSpecificRecordEqual(ISpecificRecord, ISpecificRecord)"/>.
         /// </summary>
