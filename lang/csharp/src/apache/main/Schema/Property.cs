@@ -36,7 +36,7 @@ namespace Avro
         /// Parses the custom properties from the given JSON object and stores them
         /// into the schema's list of custom properties
         /// </summary>
-        /// <param name="jtok">JSON object to prase</param>
+        /// <param name="jtok">JSON object to parse</param>
         public void Parse(JToken jtok)
         {
             JObject jo = jtok as JObject;
