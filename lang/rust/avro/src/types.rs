@@ -26,7 +26,12 @@ use crate::{
     AvroResult, Error,
 };
 use serde_json::{Number, Value as JsonValue};
-use std::{collections::HashMap, convert::TryFrom, hash::BuildHasher, str::FromStr, u8};
+use std::{
+    collections::{BTreeMap, HashMap},
+    convert::TryFrom,
+    hash::BuildHasher,
+    str::FromStr,
+};
 use uuid::Uuid;
 
 /// Compute the maximum decimal value precision of a byte array of length `len` could hold.
@@ -207,7 +212,7 @@ pub struct Record<'a> {
     /// Ordered according to the fields in the schema given to create this
     /// `Record` object. Any unset field defaults to `Value::Null`.
     pub fields: Vec<(String, Value)>,
-    schema_lookup: &'a HashMap<String, usize>,
+    schema_lookup: &'a BTreeMap<String, usize>,
 }
 
 impl<'a> Record<'a> {
@@ -462,7 +467,14 @@ impl Value {
                     Value::accumulate(acc, value.validate_internal(inner, names))
                 })
             }
-            (&Value::Record(ref record_fields), &Schema::Record { ref fields, .. }) => {
+            (
+                &Value::Record(ref record_fields),
+                &Schema::Record {
+                    ref fields,
+                    ref lookup,
+                    ..
+                },
+            ) => {
                 if fields.len() != record_fields.len() {
                     return Some(format!(
                         "The value's records length ({}) is different than the schema's ({})",
@@ -471,19 +483,26 @@ impl Value {
                     ));
                 }
 
-                fields.iter().zip(record_fields.iter()).fold(
-                    None,
-                    |acc, (field, &(ref name, ref value))| {
-                        if field.name != *name {
-                            return Some(format!(
-                                "Value's name '{}' does not match the expected field's name '{}'",
-                                name, field.name
-                            ));
+                record_fields
+                    .iter()
+                    .fold(None, |acc, (field_name, record_field)| {
+                        match lookup.get(field_name) {
+                            Some(idx) => {
+                                let field = &fields[*idx];
+                                Value::accumulate(
+                                    acc,
+                                    record_field.validate_internal(&field.schema, names),
+                                )
+                            }
+                            None => Value::accumulate(
+                                acc,
+                                Some(format!(
+                                    "There is no schema field for field '{}'",
+                                    field_name
+                                )),
+                            ),
                         }
-                        let res = value.validate_internal(&field.schema, names);
-                        Value::accumulate(acc, res)
-                    },
-                )
+                    })
             }
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().fold(None, |acc, field| {
@@ -1059,7 +1078,7 @@ mod tests {
                     lookup: Default::default(),
                 },
                 false,
-                "Invalid value: Record([(\"unknown_field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Int, order: Ignore, position: 0 }], lookup: {} }. Reason: Value's name 'unknown_field_name' does not match the expected field's name 'field_name'",
+                "Invalid value: Record([(\"unknown_field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Int, order: Ignore, position: 0 }], lookup: {} }. Reason: There is no schema field for field 'unknown_field_name'",
             ),
             (
                 Value::Record(vec![("field_name".to_string(), Value::Null)]),
@@ -1077,10 +1096,10 @@ mod tests {
                         order: RecordFieldOrder::Ignore,
                         position: 0,
                     }],
-                    lookup: Default::default(),
+                    lookup: [("field_name".to_string(), 0)].iter().cloned().collect(),
                 },
                 false,
-                "Invalid value: Record([(\"field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Ref { name: Name { name: \"missing\", namespace: None } }, order: Ignore, position: 0 }], lookup: {} }. Reason: Unresolved schema reference: 'missing'. Parsed names: []",
+                "Invalid value: Record([(\"field_name\", Null)]) for schema: Record { name: Name { name: \"record_name\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"field_name\", doc: None, default: None, schema: Ref { name: Name { name: \"missing\", namespace: None } }, order: Ignore, position: 0 }], lookup: {\"field_name\": 0} }. Reason: Unresolved schema reference: 'missing'. Parsed names: []",
             ),
         ];
 
@@ -1209,7 +1228,6 @@ mod tests {
     fn validate_record() {
         init();
 
-        use std::collections::HashMap;
         // {
         //    "type": "record",
         //    "fields": [
@@ -1239,7 +1257,10 @@ mod tests {
                     position: 1,
                 },
             ],
-            lookup: HashMap::new(),
+            lookup: [("a".to_string(), 0), ("b".to_string(), 1)]
+                .iter()
+                .cloned()
+                .collect(),
         };
 
         assert!(Value::Record(vec![
@@ -1252,21 +1273,14 @@ mod tests {
             ("b".to_string(), Value::String("foo".to_string())),
             ("a".to_string(), Value::Long(42i64)),
         ]);
-        assert!(!value.validate(&schema));
-        assert_log_message(
-            format!(
-                "Invalid value: {:?} for schema: {:?}. Reason: {}",
-                value, schema, "Value's name 'a' does not match the expected field's name 'b'"
-            )
-            .as_str(),
-        );
+        assert!(value.validate(&schema));
 
         let value = Value::Record(vec![
             ("a".to_string(), Value::Boolean(false)),
             ("b".to_string(), Value::String("foo".to_string())),
         ]);
         assert!(!value.validate(&schema));
-        assert_log_message("Invalid value: Record([(\"a\", Boolean(false)), (\"b\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Unsupported value-schema combination");
+        assert_log_message("Invalid value: Record([(\"a\", Boolean(false)), (\"b\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {\"a\": 0, \"b\": 1} }. Reason: Unsupported value-schema combination");
 
         let value = Value::Record(vec![
             ("a".to_string(), Value::Long(42i64)),
@@ -1274,7 +1288,7 @@ mod tests {
         ]);
         assert!(!value.validate(&schema));
         assert_log_message(
-            "Invalid value: Record([(\"a\", Long(42)), (\"c\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Value's name 'c' does not match the expected field's name 'b'"
+            "Invalid value: Record([(\"a\", Long(42)), (\"c\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {\"a\": 0, \"b\": 1} }. Reason: There is no schema field for field 'c'"
         );
 
         let value = Value::Record(vec![
@@ -1283,7 +1297,9 @@ mod tests {
             ("c".to_string(), Value::Null),
         ]);
         assert!(!value.validate(&schema));
-        assert_log_message("Invalid value: Record([(\"a\", Long(42)), (\"b\", String(\"foo\")), (\"c\", Null)]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: The value's records length (3) is different than the schema's (2)");
+        assert_log_message(
+            r#"Invalid value: Record([("a", Long(42)), ("b", String("foo")), ("c", Null)]) for schema: Record { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: "b", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {"a": 0, "b": 1} }. Reason: The value's records length (3) is different than the schema's (2)"#,
+        );
 
         assert!(Value::Map(
             vec![
@@ -1301,7 +1317,10 @@ mod tests {
                 .collect()
         )
         .validate(&schema));
-        assert_log_message("Invalid value: Map({\"c\": Long(123)}) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {} }. Reason: Field with name '\"a\"' is not a member of the map items\nField with name '\"b\"' is not a member of the map items");
+        assert_log_message(
+            r#"Invalid value: Map({"c": Long(123)}) for schema: Record { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: "b", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {"a": 0, "b": 1} }. Reason: Field with name '"a"' is not a member of the map items
+Field with name '"b"' is not a member of the map items"#,
+        );
 
         let union_schema = Schema::Union(UnionSchema::new(vec![Schema::Null, schema]).unwrap());
 

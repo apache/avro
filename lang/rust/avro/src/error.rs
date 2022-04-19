@@ -403,6 +403,9 @@ pub enum Error {
     #[error("Signed decimal bytes length {0} not equal to fixed schema size {1}.")]
     EncodeDecimalAsFixedError(usize, usize),
 
+    #[error("There is no entry for {0} in the lookup table: {1}.")]
+    NoEntryInLookupTable(String, String),
+
     #[error("Can only encode value type {value_kind:?} as one of {supported_schema:?}")]
     EncodeValueAsSchemaError {
         value_kind: ValueKind,
