@@ -188,18 +188,29 @@ pub(crate) fn encode_internal(
             if let Schema::Record {
                 ref name,
                 fields: ref schema_fields,
+                ref lookup,
                 ..
             } = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for (i, &(_, ref value)) in fields.iter().enumerate() {
-                    encode_internal(
-                        value,
-                        &schema_fields[i].schema,
-                        names,
-                        &record_namespace,
-                        buffer,
-                    )?;
+                for &(ref name, ref value) in fields.iter() {
+                    match lookup.get(name) {
+                        Some(idx) => {
+                            encode_internal(
+                                value,
+                                &schema_fields[*idx].schema,
+                                names,
+                                &record_namespace,
+                                buffer,
+                            )?;
+                        }
+                        None => {
+                            return Err(Error::NoEntryInLookupTable(
+                                name.clone(),
+                                format!("{:?}", lookup),
+                            ));
+                        }
+                    }
                 }
             } else {
                 error!("invalid schema type for Record: {:?}", schema);
