@@ -150,18 +150,14 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    /*
-    // TODO: (#91) figure out why "type": "error" seems to be valid (search in spec) and uncomment
     (
         r#"{
             "type": "error",
             "name": "Test",
             "fields": [{"name": "f", "type": "long"}]
         }"#,
-        true
+        false,
     ),
-    */
-    /*
     // TODO: (#92) properly support recursive types and uncomment
     (
         r#"{
@@ -172,7 +168,7 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 {"name": "children", "type": {"type": "array", "items": "Node"}}
             ]
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -195,7 +191,7 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 }
             ]
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -208,9 +204,9 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 {"name": "serverHash", "type": "MD5"},
                 {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
             ]
-        }"#, true
+        }"#,
+        true,
     ),
-    */
     (
         r#"{
                 "type":"record",
@@ -262,9 +258,6 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    /*
-    // TODO: (#95) support same types but with different names in unions and uncomment (below the explanation)
-
     // Unions may not contain more than one schema with the same type, except for the named
     // types record, fixed and enum. For example, unions containing two array types or two map
     // types are not permitted, but two types with different names are permitted.
@@ -283,9 +276,8 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 }
             ]
         }"#,
-        true
+        true,
     ),
-    */
     (
         r#"{
                 "type": "record",
@@ -376,8 +368,7 @@ const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
 ];
 
 const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
-    /*
-    // TODO: (#93) support logical types and uncomment
+  /*
     (
         r#"{
             "type": "fixed",
@@ -387,7 +378,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "size": 10,
             "scale": 2
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -396,7 +387,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 4,
             "scale": 2
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -405,7 +396,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 2,
             "scale": -2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -414,7 +405,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": -2,
             "scale": 2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -423,7 +414,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 2,
             "scale": 3
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -434,7 +425,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 2,
             "size": 5
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -445,7 +436,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 3,
             "size": 2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -456,9 +447,9 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 2,
             "size": -2
         }"#,
-        false
+        false,
     ),
-    */
+   */
 ];
 
 const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
@@ -574,12 +565,6 @@ lazy_static! {
         EXAMPLES.iter().copied().filter(|s| s.1).collect();
 }
 
-/*
-// TODO: (#92) properly support recursive types and uncomment
-
-This test is failing unwrapping the outer schema with ParseSchemaError("Unknown type: X"). It seems
-that recursive types are not properly supported.
-
 #[test]
 fn test_correct_recursive_extraction() {
     init();
@@ -603,21 +588,31 @@ fn test_correct_recursive_extraction() {
         ]
     }"#;
     let outer_schema = Schema::parse_str(raw_outer_schema).unwrap();
-    if let Schema::Record { fields: outer_fields, .. } = outer_schema {
-        let raw_inner_schema = outer_fields[0].schema.canonical_form();
-        let inner_schema = Schema::parse_str(raw_inner_schema.as_str()).unwrap();
-        if let Schema::Record { fields: inner_fields, .. } = inner_schema {
-            if let Schema::Record {name: recursive_type, .. } = &inner_fields[0].schema {
+    if let Schema::Record {
+        fields: outer_fields,
+        ..
+    } = outer_schema
+    {
+        let inner_schema = &outer_fields[0].schema;
+        if let Schema::Record {
+            fields: inner_fields,
+            ..
+        } = inner_schema
+        {
+            if let Schema::Record {
+                name: recursive_type,
+                ..
+            } = &inner_fields[0].schema
+            {
                 assert_eq!("X", recursive_type.name.as_str());
             }
         } else {
-            panic!("inner schema {} should have been a record", raw_inner_schema)
+            panic!("inner schema {:?} should have been a record", inner_schema)
         }
     } else {
-        panic!("outer schema {} should have been a record", raw_outer_schema)
+        panic!("outer schema {:?} should have been a record", outer_schema)
     }
 }
-*/
 
 #[test]
 fn test_parse() {

@@ -15,8 +15,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[workspace]
-members = [
-    "avro",
-    "avro_derive"
-]
+[package]
+name = "apache-avro-derive"
+version = "0.14.0"
+authors = ["Apache Avro team <dev@avro.apache.org>"]
+description = "A library for deriving Avro schemata from Rust structs and enums"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/apache/avro"
+edition = "2018"
+keywords = ["avro", "data", "serialization", "derive"]
+categories = ["encoding"]
+documentation = "https://docs.rs/apache-avro-derive"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = {version= "1.0.91", features=["full", "fold"]}
+quote = "1.0.18"
+proc-macro2 = "1.0.37"
+darling = "0.14.0"
+
+[dev-dependencies]
+serde = { version = "1.0.136", features = ["derive"] }
+apache-avro = { version = "0.14.0", path = "../avro", features = ["derive"] }
