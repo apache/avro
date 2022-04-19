@@ -54,15 +54,6 @@
     <WarningsAsErrors />
   </PropertyGroup>
 
-  <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="System.CodeDom" Version="$(SystemCodeDomVersion)" />
-    <PackageReference Include="System.Reflection" Version="$(SystemReflectionVersion)" />
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="$(SystemReflectionEmitILGenerationVersion)" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="$(SystemReflectionEmitLightweightVersion)" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
