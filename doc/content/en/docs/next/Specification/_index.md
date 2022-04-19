@@ -1,4 +1,3 @@
-
 ---
 title: "Specification"
 linkTitle: "Specification"
@@ -64,10 +63,10 @@ Primitive type names are also defined type names. Thus, for example, the schema 
 Avro supports six kinds of complex types: _records_, _enums_, _arrays_, _maps_, _unions_ and _fixed_.
 
 ### Records {#schema-record}
-Records use the type name "record" and support three attributes:
+Records use the type name "record" and support the following attributes:
 
 * _name_: a JSON string providing the name of the record (required).
-* _namespace_, a JSON string that qualifies the name;
+* _namespace_, a JSON string that qualifies the name (optional);
 * _doc_: a JSON string providing documentation to the user of this schema (optional).
 * _aliases_: a JSON array of strings, providing alternate names for this record (optional).
 * _fields_: a JSON array, listing fields (required). Each field is a JSON object with the following attributes:
@@ -77,22 +76,23 @@ Records use the type name "record" and support three attributes:
   * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
 
 *field default values*
-| **avro type** |	**json type** |	**example** |
-|---|---|---:|
-| null | 	null |	null |
-| boolean |	boolean |	true |
-| int,long | integer | 1 |
-| float,double | number | 1.1 |
-| bytes	| string | "\u00FF" |
-| string | string | "foo" |
-| record | object | {"a": 1} |
-| enum | string | "FOO" |
-| array | array | [1] |
-| map | object | {"a": 1} |
-| fixed	| string | "\u00ff" |
 
-  * order: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
-  * aliases: a JSON array of strings, providing alternate names for this field (optional).
+| **avro type** | **json type**  | **example** |
+|---------------|----------------|-------------|
+| null          | null           | `null`      |
+| boolean       | boolean        | `true`      |
+| int,long      | integer        | `1`         |
+| float,double  | number         | `1.1`       |
+| bytes         | string         | `"\u00FF"`  |
+| string        | string         | `"foo"`     |
+| record        | object         | `{"a": 1}`  |
+| enum          | string         | `"FOO"`     |
+| array         | array          | `[1]`       |
+| map           | object         | `{"a": 1}`  |
+| fixed         | string         | `"\u00ff"`  |
+
+  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
+  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
 
 For example, a linked-list of 64-bit values may be defined with:
 ```json
@@ -111,7 +111,7 @@ For example, a linked-list of 64-bit values may be defined with:
 Enums use the type name "enum" and support the following attributes:
 
 * _name_: a JSON string providing the name of the enum (required).
-* _namespace_, a JSON string that qualifies the name;
+* _namespace_, a JSON string that qualifies the name (optional);
 * _aliases_: a JSON array of strings, providing alternate names for this enum (optional).
 * _doc_: a JSON string providing documentation to the user of this schema (optional).
 * _symbols_: a JSON array, listing symbols, as JSON strings (required). All symbols in an enum must be unique; duplicates are prohibited. Every symbol must match the regular expression [A-Za-z_][A-Za-z0-9_]* (the same requirement as for [names]({{< ref "#names" >}} "Names")).
@@ -157,7 +157,7 @@ For example, a map from string to long is declared with:
 ```
     
 ### Unions
-Unions, as mentioned above, are represented using JSON arrays. For example, ["null", "string"] declares a schema which may be either a null or string.
+Unions, as mentioned above, are represented using JSON arrays. For example, `["null", "string"]` declares a schema which may be either a null or string.
 
 (Note that when a [default value]({{< ref "#schema-record" >}} "Schema record") is specified for a record field whose type is a union, the type of the default value must match the first element of the union. Thus, for unions containing "null", the "null" is usually listed first, since the default value of such unions is typically null.)
 
@@ -166,10 +166,10 @@ Unions may not contain more than one schema with the same type, except for the n
 Unions may not immediately contain other unions.
 
 ### Fixed
-Fixed uses the type name "fixed" and supports two attributes:
+Fixed uses the type name "fixed" and supports the following attributes:
 
 * _name_: a string naming this fixed (required).
-* _namespace_, a string that qualifies the name;
+* _namespace_, a string that qualifies the name (optional);
 * _aliases_: a JSON array of strings, providing alternate names for this enum (optional).
 * _size_: an integer, specifying the number of bytes per value (required).
 
@@ -193,15 +193,66 @@ The null namespace may not be used in a dot-separated sequence of names. So the 
   <empty> | <name>[(<dot><name>)*]
 ```
 
-In record, enum and fixed definitions, the fullname is determined in one of the following ways:
+In record, enum and fixed definitions, the fullname is determined according to the algorithm below the example:
 
-* A name and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
+```
+{
+  "type": "record",
+  "name": "Example",
+  "doc": "A simple name (attribute) and no namespace attribute: use the null namespace (\"\"); the fullname is 'Example'.",
+  "fields": [
+    {
+      "name": "inheritNull",
+      "type": {
+        "type": "enum",
+        "name": "Simple",
+        "doc": "A simple name (attribute) and no namespace attribute: inherit the null namespace of the enclosing type 'Example'. The fullname is 'Simple'.",
+        "symbols": ["a", "b"]
+      }
+    }, {
+      "name": "explicitNamespace",
+      "type": {
+        "type": "fixed",
+        "name": "Simple",
+        "namespace": "explicit",
+        "doc": "A simple name (attribute) and a namespace (attribute); the fullname is 'explicit.Simple' (this is a different type than of the 'inheritNull' field).",
+        "size": 12
+      }
+    }, {
+      "name": "fullName",
+      "type": {
+        "type": "record",
+        "name": "a.full.Name",
+        "namespace": "ignored",
+        "doc": "A name attribute with a fullname, so the namespace attribute is ignored. The fullname is 'a.full.Name', and the namespace is 'a.full'.",
+        "fields": [
+          {
+            "name": "inheritNamespace",
+            "type": {
+              "type": "enum",
+              "name": "Understanding",
+              "doc": "A simple name (attribute) and no namespace attribute: inherit the namespace of the enclosing type 'a.full.Name'. The fullname is 'a.full.Understanding'.",
+              "symbols": ["d", "e"]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+The fullname of a record, enum or fixed definition is determined by the required `name` and optional `namespace` attributes like this:
+
 * A fullname is specified. If the name specified contains a dot, then it is assumed to be a fullname, and any namespace also specified is ignored. For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
-* A name only is specified, i.e., a name that contains no dots. In this case the namespace is taken from the most tightly enclosing schema or protocol. For example, if "name": "X" is specified, and this occurs within a field of the record definition of org.foo.Y, then the fullname is org.foo.X. If there is no enclosing namespace then the null namespace is used.
+* A simple name (a name that contains no dots) and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
+* A simple name only is specified (a name that contains no dots). In this case the namespace is taken from the most tightly enclosing named schema or protocol, and the fullname is constructed from that namespace and the name. For example, if "name": "X" is specified, and this occurs within a field of the record definition of org.foo.Y, then the fullname is org.foo.X. This also happens if there is no enclosing namespace (i.e., the enclosing schema definition has the null namespace).
 
 References to previously defined names are as in the latter two cases above: if they contain a dot they are a fullname, if they do not contain a dot, the namespace is the namespace of the enclosing definition.
 
-Primitive type names have no namespace and their names may not be defined in any namespace.
+Primitive type names (`null`, `boolean`, `int`, `long`, `float`, `double`, `bytes`, `string`) have no namespace and their names may not be defined in any namespace.
+
+Complex types (`record`, `enum`, `array`, `map`, `fixed`) have no namespace, but their names (as well as `union`) are permitted to be reused as type names.  This can be confusing to the human reader, but is always unambiguous for binary serialization.  Due to the limitations of JSON encoding, it is a best practice to use a namespace when using these names.
 
 A schema or protocol may not contain multiple definitions of a fullname. Further, a name must be defined before it is used ("before" in the depth-first, left-to-right traversal of the JSON parse tree, where the types attribute of a protocol is always deemed to come "before" the messages attribute.)
 
@@ -312,7 +363,7 @@ The blocked representation permits one to read and write maps larger than can be
 #### Unions
 A union is encoded by first writing an `int` value indicating the zero-based position within the union of the schema of its value. The value is then encoded per the indicated schema within the union.
 
-For example, the union schema ["null","string"] would encode:
+For example, the union schema `["null","string"]` would encode:
 
 * _null_ as zero (the index of "null" in the union):
 `00`
@@ -331,7 +382,7 @@ The value of a union is encoded in JSON as follows:
 * if its type is _null_, then it is encoded as a JSON _null_;
 * otherwise it is encoded as a JSON object with one name/value pair whose name is the type's name and whose value is the recursively encoded value. For Avro's named types (record, fixed or enum) the user-specified name is used, for other types the type name is used.
 
-For example, the union schema ["null","string","Foo"], where Foo is a record name, would encode:
+For example, the union schema `["null","string","Foo"]`, where Foo is a record name, would encode:
 
 * _null_ as _null_;
 * the string "a" as `{"string": "a"}` and
@@ -366,8 +417,8 @@ Two items with the same schema are compared according to the following rules.
 * _bytes_ and fixed data are compared lexicographically by unsigned 8-bit values.
 * _string_ data is compared lexicographically by Unicode code point. Note that since UTF-8 is used as the binary encoding for strings, sorting of bytes and string binary data is identical.
 * _array_ data is compared lexicographically by element.
-* _enum_ data is ordered by the symbol's position in the enum schema. For example, an enum whose symbols are ["z", "a"] would sort "z" values before "a" values.
-* _union_ data is first ordered by the branch within the union, and, within that, by the type of the branch. For example, an ["int", "string"] union would order all int values before all string values, with the ints and strings themselves ordered as defined above.
+* _enum_ data is ordered by the symbol's position in the enum schema. For example, an enum whose symbols are `["z", "a"]` would sort "z" values before "a" values.
+* _union_ data is first ordered by the branch within the union, and, within that, by the type of the branch. For example, an `["int", "string"]` union would order all int values before all string values, with the ints and strings themselves ordered as defined above.
 * _record_ data is ordered lexicographically by field. If a field specifies that its order is:
     * "ascending", then the order of its values is unaltered.
     * "descending", then the order of its values is reversed.
@@ -452,7 +503,7 @@ Avro protocols describe RPC interfaces. Like schemas, they are defined with JSON
 A protocol is a JSON object with the following attributes:
 
 * _protocol_, a string, the name of the protocol (required);
-* _namespace_, an optional string that qualifies the name;
+* _namespace_, an optional string that qualifies the name (optional);
 * _doc_, an optional string describing this protocol;
 * _types_, an optional list of definitions of named types (records, enums, fixed and errors). An error definition is just like a record definition except it uses "error" instead of "record". Note that forward references to named types are not permitted.
 * _messages_, an optional JSON object whose keys are message names and whose values are objects whose attributes are described below. No two messages may have the same name.

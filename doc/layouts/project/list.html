@@ -1,3 +1,4 @@
+{{ define "main" }}
 <!--
 
  Licensed to the Apache Software Foundation (ASF) under one
@@ -18,8 +19,6 @@
  under the License.
 
 -->
-
-{{ define "main" }}
 <div class="td-content">
 	<h1>{{ .Title }}</h1>
   {{ with .Params.description }}<div class="lead">{{ . | markdownify }}</div>{{ end }}

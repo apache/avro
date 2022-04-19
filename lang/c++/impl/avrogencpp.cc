@@ -810,21 +810,26 @@ int main(int argc, char **argv) {
     const string NO_UNION_TYPEDEF("no-union-typedef");
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")("include-prefix,p", po::value<string>()->default_value("avro"),
+    desc.add_options()("help,h", "produce help message")("version,V", "produce version information")("include-prefix,p", po::value<string>()->default_value("avro"),
                                                          "prefix for include headers, - for none, default: avro")("no-union-typedef,U", "do not generate typedefs for unions in records")("namespace,n", po::value<string>(), "set namespace for generated code")("input,i", po::value<string>(), "input file")("output,o", po::value<string>(), "output file to generate");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
-        std::cout << desc << std::endl;
-        return 1;
-    }
-
     if (vm.count("help")) {
         std::cout << desc << std::endl;
         return 0;
+    }
+
+    if (vm.count("version")) {
+        std::cout << AVRO_VERSION << std::endl;
+        return 0;
+    }
+
+    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
+        std::cout << desc << std::endl;
+        return 1;
     }
 
     string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();

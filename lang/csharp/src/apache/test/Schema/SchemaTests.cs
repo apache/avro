@@ -86,6 +86,7 @@ namespace Avro.Test
         // Array
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}")]
         [TestCase("{\"type\": \"array\",\"items\": {\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}}")]
+        [TestCase("{\"type\": \"array\"}", typeof(AvroTypeException), Description = "No Items")]
 
         // Map
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}")]

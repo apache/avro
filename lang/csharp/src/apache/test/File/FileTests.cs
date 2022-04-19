@@ -34,32 +34,80 @@ namespace Avro.Test.File
         const string specificSchema  = "{\"type\":\"record\",\"name\":\"Foo\",\"namespace\":\"Avro.Test.File\",\"fields\":"
                                      + "[{\"name\":\"name\",\"type\":[\"null\",\"string\"]},{\"name\":\"age\",\"type\":\"int\"}]}";
 
+        private static IEnumerable<TestCaseData> TestSpecificDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(specificSchema, new object[]
+                    {
+                        new object[] { "John", 23 }
+                    }, codecType).SetName("{m}(Case0,{2})");
+
+                yield return new TestCaseData(specificSchema, new object[]
+                    {
+                        new object[] { "John", 23 },
+                        new object[] { "Jane", 99 },
+                        new object[] { "Jeff", 88 }
+                    }, codecType).SetName("{m}(Case1,{2})");
+
+                yield return new TestCaseData(specificSchema, new object[]
+                    {
+                        new object[] { "John", 23 },
+                        new object[] { "Jane", 99 },
+                        new object[] { "Jeff", 88 },
+                        new object[] { "James", 13 },
+                        new object[] { "June", 109 },
+                        new object[] { "Lloyd", 18 },
+                        new object[] {"Jenny", 3},
+                        new object[] { "Bob", 9 },
+                        new object[] { null, 48 }
+                    }, codecType).SetName("{m}(Case2,{2})");
+
+                yield return new TestCaseData(specificSchema, new object[]
+                    {
+                        new object[] { "John", 23},
+                        new object[] { "Jane", 99 },
+                        new object[] { "Jeff", 88 },
+                        new object[] { "James", 13 },
+                        new object[] { "June", 109 },
+                        new object[] { "Lloyd", 18 },
+                        new object[] { "Jamie", 53 },
+                        new object[] { "Fanessa", 101 },
+                        new object[] { "Kan", 18 },
+                        new object[] { "Janey", 33 },
+                        new object[] { "Deva", 102 },
+                        new object[] { "Gavin", 28 },
+                        new object[] { "Lochy", 113 },
+                        new object[] { "Nickie", 10 },
+                        new object[] { "Liddia", 38 },
+                        new object[] { "Fred", 3 },
+                        new object[] { "April", 17 },
+                        new object[] { "Novac", 48 },
+                        new object[] { "Idan", 33 },
+                        new object[] { "Jolyon", 76 },
+                        new object[] { "Ant", 68 },
+                        new object[] { "Ernie", 43 },
+                        new object[] { "Joel", 99 },
+                        new object[] { "Dan", 78 },
+                        new object[] { "Dave", 103 },
+                        new object[] { "Hillary", 79 },
+                        new object[] { "Grant", 88 },
+                        new object[] { "JJ", 14 },
+                        new object[] { "Bill", 90 },
+                        new object[] { "Larry", 4 },
+                        new object[] { "Jenny", 3 },
+                        new object[] { "Bob", 9 },
+                        new object[] { null, 48 }
+                    }, codecType).SetName("{m}(Case3,{2})");
+            }
+        }
+
         /// <summary>
         /// Reading & writing of specific (custom) record objects
         /// </summary>
-        /// <param name="schemaStr"></param>
         /// <param name="recs"></param>
         /// <param name="codecType"></param>
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Deflate, TestName = "TestSpecificData0")]
-        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Deflate, TestName = "TestSpecificData1")]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Deflate, TestName = "TestSpecificData2")]
-        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
-                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Deflate, TestName = "TestSpecificData3")]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Null, TestName = "TestSpecificData4")]
-        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Null, TestName = "TestSpecificData5")]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Null, TestName = "TestSpecificData6")]
-        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
-                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
-                                                 new object[] {"Jamie", 53}, new object[] { "Fanessa", 101 }, new object[] { "Kan", 18 },
-                                                 new object[] {"Janey", 33}, new object[] { "Deva", 102 }, new object[] { "Gavin", 28 },
-                                                 new object[] {"Lochy", 113}, new object[] { "Nickie", 10 }, new object[] { "Liddia", 38 },
-                                                 new object[] {"Fred", 3}, new object[] { "April", 17 }, new object[] { "Novac", 48 },
-                                                 new object[] {"Idan", 33}, new object[] { "Jolyon", 76 }, new object[] { "Ant", 68 },
-                                                 new object[] {"Ernie", 43}, new object[] { "Joel", 99 }, new object[] { "Dan", 78 },
-                                                 new object[] {"Dave", 103}, new object[] { "Hillary", 79 }, new object[] { "Grant", 88 },
-                                                 new object[] {"JJ", 14}, new object[] { "Bill", 90 }, new object[] { "Larry", 4 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Null, TestName = "TestSpecificData7")]
+        [TestCaseSource(nameof(TestSpecificDataSource))]
         public void TestSpecificData(string schemaStr, object[] recs, Codec.Type codecType)
         {
             // create and write out
@@ -95,6 +143,41 @@ namespace Avro.Test.File
             }
         }
 
+        private static IEnumerable<TestCaseData> TestAppendSpecificDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(specificSchema,
+                    new object[]
+                    {
+                        new object[] { "John", 23 }
+                    },
+                    new object[]
+                    {
+                        new object[] { "Jane", 21 }
+                    }, codecType).SetName("{m}(Case0,{3})");
+
+                yield return new TestCaseData(specificSchema,
+                    new object[]
+                    {
+                        new object[] { "John", 23 },
+                        new object[] { "Jane", 99 },
+                        new object[] { "Jeff", 88 },
+                        new object[] { "James", 13 },
+                        new object[] { "June", 109 },
+                        new object[] { "Lloyd", 18 },
+                        new object[] { "Jenny", 3 },
+                        new object[] { "Bob", 9 },
+                        new object[] { null, 48 }
+                    },
+                    new object[]
+                    {
+                        new object[] { "Hillary", 79 },
+                        new object[] { "Grant", 88 }
+                    }, codecType).SetName("{m}(Case1,{3})");
+            }
+        }
+
         /// <summary>
         /// Test appending of specific (custom) record objects
         /// </summary>
@@ -102,18 +185,7 @@ namespace Avro.Test.File
         /// <param name="recs">initial records</param>
         /// <param name="appendRecs">append records</param>
         /// <param name="codecType">initial compression codec type</param>
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Deflate, TestName = "TestAppendSpecificData0")]
-        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Null, TestName = "TestAppendSpecificData1")]
-        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
-                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
-                                  new object[] { new object[] { "Hillary", 79 },
-                                                 new object[] { "Grant", 88 } }, Codec.Type.Deflate, TestName = "TestAppendSpecificData2")]
-        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
-                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
-                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
-                                  new object[] { new object[] { "Hillary", 79 },
-                                                 new object[] { "Grant", 88 } }, Codec.Type.Null, TestName = "TestAppendSpecificData3")]
+        [TestCaseSource(nameof(TestAppendSpecificDataSource))]
         public void TestAppendSpecificData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
         {
             IList<Foo> records = MakeRecords(recs);
@@ -161,84 +233,50 @@ namespace Avro.Test.File
             }
         }
 
+        private static IEnumerable<TestCaseData> TestGenericDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"null\"}]}", new object[] { "f1", null }, codecType)
+                    .SetName("{m}(null,{2})");
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}", new object[] { "f1", true }, codecType)
+                    .SetName("{m}(true,{2})");
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}", new object[] { "f1", false }, codecType)
+                    .SetName("{m}(false,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}", new object[] { "f1", 101 }, codecType)
+                    .SetName("{m}(int,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"long\"}]}", new object[] { "f1", 101L }, codecType)
+                    .SetName("{m}(long,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"float\"}]}", new object[] { "f1", 101.78f }, codecType)
+                    .SetName("{m}(float,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"double\"}]}", new object[] { "f1", 101.78 }, codecType)
+                    .SetName("{m}(double,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}", new object[] { "f1", "A" }, codecType)
+                    .SetName("{m}(string,{2})"); ;
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"bytes\"}]}", new object[] { "f1", new byte[] { 0, 1 } }, codecType)
+                    .SetName("{m}(bytes,{2})"); ;
+            }
+        }
+
         /// <summary>
         /// Reading & writing of generic record objects
         /// </summary>
         /// <param name="schemaStr"></param>
         /// <param name="value"></param>
         /// <param name="codecType"></param>
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"null\"}]}",
-            new object[] { "f1", null }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
-            new object[] { "f1", true }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
-            new object[] { "f1", false }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
-            new object[] { "f1", 101 }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"long\"}]}",
-            new object[] { "f1", 101L }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"float\"}]}",
-            new object[] { "f1", 101.78f }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"double\"}]}",
-            new object[] { "f1", 101.78 }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}",
-            new object[] { "f1", "A" }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"bytes\"}]}",
-            new object[] { "f1", new byte[] { 0, 1 } }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"enum\", \"name\": \"e\", \"symbols\":[\"s1\", \"s2\"]}}]}",
-            new object[] { "f1", "s2" }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
-            new object[] { "f1", new object[] { 0, 1, 101 } }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
-            new object[] { "f1", new int[] { 0, 1, 101 } }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
-            new object[] { "f1", 100 }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
-            new object[] { "f1", 100L }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"fixed\", \"name\": \"f\", \"size\": 2}}]}",
-            new object[] { "f1", new byte[] { 1, 2 } }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"null\"}]}",
-            new object[] { "f1", null }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
-            new object[] { "f1", true }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
-            new object[] { "f1", false }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
-            new object[] { "f1", 101 }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"long\"}]}",
-            new object[] { "f1", 101L }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"float\"}]}",
-            new object[] { "f1", 101.78f }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"double\"}]}",
-            new object[] { "f1", 101.78 }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}",
-            new object[] { "f1", "A" }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"bytes\"}]}",
-            new object[] { "f1", new byte[] { 0, 1 } }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"enum\", \"name\": \"e\", \"symbols\":[\"s1\", \"s2\"]}}]}",
-            new object[] { "f1", "s2" }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
-            new object[] { "f1", new object[] { 0, 1, 101 } }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
-            new object[] { "f1", new int[] { 0, 1, 101 } }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
-            new object[] { "f1", 100 }, Codec.Type.Null)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
-            new object[] { "f1", 100L }, Codec.Type.Null)]
+        [TestCaseSource(nameof(TestGenericDataSource))]
         public void TestGenericData(string schemaStr, object[] value, Codec.Type codecType)
         {
-            foreach(var rwFactory in GenericOptions<GenericRecord>())
+            foreach (var rwFactory in GenericOptions<GenericRecord>())
             {
                 // Create and write out
                 MemoryStream dataFileOutputStream = new MemoryStream();
@@ -260,7 +298,23 @@ namespace Avro.Test.File
                 }
 
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
-                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                               string.Format(@"Generic object: {0} did not serialize/deserialize correctly", readFoos));
+            }
+        }
+
+        private static IEnumerable<TestCaseData> TestAppendGenericDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}", new object[] { "f1", true }, new object[] { "f1", false }, codecType)
+                    .SetName("{m}(bool,{3})");
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}", new object[] { "f1", 1 }, new object[] { "f1", 2 }, codecType)
+                    .SetName("{m}(int,{3})");
+                yield return new TestCaseData(
+                    "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}", new object[] { "f1", "A" }, new object[] { "f1", "B" }, codecType)
+                    .SetName("{m}(string,{3})");
             }
         }
 
@@ -270,11 +324,8 @@ namespace Avro.Test.File
         /// <param name="schemaStr">schema</param>
         /// <param name="recs">initial records</param>
         /// <param name="appendRecs">append records</param>
-        /// <param name="codecType">innitial compression codec type</param>
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
-            new object[] { "f1", true }, new object[] { "f1", false }, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
-            new object[] { "f1", 1 }, new object[] { "f1", 2 }, Codec.Type.Null)]
+        /// <param name="codecType">initial compression codec type</param>
+        [TestCaseSource(nameof(TestAppendGenericDataSource))]
         public void TestAppendGenericData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
         {
             foreach (var rwFactory in GenericOptions<GenericRecord>())
@@ -311,7 +362,7 @@ namespace Avro.Test.File
 
                 Assert.NotNull(readFoos);
                 Assert.AreEqual((recs.Length + appendRecs.Length) / 2, readFoos.Count,
-                    $"Generic object: {readFoos} did not serialise/deserialise correctly");
+                    $"Generic object: {readFoos} did not serialize/deserialize correctly");
             }
         }
 
@@ -346,9 +397,7 @@ namespace Avro.Test.File
         /// DeflateStream as it is a standard non-seekable Stream that has the same behavior as the
         /// NetworkStream, which we should handle.
         /// </summary>
-        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
-            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
-            new object[] { "f1", 100L }, Codec.Type.Null)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}", new object[] { "f1", 100L }, Codec.Type.Null)]
         public void TestNonSeekableStream(string schemaStr, object[] value, Codec.Type codecType)
         {
             foreach (var rwFactory in GenericOptions<GenericRecord>())
@@ -383,7 +432,35 @@ namespace Avro.Test.File
                 }
 
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
-                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                               string.Format(@"Generic object: {0} did not serialize/deserialize correctly", readFoos));
+            }
+        }
+
+        private static IEnumerable<TestCaseData> TestPrimitiveDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData("[\"boolean\", \"null\"]", null, codecType);
+                yield return new TestCaseData("[\"boolean\", \"null\"]", true, codecType);
+                yield return new TestCaseData("[\"int\", \"long\"]", 100, codecType);
+                yield return new TestCaseData("[\"int\", \"long\"]", 100L, codecType);
+                yield return new TestCaseData("[\"float\", \"double\"]", 100.75, codecType);
+                yield return new TestCaseData("[\"float\", \"double\"]", 23.67f, codecType);
+                yield return new TestCaseData("{\"type\": \"boolean\"}", true, codecType);
+                yield return new TestCaseData("{\"type\": \"boolean\"}", false, codecType);
+                yield return new TestCaseData("{\"type\": \"string\"}", "John", codecType);
+                yield return new TestCaseData("{\"type\": [\"null\",\"string\"]}", null, codecType);
+                yield return new TestCaseData("{\"type\": \"int\"}", 1, codecType);
+                yield return new TestCaseData("{\"type\": \"long\"}", 12312313123L, codecType);
+                yield return new TestCaseData("{\"type\": \"float\"}", 0.0f, codecType);
+                yield return new TestCaseData("{\"type\": \"double\"}", 0.0, codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", new float[] { 23.67f, 22.78f }, codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", 100.89, codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", "a", codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", new string[] { "a", "b" }, codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new byte[] { 1, 2, 3 }, codecType);
+                yield return new TestCaseData("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new object[] { new byte[] { 1, 2 }, new byte[] { 3, 4 } }, codecType);
+                yield return new TestCaseData("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]", "h1", codecType);
             }
         }
 
@@ -393,51 +470,7 @@ namespace Avro.Test.File
         /// <param name="schemaStr"></param>
         /// <param name="value"></param>
         /// <param name="codecType"></param>
-        [TestCase("{\"type\": \"boolean\"}", true, Codec.Type.Deflate)]
-        [TestCase("{\"type\": \"boolean\"}", false, Codec.Type.Deflate)]
-        [TestCase("{\"type\": \"boolean\"}", true, Codec.Type.Null)]
-        [TestCase("{\"type\": \"boolean\"}", false, Codec.Type.Null)]
-        [TestCase("[\"boolean\", \"null\"]", null, Codec.Type.Deflate)]
-        [TestCase("[\"boolean\", \"null\"]", true, Codec.Type.Deflate)]
-        [TestCase("[\"int\", \"long\"]", 100, Codec.Type.Deflate)]
-        [TestCase("[\"int\", \"long\"]", 100L, Codec.Type.Deflate)]
-        [TestCase("[\"float\", \"double\"]", 100.75, Codec.Type.Deflate)]
-        [TestCase("[\"float\", \"double\"]", 23.67f, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", new float[] { 23.67f, 22.78f }, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", 100.89, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", "a", Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", new string[] { "a", "b" }, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new byte[] { 1, 2, 3 }, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new object[] { new byte[] { 1, 2 }, new byte[] { 3, 4 } }, Codec.Type.Deflate)]
-        [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]", "h1", Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"string\"}", "John", Codec.Type.Deflate)]
-        [TestCase("{\"type\":[\"null\",\"string\"]}", null, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"int\"}", 1, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"boolean\"}", false, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"long\"}", 12312313123L, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"float\"}", 0.0f, Codec.Type.Deflate)]
-        [TestCase("{\"type\":\"double\"}", 0.0, Codec.Type.Deflate)]
-        [TestCase("[\"boolean\", \"null\"]", null, Codec.Type.Null)]
-        [TestCase("[\"boolean\", \"null\"]", true, Codec.Type.Null)]
-        [TestCase("[\"int\", \"long\"]", 100, Codec.Type.Null)]
-        [TestCase("[\"int\", \"long\"]", 100L, Codec.Type.Null)]
-        [TestCase("[\"float\", \"double\"]", 100.75, Codec.Type.Null)]
-        [TestCase("[\"float\", \"double\"]", 23.67f, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", new float[] { 23.67f, 22.78f }, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", 100.89, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", "a", Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", new string[] { "a", "b" }, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new byte[] { 1, 2, 3 }, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new object[] { new byte[] { 1, 2 }, new byte[] { 3, 4 } }, Codec.Type.Null)]
-        [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]", "h1", Codec.Type.Null)]
-        [TestCase("{\"type\":\"string\"}", "John", Codec.Type.Null)]
-        [TestCase("{\"type\":[\"null\",\"string\"]}", null, Codec.Type.Null)]
-        [TestCase("{\"type\":\"int\"}", 1, Codec.Type.Null)]
-        [TestCase("{\"type\":\"boolean\"}", false, Codec.Type.Null)]
-        [TestCase("{\"type\":\"long\"}", 12312313123L, Codec.Type.Null)]
-        [TestCase("{\"type\":\"float\"}", 0.0f, Codec.Type.Null)]
-        [TestCase("{\"type\":\"double\"}", 0.0, Codec.Type.Null)]
-        [TestCase("{\"type\":\"string\"}", "test", Codec.Type.Null)]
+        [TestCaseSource(nameof(TestPrimitiveDataSource))]
         public void TestPrimitiveData(string schemaStr, object value, Codec.Type codecType)
         {
             foreach(var rwFactory in GenericOptions<object>())
@@ -455,32 +488,28 @@ namespace Avro.Test.File
             }
         }
 
+        private static IEnumerable<TestCaseData> TestMetaDataSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                foreach (bool useTypeGetter in new bool[] { true, false })
+                {
+                    yield return new TestCaseData("bytesTest", new byte[] { 1, 2, 3 }, codecType, useTypeGetter);
+                    yield return new TestCaseData("stringTest", "testVal", codecType, useTypeGetter);
+                    yield return new TestCaseData("longTest", 12312313123L, codecType, useTypeGetter);
+                    yield return new TestCaseData("bytesTest", new byte[] { 1 }, codecType, useTypeGetter);
+                    yield return new TestCaseData("longTest", -1211212L, codecType, useTypeGetter);
+                }
+            }
+        }
+
         /// <summary>
         /// Reading & writing of header meta data
         /// </summary>
-        /// <param name="schemaStr"></param>
         /// <param name="value"></param>
         /// <param name="codecType"></param>
-        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Null, true)]
-        [TestCase("stringTest", "testVal", Codec.Type.Null, true)]
-        [TestCase("longTest", 12312313123L, Codec.Type.Null, true)]
-        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Null, true)]
-        [TestCase("longTest", -1211212L, Codec.Type.Null, true)]
-        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Deflate, true)]
-        [TestCase("stringTest", "testVal", Codec.Type.Deflate, true)]
-        [TestCase("longTest", 12312313123L, Codec.Type.Deflate, true)]
-        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Deflate, true)]
-        [TestCase("longTest", -21211212L, Codec.Type.Deflate, true)]
-        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Null, false)]
-        [TestCase("stringTest", "testVal", Codec.Type.Null, false)]
-        [TestCase("longTest", 12312313123L, Codec.Type.Null, false)]
-        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Null, false)]
-        [TestCase("longTest", -1211212L, Codec.Type.Null, false)]
-        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Deflate, false)]
-        [TestCase("stringTest", "testVal", Codec.Type.Deflate, false)]
-        [TestCase("longTest", 12312313123L, Codec.Type.Deflate, false)]
-        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Deflate, false)]
-        [TestCase("longTest", -21211212L, Codec.Type.Deflate, false)]
+        /// <param name="useTypeGetter"></param>
+        [TestCaseSource(nameof(TestMetaDataSource))]
         public void TestMetaData(string key, object value, Codec.Type codecType, bool useTypeGetter)
         {
             // create and write out
@@ -507,6 +536,20 @@ namespace Avro.Test.File
             }
         }
 
+        private static IEnumerable<TestCaseData> TestPartialReadSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(specificSchema, codecType, 0, 330).SetName("{m}({1},{2},{3})");
+                yield return new TestCaseData(specificSchema, codecType, 1, 330).SetName("{m}({1},{2},{3})");
+                yield return new TestCaseData(specificSchema, codecType, 135, 330).SetName("{m}({1},{2},{3})");
+                yield return new TestCaseData(specificSchema, codecType, 194, 264).SetName("{m}({1},{2},{3})");
+            }
+
+            // This is only for Null codec
+            yield return new TestCaseData(specificSchema, Codec.Type.Null, 888, 165).SetName("{m}({1},{2},{3})");
+        }
+
         /// <summary>
         /// Partial reading of file / stream from
         /// position in stream
@@ -514,12 +557,7 @@ namespace Avro.Test.File
         /// <param name="schemaStr"></param>
         /// <param name="value"></param>
         /// <param name="codecType"></param>
-        [TestCase(specificSchema, Codec.Type.Null, 1, 330)] // 330
-        [TestCase(specificSchema, Codec.Type.Null, 135, 330)] // 330
-        [TestCase(specificSchema, Codec.Type.Null, 194, 264)] // 264
-        [TestCase(specificSchema, Codec.Type.Null, 235, 264)] // 264
-        [TestCase(specificSchema, Codec.Type.Null, 888, 165)] // 165
-        [TestCase(specificSchema, Codec.Type.Null, 0, 330)] // 330
+        [TestCaseSource(nameof(TestPartialReadSource))]
         public void TestPartialRead(string schemaStr, Codec.Type codecType, int position, int expectedRecords)
         {
             // create and write out
@@ -569,11 +607,9 @@ namespace Avro.Test.File
         /// Tests reading from sync boundaries.
         /// </summary>
         /// <param name="schemaStr"></param>
-        /// <param name="value"></param>
         /// <param name="codecType"></param>
-        [TestCase(specificSchema, Codec.Type.Null)]
-        [TestCase(specificSchema, Codec.Type.Deflate)]
-        public void TestPartialReadAll(string schemaStr, Codec.Type codecType)
+        [Test]
+        public void TestPartialReadAll([Values(specificSchema)] string schemaStr, [Values] Codec.Type codecType)
         {
             // create and write out
             IList<Foo> records = MakeRecords(GetTestFooObject());
@@ -636,14 +672,11 @@ namespace Avro.Test.File
         /// Test leaveOpen flag
         /// </summary>
         /// <param name="schemaStr"></param>
-        /// <param name="value"></param>
         /// <param name="codecType"></param>
-        /// <param name="leaveOpen"></param>
-        [TestCase(specificSchema, Codec.Type.Null, true, false)]
-        [TestCase(specificSchema, Codec.Type.Null, true, true)]
-        [TestCase(specificSchema, Codec.Type.Null, false, false)]
-        [TestCase(specificSchema, Codec.Type.Null, false, true)]
-        public void TestLeaveOpen(string schemaStr, Codec.Type codecType, bool leaveWriteOpen, bool leaveReadOpen)
+        /// <param name="leaveWriteOpen"></param>
+        /// <param name="leaveReadOpen"></param>
+        [Test]
+        public void TestLeaveOpen([Values(specificSchema)] string schemaStr, [Values] Codec.Type codecType, [Values] bool leaveWriteOpen, [Values] bool leaveReadOpen)
         {
             // create and write out
             IList<Foo> records = MakeRecords(GetTestFooObject());
@@ -723,19 +756,23 @@ namespace Avro.Test.File
             Assert.AreEqual( expectedRecords, readRecords, "didn't read expected records from position " + position );
         }
 
+        private static IEnumerable<TestCaseData> TestSyncAndSeekPositionsSource()
+        {
+            foreach (Codec.Type codecType in Enum.GetValues(typeof(Codec.Type)))
+            {
+                yield return new TestCaseData(specificSchema, codecType, 2, 0, 1).SetName("{m}({1},{2},{3},{4})");
+                yield return new TestCaseData(specificSchema, codecType, 10, 1, 4).SetName("{m}({1},{2},{3},{4})");
+                yield return new TestCaseData(specificSchema, codecType, 200, 111, 15).SetName("{m}({1},{2},{3},{4})");
+                yield return new TestCaseData(specificSchema, codecType, 1000, 588, 998).SetName("{m}({1},{2},{3},{4})");
+            }
+        }
+
         /// <summary>
         /// Reading all sync positions and
         /// verifying them with subsequent seek
         /// positions
         /// </summary>
-        [TestCase(specificSchema, Codec.Type.Null, 2, 0, 1)]
-        [TestCase(specificSchema, Codec.Type.Null, 10, 1, 4)]
-        [TestCase(specificSchema, Codec.Type.Null, 200, 111, 15)]
-        [TestCase(specificSchema, Codec.Type.Null, 1000, 588, 998)]
-        [TestCase(specificSchema, Codec.Type.Deflate, 2, 0, 1)]
-        [TestCase(specificSchema, Codec.Type.Deflate, 10, 1, 4)]
-        [TestCase(specificSchema, Codec.Type.Deflate, 200, 111, 15)]
-        [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
+        [TestCaseSource(nameof(TestSyncAndSeekPositionsSource))]
         public void TestSyncAndSeekPositions(string schemaStr, Codec.Type codecType, int iterations, int firstSyncPosition, int secondSyncPosition)
         {
             // create and write out
@@ -775,7 +812,7 @@ namespace Avro.Test.File
                     }
                 }
 
-                // verify syncs wth seeks
+                // verify syncs with seeks
                 reader.Sync(0); // first sync
                 Assert.AreEqual(reader.PreviousSync(), syncs[0],
                               string.Format("Error syncing reader to position: {0}", syncs[0]));
@@ -820,6 +857,44 @@ namespace Avro.Test.File
         }
 
         /// <summary>
+        /// Reading & writing many specific record objects
+        /// </summary>
+        /// <param name="codecType"></param>
+        /// <param name="numOfRecords"></param>
+        [Test]
+        public void TestLargeSpecificData([Values] Codec.Type codecType, [Values(0, 1000, 100000)] int numOfRecords)
+        {
+            foreach (var rwFactory in SpecificOptions<Foo>())
+            {
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                Schema schema = Schema.Parse(specificSchema);
+                using (IFileWriter<Foo> dataFileWriter = rwFactory.CreateWriter(dataFileOutputStream, schema, Codec.CreateCodec(codecType)))
+                {
+                    for (int index = 0; index < numOfRecords; index++)
+                    {
+                        dataFileWriter.Append(new Foo() { name = $"Name-{index}", age = index });
+                    }
+                }
+
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+
+                // Read back and verify
+                using (IFileReader<Foo> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    int index = 0;
+                    foreach (Foo record in reader.NextEntries)
+                    {
+                        Assert.AreEqual($"Name-{index}", record.name);
+                        Assert.AreEqual(index, record.age);
+                        index++;
+                    }
+
+                    Assert.AreEqual(numOfRecords, index);
+                }
+            }
+        }
+
+        /// <summary>
         /// Reading and writing using optional codecs
         /// </summary>
         /// <param name="schemaStr"></param>
@@ -827,6 +902,10 @@ namespace Avro.Test.File
         [TestCase("zstd", true)]
         [TestCase("deflate", false)]
         [TestCase("null", false)]
+        [TestCase("snappy", false)]
+        [TestCase("bzip2", false)]
+        [TestCase("xz", false)]
+        [TestCase("zstandard", false)]
         public void TestOptionalCodecs(string codecToUse, bool expectResolverProvidedCodec)
         {
             var resolverProvidedCodec = false;
@@ -886,14 +965,17 @@ namespace Avro.Test.File
         [TestCase("deflate")]
         [TestCase("null")]
         [TestCase(null)] // If codec is absent, it is assumed to be "null"
+        [TestCase("snappy")]
+        [TestCase("bzip2")]
+        [TestCase("xz")]
+        [TestCase("zstandard")]
         public void KnownCodecFromString(string codec)
         {
             Assert.NotNull(Codec.CreateCodecFromString(codec));
         }
 
-        [TestCase(Codec.Type.Deflate)]
-        [TestCase(Codec.Type.Null)]
-        public void KnownCodecFromType(Codec.Type codec)
+        [Test]
+        public void KnownCodecFromType([Values] Codec.Type codec)
         {
             Assert.NotNull(Codec.CreateCodec(codec));
         }

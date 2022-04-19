@@ -20,7 +20,7 @@
 """Contains the Name classes."""
 from typing import TYPE_CHECKING, Dict, Optional
 
-from avro.constants import VALID_TYPES
+from avro.constants import PRIMITIVE_TYPES
 
 if TYPE_CHECKING:
     from avro.schema import NamedSchema
@@ -154,7 +154,7 @@ class Names:
         """
         to_add = Name(name_attr, space_attr, self.default_namespace)
 
-        if to_add.fullname in VALID_TYPES:
+        if to_add.fullname in PRIMITIVE_TYPES:
             raise avro.errors.SchemaParseException(f"{to_add.fullname} is a reserved type name.")
         if to_add.fullname in self.names:
             raise avro.errors.SchemaParseException(f'The name "{to_add.fullname}" is already in use.')
