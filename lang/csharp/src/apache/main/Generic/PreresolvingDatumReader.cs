@@ -319,15 +319,14 @@ namespace Avro.Generic
 
             for (int i = 0; i < writerSchema.Count; i++)
             {
-                var writerBranch = writerSchema[i];
+                Schema writerBranch = writerSchema[i];
 
-                if (readerSchema is UnionSchema)
+                if (readerSchema is UnionSchema unionReader)
                 {
-                    var unionReader = (UnionSchema) readerSchema;
-                    var readerBranch = unionReader.MatchingBranch(writerBranch);
+                    int readerBranch = unionReader.MatchingBranch(writerBranch);
                     if (readerBranch == -1)
                     {
-                        lookup[i] = (r, d) => { throw new AvroException( "No matching schema for " + writerBranch + " in " + unionReader ); };
+                        lookup[i] = (r, d) => { throw new AvroException("No matching schema for " + writerBranch + " in " + unionReader); };
                     }
                     else
                     {
@@ -338,7 +337,7 @@ namespace Avro.Generic
                 {
                     if (!readerSchema.CanRead(writerBranch))
                     {
-                        lookup[i] = (r, d) => { throw new AvroException( "Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema ); };
+                        lookup[i] = (r, d) => { throw new AvroException("Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema); };
                     }
                     else
                     {

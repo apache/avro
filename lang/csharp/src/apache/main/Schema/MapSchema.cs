@@ -36,10 +36,11 @@ namespace Avro
         /// Creates a new <see cref="MapSchema"/> from the given schema.
         /// </summary>
         /// <param name="type">Schema to create the map schema from.</param>
+        /// <param name="customProperties">Dictionary that provides access to custom properties</param>
         /// <returns>A new <see cref="MapSchema"/>.</returns>
-        public static MapSchema CreateMap(Schema type)
+        public static MapSchema CreateMap(Schema type, PropertyMap customProperties = null)
         {
-            return new MapSchema(type,null);
+            return new MapSchema(type, customProperties);
         }
 
         /// <summary>
@@ -67,9 +68,10 @@ namespace Avro
         /// <summary>
         /// Constructor for map schema class
         /// </summary>
-        /// <param name="valueSchema">schema for map values type</param>
-        /// <param name="props">dictionary that provides access to custom properties</param>
-        private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
+        /// <param name="valueSchema">Schema for map values type</param>
+        /// <param name="cutsomProperties">Dictionary that provides access to custom properties</param>
+        private MapSchema(Schema valueSchema, PropertyMap cutsomProperties)
+            : base(Type.Map, cutsomProperties)
         {
             ValueSchema = valueSchema ?? throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
         }

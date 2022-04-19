@@ -262,7 +262,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::Double(d) => visitor.visit_f64(d),
                 Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
                 Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
-                Value::String(ref s) => visitor.visit_str(s),
+                Value::String(ref s) => visitor.visit_borrowed_str(s),
                 Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
                 _ => Err(de::Error::custom(format!(
                     "unsupported union: {:?}",
@@ -271,7 +271,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             },
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
             Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
-            Value::String(ref s) => visitor.visit_str(s),
+            Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
             value => Err(de::Error::custom(format!(
                 "incorrect value of type: {:?}",
@@ -296,10 +296,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::String(ref s) => visitor.visit_str(s),
+            Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => ::std::str::from_utf8(bytes)
                 .map_err(|e| de::Error::custom(e.to_string()))
-                .and_then(|s| visitor.visit_str(s)),
+                .and_then(|s| visitor.visit_borrowed_str(s)),
             Value::Uuid(ref u) => visitor.visit_str(&u.to_string()),
             _ => Err(de::Error::custom("not a string|bytes|fixed")),
         }
@@ -310,14 +310,14 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::String(ref s) => visitor.visit_string(s.to_owned()),
+            Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 String::from_utf8(bytes.to_owned())
                     .map_err(|e| de::Error::custom(e.to_string()))
                     .and_then(|s| visitor.visit_string(s))
             }
             Value::Union(_i, ref x) => match **x {
-                Value::String(ref s) => visitor.visit_string(s.to_owned()),
+                Value::String(ref s) => visitor.visit_borrowed_str(s),
                 _ => Err(de::Error::custom("not a string|bytes|fixed")),
             },
             _ => Err(de::Error::custom("not a string|bytes|fixed")),
