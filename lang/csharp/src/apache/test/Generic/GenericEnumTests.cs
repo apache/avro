@@ -55,20 +55,11 @@ namespace Avro.test.Generic
         }
 
         [Test]
-        public void TestEqualsObjectNotEqual()
-        {
-            GenericEnum genericEnum = GetBaseGenericEnum();
-            GenericEnum genericEnum2 = new GenericEnum(Schema.Parse(baseSchema) as EnumSchema, "B");
-
-            Assert.IsFalse(genericEnum.Equals((object)genericEnum2));
-        }
-
-        [Test]
         public void TestEqualsObjectNullObject()
         {
             GenericEnum genericEnum = GetBaseGenericEnum();
 
-            Assert.IsFalse(genericEnum.Equals((object)null));
+            Assert.IsFalse(genericEnum.Equals(null));
         }
 
         private GenericEnum GetBaseGenericEnum()
