@@ -51,6 +51,10 @@ pub enum Error {
     #[error("Value does not match schema")]
     Validation,
 
+    /// Describes errors happened while validating Avro data.
+    #[error("Value does not match schema: Reason: {0}")]
+    ValidationWithReason(String),
+
     #[error("Unable to allocate {desired} bytes (maximum allowed: {maximum})")]
     MemoryAllocation { desired: usize, maximum: usize },
 
@@ -398,6 +402,9 @@ pub enum Error {
 
     #[error("Signed decimal bytes length {0} not equal to fixed schema size {1}.")]
     EncodeDecimalAsFixedError(usize, usize),
+
+    #[error("There is no entry for {0} in the lookup table: {1}.")]
+    NoEntryInLookupTable(String, String),
 
     #[error("Can only encode value type {value_kind:?} as one of {supported_schema:?}")]
     EncodeValueAsSchemaError {
