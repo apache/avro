@@ -78,57 +78,6 @@ namespace Avro.Specific
             diffAssembly = entryAssembly != null && execAssembly != entryAssembly;
         }
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-#pragma warning disable CA1034 // Nested types should not be visible
-#pragma warning disable SA1600 // Elements should be documented
-        /// <summary>
-        /// Obsolete: This will be removed from the public API in a future version.
-        /// </summary>
-        [Obsolete("This will be removed from the public API in a future version.")]
-        public struct NameCtorKey : IEquatable<NameCtorKey>
-        {
-            public string name { get; private set; }
-            public Schema.Type type { get; private set; }
-            public NameCtorKey(string value1, Schema.Type value2)
-                : this()
-            {
-                name = value1;
-                type = value2;
-            }
-            public bool Equals(NameCtorKey other)
-            {
-                return Equals(other.name, name) && other.type == type;
-            }
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj))
-                    return false;
-                if (obj.GetType() != typeof(NameCtorKey))
-                    return false;
-                return Equals((NameCtorKey)obj);
-            }
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-#pragma warning disable CA1307 // Specify StringComparison
-                    return ((name != null ? name.GetHashCode() : 0) * 397) ^ type.GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
-                }
-            }
-            public static bool operator ==(NameCtorKey left, NameCtorKey right)
-            {
-                return left.Equals(right);
-            }
-            public static bool operator !=(NameCtorKey left, NameCtorKey right)
-            {
-                return !left.Equals(right);
-            }
-        }
-#pragma warning restore SA1600 // Elements should be documented
-#pragma warning restore CA1034 // Nested types should not be visible
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
         /// <summary>
         /// Find the type with the given name
         /// </summary>
