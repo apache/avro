@@ -75,7 +75,8 @@ namespace Avro.Generic
                 return true;
             }
 
-            return obj.GetType() == typeof(GenericEnum)
+            return obj != null
+                && obj.GetType() == typeof(GenericEnum)
                 && Value.Equals(((GenericEnum)obj).Value, System.StringComparison.Ordinal);
         }
 
