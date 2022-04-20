@@ -159,7 +159,6 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
         }"#,
         false,
     ),
-    // TODO: (#92) properly support recursive types and uncomment
     (
         r#"{
             "type": "record",
