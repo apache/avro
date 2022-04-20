@@ -28,7 +28,7 @@ namespace Avro.Test.AvroGen
 {
     [TestFixture]
 
-    class AvroGenTests
+    class AvroGenSchemaTests
     {
         private const string _customConversionWithLogicalTypes = @"
 {
@@ -161,8 +161,11 @@ namespace Avro.Test.AvroGen
       ""type"": [""null"", {
         ""namespace"": ""org.apache.avro.codegentest.testdata"",
         ""name"": ""FixedInUnion"",
-        ""type"": ""fixed"",
-        ""size"": 12,
+        ""type"": {
+            ""type"": ""fixed"",
+            ""size"": 12,
+            ""name"": ""FixedName"",
+        },
         ""logicalType"": ""decimal"",
         ""precision"": 28,
         ""scale"": 15
@@ -443,6 +446,16 @@ namespace Avro.Test.AvroGen
                 "org/apache/avro/codegentest/other/NestedOtherNamespaceRecord.cs"
             })]
         [TestCase(
+            _nestedLogicalTypesUnionFixedDecimal,
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NestedLogicalTypesUnionFixedDecimal"
+            },
+            new string[]
+            {
+                "org/apache/avro/codegentest/testdata/NestedLogicalTypesUnionFixedDecimal.cs"
+            })]
+        [TestCase(
             _nullableLogicalTypes,
             new string[]
             {
@@ -476,7 +489,7 @@ namespace Avro.Test.AvroGen
             })]
         public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
 
         [TestCase(
@@ -590,12 +603,11 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> typeNamesToCheck,
             IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
         [TestCase(_customConversionWithLogicalTypes, typeof(SchemaParseException))]
-        [TestCase(_nestedLogicalTypesUnionFixedDecimal, typeof(SchemaParseException))]
         public void NotSupportedSchema(string schema, Type expectedException)
         {
             // Create temp folder
@@ -670,26 +682,28 @@ namespace Avro.Test.AvroGen
             new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
         [TestCase(@"
 {
-	""type"" : ""record"",
-	""name"" : ""LogicalTypes"",
-	""namespace"" : ""schematest"",
-	""fields"" :
-		[
-			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
-			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
-			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
-			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
-			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
-			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
-			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
-			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
-			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
-			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
-			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
-            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
-		]
+  ""type"" : ""record"",
+  ""name"" : ""LogicalTypes"",
+  ""namespace"" : ""schematest"",
+  ""fields"" :
+    [
+      { ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+      { ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+      { ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+      { ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+      { ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+      { ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+      { ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+      { ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+      { ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+      { ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+      { ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+      { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} },
+      { ""name"" : ""nullibledecimalfixed"", ""type"" : [""null"", {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""ndf""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+      { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+    ]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
         [TestCase(@"
 {
   ""namespace"": ""enum.base"",
@@ -715,7 +729,7 @@ namespace Avro.Test.AvroGen
             new object[] { "enum.base.EnumInDifferentNamespace", "enum.base.other.AnEnum" })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
-            Assembly assembly = TestSchema(schema);
+            Assembly assembly = AvroGenHelper.TestSchema(schema);
 
             // Instantiate object
             Type type = assembly.GetType((string)result[0]);
