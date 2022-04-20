@@ -22,8 +22,6 @@ namespace Avro.IO
     /// Defines the interface for a class that provides low-level support for serializing Avro
     /// values.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface Encoder
     {
         /// <summary>
