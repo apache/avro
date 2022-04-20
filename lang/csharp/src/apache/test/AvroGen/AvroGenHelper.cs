@@ -246,7 +246,7 @@ namespace Avro.Test.AvroGen
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
                 // Generate from schema file
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>(), false), Is.EqualTo(0));
 
                 return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck);
             }
