@@ -1209,4 +1209,134 @@ mod test_derive {
 
         serde_assert(TestBasicEnumWithAliases2::B);
     }
+
+    #[test]
+    fn test_basic_struct_with_defaults() {
+        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq)]
+        enum MyEnum {
+            Foo,
+            Bar,
+            Baz,
+        }
+
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithDefaultValues {
+            #[avro(default = "123")]
+            a: i32,
+            #[avro(default = r#""The default value for 'b'""#)]
+            b: String,
+            #[avro(default = "true")]
+            condition: bool,
+            // no default value for 'c'
+            c: f64,
+            #[avro(default = r#"{"a": 1, "b": 2}"#)]
+            map: HashMap<String, i32>,
+
+            #[avro(default = "[1, 2, 3]")]
+            array: Vec<i32>,
+
+            #[avro(default = r#""Foo""#)]
+            myenum: MyEnum,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithDefaultValues",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":"int",
+                    "default":123
+                },
+                {
+                    "name":"b",
+                    "type":"string",
+                    "default": "The default value for 'b'"
+                },
+                {
+                    "name":"condition",
+                    "type":"boolean",
+                    "default":true
+                },
+                {
+                    "name":"c",
+                    "type":"double"
+                },
+                {
+                    "name":"map",
+                    "type":{
+                        "type":"map",
+                        "values":"int"
+                    },
+                    "default": {
+                        "a": 1,
+                        "b": 2
+                    }
+                },
+                {
+                    "name":"array",
+                    "type":{
+                        "type":"array",
+                        "items":"int"
+                    },
+                    "default": [1, 2, 3]
+                },
+                {
+                    "name":"myenum",
+                    "type":{
+                        "type":"enum",
+                        "name":"MyEnum",
+                        "symbols":["Foo", "Bar", "Baz"]
+                    },
+                    "default":"Foo"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, fields, .. } = TestBasicStructWithDefaultValues::get_schema()
+        {
+            assert_eq!("TestBasicStructWithDefaultValues", name.fullname(None));
+            use serde_json::json;
+            for field in fields {
+                match field.name.as_str() {
+                    "a" => assert_eq!(Some(json!(123_i32)), field.default),
+                    "b" => assert_eq!(
+                        Some(json!(r#"The default value for 'b'"#.to_owned())),
+                        field.default
+                    ),
+                    "condition" => assert_eq!(Some(json!(true)), field.default),
+                    "array" => assert_eq!(Some(json!([1, 2, 3])), field.default),
+                    "map" => assert_eq!(
+                        Some(json!({
+                            "a": 1,
+                            "b": 2
+                        })),
+                        field.default
+                    ),
+                    "c" => assert_eq!(None, field.default),
+                    "myenum" => assert_eq!(Some(json!("Foo")), field.default),
+                    _ => panic!("Unexpected field name"),
+                }
+            }
+        } else {
+            panic!("TestBasicStructWithDefaultValues schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicStructWithDefaultValues::get_schema());
+
+        serde_assert(TestBasicStructWithDefaultValues {
+            a: 321,
+            b: "A custom value for 'b'".to_owned(),
+            condition: false,
+            c: 987.654,
+            map: [("a".to_owned(), 1), ("b".to_owned(), 2)]
+                .iter()
+                .cloned()
+                .collect(),
+            array: vec![4, 5, 6],
+            myenum: MyEnum::Bar,
+        });
+    }
 }
