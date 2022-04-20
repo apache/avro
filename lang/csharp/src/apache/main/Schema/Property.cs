@@ -118,12 +118,13 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
-            int hash = this.Count;
+            int hash = Count;
             int index = 1;
             foreach (KeyValuePair<string, string> pair in this)
-#pragma warning disable CA1307 // Specify StringComparison
+            {
                 hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode()) * index++;
-#pragma warning restore CA1307 // Specify StringComparison
+            }
+
             return hash;
         }
     }

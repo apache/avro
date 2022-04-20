@@ -60,12 +60,10 @@ namespace Avro
         [Obsolete("Use Aliases instead. This will be removed from the public API in a future version.")]
         public readonly IList<string> aliases;
 
-#pragma warning disable CS0618 // Type or member is obsolete
         /// <summary>
         /// List of aliases for the field name.
         /// </summary>
         public IList<string> Aliases => aliases;
-#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// Position of the field within its record.
@@ -283,11 +281,9 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
-#pragma warning disable CA1307 // Specify StringComparison
-            return 17 * Name.GetHashCode() + Pos + 19 * getHashCode(Documentation) +
-#pragma warning restore CA1307 // Specify StringComparison
-                   23 * getHashCode(Ordering) + 29 * getHashCode(DefaultValue) + 31 * Schema.GetHashCode() +
-                   37 * getHashCode(Props);
+            return (17 * Name.GetHashCode()) + Pos + (19 * getHashCode(Documentation)) +
+                   (23 * getHashCode(Ordering)) + (29 * getHashCode(DefaultValue)) + (31 * Schema.GetHashCode()) +
+                   (37 * getHashCode(Props));
         }
 
         /// <summary>
