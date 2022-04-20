@@ -102,7 +102,7 @@ namespace Avro.IO
         /// <summary>
         /// Starts reading the map Avro type. This, together with ReadMapNext() is used to read the
         /// entries from Avro map. This returns the number of entries in the initial chunk. After consuming
-        /// the chunk, the client should call ReadMapNext() to get the number of entriess in the next
+        /// the chunk, the client should call ReadMapNext() to get the number of entries in the next
         /// chunk. The client should repeat the procedure until there are no more entries in the array.
         /// for (int n = decoder.ReadMapStart(); n > 0; n = decoder.ReadMapNext())
         /// {
