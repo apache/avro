@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,19 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using BenchmarkDotNet.Running;
 
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-[assembly: AssemblyTitle("Avro.codegen")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Apache")]
-[assembly: AssemblyProduct("Avro.codegen")]
-[assembly: AssemblyCopyright("Copyright © Apache 2013")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-[assembly: ComVisible(false)]
-[assembly: Guid("3C23DD33-DD4F-42B1-B71F-8F9C86929E58")]
-[assembly: AssemblyVersion("0.9.0.0")]
-[assembly: AssemblyFileVersion("0.9.0.0")]
+namespace Avro.Benchmark
+{
+    public class Program
+    {
+        // dotnet run -c Release -f net6.0
+        // dotnet run -c Release -f net6.0 --runtimes netcoreapp3.1 net5.0 net6.0
+        public static void Main(string[] args)
+        {
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+        }
+    }
+}

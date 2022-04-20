@@ -17,6 +17,7 @@
 
 use apache_avro::{
     schema::{Name, RecordField},
+    to_avro_datum, to_value,
     types::{Record, Value},
     Codec, Error, Reader, Schema, Writer,
 };
@@ -64,7 +65,7 @@ const FIXED_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    (r#"{"type": "fixed", "name": "Missing size"}"#, false),
+    (r#"{"type": "fixed", "name": "MissingSize"}"#, false),
     (r#"{"type": "fixed", "size": 314}"#, false),
 ];
 
@@ -150,18 +151,14 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    /*
-    // TODO: (#91) figure out why "type": "error" seems to be valid (search in spec) and uncomment
     (
         r#"{
             "type": "error",
             "name": "Test",
             "fields": [{"name": "f", "type": "long"}]
         }"#,
-        true
+        false,
     ),
-    */
-    /*
     // TODO: (#92) properly support recursive types and uncomment
     (
         r#"{
@@ -172,7 +169,7 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 {"name": "children", "type": {"type": "array", "items": "Node"}}
             ]
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -195,7 +192,7 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 }
             ]
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -208,9 +205,9 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 {"name": "serverHash", "type": "MD5"},
                 {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
             ]
-        }"#, true
+        }"#,
+        true,
     ),
-    */
     (
         r#"{
                 "type":"record",
@@ -262,9 +259,6 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
             }"#,
         true,
     ),
-    /*
-    // TODO: (#95) support same types but with different names in unions and uncomment (below the explanation)
-
     // Unions may not contain more than one schema with the same type, except for the named
     // types record, fixed and enum. For example, unions containing two array types or two map
     // types are not permitted, but two types with different names are permitted.
@@ -283,9 +277,8 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
                 }
             ]
         }"#,
-        true
+        true,
     ),
-    */
     (
         r#"{
                 "type": "record",
@@ -376,8 +369,7 @@ const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
 ];
 
 const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
-    /*
-    // TODO: (#93) support logical types and uncomment
+  /*
     (
         r#"{
             "type": "fixed",
@@ -387,7 +379,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "size": 10,
             "scale": 2
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -396,7 +388,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 4,
             "scale": 2
         }"#,
-        true
+        true,
     ),
     (
         r#"{
@@ -405,7 +397,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 2,
             "scale": -2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -414,7 +406,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": -2,
             "scale": 2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -423,7 +415,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "precision": 2,
             "scale": 3
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -434,7 +426,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 2,
             "size": 5
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -445,7 +437,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 3,
             "size": 2
         }"#,
-        false
+        false,
     ),
     (
         r#"{
@@ -456,9 +448,9 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "scale": 2,
             "size": -2
         }"#,
-        false
+        false,
     ),
-    */
+   */
 ];
 
 const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
@@ -574,12 +566,6 @@ lazy_static! {
         EXAMPLES.iter().copied().filter(|s| s.1).collect();
 }
 
-/*
-// TODO: (#92) properly support recursive types and uncomment
-
-This test is failing unwrapping the outer schema with ParseSchemaError("Unknown type: X"). It seems
-that recursive types are not properly supported.
-
 #[test]
 fn test_correct_recursive_extraction() {
     init();
@@ -603,21 +589,31 @@ fn test_correct_recursive_extraction() {
         ]
     }"#;
     let outer_schema = Schema::parse_str(raw_outer_schema).unwrap();
-    if let Schema::Record { fields: outer_fields, .. } = outer_schema {
-        let raw_inner_schema = outer_fields[0].schema.canonical_form();
-        let inner_schema = Schema::parse_str(raw_inner_schema.as_str()).unwrap();
-        if let Schema::Record { fields: inner_fields, .. } = inner_schema {
-            if let Schema::Record {name: recursive_type, .. } = &inner_fields[0].schema {
+    if let Schema::Record {
+        fields: outer_fields,
+        ..
+    } = outer_schema
+    {
+        let inner_schema = &outer_fields[0].schema;
+        if let Schema::Record {
+            fields: inner_fields,
+            ..
+        } = inner_schema
+        {
+            if let Schema::Record {
+                name: recursive_type,
+                ..
+            } = &inner_fields[0].schema
+            {
                 assert_eq!("X", recursive_type.name.as_str());
             }
         } else {
-            panic!("inner schema {} should have been a record", raw_inner_schema)
+            panic!("inner schema {:?} should have been a record", inner_schema)
         }
     } else {
-        panic!("outer schema {} should have been a record", raw_outer_schema)
+        panic!("outer schema {:?} should have been a record", outer_schema)
     }
 }
-*/
 
 #[test]
 fn test_parse() {
@@ -699,45 +695,28 @@ fn test_parse_list_without_cross_deps() {
 /// However, the output order is guaranteed to be the same as the input order.
 fn test_parse_list_with_cross_deps_basic() {
     init();
-    let schema_str_1 = r#"{
+    let schema_a_str = r#"{
         "name": "A",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": "float"}
         ]
     }"#;
-    let schema_str_2 = r#"{
+    let schema_b_str = r#"{
         "name": "B",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": "A"}
         ]
     }"#;
-    let schema_composite = r#"{
-        "name": "B",
-        "type": "record",
-        "fields": [
-            { "name": "field_one",
-            "type": {
-                "name": "A",
-                "type": "record",
-                "fields": [
-                    {"name": "field_one", "type": "float"}
-                    ]
-                }
-            }
-        ]
 
-    }"#;
-    let schema_strs_first = [schema_str_1, schema_str_2];
-    let schema_strs_second = [schema_str_2, schema_str_1];
+    let schema_strs_first = [schema_a_str, schema_b_str];
+    let schema_strs_second = [schema_b_str, schema_a_str];
     let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
     let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
 
-    let parsed_1 = Schema::parse_str(schema_str_1).expect("Test failed");
-    let parsed_2 = Schema::parse_str(schema_composite).expect("Test failed");
-    assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
-    assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
+    assert_eq!(schemas_first[0], schemas_second[1]);
+    assert_eq!(schemas_first[1], schemas_second[0]);
 }
 
 #[test]
@@ -769,7 +748,7 @@ fn test_parse_list_recursive_type() {
 /// Test that schema composition resolves namespaces.
 fn test_parse_list_with_cross_deps_and_namespaces() {
     init();
-    let schema_str_1 = r#"{
+    let schema_a_str = r#"{
         "name": "A",
         "type": "record",
         "namespace": "namespace",
@@ -777,38 +756,19 @@ fn test_parse_list_with_cross_deps_and_namespaces() {
             {"name": "field_one", "type": "float"}
         ]
     }"#;
-    let schema_str_2 = r#"{
+    let schema_b_str = r#"{
         "name": "B",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": "namespace.A"}
         ]
     }"#;
-    let schema_composite = r#"{
-        "name": "B",
-        "type": "record",
-        "fields": [
-            { "name": "field_one",
-            "type": {
-                "name": "A",
-                "type": "record",
-                "namespace": "namespace",
-                "fields": [
-                    {"name": "field_one", "type": "float"}
-                    ]
-                }
-            }
-        ]
-    }"#;
-    let schema_strs_first = [schema_str_1, schema_str_2];
-    let schema_strs_second = [schema_str_2, schema_str_1];
-    let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
-    let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
 
-    let parsed_1 = Schema::parse_str(schema_str_1).expect("Test failed");
-    let parsed_2 = Schema::parse_str(schema_composite).expect("Test failed");
-    assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
-    assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
+    let schemas_first = Schema::parse_list(&[schema_a_str, schema_b_str]).expect("Test failed");
+    let schemas_second = Schema::parse_list(&[schema_b_str, schema_a_str]).expect("Test failed");
+
+    assert_eq!(schemas_first[0], schemas_second[1]);
+    assert_eq!(schemas_first[1], schemas_second[0]);
 }
 
 #[test]
@@ -881,6 +841,7 @@ fn test_parse_reused_record_schema_by_fullname() {
     match schema.unwrap() {
         Schema::Record {
             ref name,
+            aliases: _,
             doc: _,
             ref fields,
             lookup: _,
@@ -901,14 +862,8 @@ fn test_parse_reused_record_schema_by_fullname() {
             assert_eq!(name, "min_temp");
 
             match schema {
-                Schema::Record {
-                    ref name,
-                    doc: _,
-                    ref fields,
-                    lookup: _,
-                } => {
+                Schema::Ref { ref name } => {
                     assert_eq!(name.fullname(None), "prefix.Temp", "Name does not match!");
-                    assert_eq!(fields.len(), 1, "The number of the fields is not correct!");
                 }
                 unexpected => unreachable!("Unexpected schema type: {:?}", unexpected),
             }
@@ -959,56 +914,29 @@ fn permutation_indices(indices: Vec<usize>) -> Vec<Vec<usize>> {
 /// definitions are passed in as a list. This should work regardless of the ordering of the list.
 fn test_parse_list_multiple_dependencies() {
     init();
-    let schema_str_1 = r#"{
+    let schema_a_str = r#"{
         "name": "A",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": ["null", "B", "C"]}
         ]
     }"#;
-    let schema_str_2 = r#"{
+    let schema_b_str = r#"{
         "name": "B",
         "type": "fixed",
         "size": 16
     }"#;
-    let schema_str_3 = r#"{
+    let schema_c_str = r#"{
         "name": "C",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": "string"}
         ]
     }"#;
-    let schema_composite = r#"{
-        "name": "A",
-        "type": "record",
-        "fields": [
-            {
-                "name": "field_one",
-                "type":  [
-                    "null",
-                    {
-                        "name": "B",
-                        "type": "fixed",
-                        "size": 16
-                    },
-                    {
-                        "name": "C",
-                        "type": "record",
-                        "fields": [
-                            {"name": "field_one", "type": "string"}
-                        ]
-                    }
-                ]
-            }
-        ]
-    }"#;
 
-    let parsed = vec![
-        Schema::parse_str(schema_str_2).expect("Test failed"),
-        Schema::parse_str(schema_str_3).expect("Test failed"),
-        Schema::parse_str(schema_composite).expect("Test failed"),
-    ];
-    let schema_strs = vec![schema_str_1, schema_str_2, schema_str_3];
+    let parsed =
+        Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str]).expect("Test failed");
+    let schema_strs = vec![schema_a_str, schema_b_str, schema_c_str];
     for schema_str_perm in permutations(&schema_strs) {
         let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
         let schemas = Schema::parse_list(&schema_str_perm).expect("Test failed");
@@ -1024,68 +952,31 @@ fn test_parse_list_multiple_dependencies() {
 /// definitions are passed in as a list. This should work regardless of the ordering of the list.
 fn test_parse_list_shared_dependency() {
     init();
-    let schema_str_1 = r#"{
+    let schema_a_str = r#"{
         "name": "A",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": {"type": "array", "items": "C"}}
         ]
     }"#;
-    let schema_str_2 = r#"{
+    let schema_b_str = r#"{
         "name": "B",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": {"type": "map", "values": "C"}}
         ]
     }"#;
-    let schema_str_3 = r#"{
+    let schema_c_str = r#"{
         "name": "C",
         "type": "record",
         "fields": [
             {"name": "field_one", "type": "string"}
         ]
     }"#;
-    let schema_composite_1 = r#"{
-        "name": "A",
-        "type": "record",
-        "fields": [
-            { "name": "field_one",
-              "type": {"type": "array",
-                       "items": {
-                            "name": "C",
-                            "type": "record",
-                            "fields": [
-                                {"name": "field_one", "type": "string"}
-                                ]
-                            }
-                      }
-            }
-        ]
-    }"#;
-    let schema_composite_2 = r#"{
-        "name": "B",
-        "type": "record",
-        "fields": [
-            { "name": "field_one",
-              "type": {"type": "map",
-                       "values": {
-                            "name": "C",
-                            "type":  "record",
-                            "fields": [
-                                {"name": "field_one", "type": "string"}
-                                ]
-                            }
-                      }
-                 }
-            ]
-    }"#;
 
-    let parsed = vec![
-        Schema::parse_str(schema_str_3).expect("Test failed"),
-        Schema::parse_str(schema_composite_1).expect("Test failed"),
-        Schema::parse_str(schema_composite_2).expect("Test failed"),
-    ];
-    let schema_strs = vec![schema_str_1, schema_str_2, schema_str_3];
+    let parsed =
+        Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str]).expect("Test failed");
+    let schema_strs = vec![schema_a_str, schema_b_str, schema_c_str];
     for schema_str_perm in permutations(&schema_strs) {
         let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
         let schemas = Schema::parse_list(&schema_str_perm).expect("Test failed");
@@ -1182,9 +1073,9 @@ fn test_fullname_name_and_namespace_specified() {
 #[test]
 fn test_fullname_fullname_and_namespace_specified() {
     init();
-    let name: Name =
-        serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.h", "aliases": null}"#)
-            .unwrap();
+    let name: Name = serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.h"}"#).unwrap();
+    assert_eq!(&name.name, "d");
+    assert_eq!(name.namespace, Some("a.b.c".to_owned()));
     let fullname = name.fullname(None);
     assert_eq!("a.b.c.d", fullname);
 }
@@ -1192,19 +1083,48 @@ fn test_fullname_fullname_and_namespace_specified() {
 #[test]
 fn test_fullname_name_and_default_namespace_specified() {
     init();
-    let name: Name =
-        serde_json::from_str(r#"{"name": "a", "namespace": null, "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("b.c.d"));
+    let name: Name = serde_json::from_str(r#"{"name": "a", "namespace": null}"#).unwrap();
+    assert_eq!(&name.name, "a");
+    assert_eq!(name.namespace, None);
+    let fullname = name.fullname(Some("b.c.d".into()));
     assert_eq!("b.c.d.a", fullname);
 }
 
 #[test]
 fn test_fullname_fullname_and_default_namespace_specified() {
     init();
-    let name: Name =
-        serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": null, "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    let name: Name = serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": null}"#).unwrap();
+    assert_eq!(&name.name, "d");
+    assert_eq!(name.namespace, Some("a.b.c".to_owned()));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("a.b.c.d", fullname);
+}
+
+#[test]
+fn test_avro_3452_parsing_name_without_namespace() {
+    init();
+    let name: Name = serde_json::from_str(r#"{"name": "a.b.c.d"}"#).unwrap();
+    assert_eq!(&name.name, "d");
+    assert_eq!(name.namespace, Some("a.b.c".to_owned()));
+    let fullname = name.fullname(None);
+    assert_eq!("a.b.c.d", fullname);
+}
+
+#[test]
+fn test_avro_3452_parsing_name_with_leading_dot_without_namespace() {
+    init();
+    let name: Name = serde_json::from_str(r#"{"name": ".a"}"#).unwrap();
+    assert_eq!(&name.name, "a");
+    assert_eq!(name.namespace, None);
+    assert_eq!("a", name.fullname(None));
+}
+
+#[test]
+fn test_avro_3452_parse_json_without_name_field() {
+    init();
+    let result: serde_json::error::Result<Name> = serde_json::from_str(r#"{"unknown": "a"}"#);
+    assert!(&result.is_err());
+    assert_eq!(result.unwrap_err().to_string(), "No `name` field");
 }
 
 #[test]
@@ -1213,7 +1133,9 @@ fn test_fullname_fullname_namespace_and_default_namespace_specified() {
     let name: Name =
         serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.a", "aliases": null}"#)
             .unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    assert_eq!(&name.name, "d");
+    assert_eq!(name.namespace, Some("a.b.c".to_owned()));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("a.b.c.d", fullname);
 }
 
@@ -1222,7 +1144,9 @@ fn test_fullname_name_namespace_and_default_namespace_specified() {
     init();
     let name: Name =
         serde_json::from_str(r#"{"name": "a", "namespace": "o.a.a", "aliases": null}"#).unwrap();
-    let fullname = name.fullname(Some("o.a.h"));
+    assert_eq!(&name.name, "a");
+    assert_eq!(name.namespace, Some("o.a.a".to_owned()));
+    let fullname = name.fullname(Some("o.a.h".into()));
     assert_eq!("o.a.a.a", fullname);
 }
 
@@ -1388,3 +1312,34 @@ fn test_decimal_valid_type_attributes() {
     assert_eq!(0, bytes_decimal.get_attribute("scale"));
 }
 */
+
+// https://github.com/flavray/avro-rs/issues/47
+#[test]
+fn avro_old_issue_47() {
+    init();
+    let schema_str = r#"
+    {
+      "type": "record",
+      "name": "my_record",
+      "fields": [
+        {"name": "a", "type": "long"},
+        {"name": "b", "type": "string"}
+      ]
+    }"#;
+    let schema = Schema::parse_str(schema_str).unwrap();
+
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Deserialize, Serialize)]
+    pub struct MyRecord {
+        b: String,
+        a: i64,
+    }
+
+    let record = MyRecord {
+        b: "hello".to_string(),
+        a: 1,
+    };
+
+    let _ = to_avro_datum(&schema, to_value(record).unwrap()).unwrap();
+}

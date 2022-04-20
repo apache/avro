@@ -24,6 +24,10 @@ on:
     - .github/workflows/spotless.yml
     - lang/java/**
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   spotless:
     runs-on: ubuntu-latest

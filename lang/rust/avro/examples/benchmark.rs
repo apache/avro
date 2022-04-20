@@ -97,7 +97,7 @@ fn benchmark(
         (seconds(total_duration_write), seconds(total_duration_read));
 
     println!(
-        "{},{},{},{},{}",
+        "{}\t\t{}\t\t{}\t\t{}\t\t{}",
         count, runs, big_or_small, total_write_secs, total_read_secs
     );
     Ok(())
@@ -140,6 +140,7 @@ fn main() -> anyhow::Result<()> {
     let big_record = big_record.into();
 
     println!();
+    println!("Count\t\tRuns\t\tBig/Small\tTotal write secs\tTotal read secs");
 
     benchmark(&small_schema, &small_record, "Small", 10_000, 1)?;
     benchmark(&big_schema, &big_record, "Big", 10_000, 1)?;

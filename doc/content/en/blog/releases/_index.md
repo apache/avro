@@ -1,7 +1,9 @@
 ---
-title: "New Releases"
+title: "Releases"
 linkTitle: "Releases"
 weight: 21
+aliases:
+- /releases.html
 ---
 
 <!--

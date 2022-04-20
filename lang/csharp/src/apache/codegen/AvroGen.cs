@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Reflection;
 
 namespace Avro
 {
-    class AvroGen
+    public class AvroGenTool
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             // Print usage if no arguments provided
             if (args.Length == 0)
@@ -33,9 +34,18 @@ namespace Avro
             }
 
             // Print usage if help requested
-            if (args[0] == "-h" || args[0] == "--help")
+            if (args.Contains("-h") || args.Contains("--help"))
             {
                 Usage();
+                return 0;
+            }
+
+            if (args.Contains("--version") || args.Contains("-V"))
+            {
+                // Print version information
+                // Note: Use InformationalVersion attribute
+                // It is capable to include semver prerelease information label (if prerelease), e.g. 1.x.y-beta.z
+                Console.WriteLine(typeof(AvroGenTool).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
                 return 0;
             }
 
@@ -140,28 +150,24 @@ namespace Avro
                 "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
-                "  -h --help   Show this screen.\n" +
-                "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
-                "              The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
-                "              May be specified multiple times to map multiple namespaces.\n" +
+                "  -h --help        Show this screen.\n" +
+                "  -V --version     Show version.\n" +
+                "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
+                "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
+                "                   May be specified multiple times to map multiple namespaces.\n"  +
                 "  --skip-directories Skip creation of namespace directories. It will generate classes right inside output directory\n",
-
                 AppDomain.CurrentDomain.FriendlyName);
-            return;
         }
-        static int GenProtocol(string infile, string outdir,
+
+        public static int GenProtocol(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Protocol protocol = Protocol.Parse(text);
 
                 CodeGen codegen = new CodeGen();
-                codegen.AddProtocol(protocol);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddProtocol(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir);
@@ -174,20 +180,15 @@ namespace Avro
 
             return 0;
         }
-        static int GenSchema(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping,
-            bool skipDirectories)
+
+        public static int GenSchema(string infile, string outdir,
+            IEnumerable<KeyValuePair<string, string>> namespaceMapping, bool skipDirectories)
         {
             try
             {
                 string text = System.IO.File.ReadAllText(infile);
-                Schema schema = Schema.Parse(text);
-
                 CodeGen codegen = new CodeGen();
-                codegen.AddSchema(schema);
-
-                foreach (var entry in namespaceMapping)
-                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+                codegen.AddSchema(text, namespaceMapping);
 
                 codegen.GenerateCode();
                 codegen.WriteTypes(outdir, skipDirectories);

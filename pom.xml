@@ -406,6 +406,7 @@
                 <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
+                <exclude>lang/csharp/src/apache/codec/*/obj/**</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
                 <exclude>lang/java/mapred/userlogs/**</exclude>
                 <exclude>lang/java/tools/userlogs/**</exclude>

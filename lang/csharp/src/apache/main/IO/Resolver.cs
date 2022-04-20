@@ -158,6 +158,10 @@ namespace Avro.IO
                     EncodeDefaultValue(enc, (schema as UnionSchema).Schemas[0], jtok);
                     break;
 
+                case Schema.Type.Logical:
+                    EncodeDefaultValue(enc, (schema as LogicalSchema).BaseSchema, jtok);
+                    break;
+
                 default:
                     throw new AvroException("Unsupported schema type " + schema.Tag);
             }
