@@ -21,6 +21,7 @@ use apache_avro::{
     Reader, Schema, Writer,
 };
 use apache_avro_derive::*;
+use proptest::prelude::*;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use std::collections::HashMap;
 
@@ -87,8 +88,9 @@ mod test_derive {
         b: String,
     }
 
+    proptest! {
     #[test]
-    fn test_smoke_test() {
+    fn test_smoke_test(a: i32, b: String) {
         let schema = r#"
         {
             "type":"record",
@@ -108,11 +110,11 @@ mod test_derive {
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestBasic::get_schema());
         let test = TestBasic {
-            a: 27,
-            b: "foo".to_owned(),
+            a,
+            b,
         };
         serde_assert(test);
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(namespace = "com.testing.namespace")]
@@ -226,8 +228,9 @@ mod test_derive {
         j: String,
     }
 
+    proptest! {
     #[test]
-    fn test_basic_types() {
+    fn test_basic_types(a: bool, b: i8, c: i16, d: i32, e: u8, f: u16, g: i64, h: f32, i: f64, j: String) {
         let schema = r#"
         {
             "type":"record",
@@ -278,21 +281,20 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestAllSupportedBaseTypes::get_schema());
-        // TODO mgrigorov Use property based testing in the future
         let all_basic = TestAllSupportedBaseTypes {
-            a: true,
-            b: 8_i8,
-            c: 16_i16,
-            d: 32_i32,
-            e: 8_u8,
-            f: 16_u16,
-            g: 64_i64,
-            h: 32.3333_f32,
-            i: 64.4444_f64,
-            j: "testing string".to_owned(),
+            a,
+            b,
+            c,
+            d,
+            e,
+            f,
+            g,
+            h,
+            i,
+            j,
         };
         serde_assert(all_basic);
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct TestNested {
@@ -300,8 +302,9 @@ mod test_derive {
         b: TestAllSupportedBaseTypes,
     }
 
+    proptest! {
     #[test]
-    fn test_inner_struct() {
+    fn test_inner_struct(a: bool, b: i8, c: i16, d: i32, e: u8, f: u16, g: i64, h: f32, i: f64, j: String, aa: i32) {
         let schema = r#"
         {
             "type":"record",
@@ -365,33 +368,33 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestNested::get_schema());
-        // TODO mgrigorov Use property based testing in the future
         let all_basic = TestAllSupportedBaseTypes {
-            a: true,
-            b: 8_i8,
-            c: 16_i16,
-            d: 32_i32,
-            e: 8_u8,
-            f: 16_u16,
-            g: 64_i64,
-            h: 32.3333_f32,
-            i: 64.4444_f64,
-            j: "testing string".to_owned(),
+            a,
+            b,
+            c,
+            d,
+            e,
+            f,
+            g,
+            h,
+            i,
+            j,
         };
         let inner_struct = TestNested {
-            a: -1600,
+            a: aa,
             b: all_basic,
         };
         serde_assert(inner_struct);
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct TestOptional {
         a: Option<i32>,
     }
 
+    proptest! {
     #[test]
-    fn test_optional_field_some() {
+    fn test_optional_field_some(a: i32) {
         let schema = r#"
         {
             "type":"record",
@@ -406,9 +409,9 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestOptional::get_schema());
-        let optional_field = TestOptional { a: Some(4) };
+        let optional_field = TestOptional { a: Some(a) };
         serde_assert(optional_field);
-    }
+    }}
 
     #[test]
     fn test_optional_field_none() {
@@ -424,8 +427,9 @@ mod test_derive {
         c: HashMap<String, T>,
     }
 
+    proptest! {
     #[test]
-    fn test_generic_container_1() {
+    fn test_generic_container_1(a: String, b: Vec<i32>, c: HashMap<String, i32>) {
         let schema = r#"
         {
             "type":"record",
@@ -455,15 +459,16 @@ mod test_derive {
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestGeneric::<i32>::get_schema());
         let test_generic = TestGeneric::<i32> {
-            a: "testing".to_owned(),
-            b: vec![0, 1, 2, 3],
-            c: vec![("key".to_owned(), 3)].into_iter().collect(),
+            a,
+            b,
+            c,
         };
         serde_assert(test_generic);
-    }
+    }}
 
+    proptest! {
     #[test]
-    fn test_generic_container_2() {
+    fn test_generic_container_2(a: bool, b: i8, c: i16, d: i32, e: u8, f: u16, g: i64, h: f32, i: f64, j: String) {
         let schema = r#"
         {
             "type":"record",
@@ -543,37 +548,37 @@ mod test_derive {
         let test_generic = TestGeneric::<TestAllSupportedBaseTypes> {
             a: "testing".to_owned(),
             b: vec![TestAllSupportedBaseTypes {
-                a: true,
-                b: 8_i8,
-                c: 16_i16,
-                d: 32_i32,
-                e: 8_u8,
-                f: 16_u16,
-                g: 64_i64,
-                h: 32.3333_f32,
-                i: 64.4444_f64,
-                j: "testing string".to_owned(),
+                a,
+                b,
+                c,
+                d,
+                e,
+                f,
+                g,
+                h,
+                i,
+                j: j.clone(),
             }],
             c: vec![(
                 "key".to_owned(),
                 TestAllSupportedBaseTypes {
-                    a: true,
-                    b: 8_i8,
-                    c: 16_i16,
-                    d: 32_i32,
-                    e: 8_u8,
-                    f: 16_u16,
-                    g: 64_i64,
-                    h: 32.3333_f32,
-                    i: 64.4444_f64,
-                    j: "testing string".to_owned(),
+                    a,
+                    b,
+                    c,
+                    d,
+                    e,
+                    f,
+                    g,
+                    h,
+                    i,
+                    j,
                 },
             )]
             .into_iter()
             .collect(),
         };
         serde_assert(test_generic);
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     enum TestAllowedEnum {
@@ -723,8 +728,9 @@ mod test_derive {
         a: [i32; 4],
     }
 
+    proptest! {
     #[test]
-    fn test_simple_array() {
+    fn test_simple_array(a: [i32; 4]) {
         let schema = r#"
         {
             "type":"record",
@@ -742,9 +748,9 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestSimpleArray::get_schema());
-        let test = TestSimpleArray { a: [2, 3, 4, 5] };
+        let test = TestSimpleArray { a };
         serde_assert(test)
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct TestComplexArray<T: AvroSchemaComponent> {
@@ -803,15 +809,17 @@ mod test_derive {
         a: Vec<u8>,
         b: [u8; 2],
     }
+
+    proptest! {
     #[test]
-    fn test_bytes_handled() {
+    fn test_bytes_handled(a: Vec<u8>, b: [u8; 2]) {
         let test = Testu8 {
-            a: vec![1, 2],
-            b: [3, 4],
+            a,
+            b,
         };
         serde_assert(test)
         // don't check for schema equality to allow for transitioning to bytes or fixed types in the future
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
     #[allow(unknown_lints)] // Rust 1.51.0 (MSRV) does not support #[allow(clippy::box_collection)]
@@ -868,8 +876,9 @@ mod test_derive {
         c: &'a f64,
     }
 
+    proptest! {
     #[test]
-    fn test_reference_struct() {
+    fn test_reference_struct(a: Vec<i32>, c: f64) {
         let schema = r#"
         {
             "type":"record",
@@ -895,15 +904,15 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestReference::get_schema());
-        let a = vec![34];
-        let c = 4.55555555_f64;
+        // let a = vec![34];
+        // let c = 4.55555555_f64;
         let test = TestReference {
             a: &a,
             b: "testing_static",
             c: &c,
         };
         ser(test);
-    }
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
@@ -1037,8 +1046,9 @@ mod test_derive {
         a: u32,
     }
 
+    proptest! {
     #[test]
-    fn test_basic_with_u32() {
+    fn test_basic_with_u32(a in any::<u32>()) {
         let schema = r#"
         {
             "type":"record",
@@ -1059,10 +1069,8 @@ mod test_derive {
         }
         assert_eq!(schema, TestBasicWithU32::get_schema());
 
-        serde_assert(TestBasicWithU32 { a: u32::MAX });
-        serde_assert(TestBasicWithU32 { a: u32::MIN });
-        serde_assert(TestBasicWithU32 { a: 1_u32 });
-    }
+        serde_assert(TestBasicWithU32 { a });
+    }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
