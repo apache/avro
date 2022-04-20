@@ -28,7 +28,7 @@ namespace Avro.Test.AvroGen
 {
     [TestFixture]
 
-    class AvroGenTests
+    class AvroGenSchemaTests
     {
         private const string _customConversionWithLogicalTypes = @"
 {
@@ -489,7 +489,7 @@ namespace Avro.Test.AvroGen
             })]
         public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
 
         [TestCase(
@@ -603,7 +603,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> typeNamesToCheck,
             IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
@@ -729,7 +729,7 @@ namespace Avro.Test.AvroGen
             new object[] { "enum.base.EnumInDifferentNamespace", "enum.base.other.AnEnum" })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
-            Assembly assembly = TestSchema(schema);
+            Assembly assembly = AvroGenHelper.TestSchema(schema);
 
             // Instantiate object
             Type type = assembly.GetType((string)result[0]);
