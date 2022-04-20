@@ -70,10 +70,14 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            return (obj != null && obj is GenericEnum)
-                ? Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal)
-                : false;
+            if (obj == this)
+            {
+                return true;
+            }
+
+            return obj != null
+                && obj.GetType() == typeof(GenericEnum)
+                && Value.Equals(((GenericEnum)obj).Value, System.StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
