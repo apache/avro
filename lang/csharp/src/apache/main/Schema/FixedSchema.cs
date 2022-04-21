@@ -107,14 +107,20 @@ namespace Avro
         /// <returns>true if two schemas are the same, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-
-            if (obj != null && obj is FixedSchema)
+            if (obj == this)
             {
-                FixedSchema that = obj as FixedSchema;
-                return SchemaName.Equals(that.SchemaName) && Size == that.Size && areEqual(that.Props, this.Props);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(FixedSchema))
+            {
+                return false;
+            }
+
+            FixedSchema that = (FixedSchema)obj;
+            return SchemaName.Equals(that.SchemaName)
+                && Size == that.Size
+                && areEqual(Props, that.Props);
         }
 
         /// <summary>

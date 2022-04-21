@@ -258,28 +258,27 @@ namespace Avro
         /// <summary>
         /// Checks equality of two enum schema
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
+        /// <param name="obj">The <see cref="Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            if (obj != null && obj is EnumSchema)
+            if (obj == this)
             {
-                EnumSchema that = obj as EnumSchema;
-                if (SchemaName.Equals(that.SchemaName) && Count == that.Count)
-                {
-                    for (int i = 0; i < Count; i++)
-                    {
-                        if (!Symbols[i].Equals(that.Symbols[i], StringComparison.Ordinal))
-                        {
-                            return false;
-                        }
-                    }
-
-                    return areEqual(that.Props, this.Props);
-                }
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(EnumSchema))
+            {
+                return false;
+            }
+
+            EnumSchema that = (EnumSchema)obj;
+            return SchemaName.Equals(that.SchemaName)
+                && Count == that.Count
+                && Symbols.SequenceEqual(that.Symbols)
+                && areEqual(Props, that.Props);
         }
 
         /// <summary>

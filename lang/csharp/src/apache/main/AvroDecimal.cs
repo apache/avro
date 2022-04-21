@@ -19,12 +19,11 @@
 using System;
 using System.Globalization;
 using System.Numerics;
-
 namespace Avro
 {
-    /// <summary>
-    /// Represents a big decimal.
-    /// </summary>
+/// <summary>
+/// Represents a big decimal.
+/// </summary>
     public struct AvroDecimal : IConvertible, IFormattable, IComparable, IComparable<AvroDecimal>, IEquatable<AvroDecimal>
     {
         /// <summary>
@@ -880,7 +879,9 @@ namespace Avro
         /// </returns>
         public override bool Equals(object obj)
         {
-            return (obj is AvroDecimal @decimal) && Equals(@decimal);
+            return obj != null
+                && obj.GetType() == typeof(AvroDecimal)
+                && Equals((AvroDecimal)obj);
         }
 
         /// <summary>

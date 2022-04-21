@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Avro.Generic;
 
 namespace Avro.Specific
@@ -40,33 +39,34 @@ namespace Avro.Specific
         public abstract new Schema Schema { get; }
 
         /// <summary>
-        /// Determines whether the provided fixed is equivalent this this instance.
+        /// Determines whether the provided fixed is equivalent this instance.
         /// </summary>
-        /// <param name="obj">Fixed to compare.</param>
-        /// <returns>True if the fixed instances have equal values.</returns>
+        /// <param name="obj">Specific Fixed to compare.</param>
+        /// <returns>
+        /// True if the Specific Fixed instances have equal values.
+        /// </returns>
         protected bool Equals(SpecificFixed obj)
         {
-            if (this == obj) return true;
-            if (obj != null && obj is SpecificFixed)
+            if (this == obj)
             {
-                SpecificFixed that = obj as SpecificFixed;
-                if (that.Schema.Equals(this.Schema))
-                {
-                    for (int i = 0; i < value.Length; i++) if (this.value[i] != that.Value[i]) return false;
-                    return true;
-                }
+                return true;
             }
-            return false;
 
+            return obj.Schema.Equals(Schema)
+                && value.SequenceEqual(obj.value);
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((SpecificFixed) obj);
+            if(obj == this)
+            {
+                return true;
+            }
+
+            return obj != null
+                && obj.GetType() == typeof(SpecificFixed)
+                && Equals((SpecificFixed)obj);
         }
 
         /// <inheritdoc/>

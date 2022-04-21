@@ -178,18 +178,27 @@ namespace Avro
         /// <summary>
         /// Tests equality of this Message object with the passed object
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
+        /// <param name="obj">The object to compare with the current object.</param>
+        /// <returns>
+        /// true if the specified object  is equal to the current object; otherwise, false.
+        /// </returns>
         public override bool Equals(Object obj)
         {
-          if (obj == this) return true;
-          if (!(obj is Message)) return false;
+            if (obj == this)
+            {
+                return true;
+            }
 
-          Message that = obj as Message;
-          return this.Name.Equals(that.Name, StringComparison.Ordinal) &&
-                 this.Request.Equals(that.Request) &&
-                 areEqual(this.Response, that.Response) &&
-                 areEqual(this.Error, that.Error);
+            if (obj == null || obj.GetType() != typeof(Message))
+            {
+                return false;
+            }
+
+            Message that = (Message)obj;
+            return Name.Equals(that.Name, StringComparison.Ordinal)
+                && Request.Equals(that.Request)
+                && areEqual(Response, that.Response)
+                && areEqual(Error, that.Error);
         }
 
         /// <summary>

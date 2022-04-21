@@ -95,14 +95,19 @@ namespace Avro
         /// <returns>true if two schemas are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (this == obj) return true;
-
-            if (obj != null && obj is LogicalSchema that)
+            if (this == obj)
             {
-                if (BaseSchema.Equals(that.BaseSchema))
-                    return areEqual(that.Props, Props);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(LogicalSchema))
+            {
+                return false;
+            }
+
+            LogicalSchema that = (LogicalSchema)obj;
+            return BaseSchema.Equals(that.BaseSchema)
+                && areEqual(Props, that.Props);
         }
 
         /// <summary>

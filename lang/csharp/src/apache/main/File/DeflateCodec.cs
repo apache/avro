@@ -17,14 +17,13 @@
  */
 using System.IO;
 using System.IO.Compression;
-
 namespace Avro.File
 {
-    /// <summary>
-    /// Implements deflate compression and decompression.
-    /// </summary>
-    /// <seealso cref="Codec" />
-    /// <seealso cref="DeflateStream" />
+/// <summary>
+/// Implements deflate compression and decompression.
+/// </summary>
+/// <seealso cref="Codec" />
+/// <seealso cref="DeflateStream" />
     public class DeflateCodec : Codec
     {
         /// <inheritdoc/>
@@ -96,10 +95,16 @@ namespace Avro.File
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            return this == other || GetType().Name == other.GetType().Name;
+            if (other == this)
+            {
+                return true;
+            }
+
+            return other != null
+                && other.GetType() == typeof(DeflateCodec);
         }
 
-        /// <inheritdoc/>
+/// <inheritdoc/>
         public override int GetHashCode()
         {
             return DataFileConstants.DeflateCodecHash;

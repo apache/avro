@@ -126,13 +126,19 @@ namespace Avro
         /// <returns>true or false</returns>
         public override bool Equals(Object obj)
         {
-            if (obj == this) return true;
-            if (obj != null && obj is SchemaName)
+            if (obj == this)
             {
-                SchemaName that = (SchemaName)obj;
-                return areEqual(that.Name, Name) && areEqual(that.Namespace, Namespace);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(SchemaName))
+            {
+                return false;
+            }
+
+            SchemaName that = (SchemaName)obj;
+            return string.Equals(that.Name, Name, StringComparison.Ordinal)
+                && areEqual(that.Namespace, Namespace);
         }
 
         /// <summary>

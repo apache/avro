@@ -258,15 +258,24 @@ namespace Avro
         /// <returns>true if two fields are equal, false otherwise</returns>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            if (obj != null && obj is Field)
+            if (obj == this)
             {
-                Field that = obj as Field;
-                return areEqual(that.Name, Name) && that.Pos == Pos && areEqual(that.Documentation, Documentation)
-                    && areEqual(that.Ordering, Ordering) && JtokenEqual.Equals(that.DefaultValue, DefaultValue)
-                    && that.Schema.Equals(Schema) && areEqual(that.Props, this.Props);
+                return true;
             }
-            return false;
+
+            if (obj == null || obj.GetType() != typeof(Field))
+            {
+                return false;
+            }
+
+            Field that = (Field)obj;
+            return string.Equals(Name, that.Name, StringComparison.Ordinal)
+                && Pos == that.Pos
+                && string.Equals(Documentation, that.Documentation, StringComparison.Ordinal)
+                && areEqual(that.Ordering, Ordering)
+                && JtokenEqual.Equals(that.DefaultValue, DefaultValue)
+                && that.Schema.Equals(Schema)
+                && areEqual(that.Props, Props);
         }
 
         /// <summary>
