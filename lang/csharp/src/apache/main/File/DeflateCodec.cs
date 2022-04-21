@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.IO;
 using System.IO.Compression;
+
 namespace Avro.File
 {
-/// <summary>
-/// Implements deflate compression and decompression.
-/// </summary>
-/// <seealso cref="Codec" />
-/// <seealso cref="DeflateStream" />
+    /// <summary>
+    /// Implements deflate compression and decompression.
+    /// </summary>
+    /// <seealso cref="Codec" />
+    /// <seealso cref="DeflateStream" />
     public class DeflateCodec : Codec
     {
         /// <inheritdoc/>
