@@ -66,8 +66,7 @@ namespace Avro
         private ArraySchema(Schema items, PropertyMap customAttributes)
             : base(Type.Array, customAttributes)
         {
-            if (null == items) throw new ArgumentNullException(nameof(items));
-            this.ItemSchema = items;
+            ItemSchema = items ?? throw new ArgumentNullException(nameof(items));
         }
 
         /// <summary>
