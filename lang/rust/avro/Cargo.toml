@@ -69,7 +69,7 @@ strum = "0.24.0"
 strum_macros = "0.24.0"
 thiserror = "1.0.30"
 typed-builder = "0.10.0"
-uuid = { version = "0.8.2", features = ["serde", "v4"] }
+uuid = { version = "1.0.0", features = ["serde", "v4"] }
 zerocopy = "0.6.1"
 lazy_static = "1.4.0"
 log = "0.4.16"
