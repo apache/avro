@@ -101,7 +101,13 @@ pub(crate) fn encode_internal(
             let slice: [u8; 12] = duration.into();
             buffer.extend_from_slice(&slice);
         }
-        Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
+        Value::Uuid(uuid) => encode_bytes(
+            #[allow(unknown_lints)] // for Rust 1.51.0
+            #[allow(clippy::unnecessary_to_owned)]
+            // we need the call .to_string() to properly convert ASCII to UTF-8
+            &uuid.to_string(),
+            buffer,
+        ),
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
             Schema::Fixed { .. } => buffer.extend(bytes),
