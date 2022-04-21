@@ -130,12 +130,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// A flag to indicate if reader schema has a field that is missing from writer schema and has a default value
-        /// This is set in CanRead() which is always be called before deserializing data
-        /// </summary>
-
-        /// <summary>
-        /// Constructor for the field class
+        /// Initializes a new instance of the <see cref="Field"/> class.
         /// </summary>
         /// <param name="schema">schema for the field type</param>
         /// <param name="name">name of the field</param>
@@ -145,19 +140,27 @@ namespace Avro
         /// <param name="defaultValue">field's default value if it exists</param>
         /// <param name="sortorder">sort order of the field</param>
         /// <param name="props">dictionary that provides access to custom properties</param>
+        /// <exception cref="ArgumentNullException">
+        /// name - name cannot be null.
+        /// or
+        /// type - type cannot be null.
+        /// </exception>
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
-            if (null == schema) throw new ArgumentNullException("type", "type cannot be null.");
-            this.Schema = schema;
-            this.Name = name;
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            }
+
+            Schema = schema ?? throw new ArgumentNullException("type", "type cannot be null.");
+            Name = name;
             Aliases = aliases;
-            this.Pos = pos;
-            this.Documentation = doc;
-            this.DefaultValue = defaultValue;
-            this.Ordering = sortorder;
-            this.Props = props;
+            Pos = pos;
+            Documentation = doc;
+            DefaultValue = defaultValue;
+            Ordering = sortorder;
+            Props = props;
         }
 
         /// <summary>
