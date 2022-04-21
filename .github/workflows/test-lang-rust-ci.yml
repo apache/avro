@@ -49,6 +49,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Cache Cargo
+        uses: actions/cache@v2
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v2
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
+
       - name: Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -95,6 +110,21 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - name: Cache Cargo
+        uses: actions/cache@v2
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v2
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-stable-
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
