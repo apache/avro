@@ -327,7 +327,7 @@ impl std::convert::TryFrom<Value> for JsonValue {
             Value::Duration(d) => Ok(Self::Array(
                 <[u8; 12]>::from(d).iter().map(|&v| v.into()).collect(),
             )),
-            Value::Uuid(uuid) => Ok(Self::String(uuid.to_hyphenated().to_string())),
+            Value::Uuid(uuid) => Ok(Self::String(uuid.as_hyphenated().to_string())),
         }
     }
 }
