@@ -18,11 +18,10 @@
 //! Logic handling writing in Avro format at user level.
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
-    rabin::Rabin,
     schema::{AvroSchema, ResolvedOwnedSchema, ResolvedSchema, Schema},
     ser::Serializer,
     types::Value,
-    AvroResult, Codec, Error,
+    AvroResult, Codec, Error, rabin::Rabin,
 };
 use rand::random;
 use serde::Serialize;
