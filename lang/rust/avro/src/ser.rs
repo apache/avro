@@ -178,7 +178,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::from(None::<Self::Ok>))
+        Ok(Value::Null)
     }
 
     fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
@@ -186,7 +186,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         T: Serialize,
     {
         let v = value.serialize(&mut Serializer::default())?;
-        Ok(Value::from(Some(v)))
+        Ok(v)
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {

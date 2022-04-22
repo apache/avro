@@ -18,14 +18,14 @@
 //! Logic handling writing in Avro format at user level.
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
-    schema::{ResolvedSchema, Schema},
+    schema::{ResolvedSchema, Schema, AvroSchema, ResolvedOwnedSchema},
     ser::Serializer,
     types::Value,
-    AvroResult, Codec, Error,
+    AvroResult, Codec, Error, rabin::Rabin,
 };
 use rand::random;
 use serde::Serialize;
-use std::{collections::HashMap, convert::TryFrom, io::Write};
+use std::{collections::HashMap, convert::TryFrom, io::Write, marker::PhantomData};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
@@ -352,8 +352,99 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+/// Writer that encodes messages according to the single object encoding v1 spec
+pub struct SingleObjectWriter<T> 
+where
+    T: AvroSchema
+{   
+    buffer: Vec<u8>,
+    resolved: ResolvedOwnedSchema,
+    header: [u8; 10],
+    _model: PhantomData<T>,
+}
+
+impl <T> SingleObjectWriter<T> 
+where
+    T: AvroSchema
+{
+    pub fn with_capacity(buffer_cap: usize) -> AvroResult<SingleObjectWriter<T>> {
+        let schema = T::get_schema();
+        let fingerprint = schema.fingerprint::<Rabin>();
+        Ok(SingleObjectWriter{
+            buffer: Vec::with_capacity(buffer_cap),
+            resolved: ResolvedOwnedSchema::try_from(schema)?,
+            header: [0xC3, 0x01,
+             fingerprint.bytes[0],
+             fingerprint.bytes[1],
+             fingerprint.bytes[2],
+             fingerprint.bytes[3],
+             fingerprint.bytes[4],
+             fingerprint.bytes[5],
+             fingerprint.bytes[6],
+             fingerprint.bytes[7]],
+            _model: PhantomData,
+        })
+    }
+
+    fn write_internal<W : Write>(&mut self, v: &Value,  writer: &mut W) -> AvroResult<usize> {
+        if ! self.buffer.is_empty() {
+            Err(Error::IllegalSingleObjectWriterState)
+        } else {
+            self.buffer.extend_from_slice(&self.header);
+            write_value_ref_owned_resolved( &self.resolved, v, &mut self.buffer)?;
+            writer.write_all(&self.buffer).map_err(Error::WriteBytes)?;
+            let len = self.buffer.len();
+            self.buffer.clear();
+            Ok(len)
+        }
+    }
+}
+
+
+impl <T> SingleObjectWriter<T> 
+where
+    T: AvroSchema + Into<Value>
+{
+    pub fn write_value<W:Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        let v: Value = data.into();
+        self.write_internal(&v, writer)
+    }
+}
+
+impl <T> SingleObjectWriter<T> 
+where
+    T: AvroSchema + Serialize
+{
+    pub fn write<W:Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        let mut serializer = Serializer::default();
+        let v = data.serialize(&mut serializer)?;
+        self.write_internal(&v, writer) 
+    }
+}
+
 fn write_value_ref_resolved(
     resolved_schema: &ResolvedSchema,
+    value: &Value,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    if let Some(err) = value.validate_internal(
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+    ) {
+        return Err(Error::ValidationWithReason(err));
+    }
+    encode_internal(
+        value,
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+        &None,
+        buffer,
+    )?;
+    Ok(())
+}
+
+fn write_value_ref_owned_resolved(
+    resolved_schema: &ResolvedOwnedSchema,
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {

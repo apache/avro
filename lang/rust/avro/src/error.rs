@@ -408,6 +408,8 @@ pub enum Error {
         value_kind: ValueKind,
         supported_schema: Vec<SchemaKind>,
     },
+    #[error("Internal buffer not drained properly. Reinitialize the writer struct")]
+    IllegalSingleObjectWriterState,
 }
 
 impl serde::ser::Error for Error {
