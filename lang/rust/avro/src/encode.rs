@@ -16,12 +16,16 @@
 // under the License.
 
 use crate::{
-    schema::{Namespace, ResolvedSchema, Schema, SchemaKind, Name},
+    schema::{Name, Namespace, ResolvedSchema, Schema, SchemaKind},
     types::{Value, ValueKind},
     util::{zig_i32, zig_i64},
     AvroResult, Error,
 };
-use std::{convert::{TryFrom, TryInto}, borrow::Borrow, collections::HashMap};
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+};
 
 /// Encode a `Value` into avro format.
 ///
@@ -47,10 +51,10 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
     zig_i32(i, buffer)
 }
 
-pub(crate) fn  encode_internal< S :Borrow<Schema>>(
+pub(crate) fn encode_internal<S: Borrow<Schema>>(
     value: &Value,
     schema: &Schema,
-    names: &HashMap<Name,S>,
+    names: &HashMap<Name, S>,
     enclosing_namespace: &Namespace,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {

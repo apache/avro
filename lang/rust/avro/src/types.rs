@@ -20,7 +20,8 @@ use crate::{
     decimal::Decimal,
     duration::Duration,
     schema::{
-        NamesRef, Precision, RecordField, ResolvedSchema, Scale, Schema, SchemaKind, UnionSchema, Name,
+        Name, NamesRef, Precision, RecordField, ResolvedSchema, Scale, Schema, SchemaKind,
+        UnionSchema,
     },
     AvroResult, Error,
 };
@@ -355,7 +356,11 @@ impl Value {
         }
     }
 
-    pub(crate) fn validate_internal<S:std::borrow::Borrow<Schema>>(&self, schema: &Schema, names: &HashMap<Name, S>) -> Option<String> {
+    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema>>(
+        &self,
+        schema: &Schema,
+        names: &HashMap<Name, S>,
+    ) -> Option<String> {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
