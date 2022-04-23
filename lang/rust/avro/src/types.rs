@@ -25,7 +25,7 @@ use crate::{
     AvroResult, Error,
 };
 use serde_json::{Number, Value as JsonValue};
-use std::{collections::HashMap, convert::TryFrom, hash::BuildHasher, str::FromStr, u8, borrow::Borrow};
+use std::{collections::HashMap, convert::TryFrom, hash::BuildHasher, str::FromStr, u8};
 use uuid::Uuid;
 
 /// Compute the maximum decimal value precision of a byte array of length `len` could hold.
@@ -355,7 +355,7 @@ impl Value {
         }
     }
 
-    pub(crate) fn validate_internal<S:Borrow<Schema>>(&self, schema: &Schema, names: &HashMap<Name, S>) -> Option<String> {
+    pub(crate) fn validate_internal<S:std::borrow::Borrow<Schema>>(&self, schema: &Schema, names: &HashMap<Name, S>) -> Option<String> {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
