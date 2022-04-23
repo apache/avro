@@ -1106,14 +1106,14 @@ mod tests {
         }
     }
 
-    impl Into<Value> for TestSingleObjectWriter {
-        fn into(self) -> Value {
+    impl From<TestSingleObjectWriter> for Value {
+        fn from(obj: TestSingleObjectWriter) -> Value {
             Value::Record(vec![
-                ("a".into(), self.a.into()),
-                ("b".into(), self.b.into()),
+                ("a".into(), obj.a.into()),
+                ("b".into(), obj.b.into()),
                 (
                     "c".into(),
-                    Value::Array(self.c.into_iter().map(|s| s.into()).collect()),
+                    Value::Array(obj.c.into_iter().map(|s| s.into()).collect()),
                 ),
             ])
         }
@@ -1183,7 +1183,7 @@ mod tests {
             .write_value(obj1.clone(), &mut buf2)
             .expect("Serialization expected");
         generic_writer
-            .write_value(obj1.clone().into(), &mut buf3)
+            .write_value(obj1.into(), &mut buf3)
             .expect("Serialization expected");
         assert_eq!(buf1, buf2);
         assert_eq!(buf1, buf3);
