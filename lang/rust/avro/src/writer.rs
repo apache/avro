@@ -450,7 +450,7 @@ where
         self.inner.write_value_ref(&v, writer)
     }
 
-    /// Wrtite the Serialize object to the provided Write object. Returns a result with the number of bytes writtern including the header
+    /// Write the Serialize object to the provided Write object. Returns a result with the number of bytes writtern including the header
     pub fn write<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
         self.write_ref(&data, writer)
     }
