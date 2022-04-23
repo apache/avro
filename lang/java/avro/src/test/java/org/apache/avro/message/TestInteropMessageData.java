@@ -3,16 +3,20 @@ package org.apache.avro.message;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
-public class TestInteropData {
+public class TestInteropMessageData {
   private static String inDir = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
   private static File SCHEMA_FILE = new File(inDir + "/test_schema.json");
   private static File MESSAGE_FILE = new File(inDir + "/test_message.bin");
@@ -29,11 +33,11 @@ public class TestInteropData {
   }
 
   @Test
-  public void generateData() throws IOException {
+  public void sanity_check() throws IOException {
     MessageEncoder<GenericData.Record> encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA);
-    BUILDER.set("id", 5L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build();
-    ByteBuffer buffer = encoder
-        .encode(BUILDER.set("id", 5L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build());
-    new FileOutputStream(MESSAGE_FILE).write(buffer.array());
+    ByteBuffer buffer = encoder.encode(
+        BUILDER.set("id", 42L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build());
+    byte[] fileBuffer = Files.readAllBytes(MESSAGE_FILE.toPath());
+    Assert.assertArrayEquals(fileBuffer, buffer.array());
   }
 }
