@@ -175,3 +175,21 @@ class TestDataFile(unittest.TestCase):
 
             with reader(path) as dfr:
                 self.assertRaises(StopIteration, next, dfr)
+    
+    def test_skip_data(self):
+        """Skip data with method skip_data (DataFileReader)"""
+        for codec in CODECS_TO_VALIDATE:
+            for schema, datum in TEST_PAIRS:
+                # write data in binary to file 10 times
+                path = self.tempfile()
+                with writer(path, schema, codec) as dfw:
+                    for _ in range(10):
+                        dfw.append(datum)
+
+                # skip 5 elements and read 5 elements in binary from file
+                with reader(path) as dfr:
+                    dfr.skip_data(5)
+                    data = list(itertools.islice(dfr, 5))
+                    self.assertRaises(StopIteration, next, dfr)
+                self.assertEqual(len(data), 5)
+                self.assertEqual(data, [datum] * 5)
