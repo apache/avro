@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 
@@ -88,6 +89,15 @@ namespace Avro.Test.AvroGen
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.StdOut, Is.Not.Empty);
             Assert.That(result.StdErr, Is.Not.Empty);
+        }
+
+        [Theory]
+        public void CommandLineHelpContainsSkipDirectoriesParameter()
+        {
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool("-h");
+
+            Assert.That(result.ExitCode, Is.EqualTo(0));
+            Assert.IsTrue(result.StdOut.Any(s => s.Contains("--skip-directories")));
         }
     }
 }

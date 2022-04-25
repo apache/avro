@@ -139,7 +139,7 @@ namespace Avro.Test.AvroGen
             }
         }
 
-        public static string CreateEmptyTemporyFolder(out string uniqueId, string path = null)
+        public static string CreateEmptyTemporaryFolder(out string uniqueId, string path = null)
         {
             // Create unique id
             uniqueId = Guid.NewGuid().ToString();
@@ -234,10 +234,11 @@ namespace Avro.Test.AvroGen
             string schema,
             IEnumerable<string> typeNamesToCheck = null,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping = null,
-            IEnumerable<string> generatedFilesToCheck = null)
+            IEnumerable<string> generatedFilesToCheck = null,
+            bool skipDirectories = false)
         {
             // Create temp folder
-            string outputDir = CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
@@ -246,7 +247,7 @@ namespace Avro.Test.AvroGen
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
                 // Generate from schema file
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>(), skipDirectories), Is.EqualTo(0));
 
                 return CompileCSharpFilesAndCheckTypes(outputDir, uniqueId, typeNamesToCheck, generatedFilesToCheck);
             }
@@ -263,7 +264,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> generatedFilesToCheck = null)
         {
             // Create temp folder
-            string outputDir = CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
