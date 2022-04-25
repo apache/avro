@@ -124,6 +124,13 @@ fn get_data_struct_schema_def(
                 let doc = preserve_optional(field_attrs.doc);
                 let default_value = match field_attrs.default {
                     Some(default_value) => {
+                        let _: serde_json::Value = serde_json::from_str(&default_value[..])
+                            .map_err(|e| {
+                                vec![Error::new(
+                                    field.ident.span(),
+                                    format!("Invalid avro default json: \n{}", e),
+                                )]
+                            })?;
                         quote! {
                             Some(serde_json::from_str(#default_value).expect(format!("Invalid JSON: {:?}", #default_value).as_str()))
                         }
