@@ -69,7 +69,6 @@ namespace Avro.Util
 
         private static void ThrowIfOutOfRange(TimeSpan time, string paramName)
         {
-            Console.WriteLine($"XXXX= A '{LogicalTypeName}' value must be at least '{TimeSpan.Zero}' and less than '{_exclusiveUpperBound}'.");
             if (time.Ticks < 0 || time >= _exclusiveUpperBound)
             {
                 throw new ArgumentOutOfRangeException(paramName, $"A '{LogicalTypeName}' value must be at least '{TimeSpan.Zero}' and less than '{_exclusiveUpperBound}'.");
