@@ -75,7 +75,7 @@ namespace Avro.Generic
     /// A General purpose writer for serializing objects into a Stream using
     /// Avro. This class implements a default way of serializing objects. But
     /// one can derive a class from this and override different methods to
-    /// acheive results that are different from the default implementation.
+    /// achieve results that are different from the default implementation.
     /// </summary>
     public class DefaultWriter
     {
@@ -246,7 +246,7 @@ namespace Avro.Generic
         }
 
         /// <summary>
-        /// Serializes an enumeration. The default implementation expectes the value to be string whose
+        /// Serializes an enumeration. The default implementation expects the value to be string whose
         /// value is the name of the enumeration.
         /// </summary>
         /// <param name="es">The EnumSchema for serialization</param>
@@ -293,8 +293,8 @@ namespace Avro.Generic
 
         /// <summary>
         /// Returns the length of an array. The default implementation requires the object
-        /// to be an array of objects and returns its length. The defaul implementation
-        /// gurantees that EnsureArrayObject() has been called on the value before this
+        /// to be an array of objects and returns its length. The default implementation
+        /// guarantees that EnsureArrayObject() has been called on the value before this
         /// function is called.
         /// </summary>
         /// <param name="value">The object whose array length is required</param>
@@ -306,8 +306,8 @@ namespace Avro.Generic
 
         /// <summary>
         /// Returns the element at the given index from the given array object. The default implementation
-        /// requires that the value is an object array and returns the element in that array. The defaul implementation
-        /// gurantees that EnsureArrayObject() has been called on the value before this
+        /// requires that the value is an object array and returns the element in that array. The default implementation
+        /// guarantees that EnsureArrayObject() has been called on the value before this
         /// function is called.
         /// </summary>
         /// <param name="value">The array object</param>
@@ -351,7 +351,7 @@ namespace Avro.Generic
         }
 
         /// <summary>
-        /// Returns the size of the map object. The default implementation gurantees that EnsureMapObject has been
+        /// Returns the size of the map object. The default implementation guarantees that EnsureMapObject has been
         /// successfully called with the given value. The default implementation requires the value
         /// to be an IDictionary&lt;string, object&gt; and returns the number of elements in it.
         /// </summary>
@@ -364,7 +364,7 @@ namespace Avro.Generic
 
         /// <summary>
         /// Returns the contents of the given map object. The default implementation guarantees that EnsureMapObject
-        /// has been called with the given value. The defualt implementation of this method requires that
+        /// has been called with the given value. The default implementation of this method requires that
         /// the value is an IDictionary&lt;string, object&gt; and returns its contents.
         /// </summary>
         /// <param name="value">The map object whose size is desired</param>
@@ -437,7 +437,7 @@ namespace Avro.Generic
 
         /// <summary>
         /// Creates a new <see cref="AvroException"/> and uses the provided parameters to build an
-        /// exception message indicathing there was a type mismatch.
+        /// exception message indicating there was a type mismatch.
         /// </summary>
         /// <param name="obj">Object whose type does not the expected type</param>
         /// <param name="schemaType">Schema that we tried to write against</param>

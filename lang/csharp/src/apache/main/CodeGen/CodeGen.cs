@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.CSharp;
 
 namespace Avro
@@ -63,6 +64,7 @@ namespace Avro
         /// <value>
         /// The namespace mapping.
         /// </value>
+        [Obsolete("NamespaceMapping is not used, use AddProtocol(string ...) or AddSchema(string ...) instead!")]
         public IDictionary<string, string> NamespaceMapping { get; private set; }
 
         /// <summary>
@@ -80,7 +82,6 @@ namespace Avro
         {
             Schemas = new List<Schema>();
             Protocols = new List<Protocol>();
-            NamespaceMapping = new Dictionary<string, string>();
             NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
         }
 
@@ -104,11 +105,37 @@ namespace Avro
         }
 
         /// <summary>
+        /// Parses and adds a protocol object to generate code for.
+        /// </summary>
+        /// <param name="protocolText">The protocol.</param>
+        /// <param name="namespaceMapping">namespace mapping key value pairs.</param>
+        public virtual void AddProtocol(string protocolText, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            // Map namespaces
+            protocolText = ReplaceMappedNamespacesInSchema(protocolText, namespaceMapping);
+            Protocol protocol = Protocol.Parse(protocolText);
+            Protocols.Add(protocol);
+        }
+
+        /// <summary>
         /// Adds a schema object to generate code for.
         /// </summary>
         /// <param name="schema">schema object.</param>
         public virtual void AddSchema(Schema schema)
         {
+            Schemas.Add(schema);
+        }
+
+        /// <summary>
+        /// Parses and adds a schema object to generate code for.
+        /// </summary>
+        /// <param name="schemaText">schema object.</param>
+        /// <param name="namespaceMapping">namespace mapping key value pairs.</param>
+        public virtual void AddSchema(string schemaText, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
+        {
+            // Map namespaces
+            schemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
+            Schema schema = Schema.Parse(schemaText);
             Schemas.Add(schema);
         }
 
@@ -129,9 +156,7 @@ namespace Avro
 
             if (!NamespaceLookup.TryGetValue(name, out CodeNamespace ns))
             {
-                ns = NamespaceMapping.TryGetValue(name, out string csharpNamespace)
-                    ? new CodeNamespace(csharpNamespace)
-                    : new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+                ns = new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
 
                 foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
                 {
@@ -400,6 +425,7 @@ namespace Avro
             ctd.IsPartial = true;
             ctd.Attributes = MemberAttributes.Public;
             ctd.BaseTypes.Add("SpecificFixed");
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             if (fixedSchema.Documentation != null)
             {
@@ -463,6 +489,7 @@ namespace Avro
             CodeTypeDeclaration ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(enumschema.Name));
             ctd.IsEnum = true;
             ctd.Attributes = MemberAttributes.Public;
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             if (enumschema.Documentation != null)
             {
@@ -505,6 +532,7 @@ namespace Avro
             ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
             ctd.IsClass = true;
             ctd.BaseTypes.Add("Avro.Specific.ISpecificProtocol");
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             AddProtocolDocumentation(protocol, ctd);
 
@@ -583,6 +611,7 @@ namespace Avro
             ctd.TypeAttributes = TypeAttributes.Abstract | TypeAttributes.Public;
             ctd.IsClass = true;
             ctd.BaseTypes.Add(protocolNameMangled);
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             // Need to override
             AddProtocolDocumentation(protocol, ctd);
@@ -729,6 +758,7 @@ namespace Avro
                 isError ? typeof(Specific.SpecificException) : typeof(Specific.ISpecificRecord),
                 CodeTypeReferenceOptions.GlobalReference);
             ctd.BaseTypes.Add(baseTypeReference);
+            ctd.CustomAttributes.Add(CodeGenUtil.Instance.GeneratedCodeAttribute);
 
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
@@ -779,7 +809,7 @@ namespace Avro
                 codeField.Attributes = MemberAttributes.Private;
                 if (field.Schema is EnumSchema es && es.Default != null)
                 {
-                    codeField.InitExpression = new CodeTypeReferenceExpression($"{es.Name}.{es.Default}");
+                    codeField.InitExpression = new CodeTypeReferenceExpression($"{es.Namespace}.{es.Name}.{es.Default}");
                 }
 
                 // Process field documentation if it exist and add to the field
@@ -1110,7 +1140,8 @@ namespace Avro
         /// Writes each types in each namespaces into individual files.
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
-        public virtual void WriteTypes(string outputdir)
+        /// <param name="skipDirectories">skip creation of directories based on schema namespace</param>
+        public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
         {
             var cscp = new CSharpCodeProvider();
 
@@ -1125,11 +1156,13 @@ namespace Avro
                 var ns = nsc[i];
 
                 string dir = outputdir;
-                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                if (skipDirectories != true)
                 {
-                    dir = Path.Combine(dir, name);
+                    foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                    {
+                        dir = Path.Combine(dir, name);
+                    }
                 }
-
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
@@ -1152,6 +1185,49 @@ namespace Avro
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Replace namespace(s) in schema or protocol definition.
+        /// </summary>
+        /// <param name="input">input schema or protocol definition.</param>
+        /// <param name="namespaceMapping">namespace mappings object.</param>
+        private static string ReplaceMappedNamespacesInSchema(string input, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            if (namespaceMapping == null || input == null)
+                return input;
+
+            // Replace namespace in "namespace" definitions: 
+            //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
+            //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
+            // Note: It keeps the original whitespaces
+            return Regex.Replace(input, @"""namespace""(\s*):(\s*)""([^""]*)""", m =>
+            {
+                // m.Groups[1]: whitespaces before ':'
+                // m.Groups[2]: whitespaces after ':'
+                // m.Groups[3]: the namespace
+
+                string ns = m.Groups[3].Value;
+
+                foreach (var mapping in namespaceMapping)
+                {
+                    // Full match
+                    if (mapping.Key == ns)
+                    {
+                        ns = mapping.Value;
+                        break;
+                    }
+                    else
+                    // Partial match
+                    if (ns.StartsWith($"{mapping.Key}."))
+                    {
+                        ns = $"{mapping.Value}.{ns.Substring(mapping.Key.Length + 1)}";
+                        break;
+                    }
+                }
+
+                return $@"""namespace""{m.Groups[1].Value}:{m.Groups[2].Value}""{ns}""";
+            });
         }
     }
 }

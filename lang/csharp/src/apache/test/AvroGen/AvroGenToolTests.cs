@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using NUnit.Framework;
 
 namespace Avro.Test.AvroGen
@@ -51,6 +50,26 @@ namespace Avro.Test.AvroGen
             Assert.That(result.StdErr, Is.Empty);
         }
 
+        [TestCase("--version")]
+        [TestCase("-V")]
+        public void CommandLineVersion(params string[] args)
+        {
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(args);
+
+            Assert.That(result.ExitCode, Is.EqualTo(0));
+            Assert.That(result.StdOut, Is.Not.Empty);
+            Assert.That(result.StdErr, Is.Empty);
+
+            // Check if returned version is SemVer 2.0 compliant
+            Assert.That(result.StdOut[0], Does.Match(Utils.VersionTests.SemVerRegex));
+
+            // Returned version must be the same as the avrogen tool assembly's version
+            Assert.That(result.StdOut[0], Is.EqualTo(typeof(AvroGenTool).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion));
+
+            // Returned version must be the same as the avro library assembly's version
+            Assert.That(result.StdOut[0], Is.EqualTo(typeof(Schema).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion));
+        }
+
         [TestCase("-p")]
         [TestCase("-s")]
         [TestCase("-p", "whatever.avpr")]
@@ -70,6 +89,15 @@ namespace Avro.Test.AvroGen
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.StdOut, Is.Not.Empty);
             Assert.That(result.StdErr, Is.Not.Empty);
+        }
+
+        [Theory]
+        public void CommandLineHelpContainsSkipDirectoriesParameter()
+        {
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool("-h");
+
+            Assert.That(result.ExitCode, Is.EqualTo(0));
+            Assert.IsTrue(result.StdOut.Any(s => s.Contains("--skip-directories")));
         }
     }
 }

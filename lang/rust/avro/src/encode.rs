@@ -101,7 +101,13 @@ pub(crate) fn encode_internal(
             let slice: [u8; 12] = duration.into();
             buffer.extend_from_slice(&slice);
         }
-        Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
+        Value::Uuid(uuid) => encode_bytes(
+            #[allow(unknown_lints)] // for Rust 1.51.0
+            #[allow(clippy::unnecessary_to_owned)]
+            // we need the call .to_string() to properly convert ASCII to UTF-8
+            &uuid.to_string(),
+            buffer,
+        ),
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
             Schema::Fixed { .. } => buffer.extend(bytes),
@@ -188,18 +194,29 @@ pub(crate) fn encode_internal(
             if let Schema::Record {
                 ref name,
                 fields: ref schema_fields,
+                ref lookup,
                 ..
             } = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for (i, &(_, ref value)) in fields.iter().enumerate() {
-                    encode_internal(
-                        value,
-                        &schema_fields[i].schema,
-                        names,
-                        &record_namespace,
-                        buffer,
-                    )?;
+                for &(ref name, ref value) in fields.iter() {
+                    match lookup.get(name) {
+                        Some(idx) => {
+                            encode_internal(
+                                value,
+                                &schema_fields[*idx].schema,
+                                names,
+                                &record_namespace,
+                                buffer,
+                            )?;
+                        }
+                        None => {
+                            return Err(Error::NoEntryInLookupTable(
+                                name.clone(),
+                                format!("{:?}", lookup),
+                            ));
+                        }
+                    }
                 }
             } else {
                 error!("invalid schema type for Record: {:?}", schema);
