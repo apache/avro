@@ -53,6 +53,7 @@ namespace Avro
             bool? isProtocol = null;
             string inputFile = null;
             string outputDir = null;
+            bool skipDirectoriesCreation = false;
             var namespaceMapping = new Dictionary<string, string>();
             for (int i = 0; i < args.Length; ++i)
             {
@@ -99,6 +100,10 @@ namespace Avro
 
                     namespaceMapping[parts[0]] = parts[1];
                 }
+                else if (args[i] == "--skip-directories")
+                {
+                    skipDirectoriesCreation = true;
+                }
                 else if (outputDir == null)
                 {
                     outputDir = args[i];
@@ -133,7 +138,7 @@ namespace Avro
             else if (isProtocol.Value)
                 rc = GenProtocol(inputFile, outputDir, namespaceMapping);
             else
-                rc = GenSchema(inputFile, outputDir, namespaceMapping);
+                rc = GenSchema(inputFile, outputDir, namespaceMapping, skipDirectoriesCreation);
 
             return rc;
         }
@@ -149,7 +154,8 @@ namespace Avro
                 "  -V --version     Show version.\n" +
                 "  --namespace      Map an Avro schema/protocol namespace to a C# namespace.\n" +
                 "                   The format is \"my.avro.namespace:my.csharp.namespace\".\n" +
-                "                   May be specified multiple times to map multiple namespaces.\n",
+                "                   May be specified multiple times to map multiple namespaces.\n"  +
+                "  --skip-directories Skip creation of namespace directories. It will generate classes right inside output directory\n",
                 AppDomain.CurrentDomain.FriendlyName);
         }
 
@@ -176,7 +182,7 @@ namespace Avro
         }
 
         public static int GenSchema(string infile, string outdir,
-            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+            IEnumerable<KeyValuePair<string, string>> namespaceMapping, bool skipDirectories)
         {
             try
             {
@@ -185,7 +191,7 @@ namespace Avro
                 codegen.AddSchema(text, namespaceMapping);
 
                 codegen.GenerateCode();
-                codegen.WriteTypes(outdir);
+                codegen.WriteTypes(outdir, skipDirectories);
             }
             catch (Exception ex)
             {
