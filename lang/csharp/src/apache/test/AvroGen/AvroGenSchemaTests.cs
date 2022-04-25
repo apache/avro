@@ -316,7 +316,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> generatedFilesToCheck = null)
         {
             // Create temp folder
-            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
@@ -325,7 +325,7 @@ namespace Avro.Test.AvroGen
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
                 // Generate from schema file
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>(), false), Is.EqualTo(0));
 
                 // Check if all generated files exist
                 if (generatedFilesToCheck != null)
@@ -611,7 +611,7 @@ namespace Avro.Test.AvroGen
         public void NotSupportedSchema(string schema, Type expectedException)
         {
             // Create temp folder
-            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
@@ -619,7 +619,7 @@ namespace Avro.Test.AvroGen
                 string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>()), Is.EqualTo(1));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
             }
             finally
             {
@@ -770,6 +770,44 @@ namespace Avro.Test.AvroGen
                     Assert.That(field.GetType(), Is.EqualTo(stype));
                 }
             }
+        }
+
+        [TestCase(
+            _nullableLogicalTypesArray,
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "NullableLogicalTypesArray.cs"
+            })]
+        [TestCase(
+            _nestedSomeNamespaceRecord,
+            new string[]
+            {
+                "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
+                "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
+            },
+            new string[]
+            {
+                "NestedSomeNamespaceRecord.cs",
+                "NestedOtherNamespaceRecord.cs"
+            })]
+        [TestCase(_schema_avro_2883,
+            new string[]
+            {
+                "my.avro.ns.TestModel",
+                "my.avro.ns.EventType",
+            },
+            new string[]
+            {
+                "TestModel.cs",
+                "EventType.cs"
+            })]
+        public void GenerateSchemaWithSkipDirectoriesOption(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
+        {
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck, skipDirectories: true);
         }
     }
 }
