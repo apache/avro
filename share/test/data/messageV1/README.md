@@ -34,3 +34,12 @@ The binary data will be the V1 sincle object encoding with the schema of
 	]
 }
 ```
+
+The sample binary message will have the values equal to the json serialized version of the record shown below
+```
+{
+	"id": 42,
+	"name": "Bill",
+	"tags": ["dog_lover", "cat_hater"]
+}
+```
