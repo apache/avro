@@ -61,6 +61,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     this.in = new DataFileReader.SeekableInputStream(sin);
 
     byte[] magic = new byte[4];
+    in.seek(0); // seek to 0 to read magic header
     in.read(magic);
     if (!Arrays.equals(MAGIC, magic))
       throw new InvalidAvroMagicException("Not a data file.");
