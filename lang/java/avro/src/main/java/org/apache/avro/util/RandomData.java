@@ -21,6 +21,7 @@ import java.io.File;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -143,7 +144,7 @@ public class RandomData implements Iterable<Object> {
     }
   }
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
+  private static final Charset UTF8 = StandardCharsets.UTF_8;
 
   private Object randomString(Random random, int maxLength) {
     int length = random.nextInt(maxLength);
@@ -167,15 +168,14 @@ public class RandomData implements Iterable<Object> {
       System.exit(-1);
     }
     Schema sch = new Schema.Parser().parse(new File(args[0]));
-    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
-    writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
-    writer.create(sch, new File(args[1]));
-    try {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
+      writer.setMeta("user_metadata", "someByteArray".getBytes(StandardCharsets.UTF_8));
+      writer.create(sch, new File(args[1]));
+
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);
       }
-    } finally {
-      writer.close();
     }
   }
 }

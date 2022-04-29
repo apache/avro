@@ -27,6 +27,7 @@ import java.util.Arrays;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.Utf8;
+import org.slf4j.LoggerFactory;
 
 /**
  * An {@link Decoder} for binary-format data.
@@ -37,6 +38,13 @@ import org.apache.avro.util.Utf8;
  * required to serve its read methods. The number of unused bytes in the buffer
  * can be accessed by inputStream().remaining(), if the BinaryDecoder is not
  * 'direct'.
+ * <p/>
+ * To prevent this class from making large allocations when handling potentially
+ * pathological input data, set Java properties
+ * <tt>org.apache.avro.limits.string.maxLength</tt> and
+ * <tt>org.apache.avro.limits.bytes.maxLength</tt> before instantiating this
+ * class to limit the maximum sizes of <tt>string</tt> and <tt>bytes</tt> types
+ * handled. The default is to permit sizes up to Java's maximum array length.
  *
  * @see Encoder
  */
@@ -48,7 +56,10 @@ public class BinaryDecoder extends Decoder {
    * an array. Attempts to allocate larger arrays may result in OutOfMemoryError:
    * Requested array size exceeds VM limit
    */
-  private static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
+  static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
+
+  private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
+  private final int maxBytesLength;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -87,15 +98,27 @@ public class BinaryDecoder extends Decoder {
 
   /** protected constructor for child classes */
   protected BinaryDecoder() {
+    super();
+    String o = System.getProperty(MAX_BYTES_LENGTH_PROPERTY);
+    int i = Integer.MAX_VALUE;
+    if (o != null) {
+      try {
+        i = Integer.parseUnsignedInt(o);
+      } catch (NumberFormatException nfe) {
+        LoggerFactory.getLogger(BinaryDecoder.class)
+            .warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
+      }
+    }
+    maxBytesLength = i;
   }
 
   BinaryDecoder(InputStream in, int bufferSize) {
-    super();
+    this();
     configure(in, bufferSize);
   }
 
   BinaryDecoder(byte[] data, int offset, int length) {
-    super();
+    this();
     configure(data, offset, length);
   }
 
@@ -307,6 +330,15 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = readInt();
+    if (length > MAX_ARRAY_SIZE) {
+      throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
+    }
+    if (length > maxBytesLength) {
+      throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
+    }
+    if (length < 0L) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
+    }
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
@@ -524,7 +556,7 @@ public class BinaryDecoder extends Decoder {
 
   /**
    * BufferAccessor is used by BinaryEncoder to enable {@link ByteSource}s and the
-   * InputStream returned by {@link BinaryDecoder.inputStream} to access the
+   * InputStream returned by {@link BinaryDecoder#inputStream} to access the
    * BinaryEncoder's buffer. When a BufferAccessor is created, it is attached to a
    * BinaryDecoder and its buffer. Its accessors directly reference the
    * BinaryDecoder's buffer. When detach() is called, it stores references to the
@@ -617,15 +649,15 @@ public class BinaryDecoder extends Decoder {
    * stronger guarantees than InputStream, freeing client code to be simplified
    * and faster.
    * <p/>
-   * {@link skipSourceBytes} and {@link readRaw} are guaranteed to have read or
+   * {@link #skipSourceBytes} and {@link #readRaw} are guaranteed to have read or
    * skipped as many bytes as possible, or throw EOFException.
-   * {@link trySkipBytes} and {@link tryRead} are guaranteed to attempt to read or
-   * skip as many bytes as possible and never throw EOFException, while returning
-   * the exact number of bytes skipped or read. {@link isEof} returns true if all
-   * the source bytes have been read or skipped. This condition can also be
-   * detected by a client if an EOFException is thrown from
-   * {@link skipSourceBytes} or {@link readRaw}, or if {@link trySkipBytes} or
-   * {@link tryRead} return 0;
+   * {@link #trySkipBytes} and {@link #tryReadRaw} are guaranteed to attempt to
+   * read or skip as many bytes as possible and never throw EOFException, while
+   * returning the exact number of bytes skipped or read. {@link #isEof} returns
+   * true if all the source bytes have been read or skipped. This condition can
+   * also be detected by a client if an EOFException is thrown from
+   * {@link #skipSourceBytes} or {@link #readRaw}, or if {@link #trySkipBytes} or
+   * {@link #tryReadRaw} return 0;
    * <p/>
    * A ByteSource also implements the InputStream contract for use by APIs that
    * require it. The InputStream interface must take into account buffering in any

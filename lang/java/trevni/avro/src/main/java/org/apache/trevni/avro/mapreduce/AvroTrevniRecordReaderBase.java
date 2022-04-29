@@ -36,7 +36,7 @@ import org.apache.trevni.avro.HadoopInput;
  * @param <K> The type of key the record reader should generate.
  * @param <V> The type of value the record reader should generate.
  * @param <T> The type of the entries within the Trevni container file being
- *        read.
+ *            read.
  */
 public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K, V> {
 

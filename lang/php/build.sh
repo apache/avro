@@ -48,6 +48,7 @@ for target in "$@"
 do
   case "$target" in
     interop-data-generate)
+      composer install -d "../.."
       php test/generate_interop_data.php
       ;;
 
@@ -57,6 +58,7 @@ do
       ;;
 
     lint)
+      composer install -d "../.."
       find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
       vendor/bin/phpcs --standard=PSR12 lib
       ;;

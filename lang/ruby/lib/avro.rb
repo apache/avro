@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -22,7 +23,7 @@ require 'stringio'
 require 'zlib'
 
 module Avro
-  VERSION = "FIXME"
+  VERSION = File.read("#{__dir__}/avro/VERSION.txt").freeze
 
   class AvroError < StandardError; end
 

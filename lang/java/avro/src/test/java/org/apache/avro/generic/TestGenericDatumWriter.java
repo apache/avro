@@ -17,19 +17,26 @@
  */
 package org.apache.avro.generic;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ConcurrentModificationException;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.*;
-
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.UnresolvedUnionException;
@@ -38,6 +45,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestGenericDatumWriter {
@@ -47,7 +55,6 @@ public class TestGenericDatumWriter {
     GenericRecord r = new GenericData.Record(s);
     r.put("f", 100);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    EncoderFactory.get().jsonEncoder(s, bao);
     try {
       new GenericDatumWriter<>(s).write(r, EncoderFactory.get().jsonEncoder(s, bao));
       fail();
@@ -277,7 +284,7 @@ public class TestGenericDatumWriter {
     public void writeIndex(int unionIndex) throws IOException {
       e.writeIndex(unionIndex);
     }
-  };
+  }
 
   @Test(expected = AvroTypeException.class)
   public void writeDoesNotAllowStringForGenericEnum() throws IOException {
@@ -297,7 +304,7 @@ public class TestGenericDatumWriter {
 
   private enum AnEnum {
     ONE, TWO, THREE
-  };
+  }
 
   @Test(expected = AvroTypeException.class)
   public void writeDoesNotAllowJavaEnumForGenericEnum() throws IOException {
@@ -319,14 +326,139 @@ public class TestGenericDatumWriter {
   public void writeFieldWithDefaultWithExplicitNullDefaultInSchema() throws Exception {
     Schema schema = schemaWithExplicitNullDefault();
     GenericRecord record = createRecordWithDefaultField(schema);
-    writeObject(schema, record);
+    writeObject(record);
   }
 
   @Test
   public void writeFieldWithDefaultWithoutExplicitNullDefaultInSchema() throws Exception {
     Schema schema = schemaWithoutExplicitNullDefault();
     GenericRecord record = createRecordWithDefaultField(schema);
-    writeObject(schema, record);
+    writeObject(record);
+  }
+
+  @Test
+  public void testNestedNPEErrorClarity() throws Exception {
+    GenericData.Record topLevelRecord = buildComplexRecord();
+    @SuppressWarnings("unchecked")
+    Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
+        .get("unionField")).get("arrayField")).get(0).get("mapField");
+    map.get("a").put("strField", null);
+    try {
+      writeObject(topLevelRecord);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
+    }
+  }
+
+  @Test
+  public void testNPEForMapKeyErrorClarity() throws Exception {
+    GenericData.Record topLevelRecord = buildComplexRecord();
+    @SuppressWarnings("unchecked")
+    Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
+        .get("unionField")).get("arrayField")).get(0).get("mapField");
+    map.put(null, map.get("a")); // value is valid, but key is null
+    try {
+      writeObject(topLevelRecord);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("null key in map at RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField"));
+    }
+  }
+
+  @Test
+  public void testShortPathNPEErrorClarity() throws Exception {
+    try {
+      writeObject(Schema.create(Schema.Type.STRING), null);
+      Assert.fail("expected to throw");
+    } catch (NullPointerException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("null value for (non-nullable) string"));
+    }
+  }
+
+  @Test
+  public void testNestedCCEErrorClarity() throws Exception {
+    GenericData.Record topLevelRecord = buildComplexRecord();
+    @SuppressWarnings("unchecked")
+    Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
+        .get("unionField")).get("arrayField")).get(0).get("mapField");
+    map.get("a").put("strField", 42); // not a string
+    try {
+      writeObject(topLevelRecord);
+      Assert.fail("expected to throw");
+    } catch (ClassCastException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
+    }
+  }
+
+  @Test
+  public void testShortPathCCEErrorClarity() throws Exception {
+    try {
+      writeObject(Schema.create(Schema.Type.STRING), 42);
+      Assert.fail("expected to throw");
+    } catch (ClassCastException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("value 42 (a java.lang.Integer) cannot be cast to expected type string"));
+    }
+  }
+
+  @Test
+  public void testNestedATEErrorClarity() throws Exception {
+    GenericData.Record topLevelRecord = buildComplexRecord();
+    @SuppressWarnings("unchecked")
+    Map<String, GenericData.Record> map = (Map<String, GenericData.Record>) ((List<GenericData.Record>) ((GenericData.Record) topLevelRecord
+        .get("unionField")).get("arrayField")).get(0).get("mapField");
+    map.get("a").put("enumField", 42); // not an enum
+    try {
+      writeObject(topLevelRecord);
+      Assert.fail("expected to throw");
+    } catch (AvroTypeException expected) {
+      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
+          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].enumField"));
+      Assert.assertTrue("unexpected message " + expected.getMessage(),
+          expected.getMessage().contains("42 (a java.lang.Integer) is not a MapRecordEnum"));
+    }
+  }
+
+  private GenericData.Record buildComplexRecord() throws IOException {
+
+    Schema schema = new Schema.Parser().parse(new File("../../../share/test/schemas/RecordWithRequiredFields.avsc"));
+
+    GenericData.Record topLevelRecord = new GenericData.Record(schema);
+    GenericData.Record unionRecord = new GenericData.Record(schema.getField("unionField").schema().getTypes().get(1));
+    Schema arraySchema = unionRecord.getSchema().getField("arrayField").schema();
+    GenericData.Record arrayRecord1 = new GenericData.Record(arraySchema.getElementType());
+    GenericData.Record arrayRecord2 = new GenericData.Record(arraySchema.getElementType());
+    GenericData.Array<GenericData.Record> array = new GenericData.Array<>(arraySchema,
+        Arrays.asList(arrayRecord1, arrayRecord2));
+    Schema mapRecordSchema = arraySchema.getElementType().getField("mapField").schema().getValueType();
+    GenericData.Record mapRecordA = new GenericData.Record(mapRecordSchema);
+    Schema mapRecordEnumSchema = mapRecordSchema.getField("enumField").schema();
+
+    mapRecordA.put("enumField", new GenericData.EnumSymbol(mapRecordEnumSchema, "B"));
+    mapRecordA.put("strField", "4");
+
+    arrayRecord1.put("strField", "2");
+    HashMap<String, GenericData.Record> map1 = new HashMap<>();
+    map1.put("a", mapRecordA);
+    arrayRecord1.put("mapField", map1);
+
+    arrayRecord2.put("strField", "2");
+    HashMap<String, GenericData.Record> map2 = new HashMap<>();
+    map2.put("a", mapRecordA);
+    arrayRecord2.put("mapField", map2);
+
+    unionRecord.put(unionRecord.getSchema().getField("strField").pos(), "1");
+    unionRecord.put(unionRecord.getSchema().getField("arrayField").pos(), array); // BOOM
+
+    topLevelRecord.put(topLevelRecord.getSchema().getField("strField").pos(), "0");
+    topLevelRecord.put(topLevelRecord.getSchema().getField("unionField").pos(), unionRecord);
+
+    return topLevelRecord;
   }
 
   private Schema schemaWithExplicitNullDefault() {
@@ -342,10 +474,15 @@ public class TestGenericDatumWriter {
     return new Schema.Parser().parse(schema);
   }
 
-  private void writeObject(Schema schema, GenericRecord datum) throws Exception {
+  private void writeObject(GenericRecord datum) throws Exception {
+    writeObject(datum.getSchema(), datum);
+  }
+
+  private void writeObject(Schema schema, Object datum) throws Exception {
     BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(new ByteArrayOutputStream(), null);
-    GenericDatumWriter<GenericData.Record> writer = new GenericDatumWriter<>(schema);
-    writer.write(schema, datum, encoder);
+    GenericDatumWriter<Object> writer = new GenericDatumWriter<>(schema);
+    writer.write(datum, encoder);
+    encoder.flush();
   }
 
   private GenericRecord createRecordWithDefaultField(Schema schema) {

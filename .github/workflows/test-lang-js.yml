@@ -1,0 +1,114 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Test JavaScript'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+    - .github/workflows/test-lang-js.yml
+    - lang/js/**
+
+defaults:
+  run:
+    working-directory: lang/js
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node:
+        - 12
+        - 14
+        - 16
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Lint
+        run: ./build.sh lint
+
+      - name: Test
+        run: ./build.sh test
+
+  interop:
+    name: Node ${{ matrix.node }} Interop
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node:
+        - 12
+        - 14
+        - 16
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Python for Generating Input Data
+        uses: actions/setup-python@v2
+
+      - name: Apt Install Compression Libs Required by Python
+        run: |
+          sudo apt-get install -qqy --no-install-recommends libbz2-dev \
+                                                            liblzma-dev \
+                                                            libsnappy-dev \
+                                                            libzstd-dev
+      - name: Install Python Dependencies
+        run: |
+          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install python-snappy zstandard
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Data using Python
+        working-directory: lang/py
+        run: ./build.sh interop-data-generate
+
+      - name: Generate Interop Data
+        run: ./build.sh interop-data-generate
+
+      - name: Run Interop Tests
+        run: npm install && ./build.sh interop-data-test

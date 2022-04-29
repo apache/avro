@@ -38,6 +38,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
@@ -105,8 +106,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     creatorResolver = null;
   }
 
-  private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocal
-      .withInitial(WeakIdentityHashMap::new);
+  private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocalWithInitial
+      .of(WeakIdentityHashMap::new);
 
   /**
    * Gets a resolving decoder for use by this GenericDatumReader. Unstable API.
@@ -210,7 +211,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   /**
-   * Convert a underlying representation of a logical type (such as a ByteBuffer)
+   * Convert an underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
    *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
@@ -568,7 +569,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         skip(field.schema(), in);
       break;
     case ENUM:
-      in.readInt();
+      in.readEnum();
       break;
     case ARRAY:
       Schema elementType = schema.getElementType();

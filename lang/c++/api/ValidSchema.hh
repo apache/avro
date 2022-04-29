@@ -27,7 +27,7 @@ namespace avro {
 class AVRO_DECL Schema;
 
 /// A ValidSchema is basically a non-mutable Schema that has passed some
-/// minumum of sanity checks.  Once valididated, any Schema that is part of
+/// minimum of sanity checks.  Once validated, any Schema that is part of
 /// this ValidSchema is considered locked, and cannot be modified (an attempt
 /// to modify a locked Schema will throw).  Also, as it is validated, any
 /// recursive duplications of schemas are replaced with symbolic links to the
@@ -39,7 +39,7 @@ class AVRO_DECL Schema;
 
 class AVRO_DECL ValidSchema {
 public:
-    explicit ValidSchema(const NodePtr &root);
+    explicit ValidSchema(NodePtr root);
     explicit ValidSchema(const Schema &schema);
     ValidSchema();
 
@@ -54,10 +54,10 @@ public:
 
     void toFlatList(std::ostream &os) const;
 
-  protected:
+protected:
     NodePtr root_;
 
-  private:
+private:
     static std::string compactSchema(const std::string &schema);
 };
 

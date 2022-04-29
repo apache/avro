@@ -19,11 +19,16 @@ package org.apache.avro.specific;
 
 import java.io.IOException;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
+import org.apache.avro.path.TracingAvroTypeException;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.path.TracingClassCastException;
+import org.apache.avro.path.TracingNullPointException;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.path.LocationStep;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java
@@ -76,7 +81,11 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     if (datum instanceof SpecificRecordBase && this.getSpecificData().useCustomCoders()) {
       SpecificRecordBase d = (SpecificRecordBase) datum;
       if (d.hasCustomCoders()) {
-        d.customEncode(out);
+        try {
+          d.customEncode(out);
+        } catch (NullPointerException e) {
+          throw new TracingNullPointException(e, null, true);
+        }
         return;
       }
     }
@@ -95,7 +104,14 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
         value = convert(fieldSchema, logicalType, conversion, value);
       }
 
-      writeWithoutConversion(fieldSchema, value, out);
+      try {
+        writeWithoutConversion(fieldSchema, value, out);
+      } catch (TracingNullPointException | TracingClassCastException | TracingAvroTypeException e) {
+        e.tracePath(new LocationStep(".", f.name()));
+        throw e;
+      } catch (AvroTypeException ate) {
+        throw addAvroTypeMsg(ate, " in field '" + f.name() + "'");
+      }
 
     } else {
       super.writeField(datum, f, out, state);

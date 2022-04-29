@@ -34,7 +34,6 @@ use Apache\Avro\AvroIO;
  */
 class AvroIOBinaryDecoder
 {
-
     /**
      * @var AvroIO
      */
@@ -253,6 +252,58 @@ class AvroIOBinaryDecoder
     public function skipBytes()
     {
         return $this->skip($this->readLong());
+    }
+
+    public function skipFixed($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $decoder->skip($writers_schema->size());
+    }
+
+    public function skipEnum($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $decoder->skipInt();
+    }
+
+    public function skipUnion($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $index = $decoder->readLong();
+        AvroIODatumReader::skipData($writers_schema->schemaByIndex($index), $decoder);
+    }
+
+    public function skipRecord($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        foreach ($writers_schema->fields() as $f) {
+            AvroIODatumReader::skipData($f->type(), $decoder);
+        }
+    }
+
+    public function skipArray($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $block_count = $decoder->readLong();
+        while (0 !== $block_count) {
+            if ($block_count < 0) {
+                $decoder->skip($this->readLong());
+            }
+            for ($i = 0; $i < $block_count; $i++) {
+                AvroIODatumReader::skipData($writers_schema->items(), $decoder);
+            }
+            $block_count = $decoder->readLong();
+        }
+    }
+
+    public function skipMap($writers_schema, AvroIOBinaryDecoder $decoder)
+    {
+        $block_count = $decoder->readLong();
+        while (0 !== $block_count) {
+            if ($block_count < 0) {
+                $decoder->skip($this->readLong());
+            }
+            for ($i = 0; $i < $block_count; $i++) {
+                $decoder->skipString();
+                AvroIODatumReader::skipData($writers_schema->values(), $decoder);
+            }
+            $block_count = $decoder->readLong();
+        }
     }
 
     /**

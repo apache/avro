@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,35 +17,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+import datetime
+from typing import Optional
 
-from datetime import datetime, timedelta, tzinfo
 
+class UTCTzinfo(datetime.tzinfo):
+    def utcoffset(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
+        return datetime.timedelta(0)
 
-class UTCTzinfo(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(0)
-
-    def tzname(self, dt):
+    def tzname(self, dt: Optional[datetime.datetime] = None) -> str:
         return "UTC"
 
-    def dst(self, dt):
-        return timedelta(0)
+    def dst(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
+        return datetime.timedelta(0)
 
 
 utc = UTCTzinfo()
 
 
 # Test Time Zone with fixed offset and no DST
-class TSTTzinfo(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(hours=10)
+class TSTTzinfo(datetime.tzinfo):
+    def utcoffset(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
+        return datetime.timedelta(hours=10)
 
-    def tzname(self, dt):
+    def tzname(self, dt: Optional[datetime.datetime] = None) -> str:
         return "TST"
 
-    def dst(self, dt):
-        return timedelta(0)
+    def dst(self, dt: Optional[datetime.datetime] = None) -> datetime.timedelta:
+        return datetime.timedelta(0)
 
 
 tst = TSTTzinfo()

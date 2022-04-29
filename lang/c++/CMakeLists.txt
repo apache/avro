@@ -16,11 +16,20 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.1)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
-cmake_policy (SET CMP0042 NEW)
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.0)
+    # Enable MACOSX_RPATH by default
+    cmake_policy (SET CMP0042 NEW)
+endif()
 
 if (NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
     set (CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS ON)
@@ -52,9 +61,6 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
         -DBOOST_IOSTREAMS_DYN_LINK
         -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
-else()
-# Replease c++11 with c++17 below in case C++ 17 should be used
-    add_definitions(-std=c++11 -fPIC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -80,10 +86,13 @@ if (SNAPPY_FOUND)
 else (SNAPPY_FOUND)
     set(SNAPPY_PKG "")
     set(SNAPPY_LIBRARIES "")
+    set(SNAPPY_INCLUDE_DIR "")
     message("Disabled snappy codec. libsnappy not found.")
 endif (SNAPPY_FOUND)
 
 add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+
+add_definitions (-DAVRO_VERSION="${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR}.${AVRO_VERSION_PATCH}")
 
 include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
@@ -153,6 +162,7 @@ gen (tree1 tr1)
 gen (tree2 tr2)
 gen (crossref cr)
 gen (primitivetypes pt)
+gen (cpp_reserved_words cppres)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
@@ -177,6 +187,9 @@ unittest (DataFileTests)
 unittest (JsonTests)
 unittest (AvrogencppTests)
 unittest (CompilerTests)
+unittest (AvrogencppTestReservedWords)
+
+add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
 
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh

@@ -17,30 +17,29 @@
  */
 package org.apache.avro;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Field.Order;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
-import java.util.HashSet;
-
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Field.Order;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * A set of messages forming an application protocol.
@@ -332,7 +331,7 @@ public class Protocol extends JsonProperties {
    * {@code props} of {@code m}.
    */
   public Message createMessage(Message m, Schema request) {
-    return new Message(name, doc, m, request);
+    return new Message(m.name, m.doc, m, request);
   }
 
   /** Create a one-way message. */
@@ -417,7 +416,9 @@ public class Protocol extends JsonProperties {
 
     gen.writeStartObject();
     gen.writeStringField("protocol", name);
-    gen.writeStringField("namespace", namespace);
+    if (namespace != null) {
+      gen.writeStringField("namespace", namespace);
+    }
 
     if (doc != null)
       gen.writeStringField("doc", doc);

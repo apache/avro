@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,10 +17,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import pkgutil
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs']
+__all__ = [
+    "schema",
+    "io",
+    "datafile",
+    "protocol",
+    "ipc",
+    "constants",
+    "timezones",
+    "codecs",
+    "compatibility",
+]
 
-__version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()
+__version__ = (pkgutil.get_data(__name__, "VERSION.txt") or b"0.0.1+unknown").decode().strip()

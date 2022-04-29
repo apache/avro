@@ -87,7 +87,7 @@ public abstract class CodecFactory {
    *              use a lot of memory.
    */
   public static CodecFactory zstandardCodec(int level) {
-    return new ZstandardCodec.Option(level, false);
+    return new ZstandardCodec.Option(level, false, false);
   }
 
   /**
@@ -100,7 +100,21 @@ public abstract class CodecFactory {
    * @param useChecksum if true, will include a checksum with each data block
    */
   public static CodecFactory zstandardCodec(int level, boolean useChecksum) {
-    return new ZstandardCodec.Option(level, useChecksum);
+    return new ZstandardCodec.Option(level, useChecksum, false);
+  }
+
+  /**
+   * zstandard codec, with specific compression level, checksum, and bufferPool
+   *
+   * @param level         The compression level should be between -5 and 22,
+   *                      inclusive. Negative levels are 'fast' modes akin to lz4
+   *                      or snappy, levels above 9 are generally for archival
+   *                      purposes, and levels above 18 use a lot of memory.
+   * @param useChecksum   if true, will include a checksum with each data block
+   * @param useBufferPool if true, will use recycling buffer pool
+   */
+  public static CodecFactory zstandardCodec(int level, boolean useChecksum, boolean useBufferPool) {
+    return new ZstandardCodec.Option(level, useChecksum, useBufferPool);
   }
 
   /** Creates internal Codec. */
@@ -114,14 +128,15 @@ public abstract class CodecFactory {
 
   public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
   public static final int DEFAULT_XZ_LEVEL = XZCodec.DEFAULT_COMPRESSION;
-  public static final int DEFAULT_ZSTANDARD_LEVEL = 3;
+  public static final int DEFAULT_ZSTANDARD_LEVEL = ZstandardCodec.DEFAULT_COMPRESSION;
+  public static final boolean DEFAULT_ZSTANDARD_BUFFERPOOL = ZstandardCodec.DEFAULT_USE_BUFFERPOOL;
 
   static {
     addCodec(DataFileConstants.NULL_CODEC, nullCodec());
     addCodec(DataFileConstants.DEFLATE_CODEC, deflateCodec(DEFAULT_DEFLATE_LEVEL));
     addCodec(DataFileConstants.BZIP2_CODEC, bzip2Codec());
     addCodec(DataFileConstants.XZ_CODEC, xzCodec(DEFAULT_XZ_LEVEL));
-    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec(DEFAULT_ZSTANDARD_LEVEL));
+    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec(DEFAULT_ZSTANDARD_LEVEL, DEFAULT_ZSTANDARD_BUFFERPOOL));
     addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
   }
 

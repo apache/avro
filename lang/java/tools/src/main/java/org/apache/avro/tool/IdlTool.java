@@ -59,6 +59,10 @@ public class IdlTool implements Tool {
     }
 
     Protocol p = parser.CompilationUnit();
+    final List<String> warnings = parser.getWarningsAfterParsing();
+    for (String warning : warnings) {
+      err.println("Warning: " + warning);
+    }
     try {
       parseOut.print(p.toString(true));
     } finally {

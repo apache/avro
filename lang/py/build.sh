@@ -35,9 +35,21 @@ clean() {
                  'userlogs'
 }
 
-dist() {
-  ./setup.py dist
-}
+dist() (
+  ##
+  # Use https://pypa-build.readthedocs.io to create the build artifacts.
+  local destination virtualenv
+  destination=$(
+    d=../../dist/py
+    mkdir -p "$d"
+    cd -P "$d"
+    pwd
+  )
+  virtualenv="$(mktemp -d)"
+  python3 -m venv "$virtualenv"
+  "$virtualenv/bin/python3" -m pip install build
+  "$virtualenv/bin/python3" -m build --outdir "$destination"
+)
 
 interop-data-generate() {
   ./setup.py generate_interop_data
@@ -47,15 +59,15 @@ interop-data-generate() {
 interop-data-test() {
   mkdir -p avro/test/interop ../../build/interop/data
   cp -r ../../build/interop/data avro/test/interop
-  python -m unittest avro.test.test_datafile_interop
+  python3 -m unittest avro.test.test_datafile_interop
 }
 
 lint() {
-  tox -e lint
+  python3 -m tox -e lint
 }
 
 test_() {
-  TOX_SKIP_ENV=lint tox --skip-missing-interpreters
+  TOX_SKIP_ENV=lint python3 -m tox --skip-missing-interpreters
 }
 
 main() {

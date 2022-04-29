@@ -103,15 +103,42 @@ namespace Avro
         /// <summary>
         /// Static comparer object for JSON objects such as the fields default value
         /// </summary>
-        internal static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
+        internal readonly static JTokenEqualityComparer JtokenEqual = new JTokenEqualityComparer();
 
         /// <summary>
-        /// A flag to indicate if reader schema has a field that is missing from writer schema and has a default value
-        /// This is set in CanRead() which is always be called before deserializing data
+        /// Initializes a new instance of the <see cref="Field"/> class.
         /// </summary>
+        /// <param name="schema">schema for the field type.</param>
+        /// <param name="name">name of the field.</param>
+        /// <param name="aliases">list of aliases for the name of the field.</param>
+        /// <param name="pos">position of the field.</param>
+        /// <param name="doc">documentation for the field.</param>
+        /// <param name="defaultValue">field's default value if it exists.</param>
+        /// <param name="sortorder">sort order of the field.</param>
+        /// <param name="customProperties">dictionary that provides access to custom properties.</param>
+        public Field(Schema schema,
+            string name,
+            int pos,
+            IList<string> aliases = null,
+            string doc = null,
+            JToken defaultValue = null,
+            SortOrder sortorder = SortOrder.ignore,
+            PropertyMap customProperties = null)
+            : this(schema, name, aliases, pos, doc, defaultValue, sortorder, customProperties)
+        {
+        }
 
         /// <summary>
-        /// Constructor for the field class
+        /// Creates a new field based on the specified field, with a different position.
+        /// </summary>
+        /// <returns>A clone of this field with new position.</returns>
+        internal Field ChangePosition(int newPosition)
+        {
+            return new Field(Schema, Name, newPosition, Aliases, Documentation, DefaultValue, Ordering ?? SortOrder.ignore, Props);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class.
         /// </summary>
         /// <param name="schema">schema for the field type</param>
         /// <param name="name">name of the field</param>
@@ -121,21 +148,29 @@ namespace Avro
         /// <param name="defaultValue">field's default value if it exists</param>
         /// <param name="sortorder">sort order of the field</param>
         /// <param name="props">dictionary that provides access to custom properties</param>
+        /// <exception cref="ArgumentNullException">
+        /// name - name cannot be null.
+        /// or
+        /// type - type cannot be null.
+        /// </exception>
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
-            if (null == schema) throw new ArgumentNullException("type", "type cannot be null.");
-            this.Schema = schema;
-            this.Name = name;
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            }
+
+            Schema = schema ?? throw new ArgumentNullException("type", "type cannot be null.");
+            Name = name;
 #pragma warning disable CS0618 // Type or member is obsolete
             this.aliases = aliases;
 #pragma warning restore CS0618 // Type or member is obsolete
-            this.Pos = pos;
-            this.Documentation = doc;
-            this.DefaultValue = defaultValue;
-            this.Ordering = sortorder;
-            this.Props = props;
+            Pos = pos;
+            Documentation = doc;
+            DefaultValue = defaultValue;
+            Ordering = sortorder;
+            Props = props;
         }
 
         /// <summary>

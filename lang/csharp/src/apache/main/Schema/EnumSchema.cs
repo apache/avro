@@ -17,7 +17,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
@@ -30,7 +31,12 @@ namespace Avro
         /// <summary>
         /// List of strings representing the enum symbols
         /// </summary>
-        public IList<string> Symbols { get; private set;  }
+        public IList<string> Symbols { get; private set; }
+
+        /// <summary>
+        /// The default token to use when deserializing an enum when the provided token is not found
+        /// </summary>
+        public string Default { get; private set; }
 
         /// <summary>
         /// Map of enum symbols and it's corresponding ordinal number
@@ -41,6 +47,34 @@ namespace Avro
         /// Count of enum symbols
         /// </summary>
         public int Count { get { return Symbols.Count; } }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnumSchema"/> class.
+        /// </summary>
+        /// <param name="name">Name of enum</param>
+        /// <param name="space">Namespace of enum</param>
+        /// <param name="aliases">List of aliases for the name</param>
+        /// <param name="symbols">List of enum symbols</param>
+        /// <param name="customProperties">Custom properties on this schema</param>
+        /// <param name="doc">Documentation for this named schema</param>
+        /// <param name="defaultSymbol"></param>
+        public static EnumSchema Create(string name,
+            IEnumerable<string> symbols,
+            string space = null,
+            IEnumerable<string> aliases = null,
+            PropertyMap customProperties = null,
+            string doc = null,
+            string defaultSymbol = null)
+        {
+            return new EnumSchema(new SchemaName(name, space, null, doc),
+                  Aliases.GetSchemaNames(aliases, name, space),
+                  symbols.ToList(),
+                  CreateSymbolsMap(symbols),
+                  customProperties,
+                  new SchemaNames(),
+                  doc,
+                  defaultSymbol);
+        }
 
         /// <summary>
         /// Static function to return new instance of EnumSchema
@@ -74,9 +108,9 @@ namespace Avro
             try
             {
                 return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
-                    JsonHelper.GetOptionalString(jtok, "doc"));
+                    JsonHelper.GetOptionalString(jtok, "doc"), JsonHelper.GetOptionalString(jtok, "default"));
             }
-            catch (SchemaParseException e)
+            catch (AvroException e)
             {
                 throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
             }
@@ -92,14 +126,53 @@ namespace Avro
         /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
+        /// <param name="defaultSymbol">default symbol</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
-                            string doc)
+                            string doc, string defaultSymbol)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
-            if (null == name.Name) throw new SchemaParseException("name cannot be null for enum schema.");
+            if (null == name.Name) throw new AvroException("name cannot be null for enum schema.");
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
+
+            if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
+                throw new AvroException($"Default symbol: {defaultSymbol} not found in symbols");
+            Default = defaultSymbol;
+        }
+
+        /// <summary>
+        /// Creates symbols map from specified list of symbols.
+        /// Symbol map contains the names of the symbols and their index.
+        /// </summary>
+        /// <param name="symbols">List of symbols</param>
+        /// <returns>Symbol map</returns>
+        /// <exception cref="AvroException">Is thrown if the symbols list contains invalid symbol name or duplicate symbols</exception>
+        private static IDictionary<string, int> CreateSymbolsMap(IEnumerable<string> symbols)
+        {
+            IDictionary<string, int> symbolMap = new Dictionary<string, int>();
+            int i = 0;
+            foreach (var symbol in symbols)
+            {
+                ValidateSymbolName(symbol);
+
+                if (symbolMap.ContainsKey(symbol))
+                {
+                    throw new AvroException($"Duplicate symbol: {symbol}");
+                }
+
+                symbolMap[symbol] = i++;
+            }
+
+            return symbolMap;
+        }
+
+        private static void ValidateSymbolName(string symbol)
+        {
+            if(string.IsNullOrEmpty(symbol) || !Regex.IsMatch(symbol, "^([A-Za-z_][A-Za-z0-9_]*)$"))
+            {
+                throw new AvroException($"Invalid symbol name: {symbol}");
+            }
         }
 
         /// <summary>
@@ -117,6 +190,11 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
+            if (null != Default)
+            {
+                writer.WritePropertyName("default");
+                writer.WriteValue(Default);
+            }
         }
 
         /// <summary>
@@ -124,12 +202,24 @@ namespace Avro
         /// Throws AvroException if the symbol is not found in this enum.
         /// </summary>
         /// <param name="symbol">name of the symbol to find</param>
-        /// <returns>position of the given symbol in this enum schema</returns>
+        /// <returns>
+        /// position of the given symbol in this enum schema
+        /// </returns>
+        /// <exception cref="Avro.AvroException">No such symbol: {symbol}</exception>
         public int Ordinal(string symbol)
         {
             int result;
-            if (symbolMap.TryGetValue(symbol, out result)) return result;
-            throw new AvroException("No such symbol: " + symbol);
+            if (symbolMap.TryGetValue(symbol, out result))
+            {
+                return result;
+            }
+
+            if (Default != null && symbolMap.TryGetValue(Default, out result))
+            {
+                return result;
+            }
+
+            throw new AvroException($"No such symbol: {symbol}");
         }
 
         /// <summary>

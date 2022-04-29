@@ -52,8 +52,7 @@ namespace Avro
 
         private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)
         {
-            if (null == baseSchema) throw new ArgumentNullException(nameof(baseSchema));
-            BaseSchema = baseSchema;
+            BaseSchema = baseSchema ?? throw new ArgumentNullException(nameof(baseSchema));
             LogicalTypeName = logicalTypeName;
             LogicalType = LogicalTypeFactory.Instance.GetFromLogicalSchema(this);
         }

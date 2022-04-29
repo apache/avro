@@ -17,12 +17,18 @@
  */
 package org.apache.avro;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-
-import com.fasterxml.jackson.databind.node.NullNode;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import org.apache.avro.Schema.Field.Order;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -812,4 +818,42 @@ public class TestSchemaBuilder {
         schema.getField("double").defaultVal());
   }
 
+  @Test(expected = AvroRuntimeException.class)
+  public void testValidateDefaultsEnabled() {
+    try {
+      SchemaBuilder.record("ValidationRecord").fields().name("IntegerField").type("int").withDefault("Invalid")
+          .endRecord();
+    } catch (AvroRuntimeException e) {
+      Assert.assertEquals("Default behavior is to raise an exception due to record having an invalid default",
+          "Invalid default for field IntegerField: \"Invalid\" not a \"int\"", e.getMessage());
+      throw e;
+    }
+  }
+
+  @Test
+  public void testValidateDefaultsDisabled() {
+    final String fieldName = "IntegerField";
+    final String defaultValue = "foo";
+    Schema schema = SchemaBuilder.record("ValidationRecord").fields().name(fieldName).notValidatingDefaults()
+        .type("int").withDefault(defaultValue) // Would throw an exception on endRecord() if validations enabled
+        .endRecord();
+    Assert.assertNull("Differing types, so this returns null", schema.getField(fieldName).defaultVal());
+    Assert.assertEquals("Schema is able to be successfully created as is without validation", defaultValue,
+        schema.getField(fieldName).defaultValue().asText());
+  }
+
+  /**
+   * https://issues.apache.org/jira/browse/AVRO-1965
+   */
+  @Test
+  public void testNamespaceDefaulting() {
+    Schema d = SchemaBuilder.builder().intType();
+    Schema c = SchemaBuilder.record("c").fields().name("d").type(d).noDefault().endRecord();
+    Schema b = SchemaBuilder.record("b").fields().name("c").type(c).noDefault().endRecord();
+
+    Schema a1 = SchemaBuilder.record("default.a").fields().name("b").type(b).noDefault().endRecord();
+    Schema a2 = new Schema.Parser().parse(a1.toString());
+
+    Assert.assertEquals(a2, a1);
+  }
 }

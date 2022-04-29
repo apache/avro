@@ -1,7 +1,7 @@
 {
   "protocol" : "Simple",
   "namespace" : "org.apache.avro.test",
-  "doc" : "* A simple test case.",
+  "doc" : "A simple test case.",
   "version" : "1.0.5",
   "types" : [ {
     "type" : "enum",
@@ -15,18 +15,15 @@
    "symbols" : [ "A", "B", "C" ],
    "default" : "C"
   }, {
-    "type" : "fixed",
-    "name" : "MD5",
-    "doc" : "An MD5 hash.",
-    "size" : 16,
-    "foo" : "bar"
-  }, {
     "type" : "record",
     "name" : "TestRecord",
     "doc" : "A TestRecord.",
     "fields" : [ {
       "name" : "name",
-      "type" : "string",
+      "type" : {
+        "type": "string",
+        "avro.java.string": "String"
+      },
       "default" : "foo",
       "order" : "ignore"
     }, {
@@ -41,7 +38,12 @@
       "default" : "A"
     }, {
       "name" : "hash",
-      "type" : "MD5",
+      "type" : {
+        "type" : "fixed",
+        "name" : "MD5",
+        "doc" : "An MD5 hash.",
+        "size" : 16
+      },
       "default" : "0000000000000000"
     }, {
       "name" : "nullableHash",
@@ -62,12 +64,16 @@
       "default": 0
     }, {
       "name": "t",
-      "type": {"type": "int", "logicalType": "time-millis"},
+      "type": [ {"type": "int", "logicalType": "time-millis"}, "null" ],
       "default": 0
     } , {
       "name": "l",
       "type": {"type": "long", "foo.bar": "bar.foo"},
       "default": 0
+    } , {
+      "name": "a",
+      "type": {"type": "array", "items": "string", "foo.bar.bar": "foo.bar2"},
+      "default": []
     } , {
       "name": "prop",
       "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ],

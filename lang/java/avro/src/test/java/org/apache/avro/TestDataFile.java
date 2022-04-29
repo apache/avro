@@ -28,8 +28,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import org.apache.avro.file.*;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.file.Syncable;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -74,6 +79,8 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.zstandardCodec(0, true) });
     r.add(new Object[] { CodecFactory.zstandardCodec(5, false) });
     r.add(new Object[] { CodecFactory.zstandardCodec(18, true) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, false) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, true) });
     return r;
   }
 

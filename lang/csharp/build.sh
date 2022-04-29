@@ -35,14 +35,14 @@ do
     test)
       dotnet build --configuration Release Avro.sln
 
-      # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
-      LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
+      # AVRO-2442: Explicitly set LANG to work around ICU bug in `dotnet test`
+      LANG=en_US.UTF-8 dotnet test --configuration Release --no-build \
           --filter "TestCategory!=Interop" Avro.sln
       ;;
 
     perf)
       pushd ./src/apache/perf/
-      dotnet run --configuration Release --framework netcoreapp3.1
+      dotnet run --configuration Release --framework net6.0
       ;;
 
     dist)
@@ -50,13 +50,20 @@ do
       dotnet pack --configuration Release Avro.sln
 
       # add the binary LICENSE and NOTICE to the tarball
-      mkdir build/
+      mkdir -p build/
       cp LICENSE NOTICE build/
 
       # add binaries to the tarball
-      mkdir build/main/
+      mkdir -p build/main/
       cp -R src/apache/main/bin/Release/* build/main/
-      mkdir build/codegen/
+      # add codec binaries to the tarball
+      for codec in Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard
+      do
+        mkdir -p build/codec/$codec/
+        cp -R src/apache/codec/$codec/bin/Release/* build/codec/$codec/
+      done
+      # add codegen binaries to the tarball
+      mkdir -p build/codegen/
       cp -R src/apache/codegen/bin/Release/* build/codegen/
 
       # build the tarball
@@ -70,11 +77,11 @@ do
       ;;
 
     interop-data-generate)
-      dotnet run --project src/apache/test/Avro.test.csproj --framework netcoreapp3.1 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      dotnet run --project src/apache/test/Avro.test.csproj --framework net6.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
 
     interop-data-test)
-      LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
+      LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop" --logger "console;verbosity=normal;noprogress=true" src/apache/test/Avro.test.csproj
       ;;
 
     clean)

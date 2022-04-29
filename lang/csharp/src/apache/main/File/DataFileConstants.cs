@@ -21,9 +21,6 @@ namespace Avro.File
     /// <summary>
     /// Constants used in data files.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
-        "CA1052:Static holder types should be Static or NotInheritable",
-        Justification = "Maintain public API")]
     public class DataFileConstants
     {
         /// <summary>
@@ -52,6 +49,26 @@ namespace Avro.File
         public const string DeflateCodec = "deflate";
 
         /// <summary>
+        /// Identifier for the Snappy codec.
+        /// </summary>
+        public const string SnappyCodec = "snappy";
+
+        /// <summary>
+        /// Identifier for the BZip2 codec.
+        /// </summary>
+        public const string BZip2Codec = "bzip2";
+
+        /// <summary>
+        /// Identifier for the XZ codec.
+        /// </summary>
+        public const string XZCodec = "xz";
+
+        /// <summary>
+        /// Identifier for the Zstandard codec.
+        /// </summary>
+        public const string ZstandardCodec = "zstandard";
+
+        /// <summary>
         /// Reserved 'avro' metadata key.
         /// </summary>
         public const string MetaDataReserved = "avro";
@@ -64,10 +81,13 @@ namespace Avro.File
         /// <summary>
         /// Magic bytes at the beginning of an Avro data file.
         /// </summary>
-        public static byte[] Magic = { (byte)'O',
-                                       (byte)'b',
-                                       (byte)'j',
-                                       Version };
+        public static readonly byte[] Magic =
+        {
+            (byte)'O',
+            (byte)'b',
+            (byte)'j',
+            Version,
+        };
 
         /// <summary>
         /// Hash code for the null codec.

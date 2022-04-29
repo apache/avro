@@ -1,0 +1,184 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Rust Continuous Integration
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+      - .github/workflows/test-lang-rust-ci.yml
+      - lang/rust/**
+
+defaults:
+  run:
+    working-directory: lang/rust
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+          - 1.51.0  # MSRV
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v2
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v2
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
+
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt
+
+      - name: Rust Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path lang/rust/Cargo.toml --all -- --check
+
+      - name: Rust Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
+
+      - name: Rust Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
+
+      # because of https://github.com/rust-lang/cargo/issues/6669
+      - name: Rust Test docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path lang/rust/Cargo.toml --doc
+
+  interop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache Cargo
+        uses: actions/cache@v2
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v2
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-stable-
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java Avro for Interop Test
+        working-directory: .
+        run: mvn -B install -DskipTests
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Resources
+        working-directory: lang/java/avro
+        run: mvn -B -P interop-data-generate generate-resources
+
+      - name: Generate interop data
+        run: ./build.sh interop-data-generate
+
+      - name: Rust reads interop files created by Java and Rust
+        run: ./build.sh interop-data-test
+
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: 5.32
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                            libcpan-uploader-perl \
+                                                            libencode-perl \
+                                                            libio-string-perl \
+                                                            libjansson-dev \
+                                                            libjson-xs-perl \
+                                                            libmodule-install-perl \
+                                                            libmodule-install-readmefrompod-perl \
+                                                            libobject-tiny-perl \
+                                                            libsnappy-dev \
+                                                            libtest-exception-perl \
+                                                            libtest-pod-perl
+          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+                                                       Error::Simple \
+                                                       Module::Install::Repository \
+                                                       Object::Tiny \
+                                                       Regexp::Common \
+                                                       Try::Tiny \
+                                                       inc::Module::Install
+
+
+      - name: Perl reads interop files created by Java and Rust
+        working-directory: lang/perl
+        run: ./build.sh interop-data-test
