@@ -388,7 +388,7 @@ impl GenericSingleObjectWriter {
         })
     }
 
-    /// Wrtite the referenced Value to the provided Write object. Returns a result with the number of bytes writtern including the header
+    /// Write the referenced Value to the provided Write object. Returns a result with the number of bytes written including the header
     pub fn write_value_ref<W: Write>(&mut self, v: &Value, writer: &mut W) -> AvroResult<usize> {
         if self.buffer.len() != 10 {
             Err(Error::IllegalSingleObjectWriterState)
