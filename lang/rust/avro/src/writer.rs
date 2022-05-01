@@ -444,7 +444,7 @@ impl<T> SingleObjectWriter<T>
 where
     T: AvroSchema + Serialize,
 {
-    /// Wrtite the referenced Serialize object to the provided Write object. Returns a result with the number of bytes writtern including the header
+    /// Write the referenced Serialize object to the provided Write object. Returns a result with the number of bytes written including the header
     pub fn write_ref<W: Write>(&mut self, data: &T, writer: &mut W) -> AvroResult<usize> {
         let mut serializer = Serializer::default();
         let v = data.serialize(&mut serializer)?;
