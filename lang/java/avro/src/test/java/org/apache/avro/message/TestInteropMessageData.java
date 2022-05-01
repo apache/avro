@@ -46,7 +46,7 @@ public class TestInteropMessageData {
   private static GenericRecordBuilder BUILDER;
 
   @BeforeClass
-  public void setup() throws IOException {
+  public static void setup() throws IOException {
     final FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE);
     SCHEMA = new Schema.Parser().parse(fileInputStream);
     BUILDER = new GenericRecordBuilder(SCHEMA);
