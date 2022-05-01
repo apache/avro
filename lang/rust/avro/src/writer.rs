@@ -401,7 +401,7 @@ impl GenericSingleObjectWriter {
         }
     }
 
-    /// Wrtite the Value to the provided Write object. Returns a result with the number of bytes writtern including the header
+    /// Write the Value to the provided Write object. Returns a result with the number of bytes written including the header
     pub fn write_value<W: Write>(&mut self, v: Value, writer: &mut W) -> AvroResult<usize> {
         self.write_value_ref(&v, writer)
     }
