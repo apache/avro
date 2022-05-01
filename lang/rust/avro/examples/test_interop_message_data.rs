@@ -21,7 +21,7 @@ struct InteropMessage;
 
 impl AvroSchema for InteropMessage {
     fn get_schema() -> apache_avro::Schema {
-        let schema = std::fs::read_to_string("../../share/test/data/messageV1/test_schema.json")
+        let schema = std::fs::read_to_string("../../share/test/data/messageV1/test_schema.avsc")
             .expect("File should exist with schema inside");
         apache_avro::Schema::parse_str(schema.as_str())
             .expect("File should exist with schema inside")

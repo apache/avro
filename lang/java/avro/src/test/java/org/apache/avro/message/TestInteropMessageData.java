@@ -22,7 +22,10 @@ package org.apache.avro.message;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -36,19 +39,18 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class TestInteropMessageData {
-  private static String inDir = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
-  private static File SCHEMA_FILE = new File(inDir + "/test_schema.json");
-  private static File MESSAGE_FILE = new File(inDir + "/test_message.bin");
-  private static final Schema SCHEMA;
-  private static final GenericRecordBuilder BUILDER;
+  private static final String inDir = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
+  private static final File SCHEMA_FILE = new File(inDir + "/test_schema.avsc");
+  private static final File MESSAGE_FILE = new File(inDir + "/test_message.bin");
+  private static Schema SCHEMA;
+  private static GenericRecordBuilder BUILDER;
 
-  static {
-    try {
-      SCHEMA = new Schema.Parser().parse(new FileInputStream(SCHEMA_FILE));
-      BUILDER = new GenericRecordBuilder(SCHEMA);
-    } catch (IOException e) {
-      throw new RuntimeException("Interop Message Data Schema not found");
-    }
+  @BeforeClass
+  public void setup() throws IOException {
+    final FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE);
+    SCHEMA = new Schema.Parser().parse(fileInputStream);
+    BUILDER = new GenericRecordBuilder(SCHEMA);
+    fileInputStream.close();
   }
 
   @Test
