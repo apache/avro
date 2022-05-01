@@ -1153,7 +1153,7 @@ mod tests {
             &TestSingleObjectWriter::get_schema(),
             &mut msg_binary,
         )
-        .expect("encode should have failed by here as a depndency of any writing");
+        .expect("encode should have failed by here as a dependency of any writing");
         assert_eq!(&buf[10..], &msg_binary[..])
     }
 
