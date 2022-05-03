@@ -337,6 +337,9 @@ pub enum Error {
     #[error("wrong magic in header")]
     HeaderMagic,
 
+    #[error("Message Header mismatch. Expected: {0:?}. Actual: {1:?}")]
+    MessageHeaderMismatch([u8; 10], [u8; 10]),
+
     #[error("Failed to get JSON from avro.schema key in map")]
     GetAvroSchemaFromMap,
 

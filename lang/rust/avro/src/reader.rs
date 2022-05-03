@@ -16,11 +16,21 @@
 // under the License.
 
 //! Logic handling reading from Avro format at user level.
-use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
+use crate::{
+    decode::{decode, decode_internal},
+    from_value,
+    rabin::Rabin,
+    schema::{AvroSchema, ResolvedOwnedSchema, Schema},
+    types::Value,
+    util, AvroResult, Codec, Error,
+};
+use serde::de::DeserializeOwned;
 use serde_json::from_slice;
 use std::{
     collections::HashMap,
+    convert::TryFrom,
     io::{ErrorKind, Read},
+    marker::PhantomData,
     str::FromStr,
 };
 
@@ -340,6 +350,90 @@ pub fn from_avro_datum<R: Read>(
     match reader_schema {
         Some(schema) => value.resolve(schema),
         None => Ok(value),
+    }
+}
+
+struct GenericSingleObjectReader {
+    write_schema: ResolvedOwnedSchema,
+    expected_header: [u8; 10],
+}
+
+impl GenericSingleObjectReader {
+    pub fn new(schema: Schema) -> AvroResult<GenericSingleObjectReader> {
+        let fingerprint = schema.fingerprint::<Rabin>();
+        let expected_header = [
+            0xC3,
+            0x01,
+            fingerprint.bytes[0],
+            fingerprint.bytes[1],
+            fingerprint.bytes[2],
+            fingerprint.bytes[3],
+            fingerprint.bytes[4],
+            fingerprint.bytes[5],
+            fingerprint.bytes[6],
+            fingerprint.bytes[7],
+        ];
+        Ok(GenericSingleObjectReader {
+            write_schema: ResolvedOwnedSchema::try_from(schema)?,
+            expected_header,
+        })
+    }
+
+    pub fn read_value<R: Read>(&self, reader: &mut R) -> AvroResult<Value> {
+        let mut header: [u8; 10] = [0; 10];
+        match reader.read(&mut header) {
+            Ok(size) => {
+                if size == 10 && self.expected_header == header {
+                    decode_internal(
+                        self.write_schema.get_root_schema(),
+                        self.write_schema.get_names(),
+                        &None,
+                        reader,
+                    )
+                } else {
+                    Err(Error::MessageHeaderMismatch(self.expected_header, header))
+                }
+            }
+            Err(io_error) => Err(Error::ReadHeader(io_error)),
+        }
+    }
+}
+
+struct SingleObjectReader<T>
+where
+    T: AvroSchema,
+{
+    inner: GenericSingleObjectReader,
+    _model: PhantomData<T>,
+}
+
+impl<T> SingleObjectReader<T>
+where
+    T: AvroSchema,
+{
+    pub fn new() -> AvroResult<SingleObjectReader<T>> {
+        Ok(SingleObjectReader {
+            inner: GenericSingleObjectReader::new(T::get_schema())?,
+            _model: PhantomData,
+        })
+    }
+}
+
+impl<T> SingleObjectReader<T>
+where
+    T: AvroSchema + From<Value>,
+{
+    pub fn read_from_value<R: Read>(&self, reader: &mut R) -> AvroResult<T> {
+        self.inner.read_value(reader).map(|v| v.into())
+    }
+}
+
+impl<T> SingleObjectReader<T>
+where
+    T: AvroSchema + DeserializeOwned,
+{
+    pub fn read<R: Read>(&self, reader: &mut R) -> AvroResult<T> {
+        from_value::<T>(&self.inner.read_value(reader)?)
     }
 }
 
