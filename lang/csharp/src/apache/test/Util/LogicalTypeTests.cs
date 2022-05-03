@@ -199,6 +199,7 @@ namespace Avro.Test
             var avroTimestampMilli = new TimestampMillisecond();
             var convertedDate = (DateTime)avroTimestampMilli.ConvertToLogicalValue(avroTimestampMilli.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
+            Assert.AreEqual(DateTimeKind.Utc, convertedDate.Kind);
         }
 
         [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")]
@@ -232,6 +233,91 @@ namespace Avro.Test
             var avroTimestampMicro = new TimestampMicrosecond();
             var convertedDate = (DateTime)avroTimestampMicro.ConvertToLogicalValue(avroTimestampMicro.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
+            Assert.AreEqual(DateTimeKind.Utc, convertedDate.Kind);
+        }
+
+        [TestCase("01/01/2019 14:20:00", "01/01/2019 14:20:00")]
+        [TestCase("05/05/2019 14:20:00", "05/05/2019 14:20:00")]
+        [TestCase("05/05/2019 00:00:00", "05/05/2019 00:00:00")]
+        [TestCase("01/01/2019 14:20:00.1", "01/01/2019 14:20:00.1")]
+        [TestCase("01/01/2019 14:20:00.01", "01/01/2019 14:20:00.01")]
+        [TestCase("01/01/2019 14:20:00.001", "01/01/2019 14:20:00.001")]
+        [TestCase("01/01/2019 14:20:00.0001", "01/01/2019 14:20:00")]
+        [TestCase("01/01/2019 14:20:00.0009", "01/01/2019 14:20:00")] // there is no rounding up
+        [TestCase("01/01/2019 14:20:00.0019", "01/01/2019 14:20:00.001")] // there is no rounding up
+        [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00.1Z", "01/01/2019 14:20:00.1Z")]
+        [TestCase("01/01/2019 14:20:00.01Z", "01/01/2019 14:20:00.01Z")]
+        [TestCase("01/01/2019 14:20:00.001Z", "01/01/2019 14:20:00.001Z")]
+        public void TestLocalTimestampMillisecond(string s, string e)
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"local-timestamp-millis\"}");
+
+            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (date.Kind != DateTimeKind.Utc)
+            {
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (expectedDate.Kind != DateTimeKind.Utc)
+            {
+                expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            expectedDate = expectedDate.ToLocalTime();
+
+            var avroLocalTimestampMilli = new LocalTimestampMillisecond();
+            var convertedDate = (DateTime)avroLocalTimestampMilli.ConvertToLogicalValue(avroLocalTimestampMilli.ConvertToBaseValue(date, schema), schema);
+            Assert.AreEqual(expectedDate, convertedDate);
+            Assert.AreEqual(DateTimeKind.Local, convertedDate.Kind);
+        }
+
+        [TestCase("01/01/2019 14:20:00", "01/01/2019 14:20:00")]
+        [TestCase("05/05/2019 14:20:00", "05/05/2019 14:20:00")]
+        [TestCase("05/05/2019 00:00:00", "05/05/2019 00:00:00")]
+        [TestCase("01/01/2019 14:20:00.1", "01/01/2019 14:20:00.1")]
+        [TestCase("01/01/2019 14:20:00.01", "01/01/2019 14:20:00.01")]
+        [TestCase("01/01/2019 14:20:00.001", "01/01/2019 14:20:00.001")]
+        [TestCase("01/01/2019 14:20:00.0001", "01/01/2019 14:20:00.0001")]
+        [TestCase("01/01/2019 14:20:00.00001", "01/01/2019 14:20:00.00001")]
+        [TestCase("01/01/2019 14:20:00.000001", "01/01/2019 14:20:00.000001")]
+        [TestCase("01/01/2019 14:20:00.0000001", "01/01/2019 14:20:00")]
+        [TestCase("01/01/2019 14:20:00.0000009", "01/01/2019 14:20:00")] // there is no rounding up
+        [TestCase("01/01/2019 14:20:00.0000019", "01/01/2019 14:20:00.000001")] // there is no rounding up
+        [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")] // UTC timestamps, but will check will in local TZ
+        [TestCase("01/01/2019 14:20:00.1Z", "01/01/2019 14:20:00.1Z")]
+        [TestCase("01/01/2019 14:20:00.01Z", "01/01/2019 14:20:00.01Z")]
+        [TestCase("01/01/2019 14:20:00.001Z", "01/01/2019 14:20:00.001Z")]
+        [TestCase("01/01/2019 14:20:00.0001Z", "01/01/2019 14:20:00.0001Z")]
+        [TestCase("01/01/2019 14:20:00.00001Z", "01/01/2019 14:20:00.00001Z")]
+        [TestCase("01/01/2019 14:20:00.000001Z", "01/01/2019 14:20:00.000001Z")]
+        public void TestLocalTimestampMicrosecond(string s, string e)
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"local-timestamp-micros\"}");
+
+            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (date.Kind != DateTimeKind.Utc)
+            {
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (expectedDate.Kind != DateTimeKind.Utc)
+            {
+                expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            expectedDate = expectedDate.ToLocalTime();
+            
+            var avroLocalTimestampMicro = new LocalTimestampMicrosecond();
+            var convertedDate = (DateTime)avroLocalTimestampMicro.ConvertToLogicalValue(avroLocalTimestampMicro.ConvertToBaseValue(date, schema), schema);
+            Assert.AreEqual(expectedDate, convertedDate);
+            Assert.AreEqual(DateTimeKind.Local, convertedDate.Kind);
         }
 
         [TestCase("01:20:10", "01:20:10", false)]
