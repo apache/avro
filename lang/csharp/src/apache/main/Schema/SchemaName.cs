@@ -65,30 +65,29 @@ namespace Avro
         /// <param name="space">namespace of the schema</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <param name="documentation">documentation of the schema</param>
-        public SchemaName(String name, String space, String encspace, String documentation)
+        public SchemaName(string name, string space, string encspace, string documentation)
         {
             if (name == null)
             {                         // anonymous
-                this.Name = this.Space = null;
-                this.EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
+                Name = Space = null;
+                EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
             }
-#pragma warning disable CA1307 // Specify StringComparison
             else if (!name.Contains("."))
-#pragma warning restore CA1307 // Specify StringComparison
             {                          // unqualified name
-                this.Space = space;    // use default space
-                this.Name = name;
-                this.EncSpace = encspace;
+                Space = space;    // use default space
+                Name = name;
+                EncSpace = encspace;
             }
             else
             {
                 string[] parts = name.Split('.');
-                this.Space = string.Join(".", parts, 0, parts.Length - 1);
-                this.Name = parts[parts.Length - 1];
-                this.EncSpace = encspace;
+                Space = string.Join(".", parts, 0, parts.Length - 1);
+                Name = parts[parts.Length - 1];
+                EncSpace = encspace;
             }
-            this.Documentation = documentation;
-            fullName = string.IsNullOrEmpty(Namespace) ? this.Name : Namespace + "." + this.Name;
+
+            Documentation = documentation;
+            fullName = string.IsNullOrEmpty(Namespace) ? Name : Namespace + "." + Name;
         }
 
         /// <summary>
@@ -149,9 +148,7 @@ namespace Avro
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-#pragma warning disable CA1307 // Specify StringComparison
             return string.IsNullOrEmpty(Fullname) ? 0 : 29 * Fullname.GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
         }
     }
 
