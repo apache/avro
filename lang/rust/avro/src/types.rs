@@ -20,7 +20,8 @@ use crate::{
     decimal::Decimal,
     duration::Duration,
     schema::{
-        NamesRef, Precision, RecordField, ResolvedSchema, Scale, Schema, SchemaKind, UnionSchema,
+        Name, NamesRef, Precision, RecordField, ResolvedSchema, Scale, Schema, SchemaKind,
+        UnionSchema,
     },
     AvroResult, Error,
 };
@@ -360,7 +361,11 @@ impl Value {
         }
     }
 
-    pub(crate) fn validate_internal(&self, schema: &Schema, names: &NamesRef) -> Option<String> {
+    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema>>(
+        &self,
+        schema: &Schema,
+        names: &HashMap<Name, S>,
+    ) -> Option<String> {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
@@ -370,7 +375,7 @@ impl Value {
                         names.keys()
                     ));
                 },
-                |s| self.validate_internal(s, names),
+                |s| self.validate_internal(s.borrow(), names),
             ),
             (&Value::Null, &Schema::Null) => None,
             (&Value::Boolean(_), &Schema::Boolean) => None,
@@ -1099,7 +1104,7 @@ mod tests {
         ];
 
         for (value, schema, valid, expected_err_message) in value_schema_valid.into_iter() {
-            let err_message = value.validate_internal(&schema, &HashMap::default());
+            let err_message = value.validate_internal::<Schema>(&schema, &HashMap::default());
             assert_eq!(valid, err_message.is_none());
             if !valid {
                 let full_err_message = format!(

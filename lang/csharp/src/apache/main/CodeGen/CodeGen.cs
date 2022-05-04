@@ -1197,7 +1197,7 @@ namespace Avro
             if (namespaceMapping == null || input == null)
                 return input;
 
-            // Replace namespace in "namespace" definitions: 
+            // Replace namespace in "namespace" definitions:
             //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
             //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
             // Note: It keeps the original whitespaces

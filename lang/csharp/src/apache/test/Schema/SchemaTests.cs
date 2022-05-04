@@ -172,7 +172,7 @@ namespace Avro.Test
         {
             try
             {
-                //remove any excess spaces in the JSON to normalize the match with toString 
+                //remove any excess spaces in the JSON to normalize the match with toString
                 schema = schema.Replace("{ ", "{")
                     .Replace("} ", "}")
                     .Replace("\" ", "\"")
@@ -575,7 +575,7 @@ namespace Avro.Test
 
             UnionSchema schema = UnionSchema.Create(types.Select(t => (Schema)PrimitiveSchema.Create(t)).ToList());
             Assert.AreEqual(sc, schema);
-            
+
             Assert.AreEqual(Schema.Type.Union, sc.Tag);
             UnionSchema us = (UnionSchema)sc;
             Assert.AreEqual(types.Length, us.Count);

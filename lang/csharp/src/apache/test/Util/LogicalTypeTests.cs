@@ -67,7 +67,7 @@ namespace Avro.Test
                 "-123456789123456789.56",
                 "000000000000000001.01",
                 "-000000000000000001.01"
-            )] string s, 
+            )] string s,
             [Values(
                 "\"bytes\"",
                 "{\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}"
@@ -94,7 +94,7 @@ namespace Avro.Test
                 "-1234567891234567890123456789",
                 "0000000000000000000000000001",
                 "-0000000000000000000000000001"
-            )] string s, 
+            )] string s,
             [Values(1, 2, 3, 4, 5, 6, 7, 8)] int scale,
             [Values(
                 "\"bytes\"",
@@ -313,7 +313,7 @@ namespace Avro.Test
             }
 
             expectedDate = expectedDate.ToLocalTime();
-            
+
             var avroLocalTimestampMicro = new LocalTimestampMicrosecond();
             var convertedDate = (DateTime)avroLocalTimestampMicro.ConvertToLogicalValue(avroLocalTimestampMicro.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
@@ -342,7 +342,7 @@ namespace Avro.Test
             var timeMilliSchema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"time-millis\"}");
 
             var time = TimeSpan.Parse(s);
-            
+
             var avroTimeMilli = new TimeMillisecond();
 
             if (expectRangeError)
@@ -385,7 +385,7 @@ namespace Avro.Test
             var timeMicroSchema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"time-micros\"}");
 
             var time = TimeSpan.Parse(s);
-            
+
             var avroTimeMicro = new TimeMicrosecond();
 
             if (expectRangeError)
