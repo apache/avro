@@ -57,8 +57,8 @@ public class TestGenerateInteropSingleObjectEncoding {
   public void generateData() throws IOException {
     MessageEncoder<GenericData.Record> encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA);
     BUILDER.set("id", 42L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build();
-    ByteBuffer buffer = encoder
-        .encode(BUILDER.set("id", 42L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build());
+    ByteBuffer buffer = encoder.encode(
+        BUILDER.set("id", 42L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build());
     new FileOutputStream(MESSAGE_FILE).write(buffer.array());
   }
 }
