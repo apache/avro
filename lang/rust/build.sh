@@ -17,7 +17,6 @@
 
 set -e  # exit on error
 
-root_dir=$(pwd)
 build_dir="../../build/rust"
 dist_dir="../../dist/rust"
 
@@ -35,7 +34,7 @@ function prepare_build {
   mkdir -p $build_dir
 }
 
-cd `dirname "$0"`
+cd $(dirname "$0")
 
 for target in "$@"
 do
@@ -60,13 +59,12 @@ do
       export RUST_LOG=apache_avro=debug
       export RUST_BACKTRACE=1
       cargo run --all-features --example generate_interop_data
-      cargo run --all-features --example generate_interop_data
       ;;
 
     interop-data-test)
       prepare_build
       cargo run --all-features --example test_interop_data
-      cargo run --all-features --example test_interop_message_data
+      cargo run --all-features --example test_interop_single_object_encoding
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2

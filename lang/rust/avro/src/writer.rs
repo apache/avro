@@ -433,7 +433,8 @@ impl<T> SingleObjectWriter<T>
 where
     T: AvroSchema + Into<Value>,
 {
-    /// Write the Into<Value> to the provided Write object. Returns a result with the number of bytes written including the header
+    /// Write the Into<Value> to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
     pub fn write_value<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
         let v: Value = data.into();
         self.inner.write_value_ref(&v, writer)
@@ -444,14 +445,16 @@ impl<T> SingleObjectWriter<T>
 where
     T: AvroSchema + Serialize,
 {
-    /// Write the referenced Serialize object to the provided Write object. Returns a result with the number of bytes written including the header
+    /// Write the referenced Serialize object to the provided Write object. Returns a result with
+    /// the number of bytes written including the header
     pub fn write_ref<W: Write>(&mut self, data: &T, writer: &mut W) -> AvroResult<usize> {
         let mut serializer = Serializer::default();
         let v = data.serialize(&mut serializer)?;
         self.inner.write_value_ref(&v, writer)
     }
 
-    /// Write the Serialize object to the provided Write object. Returns a result with the number of bytes writtern including the header
+    /// Write the Serialize object to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
     pub fn write<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
         self.write_ref(&data, writer)
     }
@@ -1174,12 +1177,12 @@ mod tests {
             1024,
         )
         .expect("Should resolve schema");
-        let mut specifc_writer = SingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
+        let mut specific_writer = SingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
             .expect("Resolved should pass");
-        specifc_writer
+        specific_writer
             .write(obj1.clone(), &mut buf1)
             .expect("Serialization expected");
-        specifc_writer
+        specific_writer
             .write_value(obj1.clone(), &mut buf2)
             .expect("Serialization expected");
         generic_writer

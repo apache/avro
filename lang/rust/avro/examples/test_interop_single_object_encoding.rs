@@ -17,11 +17,13 @@
 
 use apache_avro::{schema::AvroSchema, types::Value};
 
+const RESOURCES_FOLDER: &str = "../../share/test/data/messageV1";
+
 struct InteropMessage;
 
 impl AvroSchema for InteropMessage {
     fn get_schema() -> apache_avro::Schema {
-        let schema = std::fs::read_to_string("../../share/test/data/messageV1/test_schema.avsc")
+        let schema = std::fs::read_to_string(format!("{}/test_schema.avsc", RESOURCES_FOLDER))
             .expect("File should exist with schema inside");
         apache_avro::Schema::parse_str(schema.as_str())
             .expect("File should exist with schema inside")
@@ -47,8 +49,8 @@ impl From<InteropMessage> for Value {
 }
 
 fn main() {
-    let file_message = std::fs::read("../../share/test/data/messageV1/test_message.bin")
-        .expect("File not found or error reading");
+    let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
+        .expect("File with single object not found or error occurred while reading");
     let mut generated_encoding: Vec<u8> = Vec::new();
     apache_avro::SingleObjectWriter::<InteropMessage>::with_capacity(1024)
         .expect("resolve expected")

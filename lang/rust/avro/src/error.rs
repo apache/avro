@@ -411,7 +411,9 @@ pub enum Error {
         value_kind: ValueKind,
         supported_schema: Vec<SchemaKind>,
     },
-    #[error("Internal buffer not drained properly. Reinitialize the writer struct")]
+    #[error(
+        "Internal buffer not drained properly. Re-initialize the single object writer struct!"
+    )]
     IllegalSingleObjectWriterState,
 }
 
