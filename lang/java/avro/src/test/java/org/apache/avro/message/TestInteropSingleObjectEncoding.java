@@ -34,11 +34,13 @@ import java.nio.file.Files;
 import java.util.Arrays;
 
 /**
- * Tests that <code>test_message.bin</code> is properly encoded
- * <a href="https://avro.apache.org/docs/current/spec.html#single_object_encoding">single object</a>
+ * Tests that <code>test_message.bin</code> is properly encoded <a href=
+ * "https://avro.apache.org/docs/current/spec.html#single_object_encoding">single
+ * object</a>
  */
 public class TestInteropSingleObjectEncoding {
-  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
+  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share")
+      + "/test/data/messageV1";
   private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.avsc");
   private static final File MESSAGE_FILE = new File(RESOURCES_FOLDER + "/test_message.bin");
   private static Schema SCHEMA;

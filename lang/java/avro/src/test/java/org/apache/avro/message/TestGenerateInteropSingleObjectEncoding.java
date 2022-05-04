@@ -33,17 +33,17 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * Generates <code>test_message.bin</code> - a
- * <a href="https://avro.apache.org/docs/current/spec.html#single_object_encoding">single object encoded</a>
- * Avro message.
+ * Generates <code>test_message.bin</code> - a <a href=
+ * "https://avro.apache.org/docs/current/spec.html#single_object_encoding">single
+ * object encoded</a> Avro message.
  */
 public class TestGenerateInteropSingleObjectEncoding {
-  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
+  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share")
+      + "/test/data/messageV1";
   private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.json");
   private static final File MESSAGE_FILE = new File(RESOURCES_FOLDER + "/test_message.bin");
   private static Schema SCHEMA;
   private static GenericRecordBuilder BUILDER;
-
 
   @BeforeClass
   public static void setup() throws IOException {
