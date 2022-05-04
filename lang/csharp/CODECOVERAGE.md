@@ -19,7 +19,7 @@
  -->
 # C# Avro Code Coverage
 
-The following instructions should be followed in order to create a code coverage report locally.
+The following instructions should be followed in order to create a code coverage report locally. 
 
 1. Open a command prompt
 2. Install ReportGenerator globally\

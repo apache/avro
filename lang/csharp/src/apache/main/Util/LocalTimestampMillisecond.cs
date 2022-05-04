@@ -15,45 +15,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
 
 namespace Avro.Util
 {
     /// <summary>
-    /// The 'timestamp-micros' logical type.
+    /// The 'local-timestamp-millis' logical type.
     /// </summary>
-    public class TimestampMicrosecond : LogicalUnixEpochType<DateTime>
+    public class LocalTimestampMillisecond : LogicalUnixEpochType<DateTime>
     {
         /// <summary>
-        /// The logical type name for TimestampMicrosecond.
+        /// The logical type name for LocalTimestampMillisecond.
         /// </summary>
-        public static readonly string LogicalTypeName = "timestamp-micros";
+        public static readonly string LogicalTypeName = "local-timestamp-millis";
 
         /// <summary>
-        /// Initializes a new TimestampMicrosecond logical type.
+        /// Initializes a new LocalTimestampMillisecond logical type.
         /// </summary>
-        public TimestampMicrosecond() : base(LogicalTypeName)
-        { }
+        public LocalTimestampMillisecond()
+            : base(LogicalTypeName)
+        {
+        }
 
         /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Long != schema.BaseSchema.Tag)
-                throw new AvroTypeException("'timestamp-micros' can only be used with an underlying long type");
+            {
+                throw new AvroTypeException("'local-timestamp-millis' can only be used with an underlying long type");
+            }
         }
 
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            var date = ((DateTime)logicalValue).ToUniversalTime();
-            return (date - UnixEpochDateTime).Ticks / TicksPerMicrosecond;
+            DateTime date = ((DateTime)logicalValue).ToUniversalTime();
+            return (long)(date - UnixEpochDateTime).TotalMilliseconds;
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            return UnixEpochDateTime.AddTicks((long)baseValue * TicksPerMicrosecond);
+            return UnixEpochDateTime.AddMilliseconds((long)baseValue).ToLocalTime();
         }
     }
 }

@@ -172,7 +172,7 @@ namespace Avro.Test
         {
             try
             {
-                //remove any excess spaces in the JSON to normalize the match with toString 
+                //remove any excess spaces in the JSON to normalize the match with toString
                 schema = schema.Replace("{ ", "{")
                     .Replace("} ", "}")
                     .Replace("\" ", "\"")
