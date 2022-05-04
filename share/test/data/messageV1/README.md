@@ -2,7 +2,7 @@ BinaryMessage data in single object encoding https://avro.apache.org/docs/curren
 
 Ground truth data generated with Java Code
 
-The binary data will be the V1 sincle object encoding with the schema of
+The binary data will be the V1 single object encoding with the schema of
 ```
 {
 	"type":"record",
