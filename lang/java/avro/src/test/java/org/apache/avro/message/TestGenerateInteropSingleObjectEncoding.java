@@ -40,7 +40,7 @@ import java.util.Arrays;
 public class TestGenerateInteropSingleObjectEncoding {
   private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share")
       + "/test/data/messageV1";
-  private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.json");
+  private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.avsc");
   private static final File MESSAGE_FILE = new File(RESOURCES_FOLDER + "/test_message.bin");
   private static Schema SCHEMA;
   private static GenericRecordBuilder BUILDER;
