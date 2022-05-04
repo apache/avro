@@ -439,7 +439,7 @@ pub(crate) struct ResolvedOwnedSchema {
     root_schema: Schema,
 }
 
-impl<'s> TryFrom<Schema> for ResolvedOwnedSchema {
+impl TryFrom<Schema> for ResolvedOwnedSchema {
     type Error = Error;
 
     fn try_from(schema: Schema) -> AvroResult<Self> {

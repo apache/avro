@@ -3,6 +3,7 @@ package org.apache.avro.message;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -12,19 +13,24 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class TestInteropData {
-  private static String inDir = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
-  private static File SCHEMA_FILE = new File(inDir + "/test_schema.json");
-  private static File MESSAGE_FILE = new File(inDir + "/test_message.bin");
-  private static final Schema SCHEMA;
-  private static final GenericRecordBuilder BUILDER;
+/**
+ * Generates <code>test_message.bin</code> - a
+ * <a href="https://avro.apache.org/docs/current/spec.html#single_object_encoding">single object encoded</a>
+ * Avro message.
+ */
+public class TestGenerateInteropSingleObjectEncoding {
+  private static final String RESOURCES_FOLDER = System.getProperty("share.dir", "../../../share") + "/test/data/messageV1";
+  private static final File SCHEMA_FILE = new File(RESOURCES_FOLDER + "/test_schema.json");
+  private static final File MESSAGE_FILE = new File(RESOURCES_FOLDER + "/test_message.bin");
+  private static Schema SCHEMA;
+  private static GenericRecordBuilder BUILDER;
 
-  static {
-    try {
-      SCHEMA = new Schema.Parser().parse(new FileInputStream(SCHEMA_FILE));
+
+  @BeforeClass
+  public static void setup() throws IOException {
+    try (FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE)) {
+      SCHEMA = new Schema.Parser().parse(fileInputStream);
       BUILDER = new GenericRecordBuilder(SCHEMA);
-    } catch (IOException e) {
-      throw new RuntimeException("Interop Message Data Schema not found");
     }
   }
 
