@@ -353,7 +353,7 @@ pub fn from_avro_datum<R: Read>(
     }
 }
 
-struct GenericSingleObjectReader {
+pub struct GenericSingleObjectReader {
     write_schema: ResolvedOwnedSchema,
     expected_header: [u8; 10],
 }
@@ -399,7 +399,7 @@ impl GenericSingleObjectReader {
     }
 }
 
-struct SingleObjectReader<T>
+pub struct SpecificSingleObjectReader<T>
 where
     T: AvroSchema,
 {
@@ -407,19 +407,19 @@ where
     _model: PhantomData<T>,
 }
 
-impl<T> SingleObjectReader<T>
+impl<T> SpecificSingleObjectReader<T>
 where
     T: AvroSchema,
 {
-    pub fn new() -> AvroResult<SingleObjectReader<T>> {
-        Ok(SingleObjectReader {
+    pub fn new() -> AvroResult<SpecificSingleObjectReader<T>> {
+        Ok(SpecificSingleObjectReader {
             inner: GenericSingleObjectReader::new(T::get_schema())?,
             _model: PhantomData,
         })
     }
 }
 
-impl<T> SingleObjectReader<T>
+impl<T> SpecificSingleObjectReader<T>
 where
     T: AvroSchema + From<Value>,
 {
@@ -428,7 +428,7 @@ where
     }
 }
 
-impl<T> SingleObjectReader<T>
+impl<T> SpecificSingleObjectReader<T>
 where
     T: AvroSchema + DeserializeOwned,
 {
@@ -440,7 +440,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{from_value, types::Record, Reader};
+    use crate::{encode::encode, from_value, types::Record, Reader};
     use serde::Deserialize;
     use std::io::Cursor;
 
@@ -662,5 +662,159 @@ mod tests {
 
         let reader = Reader::new(&result[..]).unwrap();
         assert_eq!(reader.user_metadata(), &user_meta_data);
+    }
+
+    #[derive(Deserialize, Clone, PartialEq, Debug)]
+    struct TestSingleObjectReader {
+        a: i64,
+        b: f64,
+        c: Vec<String>,
+    }
+
+    impl AvroSchema for TestSingleObjectReader {
+        fn get_schema() -> Schema {
+            let schema = r#"
+            {
+                "type":"record",
+                "name":"TestSingleObjectWrtierSerialize",
+                "fields":[
+                    {
+                        "name":"a",
+                        "type":"long"
+                    },
+                    {
+                        "name":"b",
+                        "type":"double"
+                    },
+                    {
+                        "name":"c",
+                        "type":{
+                            "type":"array",
+                            "items":"string"
+                        }
+                    }
+                ]
+            }
+            "#;
+            Schema::parse_str(schema).unwrap()
+        }
+    }
+
+    impl From<Value> for TestSingleObjectReader {
+        fn from(obj: Value) -> TestSingleObjectReader {
+            if let Value::Record(fields) = obj {
+                let mut a = None;
+                let mut b = None;
+                let mut c = vec![];
+                for (field_name, v) in fields {
+                    match (field_name.as_str(), v) {
+                        ("a", Value::Long(i)) => a = Some(i),
+                        ("b", Value::Double(d)) => b = Some(d),
+                        ("c", Value::Array(v)) => {
+                            for inner_val in v {
+                                if let Value::String(s) = inner_val {
+                                    c.push(s);
+                                }
+                            }
+                        }
+                        _ => panic!("Unexpected pair"),
+                    }
+                }
+                TestSingleObjectReader {
+                    a: a.unwrap(),
+                    b: b.unwrap(),
+                    c,
+                }
+            } else {
+                panic!("Should be record value")
+            }
+        }
+    }
+
+    impl From<TestSingleObjectReader> for Value {
+        fn from(obj: TestSingleObjectReader) -> Value {
+            Value::Record(vec![
+                ("a".into(), obj.a.into()),
+                ("b".into(), obj.b.into()),
+                (
+                    "c".into(),
+                    Value::Array(obj.c.into_iter().map(|s| s.into()).collect()),
+                ),
+            ])
+        }
+    }
+
+    #[test]
+    fn test_single_object_reader() {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        let mut to_read = Vec::<u8>::new();
+        to_read.extend_from_slice(&[0xC3, 0x01]);
+        to_read.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read,
+        )
+        .expect("Encode should succeed");
+        let mut to_read = &to_read[..];
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let val = generic_reader
+            .read_value(&mut to_read)
+            .expect("Should read");
+        let expected_value: Value = obj.into();
+        assert_eq!(expected_value, val);
+    }
+
+    #[test]
+    fn test_reader_parity() {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+
+        let mut to_read = Vec::<u8>::new();
+        to_read.extend_from_slice(&[0xC3, 0x01]);
+        to_read.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read,
+        )
+        .expect("Encode should succeed");
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let specific_reader = SpecificSingleObjectReader::<TestSingleObjectReader>::new()
+            .expect("schema should resolve");
+        let mut to_read1 = &to_read.clone()[..];
+        let mut to_read2 = &to_read.clone()[..];
+        let mut to_read3 = &to_read.clone()[..];
+
+        let val = generic_reader
+            .read_value(&mut to_read1)
+            .expect("Should read");
+        let read_obj1 = specific_reader
+            .read_from_value(&mut to_read2)
+            .expect("Should read from value");
+        let read_obj2 = specific_reader
+            .read(&mut to_read3)
+            .expect("Should read from deserilize");
+        let expected_value: Value = obj.clone().into();
+        assert_eq!(obj, read_obj1);
+        assert_eq!(obj, read_obj2);
+        assert_eq!(val, expected_value)
     }
 }

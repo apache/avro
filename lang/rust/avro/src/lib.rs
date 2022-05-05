@@ -742,7 +742,7 @@ pub use de::from_value;
 pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
 pub use error::Error;
-pub use reader::{from_avro_datum, Reader};
+pub use reader::{from_avro_datum, Reader, GenericSingleObjectReader, SpecificSingleObjectReader};
 pub use schema::Schema;
 pub use ser::to_value;
 pub use util::max_allocation_bytes;
