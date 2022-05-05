@@ -680,7 +680,7 @@ impl Schema {
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     pub fn canonical_form(&self) -> String {
         let json = serde_json::to_value(self)
-            .unwrap_or_else(|e| panic!("cannot parse Schema from JSON: {0}", e));
+            .unwrap_or_else(|e| panic!("Cannot parse Schema from JSON: {0}", e));
         parsing_canonical_form(&json)
     }
 
@@ -868,16 +868,31 @@ impl Parser {
         ) -> Result<DecimalMetadata, Error> {
             match complex.get(key) {
                 Some(&Value::Number(ref value)) => parse_json_integer_for_decimal(value),
-                None => Err(Error::GetDecimalMetadataFromJson(key)),
-                Some(precision) => Err(Error::GetDecimalPrecisionFromJson {
+                None => {
+                    if key == "scale" {
+                        Ok(0)
+                    } else {
+                        Err(Error::GetDecimalMetadataFromJson(key))
+                    }
+                }
+                Some(value) => Err(Error::GetDecimalMetadataValueFromJson {
                     key: key.into(),
-                    precision: precision.clone(),
+                    value: value.clone(),
                 }),
             }
         }
         let precision = get_decimal_integer(complex, "precision")?;
         let scale = get_decimal_integer(complex, "scale")?;
-        Ok((precision, scale))
+
+        if precision < 1 {
+            return Err(Error::DecimalPrecisionMuBePositive { precision });
+        }
+
+        if precision < scale {
+            Err(Error::DecimalPrecisionLessThanScale { precision, scale })
+        } else {
+            Ok((precision, scale))
+        }
     }
 
     /// Parse a `serde_json::Value` representing a complex Avro type into a
@@ -1545,7 +1560,7 @@ fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
         }
 
         // Strip off quotes surrounding "size" type, if they exist ([INTEGERS] rule).
-        if k == "size" {
+        if k == "size" || k == "precision" || k == "scale" {
             let i = match v.as_str() {
                 Some(s) => s.parse::<i64>().expect("Only valid schemas are accepted!"),
                 None => v.as_i64().unwrap(),
@@ -1597,6 +1612,8 @@ const RESERVED_FIELDS: &[&str] = &[
     "doc",
     "aliases",
     "default",
+    "precision",
+    "scale",
 ];
 
 // Used to define the ordering and inclusion of fields.

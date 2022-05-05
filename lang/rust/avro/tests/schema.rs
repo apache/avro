@@ -368,21 +368,13 @@ const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
 ];
 
 const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
-  /*
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 4,
-            "size": 10,
-            "scale": 2
-        }"#,
-        true,
-    ),
-    (
-        r#"{
-            "type": "bytes",
+            "type": {
+                "type": "fixed",
+                "name": "TestDecimal",
+                "size": 10
+            },
             "logicalType": "decimal",
             "precision": 4,
             "scale": 2
@@ -391,65 +383,97 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
     ),
     (
         r#"{
-            "type": "bytes",
+            "type": {
+                "type": "fixed",
+                "name": "ScaleIsImplicitlyZero",
+                "size": 10
+            },
             "logicalType": "decimal",
-            "precision": 2,
-            "scale": -2
+            "precision": 4
+        }"#,
+        true,
+    ),
+    (
+        r#"{
+            "type": {
+                "type": "fixed",
+                "name": "PrecisionMustBeGreaterThanZero",
+                "size": 10
+            },
+            "logicalType": "decimal",
+            "precision": 0
         }"#,
         false,
     ),
     (
         r#"{
-            "type": "bytes",
-            "logicalType": "decimal",
-            "precision": -2,
-            "scale": 2
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 4,
+             "scale": 2
+         }"#,
+        true,
+    ),
+    (
+        r#"{
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": -2
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "bytes",
-            "logicalType": "decimal",
-            "precision": 2,
-            "scale": 3
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": -2,
+             "scale": 2
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": -10,
-            "scale": 2,
-            "size": 5
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": 3
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 2,
-            "scale": 3,
-            "size": 2
-        }"#,
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": -10,
+             "scale": 2,
+             "size": 5
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 2,
-            "scale": 2,
-            "size": -2
-        }"#,
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": 2,
+             "scale": 3,
+             "size": 2
+         }"#,
         false,
     ),
-   */
+    (
+        r#"{
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": 2,
+             "scale": 2,
+             "size": -2
+         }"#,
+        false,
+    ),
 ];
 
 const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
