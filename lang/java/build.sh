@@ -18,7 +18,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {lint|test|dist|clean}"
+  echo "Usage: $0 {lint|test|testJava17|dist|clean}"
   exit 1
 }
 
@@ -32,6 +32,11 @@ main() {
         ;;
       test)
         mvn -B test
+        # Test the modules that depend on hadoop using Hadoop 2
+        mvn -B test -Phadoop2
+        ;;
+      testJava17)
+        mvn -DdisableJava17=false -B test
         # Test the modules that depend on hadoop using Hadoop 2
         mvn -B test -Phadoop2
         ;;

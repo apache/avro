@@ -70,6 +70,22 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     super(data);
   }
 
+  /** Called to read data. */
+  @Override
+  protected Object read(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    return super.read(old, expected, in);
+  }
+
+  @Override
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    SpecificData data = getSpecificData();
+    CustomEncoding encoder = data.getCustomEncoding(expected);
+    if (encoder != null) {
+      return encoder.read(old, in, this);
+    }
+    return super.readRecord(old, expected, in);
+  }
+
   @Override
   protected Object newArray(Object old, int size, Schema schema) {
     Class<?> collectionClass = ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);

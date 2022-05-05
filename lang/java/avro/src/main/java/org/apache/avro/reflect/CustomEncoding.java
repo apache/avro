@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.io.ResolvingDecoder;
 
 /**
  * Expert: a custom encoder and decoder that writes an object directly to avro.
@@ -38,7 +39,15 @@ public abstract class CustomEncoding<T> {
 
   protected abstract void write(Object datum, Encoder out) throws IOException;
 
+  protected void write(Object datum, Encoder out, ReflectDatumWriter writer) throws IOException {
+    this.write(datum, out);
+  }
+
   protected abstract T read(Object reuse, Decoder in) throws IOException;
+
+  protected T read(Object reuse, ResolvingDecoder in, ReflectDatumReader reader) throws IOException {
+    return this.read(reuse, in);
+  }
 
   T read(Decoder in) throws IOException {
     return this.read(null, in);
@@ -46,6 +55,10 @@ public abstract class CustomEncoding<T> {
 
   protected Schema getSchema() {
     return schema;
+  }
+
+  public CustomEncoding<T> setSchema(Schema schema) {
+    return this;
   }
 
 }

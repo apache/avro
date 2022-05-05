@@ -28,6 +28,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.MapEntry;
 
@@ -58,6 +59,17 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
 
   protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
+  }
+
+  @Override
+  protected void writeRecord(Schema schema, Object datum, Encoder out) throws IOException {
+    SpecificData data = getSpecificData();
+    CustomEncoding encoder = data.getCustomEncoding(schema);
+    if (encoder != null) {
+      encoder.write(datum, out, this);
+    } else {
+      super.writeRecord(schema, datum, out);
+    }
   }
 
   /**

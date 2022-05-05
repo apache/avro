@@ -29,6 +29,9 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.AvroEncode;
+import org.apache.avro.reflect.CustomEncoding;
+import org.apache.avro.reflect.ReflectRecordEncoding;
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.MapUtil;
 import org.apache.avro.util.SchemaUtil;
@@ -38,6 +41,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -60,6 +64,20 @@ public class SpecificData extends GenericData {
 
   private static final Class<?>[] NO_ARG = new Class[] {};
   private static final Class<?>[] SCHEMA_ARG = new Class[] { Schema.class };
+
+  private static final Method IS_RECORD_METHOD;
+
+  static {
+    Class<? extends Class> classClass = SpecificData.class.getClass();
+    Method isRecord;
+    try {
+      isRecord = classClass.getMethod("isRecord");
+    } catch (NoSuchMethodException e) {
+      isRecord = null;
+    }
+    IS_RECORD_METHOD = isRecord;
+
+  }
 
   private static final Function<Class<?>, Constructor<?>> CTOR_CACHE = new ClassValueCache<>(c -> {
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
@@ -229,10 +247,10 @@ public class SpecificData extends GenericData {
     return (datum instanceof Enum) ? getSchema(datum.getClass()) : super.getEnumSchema(datum);
   }
 
-  private final ConcurrentMap<String, Class> classCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ClassWrapper> classCache = new ConcurrentHashMap<>();
 
-  private static final Class NO_CLASS = new Object() {
-  }.getClass();
+  private static final ClassWrapper NO_CLASS = new ClassWrapper(new Object() {
+  }.getClass());
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
   /** Undoes mangling for reserved words. */
@@ -249,30 +267,8 @@ public class SpecificData extends GenericData {
     case FIXED:
     case RECORD:
     case ENUM:
-      String name = schema.getFullName();
-      if (name == null)
-        return null;
-      Class<?> c = MapUtil.computeIfAbsent(classCache, name, n -> {
-        try {
-          return ClassUtils.forName(getClassLoader(), getClassName(schema));
-        } catch (ClassNotFoundException e) {
-          // This might be a nested namespace. Try using the last tokens in the
-          // namespace as an enclosing class by progressively replacing period
-          // delimiters with $
-          StringBuilder nestedName = new StringBuilder(n);
-          int lastDot = n.lastIndexOf('.');
-          while (lastDot != -1) {
-            nestedName.setCharAt(lastDot, '$');
-            try {
-              return ClassUtils.forName(getClassLoader(), nestedName.toString());
-            } catch (ClassNotFoundException ignored) {
-            }
-            lastDot = n.lastIndexOf('.', lastDot - 1);
-          }
-          return NO_CLASS;
-        }
-      });
-      return c == NO_CLASS ? null : c;
+      ClassWrapper c = getClassWrapper(schema);
+      return c == NO_CLASS ? null : c.getType();
     case ARRAY:
       return List.class;
     case MAP:
@@ -302,6 +298,106 @@ public class SpecificData extends GenericData {
       return Void.TYPE;
     default:
       throw new AvroRuntimeException("Unknown type: " + schema);
+    }
+  }
+
+  private static AvroEncode getAvroEncode(Class<?> c) {
+    while (c != null && !c.equals(Object.class)) {
+      AvroEncode avroEncode = c.getAnnotation(AvroEncode.class);
+      if (avroEncode != null) {
+        return avroEncode;
+      }
+      if (c.getSuperclass() != null) {
+        avroEncode = getAvroEncode(c.getSuperclass());
+      }
+      if (avroEncode != null) {
+        return avroEncode;
+      }
+      for (Class<?> inter : c.getInterfaces()) {
+        avroEncode = getAvroEncode(inter);
+        if (avroEncode != null) {
+          return avroEncode;
+        }
+      }
+      c = c.getSuperclass();
+    }
+
+    return null;
+
+  }
+
+  protected static CustomEncoding<?> getCustomEncoding(Class<?> c) {
+    try {
+      AvroEncode avroEncode = getAvroEncode(c);
+      if (avroEncode != null) {
+        // first see if constructor that takes the class as an argument exists
+        try {
+          return avroEncode.using().getDeclaredConstructor(Class.class).newInstance(c);
+        } catch (NoSuchMethodException e) {
+          // zero argument constructor
+          return avroEncode.using().getDeclaredConstructor().newInstance();
+        }
+      } else {
+        return null;
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new AvroRuntimeException(e);
+    }
+  }
+
+  private static CustomEncoding<?> extractCustomEncoder(Schema schema, Class<?> c) {
+    CustomEncoding<?> customEncoding = getCustomEncoding(c);
+    try {
+      if (customEncoding != null) {
+        return customEncoding.setSchema(schema);
+      } else if (IS_RECORD_METHOD != null && IS_RECORD_METHOD.invoke(c).equals(true)) {
+        return new ReflectRecordEncoding(c).setSchema(schema);
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new AvroRuntimeException(e);
+    }
+    return null;
+  }
+
+  private ClassWrapper getClassWrapper(Schema schema) {
+    String name = schema.getFullName();
+    if (name == null)
+      return NO_CLASS;
+    return MapUtil.computeIfAbsent(classCache, name, n -> {
+      try {
+        Class c = ClassUtils.forName(getClassLoader(), getClassName(schema));
+        CustomEncoding customEncoding = extractCustomEncoder(schema, c);
+        return new ClassWrapper(c, customEncoding);
+      } catch (ClassNotFoundException e) {
+        // This might be a nested namespace. Try using the last tokens in the
+        // namespace as an enclosing class by progressively replacing period
+        // delimiters with $
+        StringBuilder nestedName = new StringBuilder(n);
+        int lastDot = n.lastIndexOf('.');
+        while (lastDot != -1) {
+          nestedName.setCharAt(lastDot, '$');
+          try {
+            Class c = ClassUtils.forName(getClassLoader(), nestedName.toString());
+            CustomEncoding customEncoding = extractCustomEncoder(schema, c);
+            return new ClassWrapper(c, customEncoding);
+          } catch (ClassNotFoundException ignored) {
+          }
+          lastDot = n.lastIndexOf('.', lastDot - 1);
+        }
+        return NO_CLASS;
+      }
+    });
+  }
+
+  public CustomEncoding<?> getCustomEncoding(Schema schema) {
+    switch (schema.getType()) {
+    case FIXED:
+    case RECORD:
+    case ENUM:
+      ClassWrapper c = getClassWrapper(schema);
+      return c == NO_CLASS ? null : c.getCustomEncoding();
+    default:
+      return null;
     }
   }
 
@@ -545,6 +641,28 @@ public class SpecificData extends GenericData {
       return value;
     }
     return super.createString(value);
+  }
+
+  private static class ClassWrapper {
+    private final Class<?> type;
+    private final CustomEncoding<?> customEncoding;
+
+    public ClassWrapper(Class<?> type) {
+      this(type, null);
+    }
+
+    public ClassWrapper(Class<?> type, CustomEncoding<?> customEncoding) {
+      this.type = type;
+      this.customEncoding = customEncoding;
+    }
+
+    public Class getType() {
+      return type;
+    }
+
+    public CustomEncoding getCustomEncoding() {
+      return customEncoding;
+    }
   }
 
 }

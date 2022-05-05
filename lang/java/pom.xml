@@ -86,6 +86,7 @@
     <module>grpc</module>
     <module>integration-test</module>
     <module>perf</module>
+    <module>java17-test</module>
   </modules>
 
   <build>

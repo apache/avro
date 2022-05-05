@@ -75,7 +75,12 @@ jobs:
         run: ./build.sh lint
 
       - name: Test
+        if: matrix.java < 17
         run: ./build.sh test
+
+      - name: Test Java >= 17
+        if: matrix.java >= 17
+        run: ./build.sh testJava17
 
   interop:
     name: Java ${{ matrix.java }} Interop
