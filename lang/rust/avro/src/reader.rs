@@ -726,7 +726,7 @@ mod tests {
                     c,
                 }
             } else {
-                panic!("Should be record value")
+                panic!("Should be record value: {:?}", obj)
             }
         }
     }
