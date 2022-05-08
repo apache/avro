@@ -1177,8 +1177,9 @@ mod tests {
             1024,
         )
         .expect("Should resolve schema");
-        let mut specific_writer = SpecificSingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
-            .expect("Resolved should pass");
+        let mut specific_writer =
+            SpecificSingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
+                .expect("Resolved should pass");
         specific_writer
             .write(obj1.clone(), &mut buf1)
             .expect("Serialization expected");
