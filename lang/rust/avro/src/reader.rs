@@ -717,7 +717,7 @@ mod tests {
                                 }
                             }
                         }
-                        _ => panic!("Unexpected pair"),
+                        (key, value) => panic!("Unexpected pair: {:?} -> {:?}", key, value),
                     }
                 }
                 TestSingleObjectReader {
@@ -745,7 +745,7 @@ mod tests {
     }
 
     #[test]
-    fn test_single_object_reader() {
+    fn test_avro_3507_single_object_reader() {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
@@ -775,7 +775,7 @@ mod tests {
     }
 
     #[test]
-    fn test_reader_parity() {
+    fn test_avro_3507_reader_parity() {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
