@@ -49,24 +49,22 @@ impl From<InteropMessage> for Value {
 }
 
 fn main() {
-    test_write();
-    test_read();
-}
-
-fn test_write() {
     let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
         .expect("File with single object not found or error occurred while reading");
+    test_write(&file_message);
+    test_read(file_message);
+}
+
+fn test_write(file_message: &[u8]) {
     let mut generated_encoding: Vec<u8> = Vec::new();
     apache_avro::SingleObjectWriter::<InteropMessage>::with_capacity(1024)
         .expect("resolve expected")
         .write_value(InteropMessage, &mut generated_encoding)
         .expect("Should encode");
-    assert_eq!(file_message, generated_encoding)
+    assert_eq!(file_message, &generated_encoding)
 }
 
-fn test_read() {
-    let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
-        .expect("File with single object not found or error occurred while reading");
+fn test_read(file_message: Vec<u8>) {
     let mut file_message = &file_message[..];
     let read_message = apache_avro::GenericSingleObjectReader::new(InteropMessage::get_schema())
         .expect("resolve expected")

@@ -391,7 +391,10 @@ impl GenericSingleObjectReader {
                         reader,
                     )
                 } else {
-                    Err(Error::MessageHeaderMismatch(self.expected_header, header))
+                    Err(Error::SingleObjectHeaderMismatch(
+                        self.expected_header,
+                        header,
+                    ))
                 }
             }
             Err(io_error) => Err(Error::ReadHeader(io_error)),
