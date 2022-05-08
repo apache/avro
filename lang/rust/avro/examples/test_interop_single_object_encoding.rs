@@ -52,7 +52,7 @@ fn main() {
     let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
         .expect("File with single object not found or error occurred while reading");
     let mut generated_encoding: Vec<u8> = Vec::new();
-    apache_avro::SingleObjectWriter::<InteropMessage>::with_capacity(1024)
+    apache_avro::SpecificSingleObjectWriter::<InteropMessage>::with_capacity(1024)
         .expect("resolve expected")
         .write_value(InteropMessage, &mut generated_encoding)
         .expect("Should encode");

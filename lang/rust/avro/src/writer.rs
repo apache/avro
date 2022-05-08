@@ -408,7 +408,7 @@ impl GenericSingleObjectWriter {
 }
 
 /// Writer that encodes messages according to the single object encoding v1 spec
-pub struct SingleObjectWriter<T>
+pub struct SpecificSingleObjectWriter<T>
 where
     T: AvroSchema,
 {
@@ -416,20 +416,20 @@ where
     _model: PhantomData<T>,
 }
 
-impl<T> SingleObjectWriter<T>
+impl<T> SpecificSingleObjectWriter<T>
 where
     T: AvroSchema,
 {
-    pub fn with_capacity(buffer_cap: usize) -> AvroResult<SingleObjectWriter<T>> {
+    pub fn with_capacity(buffer_cap: usize) -> AvroResult<SpecificSingleObjectWriter<T>> {
         let schema = T::get_schema();
-        Ok(SingleObjectWriter {
+        Ok(SpecificSingleObjectWriter {
             inner: GenericSingleObjectWriter::new_with_capacity(&schema, buffer_cap)?,
             _model: PhantomData,
         })
     }
 }
 
-impl<T> SingleObjectWriter<T>
+impl<T> SpecificSingleObjectWriter<T>
 where
     T: AvroSchema + Into<Value>,
 {
@@ -441,7 +441,7 @@ where
     }
 }
 
-impl<T> SingleObjectWriter<T>
+impl<T> SpecificSingleObjectWriter<T>
 where
     T: AvroSchema + Serialize,
 {
@@ -1177,7 +1177,7 @@ mod tests {
             1024,
         )
         .expect("Should resolve schema");
-        let mut specific_writer = SingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
+        let mut specific_writer = SpecificSingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
             .expect("Resolved should pass");
         specific_writer
             .write(obj1.clone(), &mut buf1)
