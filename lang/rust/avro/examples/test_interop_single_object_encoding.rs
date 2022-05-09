@@ -49,27 +49,27 @@ impl From<InteropMessage> for Value {
 }
 
 fn main() {
-    let file_message = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
-        .expect("File with single object not found or error occurred while reading");
-    test_write(&file_message);
-    test_read(file_message);
+    let single_object = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
+        .expect("File with single object not found or error occurred while reading it.");
+    test_write(&single_object);
+    test_read(&single_object[..]);
 }
 
-fn test_write(file_message: &[u8]) {
-    let mut generated_encoding: Vec<u8> = Vec::new();
+fn test_write(expected: &[u8]) {
+    let mut encoded: Vec<u8> = Vec::new();
     apache_avro::SingleObjectWriter::<InteropMessage>::with_capacity(1024)
-        .expect("resolve expected")
-        .write_value(InteropMessage, &mut generated_encoding)
-        .expect("Should encode");
-    assert_eq!(file_message, &generated_encoding)
+        .expect("Resolving failed")
+        .write_value(InteropMessage, &mut encoded)
+        .expect("Encoding failed");
+    assert_eq!(expected, &encoded)
 }
 
-fn test_read(file_message: Vec<u8>) {
-    let mut file_message = &file_message[..];
+fn test_read(encoded: &[u8]) {
+    let mut encoded = encoded;
     let read_message = apache_avro::GenericSingleObjectReader::new(InteropMessage::get_schema())
-        .expect("resolve expected")
-        .read_value(&mut file_message)
-        .expect("Should encode");
+        .expect("Resolving failed")
+        .read_value(&mut encoded)
+        .expect("Decoding failed");
     let expected_value: Value = InteropMessage.into();
     assert_eq!(expected_value, read_message)
 }
