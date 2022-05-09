@@ -746,7 +746,7 @@ pub use reader::{from_avro_datum, GenericSingleObjectReader, Reader, SpecificSin
 pub use schema::Schema;
 pub use ser::to_value;
 pub use util::max_allocation_bytes;
-pub use writer::{to_avro_datum, GenericSingleObjectWriter, SingleObjectWriter, Writer};
+pub use writer::{to_avro_datum, GenericSingleObjectWriter, SpecificSingleObjectWriter, Writer};
 
 #[macro_use]
 extern crate log;

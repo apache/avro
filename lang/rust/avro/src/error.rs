@@ -256,11 +256,17 @@ pub enum Error {
     #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
-    #[error("invalid JSON for {key:?}: {precision:?}")]
-    GetDecimalPrecisionFromJson {
+    #[error("invalid JSON for {key:?}: {value:?}")]
+    GetDecimalMetadataValueFromJson {
         key: String,
-        precision: serde_json::Value,
+        value: serde_json::Value,
     },
+
+    #[error("The decimal precision ({precision}) must be bigger or equal to the scale ({scale})")]
+    DecimalPrecisionLessThanScale { precision: usize, scale: usize },
+
+    #[error("The decimal precision ({precision}) must be a positive number")]
+    DecimalPrecisionMuBePositive { precision: usize },
 
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
