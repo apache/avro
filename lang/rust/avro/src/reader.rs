@@ -802,9 +802,9 @@ mod tests {
             .expect("Schema should resolve");
         let specific_reader = SpecificSingleObjectReader::<TestSingleObjectReader>::new()
             .expect("schema should resolve");
-        let mut to_read1 = &to_read.clone()[..];
-        let mut to_read2 = &to_read.clone()[..];
-        let mut to_read3 = &to_read.clone()[..];
+        let mut to_read1 = &to_read[..];
+        let mut to_read2 = &to_read[..];
+        let mut to_read3 = &to_read[..];
 
         let val = generic_reader
             .read_value(&mut to_read1)

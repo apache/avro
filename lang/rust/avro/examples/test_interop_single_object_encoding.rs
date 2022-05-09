@@ -48,7 +48,6 @@ impl From<InteropMessage> for Value {
     }
 }
 
-
 fn main() {
     let single_object = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
         .expect("File with single object not found or error occurred while reading it.");
