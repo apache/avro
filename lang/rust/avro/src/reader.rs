@@ -729,7 +729,7 @@ mod tests {
                     c,
                 }
             } else {
-                panic!("Should be record value: {:?}", obj)
+                panic!("Expected a Value::Record but was {:?}", obj)
             }
         }
     }
