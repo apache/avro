@@ -1140,7 +1140,8 @@ namespace Avro
         /// Writes each types in each namespaces into individual files.
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
-        public virtual void WriteTypes(string outputdir)
+        /// <param name="skipDirectories">skip creation of directories based on schema namespace</param>
+        public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
         {
             var cscp = new CSharpCodeProvider();
 
@@ -1155,11 +1156,13 @@ namespace Avro
                 var ns = nsc[i];
 
                 string dir = outputdir;
-                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                if (skipDirectories != true)
                 {
-                    dir = Path.Combine(dir, name);
+                    foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                    {
+                        dir = Path.Combine(dir, name);
+                    }
                 }
-
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
@@ -1194,7 +1197,7 @@ namespace Avro
             if (namespaceMapping == null || input == null)
                 return input;
 
-            // Replace namespace in "namespace" definitions: 
+            // Replace namespace in "namespace" definitions:
             //    "namespace": "originalnamespace" -> "namespace": "mappednamespace"
             //    "namespace": "originalnamespace.whatever" -> "namespace": "mappednamespace.whatever"
             // Note: It keeps the original whitespaces

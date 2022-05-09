@@ -22,8 +22,6 @@ namespace Avro.IO
     /// Decoder is used to decode Avro data on a stream. There are methods to read the Avro types on the stream. There are also
     /// methods to skip items, which are usually more efficient than reading, on the stream.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface Decoder
     {
         /// <summary>

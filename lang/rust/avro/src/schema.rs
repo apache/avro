@@ -434,6 +434,86 @@ impl<'s> ResolvedSchema<'s> {
     }
 }
 
+pub(crate) struct ResolvedOwnedSchema {
+    names: Names,
+    root_schema: Schema,
+}
+
+impl TryFrom<Schema> for ResolvedOwnedSchema {
+    type Error = Error;
+
+    fn try_from(schema: Schema) -> AvroResult<Self> {
+        let names = HashMap::new();
+        let mut rs = ResolvedOwnedSchema {
+            names,
+            root_schema: schema,
+        };
+        Self::from_internal(&rs.root_schema, &mut rs.names, &None)?;
+        Ok(rs)
+    }
+}
+
+impl ResolvedOwnedSchema {
+    pub(crate) fn get_root_schema(&self) -> &Schema {
+        &self.root_schema
+    }
+    pub(crate) fn get_names(&self) -> &Names {
+        &self.names
+    }
+
+    fn from_internal(
+        schema: &Schema,
+        names: &mut Names,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<()> {
+        match schema {
+            Schema::Array(schema) | Schema::Map(schema) => {
+                Self::from_internal(schema, names, enclosing_namespace)
+            }
+            Schema::Union(UnionSchema { schemas, .. }) => {
+                for schema in schemas {
+                    Self::from_internal(schema, names, enclosing_namespace)?
+                }
+                Ok(())
+            }
+            Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                if names
+                    .insert(fully_qualified_name.clone(), schema.clone())
+                    .is_some()
+                {
+                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+                } else {
+                    Ok(())
+                }
+            }
+            Schema::Record { name, fields, .. } => {
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                if names
+                    .insert(fully_qualified_name.clone(), schema.clone())
+                    .is_some()
+                {
+                    Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+                } else {
+                    let record_namespace = fully_qualified_name.namespace;
+                    for field in fields {
+                        Self::from_internal(&field.schema, names, &record_namespace)?
+                    }
+                    Ok(())
+                }
+            }
+            Schema::Ref { name } => {
+                let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+                names
+                    .get(&fully_qualified_name)
+                    .map(|_| ())
+                    .ok_or(Error::SchemaResolutionError(fully_qualified_name))
+            }
+            _ => Ok(()),
+        }
+    }
+}
+
 /// Represents a `field` in a `record` Avro schema.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RecordField {
@@ -600,7 +680,7 @@ impl Schema {
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     pub fn canonical_form(&self) -> String {
         let json = serde_json::to_value(self)
-            .unwrap_or_else(|e| panic!("cannot parse Schema from JSON: {0}", e));
+            .unwrap_or_else(|e| panic!("Cannot parse Schema from JSON: {0}", e));
         parsing_canonical_form(&json)
     }
 
@@ -788,16 +868,31 @@ impl Parser {
         ) -> Result<DecimalMetadata, Error> {
             match complex.get(key) {
                 Some(&Value::Number(ref value)) => parse_json_integer_for_decimal(value),
-                None => Err(Error::GetDecimalMetadataFromJson(key)),
-                Some(precision) => Err(Error::GetDecimalPrecisionFromJson {
+                None => {
+                    if key == "scale" {
+                        Ok(0)
+                    } else {
+                        Err(Error::GetDecimalMetadataFromJson(key))
+                    }
+                }
+                Some(value) => Err(Error::GetDecimalMetadataValueFromJson {
                     key: key.into(),
-                    precision: precision.clone(),
+                    value: value.clone(),
                 }),
             }
         }
         let precision = get_decimal_integer(complex, "precision")?;
         let scale = get_decimal_integer(complex, "scale")?;
-        Ok((precision, scale))
+
+        if precision < 1 {
+            return Err(Error::DecimalPrecisionMuBePositive { precision });
+        }
+
+        if precision < scale {
+            Err(Error::DecimalPrecisionLessThanScale { precision, scale })
+        } else {
+            Ok((precision, scale))
+        }
     }
 
     /// Parse a `serde_json::Value` representing a complex Avro type into a
@@ -1465,7 +1560,7 @@ fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
         }
 
         // Strip off quotes surrounding "size" type, if they exist ([INTEGERS] rule).
-        if k == "size" {
+        if k == "size" || k == "precision" || k == "scale" {
             let i = match v.as_str() {
                 Some(s) => s.parse::<i64>().expect("Only valid schemas are accepted!"),
                 None => v.as_i64().unwrap(),
@@ -1511,12 +1606,14 @@ const RESERVED_FIELDS: &[&str] = &[
     "symbols",
     "items",
     "values",
-    "logicalType",
     "size",
+    "logicalType",
     "order",
     "doc",
     "aliases",
     "default",
+    "precision",
+    "scale",
 ];
 
 // Used to define the ordering and inclusion of fields.

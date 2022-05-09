@@ -17,7 +17,6 @@
 
 set -e  # exit on error
 
-root_dir=$(pwd)
 build_dir="../../build/rust"
 dist_dir="../../dist/rust"
 
@@ -35,7 +34,7 @@ function prepare_build {
   mkdir -p $build_dir
 }
 
-cd `dirname "$0"`
+cd $(dirname "$0")
 
 for target in "$@"
 do
@@ -64,7 +63,10 @@ do
 
     interop-data-test)
       prepare_build
+      echo "Running interop data tests"
       cargo run --all-features --example test_interop_data
+      echo -e "\nRunning single object encoding interop data tests"
+      cargo run --all-features --example test_interop_single_object_encoding
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2

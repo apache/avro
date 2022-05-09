@@ -18,14 +18,15 @@
 //! Logic handling writing in Avro format at user level.
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
-    schema::{ResolvedSchema, Schema},
+    rabin::Rabin,
+    schema::{AvroSchema, ResolvedOwnedSchema, ResolvedSchema, Schema},
     ser::Serializer,
     types::Value,
     AvroResult, Codec, Error,
 };
 use rand::random;
 use serde::Serialize;
-use std::{collections::HashMap, convert::TryFrom, io::Write};
+use std::{collections::HashMap, convert::TryFrom, io::Write, marker::PhantomData};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
@@ -352,8 +353,136 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+/// Writer that encodes messages according to the single object encoding v1 spec
+/// Uses an API similar to the current File Writer
+/// Writes all object bytes at once, and drains internal buffer
+pub struct GenericSingleObjectWriter {
+    buffer: Vec<u8>,
+    resolved: ResolvedOwnedSchema,
+}
+
+impl GenericSingleObjectWriter {
+    pub fn new_with_capacity(
+        schema: &Schema,
+        initial_buffer_cap: usize,
+    ) -> AvroResult<GenericSingleObjectWriter> {
+        let fingerprint = schema.fingerprint::<Rabin>();
+        let mut buffer = Vec::with_capacity(initial_buffer_cap);
+        let header = [
+            0xC3,
+            0x01,
+            fingerprint.bytes[0],
+            fingerprint.bytes[1],
+            fingerprint.bytes[2],
+            fingerprint.bytes[3],
+            fingerprint.bytes[4],
+            fingerprint.bytes[5],
+            fingerprint.bytes[6],
+            fingerprint.bytes[7],
+        ];
+        buffer.extend_from_slice(&header);
+
+        Ok(GenericSingleObjectWriter {
+            buffer,
+            resolved: ResolvedOwnedSchema::try_from(schema.clone())?,
+        })
+    }
+
+    /// Write the referenced Value to the provided Write object. Returns a result with the number of bytes written including the header
+    pub fn write_value_ref<W: Write>(&mut self, v: &Value, writer: &mut W) -> AvroResult<usize> {
+        if self.buffer.len() != 10 {
+            Err(Error::IllegalSingleObjectWriterState)
+        } else {
+            write_value_ref_owned_resolved(&self.resolved, v, &mut self.buffer)?;
+            writer.write_all(&self.buffer).map_err(Error::WriteBytes)?;
+            let len = self.buffer.len();
+            self.buffer.truncate(10);
+            Ok(len)
+        }
+    }
+
+    /// Write the Value to the provided Write object. Returns a result with the number of bytes written including the header
+    pub fn write_value<W: Write>(&mut self, v: Value, writer: &mut W) -> AvroResult<usize> {
+        self.write_value_ref(&v, writer)
+    }
+}
+
+/// Writer that encodes messages according to the single object encoding v1 spec
+pub struct SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema,
+{
+    inner: GenericSingleObjectWriter,
+    _model: PhantomData<T>,
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema,
+{
+    pub fn with_capacity(buffer_cap: usize) -> AvroResult<SpecificSingleObjectWriter<T>> {
+        let schema = T::get_schema();
+        Ok(SpecificSingleObjectWriter {
+            inner: GenericSingleObjectWriter::new_with_capacity(&schema, buffer_cap)?,
+            _model: PhantomData,
+        })
+    }
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema + Into<Value>,
+{
+    /// Write the Into<Value> to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
+    pub fn write_value<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        let v: Value = data.into();
+        self.inner.write_value_ref(&v, writer)
+    }
+}
+
+impl<T> SpecificSingleObjectWriter<T>
+where
+    T: AvroSchema + Serialize,
+{
+    /// Write the referenced Serialize object to the provided Write object. Returns a result with
+    /// the number of bytes written including the header
+    pub fn write_ref<W: Write>(&mut self, data: &T, writer: &mut W) -> AvroResult<usize> {
+        let mut serializer = Serializer::default();
+        let v = data.serialize(&mut serializer)?;
+        self.inner.write_value_ref(&v, writer)
+    }
+
+    /// Write the Serialize object to the provided Write object. Returns a result with the number
+    /// of bytes written including the header
+    pub fn write<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
+        self.write_ref(&data, writer)
+    }
+}
+
 fn write_value_ref_resolved(
     resolved_schema: &ResolvedSchema,
+    value: &Value,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    if let Some(err) = value.validate_internal(
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+    ) {
+        return Err(Error::ValidationWithReason(err));
+    }
+    encode_internal(
+        value,
+        resolved_schema.get_root_schema(),
+        resolved_schema.get_names(),
+        &None,
+        buffer,
+    )?;
+    Ok(())
+}
+
+fn write_value_ref_owned_resolved(
+    resolved_schema: &ResolvedOwnedSchema,
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
@@ -942,5 +1071,125 @@ mod tests {
             .build();
 
         assert_eq!(writer.user_metadata, user_meta_data);
+    }
+
+    #[derive(Serialize, Clone)]
+    struct TestSingleObjectWriter {
+        a: i64,
+        b: f64,
+        c: Vec<String>,
+    }
+
+    impl AvroSchema for TestSingleObjectWriter {
+        fn get_schema() -> Schema {
+            let schema = r#"
+            {
+                "type":"record",
+                "name":"TestSingleObjectWrtierSerialize",
+                "fields":[
+                    {
+                        "name":"a",
+                        "type":"long"
+                    },
+                    {
+                        "name":"b",
+                        "type":"double"
+                    },
+                    {
+                        "name":"c",
+                        "type":{
+                            "type":"array",
+                            "items":"string"
+                        }
+                    }
+                ]
+            }
+            "#;
+            Schema::parse_str(schema).unwrap()
+        }
+    }
+
+    impl From<TestSingleObjectWriter> for Value {
+        fn from(obj: TestSingleObjectWriter) -> Value {
+            Value::Record(vec![
+                ("a".into(), obj.a.into()),
+                ("b".into(), obj.b.into()),
+                (
+                    "c".into(),
+                    Value::Array(obj.c.into_iter().map(|s| s.into()).collect()),
+                ),
+            ])
+        }
+    }
+
+    #[test]
+    fn test_single_object_writer() {
+        let mut buf: Vec<u8> = Vec::new();
+        let obj = TestSingleObjectWriter {
+            a: 300,
+            b: 34.555,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        let mut writer = GenericSingleObjectWriter::new_with_capacity(
+            &TestSingleObjectWriter::get_schema(),
+            1024,
+        )
+        .expect("Should resolve schema");
+        let value = obj.into();
+        let written_bytes = writer
+            .write_value_ref(&value, &mut buf)
+            .expect("Error serializing properly");
+
+        assert!(buf.len() > 10, "no bytes written");
+        assert_eq!(buf.len(), written_bytes);
+        assert_eq!(buf[0], 0xC3);
+        assert_eq!(buf[1], 0x01);
+        assert_eq!(
+            &buf[2..10],
+            &TestSingleObjectWriter::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..]
+        );
+        let mut msg_binary = Vec::new();
+        encode(
+            &value,
+            &TestSingleObjectWriter::get_schema(),
+            &mut msg_binary,
+        )
+        .expect("encode should have failed by here as a dependency of any writing");
+        assert_eq!(&buf[10..], &msg_binary[..])
+    }
+
+    #[test]
+    fn test_writer_parity() {
+        let obj1 = TestSingleObjectWriter {
+            a: 300,
+            b: 34.555,
+            c: vec!["cat".into(), "dog".into()],
+        };
+
+        let mut buf1: Vec<u8> = Vec::new();
+        let mut buf2: Vec<u8> = Vec::new();
+        let mut buf3: Vec<u8> = Vec::new();
+
+        let mut generic_writer = GenericSingleObjectWriter::new_with_capacity(
+            &TestSingleObjectWriter::get_schema(),
+            1024,
+        )
+        .expect("Should resolve schema");
+        let mut specific_writer =
+            SpecificSingleObjectWriter::<TestSingleObjectWriter>::with_capacity(1024)
+                .expect("Resolved should pass");
+        specific_writer
+            .write(obj1.clone(), &mut buf1)
+            .expect("Serialization expected");
+        specific_writer
+            .write_value(obj1.clone(), &mut buf2)
+            .expect("Serialization expected");
+        generic_writer
+            .write_value(obj1.into(), &mut buf3)
+            .expect("Serialization expected");
+        assert_eq!(buf1, buf2);
+        assert_eq!(buf1, buf3);
     }
 }

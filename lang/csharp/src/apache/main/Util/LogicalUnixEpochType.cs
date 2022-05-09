@@ -32,6 +32,11 @@ namespace Avro.Util
         protected static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
+        /// Number of ticks per microsecond.
+        /// </summary>
+        protected const long TicksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
+
+        /// <summary>
         /// Initializes the base logical type.
         /// </summary>
         /// <param name="name">The logical type name.</param>

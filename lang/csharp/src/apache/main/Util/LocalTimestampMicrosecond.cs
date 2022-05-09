@@ -21,39 +21,43 @@ using System;
 namespace Avro.Util
 {
     /// <summary>
-    /// The 'timestamp-micros' logical type.
+    /// The 'local-timestamp-micros' logical type.
     /// </summary>
-    public class TimestampMicrosecond : LogicalUnixEpochType<DateTime>
+    public class LocalTimestampMicrosecond : LogicalUnixEpochType<DateTime>
     {
         /// <summary>
-        /// The logical type name for TimestampMicrosecond.
+        /// The logical type name for LocalTimestampMicrosecond.
         /// </summary>
-        public static readonly string LogicalTypeName = "timestamp-micros";
+        public static readonly string LogicalTypeName = "local-timestamp-micros";
 
         /// <summary>
-        /// Initializes a new TimestampMicrosecond logical type.
+        /// Initializes a new LocalTimestampMicrosecond logical type.
         /// </summary>
-        public TimestampMicrosecond() : base(LogicalTypeName)
-        { }
+        public LocalTimestampMicrosecond()
+            : base(LogicalTypeName)
+        {
+        }
 
         /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Long != schema.BaseSchema.Tag)
-                throw new AvroTypeException("'timestamp-micros' can only be used with an underlying long type");
+            {
+                throw new AvroTypeException("'local-timestamp-micros' can only be used with an underlying long type");
+            }
         }
 
         /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
-            var date = ((DateTime)logicalValue).ToUniversalTime();
+            DateTime date = ((DateTime)logicalValue).ToUniversalTime();
             return (date - UnixEpochDateTime).Ticks / TicksPerMicrosecond;
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            return UnixEpochDateTime.AddTicks((long)baseValue * TicksPerMicrosecond);
+            return UnixEpochDateTime.AddTicks((long)baseValue * TicksPerMicrosecond).ToLocalTime();
         }
     }
 }
