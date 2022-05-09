@@ -63,7 +63,9 @@ do
 
     interop-data-test)
       prepare_build
+      echo "Running interop data tests"
       cargo run --all-features --example test_interop_data
+      echo -e "\nRunning single object encoding interop data tests"
       cargo run --all-features --example test_interop_single_object_encoding
       ;;
     *)
