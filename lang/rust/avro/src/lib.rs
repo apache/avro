@@ -743,7 +743,7 @@ pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
 pub use error::Error;
 pub use reader::{from_avro_datum, GenericSingleObjectReader, Reader, SpecificSingleObjectReader};
-pub use schema::{Schema, AvroSchema};
+pub use schema::{AvroSchema, Schema};
 pub use ser::to_value;
 pub use util::max_allocation_bytes;
 pub use writer::{to_avro_datum, GenericSingleObjectWriter, SpecificSingleObjectWriter, Writer};
