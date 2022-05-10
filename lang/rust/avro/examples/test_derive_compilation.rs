@@ -27,5 +27,5 @@ struct A {
 }
 
 fn main() {
-    println!("Derived schema: {:?}", A::get_schema());
+    println!("Derived schema: {:#?}", A::get_schema());
 }
