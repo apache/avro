@@ -68,8 +68,12 @@ do
       echo -e "\nRunning single object encoding interop data tests"
       cargo run --example test_interop_single_object_encoding
       ;;
+    derive-compilation)
+      echo "Tests running an example of schema derivation with 'derive' feature being enabled"
+      cargo run --no-default-features --example test_derive_compilation
+      ;;
     *)
-      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
+      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test|derive-compilation}" >&2
       exit 1
   esac
 done
