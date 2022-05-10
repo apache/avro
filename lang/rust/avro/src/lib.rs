@@ -748,10 +748,7 @@ pub use ser::to_value;
 pub use util::max_allocation_bytes;
 pub use writer::{to_avro_datum, GenericSingleObjectWriter, SpecificSingleObjectWriter, Writer};
 
-// #[cfg(feature = "derive")]
-// pub use schema::derive::AvroSchemaComponent;
 #[cfg(feature = "derive")]
-#[doc(hidden)]
 pub use apache_avro_derive::*;
 
 #[macro_use]
