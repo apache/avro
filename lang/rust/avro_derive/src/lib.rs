@@ -220,7 +220,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
         let type_string = p.path.segments.last().unwrap().ident.to_string();
 
         let schema = match &type_string[..] {
-            "bool" => quote! {Schema::Boolean},
+            "bool" => quote! {apache_avro::schema::Schema::Boolean},
             "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::schema::Schema::Int},
             "i64" => quote! {apache_avro::schema::Schema::Long},
             "f32" => quote! {apache_avro::schema::Schema::Float},
