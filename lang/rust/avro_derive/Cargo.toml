@@ -39,6 +39,6 @@ proc-macro2 = "1.0.37"
 serde_json = "1.0.79"
 
 [dev-dependencies]
-apache-avro = { version = "0.14.0", path = "../avro", features = ["derive"] }
+apache-avro = { path = "../avro", features = ["derive"] }
 proptest = "1.0.0"
 serde = { version = "1.0.136", features = ["derive"] }
