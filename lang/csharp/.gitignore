@@ -52,5 +52,7 @@ obj/
 
 #Test results
 TestResult.xml
+Coverage
+TestResults
 
 .vs/

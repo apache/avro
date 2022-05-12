@@ -56,7 +56,7 @@ function command_dist()
 {
   execute cargo build --release --lib --all-features
   execute cargo package
-  execute mkdir -p "$BUILD_ROOT/dist/rust"
+  execute mkdir -p "$dist_dir"
   execute cp target/package/apache-avro-*.crate "$dist_dir"
 }
 
@@ -73,13 +73,17 @@ function command_interop-data-generate()
   prepare_build
   export RUST_LOG=apache_avro=debug
   export RUST_BACKTRACE=1
-  execute cargo run --all-features --example generate_interop_data
+  execute cargo run  --features snappy,zstandard,bzip,xz --example generate_interop_data
 }
 
 function command_interop-data-test()
 {
   prepare_build
   execute cargo run --all-features --example test_interop_data
+  echo "Running interop data tests"
+  execute cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
+  echo -e "\nRunning single object encoding interop data tests"
+  execute cargo run --example test_interop_single_object_encoding
 }
 
 build-run "$@"
