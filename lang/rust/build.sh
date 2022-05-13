@@ -60,21 +60,22 @@ function command_test()
 
 function command_dist()
 {
-  # Local distribution cannot be created because Cargo projects with 
+  # Local distribution cannot be created because Cargo projects with
   # virtual manifests which use Path dependencies cannot resolve
   # non-published dependencies
-  # Read https://doc.rust-lang.org/cargo/reference/workspaces.html 
-  # and https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies 
+  # Read https://doc.rust-lang.org/cargo/reference/workspaces.html
+  # and https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies
   # for more details
 
-  # The source distribution (the .crate) is created at the end of 
+  # The source distribution (the .crate) is created at the end of
   # the `release` step
+  true
 }
 
 function command_release()
 {
   execute cargo login "$CARGO_API_TOKEN"
-  
+
   for module in "${modules[@]}"; do
     pushd "${module}"
     execute cargo build --release --lib --all-features
