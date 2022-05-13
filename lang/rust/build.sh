@@ -22,8 +22,13 @@ cd "$(dirname "$0")" # If being called from another folder, cd into the director
 # shellcheck disable=SC1091
 source ../../share/build-helper.sh "Rust"
 
-build_dir="$BUILD_ROOT/build/rust"
-dist_dir="$BUILD_ROOT/dist/rust"
+build_dir="$BUILD_ROOT/build/rust/"
+dist_dir="$BUILD_ROOT/dist/rust/"
+modules=(
+  "avro_derive"
+  "avro"
+)
+
 
 function clean {
   if [ -d "$build_dir" ]; then
@@ -39,6 +44,7 @@ function prepare_build {
 
 function command_clean()
 {
+  execute rm -rf "$dist_dir"
   execute cargo clean
 }
 
@@ -54,18 +60,30 @@ function command_test()
 
 function command_dist()
 {
-  execute cargo build --release --lib --all-features
-  execute cargo package
-  execute mkdir -p "$dist_dir"
-  execute cp target/package/apache-avro-*.crate "$dist_dir"
+  # Local distribution cannot be created because Cargo projects with 
+  # virtual manifests which use Path dependencies cannot resolve
+  # non-published dependencies
+  # Read https://doc.rust-lang.org/cargo/reference/workspaces.html 
+  # and https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies 
+  # for more details
+
+  # The source distribution (the .crate) is created at the end of 
+  # the `release` step
 }
 
 function command_release()
 {
-  command_dist
-
   execute cargo login "$CARGO_API_TOKEN"
-  execute cargo publish
+  
+  for module in "${modules[@]}"; do
+    pushd "${module}"
+    execute cargo build --release --lib --all-features
+    execute cargo publish
+    execute mkdir -p "../${dist_dir}"
+    popd
+  done
+  execute cp target/package/apache-avro-*.crate "$dist_dir"
+
 }
 
 function command_interop-data-generate()
