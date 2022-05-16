@@ -398,7 +398,7 @@
 	<title>Aliases</title>
 	<p>Named types and fields may have aliases.  An implementation
         may optionally use aliases to map a writer's schema to the
-        reader's.  This faciliates both schema evolution as well as
+        reader's.  This facilitates both schema evolution as well as
         processing disparate datasets.</p>
 	<p>Aliases function by re-writing the writer's schema using
         aliases from the reader's schema.  For example, if the
