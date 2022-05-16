@@ -1115,6 +1115,7 @@ impl Parser {
                     Some(ref ns) => format!("{}.{}", ns, alias),
                     None => alias.clone(),
                 };
+
                 let alias_name = Name::new(alias_fullname.as_str()).unwrap();
                 self.resolving_schemas.remove(&alias_name);
                 self.parsed_schemas.insert(alias_name, schema.clone());
@@ -1148,8 +1149,6 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        let name = Name::parse(complex)?;
-        let aliases = complex.aliases();
         let fields_opt = complex.get("fields");
 
         if fields_opt.is_none() {
@@ -1157,6 +1156,9 @@ impl Parser {
                 return Ok(seen.clone());
             }
         }
+
+        let name = Name::parse(complex)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
         let mut lookup = BTreeMap::new();
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
@@ -1199,9 +1201,6 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        let name = Name::parse(complex)?;
-        let aliases = complex.aliases();
-        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let symbols_opt = complex.get("symbols");
 
         if symbols_opt.is_none() {
@@ -1209,6 +1208,10 @@ impl Parser {
                 return Ok(seen.clone());
             }
         }
+
+        let name = Name::parse(complex)?;
+        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
         let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
@@ -1297,9 +1300,6 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        let name = Name::parse(complex)?;
-        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-        let aliases = complex.aliases();
         let size_opt = complex.get("size");
         if size_opt.is_none() {
             if let Some(seen) = self.get_already_seen_schema(complex, enclosing_namespace) {
@@ -1316,6 +1316,10 @@ impl Parser {
             .and_then(|v| v.as_i64())
             .ok_or(Error::GetFixedSizeField)?;
 
+        let name = Name::parse(complex)?;
+        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+
         let schema = Schema::Fixed {
             name,
             aliases: aliases.clone(),
@@ -1327,6 +1331,29 @@ impl Parser {
 
         Ok(schema)
     }
+}
+
+// A type alias may be specified either as a fully namespace-qualified, or relative
+// to the namespace of the name it is an alias for. For example, if a type named "a.b"
+// has aliases of "c" and "x.y", then the fully qualified names of its aliases are "a.c"
+// and "x.y".
+// https://avro.apache.org/docs/current/spec.html#Aliases
+fn fix_aliases_namespace(aliases: Aliases, namespace: &Namespace) -> Aliases {
+    aliases.map(|aliases| {
+        aliases
+            .iter()
+            .map(|alias| {
+                if alias.find('.').is_none() {
+                    match namespace {
+                        Some(ref ns) => format!("{}.{}", ns, alias),
+                        None => alias.clone(),
+                    }
+                } else {
+                    alias.clone()
+                }
+            })
+            .collect()
+    })
 }
 
 fn get_schema_type_name(name: Name, value: Value) -> Name {
@@ -3504,5 +3531,105 @@ mod tests {
         let schema_str = serde_json::to_string(&schema).expect("test failed");
         let _schema = Schema::parse_str(&schema_str).expect("test failed");
         assert_eq!(schema, _schema);
+    }
+
+    #[test]
+    fn avro_3512_alias_with_null_namespace_record() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type": "record",
+              "name": "a",
+              "namespace": "space",
+              "aliases": ["b", "x.y", ".c"],
+              "fields" : [
+                {"name": "time", "type": "long"}
+              ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        if let Schema::Record { ref aliases, .. } = schema {
+            match aliases {
+                Some(aliases) => {
+                    assert_eq!(aliases.len(), 3);
+                    assert_eq!(aliases[0], "space.b");
+                    assert_eq!(aliases[1], "x.y");
+                    assert_eq!(aliases[2], ".c");
+                }
+                None => {
+                    panic!("'aliases' must be Some");
+                }
+            }
+        } else {
+            panic!("The Schema should be a record: {:?}", schema);
+        }
+    }
+
+    #[test]
+    fn avro_3512_alias_with_null_namespace_enum() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type": "enum",
+              "name": "a",
+              "namespace": "space",
+              "aliases": ["b", "x.y", ".c"],
+              "symbols" : [
+                "symbol1", "symbol2"
+              ]
+            }
+        "#,
+        )
+        .unwrap();
+
+        if let Schema::Enum { ref aliases, .. } = schema {
+            match aliases {
+                Some(aliases) => {
+                    assert_eq!(aliases.len(), 3);
+                    assert_eq!(aliases[0], "space.b");
+                    assert_eq!(aliases[1], "x.y");
+                    assert_eq!(aliases[2], ".c");
+                }
+                None => {
+                    panic!("'aliases' must be Some");
+                }
+            }
+        } else {
+            panic!("The Schema should be an enum: {:?}", schema);
+        }
+    }
+
+    #[test]
+    fn avro_3512_alias_with_null_namespace_fixed() {
+        let schema = Schema::parse_str(
+            r#"
+            {
+              "type": "fixed",
+              "name": "a",
+              "namespace": "space",
+              "aliases": ["b", "x.y", ".c"],
+              "size" : 12
+            }
+        "#,
+        )
+        .unwrap();
+
+        if let Schema::Fixed { ref aliases, .. } = schema {
+            match aliases {
+                Some(aliases) => {
+                    assert_eq!(aliases.len(), 3);
+                    assert_eq!(aliases[0], "space.b");
+                    assert_eq!(aliases[1], "x.y");
+                    assert_eq!(aliases[2], ".c");
+                }
+                None => {
+                    panic!("'aliases' must be Some");
+                }
+            }
+        } else {
+            panic!("The Schema should be a fixed: {:?}", schema);
+        }
     }
 }
