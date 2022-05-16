@@ -1212,7 +1212,7 @@ impl Parser {
         let name = Name::parse(complex)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
-        
+
         let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
             .ok_or(Error::GetEnumSymbolsField)
