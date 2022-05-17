@@ -24,7 +24,10 @@ A module that provides several test related goodies to the other Avro crates:
 
 ### Custom Logger
 
-The logger both collects the logged messages and delegates to env_logger so that they printed on the stderr
+The logger:
+
+* collects the logged messages, so that a test could assert what has been logged
+* delegates to env_logger so that they printed on the stderr
 
 ### Colorized Backtraces
 
@@ -44,5 +47,5 @@ Since integration tests are actually crates without Cargo.toml, the test author 
 
 To assert that a given message was logged, use the `assert_logged` function.
 ```rust
-assert_logged("An expected message");
+apache_avro_test_helper::logger::assert_logged("An expected message");
 ```
