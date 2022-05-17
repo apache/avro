@@ -12,20 +12,20 @@ ref_thread_local! {
 pub mod logger;
 
 #[ctor]
-fn setup() {
+fn before_all() {
     // better stacktraces in tests
     color_backtrace::install();
 
     // enable logging in tests
-    logger::setup();
+    logger::install();
 }
 
 #[dtor]
-fn teardown() {
+fn after_all() {
     logger::clear_log_messages();
 }
 
 /// Does nothing. Just loads the crate.
 /// Should be used in the integration tests, because they do not use [dev-dependencies]
 /// and do not auto-load this crate.
-pub const fn init() {}
+pub fn init() {}

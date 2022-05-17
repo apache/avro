@@ -8,6 +8,7 @@ struct TestLogger {
 }
 
 impl Log for TestLogger {
+    #[inline]
     fn enabled(&self, _metadata: &Metadata) -> bool {
         true
     }
@@ -41,7 +42,7 @@ pub fn assert_logged(expected_message: &str) {
     assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
 }
 
-pub(crate) fn setup() {
+pub(crate) fn install() {
     log::set_logger(&*TEST_LOGGER)
         .map(|_| log::set_max_level(LevelFilter::Trace))
         .map_err(|err| {
