@@ -30,6 +30,7 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
+    use apache_avro::schema::Alias;
     use std::{
         borrow::{Borrow, Cow},
         sync::Mutex,
@@ -1097,7 +1098,11 @@ mod test_derive {
         if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases::get_schema() {
             assert_eq!("TestBasicStructWithAliases", name.fullname(None));
             assert_eq!(
-                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                Some(vec![
+                    Alias::new("a").unwrap(),
+                    Alias::new("b").unwrap(),
+                    Alias::new("c").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1135,7 +1140,11 @@ mod test_derive {
         if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases2::get_schema() {
             assert_eq!("TestBasicStructWithAliases2", name.fullname(None));
             assert_eq!(
-                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                Some(vec![
+                    Alias::new("d").unwrap(),
+                    Alias::new("e").unwrap(),
+                    Alias::new("f").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1170,7 +1179,11 @@ mod test_derive {
         if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases::get_schema() {
             assert_eq!("TestBasicEnumWithAliases", name.fullname(None));
             assert_eq!(
-                Some(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()]),
+                Some(vec![
+                    Alias::new("a").unwrap(),
+                    Alias::new("b").unwrap(),
+                    Alias::new("c").unwrap()
+                ]),
                 aliases
             );
         } else {
@@ -1207,7 +1220,11 @@ mod test_derive {
         if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases2::get_schema() {
             assert_eq!("TestBasicEnumWithAliases2", name.fullname(None));
             assert_eq!(
-                Some(vec!["d".to_owned(), "e".to_owned(), "f".to_owned()]),
+                Some(vec![
+                    Alias::new("d").unwrap(),
+                    Alias::new("e").unwrap(),
+                    Alias::new("f").unwrap()
+                ]),
                 aliases
             );
         } else {
