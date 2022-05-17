@@ -82,4 +82,5 @@ apache-avro-test-helper = { version= "0.1.0", path = "../avro_test_helper" }
 criterion = "0.3.5"
 hex-literal = "0.3.4"
 md-5 = "0.10.1"
+pretty_assertions = "1.2.1"
 sha2 = "0.10.2"

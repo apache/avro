@@ -155,6 +155,7 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_zigzag() {

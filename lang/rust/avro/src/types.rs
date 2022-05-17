@@ -939,6 +939,7 @@ mod tests {
         types::Value,
     };
     use apache_avro_test_helper::logger::assert_logged;
+    use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
     #[test]
