@@ -72,6 +72,16 @@ SCHEMAS_TO_VALIDATE = tuple(
             decimal.Decimal("-3.1415"),
         ),
         (
+            {
+                "type": "fixed",
+                "logicalType": "decimal",
+                "name": "Test",
+                "size": 8,
+                "precision": 1,
+            },
+            decimal.Decimal("3"),
+        ),
+        (
             {"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4},
             decimal.Decimal("3.1415"),
         ),
@@ -81,16 +91,6 @@ SCHEMAS_TO_VALIDATE = tuple(
         ),
         (
             {"type": "bytes", "logicalType": "decimal", "precision": 1},
-            decimal.Decimal("3"),
-        ),
-        (
-            {
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "Test",
-                "size": 8,
-                "precision": 1,
-            },
             decimal.Decimal("3"),
         ),
         ({"type": "enum", "name": "Test", "symbols": ["A", "B"]}, "B"),
