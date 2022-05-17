@@ -46,7 +46,7 @@ pub(crate) fn install() {
     log::set_logger(&*TEST_LOGGER)
         .map(|_| log::set_max_level(LevelFilter::Trace))
         .map_err(|err| {
-            eprintln!("========= Failed to set the custom logger: {}", err);
+            eprintln!("Failed to set the custom logger: {:?}", err);
         })
         .unwrap();
 }

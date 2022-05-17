@@ -6,7 +6,7 @@ ref_thread_local! {
     // The unit tests run in parallel
     // We need to keep the log messages in a thread-local variable
     // and clear them after assertion
-    pub static managed LOG_MESSAGES: Vec<String> = Vec::new();
+    pub(crate) static managed LOG_MESSAGES: Vec<String> = Vec::new();
 }
 
 pub mod logger;
