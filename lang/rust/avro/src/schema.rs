@@ -3735,4 +3735,53 @@ mod tests {
         );
         assert_eq!(schema, Schema::parse_str(&serialized).unwrap());
     }
+
+    #[test]
+    fn avro_3130_parse_anonymous_union_type() {
+        let schema_str = r#"
+        {
+            "type": "record",
+            "name": "AccountEvent",
+            "fields": [
+                {"type":
+                  ["null",
+                   { "name": "accountList",
+                      "type": {
+                        "type": "array",
+                        "items": "long"
+                      }
+                  }
+                  ],
+                 "name":"NullableLongArray"
+               }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str).unwrap();
+
+        if let Schema::Record { name, fields, .. } = schema {
+            assert_eq!(name, Name::new("AccountEvent").unwrap());
+
+            let field = &fields[0];
+            assert_eq!(&field.name, "NullableLongArray");
+
+            if let Schema::Union(ref union) = field.schema {
+                assert_eq!(union.schemas[0], Schema::Null);
+
+                if let Schema::Array(ref array_schema) = union.schemas[1] {
+                    if let Schema::Long = **array_schema {
+                        // OK
+                    } else {
+                        panic!("Expected a Schema::Array of type Long");
+                    }
+                } else {
+                    panic!("Expected Schema::Array");
+                }
+            } else {
+                panic!("Expected Schema::Union");
+            }
+        } else {
+            panic!("Expected Schema::Record");
+        }
+    }
 }
