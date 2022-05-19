@@ -15,37 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.util.internal;
+package org.apache.avro.reflect;
 
-import java.util.function.Function;
+import org.apache.avro.Schema;
 
-/**
- * Wraps a {@link ClassValue} cache so it can be overridden in an android
- * environment, where it isn't available.
- *
- * @param <R> Return type of the ClassValue
- */
-public class ClassValueCache<R> implements Function<Class<?>, R> {
+public interface CustomEncoderFieldAccess {
 
-  private final Function<Class<?>, R> ifAbsent;
+  /**
+   * Set the read schema.
+   *
+   * @param schema the read schema.
+   * @return the field accessor to be used for this field.
+   */
+  FieldAccessor setReadSchema(Schema schema);
 
-  private final ClassValue<R> cache = new ClassValue<R>() {
-    @Override
-    protected R computeValue(Class<?> c) {
-      return ifAbsent.apply(c);
-    }
-  };
-
-  public ClassValueCache(Function<Class<?>, R> ifAbsent) {
-    this.ifAbsent = ifAbsent;
-  }
-
-  @Override
-  public R apply(Class<?> c) {
-    return cache.get(c);
-  }
-
-  public void remove(Class<?> c) {
-    cache.remove(c);
-  }
 }

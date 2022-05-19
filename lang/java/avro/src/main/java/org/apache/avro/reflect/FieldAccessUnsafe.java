@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
@@ -329,7 +330,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
   }
 
-  final static class UnsafeCustomEncodedField extends UnsafeCachedField {
+  final static class UnsafeCustomEncodedField extends UnsafeCachedField implements CustomEncoderFieldAccess {
 
     private CustomEncoding<?> encoding;
 
@@ -361,6 +362,11 @@ class FieldAccessUnsafe extends FieldAccess {
     @Override
     protected boolean isCustomEncoded() {
       return true;
+    }
+
+    @Override
+    public FieldAccessor setReadSchema(Schema schema) {
+      return new UnsafeCustomEncodedField(field, encoding.setReadSchema(schema));
     }
   }
 }

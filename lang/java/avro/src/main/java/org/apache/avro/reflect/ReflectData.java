@@ -390,7 +390,11 @@ public class ReflectData extends SpecificData {
       List<Schema.Field> avroFields = schema.getFields();
       FieldAccessor[] result = new FieldAccessor[avroFields.size()];
       for (Schema.Field avroField : schema.getFields()) {
-        result[avroField.pos()] = byName.get(avroField.name());
+        FieldAccessor fieldAccessor = byName.get(avroField.name());
+        if (fieldAccessor instanceof CustomEncoderFieldAccess) {
+          fieldAccessor = ((CustomEncoderFieldAccess) fieldAccessor).setReadSchema(avroField.schema());
+        }
+        result[avroField.pos()] = fieldAccessor;
       }
       return result;
     }
@@ -1052,5 +1056,11 @@ public class ReflectData extends SpecificData {
       }
     }
     return super.newRecord(old, schema);
+  }
+
+  /** Needed to expose for test in this package. */
+  @Override
+  protected void removeFromSchemaClassCache(Class<?> c) {
+    super.removeFromSchemaClassCache(c);
   }
 }
