@@ -524,6 +524,7 @@ mod tests {
         types::Record,
         util::zig_i64,
     };
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
     const AVRO_OBJECT_HEADER_LEN: usize = AVRO_OBJECT_HEADER.len();
