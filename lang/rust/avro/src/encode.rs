@@ -244,7 +244,9 @@ pub fn encode_to_vec(value: &Value, schema: &Schema) -> AvroResult<Vec<u8>> {
 #[allow(clippy::expect_fun_call)]
 pub(crate) mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::collections::HashMap;
+
     pub(crate) fn success(value: &Value, schema: &Schema) -> String {
         format!(
             "Value: {:?}\n should encode with schema:\n{:?}",

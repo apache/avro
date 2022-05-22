@@ -764,6 +764,7 @@ mod tests {
         types::{Record, Value},
         Codec, Reader, Schema, Writer,
     };
+    use pretty_assertions::assert_eq;
 
     //TODO: move where it fits better
     #[test]
