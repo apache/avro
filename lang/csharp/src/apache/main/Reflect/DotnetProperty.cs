@@ -28,9 +28,10 @@ namespace Avro.Reflect
 
         public IAvroFieldConverter Converter { get; set; }
 
-        private bool IsPropertyCompatible(Avro.Schema.Type schemaTag)
+        private bool IsPropertyCompatible(Avro.Schema schema)
         {
             Type propType;
+            var schemaTag = schema.Tag;
 
             if (Converter == null)
             {
@@ -74,21 +75,25 @@ namespace Avro.Reflect
                     return propType == typeof(byte[]);
                 case Avro.Schema.Type.Error:
                     return propType.IsClass;
+                case Avro.Schema.Type.Logical:
+                    var logicalSchema = (LogicalSchema)schema;
+                    var type = logicalSchema.LogicalType.GetCSharpType(false);
+                    return type == propType;
             }
 
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
             Converter = converter;
 
-            if (!IsPropertyCompatible(schemaTag))
+            if (!IsPropertyCompatible(schema))
             {
                 if (Converter == null)
                 {
-                    var c = cache.GetDefaultConverter(schemaTag, _property.PropertyType);
+                    var c = cache.GetDefaultConverter(schema.Tag, _property.PropertyType);
                     if (c != null)
                     {
                         Converter = c;
@@ -96,12 +101,12 @@ namespace Avro.Reflect
                     }
                 }
 
-                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schemaTag}");
+                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schema.Tag}");
             }
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, ClassCache cache)
-            : this(property, schemaTag, null, cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
+            : this(property, schema, null, cache)
         {
         }
 
