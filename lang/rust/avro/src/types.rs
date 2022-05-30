@@ -762,7 +762,7 @@ impl Value {
     fn resolve_string(self) -> Result<Self, Error> {
         match self {
             Value::String(s) => Ok(Value::String(s)),
-            Value::Bytes(bytes) => Ok(Value::String(
+            Value::Bytes(bytes) | Value::Fixed(_, bytes) => Ok(Value::String(
                 String::from_utf8(bytes).map_err(Error::ConvertToUtf8)?,
             )),
             other => Err(Error::GetString(other.into())),
@@ -778,6 +778,7 @@ impl Value {
                     Err(Error::CompareFixedSizes { size, n })
                 }
             }
+            Value::String(s) => Ok(Value::Fixed(s.len(), s.into_bytes())),
             other => Err(Error::GetStringForFixed(other.into())),
         }
     }
@@ -1309,6 +1310,24 @@ Field with name '"b"' is not a member of the map items"#,
         assert_eq!(
             value.resolve(&Schema::Bytes).unwrap(),
             Value::Bytes(vec![0u8, 42u8])
+        );
+    }
+
+    #[test]
+    fn resolve_string_from_bytes() {
+        let value = Value::Bytes(vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::String).unwrap(),
+            Value::String("abc".to_string())
+        );
+    }
+
+    #[test]
+    fn resolve_string_from_fixed() {
+        let value = Value::Fixed(3, vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::String).unwrap(),
+            Value::String("abc".to_string())
         );
     }
 
