@@ -273,7 +273,7 @@ When you commit a change, resolve the issue in Jira. When resolving, always set 
 
 ## Jira Guidelines
 
-Please comment on issues in Jira, making your concerns known. Please also vote for issues that are a high priority for you.
+Please comment on issues in [Jira](https://issues.apache.org/jira/projects/AVRO/issues), making your concerns known. Please also vote for issues that are a high priority for you.
 
 Please refrain from editing descriptions and comments if possible, as edits spam the mailing list and clutter Jira's "All" display, which is otherwise very useful. Instead, preview descriptions and comments using the preview button (on the right) before posting them. Keep descriptions brief and save more elaborate proposals for comments, since descriptions are included in Jira's automatically sent messages. If you change your mind, note this in a new comment, rather than editing an older comment. The issue should preserve this history of the discussion.
 
