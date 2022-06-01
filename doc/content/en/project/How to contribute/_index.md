@@ -88,15 +88,15 @@ mvn clean test
 
 ```shell
 cd avro-trunk/lang/py
-ant clean test
+./setup.py build test
 ```
 </details>
 
-<details><summary>Python3</summary>
+<details><summary><a href="https://www.rust-lang.org/">Rust</a></summary>
 
 ```shell
-cd avro-trunk/lang/py3
-./setup.py build test
+cd avro-trunk/lang/rust
+./build.sh clean test
 ```
 </details>
 
@@ -133,7 +133,6 @@ cd avro-trunk/lang/php
 ./build.sh clean
 ./build.sh test
 ```
-
 </details>
 
 <details><summary>Documentation</summary>
@@ -191,7 +190,7 @@ Link this PR to the corresponding JIRA ticket (on JIRA ticket, add PR to "Issue 
 <details><summary><b>Clone avro repository</b></summary> 
 
 ```shell
-git clone https://github.com/apache/avro.git
+git clone https://github.com/apache/avro.git -o github
 ```
 </details>
 code your changes (following preceding recommendations)
