@@ -1359,6 +1359,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private Names names = new Names();
     private boolean validate = true;
     private boolean validateDefaults = true;
+    private boolean strictLogicalTypes = false;
 
     /**
      * Adds the provided types to the set of defined, named types known to this
@@ -1398,6 +1399,17 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /** True iff default values are validated. False by default. */
     public boolean getValidateDefaults() {
       return this.validateDefaults;
+    }
+
+    /** Enable or disable strict LogicalType parsing. */
+    public Parser setStrictLogicalTypes(boolean strictLogicalTypes) {
+      this.strictLogicalTypes = strictLogicalTypes;
+      return this;
+    }
+
+    /** True iff strict LogicalType parsing is desired. False by default. */
+    public boolean getStrictLogicalTypes() {
+      return this.strictLogicalTypes;
     }
 
     /**
@@ -1442,7 +1454,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       try {
         validateNames.set(validate);
         VALIDATE_DEFAULTS.set(validateDefaults);
-        return Schema.parse(MAPPER.readTree(parser), names);
+        return Schema.parse(MAPPER.readTree(parser), names, strictLogicalTypes);
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {
@@ -1644,8 +1656,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  /** @see #parse(String) */
   static Schema parse(JsonNode schema, Names names) {
+    return parse(schema, names, false);
+  }
+
+  /** @see #parse(String) */
+  static Schema parse(JsonNode schema, Names names, boolean strictLogicalTypes) {
     if (schema == null) {
       throw new SchemaParseException("Cannot parse <null> schema");
     }
@@ -1766,7 +1782,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
           result.addProp(prop, schema.get(prop));
       }
       // parse logical type if present
-      result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
+      if (strictLogicalTypes) {
+        result.logicalType = LogicalTypes.fromSchema(result);
+      } else {
+        result.logicalType = LogicalTypes.fromSchemaIgnoreInvalid(result);
+      }
       names.space(savedSpace); // restore space
       if (result instanceof NamedSchema) {
         Set<String> aliases = parseAliases(schema);
