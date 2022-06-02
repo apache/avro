@@ -149,10 +149,8 @@ pub enum Schema {
     TimestampMicros,
     /// An amount of time defined by a number of months, days and milliseconds.
     Duration,
-    // A reference to another schema.
-    Ref {
-        name: Name,
-    },
+    /// A reference to another schema.
+    Ref { name: Name },
 }
 
 impl PartialEq for Schema {
@@ -161,7 +159,78 @@ impl PartialEq for Schema {
     /// [Parsing Canonical Form]:
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     fn eq(&self, other: &Self) -> bool {
-        self.canonical_form() == other.canonical_form()
+        let maybe_eq = match (self, other) {
+            (Schema::Null, Schema::Null) => true,
+            (Schema::Boolean, Schema::Boolean) => true,
+            (Schema::Int, Schema::Int) => true,
+            (Schema::Long, Schema::Long) => true,
+            (Schema::Float, Schema::Float) => true,
+            (Schema::Double, Schema::Double) => true,
+            (Schema::Bytes, Schema::Bytes) => true,
+            (Schema::String, Schema::String) => true,
+            (Schema::Array(a), Schema::Array(b)) => a == b,
+            (Schema::Map(a), Schema::Map(b)) => a == b,
+            (Schema::Union(_), Schema::Union(_)) => true,
+            (
+                Schema::Record {
+                    name: name_a,
+                    fields: fields_a,
+                    ..
+                },
+                Schema::Record {
+                    name: name_b,
+                    fields: fields_b,
+                    ..
+                },
+            ) => name_a == name_b && fields_a == fields_b,
+            (
+                Schema::Enum {
+                    name: name_a,
+                    symbols: symbols_a,
+                    ..
+                },
+                Schema::Enum {
+                    name: name_b,
+                    symbols: symbols_b,
+                    ..
+                },
+            ) => name_a == name_b && symbols_a == symbols_b,
+            (
+                Schema::Fixed {
+                    name: name_a,
+                    size: size_a,
+                    ..
+                },
+                Schema::Fixed {
+                    name: name_b,
+                    size: size_b,
+                    ..
+                },
+            ) => name_a == name_b && size_a == size_b,
+            (
+                Schema::Decimal {
+                    precision: precision_a,
+                    scale: scale_a,
+                    ..
+                },
+                Schema::Decimal {
+                    precision: precision_b,
+                    scale: scale_b,
+                    ..
+                },
+            ) => precision_a == precision_b && scale_a == scale_b,
+            (Schema::Uuid, Schema::Uuid) => true,
+            (Schema::Date, Schema::Date) => true,
+            (Schema::TimeMillis, Schema::TimeMillis) => true,
+            (Schema::TimeMicros, Schema::TimeMicros) => true,
+            (Schema::TimestampMillis, Schema::TimestampMillis) => true,
+            (Schema::TimestampMicros, Schema::TimestampMicros) => true,
+            (Schema::Duration, Schema::Duration) => true,
+            (Schema::Ref { .. }, Schema::Ref { .. }) => true,
+            _ => false,
+        };
+
+        maybe_eq/* && self.canonical_form() == other.canonical_form()*/
     }
 }
 
@@ -557,7 +626,7 @@ impl ResolvedOwnedSchema {
 }
 
 /// Represents a `field` in a `record` Avro schema.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct RecordField {
     /// Name of the field.
     pub name: String,
@@ -575,6 +644,12 @@ pub struct RecordField {
     pub order: RecordFieldOrder,
     /// Position of the field in the list of `field` of its parent `Schema`
     pub position: usize,
+}
+
+impl PartialEq for RecordField {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.schema == other.schema
+    }
 }
 
 /// Represents any valid order for a `field` in a `record` Avro schema.
