@@ -28,7 +28,7 @@ use rand::random;
 use serde::Serialize;
 use std::{collections::HashMap, convert::TryFrom, io::Write, marker::PhantomData};
 
-const DEFAULT_BLOCK_SIZE: usize = 16000;
+const DEFAULT_BLOCK_SIZE: usize = 16 * 1024;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
 
 /// Main interface for writing Avro formatted values.
