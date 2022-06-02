@@ -115,8 +115,8 @@ fn main() -> anyhow::Result<()> {
     let small_schema = Schema::parse_str(raw_small_schema)?;
     let big_schema = Schema::parse_str(raw_big_schema)?;
 
-    println!("{:?}", small_schema);
-    println!("{:?}", big_schema);
+    println!("{:#?}", small_schema);
+    println!("{:#?}", big_schema);
 
     let mut small_record = Record::new(&small_schema).unwrap();
     small_record.put("field", "foo");
@@ -139,8 +139,7 @@ fn main() -> anyhow::Result<()> {
     big_record.put("address", address);
     let big_record = big_record.into();
 
-    println!();
-    println!("Count\t\tRuns\t\tBig/Small\tTotal write secs\tTotal read secs");
+    println!("\nCount\t\tRuns\t\tBig/Small\tTotal write secs\tTotal read secs");
 
     benchmark(&small_schema, &small_record, "Small", 10_000, 1)?;
     benchmark(&big_schema, &big_record, "Big", 10_000, 1)?;
