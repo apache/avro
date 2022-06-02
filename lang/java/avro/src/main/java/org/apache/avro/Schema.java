@@ -1707,7 +1707,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
           if (fieldTypeNode.isTextual() && names.get(fieldTypeNode.textValue()) == null)
             throw new SchemaParseException(fieldTypeNode + " is not a defined name." + " The type of the \"" + fieldName
                 + "\" field must be a defined name or a {\"type\": ...} expression.");
-          Schema fieldSchema = parse(fieldTypeNode, names);
+          Schema fieldSchema = parse(fieldTypeNode, names, strictLogicalTypes);
           Field.Order order = Field.Order.ASCENDING;
           JsonNode orderNode = field.get("order");
           if (orderNode != null)
@@ -1750,12 +1750,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
         JsonNode itemsNode = schema.get("items");
         if (itemsNode == null)
           throw new SchemaParseException("Array has no items type: " + schema);
-        result = new ArraySchema(parse(itemsNode, names));
+        result = new ArraySchema(parse(itemsNode, names, strictLogicalTypes));
       } else if (type.equals("map")) { // map
         JsonNode valuesNode = schema.get("values");
         if (valuesNode == null)
           throw new SchemaParseException("Map has no values type: " + schema);
-        result = new MapSchema(parse(valuesNode, names));
+        result = new MapSchema(parse(valuesNode, names, strictLogicalTypes));
       } else if (isTypeFixed) { // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
@@ -1798,7 +1798,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     } else if (schema.isArray()) { // union
       LockableArrayList<Schema> types = new LockableArrayList<>(schema.size());
       for (JsonNode typeNode : schema)
-        types.add(parse(typeNode, names));
+        types.add(parse(typeNode, names, strictLogicalTypes));
       return new UnionSchema(types);
     } else {
       throw new SchemaParseException("Schema not yet supported: " + schema);
