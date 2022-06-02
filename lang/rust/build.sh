@@ -68,8 +68,19 @@ do
       echo -e "\nRunning single object encoding interop data tests"
       cargo run --example test_interop_single_object_encoding
       ;;
+    profile-heap)
+      echo "Heap memory profiling using KDE heaptrack tool"
+      EXAMPLE_APP=$2
+      EXAMPLE_APP=${EXAMPLE_APP:-"benchmark"}
+      echo $EXAMPLE_APP
+      RUSTFLAGS=-g cargo build --release --example $EXAMPLE_APP
+      rm -rf heaptrack.${EXAMPLE_APP}.*
+      heaptrack ./target/release/examples/$EXAMPLE_APP
+      heaptrack --analyze heaptrack.${EXAMPLE_APP}.*
+      exit
+      ;;
     *)
-      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
+      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test|profile-heap}" >&2
       exit 1
   esac
 done
