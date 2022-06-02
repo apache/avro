@@ -15,6 +15,8 @@ import java.util.Optional;
 @org.apache.avro.specific.AvroGenerated
 public class AddExtraOptionalGettersTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = -3300987256178011215L;
+
+
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AddExtraOptionalGettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that extra optional getters are added\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
@@ -427,6 +429,32 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
         }
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + (name == null ? 0 : name.hashCode());
+    result = 31 * result + (favorite_number == null ? 0 : favorite_number.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof AddExtraOptionalGettersTest)) {
+      return false;
+    }
+    AddExtraOptionalGettersTest other = (AddExtraOptionalGettersTest) o;
+    if (Utf8.compareSequences(this.name, other.name) != 0) {
+      return false;
+    }
+    if (!java.util.Objects.equals(this.favorite_number, other.favorite_number)) {
+      return false;
+    }
+    return true;
   }
 }
 

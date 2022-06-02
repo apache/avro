@@ -616,6 +616,47 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
     }
   }
 #end
+#if ($this.canGenerateEqualsAndHashCode($schema))
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+#foreach ($field in $schema.getFields())
+#if (!${this.ignoredField($field)})
+#set ($n = ${this.mangle($field.name(), $schema.isError())})
+    result = 31 * result + ${this.hashCodeFor($field.schema(), $n)};
+#end
+#end
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ${this.mangleTypeIdentifier($schema.getName())})) {
+      return false;
+    }
+    ${this.mangleTypeIdentifier($schema.getName())} other = (${this.mangleTypeIdentifier($schema.getName())}) o;
+#foreach ($field in $schema.getFields())
+#if (!${this.ignoredField($field)})
+#set ($n = ${this.mangle($field.name(), $schema.isError())})
+#set ($s = $field.schema())
+#if (${this.isPrimitiveType($s)})
+    if (this.$n != other.$n) {
+#elseif (${this.javaType($field.schema()).equals("java.lang.CharSequence")})
+    if (Utf8.compareSequences(this.$n, other.$n) != 0) {
+#else
+    if (!java.util.Objects.equals(this.$n, other.$n)) {
+#end
+      return false;
+    }
+#end
+#end
+    return true;
+  }
+#end
 }
 
 #macro( encodeVar $indent $var $s )
