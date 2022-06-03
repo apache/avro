@@ -69,14 +69,24 @@ do
       cargo run --example test_interop_single_object_encoding
       ;;
     profile-heap)
-      echo "Heap memory profiling using KDE heaptrack tool"
-      EXAMPLE_APP=$2
-      EXAMPLE_APP=${EXAMPLE_APP:-"benchmark"}
-      echo $EXAMPLE_APP
+      echo "Heap memory profiling with https://github.com/KDE/heaptrack"
+      EXAMPLE_APP=${2:-"benchmark"}
       RUSTFLAGS=-g cargo build --release --example $EXAMPLE_APP
-      rm -rf heaptrack.${EXAMPLE_APP}.*
+      rm -f heaptrack.${EXAMPLE_APP}.*
       heaptrack ./target/release/examples/$EXAMPLE_APP
       heaptrack --analyze heaptrack.${EXAMPLE_APP}.*
+      exit
+      ;;
+    profile-cpu)
+      echo "CPU profiling with perf and https://github.com/KDAB/hotspot"
+      EXAMPLE_APP=${2:-"benchmark"}
+      RUSTFLAGS=-g cargo build --release --example $EXAMPLE_APP
+      NOW=$(date +%y%m%d%H%M%S)
+      DATA_FILE=perf-${EXAMPLE_APP}-${NOW}.data
+      # sudo sysctl kernel.perf_event_paranoid=-1
+      # sudo sysctl kernel.kptr_restrict=0
+      perf record --call-graph=dwarf --output=$DATA_FILE ./target/release/examples/$EXAMPLE_APP
+      hotspot $DATA_FILE
       exit
       ;;
     *)
