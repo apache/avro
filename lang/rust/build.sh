@@ -20,12 +20,9 @@ set -e  # exit on error
 build_dir="../../build/rust"
 dist_dir="../../dist/rust"
 
-
 function clean {
-  if [ -d $build_dir ]; then
-    find $build_dir | xargs chmod 755
-    rm -rf $build_dir
-  fi
+  rm -rf $build_dir
+  rm -rf $dist_dir
 }
 
 
@@ -49,24 +46,21 @@ do
       cargo test
       ;;
     dist)
-      cargo build --release --lib --all-features
-      cargo package
-      mkdir -p  ../../dist/rust
-      cp target/package/apache-avro-*.crate $dist_dir
+      mkdir -p ${dist_dir}
+      cargo build --release --lib --all-features --workspace
+      git archive --output=apache-avro.tgz HEAD
+      mv apache-avro.tgz ${dist_dir}/
       ;;
     interop-data-generate)
       prepare_build
-      export RUST_LOG=apache_avro=debug
-      export RUST_BACKTRACE=1
-      cargo run  --features snappy,zstandard,bzip,xz --example generate_interop_data
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --features snappy,zstandard,bzip,xz --example generate_interop_data
       ;;
-
     interop-data-test)
       prepare_build
       echo "Running interop data tests"
-      cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
       echo -e "\nRunning single object encoding interop data tests"
-      cargo run --example test_interop_single_object_encoding
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --example test_interop_single_object_encoding
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
