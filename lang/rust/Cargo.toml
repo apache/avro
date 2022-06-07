@@ -18,6 +18,6 @@
 [workspace]
 members = [
     "avro_test_helper",
-    "avro",
-    "avro_derive"
+    "avro_derive",
+    "avro"
 ]
