@@ -53,18 +53,14 @@ do
       ;;
     interop-data-generate)
       prepare_build
-      export RUST_LOG=apache_avro=debug
-      export RUST_BACKTRACE=1
-      cargo run --features snappy,zstandard,bzip,xz --example generate_interop_data
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --features snappy,zstandard,bzip,xz --example generate_interop_data
       ;;
     interop-data-test)
       prepare_build
-      export RUST_LOG=apache_avro=debug
-      export RUST_BACKTRACE=1
       echo "Running interop data tests"
-      cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
       echo -e "\nRunning single object encoding interop data tests"
-      cargo run --example test_interop_single_object_encoding
+      RUST_LOG=apache_avro=debug RUST_BACKTRACE=1 cargo run --example test_interop_single_object_encoding
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
