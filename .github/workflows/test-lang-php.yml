@@ -146,4 +146,4 @@ jobs:
         run: ./build.sh interop-data-generate
 
       - name: Run Interop Tests
-        run: ./build.sh test-interop
+        run: ./build.sh interop-data-test

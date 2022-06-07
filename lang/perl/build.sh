@@ -17,29 +17,26 @@
 
 set -e # exit on error
 
-function usage {
-  echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}"
-  exit 1
+shopt -s globstar # enable **/* globbing
+shopt -s nullglob # return nothing if no glob match
+
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "Perl"
+
+function command_clean()
+{
+  [ ! -f Makefile ] || execute make clean
+  execute rm -f  Avro-*.tar.gz META.yml Makefile.old
+  execute rm -rf lang/perl/inc/
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
-
-for target in "$@"
-do
-
-function do_clean(){
-  [ ! -f Makefile ] || make clean
-  rm -f  Avro-*.tar.gz META.yml Makefile.old
-  rm -rf lang/perl/inc/
-}
-
-function do_lint(){
+function command_lint()
+{
   local failures=0
-  for i in $(find lib t xt -name '*.p[lm]' -or -name '*.t'); do
-    if ! perlcritic --verbose 1 ${i}; then
+  for i in {lib,t,xt}/**/*.{p[lm],t}; do
+    if ! execute perlcritic --verbose 1 "${i}"; then
       ((failures=failures+1))
     fi
   done
@@ -48,36 +45,27 @@ function do_lint(){
   fi
 }
 
-case "$target" in
-  lint)
-    do_lint
-    ;;
+function command_test()
+{
+  execute perl ./Makefile.PL
+  execute make test
+}
 
-  test)
-    perl ./Makefile.PL && make test
-    ;;
+function command_dist()
+{
+  execute cp "$BUILD_ROOT/share/VERSION.txt" .
+  execute perl ./Makefile.PL
+  execute make dist
+}
 
-  dist)
-    cp ../../share/VERSION.txt .
-    perl ./Makefile.PL && make dist
-    ;;
+function command_interop-data-generate()
+{
+  execute perl -Ilib share/interop-data-generate
+}
 
-  clean)
-    do_clean
-    ;;
+function command_interop-data-test()
+{
+  execute prove -Ilib xt/interop.t
+}
 
-  interop-data-generate)
-    perl -Ilib share/interop-data-generate
-    ;;
-
-  interop-data-test)
-    prove -Ilib xt/interop.t
-    ;;
-
-  *)
-    usage
-esac
-
-done
-
-exit 0
+build-run "$@"

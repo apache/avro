@@ -17,54 +17,63 @@
 
 set -e
 
-# connect to avro ruby root directory
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "Ruby"
 
 # maintain our gems here
 export GEM_HOME="$PWD/.gem/"
 export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
 
-# bootstrap bundler
-gem install --no-document -v 1.17.3 bundler
+function prepare_bundle()
+{
+  # bootstrap bundler
+  execute gem install --no-document -v 1.17.3 bundler
 
-# rbenv is used by the Dockerfile but not the Github action in CI
-rbenv rehash 2>/dev/null || echo "Not using rbenv"
-bundle install
+  # rbenv is used by the Dockerfile but not the Github action in CI
+  execute rbenv rehash 2>/dev/null || echo "Not using rbenv"
+  execute bundle install
+}
 
-for target in "$@"
-do
-  case "$target" in
-    lint)
-      bundle exec rubocop
-      ;;
+function command_lint()
+{
+  prepare_bundle
+  execute bundle exec rubocop
+}
 
-    interop-data-generate)
-      bundle exec rake generate_interop
-      ;;
+function command_interop-data-generate()
+{
+  prepare_bundle
+  execute bundle exec rake generate_interop
+}
 
-    interop-data-test)
-      bundle exec rake interop
-      ;;
+function command_interop-data-test()
+{
+  prepare_bundle
+  execute bundle exec rake interop
+}
 
-    test)
-      bundle exec rake test
-      ;;
+function command_test()
+{
+  prepare_bundle
+  execute bundle exec rake test
+}
 
-    dist)
-      bundle exec rake build
-      DIST="../../dist/ruby"
-      mkdir -p "${DIST}"
-      VERSION=$(cat lib/avro/VERSION.txt)
-      cp "pkg/avro-${VERSION}.gem" "${DIST}"
-      ;;
+function command_dist()
+{
+  prepare_bundle
+  execute bundle exec rake build
+  DIST="$BUILD_ROOT/dist/ruby"
+  mkdir -p "${DIST}"
+  cp "pkg/avro-${BUILD_VERSION}.gem" "${DIST}"
+}
 
-    clean)
-      bundle exec rake clean
-      rm -rf tmp data.avr lib/avro/VERSION.txt
-      ;;
+function command_clean()
+{
+  prepare_bundle
+  execute bundle exec rake clean
+  execute rm -rf tmp data.avr lib/avro/VERSION.txt
+}
 
-    *)
-      echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
-      exit 1
-  esac
-done
+build-run "$@"

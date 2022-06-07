@@ -20,84 +20,82 @@
 
 set -e        # exit on error
 
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "C"
+
 root_dir=$(pwd)
-build_dir="../../build/c"
-dist_dir="../../dist/c"
+build_dir="$BUILD_ROOT/build/c"
+dist_dir="$BUILD_ROOT/dist/c"
 version=$(./version.sh project)
 tarball="avro-c-$version.tar.gz"
-doc_dir="../../build/avro-doc-$version/api/c"
+doc_dir="$BUILD_ROOT/build/avro-doc-$version/api/c"
 
-function prepare_build {
-  clean
-  mkdir -p $build_dir
-  (cd $build_dir && cmake $root_dir -DCMAKE_BUILD_TYPE=RelWithDebInfo)
+function prepare_build()
+{
+  command_clean
+  execute mkdir -p "$build_dir"
+  execute pushd "$build_dir"
+  execute cmake "$root_dir" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  execute popd
 }
 
-function clean {
-  if [ -d $build_dir ]; then
-    find $build_dir | xargs chmod 755
-    rm -rf $build_dir
+function command_clean()
+{
+  if [ -d "$build_dir" ]; then
+    execute find "$build_dir" -exec chmod 755 {} +
+    execute rm -rf "$build_dir"
   fi
-  rm -f VERSION.txt
-  rm -f examples/quickstop.db
+  execute rm -f VERSION.txt
+  execute rm -f examples/quickstop.db
 }
 
-for target in "$@"
-do
+function command_interop-data-generate()
+{
+  prepare_build
+  execute make -C "$build_dir"
+  execute "$build_dir/tests/generate_interop_data" "$BUILD_ROOT/share/test/schemas/interop.avsc"  "$BUILD_ROOT/build/interop/data"
+}
 
-  case "$target" in
+function command_interop-data-test()
+{
+    prepare_build
+    execute make -C "$build_dir"
+    execute "$build_dir/tests/test_interop_data" "$BUILD_ROOT/build/interop/data"
+}
 
-    interop-data-generate)
-      prepare_build
-      make -C $build_dir
-      $build_dir/tests/generate_interop_data "../../share/test/schemas/interop.avsc"  "../../build/interop/data"
-      ;;
+function command_lint()
+{
+  echo 'This is a stub where someone can provide linting.'
+}
 
-    interop-data-test)
-      prepare_build
-      make -C $build_dir
-      $build_dir/tests/test_interop_data "../../build/interop/data"
-      ;;
+function command_test()
+{
+  prepare_build
+  execute make -C "$build_dir"
+  execute make -C "$build_dir" test
+}
 
-    lint)
-      echo 'This is a stub where someone can provide linting.'
-      ;;
+function command_dist()
+{
+  prepare_build
+  execute cp "$BUILD_ROOT/share/VERSION.txt" "$root_dir"
+  execute make -C "$build_dir" docs
+  # This is a hack to force the built documentation to be included
+  # in the source package.
+  execute cp "$build_dir"/docs/*.html "$root_dir/docs"
+  execute make -C "$build_dir" package_source
+  execute rm "$root_dir"/docs/*.html
+  if [ ! -d "$dist_dir" ]; then
+    execute mkdir -p "$dist_dir"
+  fi
+  if [ ! -d "$doc_dir" ]; then
+    execute mkdir -p "$doc_dir"
+  fi
+  execute mv "$build_dir/$tarball" "$dist_dir"
+  execute cp "$build_dir"/docs/*.html "$doc_dir"
+  command_clean
+}
 
-    test)
-      prepare_build
-      make -C $build_dir
-      make -C $build_dir test
-      ;;
-
-    dist)
-      prepare_build
-      cp ../../share/VERSION.txt $root_dir
-      make -C $build_dir docs
-      # This is a hack to force the built documentation to be included
-      # in the source package.
-      cp $build_dir/docs/*.html $root_dir/docs
-      make -C $build_dir package_source
-      rm $root_dir/docs/*.html
-      if [ ! -d $dist_dir ]; then
-        mkdir -p $dist_dir
-      fi
-      if [ ! -d $doc_dir ]; then
-        mkdir -p $doc_dir
-      fi
-      mv $build_dir/$tarball $dist_dir
-      cp $build_dir/docs/*.html $doc_dir
-      clean
-      ;;
-
-    clean)
-      clean
-      ;;
-
-    *)
-      echo "Usage: $0 {interop-data-generate|interop-data-test|lint|test|dist|clean}"
-      exit 1
-  esac
-
-done
-
-exit 0
+build-run "$@"

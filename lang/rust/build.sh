@@ -17,59 +17,92 @@
 
 set -e  # exit on error
 
-build_dir="../../build/rust"
-dist_dir="../../dist/rust"
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "Rust"
+
+build_dir="$BUILD_ROOT/build/rust/"
+dist_dir="$BUILD_ROOT/dist/rust/"
+modules=(
+  "avro_derive"
+  "avro"
+)
 
 
 function clean {
-  if [ -d $build_dir ]; then
-    find $build_dir | xargs chmod 755
-    rm -rf $build_dir
+  if [ -d "$build_dir" ]; then
+    execute find "$build_dir" -exec chmod 755 {} +
+    execute rm -rf "$build_dir"
   fi
 }
 
-
 function prepare_build {
   clean
-  mkdir -p $build_dir
+  execute mkdir -p "$build_dir"
 }
 
-cd $(dirname "$0")
+function command_clean()
+{
+  execute rm -rf "$dist_dir"
+  execute cargo clean
+}
 
-for target in "$@"
-do
-  case "$target" in
-    clean)
-      cargo clean
-      ;;
-    lint)
-      cargo clippy --all-targets --all-features -- -Dclippy::all
-      ;;
-    test)
-      cargo test
-      ;;
-    dist)
-      cargo build --release --lib --all-features
-      cargo package
-      mkdir -p  ../../dist/rust
-      cp target/package/apache-avro-*.crate $dist_dir
-      ;;
-    interop-data-generate)
-      prepare_build
-      export RUST_LOG=apache_avro=debug
-      export RUST_BACKTRACE=1
-      cargo run  --features snappy,zstandard,bzip,xz --example generate_interop_data
-      ;;
+function command_lint()
+{
+  execute cargo clippy --all-targets --all-features -- -Dclippy::all
+}
 
-    interop-data-test)
-      prepare_build
-      echo "Running interop data tests"
-      cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
-      echo -e "\nRunning single object encoding interop data tests"
-      cargo run --example test_interop_single_object_encoding
-      ;;
-    *)
-      echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}" >&2
-      exit 1
-  esac
-done
+function command_test()
+{
+  execute cargo test
+}
+
+function command_dist()
+{
+  # Local distribution cannot be created because Cargo projects with
+  # virtual manifests which use Path dependencies cannot resolve
+  # non-published dependencies
+  # Read https://doc.rust-lang.org/cargo/reference/workspaces.html
+  # and https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies
+  # for more details
+
+  # The source distribution (the .crate) is created at the end of
+  # the `release` step
+  true
+}
+
+function command_release()
+{
+  execute cargo login "$CARGO_API_TOKEN"
+
+  for module in "${modules[@]}"; do
+    pushd "${module}"
+    execute cargo build --release --lib --all-features
+    execute cargo publish
+    execute mkdir -p "../${dist_dir}"
+    popd
+  done
+  execute cp target/package/apache-avro-*.crate "$dist_dir"
+
+}
+
+function command_interop-data-generate()
+{
+  prepare_build
+  export RUST_LOG=apache_avro=debug
+  export RUST_BACKTRACE=1
+  execute cargo run  --features snappy,zstandard,bzip,xz --example generate_interop_data
+}
+
+function command_interop-data-test()
+{
+  prepare_build
+  execute cargo run --all-features --example test_interop_data
+  echo "Running interop data tests"
+  execute cargo run --features snappy,zstandard,bzip,xz --example test_interop_data
+  echo -e "\nRunning single object encoding interop data tests"
+  execute cargo run --example test_interop_single_object_encoding
+}
+
+build-run "$@"

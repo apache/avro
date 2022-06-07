@@ -17,68 +17,62 @@
 
 set -e
 
-cd `dirname "$0"`
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
 
-dist_dir="../../dist/php"
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "PHP"
+
+dist_dir="$BUILD_ROOT/dist/php"
 build_dir="pkg"
-version=$(cat ../../share/VERSION.txt)
-libname="avro-php-$version"
+libname="avro-php-$BUILD_VERSION"
 lib_dir="$build_dir/$libname"
 tarball="$libname.tar.bz2"
 
 test_tmp_dir="test/tmp"
 
-function clean {
-    rm -rf "$test_tmp_dir"
-    rm -rf "$build_dir"
+function command_clean()
+{
+  execute rm -rf "$test_tmp_dir"
+  execute rm -rf "$build_dir"
 }
 
-function dist {
+function command_dist()
+{
     mkdir -p "$build_dir/$libname" "$lib_dir/examples"
     cp -pr lib "$lib_dir"
     cp -pr examples/*.php "$lib_dir/examples"
     cp README.md LICENSE NOTICE "$lib_dir"
-    cd "$build_dir"
+    pushd "$build_dir"
     tar -cjf "$tarball" "$libname"
     mkdir -p "../$dist_dir"
     cp "$tarball" "../$dist_dir"
+    popd
 }
 
-for target in "$@"
-do
-  case "$target" in
-    interop-data-generate)
-      composer install -d "../.."
-      php test/generate_interop_data.php
-      ;;
 
-    test-interop)
-      composer install -d "../.."
-      vendor/bin/phpunit test/InterOpTest.php
-      ;;
+function command_interop-data-generate()
+{
+  execute composer install -d "$BUILD_ROOT"
+  execute php test/generate_interop_data.php
+}
 
-    lint)
-      composer install -d "../.."
-      find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
-      vendor/bin/phpcs --standard=PSR12 lib
-      ;;
+function command_interop-data-test()
+{
+  execute composer install -d "$BUILD_ROOT"
+  execute vendor/bin/phpunit test/InterOpTest.php
+}
 
-    test)
-      composer install -d "../.."
-      vendor/bin/phpunit -v
-      ;;
+function command_lint()
+{
+  execute composer install -d "$BUILD_ROOT"
+  find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
+  execute vendor/bin/phpcs --standard=PSR12 lib
+}
 
-    dist)
-      dist
-      ;;
+function command_test()
+{
+  execute composer install -d "$BUILD_ROOT"
+  execute vendor/bin/phpunit -v
+}
 
-    clean)
-      clean
-      ;;
-
-    *)
-      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
-  esac
-done
-
-exit 0
+build-run "$@"

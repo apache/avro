@@ -17,35 +17,32 @@
 
 set -e
 
-usage() {
-  echo "Usage: $0 {lint|test|dist|clean}"
-  exit 1
+cd "$(dirname "$0")" # If being called from another folder, cd into the directory containing this script.
+
+# shellcheck disable=SC1091
+source ../../share/build-helper.sh "Java"
+
+function command_lint()
+{
+  execute mvn -B spotless:apply
 }
 
-main() {
-  local target
-  (( $# )) || usage
-  for target; do
-    case "$target" in
-      lint)
-        mvn -B spotless:apply
-        ;;
-      test)
-        mvn -B test
-        # Test the modules that depend on hadoop using Hadoop 2
-        mvn -B test -Phadoop2
-        ;;
-      dist)
-        mvn -P dist package -DskipTests javadoc:aggregate
-        ;;
-      clean)
-        mvn clean
-        ;;
-      *)
-        usage
-        ;;
-    esac
-  done
+
+function command_test()
+{
+  execute mvn -B test
+  # Test the modules that depend on hadoop using Hadoop 2
+  execute mvn -B test -Phadoop2
 }
 
-main "$@"
+function command_dist()
+{
+  execute mvn -P dist package -DskipTests javadoc:aggregate
+}
+
+function command_clean()
+{
+  execute mvn clean
+}
+
+build-run "$@"
