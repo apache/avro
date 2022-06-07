@@ -47,6 +47,8 @@ jobs:
       #  with:
       #    token: ${{ secrets.GITHUB_TOKEN }}
       # Install it manually
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v1
       - name: Install Cargo Audit
         run: cargo install cargo-audit
       - name: Audit
