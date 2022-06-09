@@ -22,9 +22,9 @@ edition = "2018"
 description = "Avro test helper. This crate is not supposed to be published!"
 
 [dependencies]
-ctor = "0.1.22"
-color-backtrace = { version = "0.5" }
-env_logger = "0.9.0"
-lazy_static = { default-features = false, version="1.4.0" }
-log = { default-features = false, version="0.4.16" }
-ref_thread_local = "0.1.1"
+ctor = { default-features = false, version = "0.1.22" }
+color-backtrace = { default-features = false, version = "0.5.1" }
+env_logger = { default-features = false, version = "0.9.0" }
+lazy_static = { default-features = false, version = "1.4.0" }
+log = { default-features = false, version = "0.4.17" }
+ref_thread_local = { default-features = false, version = "0.1.1" }
