@@ -48,6 +48,7 @@ jobs:
       #    token: ${{ secrets.GITHUB_TOKEN }}
       # Install it manually
       - name: Dependency Review
+        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@v1
       - name: Install Cargo Audit
         run: cargo install cargo-audit
