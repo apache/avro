@@ -787,7 +787,6 @@ impl Schema {
 impl Parser {
     /// Create a `Schema` from a string representing a JSON Avro schema.
     fn parse_str(&mut self, input: &str) -> Result<Schema, Error> {
-        // TODO: (#82) this should be a ParseSchemaError wrapping the JSON error
         let value = serde_json::from_str(input).map_err(Error::ParseSchemaJson)?;
         self.parse(&value, &None)
     }
@@ -1695,8 +1694,9 @@ fn field_ordering_position(field: &str) -> Option<usize> {
 }
 
 /// Trait for types that serve as an Avro data model. Derive implementation available
-/// through `derive` feature. Do not implement directly, implement [`derive::AvroSchemaComponent`]
-/// to get this trait through a blanket implementation.
+/// through `derive` feature. Do not implement directly!
+/// Implement `apache_avro::schema::derive::AvroSchemaComponent` to get this trait
+/// through a blanket implementation.
 pub trait AvroSchema {
     fn get_schema() -> Schema;
 }
