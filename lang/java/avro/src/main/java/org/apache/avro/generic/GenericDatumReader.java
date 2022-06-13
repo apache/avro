@@ -545,16 +545,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       this.readLock.lock();
       try {
         aClass = stringClassCache.get(s);
-      }
-      finally {
+      } finally {
         this.readLock.unlock();
       }
       if (aClass == null) {
         this.writeLock.lock();
         try {
           aClass = stringClassCache.computeIfAbsent(s, this.findStringClass);
-        }
-        finally {
+        } finally {
           this.writeLock.unlock();
         }
       }
