@@ -100,6 +100,14 @@ cd avro-trunk/lang/rust
 ```
 </details>
 
+<details><summary>C#</summary>
+
+```shell
+cd avro-trunk/lang/csharp
+./build.sh clean test
+```
+</details>
+
 <details><summary>C</summary>
 
 ```shell
