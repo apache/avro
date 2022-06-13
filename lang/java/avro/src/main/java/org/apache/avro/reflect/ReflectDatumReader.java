@@ -267,8 +267,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         if (accessor.isStringable()) {
           try {
             String asString = (String) read(null, field.schema(), in);
-            accessor.set(record,
-                asString == null ? null : newInstanceFromString(accessor.getField().getType(), asString));
+            accessor.set(record, asString == null ? null
+                : this.getReaderCache().newInstanceFromString(accessor.getField().getType(), asString));
             return;
           } catch (Exception e) {
             throw new AvroRuntimeException("Failed to read Stringable", e);
