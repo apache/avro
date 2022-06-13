@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
@@ -506,6 +507,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
     private final Function<Schema, Class> findStringClass;
 
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+
+    private final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+
     public ReaderCache(Function<Schema, Class> findStringClass) {
       this.findStringClass = findStringClass;
     }
@@ -534,9 +541,25 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
 
     public Class getStringClass(Schema s) {
-      synchronized (stringClassCache) {
-        return stringClassCache.computeIfAbsent(s, this.findStringClass);
+      Class aClass;
+      this.readLock.lock();
+      try {
+        aClass = stringClassCache.get(s);
       }
+      finally {
+        this.readLock.unlock();
+      }
+      if (aClass == null) {
+        this.writeLock.lock();
+        try {
+          aClass = stringClassCache.computeIfAbsent(s, this.findStringClass);
+        }
+        finally {
+          this.writeLock.unlock();
+        }
+      }
+
+      return aClass;
     }
 
   }
