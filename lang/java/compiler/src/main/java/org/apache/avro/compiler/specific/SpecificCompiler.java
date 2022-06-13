@@ -943,19 +943,21 @@ public class SpecificCompiler {
    * record.vm can handle the schema being presented.
    */
   public boolean isCustomCodable(Schema schema) {
-    if (schema.isError())
-      return false;
     return isCustomCodable(schema, new HashSet<>());
   }
 
   private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
     if (!seen.add(schema))
+      // Recursive call: assume custom codable until a caller on the call stack proves
+      // otherwise.
       return true;
     if (schema.getLogicalType() != null)
       return false;
     boolean result = true;
     switch (schema.getType()) {
     case RECORD:
+      if (schema.isError())
+        return false;
       for (Schema.Field f : schema.getFields())
         result &= isCustomCodable(f.schema(), seen);
       break;
