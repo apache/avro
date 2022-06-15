@@ -149,7 +149,7 @@ public class SpecificData extends GenericData {
   }
 
   /**
-   * For RECORD and Union type schemas, this method returns the SpecificData instance of the
+   * For RECORD and UNION type schemas, this method returns the SpecificData instance of the
    * class associated with the schema, in order to get the right conversions for
    * any logical types used.
    *
