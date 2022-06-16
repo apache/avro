@@ -367,7 +367,7 @@ For example, the union schema `["null","string"]` would encode:
 
 * _null_ as zero (the index of "null" in the union):
 `00`
-* the string "a" as one (the index of "string" in the union, encoded as hex 02), followed by the serialized string:
+* the string "a" as one (the index of "string" in the union, 1, encoded as hex 02), followed by the serialized string:
 `02 02 61`
 NOTE: Currently for C/C++ implementations, the positions are practically an int, but theoretically a long. In reality, we don't expect unions with 215M members
 
