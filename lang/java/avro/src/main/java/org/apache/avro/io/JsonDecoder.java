@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 
+import org.apache.avro.AvroTokenTypeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.parsing.JsonGrammarGenerator;
@@ -86,7 +87,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The InputStream to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -109,7 +110,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The String to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -217,7 +218,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       }
     } else {
       if (in.getCurrentToken() != JsonToken.VALUE_STRING) {
-        throw error("string");
+        throw error("string", JsonToken.VALUE_STRING, in.getCurrentToken());
       }
     }
     String result = in.getText();
@@ -470,6 +471,9 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
             in.nextToken();
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
+        if (fa.defaultValue != null) {
+          return null;
+        }
         throw new AvroTypeException("Expected field name not found: " + fa.fname);
       }
     } else if (top == Symbol.FIELD_END) {
@@ -509,6 +513,10 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
 
   private AvroTypeException error(String type) {
     return new AvroTypeException("Expected " + type + ". Got " + in.getCurrentToken());
+  }
+
+  private AvroTypeException error(String type, JsonToken expectedType, JsonToken actualType) {
+    return new AvroTokenTypeException("Expected " + type + ". Got " + in.getCurrentToken(), expectedType, actualType);
   }
 
 }
