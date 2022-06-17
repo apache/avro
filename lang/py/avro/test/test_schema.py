@@ -421,7 +421,7 @@ IGNORED_LOGICAL_TYPE = [
     ),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2},
-        warnings=[avro.errors.IgnoredLogicalType("Invalid decimal scale -2. Must be a positive integer.")],
+        warnings=[avro.errors.IgnoredLogicalType("Invalid decimal scale -2. Must be a non-negative integer.")],
     ),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2},
