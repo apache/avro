@@ -143,19 +143,6 @@ cd avro-trunk/lang/php
 ```
 </details>
 
-<details><summary>Documentation</summary>
-
-Please also check the documentation.
-Java
-
-```shell
-mvn compile
-mvn javadoc:aggregate
-firefox target/site/apidocs/index.html
-```
-
-Examine all public classes you've changed to see that documentation is complete, informative, and properly formatted. Your patch must not generate any javadoc warnings.
-</details>
 
 ## Contributing your code
 
@@ -192,7 +179,7 @@ On your github fork site, a button will propose you to build the Pull Request.
 Click on it, fill Conversation form, and create it.
 Link this PR to the corresponding JIRA ticket (on JIRA ticket, add PR to "Issue Links" chapter, and add label 'pull-request-available' to it .
 
-
+<!--  TODO: Fix formatting and decide whether this should be included in this section, moved to another section
 <details><summary><b>Via Patch</b> (if you don't have github account)</summary>
 <blockquote>
 <details><summary><b>Clone avro repository</b></summary> 
@@ -277,6 +264,7 @@ When you commit a change, resolve the issue in Jira. When resolving, always set 
 </details>
 </blockquote>
 </details>
+-->
 
 ## Jira Guidelines
 
