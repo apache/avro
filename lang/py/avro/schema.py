@@ -303,7 +303,7 @@ class DecimalLogicalSchema(LogicalSchema):
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Max is {max_precision}.")
 
         if not isinstance(scale, int) or scale < 0:
-            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer.")
+            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer.")
 
         if scale > precision:
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Cannot be greater than precision {precision}.")

@@ -700,7 +700,7 @@ class DatumReader:
                     return decoder.read_bytes()
                 scale = writers_schema.get_prop("scale")
                 if not (isinstance(scale, int) and scale >= 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return decoder.read_bytes()
                 return decoder.read_decimal_from_bytes(precision, scale)
             return decoder.read_bytes()
@@ -712,7 +712,7 @@ class DatumReader:
                     return self.read_fixed(writers_schema, readers_schema, decoder)
                 scale = writers_schema.get_prop("scale")
                 if not (isinstance(scale, int) and scale >= 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                     return self.read_fixed(writers_schema, readers_schema, decoder)
                 return decoder.read_decimal_from_fixed(precision, scale, writers_schema.size)
             return self.read_fixed(writers_schema, readers_schema, decoder)
@@ -1068,7 +1068,7 @@ class DatumWriter:
             if logical_type == "decimal":
                 scale = writers_schema.get_prop("scale")
                 if not (isinstance(scale, int) and scale >= 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                 elif not isinstance(datum, decimal.Decimal):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a decimal type"))
                 else:
@@ -1081,7 +1081,7 @@ class DatumWriter:
                 scale = writers_schema.get_prop("scale")
                 size = writers_schema.size
                 if not (isinstance(scale, int) and scale >= 0):
-                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer."))
+                    warnings.warn(avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer."))
                 elif not isinstance(datum, decimal.Decimal):
                     warnings.warn(avro.errors.IgnoredLogicalType(f"{datum} is not a decimal type"))
                 else:
