@@ -134,6 +134,9 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                     return Err(Error::GetEnumSymbol(s.clone()));
                 }
             }
+            Schema::Uuid => {
+                encode_bytes(s, buffer);
+            }
             _ => {
                 return Err(Error::EncodeValueAsSchemaError {
                     value_kind: ValueKind::String,
