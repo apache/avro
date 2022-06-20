@@ -154,7 +154,7 @@ namespace Avro.Specific
             foreach (System.Collections.DictionaryEntry de in map)
             {
                 encoder.StartItem();
-                encoder.WriteString(de.Key as string);
+                encoder.WriteString(de.Key.ToString());
                 Write(schema.ValueSchema, de.Value, encoder);
             }
             encoder.WriteMapEnd();
