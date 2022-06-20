@@ -21,12 +21,75 @@ using System.IO;
 using NUnit.Framework;
 using Avro.IO;
 using Avro.Reflect;
+using System.Collections.Generic;
+using System;
+using Avro.Specific;
+using System.Linq;
+
+
 
 namespace Avro.Test
 {
     [TestFixture]
     class TestReflect
     {
+        public class DictionaryTestClass
+        {
+            public Dictionary<int, int> p { get; set; }
+            public NestedTestClass ntc { get; set; }
+
+
+            public class NestedTestClass
+            {
+                public int NestedTestClassInt { get; set; }
+            }
+        }
+
+        public class DictionaryTestClass2
+        {
+            public Dictionary<int, string> p { get; set; }
+
+        }
+        class TestMapConverter : IAvroFieldConverter
+        {
+            public object FromAvroType(object o, Schema s) =>
+                ((Dictionary<string, int>)o).ToDictionary(x => int.Parse(x.Key), y=>y.Value);
+                
+            
+            public Type GetAvroType() => typeof(IDictionary<string, int>);
+            public Type GetPropertyType() => typeof(Dictionary<int, int>);
+            public object ToAvroType(object o, Schema s) =>
+                ((Dictionary<int, int>)o).ToDictionary(x => x.Key.ToString(), y => y.Value);
+        }
+
+        [TestCase]
+        public void TestMapWithConverterSucceeds()
+        {
+            ClassCache.AddDefaultConverter(new TestMapConverter());
+            
+            var schemaJson = "{\"fields\":[{\"name\":\"ntc\",\"type\":{\"type\":\"record\",\"name\":\"NestedTestClass\",\"fields\":[{\"name\":\"NestedTestClassInt\",\"type\":\"int\"}]}},{\"type\":{\"values\":\"int\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
+            var schema = Schema.Parse(schemaJson);
+            DictionaryTestClass expected = new DictionaryTestClass() { p = new Dictionary<int, int>() { { 1, 1 }, { 2, 4 }, { 3, 5 } } , ntc = new DictionaryTestClass.NestedTestClass() { NestedTestClassInt = 1 } };
+
+            using Stream stream =  serialize(schema, expected);
+            var avroReader = new ReflectReader<DictionaryTestClass>(schema, schema);    
+            stream.Position = 0;
+            var actual = avroReader.Read(null, new BinaryDecoder(stream));
+           
+            CollectionAssert.AreEquivalent(expected.p, actual.p);
+        }
+
+        [TestCase]
+        public void TestMapWithoutConverterFails()
+        {
+            var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"string\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
+            var schema = Schema.Parse(schemaJson);
+            DictionaryTestClass2 expected = new DictionaryTestClass2() { p = new Dictionary<int, string>() { { 1, "1" }, { 2, "4" }, { 3, "5" } } };
+            var ex = Assert.Throws<AvroException>(() => new ReflectWriter<DictionaryTestClass2>(schema));
+            var ex2 = Assert.Throws<AvroException>(() => new ReflectReader<DictionaryTestClass2>(schema, schema));
+            Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass2 isn't compatible with Avro schema type Map", ex.Message);
+            Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass2 isn't compatible with Avro schema type Map", ex2.Message);
+        }
 
         enum EnumResolutionEnum
         {
@@ -117,7 +180,7 @@ namespace Avro.Test
                 {
                     AssertReflectRecordEqual(f.Schema, rec1Val, f.Schema, rec2Val, cache);
                 }
-                else if (rec1Val is IList)
+                else if (rec1Val is IList) //I don't see when this or the last block would be evaluated.  Isn't anything that is IList or IDictionary going to be a class?
                 {
                     var schema1List = f.Schema as ArraySchema;
                     var rec1List = (IList) rec1Val;

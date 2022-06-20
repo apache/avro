@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Avro.Reflect
 {
@@ -112,7 +113,13 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Array:
                     return null;
                 case Avro.Schema.Type.Map:
-                    return null;
+                    if (!propType.IsGenericType)
+                    {
+                        return null;
+                    }
+                    Type valueType = propType.GenericTypeArguments[1];
+                    avroType = typeof(IDictionary<,>).MakeGenericType(typeof(string), valueType);
+                    break;
                 case Avro.Schema.Type.Union:
                     return null;
                 case Avro.Schema.Type.Fixed:
@@ -242,7 +249,7 @@ namespace Avro.Reflect
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
                 case MapSchema ms:
-                    if (!typeof(IDictionary).IsAssignableFrom(objType))
+                    if (!objType.IsGenericType && !typeof(IDictionary).IsAssignableFrom(objType))
                     {
                         throw new AvroException($"Cant map type {objType.Name} to map {ms.Name}");
                     }
@@ -252,7 +259,18 @@ namespace Avro.Reflect
                         throw new AvroException($"Cant map non-generic type {objType.Name} to map {ms.Name}");
                     }
 
-                    if (!typeof(string).IsAssignableFrom(objType.GenericTypeArguments[0]))
+                    var genericTypeDef = objType.GetGenericTypeDefinition();
+                    if (!objType.IsInstanceOfType(typeof(IDictionary))
+                        && objType.IsGenericType
+                        && genericTypeDef != typeof(Dictionary<,>)
+                        && genericTypeDef != typeof(IDictionary<,>))
+                    {
+                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Name}");
+                    }
+
+                    
+                    var keyType = objType.GenericTypeArguments[0];
+                    if (!(keyType.IsPrimitive || keyType.IsEnum || typeof(string).IsAssignableFrom(keyType)))
                     {
                         throw new AvroException($"First type parameter of {objType.Name} must be assignable to string");
                     }

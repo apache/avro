@@ -19,6 +19,7 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Avro.Reflect
 {
@@ -67,7 +68,8 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Array:
                     return typeof(IEnumerable).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Map:
-                    return typeof(IDictionary).IsAssignableFrom(propType);
+                    var dictionaryType = typeof(IDictionary);
+                    return dictionaryType.IsAssignableFrom(propType) && propType.GenericTypeArguments[0] == typeof(string);
                 case Avro.Schema.Type.Union:
                     return true;
                 case Avro.Schema.Type.Fixed:
