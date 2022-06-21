@@ -22,11 +22,11 @@ import org.apache.avro.Schema;
 public interface CustomEncoderFieldAccess {
 
   /**
-   * Set the read schema.
+   * Set the schema.
    *
-   * @param schema the read schema.
+   * @param schema the schema.
    * @return the field accessor to be used for this field.
    */
-  FieldAccessor setReadSchema(Schema schema);
+  FieldAccessor setSchema(Schema schema);
 
 }

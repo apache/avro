@@ -49,14 +49,14 @@ public abstract class CustomEncoding<T> {
   }
 
   /**
-   * Sets the read schema, giving the concrete implementation an opportunity to
+   * Sets the schema, giving the concrete encoder implementation an opportunity to
    * detect schema changes and behave accordingly. Useful for maintaining
    * backwards compatibility.
    *
-   * @param schema the read schema.
+   * @param schema the schema detected during read.
    * @return custom encoding to be used for field access.
    */
-  public CustomEncoding<T> setReadSchema(Schema schema) {
+  public CustomEncoding<T> setSchema(Schema schema) {
     return this;
   }
 

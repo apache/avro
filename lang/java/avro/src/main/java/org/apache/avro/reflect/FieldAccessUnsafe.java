@@ -365,8 +365,8 @@ class FieldAccessUnsafe extends FieldAccess {
     }
 
     @Override
-    public FieldAccessor setReadSchema(Schema schema) {
-      return new UnsafeCustomEncodedField(field, encoding.setReadSchema(schema));
+    public FieldAccessor setSchema(Schema schema) {
+      return new UnsafeCustomEncodedField(field, encoding.setSchema(schema));
     }
   }
 }
