@@ -179,9 +179,11 @@ For example, 16-byte quantity may be declared with:
 ```
 
 ### Names {#names}
-Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace. Equality of names is defined on the fullname.
+Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace, separated by a dot. Equality of names is defined on the fullname.
 
-The name portion of a fullname, record field names, and enum symbols must:
+Record fields and enum symbols have names as well (but no namespace). Equality of fields and enum symbols is defined on the name of the field/symbol within its scope (the record/enum that defines it). Fields and enum symbols across scopes are never equal.
+
+The name portion of the fullname of named types, record field names, and enum symbols must:
 
 * start with [A-Za-z_]
 * subsequently contain only [A-Za-z0-9_]
