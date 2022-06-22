@@ -18,14 +18,12 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
@@ -500,18 +498,41 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   }
 
+  /**
+   * This class is used to reproduce part of IdentityHashMap in ConcurrentHashMap
+   * code.
+   */
+  private static final class IdentitySchemaKey {
+    private final Schema schema;
+
+    private final int hashcode;
+
+    public IdentitySchemaKey(Schema schema) {
+      this.schema = schema;
+      this.hashcode = System.identityHashCode(schema);
+    }
+
+    @Override
+    public int hashCode() {
+      return this.hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null || !(obj instanceof GenericDatumReader.IdentitySchemaKey)) {
+        return false;
+      }
+      IdentitySchemaKey key = (IdentitySchemaKey) obj;
+      return this == key || this.schema == key.schema;
+    }
+  }
+
   protected static class ReaderCache {
-    private final Map<Schema, Class> stringClassCache = new IdentityHashMap<>();
+    private final Map<IdentitySchemaKey, Class> stringClassCache = new ConcurrentHashMap<>();
 
     private final Map<Class, Function<String, Object>> stringCtorCache = new ConcurrentHashMap<>();
 
     private final Function<Schema, Class> findStringClass;
-
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-
-    private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
-
-    private final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 
     public ReaderCache(Function<Schema, Class> findStringClass) {
       this.findStringClass = findStringClass;
@@ -540,26 +561,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       };
     }
 
-    public Class getStringClass(Schema s) {
-      Class aClass;
-      this.readLock.lock();
-      try {
-        aClass = stringClassCache.get(s);
-      } finally {
-        this.readLock.unlock();
-      }
-      if (aClass == null) {
-        this.writeLock.lock();
-        try {
-          aClass = stringClassCache.computeIfAbsent(s, this.findStringClass);
-        } finally {
-          this.writeLock.unlock();
-        }
-      }
-
-      return aClass;
+    public Class getStringClass(final Schema s) {
+      final IdentitySchemaKey key = new IdentitySchemaKey(s);
+      return this.stringClassCache.computeIfAbsent(key, (IdentitySchemaKey k) -> this.findStringClass.apply(k.schema));
     }
-
   }
 
   private final ReaderCache readerCache = new ReaderCache(this::findStringClass);
