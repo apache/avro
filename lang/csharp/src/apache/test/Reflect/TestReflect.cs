@@ -84,7 +84,6 @@ namespace Avro.Test
         {
             var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"string\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
             var schema = Schema.Parse(schemaJson);
-            DictionaryTestClass2 expected = new DictionaryTestClass2() { p = new Dictionary<int, string>() { { 1, "1" }, { 2, "4" }, { 3, "5" } } };
             var ex = Assert.Throws<AvroException>(() => new ReflectWriter<DictionaryTestClass2>(schema));
             var ex2 = Assert.Throws<AvroException>(() => new ReflectReader<DictionaryTestClass2>(schema, schema));
             Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass2 isn't compatible with Avro schema type Map", ex.Message);
