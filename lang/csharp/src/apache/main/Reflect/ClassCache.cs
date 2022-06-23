@@ -249,33 +249,19 @@ namespace Avro.Reflect
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
                 case MapSchema ms:
-                    if (!objType.IsGenericType && !typeof(IDictionary).IsAssignableFrom(objType))
-                    {
-                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Name}");
+                    var dictionaryType = FindOpenGenericInterface(typeof(IDictionary<,>), objType);
+                    if (dictionaryType == null)
+                    { 
+                        throw new AvroException($"Can't map type {objType.Name} to map {ms.Name}");
                     }
-
-                    if (!objType.IsGenericType)
-                    {
-                        throw new AvroException($"Cant map non-generic type {objType.Name} to map {ms.Name}");
-                    }
-
-                    var genericTypeDef = objType.GetGenericTypeDefinition();
-                    if (!objType.IsInstanceOfType(typeof(IDictionary))
-                        && objType.IsGenericType
-                        && genericTypeDef != typeof(Dictionary<,>)
-                        && genericTypeDef != typeof(IDictionary<,>))
-                    {
-                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Name}");
-                    }
-
                     
-                    var keyType = objType.GenericTypeArguments[0];
+                    var keyType = dictionaryType.GenericTypeArguments[0];
                     if (!(keyType.IsPrimitive || keyType.IsEnum || typeof(string).IsAssignableFrom(keyType)))
                     {
-                        throw new AvroException($"First type parameter of {objType.Name} must be assignable to string");
+                        throw new AvroException($"Can't map first generic type parameter of .Net type:\"{objType.Name}\" to Avro schema type: \"string\"");
                     }
 
-                    LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);
+                    LoadClassCache(dictionaryType.GenericTypeArguments[1], ms.ValueSchema);
                     break;
                 case NamedSchema ns:
                     EnumCache.AddEnumNameMapItem(ns, objType);
@@ -307,6 +293,27 @@ namespace Avro.Reflect
 
                     break;
             }
+        }
+        private static Type FindOpenGenericInterface(
+            Type expected,
+            Type actual)
+        {
+            if (actual.IsGenericType &&
+                actual.GetGenericTypeDefinition() == expected)
+            {
+                return actual;
+            }
+
+            Type[] interfaces = actual.GetInterfaces();
+            foreach (Type interfaceType in interfaces)
+            {
+                if (interfaceType.IsGenericType &&
+                    interfaceType.GetGenericTypeDefinition() == expected)
+                {
+                    return interfaceType;
+                }
+            }
+            return null;
         }
     }
 }

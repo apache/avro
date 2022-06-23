@@ -19,6 +19,7 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Avro.Reflect
 {
@@ -67,8 +68,12 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Array:
                     return typeof(IEnumerable).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Map:
-                    var dictionaryType = typeof(IDictionary);
-                    return dictionaryType.IsAssignableFrom(propType) && propType.GenericTypeArguments[0] == typeof(string);
+                    var dictionaryInterface = FindOpenGenericInterface(typeof(IDictionary<,>), propType);
+
+                    return dictionaryInterface != null
+                        && dictionaryInterface.IsGenericType
+                        && dictionaryInterface.GetGenericTypeDefinition() == typeof(IDictionary<,>)
+                        && dictionaryInterface.GenericTypeArguments[0] == typeof(string);
                 case Avro.Schema.Type.Union:
                     return true;
                 case Avro.Schema.Type.Fixed:
@@ -136,6 +141,28 @@ namespace Avro.Reflect
             {
                 _property.SetValue(o, v);
             }
+        }
+
+        private static Type FindOpenGenericInterface(
+            Type expected,
+            Type actual)
+        {
+            if (actual.IsGenericType &&
+                actual.GetGenericTypeDefinition() == expected)
+            {
+                return actual;
+            }
+
+            Type[] interfaces = actual.GetInterfaces();
+            foreach (Type interfaceType in interfaces)
+            {
+                if (interfaceType.IsGenericType &&
+                    interfaceType.GetGenericTypeDefinition() == expected)
+                {
+                    return interfaceType;
+                }
+            }
+            return null;
         }
     }
 }
