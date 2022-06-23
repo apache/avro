@@ -573,6 +573,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     return readerCache;
   }
 
+  @SuppressWarnings("unchecked")
+  protected Object newInstanceFromString(Class c, String s) {
+    return this.getReaderCache().newInstanceFromString(c, s);
+  }
+
   /**
    * Called to read byte arrays. Subclasses may override to use a different byte
    * array representation. By default, this calls
