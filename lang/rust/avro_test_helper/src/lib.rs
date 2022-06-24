@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[cfg(not(target_arch = "wasm32"))]
 use ctor::{ctor, dtor};
 
 use ref_thread_local::ref_thread_local;
@@ -28,6 +29,7 @@ ref_thread_local! {
 
 pub mod logger;
 
+#[cfg(not(target_arch = "wasm32"))]
 #[ctor]
 fn before_all() {
     // better stacktraces in tests
@@ -37,6 +39,7 @@ fn before_all() {
     logger::install();
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[dtor]
 fn after_all() {
     logger::clear_log_messages();
