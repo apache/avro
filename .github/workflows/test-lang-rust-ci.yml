@@ -77,7 +77,7 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Rust Format
-        if: ${{ matrix.target }} != 'wasm32-unknown-unknown'
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -90,7 +90,7 @@ jobs:
           args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
 
       - name: Rust Test
-        if: ${{ matrix.target }} != 'wasm32-unknown-unknown'
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
@@ -98,7 +98,7 @@ jobs:
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
-        if: ${{ matrix.target }} != 'wasm32-unknown-unknown'
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
