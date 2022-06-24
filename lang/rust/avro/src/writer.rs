@@ -513,17 +513,8 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 fn generate_sync_marker() -> Vec<u8> {
     std::iter::repeat_with(rand::random).take(16).collect()
-}
-
-#[cfg(target_arch = "wasm32")]
-fn generate_sync_marker() -> Vec<u8> {
-    std::iter::repeat_with(quad_rand::rand)
-        .take(4)
-        .flat_map(|i| i.to_be_bytes())
-        .collect()
 }
 
 #[cfg(test)]
