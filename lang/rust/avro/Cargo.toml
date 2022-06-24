@@ -69,7 +69,7 @@ strum = { default-features = false, version = "0.24.1" }
 strum_macros = { default-features = false, version = "0.24.0" }
 thiserror = { default-features = false, version = "1.0.31" }
 typed-builder = { default-features = false, version = "0.10.0" }
-uuid = { default-features = false, version = "1.1.1", features = ["serde", "std", "v4"] }
+uuid = { default-features = false, version = "1.1.2", features = ["serde", "std"] }
 zerocopy = { default-features = false, version = "0.6.1" }
 lazy_static = { default-features = false, version = "1.4.0" }
 log = { default-features = false, version = "0.4.17" }
