@@ -32,6 +32,7 @@
 
 #include "Node.hh"
 #include "NodeConcepts.hh"
+#include "CustomFields.hh"
 
 namespace avro {
 
@@ -42,6 +43,7 @@ template<
     class NameConcept,
     class LeavesConcept,
     class LeafNamesConcept,
+    class MultiAttributesConcept,
     class SizeConcept>
 class NodeImpl : public Node {
 
@@ -51,17 +53,20 @@ protected:
                                    docAttribute_(),
                                    leafAttributes_(),
                                    leafNameAttributes_(),
+                                   customAttributes_(),
                                    sizeAttribute_() {}
 
     NodeImpl(Type type,
              const NameConcept &name,
              const LeavesConcept &leaves,
              const LeafNamesConcept &leafNames,
+             const MultiAttributesConcept &customAttributes,
              const SizeConcept &size) : Node(type),
                                         nameAttribute_(name),
                                         docAttribute_(),
                                         leafAttributes_(leaves),
                                         leafNameAttributes_(leafNames),
+                                        customAttributes_(customAttributes),
                                         sizeAttribute_(size) {}
 
     // Ctor with "doc"
@@ -70,11 +75,13 @@ protected:
              const concepts::SingleAttribute<std::string> &doc,
              const LeavesConcept &leaves,
              const LeafNamesConcept &leafNames,
+             const MultiAttributesConcept &customAttributes,
              const SizeConcept &size) : Node(type),
                                         nameAttribute_(name),
                                         docAttribute_(doc),
                                         leafAttributes_(leaves),
                                         leafNameAttributes_(leafNames),
+                                        customAttributes_(customAttributes),
                                         sizeAttribute_(size) {}
 
     void swap(NodeImpl &impl) {
@@ -83,6 +90,7 @@ protected:
         std::swap(leafAttributes_, impl.leafAttributes_);
         std::swap(leafNameAttributes_, impl.leafNameAttributes_);
         std::swap(sizeAttribute_, impl.sizeAttribute_);
+        std::swap(customAttributes_, impl.customAttributes_);
         std::swap(nameIndex_, impl.nameIndex_);
     }
 
@@ -152,6 +160,10 @@ protected:
 
     void setLeafToSymbolic(size_t index, const NodePtr &node) override;
 
+    virtual void doAddCustomAttribute(const CustomFields &customfields) {
+      customAttributes_.add(customfields);
+    }
+
     SchemaResolution furtherResolution(const Node &reader) const {
         SchemaResolution match = RESOLVE_NO_MATCH;
 
@@ -195,6 +207,7 @@ protected:
 
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
+    MultiAttributesConcept customAttributes_;
     SizeConcept sizeAttribute_;
     concepts::NameIndexConcept<LeafNamesConcept> nameIndex_;
 };
@@ -210,19 +223,21 @@ using MultiLeaves = concepts::MultiAttribute<NodePtr>;
 
 using NoLeafNames = concepts::NoAttribute<std::string>;
 using LeafNames = concepts::MultiAttribute<std::string>;
+using MultiAttributes = concepts::MultiAttribute<CustomFields>;
+using NoAttributes = concepts::NoAttribute<CustomFields>;
 
 using NoSize = concepts::NoAttribute<int>;
 using HasSize = concepts::SingleAttribute<int>;
 
-using NodeImplPrimitive = NodeImpl<NoName, NoLeaves, NoLeafNames, NoSize>;
-using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoSize>;
+using NodeImplPrimitive = NodeImpl<NoName, NoLeaves, NoLeafNames, MultiAttributes, NoSize>;
+using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, MultiAttributes, NoSize>;
 
-using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, NoSize>;
-using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoSize>;
-using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, NoSize>;
-using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoSize>;
-using NodeImplUnion = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoSize>;
-using NodeImplFixed = NodeImpl<HasName, NoLeaves, NoLeafNames, HasSize>;
+using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, MultiAttributes, NoSize>;
+using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoAttributes, NoSize>;
+using NodeImplArray = NodeImpl<NoName, SingleLeaf, NoLeafNames, NoAttributes, NoSize>;
+using NodeImplMap = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
+using NodeImplUnion = NodeImpl<NoName, MultiLeaves, NoLeafNames, NoAttributes, NoSize>;
+using NodeImplFixed = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, HasSize>;
 
 class AVRO_DECL NodePrimitive : public NodeImplPrimitive {
 public:

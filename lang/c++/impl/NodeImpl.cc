@@ -83,6 +83,17 @@ std::ostream &operator<<(std::ostream &os, indent x) {
     return os;
 }
 
+void printCustomFields(const CustomFields& customFields, int depth,
+                       std::ostream &os) {
+    std::map<std::string, json::Entity>::const_iterator iter =
+        customFields.fields().begin();
+    while (iter != customFields.fields().end()) {
+      os << ",\n" << indent(depth);
+      customFields.printJson(os, iter->first);
+      ++iter;
+    }
+}
+
 } // anonymous namespace
 
 const int kByteStringSize = 6;
@@ -254,6 +265,7 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
     ++depth;
     // Serialize "default" field:
     assert(defaultValues.empty() || (defaultValues.size() == fields));
+    assert(customAttributes_.size() == 0 || customAttributes_.size() == fields);
     for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {
             os << ',';
@@ -273,6 +285,9 @@ void NodeRecord::printJson(std::ostream &os, size_t depth) const {
                 leafAttributes_.get(i)->printDefaultToJson(defaultValues[i], os,
                                                            depth);
             }
+        }
+        if(customAttributes_.size() == fields) {
+          printCustomFields(customAttributes_.get(i), depth, os);
         }
         os << '\n';
         os << indent(--depth) << '}';
