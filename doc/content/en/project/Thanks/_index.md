@@ -2,6 +2,7 @@
 title: "Thanks"
 linkTitle: "Thanks"
 weight: 7
+manualLink: https://www.apache.org/foundation/thanks.html
 ---
 
 <!--
