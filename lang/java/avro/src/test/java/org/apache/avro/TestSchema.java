@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -366,4 +367,32 @@ public class TestSchema {
   public void testSchemaFieldWithoutSchema() {
     new Schema.Field("f", null);
   }
+
+  @Test
+  public void testParseRecordWithNameAsType() {
+    final String schemaString = "{\n  \"type\" : \"record\",\n  \"name\" : \"ns.int\",\n"
+        + "  \"fields\" : [ \n    {\"name\" : \"value\", \"type\" : \"int\"}, \n"
+        + "    {\"name\" : \"next\", \"type\" : [ \"null\", \"ns.int\" ]}\n  ]\n}";
+    final Schema schema = new Schema.Parser().parse(schemaString);
+    String toString = schema.toString(true);
+
+    final Schema schema2 = new Schema.Parser().parse(toString);
+    assertEquals(schema, schema2);
+  }
+
+  @Test
+  public void testQualifiedName() {
+    Arrays.stream(Type.values()).forEach((Type t) -> {
+      final Schema.Name name = new Schema.Name(t.getName(), "space");
+      assertEquals("space." + t.getName(), name.getQualified("space"));
+      assertEquals("space." + t.getName(), name.getQualified("otherdefault"));
+    });
+    final Schema.Name name = new Schema.Name("name", "space");
+    assertEquals("name", name.getQualified("space"));
+    assertEquals("space.name", name.getQualified("otherdefault"));
+
+    final Schema.Name nameInt = new Schema.Name("Int", "space");
+    assertEquals("Int", nameInt.getQualified("space"));
+  }
+
 }
