@@ -444,6 +444,7 @@ where
 mod tests {
     use super::*;
     use crate::{encode::encode, from_value, types::Record, Reader};
+    use pretty_assertions::assert_eq;
     use serde::Deserialize;
     use std::io::Cursor;
 

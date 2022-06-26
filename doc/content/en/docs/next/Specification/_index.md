@@ -179,9 +179,11 @@ For example, 16-byte quantity may be declared with:
 ```
 
 ### Names {#names}
-Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace. Equality of names is defined on the fullname.
+Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace, separated by a dot. Equality of names is defined on the fullname.
 
-The name portion of a fullname, record field names, and enum symbols must:
+Record fields and enum symbols have names as well (but no namespace). Equality of fields and enum symbols is defined on the name of the field/symbol within its scope (the record/enum that defines it). Fields and enum symbols across scopes are never equal.
+
+The name portion of the fullname of named types, record field names, and enum symbols must:
 
 * start with [A-Za-z_]
 * subsequently contain only [A-Za-z0-9_]
@@ -367,7 +369,7 @@ For example, the union schema `["null","string"]` would encode:
 
 * _null_ as zero (the index of "null" in the union):
 `00`
-* the string "a" as one (the index of "string" in the union, encoded as hex 02), followed by the serialized string:
+* the string "a" as one (the index of "string" in the union, 1, encoded as hex 02), followed by the serialized string:
 `02 02 61`
 NOTE: Currently for C/C++ implementations, the positions are practically an int, but theoretically a long. In reality, we don't expect unions with 215M members
 

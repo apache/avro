@@ -24,7 +24,6 @@ use crate::{
     types::Value,
     AvroResult, Codec, Error,
 };
-use rand::random;
 use serde::Serialize;
 use std::{collections::HashMap, convert::TryFrom, io::Write, marker::PhantomData};
 
@@ -48,7 +47,7 @@ pub struct Writer<'a, W> {
     serializer: Serializer,
     #[builder(default = 0, setter(skip))]
     num_values: usize,
-    #[builder(default = std::iter::repeat_with(random).take(16).collect(), setter(skip))]
+    #[builder(default = generate_sync_marker(), setter(skip))]
     marker: Vec<u8>,
     #[builder(default = false, setter(skip))]
     has_header: bool,
@@ -514,6 +513,19 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn generate_sync_marker() -> Vec<u8> {
+    std::iter::repeat_with(rand::random).take(16).collect()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn generate_sync_marker() -> Vec<u8> {
+    std::iter::repeat_with(quad_rand::rand)
+        .take(4)
+        .flat_map(|i| i.to_be_bytes())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -524,6 +536,7 @@ mod tests {
         types::Record,
         util::zig_i64,
     };
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
     const AVRO_OBJECT_HEADER_LEN: usize = AVRO_OBJECT_HEADER.len();

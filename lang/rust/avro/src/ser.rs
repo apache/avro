@@ -485,6 +485,7 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Deserialize, Serialize, Clone)]

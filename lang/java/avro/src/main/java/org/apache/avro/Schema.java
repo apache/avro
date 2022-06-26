@@ -751,8 +751,32 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public String getQualified(String defaultSpace) {
-      return (space == null || space.equals(defaultSpace)) ? name : full;
+      return this.shouldWriteFull(defaultSpace) ? full : name;
     }
+
+    /**
+     * Determine if full name must be written. There are 2 cases for true :
+     * defaultSpace != from this.space or name is already a Schema.Type (int, array
+     * ...)
+     *
+     * @param defaultSpace : default name space.
+     * @return true if full name must be written.
+     */
+    private boolean shouldWriteFull(String defaultSpace) {
+      if (space != null && space.equals(defaultSpace)) {
+        for (Type schemaType : Type.values()) {
+          if (schemaType.name.equals(name)) {
+            // name is a 'Type', so namespace must be written
+            return true;
+          }
+        }
+        // this.space == defaultSpace
+        return false;
+      }
+      // this.space != defaultSpace, so namespace must be written.
+      return true;
+    }
+
   }
 
   private static abstract class NamedSchema extends Schema {

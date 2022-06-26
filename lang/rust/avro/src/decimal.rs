@@ -102,6 +102,7 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::convert::TryFrom;
 
     #[test]

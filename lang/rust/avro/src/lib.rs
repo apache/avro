@@ -604,7 +604,7 @@
 //!     let mut record = Record::new(writer.schema()).unwrap();
 //!     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
 //!     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
-//!     record.put("uuid", uuid::Uuid::new_v4());
+//!     record.put("uuid", uuid::Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
 //!     record.put("date", Value::Date(1));
 //!     record.put("time_millis", Value::TimeMillis(2));
 //!     record.put("time_micros", Value::TimeMicros(3));
@@ -764,6 +764,7 @@ mod tests {
         types::{Record, Value},
         Codec, Reader, Schema, Writer,
     };
+    use pretty_assertions::assert_eq;
 
     //TODO: move where it fits better
     #[test]

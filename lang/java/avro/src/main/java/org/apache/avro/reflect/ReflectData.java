@@ -71,6 +71,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  /**
+   * Always false since custom coders are not available for {@link ReflectData}.
+   */
   @Override
   public boolean useCustomCoders() {
     return false;

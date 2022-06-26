@@ -762,7 +762,7 @@ impl Value {
     fn resolve_string(self) -> Result<Self, Error> {
         match self {
             Value::String(s) => Ok(Value::String(s)),
-            Value::Bytes(bytes) => Ok(Value::String(
+            Value::Bytes(bytes) | Value::Fixed(_, bytes) => Ok(Value::String(
                 String::from_utf8(bytes).map_err(Error::ConvertToUtf8)?,
             )),
             other => Err(Error::GetString(other.into())),
@@ -778,6 +778,7 @@ impl Value {
                     Err(Error::CompareFixedSizes { size, n })
                 }
             }
+            Value::String(s) => Ok(Value::Fixed(s.len(), s.into_bytes())),
             other => Err(Error::GetStringForFixed(other.into())),
         }
     }
@@ -938,47 +939,9 @@ mod tests {
         schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
         types::Value,
     };
-    use log::{Level, LevelFilter, Metadata};
+    use apache_avro_test_helper::logger::assert_logged;
+    use pretty_assertions::assert_eq;
     use uuid::Uuid;
-
-    use ref_thread_local::{ref_thread_local, RefThreadLocal};
-
-    ref_thread_local! {
-        // The unit tests run in parallel
-        // We need to keep the log messages in a thread-local variable
-        // and clear them after assertion
-        static managed LOG_MESSAGES: Vec<String> = Vec::new();
-    }
-
-    struct TestLogger;
-
-    impl log::Log for TestLogger {
-        fn enabled(&self, metadata: &Metadata) -> bool {
-            metadata.level() <= Level::Error
-        }
-
-        fn log(&self, record: &log::Record) {
-            if self.enabled(record.metadata()) {
-                let mut msgs = LOG_MESSAGES.borrow_mut();
-                msgs.push(format!("{}", record.args()));
-            }
-        }
-
-        fn flush(&self) {}
-    }
-
-    static TEST_LOGGER: TestLogger = TestLogger;
-
-    fn init() {
-        let _ = log::set_logger(&TEST_LOGGER);
-        log::set_max_level(LevelFilter::Info);
-    }
-
-    fn assert_log_message(expected_message: &str) {
-        let mut msgs = LOG_MESSAGES.borrow_mut();
-        assert_eq!(msgs.pop().unwrap(), expected_message);
-        msgs.clear();
-    }
 
     #[test]
     fn validate() {
@@ -1120,8 +1083,6 @@ mod tests {
 
     #[test]
     fn validate_fixed() {
-        init();
-
         let schema = Schema::Fixed {
             size: 4,
             name: Name::new("some_fixed").unwrap(),
@@ -1132,7 +1093,7 @@ mod tests {
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
         let value = Value::Fixed(5, vec![0, 0, 0, 0, 0]);
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, schema, "The value's size (5) is different than the schema's size (4)"
@@ -1143,7 +1104,7 @@ mod tests {
         assert!(Value::Bytes(vec![0, 0, 0, 0]).validate(&schema));
         let value = Value::Bytes(vec![0, 0, 0, 0, 0]);
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, schema, "The bytes' length (5) is different than the schema's size (4)"
@@ -1154,8 +1115,6 @@ mod tests {
 
     #[test]
     fn validate_enum() {
-        init();
-
         let schema = Schema::Enum {
             name: Name::new("some_enum").unwrap(),
             aliases: None,
@@ -1173,7 +1132,7 @@ mod tests {
 
         let value = Value::Enum(1, "spades".to_string());
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, schema, "Symbol 'spades' is not at position '1'"
@@ -1183,7 +1142,7 @@ mod tests {
 
         let value = Value::Enum(1000, "spades".to_string());
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, schema, "No symbol at position '1000'"
@@ -1193,7 +1152,7 @@ mod tests {
 
         let value = Value::String("lorem".to_string());
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, schema, "'lorem' is not a member of the possible symbols"
@@ -1215,7 +1174,7 @@ mod tests {
 
         let value = Value::Enum(0, "spades".to_string());
         assert!(!value.validate(&other_schema));
-        assert_log_message(
+        assert_logged(
             format!(
                 "Invalid value: {:?} for schema: {:?}. Reason: {}",
                 value, other_schema, "Symbol 'spades' is not at position '0'"
@@ -1226,8 +1185,6 @@ mod tests {
 
     #[test]
     fn validate_record() {
-        init();
-
         // {
         //    "type": "record",
         //    "fields": [
@@ -1280,14 +1237,14 @@ mod tests {
             ("b".to_string(), Value::String("foo".to_string())),
         ]);
         assert!(!value.validate(&schema));
-        assert_log_message("Invalid value: Record([(\"a\", Boolean(false)), (\"b\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {\"a\": 0, \"b\": 1} }. Reason: Unsupported value-schema combination");
+        assert_logged("Invalid value: Record([(\"a\", Boolean(false)), (\"b\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {\"a\": 0, \"b\": 1} }. Reason: Unsupported value-schema combination");
 
         let value = Value::Record(vec![
             ("a".to_string(), Value::Long(42i64)),
             ("c".to_string(), Value::String("foo".to_string())),
         ]);
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             "Invalid value: Record([(\"a\", Long(42)), (\"c\", String(\"foo\"))]) for schema: Record { name: Name { name: \"some_record\", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: \"a\", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: \"b\", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {\"a\": 0, \"b\": 1} }. Reason: There is no schema field for field 'c'"
         );
 
@@ -1297,7 +1254,7 @@ mod tests {
             ("c".to_string(), Value::Null),
         ]);
         assert!(!value.validate(&schema));
-        assert_log_message(
+        assert_logged(
             r#"Invalid value: Record([("a", Long(42)), ("b", String("foo")), ("c", Null)]) for schema: Record { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: "b", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {"a": 0, "b": 1} }. Reason: The value's records length (3) is different than the schema's (2)"#,
         );
 
@@ -1317,7 +1274,7 @@ mod tests {
                 .collect()
         )
         .validate(&schema));
-        assert_log_message(
+        assert_logged(
             r#"Invalid value: Map({"c": Long(123)}) for schema: Record { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, default: None, schema: Long, order: Ascending, position: 0 }, RecordField { name: "b", doc: None, default: None, schema: String, order: Ascending, position: 1 }], lookup: {"a": 0, "b": 1} }. Reason: Field with name '"a"' is not a member of the map items
 Field with name '"b"' is not a member of the map items"#,
         );
@@ -1353,6 +1310,24 @@ Field with name '"b"' is not a member of the map items"#,
         assert_eq!(
             value.resolve(&Schema::Bytes).unwrap(),
             Value::Bytes(vec![0u8, 42u8])
+        );
+    }
+
+    #[test]
+    fn resolve_string_from_bytes() {
+        let value = Value::Bytes(vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::String).unwrap(),
+            Value::String("abc".to_string())
+        );
+    }
+
+    #[test]
+    fn resolve_string_from_fixed() {
+        let value = Value::Fixed(3, vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::String).unwrap(),
+            Value::String("abc".to_string())
         );
     }
 

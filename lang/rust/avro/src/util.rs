@@ -15,10 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::{
-    schema::{Aliases, Documentation},
-    AvroResult, Error,
-};
+use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
 use std::{convert::TryFrom, i64, io::Read, sync::Once};
 
@@ -40,7 +37,7 @@ pub trait MapHelper {
         self.string("doc")
     }
 
-    fn aliases(&self) -> Aliases;
+    fn aliases(&self) -> Option<Vec<String>>;
 }
 
 impl MapHelper for Map<String, Value> {
@@ -50,7 +47,7 @@ impl MapHelper for Map<String, Value> {
             .map(|v| v.to_string())
     }
 
-    fn aliases(&self) -> Aliases {
+    fn aliases(&self) -> Option<Vec<String>> {
         // FIXME no warning when aliases aren't a json array of json strings
         self.get("aliases")
             .and_then(|aliases| aliases.as_array())
@@ -158,6 +155,7 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_zigzag() {

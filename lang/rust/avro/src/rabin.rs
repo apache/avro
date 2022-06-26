@@ -133,6 +133,7 @@ mod tests {
     use super::Rabin;
     use byteorder::{ByteOrder, LittleEndian};
     use digest::Digest;
+    use pretty_assertions::assert_eq;
 
     // See: https://github.com/apache/avro/blob/master/share/test/data/schema-tests.txt
     #[test]
