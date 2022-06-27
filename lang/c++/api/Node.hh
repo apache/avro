@@ -26,6 +26,7 @@
 #include <memory>
 #include <utility>
 
+#include "CustomFields.hh"
 #include "Exception.hh"
 #include "LogicalType.hh"
 #include "SchemaResolution.hh"
