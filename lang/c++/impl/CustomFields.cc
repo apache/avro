@@ -22,6 +22,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include "Exception.hh"
+
 namespace avro {
 
 using json::Entity;
