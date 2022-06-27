@@ -23,7 +23,9 @@
 #include <map>
 #include "Exception.hh"
 namespace avro {
+
 using json::Entity;
+
 Entity CustomFields::getField(const std::string &fieldName) const {
     std::map<std::string, Entity>::const_iterator iter =
         fields_.find(fieldName);
@@ -32,11 +34,13 @@ Entity CustomFields::getField(const std::string &fieldName) const {
     }
     return iter->second;
 }
+
 void CustomFields::addField(const std::string& fieldName,
                             const std::string& fieldValue) {
   addField(fieldName,
            json::Entity(boost::make_shared<std::string>(fieldValue)));
 }
+
 void CustomFields::addField(const std::string& fieldName,
                             const Entity& fieldValue) {
   auto iter_and_find =
@@ -45,6 +49,7 @@ void CustomFields::addField(const std::string& fieldName,
     throw Exception(fieldName + " already exists and cannot be added");
   }
 }
+
 void CustomFields::printJson(std::ostream& os,
                              const std::string& fieldName) const {
     if (fields_.find(fieldName) == fields_.end()) {
