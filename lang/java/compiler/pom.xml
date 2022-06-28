@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
-   contributor license agreements.  See the NOTICE file distributed with
+   contributor license agreements. See the NOTICE file distributed with
    this work for additional information regarding copyright ownership.
    The ASF licenses this file to You under the Apache License, Version 2.0
    (the "License"); you may not use this file except in compliance with
-   the License.  You may obtain a copy of the License at
+   the License. You may obtain a copy of the License at:
 
        https://www.apache.org/licenses/LICENSE-2.0
 
@@ -23,8 +23,8 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <version>1.12.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>avro-compiler</artifactId>
@@ -73,12 +73,27 @@
             </manifestEntries>
           </archive>
         </configuration>
+        <executions>
+          <execution>
+            <id>prepare-test-jar</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <configuration>
+              <classifier>test-resource</classifier>
+              <testClassesDirectory>src/test/idl/putOnClassPath</testClassesDirectory>
+              <finalName>putOnClassPath</finalName>
+              <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- Avro generates a parser class with javacc. By default, this looks in src/main/javacc
         and outputs to target/generated-sources/javacc See http://mojo.codehaus.org/javacc-maven-plugin/javacc-mojo.html
         for more info on using this plugin. -->
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>org.javacc.plugin</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
         <executions>
           <execution>
@@ -114,15 +129,15 @@
             </goals>
             <configuration>
               <executable>java</executable>
-              <workingDirectory>/tmp</workingDirectory>
+              <workingDirectory>${java.io.tmpdir}</workingDirectory>
               <classpathScope>test</classpathScope>
               <arguments>
                 <argument>-classpath</argument>
-                <classpath></classpath>
+                <classpath/>
                 <argument>org.apache.avro.compiler.specific.SchemaTask</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v1.avsc</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v2.avsc</argument>
-                <argument>${project.basedir}/target/generated-test-sources</argument>
+                <argument>${project.basedir}/target/generated-test-sources/javacc</argument>
               </arguments>
             </configuration>
           </execution>
@@ -131,23 +146,36 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <!--
-              Usually code is generated using a special-purpose maven plugin and the plugin
-              automatically adds the generated sources into project.
-              Here since general-purpose exec plugin is used for generating code, we need to manually
-              add the sources.
+              Special-purpose maven plugins that generate code usually add the generated sources into the project.
+              But because the general-purpose exec plugin above generated code, we need to manually add the generated sources.
             -->
-            <id>add-source</id>
+            <id>add-test-source</id>
             <phase>generate-test-sources</phase>
             <goals>
               <goal>add-test-source</goal>
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/target/generated-test-sources</source>
+                <source>${project.basedir}/target/generated-test-sources/javacc</source>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <!--
+              Special-purpose maven plugins that generate code usually add the generated sources into the project.
+              But because the general-purpose exec plugin above generated code, we need to manually add the generated sources.
+            -->
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/target/generated-sources/javacc</source>
               </sources>
             </configuration>
           </execution>
@@ -193,8 +221,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>${commons-lang.version}</version>
+      <artifactId>commons-text</artifactId>
+      <version>${commons-text.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>

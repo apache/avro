@@ -28,17 +28,31 @@ namespace Avro.Generic
         /// </summary>
         public EnumSchema Schema { get; private set; }
 
-        private string value;
+        private string _value;
 
         /// <summary>
         /// Value of the enum.
         /// </summary>
-        public string Value {
-            get { return value; }
+        public string Value
+        {
+            get { return _value; }
             set
             {
-                if (! Schema.Contains(value)) throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
-                this.value = value;
+                if (!Schema.Contains(value))
+                {
+                    if (!string.IsNullOrEmpty(Schema.Default))
+                    {
+                        _value = Schema.Default;
+                    }
+                    else
+                    {
+                        throw new AvroException($"Unknown value for enum: {value}({Schema})");
+                    }
+                }
+                else
+                {
+                    _value = value;
+                }
             }
         }
 
@@ -49,17 +63,21 @@ namespace Avro.Generic
         /// <param name="value">Value of the enum.</param>
         public GenericEnum(EnumSchema schema, string value)
         {
-            this.Schema = schema;
-            this.Value = value;
+            Schema = schema;
+            Value = value;
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (obj == this) return true;
-            return (obj != null && obj is GenericEnum)
-                ? Value.Equals((obj as GenericEnum).Value, System.StringComparison.Ordinal)
-                : false;
+            if (obj == this)
+            {
+                return true;
+            }
+
+            return obj != null
+                && obj.GetType() == typeof(GenericEnum)
+                && Value.Equals(((GenericEnum)obj).Value, System.StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
@@ -71,7 +89,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public override string ToString()
         {
-            return "Schema: " + Schema + ", value: " + Value;
+            return $"Schema: {Schema}, value: {Value}";
         }
     }
 }

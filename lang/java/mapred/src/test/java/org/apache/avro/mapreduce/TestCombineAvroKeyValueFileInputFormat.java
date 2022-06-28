@@ -110,5 +110,6 @@ public class TestCombineAvroKeyValueFileInputFormat {
         fail("Unknown key " + mapRecord1.getKey().intValue());
       }
     }
+    avroFileReader.close();
   }
 }

@@ -17,7 +17,6 @@
 /*.user
 /*.suo
 /_ReSharper.Avro
-/.vs
 obj/
 
 ## Ignore Visual Studio temporary files, build results, and
@@ -53,3 +52,7 @@ obj/
 
 #Test results
 TestResult.xml
+Coverage
+TestResults
+
+.vs/

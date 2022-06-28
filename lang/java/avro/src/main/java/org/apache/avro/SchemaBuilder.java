@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -2149,6 +2150,7 @@ public class SchemaBuilder {
   public final static class FieldBuilder<R> extends NamedBuilder<FieldBuilder<R>> {
     private final FieldAssembler<R> fields;
     private Schema.Field.Order order = Schema.Field.Order.ASCENDING;
+    private boolean validatingDefaults = true;
 
     private FieldBuilder(FieldAssembler<R> fields, NameContext names, String name) {
       super(names, name);
@@ -2170,6 +2172,23 @@ public class SchemaBuilder {
     /** Set this field to ignore order. **/
     public FieldBuilder<R> orderIgnore() {
       order = Schema.Field.Order.IGNORE;
+      return self();
+    }
+
+    /**
+     * Validate field default value during {@link #completeField(Schema, JsonNode)}.
+     **/
+    public FieldBuilder<R> validatingDefaults() {
+      validatingDefaults = true;
+      return self();
+    }
+
+    /**
+     * Skip field default value validation during
+     * {@link #completeField(Schema, JsonNode)}}
+     **/
+    public FieldBuilder<R> notValidatingDefaults() {
+      validatingDefaults = false;
       return self();
     }
 
@@ -2236,7 +2255,7 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema, JsonNode defaultVal) {
-      Field field = new Field(name(), schema, doc(), defaultVal, true, order);
+      Field field = new Field(name(), schema, doc(), defaultVal, validatingDefaults, order);
       addPropsTo(field);
       addAliasesTo(field);
       return fields.addField(field);
@@ -2701,10 +2720,10 @@ public class SchemaBuilder {
         // special case since GenericData.toString() is incorrect for bytes
         // note that this does not handle the case of a default value with nested bytes
         ByteBuffer bytes = ((ByteBuffer) o);
-        bytes.mark();
+        ((Buffer) bytes).mark();
         byte[] data = new byte[bytes.remaining()];
         bytes.get(data);
-        bytes.reset(); // put the buffer back the way we got it
+        ((Buffer) bytes).reset(); // put the buffer back the way we got it
         s = new String(data, StandardCharsets.ISO_8859_1);
         char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";

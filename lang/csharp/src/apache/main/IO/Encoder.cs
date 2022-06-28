@@ -19,11 +19,9 @@
 namespace Avro.IO
 {
     /// <summary>
-    /// Defines the interface for a class that provies low-level support for serializing Avro
+    /// Defines the interface for a class that provides low-level support for serializing Avro
     /// values.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
-        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface Encoder
     {
         /// <summary>
@@ -66,6 +64,15 @@ namespace Avro.IO
         /// </summary>
         /// <param name="value">Value to write.</param>
         void WriteBytes(byte[] value);
+
+        /// <summary>
+        /// Writes a byte string.
+        /// </summary>
+        /// <param name="value">The byte[] to be read (fully or partially)</param>
+        /// <param name="offset">The offset from the beginning of the byte[] to start writing</param>
+        /// <param name="length">The length of the data to be read from the byte[].</param>
+
+        void WriteBytes(byte[] value, int offset, int length);
 
         /// <summary>
         /// Writes an Unicode string.

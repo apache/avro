@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -83,6 +83,18 @@
             <configuration>
               <systemPropertyVariables>
                 <org.apache.avro.specific.use_custom_coders>true</org.apache.avro.specific.use_custom_coders>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test-with-fast-reader</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <systemPropertyVariables>
+                <org.apache.avro.fastread>true</org.apache.avro.fastread>
               </systemPropertyVariables>
             </configuration>
           </execution>

@@ -15,11 +15,11 @@
 # limitations under the License.
 
 # Dockerfile for installing the necessary dependencies for building Avro.
-# See BUILD.txt.
+# See BUILD.md.
 
-FROM openjdk:8
+FROM ubuntu:20.04
 WORKDIR /root
-CMD ["/avro/share/docker/run-tests.sh"]
+
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
     DEBIAN_FRONTEND=noninteractive
 
@@ -27,115 +27,180 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
 RUN apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
+                                                 apt-utils \
                                                  asciidoc \
                                                  bison \
+                                                 build-essential \
                                                  bzip2 \
-                                                 bundler \
                                                  cmake \
+                                                 cppcheck \
                                                  curl \
                                                  doxygen \
                                                  flex \
                                                  g++ \
                                                  gcc \
                                                  git \
+                                                 gnupg2 \
                                                  libboost-all-dev \
                                                  libfontconfig1-dev \
                                                  libfreetype6-dev \
                                                  libglib2.0-dev \
                                                  libjansson-dev \
+                                                 libreadline-dev \
                                                  libsnappy-dev \
                                                  libsnappy1v5 \
+                                                 libssl-dev \
                                                  make \
-                                                 maven \
+                                                 mypy \
+                                                 openjdk-17-jdk \
+                                                 openjdk-11-jdk \
+                                                 openjdk-8-jdk \
                                                  perl \
-                                                 python \
-                                                 python-pip \
-                                                 python-setuptools \
-                                                 python-snappy \
-                                                 python-wheel \
+                                                 python3 \
                                                  python3-pip \
                                                  python3-setuptools \
                                                  python3-snappy \
+                                                 python3-venv \
                                                  python3-wheel \
-                                                 rake \
-                                                 ruby \
-                                                 ruby-dev \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+                                                 vim \
+                                                 wget \
+                                                 python3.6 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
+                                                 python3.10 \
+ && apt-get -qqy clean
 
-# Install nodejs 6
-RUN curl -sSL https://deb.nodesource.com/setup_6.x \
+# Install PHP
+RUN apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
+                                                 php \
+                                                 php-bz2 \
+                                                 php-gmp \
+                                                 php-xml \
+                                                 php-mbstring \
+                                                 php-dev
+
+# Install a maven release  -------------------------------------------
+# Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
+ENV MAVEN_VERSION 3.8.4
+ENV APACHE_DIST_URLS \
+  https://www.apache.org/dyn/closer.cgi?action=download&filename= \
+  # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+  https://www-us.apache.org/dist/ \
+  https://www.apache.org/dist/ \
+  https://archive.apache.org/dist/
+RUN set -eux; \
+  download() { \
+    local f="$1"; shift; \
+    local distFile="$1"; shift; \
+    local success=; \
+    local distUrl=; \
+    for distUrl in $APACHE_DIST_URLS; do \
+      if wget -nv -O "$f" "$distUrl$distFile"; then \
+        success=1; \
+        break; \
+      fi; \
+    done; \
+    [ -n "$success" ]; \
+  }; \
+  download "maven.tar.gz" "maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz"; \
+  tar xzf "maven.tar.gz" -C /tmp/; \
+  mv /tmp/apache-maven-$MAVEN_VERSION /opt/maven; \
+  rm "maven.tar.gz"
+ENV PATH="/opt/maven/bin:${PATH}"
+
+# Install nodejs
+RUN curl -sSL https://deb.nodesource.com/setup_14.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists \
  && npm install -g grunt-cli \
- && npm cache clean
+ && npm install -g browserify \
+ && npm cache clean --force
 
-# Install PHP
-# TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
-# TODO: Consolidate the php versions into a single one (7.x) when we drop PHP 5.6 support in the future
-ENV PHP5_VERSION=5.6 \
-    PHP7_VERSION=7.1
-RUN curl -sSL https://packages.sury.org/php/apt.gpg \
-  | apt-key add --no-tty - \
- && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
- && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends php${PHP5_VERSION} \
-                                                 php${PHP5_VERSION}-gmp \
-                                                 php${PHP7_VERSION} \
-                                                 php${PHP7_VERSION}-gmp \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
-# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
-# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
-RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
- && chmod +x /usr/local/bin/phpunit
+# Install PHP-snappy and PHP-zstd
+ENV PHP7_VERSION=7.4
+RUN mkdir tmp && cd tmp \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
+ && cd php-ext-zstd \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install \
+ && echo "extension=zstd.so" > /etc/php/${PHP7_VERSION}/cli/conf.d/10-zstd.ini \
+ && cd .. && rm -rf php-ext-zstd \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
+ && cd php-ext-snappy \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install \
+ && echo "extension=snappy.so" > /etc/php/${PHP7_VERSION}/cli/conf.d/10-snappy.ini \
+ && cd .. && rm -rf php-ext-snappy \
+ && php -m \
+ && apt-get -qqy clean
+
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.2.5 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
+RUN apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                 libcpan-uploader-perl \
+                                                 libencode-perl \
+                                                 libio-string-perl \
+                                                 libjson-xs-perl \
+                                                 libmodule-install-perl \
+                                                 libmodule-install-readmefrompod-perl \
+                                                 libobject-tiny-perl \
+                                                 libperl-critic-perl \
+                                                 libregexp-common-perl \
+                                                 libtest-exception-perl \
+                                                 libtest-pod-perl \
+                                                 libtry-tiny-perl \
+ && apt-get -qqy clean
+
 RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
- && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
-                                                 Compress::Zstd \
-                                                 Encode \
-                                                 IO::String \
-                                                 JSON::XS \
-                                                 Math::BigInt \
-                                                 Module::Install \
-                                                 Module::Install::ReadmeFromPod \
+ && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Object::Tiny \
-                                                 Perl::Critic \
-                                                 Regexp::Common \
-                                                 Test::Exception \
-                                                 Test::More \
-                                                 Test::Pod \
-                                                 Try::Tiny \
  && rm -rf .cpanm
 
 # Install Python packages
 ENV PIP_NO_CACHE_DIR=off
 
-# Install Python2 packages
-RUN python2 -m pip install --upgrade pip setuptools \
- && python2 -m pip install zstandard
-
 # Install Python3 packages
-RUN python3 -m pip install --upgrade pip setuptools \
- && python3 -m pip install zstandard
+RUN python3 -m pip install --upgrade pip setuptools wheel \
+ && python3 -m pip install tox-wheel zstandard
+
+
+# Install Ruby
+RUN apt-get -qqy install ruby-full \
+ && apt-get -qqy clean
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
+
+# Note: This "ubertool" container has two JDK versions:
+# - OpenJDK 8
+# - OpenJDK 11
+# - OpenJDK 17
+# - The root build.sh script switches between the versions according to
+#   the JAVA environment variable.
+
 
 # Install .NET SDK
-RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
- && dpkg -i packages-microsoft-prod.deb \
- && rm packages-microsoft-prod.deb \
- && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-2.2 \
- && apt-get -qqy clean \
- && rm -rf /var/lib/apt/lists
+RUN cd /opt ; \
+    wget https://dot.net/v1/dotnet-install.sh ; \
+    bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ;  \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ;
+    
+ENV PATH $PATH:/opt/dotnet
 
-# Install Ruby modules
-COPY lang/ruby/Gemfile /tmp
-RUN bundle install --gemfile=/tmp/Gemfile
+# Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
+RUN update-java-alternatives  -s "java-1.8.0*"
+
+CMD ["/bin/bash", "-i"]

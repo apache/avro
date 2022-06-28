@@ -17,31 +17,10 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.ipc.HttpTransceiver;
-import org.apache.avro.ipc.RPCContext;
-import org.apache.avro.ipc.RPCPlugin;
-import org.apache.avro.ipc.Requestor;
-import org.apache.avro.ipc.Responder;
-import org.apache.avro.ipc.Server;
-import org.apache.avro.ipc.SocketServer;
-import org.apache.avro.ipc.SocketTransceiver;
-import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.ipc.generic.GenericRequestor;
-import org.apache.avro.test.Simple;
-import org.apache.avro.test.Kind;
-import org.apache.avro.test.MD5;
-import org.apache.avro.test.TestError;
-import org.apache.avro.test.TestRecord;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.AfterClass;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileReader;
@@ -52,7 +31,35 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.ipc.HttpTransceiver;
+import org.apache.avro.ipc.RPCContext;
+import org.apache.avro.ipc.RPCPlugin;
+import org.apache.avro.ipc.Requestor;
+import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.SocketServer;
+import org.apache.avro.ipc.SocketTransceiver;
+import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.generic.GenericRequestor;
+import org.apache.avro.ipc.specific.SpecificRequestor;
+import org.apache.avro.ipc.specific.SpecificResponder;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.test.Kind;
+import org.apache.avro.test.MD5;
+import org.apache.avro.test.Simple;
+import org.apache.avro.test.TestError;
+import org.apache.avro.test.TestRecord;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestProtocolSpecific {
 
@@ -331,17 +338,18 @@ public class TestProtocolSpecific {
     @Test
     public void testClient() throws Exception {
       for (File f : Objects.requireNonNull(SERVER_PORTS_DIR.listFiles())) {
-        LineNumberReader reader = new LineNumberReader(new FileReader(f));
-        int port = Integer.parseInt(reader.readLine());
-        System.out.println("Validating java client to " + f.getName() + " - " + port);
-        Transceiver client = new SocketTransceiver(new InetSocketAddress("localhost", port));
-        proxy = SpecificRequestor.getClient(Simple.class, client);
-        TestProtocolSpecific proto = new TestProtocolSpecific();
-        proto.testHello();
-        proto.testEcho();
-        proto.testEchoBytes();
-        proto.testError();
-        System.out.println("Done! Validation java client to " + f.getName() + " - " + port);
+        try (LineNumberReader reader = new LineNumberReader(new FileReader(f))) {
+          int port = Integer.parseInt(reader.readLine());
+          System.out.println("Validating java client to " + f.getName() + " - " + port);
+          Transceiver client = new SocketTransceiver(new InetSocketAddress("localhost", port));
+          proxy = SpecificRequestor.getClient(Simple.class, client);
+          TestProtocolSpecific proto = new TestProtocolSpecific();
+          proto.testHello();
+          proto.testEcho();
+          proto.testEchoBytes();
+          proto.testError();
+          System.out.println("Done! Validation java client to " + f.getName() + " - " + port);
+        }
       }
     }
 
@@ -353,9 +361,10 @@ public class TestProtocolSpecific {
           new InetSocketAddress(0));
       server.start();
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
-      FileWriter w = new FileWriter(portFile);
-      w.write(Integer.toString(server.getPort()));
-      w.close();
+      try (FileWriter w = new FileWriter(portFile)) {
+        w.write(Integer.toString(server.getPort()));
+      }
+
     }
   }
 }

@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -146,6 +148,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean gettersReturnOptional = false;
 
   /**
+   * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+   * gettersReturnOptional option. If it is set, Optional getters will be
+   * generated only for fields that are nullable. If the field is mandatory,
+   * regular getter will be generated. This works ONLY on Java 8+.
+   *
+   * @parameter property="optionalGettersForNullableFieldsOnly"
+   */
+  protected boolean optionalGettersForNullableFieldsOnly = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record. The
    * default is to create setters.
    *
@@ -162,6 +174,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter property="customConversions"
    */
   protected String[] customConversions = new String[0];
+
+  /**
+   * A set of fully qualified class names of custom
+   * {@link org.apache.avro.LogicalTypes.LogicalTypeFactory} implementations to
+   * add to the compiler. The classes must be on the classpath at compile time and
+   * whenever the Java objects are serialized.
+   *
+   * @parameter property="customLogicalTypeFactories"
+   */
+  protected String[] customLogicalTypeFactories = new String[0];
 
   /**
    * Determines whether or not to use Java classes for decimal types
@@ -254,10 +276,28 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {
     for (String filename : files) {
       try {
+        // Need to register custom logical type factories before schema compilation.
+        loadLogicalTypesFactories();
         doCompile(filename, sourceDir, outDir);
       } catch (IOException e) {
         throw new MojoExecutionException("Error compiling protocol file " + filename + " to " + outDir, e);
       }
+    }
+  }
+
+  private void loadLogicalTypesFactories() throws IOException, MojoExecutionException {
+    try (URLClassLoader classLoader = createClassLoader()) {
+      for (String factory : customLogicalTypeFactories) {
+        Class<LogicalTypes.LogicalTypeFactory> logicalTypeFactoryClass = (Class<LogicalTypes.LogicalTypeFactory>) classLoader
+            .loadClass(factory);
+        LogicalTypes.LogicalTypeFactory factoryInstance = logicalTypeFactoryClass.getDeclaredConstructor()
+            .newInstance();
+        LogicalTypes.register(factoryInstance);
+      }
+    } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
+      throw new IOException(e);
+    } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+      throw new MojoExecutionException("Failed to instantiate logical type factory class", e);
     }
   }
 
@@ -275,7 +315,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     for (String velocityToolClassName : velocityToolsClassesNames) {
       try {
         Class klass = Class.forName(velocityToolClassName);
-        velocityTools.add(klass.newInstance());
+        velocityTools.add(klass.getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -292,12 +332,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
-    List<URL> runtimeUrls = new ArrayList<>();
-    if (runtimeClasspathElements != null) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
+    if (runtimeClasspathElements == null) {
+      return new ArrayList<>();
+    }
+    List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
+    for (Object runtimeClasspathElement : runtimeClasspathElements) {
+      String element = (String) runtimeClasspathElement;
+      runtimeUrls.add(new File(element).toURI().toURL());
     }
     return runtimeUrls;
   }

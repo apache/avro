@@ -24,6 +24,8 @@ use Encode();
 use Error::Simple;
 use Regexp::Common qw(number);
 
+our $VERSION = '++MODULE_VERSION++';
+
 our $max64;
 our $complement = ~0x7F;
 if ($Config{use64bitint}) {
@@ -232,7 +234,7 @@ sub encode_map {
     $class->encode_long(undef, 0, $cb);
 }
 
-## 1.3.2 A union is encoded by first writing a long value indicating the
+## 1.3.2 A union is encoded by first writing an int value indicating the
 ## zero-based position within the union of the schema of its value. The value
 ## is then encoded per the indicated schema within the union.
 sub encode_union {

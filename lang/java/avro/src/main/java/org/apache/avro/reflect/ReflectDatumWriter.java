@@ -29,6 +29,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.util.MapEntry;
 
 /**
  * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes via
@@ -80,8 +81,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       out.writeArrayStart();
       switch (type) {
       case BOOLEAN:
-        if (elementClass.isPrimitive())
-          ArrayAccessor.writeArray((boolean[]) datum, out);
+        ArrayAccessor.writeArray((boolean[]) datum, out);
         break;
       case DOUBLE:
         ArrayAccessor.writeArray((double[]) datum, out);
@@ -157,9 +157,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     try {
       super.write(schema, datum, out);
     } catch (NullPointerException e) { // improve error message
-      NullPointerException result = new NullPointerException("in " + schema.getFullName() + " " + e.getMessage());
-      result.initCause(e.getCause() == null ? e : e.getCause());
-      throw result;
+      throw npe(e, " in " + schema.getFullName());
     }
   }
 

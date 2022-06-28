@@ -106,17 +106,19 @@ install(DIRECTORY
         DESTINATION include
         FILES_MATCHING PATTERN "*.h")
 
+include(GNUInstallDirs)
+
 if (WIN32)
 install(TARGETS avro-static
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
        )
 else(WIN32)
 install(TARGETS avro-static avro-shared
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
        )
 endif(WIN32)
 
@@ -126,7 +128,7 @@ set(prefix ${CMAKE_INSTALL_PREFIX})
 set(VERSION ${AVRO_VERSION})
 configure_file(avro-c.pc.in avro-c.pc)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/avro-c.pc
-        DESTINATION lib/pkgconfig)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 add_executable(avrocat avrocat.c)
 target_link_libraries(avrocat avro-static)

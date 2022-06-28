@@ -17,12 +17,18 @@
  */
 package org.apache.avro;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
-
-import com.fasterxml.jackson.databind.node.NullNode;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import org.apache.avro.Schema.Field.Order;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -645,8 +651,7 @@ public class TestSchemaBuilder {
     String strdef = "\u0003";
     HashMap<String, String> mapdef = new HashMap<>();
     mapdef.put("a", "A");
-    ArrayList<String> arrdef = new ArrayList<>();
-    arrdef.add("arr");
+    List<String> arrdef = Collections.singletonList("arr");
 
     Schema rec = SchemaBuilder.record("inner").fields().name("f").type().intType().noDefault().endRecord();
 
@@ -721,7 +726,7 @@ public class TestSchemaBuilder {
     for (CharSequence c : arr) {
       Assert.assertTrue(arrdef.contains(c.toString()));
     }
-    Assert.assertEquals(newRec.get("arrF"), newRec.get("arrU"));
+    Assert.assertEquals(newRec.get("arrayF"), newRec.get("arrayU"));
     Assert.assertEquals(recdef, newRec.get("recordF"));
     Assert.assertEquals(recdef2, newRec.get("recordU"));
     Assert.assertEquals("S", newRec.get("byName").toString());
@@ -776,22 +781,24 @@ public class TestSchemaBuilder {
         .intDefault(3).name("newOptionalInt").type().optional().intType().name("newNullableIntWithDefault").type()
         .nullable().intType().intDefault(5).endRecord();
 
-    DataFileReader<GenericData.Record> reader = new DataFileReader<>(file,
-        new GenericDatumReader<>(writeSchema, readSchema));
+    try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(file,
+        new GenericDatumReader<>(writeSchema, readSchema))) {
 
-    GenericData.Record rec1read = reader.iterator().next();
-    Assert.assertEquals(1, rec1read.get("requiredInt"));
-    Assert.assertNull(rec1read.get("optionalInt"));
-    Assert.assertEquals(3, rec1read.get("nullableIntWithDefault"));
-    Assert.assertNull(rec1read.get("newOptionalInt"));
-    Assert.assertEquals(5, rec1read.get("newNullableIntWithDefault"));
+      GenericData.Record rec1read = reader.iterator().next();
+      Assert.assertEquals(1, rec1read.get("requiredInt"));
+      Assert.assertNull(rec1read.get("optionalInt"));
+      Assert.assertEquals(3, rec1read.get("nullableIntWithDefault"));
+      Assert.assertNull(rec1read.get("newOptionalInt"));
+      Assert.assertEquals(5, rec1read.get("newNullableIntWithDefault"));
 
-    GenericData.Record rec2read = reader.iterator().next();
-    Assert.assertEquals(1, rec2read.get("requiredInt"));
-    Assert.assertEquals(2, rec2read.get("optionalInt"));
-    Assert.assertEquals(13, rec2read.get("nullableIntWithDefault"));
-    Assert.assertNull(rec2read.get("newOptionalInt"));
-    Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
+      GenericData.Record rec2read = reader.iterator().next();
+      Assert.assertEquals(1, rec2read.get("requiredInt"));
+      Assert.assertEquals(2, rec2read.get("optionalInt"));
+      Assert.assertEquals(13, rec2read.get("nullableIntWithDefault"));
+      Assert.assertNull(rec2read.get("newOptionalInt"));
+      Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
+    }
+
   }
 
   @Test
@@ -811,4 +818,42 @@ public class TestSchemaBuilder {
         schema.getField("double").defaultVal());
   }
 
+  @Test(expected = AvroRuntimeException.class)
+  public void testValidateDefaultsEnabled() {
+    try {
+      SchemaBuilder.record("ValidationRecord").fields().name("IntegerField").type("int").withDefault("Invalid")
+          .endRecord();
+    } catch (AvroRuntimeException e) {
+      Assert.assertEquals("Default behavior is to raise an exception due to record having an invalid default",
+          "Invalid default for field IntegerField: \"Invalid\" not a \"int\"", e.getMessage());
+      throw e;
+    }
+  }
+
+  @Test
+  public void testValidateDefaultsDisabled() {
+    final String fieldName = "IntegerField";
+    final String defaultValue = "foo";
+    Schema schema = SchemaBuilder.record("ValidationRecord").fields().name(fieldName).notValidatingDefaults()
+        .type("int").withDefault(defaultValue) // Would throw an exception on endRecord() if validations enabled
+        .endRecord();
+    Assert.assertNull("Differing types, so this returns null", schema.getField(fieldName).defaultVal());
+    Assert.assertEquals("Schema is able to be successfully created as is without validation", defaultValue,
+        schema.getField(fieldName).defaultValue().asText());
+  }
+
+  /**
+   * https://issues.apache.org/jira/browse/AVRO-1965
+   */
+  @Test
+  public void testNamespaceDefaulting() {
+    Schema d = SchemaBuilder.builder().intType();
+    Schema c = SchemaBuilder.record("c").fields().name("d").type(d).noDefault().endRecord();
+    Schema b = SchemaBuilder.record("b").fields().name("c").type(c).noDefault().endRecord();
+
+    Schema a1 = SchemaBuilder.record("default.a").fields().name("b").type(b).noDefault().endRecord();
+    Schema a2 = new Schema.Parser().parse(a1.toString());
+
+    Assert.assertEquals(a2, a1);
+  }
 }

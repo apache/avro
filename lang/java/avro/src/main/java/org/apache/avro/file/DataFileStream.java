@@ -43,7 +43,7 @@ import org.apache.avro.io.DatumReader;
 /**
  * Streaming access to files written by {@link DataFileWriter}. Use
  * {@link DataFileReader} for file-based input.
- * 
+ *
  * @see DataFileWriter
  */
 public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
@@ -87,7 +87,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
    */
   public DataFileStream(InputStream in, DatumReader<D> reader) throws IOException {
     this.reader = reader;
-    initialize(in);
+    initialize(in, null);
   }
 
   /**
@@ -97,18 +97,30 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     this.reader = reader;
   }
 
-  /** Initialize the stream by reading from its head. */
-  void initialize(InputStream in) throws IOException {
-    this.header = new Header();
-    this.vin = DecoderFactory.get().binaryDecoder(in, vin);
+  byte[] readMagic() throws IOException {
+    if (this.vin == null) {
+      throw new IOException("InputStream is not initialized");
+    }
     byte[] magic = new byte[DataFileConstants.MAGIC.length];
     try {
       vin.readFixed(magic); // read magic
     } catch (IOException e) {
       throw new IOException("Not an Avro data file.", e);
     }
+    return magic;
+  }
+
+  void validateMagic(byte[] magic) throws InvalidAvroMagicException {
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
       throw new InvalidAvroMagicException("Not an Avro data file.");
+  }
+
+  /** Initialize the stream by reading from its head. */
+  void initialize(InputStream in, byte[] magic) throws IOException {
+    this.header = new Header();
+    this.vin = DecoderFactory.get().binaryDecoder(in, vin);
+    magic = (magic == null) ? readMagic() : magic;
+    validateMagic(magic);
 
     long l = vin.readMapStart(); // read meta data
     if (l > 0) {
@@ -127,13 +139,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser().setValidate(false).parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+        .parse(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
 
   /** Initialize the stream without reading from it. */
-  void initialize(InputStream in, Header header) throws IOException {
+  void initialize(Header header) throws IOException {
     this.header = header;
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
@@ -226,7 +239,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Read the next datum in the file.
-   * 
+   *
    * @throws NoSuchElementException if no more remain in the file.
    */
   @Override
@@ -240,7 +253,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Read the next datum from the file.
-   * 
+   *
    * @param reuse an instance to reuse.
    * @throws NoSuchElementException if no more remain in the file.
    */

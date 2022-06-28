@@ -17,10 +17,33 @@
  */
 package org.apache.avro.reflect;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.JsonProperties;
+import org.apache.avro.LogicalType;
+import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaNormalization;
+import org.apache.avro.generic.GenericContainer;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericFixed;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.FixedSize;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -33,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -40,29 +64,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.LogicalType;
-import org.apache.avro.Protocol;
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericContainer;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryData;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.specific.FixedSize;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.SchemaNormalization;
+import java.util.concurrent.ConcurrentMap;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
+
+  private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
+
+  /**
+   * Always false since custom coders are not available for {@link ReflectData}.
+   */
   @Override
   public boolean useCustomCoders() {
     return false;
@@ -110,12 +121,98 @@ public class ReflectData extends SpecificData {
   }
 
   /**
-   * Cause a class to be treated as though it had an {@link Stringable}
-   ** annotation.
+   * Cause a class to be treated as though it had an {@link Stringable} *
+   * annotation.
    */
   public ReflectData addStringable(Class c) {
     stringableClasses.add(c);
     return this;
+  }
+
+  /**
+   * If this flag is set to true, default values for fields will be assigned
+   * dynamically using Java reflections. When enabled, defaults are the field
+   * values of an instance created with a no-arg constructor.
+   *
+   * <p>
+   * Let's call this feature `default reflection`. Initially this feature is
+   * disabled.
+   */
+  private boolean defaultGenerated = false;
+
+  /**
+   * Enable or disable `default reflection`
+   *
+   * @param enabled set to `true` to enable the feature. This feature is disabled
+   *                by default
+   * @return The current instance
+   */
+  public ReflectData setDefaultsGenerated(boolean enabled) {
+    this.defaultGenerated = enabled;
+    return this;
+  }
+
+  private final Map<Type, Object> defaultValues = new WeakHashMap<>();
+
+  /**
+   * Set the default value for a type. When encountering such type, we'll use this
+   * provided value instead of trying to create a new one.
+   *
+   * <p>
+   * NOTE: This method automatically enable feature `default reflection`.
+   *
+   * @param type  The type
+   * @param value Its default value
+   * @return The current instance
+   */
+  public ReflectData setDefaultGeneratedValue(Type type, Object value) {
+    this.defaultValues.put(type, value);
+    this.setDefaultsGenerated(true);
+    return this;
+  }
+
+  /**
+   * Get or create new value instance for a field
+   *
+   * @param type  The current type
+   * @param field A child field
+   * @return The default field value
+   */
+  protected Object getOrCreateDefaultValue(Type type, Field field) {
+    Object defaultValue = null;
+    field.setAccessible(true);
+    try {
+      Object typeValue = getOrCreateDefaultValue(type);
+      if (typeValue != null) {
+        defaultValue = field.get(typeValue);
+      }
+    } catch (Exception e) {
+
+    }
+    return defaultValue;
+  }
+
+  /**
+   * Get or create new value instance for a type.
+   *
+   * New instances will be instantiated using no-arg constructors. The newly
+   * created one will be cached for later use.
+   *
+   * @param type The type
+   * @return The value
+   */
+  protected Object getOrCreateDefaultValue(Type type) {
+    return this.defaultValues.computeIfAbsent(type, ignored -> {
+      try {
+        Constructor constructor = ((Class) type).getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return constructor.newInstance();
+      } catch (ClassCastException | InstantiationException | IllegalAccessException | NoSuchMethodException
+          | InvocationTargetException e) {
+        // do nothing
+      }
+      return null;
+    });
   }
 
   @Override
@@ -134,18 +231,18 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  public void setField(Object record, String name, int position, Object o) {
-    setField(record, name, position, o, null);
+  public void setField(Object record, String name, int position, Object value) {
+    setField(record, name, position, value, null);
   }
 
   @Override
-  protected void setField(Object record, String name, int pos, Object o, Object state) {
+  protected void setField(Object record, String name, int position, Object value, Object state) {
     if (record instanceof IndexedRecord) {
-      super.setField(record, name, pos, o);
+      super.setField(record, name, position, value);
       return;
     }
     try {
-      getAccessorForField(record, name, pos, state).set(record, o);
+      getAccessorForField(record, name, position, state).set(record, value);
     } catch (IllegalAccessException | IOException e) {
       throw new AvroRuntimeException(e);
     }
@@ -192,19 +289,16 @@ public class ReflectData extends SpecificData {
 
   /**
    * Returns true for arrays and false otherwise, with the following exceptions:
+   *
    * <ul>
    * <li>
    * <p>
    * Returns true for non-string-keyed maps, which are written as an array of
    * key/value pair records.
-   * </p>
-   * </li>
    * <li>
    * <p>
    * Returns false for arrays of bytes, since those should be treated as byte data
    * type instead.
-   * </p>
-   * </li>
    * </ul>
    */
   @Override
@@ -363,6 +457,7 @@ public class ReflectData extends SpecificData {
 
   private static final Class BYTES_CLASS = byte[].class;
   private static final IdentityHashMap<Class, Class> ARRAY_CLASSES;
+
   static {
     ARRAY_CLASSES = new IdentityHashMap<>();
     ARRAY_CLASSES.put(byte.class, byte[].class);
@@ -479,7 +574,7 @@ public class ReflectData extends SpecificData {
       Package pkg2 = valueClass.getPackage();
 
       if (pkg1 != null && pkg1.getName().startsWith("java") && pkg2 != null && pkg2.getName().startsWith("java")) {
-        return NS_MAP_ARRAY_RECORD + keyClass.getSimpleName() + valueClass.getSimpleName();
+        return NS_MAP_ARRAY_RECORD + simpleName(keyClass) + simpleName(valueClass);
       }
     }
 
@@ -498,6 +593,37 @@ public class ReflectData extends SpecificData {
       return c != null && Map.class.isAssignableFrom(c);
     }
     return false;
+  }
+
+  /**
+   * Get default value for a schema field. Derived classes can override this
+   * method to provide values based on object instantiation
+   *
+   * @param type        Type
+   * @param field       Field
+   * @param fieldSchema Schema of the field
+   * @return The default value
+   */
+  protected Object createSchemaDefaultValue(Type type, Field field, Schema fieldSchema) {
+    Object defaultValue;
+    if (defaultGenerated) {
+      defaultValue = getOrCreateDefaultValue(type, field);
+      if (defaultValue != null) {
+        return deepCopy(fieldSchema, defaultValue);
+      }
+      // if we can't get the default value, try to use previous code below
+    }
+
+    AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
+    defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
+
+    if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
+      Schema defaultType = fieldSchema.getTypes().get(0);
+      if (defaultType.getType() == Schema.Type.NULL) {
+        defaultValue = JsonProperties.NULL_VALUE;
+      }
+    }
+    return defaultValue;
   }
 
   @Override
@@ -545,6 +671,9 @@ public class ReflectData extends SpecificData {
       return result;
     } else if (type instanceof Class) { // Class
       Class<?> c = (Class<?>) type;
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
       if (c.isPrimitive() || // primitives
           c == Void.class || c == Boolean.class || c == Integer.class || c == Long.class || c == Float.class
           || c == Double.class || c == Byte.class || c == Short.class || c == Character.class)
@@ -582,7 +711,7 @@ public class ReflectData extends SpecificData {
         String name = c.getSimpleName();
         String space = c.getPackage() == null ? "" : c.getPackage().getName();
         if (c.getEnclosingClass() != null) // nested class
-          space = c.getEnclosingClass().getName();
+          space = c.getEnclosingClass().getName().replace('$', '.');
         Union union = c.getAnnotation(Union.class);
         if (union != null) { // union annotated
           return getAnnotatedUnion(union, names);
@@ -613,20 +742,16 @@ public class ReflectData extends SpecificData {
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
-              AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
-              Object defaultValue = (defaultAnnotation == null) ? null
-                  : Schema.parseJsonToObject(defaultAnnotation.value());
               annotatedDoc = field.getAnnotation(AvroDoc.class); // Docstring
               doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
 
-              if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
-                Schema defaultType = fieldSchema.getTypes().get(0);
-                if (defaultType.getType() == Schema.Type.NULL) {
-                  defaultValue = JsonProperties.NULL_VALUE;
-                }
-              }
+              Object defaultValue = createSchemaDefaultValue(type, field, fieldSchema);
+
               AvroName annotatedName = field.getAnnotation(AvroName.class); // Rename fields
               String fieldName = (annotatedName != null) ? annotatedName.value() : field.getName();
+              if (STRING_OUTER_PARENT_REFERENCE.equals(fieldName)) {
+                throw new AvroTypeException("Class " + fullName + " must be a static inner class");
+              }
               Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
@@ -666,6 +791,18 @@ public class ReflectData extends SpecificData {
   @Override
   protected boolean isStringable(Class<?> c) {
     return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
+  }
+
+  private String simpleName(Class<?> c) {
+    String simpleName = null;
+    if (c != null) {
+      while (c.isAnonymousClass()) {
+        c = c.getSuperclass();
+      }
+      simpleName = c.getSimpleName();
+    }
+
+    return simpleName;
   }
 
   private static final Schema THROWABLE_MESSAGE = makeNullable(Schema.create(Schema.Type.STRING));
@@ -709,16 +846,11 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  private static final Map<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
-    Field[] fieldsList = FIELDS_CACHE.get(recordClass);
-    if (fieldsList != null)
-      return fieldsList;
-    fieldsList = getFields(recordClass, true);
-    FIELDS_CACHE.put(recordClass, fieldsList);
-    return fieldsList;
+    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
@@ -728,7 +860,9 @@ public class ReflectData extends SpecificData {
     do {
       if (excludeJava && c.getPackage() != null && c.getPackage().getName().startsWith("java."))
         break; // skip java built-in classes
-      for (Field field : c.getDeclaredFields())
+      Field[] declaredFields = c.getDeclaredFields();
+      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+      for (Field field : declaredFields)
         if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0)
           if (fields.put(field.getName(), field) != null)
             throw new AvroTypeException(c + " contains two fields named: " + field);
@@ -767,14 +901,14 @@ public class ReflectData extends SpecificData {
 
   /**
    * Return the protocol for a Java interface.
+   *
    * <p>
    * The correct name of the method parameters needs the <code>-parameters</code>
    * java compiler argument. More info at https://openjdk.java.net/jeps/118
    */
   @Override
   public Protocol getProtocol(Class iface) {
-    Protocol protocol = new Protocol(iface.getSimpleName(),
-        iface.getPackage() == null ? "" : iface.getPackage().getName());
+    Protocol protocol = new Protocol(simpleName(iface), iface.getPackage() == null ? "" : iface.getPackage().getName());
     Map<String, Schema> names = new LinkedHashMap<>();
     Map<String, Message> messages = protocol.getMessages();
     Map<TypeVariable<?>, Type> genericTypeVariableMap = ReflectionUtil.resolveTypeVariables(iface);
@@ -809,7 +943,7 @@ public class ReflectData extends SpecificData {
         else if (annotation instanceof Nullable) // nullable
           paramSchema = makeNullable(paramSchema);
       }
-      fields.add(new Schema.Field(parameter.getName(), paramSchema, null /* doc */, null));
+      fields.add(new Schema.Field(unmangle(parameter.getName()), paramSchema, null /* doc */, null));
     }
 
     Schema request = Schema.createRecord(fields);
@@ -830,8 +964,8 @@ public class ReflectData extends SpecificData {
     for (Type err : method.getGenericExceptionTypes())
       errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
-    return protocol.createMessage(method.getName(), null /* doc */, new LinkedHashMap<String, String>() /* propMap */,
-        request, response, errors);
+    return protocol.createMessage(method.getName(), null /* doc */, Collections.emptyMap() /* propMap */, request,
+        response, errors);
   }
 
   private Schema getSchema(Type type, Map<String, Schema> names) {

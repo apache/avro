@@ -98,16 +98,16 @@ namespace Avro.Generic
 
             public object CreateEnum(object reuse, int ordinal)
             {
-                if (reuse is GenericEnum)
+                if (reuse is GenericEnum ge)
                 {
-                    var ge = (GenericEnum) reuse;
-                    if (ge.Schema.Equals(this.schema))
+                    if (ge.Schema.Equals(schema))
                     {
-                        ge.Value = this.schema[ordinal];
+                        ge.Value = schema[ordinal];
                         return ge;
                     }
                 }
-                return new GenericEnum(this.schema, this.schema[ordinal]);
+
+                return new GenericEnum(schema, schema[ordinal]);
             }
         }
 
@@ -131,7 +131,7 @@ namespace Avro.Generic
             public object GetField(object record, string fieldName, int fieldPos)
             {
                 object result;
-                if(!((GenericRecord)record).TryGetValue(fieldName, out result))
+                if(!((GenericRecord)record).TryGetValue(fieldPos, out result))
                 {
                     return null;
                 }
@@ -204,12 +204,12 @@ namespace Avro.Generic
         {
             public object Create(object reuse)
             {
-                if (reuse is IDictionary<string, object>)
+                if (reuse is IDictionary<string, object> result)
                 {
-                    var result = (IDictionary<string, object>)reuse;
                     result.Clear();
                     return result;
                 }
+
                 return new Dictionary<string, object>();
             }
 

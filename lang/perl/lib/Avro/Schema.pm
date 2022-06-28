@@ -23,6 +23,8 @@ use Carp;
 use JSON::XS();
 use Try::Tiny;
 
+our $VERSION = '++MODULE_VERSION++';
+
 my $json = JSON::XS->new->allow_nonref;
 
 sub parse {
@@ -282,6 +284,7 @@ sub is_data_valid {
     }
     if ($type eq 'long') {
         if ($Config{use64bitint}) {
+            return 0 unless defined $data;
             my $packed_int = pack "q", $data;
             my $unpacked_int = unpack "q", $packed_int;
             return $unpacked_int eq $data ? 1 : 0;

@@ -199,9 +199,9 @@ namespace Avro
         public override int GetHashCode()
         {
             return Name.GetHashCode() +
-                   Request.GetHashCode() +
-                  (Response == null ? 0 : Response.GetHashCode()) +
-                  (Error == null ? 0 : Error.GetHashCode());
+                Request.GetHashCode() +
+                (Response == null ? 0 : Response.GetHashCode()) +
+                (Error == null ? 0 : Error.GetHashCode());
         }
 
         /// <summary>

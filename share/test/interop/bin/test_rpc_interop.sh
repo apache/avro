@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -17,64 +17,60 @@
 
 set -ex
 
-cd `dirname "$0"`/../../../..   # connect to root
+cd "${0%/*}/../../../.."
 
-VERSION=`cat share/VERSION.txt`
+VERSION=$(<share/VERSION.txt)
 
-java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
-java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
+export GEM_HOME="$PWD/lang/ruby/.gem/"
 
-py_client="env PYTHONPATH=lang/py/build/src python -m avro.tool rpcsend"
-py_server="env PYTHONPATH=lang/py/build/src python -m avro.tool rpcreceive"
+java_tool() {
+  java -jar "lang/java/tools/target/avro-tools-$VERSION.jar" "$@"
+}
 
-py3_client="env PYTHONPATH=lang/py3 python3 -m avro.tool rpcsend"
-py3_server="env PYTHONPATH=lang/py3 python3 -m avro.tool rpcreceive"
+py_tool() {
+  PYTHONPATH=lang/py python3 -m avro.tool "$@"
+}
 
-ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
-ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
+ruby_tool() {
+  ruby -Ilang/ruby/lib lang/ruby/test/tool.rb "$@"
+}
 
-clients=("$java_client" "$py_client" "$py3_client" "$ruby_client")
-servers=("$java_server" "$py_server" "$py3_server" "$ruby_server")
+tools=( {java,py,ruby}_tool )
 
 proto=share/test/schemas/simple.avpr
 
-portfile=/tmp/interop_$$
+portfile="/tmp/interop_$$"
 
-function cleanup() {
+cleanup() {
   rm -rf "$portfile"
-  for job in `jobs -p` ; do
-    kill $(jobs -p) 2>/dev/null || true;
+  for job in $(jobs -p); do
+    kill "$job" 2>/dev/null || true;
   done
 }
 
 trap 'cleanup' EXIT
 
-for server in "${servers[@]}"
-do
-  for msgDir in share/test/interop/rpc/*
-  do
-    msg=`basename "$msgDir"`
-    for c in ${msgDir}/*
-    do
-      echo TEST: $c
-      for client in "${clients[@]}"
-      do
+for server in "${tools[@]}"; do
+  for msgDir in share/test/interop/rpc/*; do
+    msg="${msgDir##*/}"
+    for c in "$msgDir/"*; do
+      echo "TEST: $c"
+      for client in "${tools[@]}"; do
         rm -rf "$portfile"
-        $server http://127.0.0.1:0/ $proto $msg -file $c/response.avro > $portfile &
+        "$server" rpcreceive 'http://127.0.0.1:0/' "$proto" "$msg" \
+          -file "$c/response.avro" > "$portfile" &
         count=0
-        while [ ! -s $portfile ]
-        do
+        until [[ -s "$portfile" ]]; do
           sleep 1
-          if [ $count -ge 10 ]
-          then
-            echo $server did not start.
+          if (( count++ >= 10 )); then
+            echo "$server did not start." >&2
             exit 1
           fi
-          count=`expr $count + 1`
         done
-        read ignore port < $portfile
-        $client http://127.0.0.1:$port $proto $msg -file $c/request.avro
-        done
+        read -r _ port < "$portfile"
+        "$client" rpcsend "http://127.0.0.1:$port" "$proto" "$msg" \
+          -file "$c/request.avro"
+      done
     done
-    done
+  done
 done

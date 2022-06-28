@@ -111,9 +111,6 @@ public class StatsServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     resp.setContentType("text/html");
-    String url = req.getRequestURL().toString();
-    String[] parts = url.split("//")[1].split("/");
-
     try {
       writeStats(resp.getWriter());
     } catch (Exception e) {

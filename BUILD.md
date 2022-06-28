@@ -4,16 +4,14 @@
 
 The following packages must be installed before Avro can be built:
 
- - Java: JDK 1.8, Maven 2 or better, protobuf-compile
- - PHP: php5, phpunit, php5-gmp
- - Python 2: 2.7 or greater, python-setuptools for dist target
- - Python 3: 3.5 or greater
+ - Java: JDK 1.8, Maven 3 or better, protobuf-compile
+ - PHP: php7, phpunit, php7-gmp
+ - Python 3: 3.6 or greater
  - C: gcc, cmake, asciidoc, source-highlight, Jansson, pkg-config
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
  - C#: .NET Core 2.2 SDK
- - JavaScript: Node 6.x+, nodejs, npm
- - Ruby: Ruby 2.3.3 or greater, ruby-dev, gem, rake, echoe, yajl-ruby,
-   snappy, zstd-ruby
+ - JavaScript: Node 12.x+, nodejs, npm
+ - Ruby: Ruby 2.6 or greater, ruby-dev, gem, bundler, snappy
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
    Module::Install::ReadmeFromPod, Module::Install::Repository,
    Math::BigInt, JSON::XS, Try::Tiny, Regexp::Common, Encode,
@@ -23,8 +21,11 @@ The following packages must be installed before Avro can be built:
  - Apache Forrest 0.9 (for documentation)
  - md5sum, sha1sum, used by top-level dist target
 
-To simplify this, you can run a Docker container with all the above
-dependencies installed by installing Docker and run:
+## Using docker
+
+It can be simpler to use a Docker image with all of the requirements already
+installed. If you have Docker installed on your host machine, you can build
+inside a container by running:
 
 ```bash
 ./build.sh docker
@@ -42,6 +43,35 @@ cached image is used.
 The working directory in the container is mounted from your host. This
 allows you to access the files in your Avro development tree from the
 Docker container.
+
+There are some additional `DOCKER_` environment variables described in 
+[build.sh](./build.sh) that can be used to interact with the image using
+the build script. Some examples:
+
+```bash
+# Rebuild the docker image without using the build cache.
+DOCKER_BUILD_XTRA_ARGS=--no-cache ./build.sh docker
+
+# Build a docker image with a specific tag (for an RC or poc, for example)
+DOCKER_IMAGE_NAME=avro-build:1.10.1-rc1 ./build.sh docker
+
+# Run a command and return.
+DOCKER_RUN_ENTRYPOINT="mvn --version" ./build.sh docker
+```
+
+## Developing inside a Container (Visual Studio Code Devcontainer)
+
+Requirement:
+ - [Visual Studio Code](https://code.visualstudio.com/)
+ - [Remote Development extension pack](https://aka.ms/vscode-remote/download/extension)
+ - Docker
+   - Windows: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
+   - macOS: (Docker Desktop)[https://www.docker.com/products/docker-desktop]
+   - Linux: (Docker CE/EE)[https://docs.docker.com/install/#supported-platforms] and (Docker Compose)[https://docs.docker.com/compose/install]
+
+Useful links:
+ - (Developing inside a Container)[https://code.visualstudio.com/docs/remote/containers]
+ - (Going further with Dev Containers)[https://microsoft.github.io/code-with-engineering-playbook/developer-experience/going-further/]
 
 ## Building
 

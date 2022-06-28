@@ -33,6 +33,8 @@ use Object::Tiny qw{
     messages
 };
 
+our $VERSION = '++MODULE_VERSION++';
+
 my $json = JSON::XS->new->allow_nonref;
 
 sub parse {

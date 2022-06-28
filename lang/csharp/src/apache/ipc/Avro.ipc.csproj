@@ -16,8 +16,11 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../../../common.props" />
+  <Import Project="../../../versions.props" />
+
   <PropertyGroup>
-    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
     <AssemblyName>Avro.ipc</AssemblyName>
     <RootNamespace>Avro.ipc</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -27,7 +30,7 @@
 
   <ItemGroup>
     <PackageReference Include="castle.core" Version="4.2.1" />
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.14" />
   </ItemGroup>
 
   <ItemGroup>

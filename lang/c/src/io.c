@@ -345,7 +345,7 @@ avro_write_file(struct _avro_writer_file_t *writer, void *buf, int64_t len)
 	if (len > 0) {
 		rval = fwrite(buf, len, 1, writer->fp);
 		if (rval == 0) {
-			return feof(writer->fp) ? EOF : 0;
+			return EIO;
 		}
 	}
 	return 0;

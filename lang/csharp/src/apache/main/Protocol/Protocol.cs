@@ -270,7 +270,7 @@ namespace Avro
         public override int GetHashCode()
         {
             return Name.GetHashCode() + Namespace.GetHashCode() +
-                   GetTypesHashCode() + GetMessagesHashCode();
+                GetTypesHashCode() + GetMessagesHashCode();
         }
 
         /// <summary>
@@ -293,7 +293,10 @@ namespace Avro
         {
             int hash = Messages.Count;
             foreach (KeyValuePair<string, Message> pair in Messages)
+            {
                 hash += pair.Key.GetHashCode() + pair.Value.GetHashCode();
+            }
+
             return hash;
         }
     }

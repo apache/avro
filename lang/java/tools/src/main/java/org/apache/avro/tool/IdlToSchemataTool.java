@@ -18,6 +18,7 @@
 
 package org.apache.avro.tool;
 
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.idl.Idl;
 
@@ -46,7 +47,12 @@ public class IdlToSchemataTool implements Tool {
     Idl parser = new Idl(new File(args.get(0)));
     File outputDirectory = getOutputDirectory(args);
 
-    for (Schema schema : parser.CompilationUnit().getTypes()) {
+    final Protocol protocol = parser.CompilationUnit();
+    final List<String> warnings = parser.getWarningsAfterParsing();
+    for (String warning : warnings) {
+      err.println("Warning: " + warning);
+    }
+    for (Schema schema : protocol.getTypes()) {
       print(schema, outputDirectory, pretty);
     }
     parser.close();

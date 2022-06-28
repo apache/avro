@@ -28,6 +28,7 @@ var utils = require('./utils'),
 // Convenience imports.
 var Tap = utils.Tap;
 var f = util.format;
+var Buffer = buffer.Buffer;
 
 // All Avro types.
 var TYPES = {
@@ -56,7 +57,7 @@ var NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 var RANDOM = new utils.Lcg();
 
 // Encoding tap (shared for performance).
-var TAP = new Tap(new buffer.SlowBuffer(1024));
+var TAP = new Tap(Buffer.allocUnsafeSlow(1024));
 
 // Path prefix for validity checks (shared for performance).
 var PATH = [];
@@ -166,7 +167,7 @@ function Type(registry) {
   registry[name] = type;
 }
 
-Type.__reset = function (size) { TAP.buf = new buffer.SlowBuffer(size); };
+Type.__reset = function (size) { TAP.buf = Buffer.allocUnsafeSlow(size); };
 
 Type.prototype.createResolver = function (type, opts) {
   if (!(type instanceof Type)) {
@@ -261,7 +262,7 @@ Type.prototype.toBuffer = function (val) {
     TAP.pos = 0;
     this._write(TAP, val);
   }
-  var buf = new Buffer(TAP.pos);
+  var buf = Buffer.alloc(TAP.pos);
   TAP.buf.copy(buf, 0, 0, TAP.pos);
   return buf;
 };
@@ -652,19 +653,19 @@ BytesType.prototype._copy = function (obj, opts) {
       if (typeof obj != 'string') {
         throw new Error(f('cannot coerce to buffer: %j', obj));
       }
-      buf = new Buffer(obj, 'binary');
+      buf = Buffer.from(obj, 'binary');
       this._check(buf, throwInvalidError);
       return buf;
     case 1: // Coerce buffer JSON representation to buffers.
       if (!obj || obj.type !== 'Buffer' || !(obj.data instanceof Array)) {
         throw new Error(f('cannot coerce to buffer: %j', obj));
       }
-      buf = new Buffer(obj.data);
+      buf = Buffer.from(obj.data);
       this._check(buf, throwInvalidError);
       return buf;
     default: // Copy buffer.
       this._check(obj, throwInvalidError);
-      return new Buffer(obj);
+      return Buffer.from(obj);
   }
 };
 BytesType.prototype.compare = Buffer.compare;
@@ -1713,7 +1714,7 @@ RecordType.prototype._copy = function (val, opts) {
   var i, l, field, value;
   for (i = 0, l = this._fields.length; i < l; i++) {
     field = this._fields[i];
-    value = field._type._copy(val[field._name], opts);
+    value = field._type._copy(typeof val[field._name] == 'undefined' ? field.getDefault() : val[field._name], opts);
     if (hook) {
       value = hook(field, value, this);
     }

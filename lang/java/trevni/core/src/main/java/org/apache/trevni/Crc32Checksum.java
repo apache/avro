@@ -17,6 +17,7 @@
  */
 package org.apache.trevni;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 
@@ -36,7 +37,7 @@ final class Crc32Checksum extends Checksum {
 
     ByteBuffer result = ByteBuffer.allocate(size());
     result.putInt((int) crc32.getValue());
-    result.flip();
+    ((Buffer) result).flip();
     return result;
   }
 

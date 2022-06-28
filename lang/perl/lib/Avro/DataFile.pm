@@ -23,6 +23,8 @@ use constant AVRO_MAGIC => "Obj\x01";
 
 use Avro::Schema;
 
+our $VERSION = '++MODULE_VERSION++';
+
 our $HEADER_SCHEMA = Avro::Schema->parse(<<EOH);
 {"type": "record", "name": "org.apache.avro.file.Header",
   "fields" : [
@@ -36,6 +38,7 @@ EOH
 our %ValidCodec = (
     null      => 1,
     deflate   => 1,
+    bzip2     => 1,
     zstandard => 1,
 );
 

@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {lint|test|dist|clean|install|doc}"
+  echo "Usage: $0 {lint|test|dist|clean|install|doc|format}"
   exit 1
 }
 
@@ -59,7 +59,7 @@ function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
   cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-    LICENSE NOTICE impl jsonschemas NEWS parser README scripts test examples \
+    LICENSE NOTICE impl jsonschemas NEWS parser README test examples \
     $BUILD_CPP
   find $BUILD_CPP -name '.svn' | xargs rm -rf
   cp ../../share/VERSION.txt $BUILD_CPP
@@ -71,13 +71,15 @@ function do_dist() {
   fi
 }
 
-(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
+(mkdir -p build; cd build; cmake --version; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
 case "$target" in
   lint)
-    echo 'This is a stub where someone can provide linting.'
+    # some versions of cppcheck seem to require an explicit
+    # "--error-exitcode" option to return non-zero code
+    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ api examples impl test
     ;;
 
   test)
@@ -111,9 +113,13 @@ case "$target" in
     do_doc
     ;;
 
+  format)
+    clang-format -i --style file `find api -type f` `find impl -type f` `find test -type f`
+    ;;
+
   clean)
     (cd build && make clean)
-    rm -rf doc test.avro test?.df test_skip.df
+    rm -rf doc test.avro test?.df test??.df test_skip.df test_lastSync.df test_readRecordUsingLastSync.df
     ;;
 
   install)

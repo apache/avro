@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.12.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -35,7 +35,7 @@
 
   <properties>
     <main.basedir>${project.parent.parent.basedir}</main.basedir>
-    <pluginTestingVersion>1.3</pluginTestingVersion>
+    <pluginTestingVersion>3.3.0</pluginTestingVersion>
   </properties>
 
   <build>
@@ -56,21 +56,35 @@
   </build>
 
   <dependencies>
-    <!-- maven -->
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-plugin-api</artifactId>
-      <version>${maven.version}</version>
+      <artifactId>maven-core</artifactId>
+      <version>${maven-core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+    <!-- Bump this to a higher version while maven 3.3.9 still uses 3.0.22 with a -->
+    <!-- XML injection vulnerability. -->
     <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-project</artifactId>
-      <version>${maven.version}</version>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-utils</artifactId>
+      <version>3.4.2</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>file-management</artifactId>
       <version>${file-management.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -80,8 +94,8 @@
     <!-- test-->
     <dependency>
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-core</artifactId>
-      <version>${maven.version}</version>
+      <artifactId>maven-compat</artifactId>
+      <version>${maven-core.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

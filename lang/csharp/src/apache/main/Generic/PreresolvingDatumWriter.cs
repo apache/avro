@@ -99,6 +99,8 @@ namespace Avro.Generic
                     return ResolveMap((MapSchema)schema);
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)schema);
+                case Schema.Type.Logical:
+                    return ResolveLogical((LogicalSchema)schema);
                 default:
                     return (v, e) => Error(schema, v);
             }
@@ -232,6 +234,17 @@ namespace Avro.Generic
             encoder.WriteArrayEnd();
         }
 
+        /// <summary>
+        /// Serializes a logical value object by using the underlying logical type to convert the value
+        /// to its base value.
+        /// </summary>
+        /// <param name="schema">The logical schema.</param>
+        protected WriteItem ResolveLogical(LogicalSchema schema)
+        {
+            var baseWriter = ResolveWriter(schema.BaseSchema);
+            return (d, e) => baseWriter(schema.LogicalType.ConvertToBaseValue(d, schema), e);
+        }
+
         private WriteItem ResolveMap(MapSchema mapSchema)
         {
             var itemWriter = ResolveWriter(mapSchema.ValueSchema);
@@ -319,7 +332,7 @@ namespace Avro.Generic
 
         /// <summary>
         /// Creates a new <see cref="AvroException"/> and uses the provided parameters to build an
-        /// exception message indicathing there was a type mismatch.
+        /// exception message indicating there was a type mismatch.
         /// </summary>
         /// <param name="obj">Object whose type does not the expected type</param>
         /// <param name="schemaType">Schema that we tried to write against</param>
@@ -370,8 +383,8 @@ namespace Avro.Generic
 
             /// <summary>
             /// Returns the length of an array. The default implementation requires the object
-            /// to be an array of objects and returns its length. The defaul implementation
-            /// gurantees that EnsureArrayObject() has been called on the value before this
+            /// to be an array of objects and returns its length. The default implementation
+            /// guarantees that EnsureArrayObject() has been called on the value before this
             /// function is called.
             /// </summary>
             /// <param name="value">The object whose array length is required</param>
@@ -403,7 +416,7 @@ namespace Avro.Generic
             void EnsureMapObject(object value);
 
             /// <summary>
-            /// Returns the size of the map object. The default implementation gurantees that EnsureMapObject has been
+            /// Returns the size of the map object. The default implementation guarantees that EnsureMapObject has been
             /// successfully called with the given value. The default implementation requires the value
             /// to be an IDictionary&lt;string, object&gt; and returns the number of elements in it.
             /// </summary>

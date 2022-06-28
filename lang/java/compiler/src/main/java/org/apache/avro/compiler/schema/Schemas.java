@@ -21,7 +21,6 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -141,9 +140,8 @@ public final class Schemas {
             visited.put(schema, schema);
             break;
           case RECORD:
-            Iterator<Schema> reverseSchemas = schema.getFields().stream().map(Field::schema)
-                .collect(Collectors.toCollection(ArrayDeque::new)).descendingIterator();
-            terminate = visitNonTerminal(visitor, schema, dq, () -> reverseSchemas);
+            terminate = visitNonTerminal(visitor, schema, dq, () -> schema.getFields().stream().map(Field::schema)
+                .collect(Collectors.toCollection(ArrayDeque::new)).descendingIterator());
             visited.put(schema, schema);
             break;
           case UNION:

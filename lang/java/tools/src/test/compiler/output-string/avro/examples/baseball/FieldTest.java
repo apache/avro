@@ -19,17 +19,19 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static SpecificData MODEL$ = new SpecificData();
-static {
+  private static final SpecificData MODEL$ = new SpecificData();
+  static {
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
   }
 
   private static final BinaryMessageEncoder<FieldTest> ENCODER =
-      new BinaryMessageEncoder<FieldTest>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<FieldTest> DECODER =
-      new BinaryMessageDecoder<FieldTest>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -53,7 +55,7 @@ static {
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<FieldTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<FieldTest>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**
@@ -77,12 +79,12 @@ static {
   }
 
   /** The number of the player */
-   private int number;
-   private java.lang.String last_name;
-   private java.time.Instant timestamp;
-   private java.time.Instant timestampMicros;
-   private java.time.LocalTime timeMillis;
-   private java.time.LocalTime timeMicros;
+  private int number;
+  private java.lang.String last_name;
+  private java.time.Instant timestamp;
+  private java.time.Instant timestampMicros;
+  private java.time.LocalTime timeMillis;
+  private java.time.LocalTime timeMicros;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -120,7 +122,7 @@ static {
     case 3: return timestampMicros;
     case 4: return timeMillis;
     case 5: return timeMicros;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -145,12 +147,12 @@ static {
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: number = (java.lang.Integer)value$; break;
-    case 1: last_name = (java.lang.String)value$; break;
+    case 1: last_name = value$ != null ? value$.toString() : null; break;
     case 2: timestamp = (java.time.Instant)value$; break;
     case 3: timestampMicros = (java.time.Instant)value$; break;
     case 4: timeMillis = (java.time.LocalTime)value$; break;
     case 5: timeMicros = (java.time.LocalTime)value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -308,7 +310,7 @@ static {
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
     }
 
     /**
@@ -348,7 +350,7 @@ static {
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.FieldTest other) {
-      super(SCHEMA$);
+      super(SCHEMA$, MODEL$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;

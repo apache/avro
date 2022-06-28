@@ -18,7 +18,13 @@
 use Config;
 use inc::Module::Install;
 
-my $version = `cat ../../share/VERSION.txt`;
+my $version;
+for ('VERSION.txt', '../../share/VERSION.txt') {
+    if (-f) {
+        $version = `cat $_`;
+        last;
+    }
+}
 chomp $version;
 
 license 'apache';
@@ -43,5 +49,19 @@ unless ($Config{use64bitint}) {
     requires 'Math::BigInt';
 }
 auto_set_repository();
+
+my %packages = (
+    'Avro'                    => 'lib/Avro.pm',
+    'Avro::BinaryDecoder'     => 'lib/Avro/BinaryDecoder.pm',
+    'Avro::BinaryEncoder'     => 'lib/Avro/BinaryEncoder.pm',
+    'Avro::DataFile'          => 'lib/Avro/DataFile.pm',
+    'Avro::DataFileReader'    => 'lib/Avro/DataFileReader.pm',
+    'Avro::DataFileWriter'    => 'lib/Avro/DataFileWriter.pm',
+    'Avro::Protocol'          => 'lib/Avro/Protocol.pm',
+    'Avro::Protocol::Message' => 'lib/Avro/Protocol/Message.pm',
+    'Avro::Schema'            => 'lib/Avro/Schema.pm',
+);
+my %provides = map { $_ => { file => $packages{$_}, version => $version } } keys %packages;
+provides(%provides);
 
 WriteMakefile(PM_FILTER => "sed -e 's/\+\+MODULE_VERSION\+\+/$version/'");

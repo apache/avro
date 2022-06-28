@@ -20,8 +20,6 @@
 
 # This script is used to generate version numbers for autotools
 #
-# The top-level main version is collected from the top-level build.xml
-#
 # The information for libtool is maintained manually since
 # the public API for the C library can change independent of the project
 #

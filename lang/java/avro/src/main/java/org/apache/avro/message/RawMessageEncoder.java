@@ -24,6 +24,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,7 +39,7 @@ import java.nio.ByteBuffer;
  */
 public class RawMessageEncoder<D> implements MessageEncoder<D> {
 
-  private static final ThreadLocal<BufferOutputStream> TEMP = ThreadLocal.withInitial(BufferOutputStream::new);
+  private static final ThreadLocal<BufferOutputStream> TEMP = ThreadLocalWithInitial.of(BufferOutputStream::new);
 
   private static final ThreadLocal<BinaryEncoder> ENCODER = new ThreadLocal<>();
 
@@ -49,8 +51,8 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * Buffers returned by {@link #encode(D)} are copied and will not be modified by
-   * future calls to {@code encode}.
+   * Buffers returned by {@link RawMessageEncoder#encode} are copied and will not
+   * be modified by future calls to {@code encode}.
    *
    * @param model  the {@link GenericData data model} for datum instances
    * @param schema the {@link Schema} for datum instances
@@ -64,8 +66,9 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(D)}
-   * are copied and will not be modified by future calls to {@code encode}.
+   * If {@code shouldCopy} is true, then buffers returned by
+   * {@link RawMessageEncoder#encode} are copied and will not be modified by
+   * future calls to {@code encode}.
    * <p>
    * If {@code shouldCopy} is false, then buffers returned by {@code encode} wrap
    * a thread-local buffer that can be reused by future calls to {@code encode},

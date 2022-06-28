@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.ipc.CallFuture;
 import org.apache.avro.ipc.Callback;
@@ -154,7 +153,7 @@ public class TestNettyServerWithCallbacks {
     // Test asynchronous RPC (future):
     CallFuture<Integer> future1 = new CallFuture<>();
     simpleClient.add(8, 8, future1);
-    Assert.assertEquals(new Integer(16), future1.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals(Integer.valueOf(16), future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
@@ -170,7 +169,7 @@ public class TestNettyServerWithCallbacks {
         future2.handleError(error);
       }
     });
-    Assert.assertEquals(new Integer(768), future2.get(2, TimeUnit.SECONDS));
+    Assert.assertEquals(Integer.valueOf(768), future2.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future2.getError());
   }
 
@@ -212,9 +211,6 @@ public class TestNettyServerWithCallbacks {
       Assert.fail("Expected " + TestError.class.getCanonicalName());
     } catch (TestError e) {
       // Expected
-    } catch (AvroRemoteException e) {
-      e.printStackTrace();
-      Assert.fail("Unexpected error: " + e.toString());
     }
 
     // Test asynchronous RPC (future):
@@ -282,7 +278,7 @@ public class TestNettyServerWithCallbacks {
         // Try again with callbacks:
         CallFuture<Integer> addFuture = new CallFuture<>();
         simpleClient2.add(1, 2, addFuture);
-        Assert.assertEquals(new Integer(3), addFuture.get());
+        Assert.assertEquals(Integer.valueOf(3), addFuture.get());
 
         // Shut down server:
         server2.close();
@@ -404,6 +400,7 @@ public class TestNettyServerWithCallbacks {
           simpleClient2.add(3, 4);
           Assert.fail("Expected an exception");
         } catch (Exception e) {
+          e.printStackTrace();
           // expected
         }
       });

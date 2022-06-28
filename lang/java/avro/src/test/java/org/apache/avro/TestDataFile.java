@@ -28,8 +28,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import org.apache.avro.file.*;
+import org.apache.avro.file.CodecFactory;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.file.Syncable;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -74,6 +79,8 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.zstandardCodec(0, true) });
     r.add(new Object[] { CodecFactory.zstandardCodec(5, false) });
     r.add(new Object[] { CodecFactory.zstandardCodec(18, true) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, false) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, false, true) });
     return r;
   }
 
@@ -233,29 +240,39 @@ public class TestDataFile {
 
   private void testReadWithHeader() throws IOException {
     File file = makeFile();
-    DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>());
-    // get a header for this file
-    DataFileStream.Header header = reader.getHeader();
-    // re-open to an arbitrary position near the middle, with sync == true
-    SeekableFileInput sin = new SeekableFileInput(file);
-    sin.seek(sin.length() / 2);
-    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(), header, true);
-    assertNotNull("Should be able to reopen from arbitrary point", reader.next());
-    long validPos = reader.previousSync();
-    // post sync, we know of a valid sync point: re-open with seek (sync == false)
-    sin.seek(validPos);
-    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(), header, false);
-    assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
-    assertNotNull("Should be able to reopen at sync point", reader.next());
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
+      // get a header for this file
+      DataFileStream.Header header = reader.getHeader();
+      // re-open to an arbitrary position near the middle, with sync == true
+      SeekableFileInput sin = new SeekableFileInput(file);
+      sin.seek(sin.length() / 2);
+      try (DataFileReader<Object> readerTrue = DataFileReader.openReader(sin, new GenericDatumReader<>(), header,
+          true);) {
+
+        assertNotNull("Should be able to reopen from arbitrary point", readerTrue.next());
+        long validPos = readerTrue.previousSync();
+        // post sync, we know of a valid sync point: re-open with seek (sync == false)
+        sin.seek(validPos);
+        try (DataFileReader<Object> readerFalse = DataFileReader.openReader(sin, new GenericDatumReader<>(), header,
+            false)) {
+          assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
+          assertNotNull("Should be able to reopen at sync point", readerFalse.next());
+        }
+
+      }
+
+    }
+
   }
 
   @Test
   public void testSyncInHeader() throws IOException {
-    DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
-        new GenericDatumReader<>());
-    reader.sync(0);
-    for (Object datum : reader)
-      assertNotNull(datum);
+    try (DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
+        new GenericDatumReader<>())) {
+      reader.sync(0);
+      for (Object datum : reader)
+        assertNotNull(datum);
+    }
   }
 
   @Test
@@ -321,9 +338,10 @@ public class TestDataFile {
   }
 
   static void readFile(File f, DatumReader<? extends Object> datumReader) throws IOException {
-    FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader);
-    for (Object datum : reader) {
-      assertNotNull(datum);
+    try (FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader)) {
+      for (Object datum : reader) {
+        assertNotNull(datum);
+      }
     }
   }
 

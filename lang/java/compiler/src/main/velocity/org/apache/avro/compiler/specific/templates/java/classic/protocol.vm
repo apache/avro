@@ -16,7 +16,7 @@
 ## limitations under the License.
 ##
 #if ($protocol.getNamespace())
-package $protocol.getNamespace();
+package $this.mangle($protocol.getNamespace());
 #end
 
 #if ($protocol.getDoc())
@@ -26,7 +26,7 @@ package $protocol.getNamespace();
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public interface $this.mangle($protocol.getName()) {
+public interface $this.mangleTypeIdentifier($protocol.getName()) {
   public static final org.apache.avro.Protocol PROTOCOL = org.apache.avro.Protocol.parse(${this.javaSplit($protocol.toString())});
 #foreach ($e in $protocol.getMessages().entrySet())
 #set ($name = $e.getKey())
@@ -47,7 +47,7 @@ public interface $this.mangle($protocol.getName()) {
   #if ($message.isOneWay())void#else${this.javaUnbox($response, true)}#end
  ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema(), false)} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
 #end
 )#if (! $message.isOneWay() && $message.getErrors().getTypes().size() > 1)
  throws ##
@@ -61,12 +61,12 @@ ${this.mangle($error.getFullName())}##
 #end## (requests)
 
 ## Generate nested callback API
-  @SuppressWarnings("all")
 #if ($protocol.getDoc())
   /** $protocol.getDoc() */
 #end
-  public interface Callback extends $this.mangle($protocol.getName()) {
-    public static final org.apache.avro.Protocol PROTOCOL = #if ($protocol.getNamespace())$protocol.getNamespace().#end${this.mangle($protocol.getName())}.PROTOCOL;
+  @org.apache.avro.specific.AvroGenerated
+  public interface Callback extends $this.mangleTypeIdentifier($protocol.getName()) {
+    public static final org.apache.avro.Protocol PROTOCOL = #if ($this.mangle($protocol.getNamespace()))$this.mangle($protocol.getNamespace()).#end${this.mangleTypeIdentifier($protocol.getName())}.PROTOCOL;
 #foreach ($e in $protocol.getMessages().entrySet())
 #set ($name = $e.getKey())
 #set ($message = $e.getValue())
@@ -85,7 +85,7 @@ ${this.mangle($error.getFullName())}##
      */
     void ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema(), false)} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
 #end
 #if ($message.getRequest().getFields().size() > 0), #end
 org.apache.avro.ipc.Callback<${this.javaType($response)}> callback) throws java.io.IOException;

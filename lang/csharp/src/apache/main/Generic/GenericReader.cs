@@ -75,7 +75,7 @@ namespace Avro.Generic
         /// Reads an object off the stream.
         /// </summary>
         /// <param name="reuse">
-        /// If not null, the implemenation will try to use to return the object
+        /// If not null, the implementation will try to use to return the object
         /// </param>
         /// <param name="d">Decoder to read from.</param>
         /// <returns>Object we read from the decoder.</returns>
@@ -88,7 +88,7 @@ namespace Avro.Generic
     /// <summary>
     /// The default implementation for the generic reader. It constructs new .NET objects for avro objects on the
     /// stream and returns the .NET object. Users can directly use this class or, if they want to customize the
-    /// object types for differnt Avro schema types, can derive from this class. There are enough hooks in this
+    /// object types for different Avro schema types, can derive from this class. There are enough hooks in this
     /// class to allow customization.
     /// </summary>
     /// <remarks>
@@ -113,7 +113,7 @@ namespace Avro.Generic
         /// <summary>
         /// Constructs the default reader for the given schemas using the DefaultReader. If the
         /// reader's and writer's schemas are different this class performs the resolution.
-        /// This default implemenation maps Avro types to .NET types as follows:
+        /// This default implementation maps Avro types to .NET types as follows:
         /// </summary>
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
@@ -121,6 +121,8 @@ namespace Avro.Generic
         {
             this.ReaderSchema = readerSchema;
             this.WriterSchema = writerSchema;
+            if (!ReaderSchema.CanRead(WriterSchema))
+                throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
         }
 
         /// <summary>
@@ -129,14 +131,11 @@ namespace Avro.Generic
         /// <typeparam name="T">The type of object to read. A single schema typically returns an object of a single .NET class.
         /// The only exception is UnionSchema, which can return a object of different types based on the branch selected.
         /// </typeparam>
-        /// <param name="reuse">If not null, the implemenation will try to use to return the object</param>
+        /// <param name="reuse">If not null, the implementation will try to use to return the object</param>
         /// <param name="decoder">The decoder for deserialization</param>
         /// <returns>Object read from the decoder.</returns>
         public T Read<T>(T reuse, Decoder decoder)
         {
-            if (!ReaderSchema.CanRead(WriterSchema))
-                throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
-
             return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
         }
 
@@ -144,7 +143,7 @@ namespace Avro.Generic
         /// Reads an object off the stream.
         /// </summary>
         /// <param name="reuse">
-        /// If not null, the implemenation will try to use to return the object.
+        /// If not null, the implementation will try to use to return the object.
         /// </param>
         /// <param name="writerSchema">Schema used to write the data.</param>
         /// <param name="readerSchema">Schema to use when reading the data.</param>
@@ -226,6 +225,8 @@ namespace Avro.Generic
                     return ReadMap(reuse, (MapSchema)writerSchema, readerSchema, d);
                 case Schema.Type.Union:
                     return ReadUnion(reuse, (UnionSchema)writerSchema, readerSchema, d);
+                case Schema.Type.Logical:
+                    return ReadLogical(reuse, (LogicalSchema)writerSchema, readerSchema, d);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -335,7 +336,7 @@ namespace Avro.Generic
         /// <returns>True if and only if a field with the given name is found.</returns>
         protected virtual bool TryGetField(object record, string fieldName, int fieldPos, out object value)
         {
-            return (record as GenericRecord).TryGetValue(fieldName, out value);
+            return (record as GenericRecord).TryGetValue(fieldPos, out value);
         }
 
         /// <summary>
@@ -349,13 +350,13 @@ namespace Avro.Generic
         /// <param name="fieldValue">The value to be added for the field</param>
         protected virtual void AddField(object record, string fieldName, int fieldPos, object fieldValue)
         {
-            (record as GenericRecord).Add(fieldName, fieldValue);
+            (record as GenericRecord).Add(fieldPos, fieldValue);
         }
 
         /// <summary>
         /// Deserializes a enum. Uses CreateEnum to construct the new enum object.
         /// </summary>
-        /// <param name="reuse">If appropirate, uses this instead of creating a new enum object.</param>
+        /// <param name="reuse">If appropriate, uses this instead of creating a new enum object.</param>
         /// <param name="writerSchema">The schema the writer used while writing the enum</param>
         /// <param name="readerSchema">The schema the reader is using</param>
         /// <param name="d">The decoder for deserialization.</param>
@@ -371,7 +372,7 @@ namespace Avro.Generic
         /// <param name="reuse">If appropriate, use this enum object instead of a new one.</param>
         /// <param name="es">The enum schema used by the reader.</param>
         /// <param name="symbol">The symbol that needs to be used.</param>
-        /// <returns>The default implemenation returns a GenericEnum.</returns>
+        /// <returns>The default implementation returns a GenericEnum.</returns>
         protected virtual object CreateEnum(object reuse, EnumSchema es, string symbol)
         {
             if (reuse is GenericEnum)
@@ -429,7 +430,7 @@ namespace Avro.Generic
         /// <summary>
         /// Returns the size of the given array object.
         /// </summary>
-        /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+        /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
         /// a previous call to CreateArray().</param>
         /// <returns>The size of the array</returns>
         protected virtual int GetArraySize(object array)
@@ -440,7 +441,7 @@ namespace Avro.Generic
         /// <summary>
         /// Resizes the array to the new value.
         /// </summary>
-        /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+        /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
         /// a previous call to CreateArray().</param>
         /// <param name="n">The new size.</param>
         protected virtual void ResizeArray(ref object array, int n)
@@ -453,7 +454,7 @@ namespace Avro.Generic
         /// <summary>
         /// Assigns a new value to the object at the given index
         /// </summary>
-        /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+        /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
         /// a previous call to CreateArray().</param>
         /// <param name="index">The index to reassign to.</param>
         /// <param name="value">The value to assign.</param>
@@ -466,7 +467,7 @@ namespace Avro.Generic
         /// <summary>
         /// Returns the element at the given index.
         /// </summary>
-        /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+        /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
         /// a previous call to CreateArray().</param>
         /// <param name="index">The index to look into.</param>
         /// <returns>The object the given index. Null if no object has been assigned to that index.</returns>
@@ -476,7 +477,7 @@ namespace Avro.Generic
         }
 
         /// <summary>
-        /// Deserialized an avro map. The default implemenation creats a new map using CreateMap() and then
+        /// Deserialized an avro map. The default implementation creates a new map using CreateMap() and then
         /// adds elements to the map using AddMapEntry().
         /// </summary>
         /// <param name="reuse">If appropriate, use this instead of creating a new map object.</param>
@@ -501,7 +502,7 @@ namespace Avro.Generic
 
         /// <summary>
         /// Used by the default implementation of ReadMap() to create a fresh map object. The default
-        /// implementaion of this method returns a IDictionary&lt;string, map&gt;.
+        /// implementation of this method returns a IDictionary&lt;string, map&gt;.
         /// </summary>
         /// <param name="reuse">If appropriate, use this map object instead of creating a new one.</param>
         /// <param name="ms">Map schema to use when creating the object.</param>
@@ -529,7 +530,7 @@ namespace Avro.Generic
         }
 
         /// <summary>
-        /// Deserialized an object based on the writer's uninon schema.
+        /// Deserialized an object based on the writer's union schema.
         /// </summary>
         /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
         /// <param name="writerSchema">The UnionSchema that the writer used.</param>
@@ -551,15 +552,31 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Deserializes an object based on the writer's logical schema. Uses the underlying logical type to convert
+        /// the value to the logical type.
+        /// </summary>
+        /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
+        /// <param name="writerSchema">The UnionSchema that the writer used.</param>
+        /// <param name="readerSchema">The schema the reader uses.</param>
+        /// <param name="d">The decoder for serialization.</param>
+        /// <returns>The deserialized object.</returns>
+        protected virtual object ReadLogical(object reuse, LogicalSchema writerSchema, Schema readerSchema, Decoder d)
+        {
+            LogicalSchema ls = (LogicalSchema)readerSchema;
+
+            return writerSchema.LogicalType.ConvertToLogicalValue(Read(reuse, writerSchema.BaseSchema, ls.BaseSchema, d), ls);
+        }
+
+        /// <summary>
         /// Deserializes a fixed object and returns the object. The default implementation uses CreateFixed()
         /// and GetFixedBuffer() and returns what CreateFixed() returned.
         /// </summary>
         /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
         /// <param name="writerSchema">The FixedSchema the writer used during serialization.</param>
-        /// <param name="readerSchema">The schema that the readr uses. Must be a FixedSchema with the same
+        /// <param name="readerSchema">The schema that the reader uses. Must be a FixedSchema with the same
         /// size as the writerSchema.</param>
         /// <param name="d">The decoder for deserialization.</param>
-        /// <returns>The deserilized object.</returns>
+        /// <returns>The deserialized object.</returns>
         protected virtual object ReadFixed(object reuse, FixedSchema writerSchema, Schema readerSchema, Decoder d)
         {
             FixedSchema rs = (FixedSchema)readerSchema;
@@ -660,6 +677,9 @@ namespace Avro.Generic
                     break;
                 case Schema.Type.Union:
                     Skip((writerSchema as UnionSchema)[d.ReadUnionIndex()], d);
+                    break;
+                case Schema.Type.Logical:
+                    Skip((writerSchema as LogicalSchema).BaseSchema, d);
                     break;
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);

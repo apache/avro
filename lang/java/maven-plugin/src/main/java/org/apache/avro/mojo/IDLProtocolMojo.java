@@ -85,6 +85,9 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
 
         Protocol p = parser.CompilationUnit();
+        for (String warning : parser.getWarningsAfterParsing()) {
+          getLog().warn(warning);
+        }
         String json = p.toString(true);
         Protocol protocol = Protocol.parse(json);
         final SpecificCompiler compiler = new SpecificCompiler(protocol);
@@ -93,6 +96,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         compiler.setFieldVisibility(getFieldVisibility());
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);
+        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
         compiler.setCreateSetters(createSetters);
         compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);

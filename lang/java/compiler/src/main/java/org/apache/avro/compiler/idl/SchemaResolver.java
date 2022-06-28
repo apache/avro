@@ -84,6 +84,20 @@ final class SchemaResolver {
   }
 
   /**
+   * Is this a unresolved schema.
+   *
+   * @param schema
+   * @return
+   */
+  static boolean isFullyResolvedSchema(final Schema schema) {
+    if (isUnresolvedSchema(schema)) {
+      return false;
+    } else {
+      return Schemas.visit(schema, new IsResolvedSchemaVisitor());
+    }
+  }
+
+  /**
    * Will clone the provided protocol while resolving all unreferenced schemas
    *
    * @param protocol

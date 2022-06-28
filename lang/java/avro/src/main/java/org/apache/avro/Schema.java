@@ -49,6 +49,11 @@ import java.util.Set;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.avro.LogicalType.LOGICAL_TYPE_PROP;
 
 /**
  * An abstract data type.
@@ -106,6 +111,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   static final JsonFactory FACTORY = new JsonFactory();
+  static final Logger LOG = LoggerFactory.getLogger(Schema.class);
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
   private static final int NO_HASHCODE = Integer.MIN_VALUE;
@@ -118,6 +124,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES, INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+
     private final String name;
 
     private Type() {
@@ -275,6 +282,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   /**
+   * If this is a record, returns whether the fields have been set.
+   */
+  public boolean hasFields() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
+  /**
    * If this is a record, set its fields. The fields can be set only once in a
    * schema.
    */
@@ -388,12 +402,35 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
+    return toString(new Names(), pretty);
+  }
+
+  /**
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
+   *
+   * @param referencedSchemas referenced schemas
+   * @param pretty            if true, pretty-print JSON.
+   */
+  // Use at your own risk. This method should be removed with AVRO-2832.
+  @Deprecated
+  public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
+    Schema.Names names = new Schema.Names();
+    if (referencedSchemas != null) {
+      for (Schema s : referencedSchemas) {
+        names.add(s);
+      }
+    }
+    return toString(names, pretty);
+  }
+
+  String toString(Names names, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(new Names(), gen);
+      toJson(names, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -492,12 +529,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
+
       private final String name;
 
-      private Order() {
+      Order() {
         this.name = this.name().toLowerCase(Locale.ENGLISH);
       }
-    };
+    }
 
     /**
      * For Schema unions with a "null" type as the first entry, this can be used to
@@ -516,7 +554,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     Field(String name, Schema schema, String doc, JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
-      this.schema = schema;
+      this.schema = Objects.requireNonNull(schema, "schema is required and cannot be null");
       this.doc = doc;
       this.defaultValue = validateDefault ? validateDefault(name, schema, defaultValue) : defaultValue;
       this.order = Objects.requireNonNull(order, "Order cannot be null");
@@ -673,7 +711,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         this.name = validateName(name);
       } else { // qualified name
         space = name.substring(0, lastDot); // get space from name
-        this.name = validateName(name.substring(lastDot + 1, name.length()));
+        this.name = validateName(name.substring(lastDot + 1));
       }
       if ("".equals(space))
         space = null;
@@ -713,8 +751,32 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public String getQualified(String defaultSpace) {
-      return (space == null || space.equals(defaultSpace)) ? name : full;
+      return this.shouldWriteFull(defaultSpace) ? full : name;
     }
+
+    /**
+     * Determine if full name must be written. There are 2 cases for true :
+     * defaultSpace != from this.space or name is already a Schema.Type (int, array
+     * ...)
+     *
+     * @param defaultSpace : default name space.
+     * @return true if full name must be written.
+     */
+    private boolean shouldWriteFull(String defaultSpace) {
+      if (space != null && space.equals(defaultSpace)) {
+        for (Type schemaType : Type.values()) {
+          if (schemaType.name.equals(name)) {
+            // name is a 'Type', so namespace must be written
+            return true;
+          }
+        }
+        // this.space == defaultSpace
+        return false;
+      }
+      // this.space != defaultSpace, so namespace must be written.
+      return true;
+    }
+
   }
 
   private static abstract class NamedSchema extends Schema {
@@ -798,7 +860,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public void aliasesToJson(JsonGenerator gen) throws IOException {
-      if (aliases == null || aliases.size() == 0)
+      if (aliases == null || aliases.isEmpty())
         return;
       gen.writeFieldName("aliases");
       gen.writeStartArray();
@@ -834,8 +896,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocal.withInitial(HashSet::new);
-  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocal.withInitial(IdentityHashMap::new);
+  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocalWithInitial.of(HashSet::new);
+  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocalWithInitial.of(IdentityHashMap::new);
 
   @SuppressWarnings(value = "unchecked")
   private static class RecordSchema extends NamedSchema {
@@ -874,16 +936,22 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    public boolean hasFields() {
+      return fields != null;
+    }
+
+    @Override
     public void setFields(List<Field> fields) {
       if (this.fields != null) {
         throw new AvroRuntimeException("Fields are already set");
       }
       int i = 0;
-      fieldMap = new HashMap<>();
-      LockableArrayList ff = new LockableArrayList();
+      fieldMap = new HashMap<>(Math.multiplyExact(2, fields.size()));
+      LockableArrayList<Field> ff = new LockableArrayList<>(fields.size());
       for (Field f : fields) {
-        if (f.position != -1)
+        if (f.position != -1) {
           throw new AvroRuntimeException("Field already used: " + f);
+        }
         f.position = i++;
         final Field existingField = fieldMap.put(f.name(), f);
         if (existingField != null) {
@@ -999,15 +1067,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public EnumSchema(Name name, String doc, LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
-      this.ordinals = new HashMap<>();
+      this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
       this.enumDefault = enumDefault;
       int i = 0;
-      for (String symbol : symbols)
-        if (ordinals.put(validateName(symbol), i++) != null)
+      for (String symbol : symbols) {
+        if (ordinals.put(validateName(symbol), i++) != null) {
           throw new SchemaParseException("Duplicate enum symbol: " + symbol);
-      if (enumDefault != null && !symbols.contains(enumDefault))
+        }
+      }
+      if (enumDefault != null && !symbols.contains(enumDefault)) {
         throw new SchemaParseException(
             "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
+      }
     }
 
     @Override
@@ -1146,20 +1217,24 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
-    private final Map<String, Integer> indexByName = new HashMap<>();
+    private final Map<String, Integer> indexByName;
 
     public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
+      this.indexByName = new HashMap<>(Math.multiplyExact(2, types.size()));
       this.types = types.lock();
       int index = 0;
       for (Schema type : types) {
-        if (type.getType() == Type.UNION)
+        if (type.getType() == Type.UNION) {
           throw new AvroRuntimeException("Nested union: " + this);
+        }
         String name = type.getFullName();
-        if (name == null)
+        if (name == null) {
           throw new AvroRuntimeException("Nameless in union:" + this);
-        if (indexByName.put(name, index++) != null)
+        }
+        if (indexByName.put(name, index++) != null) {
           throw new AvroRuntimeException("Duplicate in union:" + name);
+        }
       }
     }
 
@@ -1513,11 +1588,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static ThreadLocal<Boolean> validateNames = ThreadLocal.withInitial(() -> true);
+  private static ThreadLocal<Boolean> validateNames = ThreadLocalWithInitial.of(() -> true);
 
   private static String validateName(String name) {
     if (!validateNames.get())
       return name; // not validating names
+    if (name == null)
+      throw new SchemaParseException("Null name");
     int length = name.length();
     if (length == 0)
       throw new SchemaParseException("Empty name");
@@ -1532,7 +1609,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return name;
   }
 
-  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocal.withInitial(() -> true);
+  private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema, JsonNode defaultValue) {
     if (VALIDATE_DEFAULTS.get() && (defaultValue != null) && !isValidDefault(schema, defaultValue)) { // invalid default
@@ -1552,7 +1629,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
     case FIXED:
       return defaultValue.isTextual();
     case INT:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToInt();
     case LONG:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToLong();
     case FLOAT:
     case DOUBLE:
       return defaultValue.isNumber();
@@ -1605,21 +1684,23 @@ public abstract class Schema extends JsonProperties implements Serializable {
       Name name = null;
       String savedSpace = names.space();
       String doc = null;
-      if (type.equals("record") || type.equals("error") || type.equals("enum") || type.equals("fixed")) {
+      final boolean isTypeError = "error".equals(type);
+      final boolean isTypeRecord = "record".equals(type);
+      final boolean isTypeEnum = "enum".equals(type);
+      final boolean isTypeFixed = "fixed".equals(type);
+      if (isTypeRecord || isTypeError || isTypeEnum || isTypeFixed) {
         String space = getOptionalText(schema, "namespace");
         doc = getOptionalText(schema, "doc");
         if (space == null)
-          space = names.space();
+          space = savedSpace;
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-        if (name.space != null) { // set default namespace
-          names.space(name.space);
-        }
+        names.space(name.space); // set default namespace
       }
       if (PRIMITIVES.containsKey(type)) { // primitive
         result = create(PRIMITIVES.get(type));
-      } else if (type.equals("record") || type.equals("error")) { // record
+      } else if (isTypeRecord || isTypeError) { // record
         List<Field> fields = new ArrayList<>();
-        result = new RecordSchema(name, doc, type.equals("error"));
+        result = new RecordSchema(name, doc, isTypeError);
         if (name != null)
           names.add(result);
         JsonNode fieldsNode = schema.get("fields");
@@ -1633,7 +1714,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
             throw new SchemaParseException("No field type: " + field);
           if (fieldTypeNode.isTextual() && names.get(fieldTypeNode.textValue()) == null)
             throw new SchemaParseException(fieldTypeNode + " is not a defined name." + " The type of the \"" + fieldName
-                + "\" field must be" + " a defined name or a {\"type\": ...} expression.");
+                + "\" field must be a defined name or a {\"type\": ...} expression.");
           Schema fieldSchema = parse(fieldTypeNode, names);
           Field.Order order = Field.Order.ASCENDING;
           JsonNode orderNode = field.get("order");
@@ -1653,9 +1734,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
           }
           f.aliases = parseAliases(field);
           fields.add(f);
+          if (fieldSchema.getLogicalType() == null && getOptionalText(field, LOGICAL_TYPE_PROP) != null)
+            LOG.warn(
+                "Ignored the {}.{}.logicalType property (\"{}\"). It should probably be nested inside the \"type\" for the field.",
+                name, fieldName, getOptionalText(field, "logicalType"));
         }
         result.setFields(fields);
-      } else if (type.equals("enum")) { // enum
+      } else if (isTypeEnum) { // enum
         JsonNode symbolsNode = schema.get("symbols");
         if (symbolsNode == null || !symbolsNode.isArray())
           throw new SchemaParseException("Enum has no symbols: " + schema);
@@ -1679,7 +1764,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (valuesNode == null)
           throw new SchemaParseException("Map has no values type: " + schema);
         result = new MapSchema(parse(valuesNode, names));
-      } else if (type.equals("fixed")) { // fixed
+      } else if (isTypeFixed) { // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())
           throw new SchemaParseException("Invalid or no size: " + schema);
@@ -1696,7 +1781,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       Iterator<String> i = schema.fieldNames();
 
       Set reserved = SCHEMA_RESERVED;
-      if (type.equals("enum")) {
+      if (isTypeEnum) {
         reserved = ENUM_RESERVED;
       }
       while (i.hasNext()) { // add properties

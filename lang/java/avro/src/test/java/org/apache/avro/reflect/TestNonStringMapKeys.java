@@ -18,14 +18,21 @@
 package org.apache.avro.reflect;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -241,17 +248,18 @@ public class TestNonStringMapKeys {
 
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<GenericRecord> fileReader = new DataFileReader<>(avroInputStream, datumReader);
-
-    Schema schema = fileReader.getSchema();
-    assertNotNull("Unable to get schema for " + testType, schema);
-    GenericRecord record = null;
     List<GenericRecord> records = new ArrayList<>();
-    while (fileReader.hasNext()) {
-      try {
-        records.add(fileReader.next(record));
-      } catch (Exception e) {
-        fail("Fail with schema: " + schema);
+    try (DataFileReader<GenericRecord> fileReader = new DataFileReader<>(avroInputStream, datumReader)) {
+
+      Schema schema = fileReader.getSchema();
+      assertNotNull("Unable to get schema for " + testType, schema);
+      GenericRecord record = null;
+      while (fileReader.hasNext()) {
+        try {
+          records.add(fileReader.next(record));
+        } catch (Exception e) {
+          fail("Fail with schema: " + schema);
+        }
       }
     }
     return records;
@@ -266,13 +274,14 @@ public class TestNonStringMapKeys {
 
     ReflectDatumReader<T> datumReader = new ReflectDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader);
-
-    Schema schema = fileReader.getSchema();
-    T record = null;
     List<T> records = new ArrayList<>();
-    while (fileReader.hasNext()) {
-      records.add(fileReader.next(record));
+    try (DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader)) {
+
+      Schema schema = fileReader.getSchema();
+      T record = null;
+      while (fileReader.hasNext()) {
+        records.add(fileReader.next(record));
+      }
     }
     return records;
   }
