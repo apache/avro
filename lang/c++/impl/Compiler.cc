@@ -268,17 +268,6 @@ static const std::unordered_set<std::string>& getKnownFields() {
       return kKnownFields;
 }
 
-static void addCustomFields(const NodePtr &node, const Object &m) {
-    // Don't add known fields on primitive type and fixed type into custom
-    // fields.
-    const std::unordered_set<std::string>& kKnownFields = getKnownFields();
-    for (const auto &entry : m) {
-        if (kKnownFields.find(entry.first) == kKnownFields.end()) {
-            node->addCustomField(entry.first, entry.second);
-        }
-    }
-}
-
 static void getCustomAttributes(const Object& m, CustomFields &customAttributes)
 {
   // Don't add known fields on primitive type and fixed type into custom
