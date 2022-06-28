@@ -82,7 +82,7 @@ impl<R: Read> Block<R> {
 
         if let Value::Map(metadata) = decode(&meta_schema, &mut self.reader)? {
             self.read_writer_schema(&metadata)?;
-            self.read_codec(&metadata);
+            self.codec = read_codec(&metadata)?;
 
             for (key, value) in metadata {
                 if key == "avro.schema" || key == "avro.codec" {
@@ -199,22 +199,6 @@ impl<R: Read> Block<R> {
         Ok(())
     }
 
-    fn read_codec(&mut self, metadata: &HashMap<String, Value>) {
-        if let Some(codec) = metadata
-            .get("avro.codec")
-            .and_then(|codec| {
-                if let Value::Bytes(ref bytes) = *codec {
-                    std::str::from_utf8(bytes.as_ref()).ok()
-                } else {
-                    None
-                }
-            })
-            .and_then(|codec| Codec::from_str(codec).ok())
-        {
-            self.codec = codec;
-        }
-    }
-
     fn read_user_metadata(&mut self, key: String, value: Value) {
         match value {
             Value::Bytes(ref vec) => {
@@ -227,6 +211,33 @@ impl<R: Read> Block<R> {
                 );
             }
         }
+    }
+}
+
+fn read_codec(metadata: &HashMap<String, Value>) -> AvroResult<Codec> {
+    let result = metadata
+        .get("avro.codec")
+        .map(|codec| {
+            if let Value::Bytes(ref bytes) = *codec {
+                match std::str::from_utf8(bytes.as_ref()) {
+                    Ok(utf8) => Ok(utf8),
+                    Err(utf8_error) => Err(Error::ConvertToUtf8Error(utf8_error)),
+                }
+            } else {
+                Err(Error::BadCodecMetadata)
+            }
+        })
+        .map(|codec_res| match codec_res {
+            Ok(codec) => match Codec::from_str(codec) {
+                Ok(codec) => Ok(codec),
+                Err(_) => Err(Error::CodecNotSupported(codec.to_owned())),
+            },
+            Err(err) => Err(err),
+        });
+
+    match result {
+        Some(res) => res,
+        None => Ok(Codec::Null),
     }
 }
 
@@ -820,5 +831,28 @@ mod tests {
         assert_eq!(obj, read_obj1);
         assert_eq!(obj, read_obj2);
         assert_eq!(val, expected_value)
+    }
+
+    #[cfg(not(feature = "snappy"))]
+    #[test]
+    fn test_avro_3549_read_not_enabled_codec() {
+        let snappy_compressed_avro = vec![
+            79, 98, 106, 1, 4, 22, 97, 118, 114, 111, 46, 115, 99, 104, 101, 109, 97, 210, 1, 123,
+            34, 102, 105, 101, 108, 100, 115, 34, 58, 91, 123, 34, 110, 97, 109, 101, 34, 58, 34,
+            110, 117, 109, 34, 44, 34, 116, 121, 112, 101, 34, 58, 34, 115, 116, 114, 105, 110,
+            103, 34, 125, 93, 44, 34, 110, 97, 109, 101, 34, 58, 34, 101, 118, 101, 110, 116, 34,
+            44, 34, 110, 97, 109, 101, 115, 112, 97, 99, 101, 34, 58, 34, 101, 120, 97, 109, 112,
+            108, 101, 110, 97, 109, 101, 115, 112, 97, 99, 101, 34, 44, 34, 116, 121, 112, 101, 34,
+            58, 34, 114, 101, 99, 111, 114, 100, 34, 125, 20, 97, 118, 114, 111, 46, 99, 111, 100,
+            101, 99, 12, 115, 110, 97, 112, 112, 121, 0, 213, 209, 241, 208, 200, 110, 164, 47,
+            203, 25, 90, 235, 161, 167, 195, 177, 2, 20, 4, 12, 6, 49, 50, 51, 115, 38, 58, 0, 213,
+            209, 241, 208, 200, 110, 164, 47, 203, 25, 90, 235, 161, 167, 195, 177,
+        ];
+
+        if let Err(err) = Reader::new(snappy_compressed_avro.as_slice()) {
+            assert_eq!("Codec 'snappy' is not supported/enabled", err.to_string());
+        } else {
+            panic!("Expected an error in the reading of the codec!");
+        }
     }
 }

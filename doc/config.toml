@@ -219,6 +219,11 @@ enable = true
   icon = "fab fa-github"
   desc = "Development takes place here!"
 [[params.links.developer]]
+  name = "Issues"
+  url = "https://issues.apache.org/jira/projects/AVRO/issues"
+  icon = "fab fa-jira"
+  desc = "Track bugs and new features"
+[[params.links.developer]]
   name = "Chat with other project developers at Slack"
   url = "https://the-asf.slack.com/"
   icon = "fab fa-slack"
