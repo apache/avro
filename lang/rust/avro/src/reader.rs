@@ -833,6 +833,7 @@ mod tests {
         assert_eq!(val, expected_value)
     }
 
+    #[cfg(not(feature = "snappy"))]
     #[test]
     fn test_avro_3549_read_not_enabled_codec() {
         let snappy_compressed_avro = vec![
