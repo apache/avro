@@ -59,6 +59,7 @@ pub fn assert_logged(expected_message: &str) {
     assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn install() {
     log::set_logger(&*TEST_LOGGER)
         .map(|_| log::set_max_level(LevelFilter::Trace))
