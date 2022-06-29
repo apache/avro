@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
@@ -1092,22 +1093,39 @@ public class GenericData {
    * {@link #compare(Object,Object,Schema)}.
    */
   public int hashCode(Object o, Schema s) {
-    if (o == null)
+    return this.hashCode(o, s, new AtomicInteger(10));
+  }
+
+  /**
+   * Compute a hash code according to a schema, consistent with
+   * {@link #compare(Object,Object,Schema)}.
+   */
+  private int hashCode(Object o, Schema s, AtomicInteger counter) {
+    if (o == null || counter.get() == 0)
       return 0; // incomplete datum
     int hashCode = 1;
     switch (s.getType()) {
     case RECORD:
       for (Field f : s.getFields()) {
+        int value = counter.decrementAndGet();
+        if (value == 0) {
+          return hashCode;
+        }
         if (f.order() == Field.Order.IGNORE)
           continue;
-        hashCode = hashCodeAdd(hashCode, getField(o, f.name(), f.pos()), f.schema());
+        hashCode = hashCodeAdd(hashCode, getField(o, f.name(), f.pos()), f.schema(), counter);
       }
       return hashCode;
     case ARRAY:
       Collection<?> a = (Collection<?>) o;
       Schema elementType = s.getElementType();
-      for (Object e : a)
-        hashCode = hashCodeAdd(hashCode, e, elementType);
+      for (Object e : a) {
+        int value = counter.decrementAndGet();
+        if (value == 0) {
+          return hashCode;
+        }
+        hashCode = hashCodeAdd(hashCode, e, elementType, counter);
+      }
       return hashCode;
     case UNION:
       return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
@@ -1123,8 +1141,8 @@ public class GenericData {
   }
 
   /** Add the hash code for an object into an accumulated hash code. */
-  protected int hashCodeAdd(int hashCode, Object o, Schema s) {
-    return 31 * hashCode + hashCode(o, s);
+  protected int hashCodeAdd(int hashCode, Object o, Schema s, AtomicInteger counter) {
+    return 31 * hashCode + hashCode(o, s, counter);
   }
 
   /**
