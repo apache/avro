@@ -2,7 +2,7 @@
 title: "Java API"
 linkTitle: "Java API"
 weight: 100
-manualLink: ++version++/api/java/
+manualLink: /docs/++version++/api/java/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: ++version++/api/java/
 
 -->
 
-The Javadocs can be found <a href="++version++/api/java/">here</a>.
+The Javadocs can be found <a href="/docs/++version++/api/java/">here</a>.
