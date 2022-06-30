@@ -66,7 +66,11 @@ fn write_read() {
     record.put("a", 12_i32);
     record.put("b", "hello".to_owned());
 
-    let mut writer = Writer::with_codec(&schema, BufWriter::new(Vec::with_capacity(200)), Codec::Null);
+    let mut writer = Writer::with_codec(
+        &schema,
+        BufWriter::new(Vec::with_capacity(200)),
+        Codec::Null,
+    );
     writer.append(record).unwrap();
     writer.flush().unwrap();
     let bytes = writer.into_inner().unwrap().into_inner().unwrap();
