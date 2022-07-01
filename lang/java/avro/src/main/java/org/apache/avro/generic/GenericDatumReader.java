@@ -527,7 +527,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   }
 
-  protected static class ReaderCache {
+  // VisibleForTesting
+  static class ReaderCache {
     private final Map<IdentitySchemaKey, Class> stringClassCache = new ConcurrentHashMap<>();
 
     private final Map<Class, Function<String, Object>> stringCtorCache = new ConcurrentHashMap<>();
@@ -569,7 +570,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   private final ReaderCache readerCache = new ReaderCache(this::findStringClass);
 
-  protected ReaderCache getReaderCache() {
+  // VisibleForTesting
+  ReaderCache getReaderCache() {
     return readerCache;
   }
 

@@ -267,7 +267,8 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         if (accessor.isStringable()) {
           try {
             String asString = (String) read(null, field.schema(), in);
-            accessor.set(record, asString == null ? null
+            accessor.set(record,
+                asString == null ? null : newInstanceFromString(accessor.getField().getType(), asString));
                 : this.getReaderCache().newInstanceFromString(accessor.getField().getType(), asString));
             return;
           } catch (Exception e) {
