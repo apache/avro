@@ -824,7 +824,7 @@ mod test_derive {
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
     struct TestSmartPointers<'a> {
-        a: Box<String>,
+        a: String,
         b: Mutex<Vec<i64>>,
         c: Cow<'a, i32>,
     }
@@ -857,13 +857,13 @@ mod test_derive {
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestSmartPointers::get_schema());
         let test = TestSmartPointers {
-            a: Box::new("hey".into()),
+            a: "hey".into(),
             b: Mutex::new(vec![42]),
             c: Cow::Owned(32),
         };
         // test serde with manual equality for mutex
         let test = serde(test);
-        assert_eq!(Box::new("hey".into()), test.a);
+        assert_eq!("hey", test.a);
         assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
         assert_eq!(Cow::Owned::<i32>(32), test.c);
     }
