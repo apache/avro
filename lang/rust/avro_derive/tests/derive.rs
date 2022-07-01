@@ -823,8 +823,6 @@ mod test_derive {
     }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema)]
-    #[allow(unknown_lints)] // Rust 1.51.0 (MSRV) does not support #[allow(clippy::box_collection)]
-    #[allow(clippy::box_collection)]
     struct TestSmartPointers<'a> {
         a: Box<String>,
         b: Mutex<Vec<i64>>,
