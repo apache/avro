@@ -87,6 +87,8 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
   }
 
   private Path getWorkPathFromCommitter(TaskAttemptContext context) throws IOException {
+    // When Hadoop 2 support is dropped, this method removed to a simple cast
+    // See https://github.com/apache/avro/pull/1431/
     OutputCommitter committer = getOutputCommitter(context);
     try {
       return (Path) committer.getClass().getMethod("getWorkPath").invoke(committer);
