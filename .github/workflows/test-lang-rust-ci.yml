@@ -44,9 +44,6 @@ jobs:
           - beta
           - nightly
           - 1.51.0  # MSRV
-        target:
-          - x86_64-unknown-linux-gnu
-          - wasm32-unknown-unknown
 
     steps:
       - name: Checkout
@@ -74,10 +71,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
           components: rustfmt
-          target: ${{ matrix.target }}
 
       - name: Rust Format
-        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -90,22 +85,19 @@ jobs:
           args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
 
       - name: Rust Test
-        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path lang/rust/Cargo.toml --all-features --target ${{ matrix.target }}
+          args: --manifest-path lang/rust/Cargo.toml --all-features
 
       - name: Rust Test AVRO-3549
-        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path lang/rust/Cargo.toml --target ${{ matrix.target }} test_avro_3549_read_not_enabled_codec
+          args: --manifest-path lang/rust/Cargo.toml test_avro_3549_read_not_enabled_codec
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
-        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
@@ -230,9 +222,6 @@ jobs:
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Install Firefox
-        run: sudo apt-get install firefox
 
       - name: Build the Web Assembly demo app
         run: wasm-pack build wasm-demo
