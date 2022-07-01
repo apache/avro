@@ -21,10 +21,14 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -395,4 +399,36 @@ public class TestSchema {
     assertEquals("Int", nameInt.getQualified("space"));
   }
 
+  @Test(expected = SchemaParseException.class)
+  public void testContentAfterAvsc() throws Exception {
+    Schema.Parser parser = new Schema.Parser();
+    parser.setValidate(true);
+    parser.setValidateDefaults(true);
+    parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS");
+  }
+
+  @Test
+  public void testContentAfterAvscInInputStream() throws Exception {
+    Schema.Parser parser = new Schema.Parser();
+    parser.setValidate(true);
+    parser.setValidateDefaults(true);
+    String avsc = "{\"type\": \"string\"}; DROP TABLE STUDENTS";
+    ByteArrayInputStream is = new ByteArrayInputStream(avsc.getBytes(StandardCharsets.UTF_8));
+    Schema schema = parser.parse(is);
+    assertNotNull(schema);
+  }
+
+  @Test(expected = SchemaParseException.class)
+  public void testContentAfterAvscInFile() throws Exception {
+    File avscFile = Files.createTempFile("testContentAfterAvscInFile", null).toFile();
+    try (FileWriter writer = new FileWriter(avscFile)) {
+      writer.write("{\"type\": \"string\"}; DROP TABLE STUDENTS");
+      writer.flush();
+    }
+
+    Schema.Parser parser = new Schema.Parser();
+    parser.setValidate(true);
+    parser.setValidateDefaults(true);
+    parser.parse(avscFile);
+  }
 }
