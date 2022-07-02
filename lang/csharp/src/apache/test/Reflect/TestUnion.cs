@@ -48,19 +48,105 @@ namespace Avro.Test
         ]
         ";
 
-        public class BaseClass
+        public class BaseClass : IEquatable<BaseClass>
         {
             public string A { get; set; }
+
+            public bool Equals(BaseClass other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return A == other.A;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((BaseClass) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return A != null ? A.GetHashCode() : 0;
+            }
         }
 
-        public class Derived1 : BaseClass
+        public class Derived1 : BaseClass, IEquatable<Derived1>
         {
             public int B { get; set; }
+
+            public bool Equals(Derived1 other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return base.Equals(other) && B == other.B;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Derived1) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (base.GetHashCode() * 397) ^ B;
+                }
+            }
+
+            public static bool operator ==(Derived1 left, Derived1 right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(Derived1 left, Derived1 right)
+            {
+                return !Equals(left, right);
+            }
         }
 
-        public class Derived2 : BaseClass
+        public class Derived2 : BaseClass, IEquatable<Derived2>
         {
             public double C { get; set; }
+
+            public bool Equals(Derived2 other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return base.Equals(other) && C.Equals(other.C);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Derived2) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (base.GetHashCode() * 397) ^ C.GetHashCode();
+                }
+            }
+
+            public static bool operator ==(Derived2 left, Derived2 right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(Derived2 left, Derived2 right)
+            {
+                return !Equals(left, right);
+            }
         }
 
         /// <summary>
@@ -149,7 +235,96 @@ namespace Avro.Test
             }
         }
 
+        public enum EnumMood
+        {
+            Happy,
+            Sad,
+            Cranky,
+            Meh
+        }
+
         [TestCase]
+        public void NullableEnumTest()
+        {
+            var nullableSchema = @"
+            [
+                ""null"",
+                { ""type"" : ""enum"", ""name"" : ""EnumMood"", ""symbols"" :
+                    [
+                        ""Happy"",
+                        ""Sad"",
+                        ""Cranky"",
+                        ""Meh""
+                    ]
+                }
+            ]
+            ";
+
+            var schema = Schema.Parse(nullableSchema);
+            EnumMood? moodWrite = EnumMood.Meh;
+
+            var writer = new ReflectWriter<EnumMood?>(schema);
+            var reader = new ReflectReader<EnumMood?>(schema, schema);
+
+            using (var stream = new MemoryStream(256))
+            {
+                var encoder = new BinaryEncoder(stream);
+                writer.Write(moodWrite, encoder);
+                writer.Write(null, encoder);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                var decoder = new BinaryDecoder(stream);
+                var moodRead = reader.Read(decoder);
+                var moodNull = reader.Read(decoder);
+                Assert.AreEqual(moodWrite, moodRead);
+                Assert.IsNull(moodNull);
+            }
+        }
+
+        [Test]
+        public void NullableArrayTest()
+        {
+            var nullableSchema = @"
+            [
+                ""null"",
+                { ""type"" : ""array"", ""items"" :
+                    {
+                        ""type"" : ""record"", ""name"": ""Derived2"", ""fields"": 
+                        [
+                            { ""name"" : ""A"", ""type"" : ""string""},
+                            { ""name"" : ""C"", ""type"" : ""double""}
+                        ]
+                     }
+                }
+            ]
+            ";
+
+            var schema = Schema.Parse(nullableSchema);
+            var recordsWrite = new List<Derived2>
+            {
+                new Derived2 {A = "derived2", C = 3.14},
+                new Derived2 {A = "derived2.1", C = 42}
+            };
+
+            var writer = new ReflectWriter<List<Derived2>>(schema);
+            var reader = new ReflectReader<List<Derived2>>(schema, schema);
+
+            using (var stream = new MemoryStream(256))
+            {
+                var encoder = new BinaryEncoder(stream);
+                writer.Write(recordsWrite, encoder);
+                writer.Write(null, encoder);
+                stream.Seek(0, SeekOrigin.Begin);
+
+                var decoder = new BinaryDecoder(stream);
+                var recordsRead = reader.Read(decoder);
+                var recordsNull = reader.Read(decoder);
+                Assert.AreEqual(recordsWrite, recordsRead);
+                Assert.IsNull(recordsNull);
+            }
+        }
+
+        [Test]
         public void HeterogeneousTest()
         {
             var heterogeneousSchema = @"
