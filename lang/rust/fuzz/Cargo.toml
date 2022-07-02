@@ -1,0 +1,31 @@
+[package]
+name = "apache-avro-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde = { version = "1", features = ["derive"] }
+
+[dependencies.apache-avro]
+path = "../avro"
+features = ["derive"]
+
+[workspace]
+members = ["."]
+
+[features]
+debug = []
+
+[[bin]]
+name = "roundtrip"
+path = "fuzz_targets/roundtrip.rs"
+test = false
+doc = false
+
+[profile.release]
+debug = true
