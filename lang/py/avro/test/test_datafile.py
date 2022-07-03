@@ -175,7 +175,7 @@ class TestDataFile(unittest.TestCase):
 
             with reader(path) as dfr:
                 self.assertRaises(StopIteration, next, dfr)
-    
+
     def test_skip_data(self):
         """Skip data with method skip_data (DataFileReader)"""
         for codec in CODECS_TO_VALIDATE:
