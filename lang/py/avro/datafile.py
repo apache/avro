@@ -389,9 +389,6 @@ class DataFileReader(_DataFileMetadata):
             codec = avro.codecs.get_codec(self.codec)
             self._datum_decoder = codec.decompress(self.raw_decoder)
 
-        if self.datum_decoder is None:
-            raise avro.errors.DataFileException("DataFile is not ready to read because it has no decoder")
-
     def _skip_sync(self) -> bool:
         """
         Read the length of the sync marker; if it matches the sync marker,
@@ -405,14 +402,21 @@ class DataFileReader(_DataFileMetadata):
 
     def skip_data(self, number: int = 1) -> None:
         """Skip datums in the file"""
+        if self.datum_reader.writers_schema is None:
+            raise avro.errors.DataFileException("Datafile is not ready to skip because it has no writers_schema")
+
         for _ in range(number):
             self._read_block_header()
+            if self.datum_decoder is None:
+                raise avro.errors.DataFileException("DataFile is not ready to read because it has no decoder")
             self.datum_reader.skip_data(self.datum_reader.writers_schema, self.datum_decoder)
             self.block_count -= 1
 
     def __next__(self) -> object:
         """Return the next datum in the file."""
         self._read_block_header()
+        if self.datum_decoder is None:
+            raise avro.errors.DataFileException("DataFile is not ready to read because it has no decoder")
         datum = self.datum_reader.read(self.datum_decoder)
         self.block_count -= 1
         return datum
