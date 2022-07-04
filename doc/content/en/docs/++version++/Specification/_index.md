@@ -3,6 +3,8 @@ title: "Specification"
 linkTitle: "Specification"
 weight: 4
 date: 2021-10-25
+aliases:
+- spec.html
 ---
 
 <!--
