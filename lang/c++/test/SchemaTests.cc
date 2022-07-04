@@ -225,14 +225,14 @@ const char *roundTripSchemas[] = {
     "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f\",\"type\":\"long\"}]}",
 
-    // Custom fields 
-    "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\", \"type\": \"long\",\"extra field\": \"1\"},"
-        "{\"name\": \"f2\", \"type\": \"int\"}]}",
-    "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\", \"type\": \"long\",\"extra field\": \"1\"},"
-        "{\"name\": \"f2\", \"type\": \"int\","
-        "\"extra field1\": \"21\",\"extra field2\": \"22\"}]}",    
+    // Custom fields
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
+        "{\"name\":\"f2\",\"type\":\"int\"}]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
+        "{\"name\":\"f2\",\"type\":\"int\","
+        "\"extra_field1\":\"21\",\"extra_field2\":\"22\"}]}",
 };
 
 const char *malformedLogicalTypes[] = {

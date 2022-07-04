@@ -230,7 +230,7 @@ using NoSize = concepts::NoAttribute<int>;
 using HasSize = concepts::SingleAttribute<int>;
 
 using NodeImplPrimitive = NodeImpl<NoName, NoLeaves, NoLeafNames, MultiAttributes, NoSize>;
-using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, MultiAttributes, NoSize>;
+using NodeImplSymbolic = NodeImpl<HasName, NoLeaves, NoLeafNames, NoAttributes, NoSize>;
 
 using NodeImplRecord = NodeImpl<HasName, MultiLeaves, LeafNames, MultiAttributes, NoSize>;
 using NodeImplEnum = NodeImpl<HasName, NoLeaves, LeafNames, NoAttributes, NoSize>;
@@ -304,7 +304,7 @@ public:
 
     NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
                const LeafNames &fieldsNames,
-               std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, NoAttributes(), NoSize()),
+               std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, MultiAttributes(), NoSize()),
                                                defaultValues(std::move(dv)) {
         leafNameCheck();
     }
@@ -366,7 +366,7 @@ class AVRO_DECL NodeEnum : public NodeImplEnum {
 public:
     NodeEnum() : NodeImplEnum(AVRO_ENUM) {}
 
-    NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize()) {
+    NodeEnum(const HasName &name, const LeafNames &symbols) : NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoAttributes(), NoSize()) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));

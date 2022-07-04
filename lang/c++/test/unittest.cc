@@ -105,7 +105,7 @@ struct TestSchema {
         myenum.addSymbol("two");
         myenum.addSymbol("three");
 
-        bool caught = false;
+        caught = false;
         try {
             myenum.addSymbol("three");
         } catch (Exception &e) {
@@ -435,6 +435,7 @@ struct TestSchema {
     void checkNodeRecordWithCustomField()
     {
         Name recordName("Test");
+        HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
@@ -446,7 +447,7 @@ struct TestSchema {
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
         customFields.add(cf);
 
-        NodeRecord nodeRecordWithCustomField(recordName, fieldValues,
+        NodeRecord nodeRecordWithCustomField(nameConcept, fieldValues,
                                             fieldNames, defaultValues,
                                             customFields);
         std::string expectedJsonWithCustomField =
@@ -461,6 +462,7 @@ struct TestSchema {
     void checkNodeRecordWithoutCustomField()
     {
         Name recordName("Test");
+        HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
@@ -470,7 +472,7 @@ struct TestSchema {
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
 
-        NodeRecord nodeRecordWithoutCustomField(recordName, fieldValues,
+        NodeRecord nodeRecordWithoutCustomField(nameConcept, fieldValues,
                                             fieldNames, defaultValues);
         std::string expectedJsonWithoutCustomField =
         "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "

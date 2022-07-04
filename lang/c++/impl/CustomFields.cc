@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 #include "CustomFields.hh"
-#include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <map>
+#include <memory>
 #include "Exception.hh"
 
 namespace avro {
@@ -39,7 +37,7 @@ Entity CustomFields::getField(const std::string &fieldName) const {
 void CustomFields::addField(const std::string& fieldName,
                             const std::string& fieldValue) {
   addField(fieldName,
-           json::Entity(boost::make_shared<std::string>(fieldValue)));
+           json::Entity(std::make_shared<std::string>(fieldValue)));
 }
 
 void CustomFields::addField(const std::string& fieldName,

@@ -427,7 +427,7 @@ void NodeRecord::printDefaultToJson(const GenericDatum &g, std::ostream &os,
 NodeRecord::NodeRecord(const HasName &name,
                        const MultiLeaves &fields,
                        const LeafNames &fieldsNames,
-                       std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
+                       std::vector<GenericDatum> dv) : NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, MultiAttributes(), NoSize()),
                                                        defaultValues(std::move(dv)) {
     for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
         if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
