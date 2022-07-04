@@ -187,7 +187,7 @@ RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.51.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.54.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
