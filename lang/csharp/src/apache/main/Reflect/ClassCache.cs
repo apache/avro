@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Avro.Reflect
 {
@@ -113,12 +114,21 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Array:
                     return null;
                 case Avro.Schema.Type.Map:
-                    if (!propType.IsGenericType)
+                    var dictionaryType = FindOpenGenericInterface(typeof(IDictionary<,>), propType);
+                    if (dictionaryType != null)
+                    {
+
+                        Type valueType = dictionaryType.GenericTypeArguments[1];
+                        avroType = typeof(IDictionary<,>).MakeGenericType(typeof(string), valueType);
+                    }
+                    else if (propType.GetInterfaces().Contains(typeof(IDictionary)))
+                    {
+                        avroType = typeof(IDictionary);
+                    }
+                    else
                     {
                         return null;
                     }
-                    Type valueType = propType.GenericTypeArguments[1];
-                    avroType = typeof(IDictionary<,>).MakeGenericType(typeof(string), valueType);
                     break;
                 case Avro.Schema.Type.Union:
                     return null;

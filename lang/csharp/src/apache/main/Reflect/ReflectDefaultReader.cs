@@ -33,7 +33,7 @@ namespace Avro.Reflect
     {
         /// <summary>
         /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
-        /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
+        /// type parameter must be a string. Default is System.Collections.Generic.Dictionary&lt;,&gt;
         /// </summary>
         public Type MapType { get => _mapType; set => _mapType = value; }
 

@@ -69,11 +69,11 @@ namespace Avro.Reflect
                     return typeof(IEnumerable).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Map:
                     var dictionaryInterface = FindOpenGenericInterface(typeof(IDictionary<,>), propType);
-
-                    return dictionaryInterface != null
-                        && dictionaryInterface.IsGenericType
-                        && dictionaryInterface.GetGenericTypeDefinition() == typeof(IDictionary<,>)
-                        && dictionaryInterface.GenericTypeArguments[0] == typeof(string);
+                            // IDictionary is needed for writing from SpecificWriter and PreresolvingDatumWriter.
+                            // GenericRecord uses it for mapsEqual, GenericReader and gernicwriter for read/write
+                    return typeof(IDictionary).IsAssignableFrom(propType)
+                           //IDictionary<string, object> is needed for writing from GenericWriter/
+                        && dictionaryInterface != null && dictionaryInterface.GenericTypeArguments[0] == typeof(string);
                 case Avro.Schema.Type.Union:
                     return true;
                 case Avro.Schema.Type.Fixed:

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Avro.IO;
 using Avro.Specific;
 
@@ -150,8 +151,36 @@ namespace Avro.Reflect
             {
                 throw new AvroTypeException("Map is null - use a union for nullable types");
             }
+            if (value as IDictionary != null)
+            {
+                base.WriteMap(schema, value, encoder);
+                return;
+            }
+            var genericDictionary = FindOpenGenericInterface(typeof(IDictionary<,>), value.GetType());
+            if (genericDictionary == null)
+            {
+                throw new AvroTypeException($"Unable to convert to Map.  {value.GetType().Name} does not implement IDictionary or IDicitionary<,>");
+            }
+            encoder.WriteMapStart();
 
-            base.WriteMap(schema, value, encoder);
+            var keysProperty = genericDictionary.GetProperty("Keys");
+            var countProperty = keysProperty.PropertyType.GetProperty("Count");//.GetValue(value);
+            var valueKeys = keysProperty.GetValue(value);
+            var countKeys = (int)countProperty.GetValue(valueKeys);
+            encoder.SetItemCount(countKeys);
+            
+            foreach (var kvp in (value as IEnumerable))
+            {
+                var keyProperty = kvp.GetType().GetProperty("Key");
+                var valueProperty = kvp.GetType().GetProperty("Value");
+
+                var kvpKey = keyProperty.GetValue(kvp);
+                encoder.StartItem();
+                encoder.WriteString(kvpKey.ToString());
+                var kvpValue = valueProperty.GetValue(kvp);
+                Write(schema.ValueSchema, kvpValue, encoder);
+            }
+            encoder.WriteMapEnd();
         }
 
         /// <summary>
@@ -202,6 +231,27 @@ namespace Avro.Reflect
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }
+        }
+        private static Type FindOpenGenericInterface(
+            Type expected,
+            Type actual)
+        {
+            if (actual.IsGenericType &&
+                actual.GetGenericTypeDefinition() == expected)
+            {
+                return actual;
+            }
+
+            Type[] interfaces = actual.GetInterfaces();
+            foreach (Type interfaceType in interfaces)
+            {
+                if (interfaceType.IsGenericType &&
+                    interfaceType.GetGenericTypeDefinition() == expected)
+                {
+                    return interfaceType;
+                }
+            }
+            return null;
         }
     }
 }

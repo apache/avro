@@ -25,14 +25,55 @@ using System.Collections.Generic;
 using System;
 using Avro.Specific;
 using System.Linq;
-
-
+using System.Diagnostics.CodeAnalysis;
 
 namespace Avro.Test
 {
     [TestFixture]
     class TestReflect
     {
+        public class IDictionaryTestClass : IDictionary<string, int>
+        {
+            Dictionary<string, int> _pairs = new Dictionary<string, int>();
+            public int this[string key] { get => _pairs[key]; set => _pairs[key] = value; }
+
+            public ICollection<string> Keys => _pairs.Keys;
+
+            public ICollection<int> Values => _pairs.Values;
+
+            public int Count => _pairs.Count;
+
+            public bool IsReadOnly => throw new NotImplementedException("readonly");
+
+            public void Add(string key, int value) => _pairs.Add(key, value);
+            public void Add(KeyValuePair<string, int> item) => throw new NotImplementedException("add_kvp");
+            public void Clear() => throw new NotImplementedException("clear");
+            public bool Contains(KeyValuePair<string, int> item) => throw new NotImplementedException("contains");
+            public bool ContainsKey(string key) => throw new NotImplementedException("containskey");
+            public void CopyTo(KeyValuePair<string, int>[] array, int arrayIndex) => throw new NotImplementedException("copyto");
+            public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => _pairs.GetEnumerator();
+            public bool Remove(string key) => throw new NotImplementedException("remove");
+            public bool Remove(KeyValuePair<string, int> item) => throw new NotImplementedException("remove_kvp");
+            public bool TryGetValue(string key, out int value) => throw new NotImplementedException("trygetvalue");
+            IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
+            public static implicit operator IDictionaryTestClass(Dictionary<string,int> instance)
+            {
+                IDictionaryTestClass result = new IDictionaryTestClass();
+                foreach (var item in instance)
+                {
+                    result.Add(item.Key, item.Value);
+                }
+                return result;
+            }
+        }
+
+        public class TestClassNestedInheritance : IDictionaryTestClass {}
+
+        public class TestClassWithPropertyTestingInheritance
+        {
+            public TestClassNestedInheritance prop { get; set; }
+        }
+
         public class DictionaryTestClass
         {
             public Dictionary<int, int> p { get; set; }
@@ -62,6 +103,26 @@ namespace Avro.Test
                 ((Dictionary<int, int>)o).ToDictionary(x => x.Key.ToString(), y => y.Value);
         }
 
+        class TestConverterForNestedInheritance : IAvroFieldConverter
+        {
+            public object FromAvroType(object o, Schema s)
+            {
+                TestClassNestedInheritance result = new TestClassNestedInheritance();
+                foreach(var kvp in (Dictionary<string, int>)o)
+                {
+                    result.Add(kvp.Key, kvp.Value);
+                }
+                return result;
+            }
+
+
+            public Type GetAvroType() => typeof(IDictionary<string, int>);
+            public Type GetPropertyType() => typeof(TestClassNestedInheritance);
+            public object ToAvroType(object o, Schema s) =>
+                ((IDictionary<string, int>)o).ToDictionary(x => x.Key.ToString(), y => y.Value);
+        }
+
+
         [TestCase]
         public void TestMapWithConverterSucceeds()
         {
@@ -82,12 +143,49 @@ namespace Avro.Test
         [TestCase]
         public void TestMapWithoutConverterFails()
         {
-            var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"string\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
+            var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"string\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass2\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
             var schema = Schema.Parse(schemaJson);
             var ex = Assert.Throws<AvroException>(() => new ReflectWriter<DictionaryTestClass2>(schema));
             var ex2 = Assert.Throws<AvroException>(() => new ReflectReader<DictionaryTestClass2>(schema, schema));
             Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass2 isn't compatible with Avro schema type Map", ex.Message);
             Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass2 isn't compatible with Avro schema type Map", ex2.Message);
+        }
+
+        public class DictionaryTestClass3
+        {
+            public Hashtable p { get; set; }
+        }
+
+        [TestCase]
+        public void TestHashmapFailsBecauseItDoesntImplmentIDictionaryTKeyTValue()
+        {
+            var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"string\",\"type\":\"map\"},\"name\":\"p\"}],\"type\":\"record\",\"name\":\"DictionaryTestClass3\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
+            var schema = Schema.Parse(schemaJson);            
+            var ex = Assert.Throws<AvroException>(() => new ReflectWriter<DictionaryTestClass3>(schema));
+            Assert.AreEqual("Property p in object Avro.Test.TestReflect+DictionaryTestClass3 isn't compatible with Avro schema type Map", ex.Message);
+
+        }
+
+
+        [TestCase]
+        public void TestConverterForNestedInheritanceSucceeds()
+        {
+            ClassCache.AddDefaultConverter(new TestConverterForNestedInheritance());
+
+            var schemaJson = "{\"fields\":[{\"type\":{\"values\":\"int\",\"type\":\"map\"},\"name\":\"prop\"}],\"type\":\"record\",\"name\":\"TestClassWithTestClassA\",\"namespace\":\"Avro.Test.TestReflect\\u002B\"}";
+            var schema = Schema.Parse(schemaJson);
+
+
+            TestClassWithPropertyTestingInheritance expected = new TestClassWithPropertyTestingInheritance() { prop = new TestClassNestedInheritance() };
+            expected.prop["1"] = 1;
+
+            using Stream stream = serialize(schema, expected);
+            var avroReader = new ReflectReader<TestClassWithPropertyTestingInheritance>(schema, schema);
+            stream.Position = 0;
+            var actual = avroReader.Read(null, new BinaryDecoder(stream));
+
+            CollectionAssert.AreEquivalent(expected.prop, actual.prop);   
+
         }
 
         enum EnumResolutionEnum
