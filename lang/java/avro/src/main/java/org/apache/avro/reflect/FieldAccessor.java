@@ -23,6 +23,10 @@ import java.lang.reflect.Field;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
+/**
+ * Classes that extend this can optionally implement {@link CustomEncoderFieldAccess}
+ * to receive the schema detected during field access.
+ */
 abstract class FieldAccessor {
   FieldAccessor() {
   }

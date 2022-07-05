@@ -121,8 +121,8 @@ class FieldAccessReflect extends FieldAccess {
     }
 
     @Override
-    public FieldAccessor setSchema(Schema schema) {
-      return new ReflectionBasesAccessorCustomEncoded(field, encoding.setSchema(schema));
+    public FieldAccessor withSchema(Schema schema) {
+      return new ReflectionBasesAccessorCustomEncoded(field, encoding.withSchema(schema));
     }
   }
 }

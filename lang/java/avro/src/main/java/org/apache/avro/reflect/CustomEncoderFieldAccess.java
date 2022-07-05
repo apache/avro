@@ -19,14 +19,19 @@ package org.apache.avro.reflect;
 
 import org.apache.avro.Schema;
 
+/**
+ * Exposes the schema detected during field access.
+ *
+ * Classes that extend {@link FieldAccessor} can optionally implement this.
+ */
 public interface CustomEncoderFieldAccess {
 
   /**
-   * Set the schema.
+   * Receives the schema during field access.
    *
    * @param schema the schema.
    * @return the field accessor to be used for this field.
    */
-  FieldAccessor setSchema(Schema schema);
+  FieldAccessor withSchema(Schema schema);
 
 }

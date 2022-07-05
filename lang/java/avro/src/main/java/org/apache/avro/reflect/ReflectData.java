@@ -395,7 +395,7 @@ public class ReflectData extends SpecificData {
       for (Schema.Field avroField : schema.getFields()) {
         FieldAccessor fieldAccessor = byName.get(avroField.name());
         if (fieldAccessor instanceof CustomEncoderFieldAccess) {
-          fieldAccessor = ((CustomEncoderFieldAccess) fieldAccessor).setSchema(avroField.schema());
+          fieldAccessor = ((CustomEncoderFieldAccess) fieldAccessor).withSchema(avroField.schema());
         }
         result[avroField.pos()] = fieldAccessor;
       }

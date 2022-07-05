@@ -148,7 +148,7 @@ public class TestReflectCustomEncoderFieldAccess {
     }
 
     @Override
-    public CustomEncoding<Custom> setSchema(Schema schema) {
+    public CustomEncoding<Custom> withSchema(Schema schema) {
       CustomEncoder encoder = new CustomEncoder();
       encoder.hasV2Field = schema.getField("v2Field") != null;
       return encoder;
