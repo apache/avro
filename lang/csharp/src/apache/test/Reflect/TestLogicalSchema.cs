@@ -63,19 +63,26 @@ namespace Avro.test.Reflect
 
             //Assert
             Assert.NotNull(result);
-            Assert.AreEqual(obj.AvroDecimalNullableProperty, result.AvroDecimalNullableProperty);
+
+            Assert.IsNull(result.AvroDecimalNullableProperty);
             Assert.AreEqual(obj.AvroDecimalProperty, result.AvroDecimalProperty);
-            Assert.AreEqual(obj.GuidNullableProperty, result.GuidNullableProperty);
+
+            Assert.IsNull(result.GuidNullableProperty);
             Assert.AreEqual(obj.GuidProperty, result.GuidProperty);
+
             Assert.IsNull(obj.DateNullableProperty);
             Assert.AreEqual(obj.DateProperty.Date, result.DateProperty);
-            Assert.AreEqual(obj.DateTimeMicrosecondNullableProperty, obj.DateTimeMicrosecondNullableProperty);
-            Assert.AreEqual(obj.DateTimeMicrosecondProperty, obj.DateTimeMicrosecondProperty);
+
+            Assert.IsNull(result.DateTimeMicrosecondNullableProperty);
+            Assert.AreEqual((obj.DateTimeMicrosecondProperty.Ticks / 10 ) * 10, result.DateTimeMicrosecondProperty.Ticks);
+
             Assert.IsNull(result.DateTimeMillisecondNullableProperty);
             Assert.AreEqual((obj.DateTimeMillisecondProperty.Ticks / 10000) * 10000, result.DateTimeMillisecondProperty.Ticks);
-            Assert.AreEqual(obj.TimeSpanMicrosecondNullableProperty, result.TimeSpanMicrosecondNullableProperty);
+
+            Assert.IsNull(result.TimeSpanMicrosecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMicrosecondProperty, result.TimeSpanMicrosecondProperty);
-            Assert.AreEqual(obj.TimeSpanMillisecondNullableProperty, result.TimeSpanMillisecondNullableProperty);
+
+            Assert.IsNull(result.TimeSpanMillisecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMillisecondProperty, result.TimeSpanMillisecondProperty);
         }
 
@@ -116,18 +123,32 @@ namespace Avro.test.Reflect
 
             //Assert
             Assert.NotNull(result);
+
+            Assert.NotNull(result.AvroDecimalNullableProperty);
             Assert.AreEqual(obj.AvroDecimalNullableProperty, result.AvroDecimalNullableProperty);
             Assert.AreEqual(obj.AvroDecimalProperty, result.AvroDecimalProperty);
+
+            Assert.NotNull(result.GuidNullableProperty);
             Assert.AreEqual(obj.GuidNullableProperty, result.GuidNullableProperty);
             Assert.AreEqual(obj.GuidProperty, result.GuidProperty);
+
+            Assert.NotNull(result.DateProperty);
             Assert.AreEqual(obj.DateNullableProperty?.Date, result.DateProperty);
             Assert.AreEqual(obj.DateProperty.Date, result.DateProperty);
-            Assert.AreEqual(obj.DateTimeMicrosecondNullableProperty, obj.DateTimeMicrosecondNullableProperty);
-            Assert.AreEqual(obj.DateTimeMicrosecondProperty, obj.DateTimeMicrosecondProperty);
-            Assert.AreEqual((obj.TimeSpanMicrosecondNullableProperty?.Ticks / 10000) * 10000, result.TimeSpanMicrosecondNullableProperty?.Ticks);
+
+            Assert.NotNull(result.DateTimeMicrosecondNullableProperty);
+            Assert.AreEqual((obj.DateTimeMicrosecondNullableProperty?.Ticks / 10) * 10, result.DateTimeMicrosecondNullableProperty?.Ticks);
+            Assert.AreEqual((obj.DateTimeMicrosecondProperty.Ticks / 10) * 10, result.DateTimeMicrosecondProperty.Ticks);
+
+            Assert.NotNull(result.DateTimeMillisecondNullableProperty);
+            Assert.AreEqual((obj.DateTimeMillisecondNullableProperty?.Ticks / 10000) * 10000, result.DateTimeMillisecondNullableProperty?.Ticks);
             Assert.AreEqual((obj.DateTimeMillisecondProperty.Ticks / 10000) * 10000, result.DateTimeMillisecondProperty.Ticks);
+
+            Assert.NotNull(result.TimeSpanMicrosecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMicrosecondNullableProperty, result.TimeSpanMicrosecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMicrosecondProperty, result.TimeSpanMicrosecondProperty);
+
+            Assert.NotNull(result.TimeSpanMillisecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMillisecondNullableProperty, result.TimeSpanMillisecondNullableProperty);
             Assert.AreEqual(obj.TimeSpanMillisecondProperty, result.TimeSpanMillisecondProperty);
         }
