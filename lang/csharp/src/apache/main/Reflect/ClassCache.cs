@@ -270,7 +270,7 @@ namespace Avro.Reflect
                             }
 
                             var innerType = Nullable.GetUnderlyingType(objType);
-                            if (innerType != null)
+                            if (innerType != null && innerType.IsEnum)
                             {
                                 LoadClassCache(innerType, o);
                             }
