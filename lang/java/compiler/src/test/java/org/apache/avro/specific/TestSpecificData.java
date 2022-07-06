@@ -17,14 +17,36 @@ package org.apache.avro.specific;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+
+import com.sun.source.util.JavacTask;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
@@ -62,6 +84,19 @@ public class TestSpecificData {
     JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager = javac.getStandardFileManager(null, null, null);
     Iterable<? extends JavaFileObject> units = fileManager.getJavaFileObjects("target/foo/Bar.java");
+
+    JavaCompiler.CompilationTask task1 = javac.getTask(null, fileManager, null, null, null, units);
+    JavacTask jcTask = (JavacTask) task1;
+    Iterable<? extends Element> analyze = jcTask.analyze();
+
+    GeneratedCodeController ctrl = new GeneratedCodeController();
+    for (Element el : analyze) {
+      if (el.getKind() == ElementKind.CLASS) {
+        List<String> accept = el.accept(ctrl, 0);
+        Assert.assertTrue(accept.stream().collect(Collectors.joining("\n\t")), accept.isEmpty());
+      }
+    }
+
     javac.getTask(null, fileManager, null, null, null, units).call();
     fileManager.close();
 
@@ -88,6 +123,127 @@ public class TestSpecificData {
     if (ex != null) {
       ex.printStackTrace();
       Assert.fail(ex.getMessage());
+    }
+  }
+
+  static class GeneratedCodeController implements ElementVisitor<List<String>, Integer> {
+
+    @Override
+    public List<String> visit(Element e, Integer integer) {
+      return null;
+    }
+
+    @Override
+    public List<String> visit(Element e) {
+      return this.visit(e, 1);
+    }
+
+    @Override
+    public List<String> visitPackage(PackageElement e, Integer integer) {
+      return e.getEnclosedElements().stream().map((Element sub) -> sub.accept(this, 1)).filter(Objects::nonNull)
+          .flatMap(List::stream).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> visitType(TypeElement e, Integer integer) {
+      List<TypeMirror> interfaces = this.allInterfaces(e);
+
+      List<Method> methods = interfaces.stream().filter(Type.ClassType.class::isInstance)
+          .map(Type.ClassType.class::cast).map((Type.ClassType it) -> it.tsym.asType().toString())
+          .map((String typeName) -> {
+            try {
+              return Thread.currentThread().getContextClassLoader().loadClass(typeName);
+            } catch (ClassNotFoundException ex) {
+              return null;
+            }
+          }).filter(Objects::nonNull).map(Class::getMethods).flatMap(Arrays::stream)
+          .filter((Method m) -> Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers())
+              && !Modifier.isFinal(m.getModifiers()) && m.getDeclaringClass() != Object.class)
+          .collect(Collectors.toList());
+
+      Stream<String> errors = e.getEnclosedElements().stream().filter(Symbol.MethodSymbol.class::isInstance)
+          .map(Symbol.MethodSymbol.class::cast)
+          .filter((Symbol.MethodSymbol declM) -> GeneratedCodeController.findFirst(declM, methods) != null)
+          .filter((Symbol.MethodSymbol declM) -> declM.getAnnotation(Override.class) == null)
+          .map((Symbol.MethodSymbol declM) -> "'" + declM.getReturnType().toString() + " " + declM.name.toString()
+              + "(...)' method doesn't have @Override annotation");
+
+      Stream<String> subError = e.getEnclosedElements().stream().map((Element sub) -> sub.accept(this, 1))
+          .filter(Objects::nonNull).flatMap(List::stream);
+      return Stream.concat(errors, subError).collect(Collectors.toList());
+    }
+
+    private List<TypeMirror> allInterfaces(TypeElement e) {
+      List<TypeMirror> allInterfaces = new ArrayList<>(e.getInterfaces());
+
+      TypeMirror superclass = e.getSuperclass();
+      if (superclass != null && !Objects.equals(superclass.toString(), "java.lang.Object")) {
+        allInterfaces.add(superclass);
+        if (superclass instanceof Type.ClassType) {
+          Symbol.TypeSymbol symbol = ((Type.ClassType) superclass).tsym;
+
+          if (symbol instanceof Symbol.ClassSymbol) {
+            allInterfaces((Symbol.ClassSymbol) symbol);
+          }
+        }
+      }
+      return allInterfaces;
+    }
+
+    private static Method findFirst(Symbol.MethodSymbol ref, List<Method> methods) {
+      return methods.stream().filter((Method m) -> GeneratedCodeController.areMethodSame(ref, m)).findFirst()
+          .orElse(null);
+    }
+
+    private static boolean areMethodSame(Symbol.MethodSymbol declaredMethod, Method interfaceMethod) {
+      boolean res = Objects.equals(declaredMethod.name.toString(), interfaceMethod.getName());
+      if (!res) {
+        return false;
+      }
+
+      Type type = declaredMethod.getReturnType();
+      if (!type.toString().equals(interfaceMethod.getReturnType().getName())) {
+        try {
+          Class<?> declaredReturnedType = Thread.currentThread().getContextClassLoader().loadClass(type.toString());
+          res &= interfaceMethod.getReturnType().isAssignableFrom(declaredReturnedType);
+        } catch (ClassNotFoundException ex) {
+          return false;
+        }
+      }
+      com.sun.tools.javac.util.List<Symbol.VarSymbol> parameters = declaredMethod.getParameters();
+      Class<?>[] parameterTypes = interfaceMethod.getParameterTypes();
+      if (parameters.size() != parameterTypes.length) {
+        return false;
+      }
+      for (int i = 0; i < parameterTypes.length; i++) {
+        res &= areEquivalent(parameters.get(i), parameterTypes[i]);
+      }
+      return res;
+    }
+
+    private static boolean areEquivalent(Symbol.VarSymbol sourceParam, Class<?> typeParam) {
+      Type type = sourceParam.type;
+      return Objects.equals(type.toString(), typeParam.getName());
+    }
+
+    @Override
+    public List<String> visitVariable(VariableElement e, Integer integer) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> visitExecutable(ExecutableElement e, Integer integer) {
+      return null;
+    }
+
+    @Override
+    public List<String> visitTypeParameter(TypeParameterElement e, Integer integer) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> visitUnknown(Element e, Integer integer) {
+      return Collections.emptyList();
     }
   }
 }
