@@ -38,6 +38,8 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -45,8 +47,6 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import com.sun.source.util.JavacTask;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Type;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
@@ -87,6 +87,7 @@ public class TestSpecificData {
 
     JavaCompiler.CompilationTask task1 = javac.getTask(null, fileManager, null, null, null, units);
     JavacTask jcTask = (JavacTask) task1;
+
     Iterable<? extends Element> analyze = jcTask.analyze();
 
     GeneratedCodeController ctrl = new GeneratedCodeController();
@@ -148,9 +149,8 @@ public class TestSpecificData {
     public List<String> visitType(TypeElement e, Integer integer) {
       List<TypeMirror> interfaces = this.allInterfaces(e);
 
-      List<Method> methods = interfaces.stream().filter(Type.ClassType.class::isInstance)
-          .map(Type.ClassType.class::cast).map((Type.ClassType it) -> it.tsym.asType().toString())
-          .map((String typeName) -> {
+      List<Method> methods = interfaces.stream().filter((TypeMirror tm) -> tm.getKind() == TypeKind.DECLARED)
+          .map(TypeMirror::toString).map((String typeName) -> {
             try {
               return Thread.currentThread().getContextClassLoader().loadClass(typeName);
             } catch (ClassNotFoundException ex) {
@@ -161,11 +161,11 @@ public class TestSpecificData {
               && !Modifier.isFinal(m.getModifiers()) && m.getDeclaringClass() != Object.class)
           .collect(Collectors.toList());
 
-      Stream<String> errors = e.getEnclosedElements().stream().filter(Symbol.MethodSymbol.class::isInstance)
-          .map(Symbol.MethodSymbol.class::cast)
-          .filter((Symbol.MethodSymbol declM) -> GeneratedCodeController.findFirst(declM, methods) != null)
-          .filter((Symbol.MethodSymbol declM) -> declM.getAnnotation(Override.class) == null)
-          .map((Symbol.MethodSymbol declM) -> "'" + declM.getReturnType().toString() + " " + declM.name.toString()
+      Stream<String> errors = e.getEnclosedElements().stream()
+          .filter((Element el) -> el.getKind() == ElementKind.METHOD).map(ExecutableElement.class::cast)
+          .filter((ExecutableElement declM) -> GeneratedCodeController.findFirst(declM, methods) != null)
+          .filter((ExecutableElement declM) -> declM.getAnnotation(Override.class) == null)
+          .map((ExecutableElement declM) -> "'" + declM.getReturnType().toString() + " " + declM.getSimpleName()
               + "(...)' method doesn't have @Override annotation");
 
       Stream<String> subError = e.getEnclosedElements().stream().map((Element sub) -> sub.accept(this, 1))
@@ -179,29 +179,30 @@ public class TestSpecificData {
       TypeMirror superclass = e.getSuperclass();
       if (superclass != null && !Objects.equals(superclass.toString(), "java.lang.Object")) {
         allInterfaces.add(superclass);
-        if (superclass instanceof Type.ClassType) {
-          Symbol.TypeSymbol symbol = ((Type.ClassType) superclass).tsym;
 
-          if (symbol instanceof Symbol.ClassSymbol) {
-            allInterfaces((Symbol.ClassSymbol) symbol);
+        if (superclass.getKind() == TypeKind.DECLARED) {
+          final Element element = ((DeclaredType) superclass).asElement();
+
+          if (element instanceof TypeElement) {
+            allInterfaces((TypeElement) element);
           }
         }
       }
       return allInterfaces;
     }
 
-    private static Method findFirst(Symbol.MethodSymbol ref, List<Method> methods) {
+    private static Method findFirst(ExecutableElement ref, List<Method> methods) {
       return methods.stream().filter((Method m) -> GeneratedCodeController.areMethodSame(ref, m)).findFirst()
           .orElse(null);
     }
 
-    private static boolean areMethodSame(Symbol.MethodSymbol declaredMethod, Method interfaceMethod) {
-      boolean res = Objects.equals(declaredMethod.name.toString(), interfaceMethod.getName());
+    private static boolean areMethodSame(ExecutableElement declaredMethod, Method interfaceMethod) {
+      boolean res = Objects.equals(declaredMethod.getSimpleName().toString(), interfaceMethod.getName());
       if (!res) {
         return false;
       }
 
-      Type type = declaredMethod.getReturnType();
+      TypeMirror type = declaredMethod.getReturnType();
       if (!type.toString().equals(interfaceMethod.getReturnType().getName())) {
         try {
           Class<?> declaredReturnedType = Thread.currentThread().getContextClassLoader().loadClass(type.toString());
@@ -210,7 +211,7 @@ public class TestSpecificData {
           return false;
         }
       }
-      com.sun.tools.javac.util.List<Symbol.VarSymbol> parameters = declaredMethod.getParameters();
+      List<? extends VariableElement> parameters = declaredMethod.getParameters();
       Class<?>[] parameterTypes = interfaceMethod.getParameterTypes();
       if (parameters.size() != parameterTypes.length) {
         return false;
@@ -221,9 +222,10 @@ public class TestSpecificData {
       return res;
     }
 
-    private static boolean areEquivalent(Symbol.VarSymbol sourceParam, Class<?> typeParam) {
-      Type type = sourceParam.type;
-      return Objects.equals(type.toString(), typeParam.getName());
+    private static boolean areEquivalent(VariableElement sourceParam, Class<?> typeParam) {
+      // sourceParam.getSimpleName()
+      // Type type = sourceParam.type;
+      return Objects.equals(sourceParam.getSimpleName(), typeParam.getName());
     }
 
     @Override
