@@ -2,7 +2,7 @@
 title: "C++ API"
 linkTitle: "C++ API"
 weight: 102
-manualLink: ++version++/api/c++/html/
+manualLink: /docs/++version++/api/cpp/html/
 ---
 
 <!--
@@ -26,4 +26,4 @@ manualLink: ++version++/api/c++/html/
 
 -->
 
-The C++ API documentation can be found <a href="++version++/api/c++/html/">here</a>.
+The C++ API documentation can be found <a href="/docs/++version++/api/cpp/html/">here</a>.
