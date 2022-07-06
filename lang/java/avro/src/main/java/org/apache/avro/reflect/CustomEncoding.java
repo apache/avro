@@ -49,9 +49,9 @@ public abstract class CustomEncoding<T> {
   }
 
   /**
-   * Receives the schema, giving the concrete encoder implementation an opportunity to
-   * detect schema changes and behave accordingly. Useful for maintaining
-   * backwards compatibility.
+   * Receives the schema, giving the concrete encoder implementation an
+   * opportunity to detect schema changes and behave accordingly. Useful for
+   * maintaining backwards compatibility.
    *
    * @param schema the schema detected during read.
    * @return custom encoding to be used.
