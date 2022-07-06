@@ -269,18 +269,12 @@ namespace Avro.Reflect
                                 LoadClassCache(objType, o);
                             }
 
-                            if (objType.IsGenericType)
+                            var innerType = Nullable.GetUnderlyingType(objType);
+                            if (innerType != null)
                             {
-                                var genericType = objType.GetGenericTypeDefinition();
-                                var isNullable = genericType == typeof(Nullable<>);
-                                var innerType = objType.GetGenericArguments()[0];
-                                if (isNullable && innerType.IsEnum)
-                                {
-                                    LoadClassCache(objType.GetGenericArguments()[0], o);
-                                }
+                                LoadClassCache(innerType, o);
                             }
                         }
-
                     }
                     else
                     {
