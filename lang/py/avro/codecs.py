@@ -39,6 +39,7 @@ import avro.io
 #
 # Constants
 #
+
 STRUCT_CRC32 = struct.Struct(">I")  # big-endian unsigned int
 
 

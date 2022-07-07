@@ -158,9 +158,9 @@ def _iterate_node(node: ValidationNode) -> ValidationNodeGeneratorType:
         yield ValidationNode(*item)
 
 
-#############
-# Iteration #
-#############
+#
+# Iteration
+#
 
 
 def _default_iterator(_) -> ValidationNodeGeneratorType:
@@ -205,12 +205,11 @@ _ITERATORS["error"] = _ITERATORS["request"] = _ITERATORS["record"]
 
 class BinaryDecoder:
     """Read leaf values."""
-
     _reader: IO[bytes]
 
     def __init__(self, reader: IO[bytes]) -> None:
         """
-        reader is a Python object on which we can call read, seek, and tell.
+        Reader is a Python object on which we can call read, seek, and tell.
         """
         self._reader = reader
 
@@ -219,9 +218,7 @@ class BinaryDecoder:
         return self._reader
 
     def read(self, n: int) -> bytes:
-        """
-        Read n bytes.
-        """
+        """Read n bytes."""
         if n < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
         read_bytes = self.reader.read(n)
@@ -230,14 +227,12 @@ class BinaryDecoder:
         return read_bytes
 
     def read_null(self) -> None:
-        """
-        null is written as zero bytes
-        """
+        """Null is written as zero bytes"""
         return None
 
     def read_boolean(self) -> bool:
         """
-        a boolean is written as a single byte
+        A boolean is written as a single byte
         whose value is either 0 (false) or 1 (true).
         """
         return ord(self.read(1)) == 1
@@ -419,7 +414,7 @@ class BinaryEncoder:
 
     def __init__(self, writer: IO[bytes]) -> None:
         """
-        writer is a Python object on which we can call write.
+        Writer is a Python object on which we can call write.
         """
         self._writer = writer
 
@@ -432,14 +427,12 @@ class BinaryEncoder:
         self.writer.write(datum)
 
     def write_null(self, datum: None) -> None:
-        """
-        null is written as zero bytes
-        """
+        """Null is written as zero bytes"""
         pass
 
     def write_boolean(self, datum: bool) -> None:
         """
-        a boolean is written as a single byte
+        A boolean is written as a single byte
         whose value is either 0 (false) or 1 (true).
         """
         self.write(bytearray([bool(datum)]))
@@ -612,7 +605,6 @@ class BinaryEncoder:
 #
 class DatumReader:
     """Deserialize Avro-encoded data into a Python data structure."""
-
     _writers_schema: Optional[avro.schema.Schema]
     _readers_schema: Optional[avro.schema.Schema]
 
@@ -872,7 +864,7 @@ class DatumReader:
         the zero-based position within the union of the schema of its value.
         The value is then encoded per the indicated schema within the union.
         """
-        # schema resolution
+        # Schema resolution
         index_of_schema = int(decoder.read_long())
         if index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
@@ -880,7 +872,7 @@ class DatumReader:
             )
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
-        # read data
+        # Read data
         return self.read_data(selected_writers_schema, readers_schema, decoder)
 
     def skip_union(self, writers_schema: avro.schema.UnionSchema, decoder: BinaryDecoder) -> None:
@@ -913,7 +905,7 @@ class DatumReader:
            writer's schema does not have a field with the same name, then the
            field's value is unset.
         """
-        # schema resolution
+        # Schema resolution
         readers_fields_dict = readers_schema.fields_dict
         read_record = {}
         for field in writers_schema.fields:
@@ -924,7 +916,7 @@ class DatumReader:
             else:
                 self.skip_data(field.type, decoder)
 
-        # fill in default values
+        # Fill in default values
         if len(readers_fields_dict) > len(read_record):
             writers_fields_dict = writers_schema.fields_dict
             for field_name, field in readers_fields_dict.items():
@@ -940,9 +932,7 @@ class DatumReader:
             self.skip_data(field.type, decoder)
 
     def _read_default_value(self, field_schema: avro.schema.Schema, default_value: object) -> object:
-        """
-        Basically a JSON Decoder?
-        """
+        """Basically a JSON Decoder?"""
         if field_schema.type == "null":
             if default_value is None:
                 return None
@@ -993,7 +983,6 @@ class DatumReader:
 
 class DatumWriter:
     """DatumWriter for generic python objects."""
-
     _writers_schema: Optional[avro.schema.Schema]
 
     def __init__(self, writers_schema: Optional[avro.schema.Schema] = None) -> None:

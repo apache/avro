@@ -19,7 +19,6 @@
 
 """Contains Constants for Python Avro"""
 
-
 DATE = "date"
 DECIMAL = "decimal"
 TIMESTAMP_MICROS = "timestamp-micros"
@@ -57,3 +56,8 @@ NAMED_TYPES = (
 )
 
 VALID_TYPES = PRIMITIVE_TYPES + NAMED_TYPES + ("array", "map", "union", "request", "error_union")
+
+INT_MIN_VALUE = -(1 << 31)
+INT_MAX_VALUE = (1 << 31) - 1
+LONG_MIN_VALUE = -(1 << 63)
+LONG_MAX_VALUE = (1 << 63) - 1

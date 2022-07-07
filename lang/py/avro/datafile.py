@@ -22,6 +22,7 @@ Read/Write Avro File Object Containers.
 
 https://avro.apache.org/docs/current/spec.html#Object+Container+Files
 """
+
 import io
 import json
 import warnings
@@ -293,7 +294,6 @@ class DataFileWriter(_DataFileMetadata):
 
 class DataFileReader(_DataFileMetadata):
     """Read files written by DataFileWriter."""
-
     __slots__ = (
         "_datum_decoder",
         "_datum_reader",

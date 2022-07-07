@@ -51,8 +51,16 @@ from typing import Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
-from avro.constants import NAMED_TYPES, PRIMITIVE_TYPES, VALID_TYPES
 from avro.name import Name, Names, validate_basename
+from avro.constants import (
+    NAMED_TYPES,
+    PRIMITIVE_TYPES, 
+    VALID_TYPES, 
+    INT_MAX_VALUE,
+    INT_MIN_VALUE,
+    LONG_MAX_VALUE,
+    LONG_MIN_VALUE,
+)
 
 #
 # Constants
@@ -93,11 +101,6 @@ CANONICAL_FIELD_ORDER = (
     "values",
     "size",
 )
-
-INT_MIN_VALUE = -(1 << 31)
-INT_MAX_VALUE = (1 << 31) - 1
-LONG_MIN_VALUE = -(1 << 63)
-LONG_MAX_VALUE = (1 << 63) - 1
 
 
 def _is_timezone_aware_datetime(dt: datetime.datetime) -> bool:
