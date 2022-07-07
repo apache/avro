@@ -27,7 +27,7 @@ import io
 import json
 import warnings
 from types import TracebackType
-from typing import IO, AnyStr, BinaryIO, MutableMapping, Optional, Type, cast
+from typing import IO, AnyStr, MutableMapping, Optional, Type, cast
 
 import avro.codecs
 import avro.errors

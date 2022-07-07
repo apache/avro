@@ -54,8 +54,8 @@ import avro.errors
 from avro.name import Name, Names, validate_basename
 from avro.constants import (
     NAMED_TYPES,
-    PRIMITIVE_TYPES, 
-    VALID_TYPES, 
+    PRIMITIVE_TYPES,
+    VALID_TYPES,
     INT_MAX_VALUE,
     INT_MIN_VALUE,
     LONG_MAX_VALUE,
@@ -786,7 +786,6 @@ class UnionSchema(EqualByJsonMixin, Schema):
 
     def to_json(self, names=None):
         names = names or Names()
-
         to_dump = []
         for schema in self.schemas:
             to_dump.append(schema.to_json(names))
@@ -795,7 +794,6 @@ class UnionSchema(EqualByJsonMixin, Schema):
 
     def to_canonical_json(self, names=None):
         names = names or Names()
-
         return [schema.to_canonical_json(names) for schema in self.schemas]
 
     def validate(self, datum):
@@ -812,7 +810,6 @@ class ErrorUnionSchema(UnionSchema):
 
     def to_json(self, names=None):
         names = names or Names()
-
         to_dump = []
         for schema in self.schemas:
             # Don't print the system error schema
@@ -1209,7 +1206,5 @@ def parse(json_string: str, validate_enum_symbols: bool = True) -> Schema:
 
 
 def from_path(path: Union[Path, str], validate_enum_symbols: bool = True) -> Schema:
-    """
-    Constructs the Schema from a path to an avsc (json) file.
-    """
+    """Constructs the Schema from a path to an avsc (json) file."""
     return parse(Path(path).read_text(), validate_enum_symbols)

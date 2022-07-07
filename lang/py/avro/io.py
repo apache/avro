@@ -91,7 +91,6 @@ import struct
 import warnings
 from typing import (
     IO,
-    Deque,
     Generator,
     Iterable,
     List,
@@ -295,12 +294,12 @@ class BinaryDecoder:
             datum = bytearray([modified_first_byte]) + datum[1:]
             for offset in range(size):
                 unscaled_datum <<= 8
-                unscaled_datum += ord(datum[offset : 1 + offset])
+                unscaled_datum += ord(datum[offset: 1 + offset])
             unscaled_datum += pow(-2, (size * 8) - 1)
         else:
             for offset in range(size):
                 unscaled_datum <<= 8
-                unscaled_datum += ord(datum[offset : 1 + offset])
+                unscaled_datum += ord(datum[offset: 1 + offset])
 
         original_prec = decimal.getcontext().prec
         try:
