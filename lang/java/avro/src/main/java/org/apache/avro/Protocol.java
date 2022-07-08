@@ -291,7 +291,7 @@ public class Protocol extends JsonProperties {
       this.name = name.substring(lastDot) + 1;
       this.namespace = name.substring(0, lastDot);
     }
-    if ("".equals(this.namespace)) {
+    if (this.namespace != null && this.namespace.isEmpty()) {
       this.namespace = null;
     }
     types.space(this.namespace);
