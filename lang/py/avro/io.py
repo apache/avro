@@ -291,16 +291,16 @@ class BinaryDecoder:
         msb = struct.unpack("!b", datum[0:1])[0]
         leftmost_bit = (msb >> 7) & 1
         if leftmost_bit == 1:
-            modified_first_byte = ord(datum[0: 1]) ^ (1 << 7)
+            modified_first_byte = ord(datum[0:1]) ^ (1 << 7)
             datum = bytearray([modified_first_byte]) + datum[1:]
             for offset in range(size):
                 unscaled_datum <<= 8
-                unscaled_datum += ord(datum[offset: 1 + offset])
+                unscaled_datum += ord(datum[offset : 1 + offset])
             unscaled_datum += pow(-2, (size * 8) - 1)
         else:
             for offset in range(size):
                 unscaled_datum <<= 8
-                unscaled_datum += ord(datum[offset: 1 + offset])
+                unscaled_datum += ord(datum[offset : 1 + offset])
 
         original_prec = decimal.getcontext().prec
         try:
