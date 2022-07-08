@@ -204,11 +204,12 @@ _ITERATORS["error"] = _ITERATORS["request"] = _ITERATORS["record"]
 
 class BinaryDecoder:
     """Read leaf values."""
+
     _reader: IO[bytes]
 
     def __init__(self, reader: IO[bytes]) -> None:
         """
-        Reader is a Python object on which we can call read, seek, and tell.
+        `reader` is a Python object on which we can call `read`, seek, and tell.
         """
         self._reader = reader
 
@@ -290,7 +291,7 @@ class BinaryDecoder:
         msb = struct.unpack("!b", datum[0:1])[0]
         leftmost_bit = (msb >> 7) & 1
         if leftmost_bit == 1:
-            modified_first_byte = ord(datum[0:1]) ^ (1 << 7)
+            modified_first_byte = ord(datum[0: 1]) ^ (1 << 7)
             datum = bytearray([modified_first_byte]) + datum[1:]
             for offset in range(size):
                 unscaled_datum <<= 8
@@ -310,9 +311,7 @@ class BinaryDecoder:
         return scaled_datum
 
     def read_bytes(self) -> bytes:
-        """
-        Bytes are encoded as a long followed by that many bytes of data.
-        """
+        """Bytes are encoded as a long followed by that many bytes of data."""
         return self.read(self.read_long())
 
     def read_utf8(self) -> str:
@@ -337,7 +336,6 @@ class BinaryDecoder:
         value, seconds = divmod(value, 60)
         value, minutes = divmod(value, 60)
         hours = value
-
         return datetime.time(hour=hours, minute=minutes, second=seconds, microsecond=microseconds)
 
     def read_time_millis_from_int(self) -> datetime.time:
@@ -413,7 +411,7 @@ class BinaryEncoder:
 
     def __init__(self, writer: IO[bytes]) -> None:
         """
-        Writer is a Python object on which we can call write.
+        `writer` is a Python object on which we can call `write`.
         """
         self._writer = writer
 
@@ -496,9 +494,7 @@ class BinaryEncoder:
             self.write(bytearray([bits_to_write & 0xFF]))
 
     def write_decimal_fixed(self, datum: decimal.Decimal, scale: int, size: int) -> None:
-        """
-        Decimal in fixed are encoded as size of fixed bytes.
-        """
+        """Decimal in fixed are encoded as size of fixed bytes."""
         sign, digits, exp = datum.as_tuple()
         if (-1 * exp) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
@@ -537,9 +533,7 @@ class BinaryEncoder:
                 self.write(bytearray([bits_to_write & 0xFF]))
 
     def write_bytes(self, datum: bytes) -> None:
-        """
-        Bytes are encoded as a long followed by that many bytes of data.
-        """
+        """Bytes are encoded as a long followed by that many bytes of data."""
         self.write_long(len(datum))
         self.write(struct.pack(f"{len(datum)}s", datum))
 
@@ -604,6 +598,7 @@ class BinaryEncoder:
 #
 class DatumReader:
     """Deserialize Avro-encoded data into a Python data structure."""
+
     _writers_schema: Optional[avro.schema.Schema]
     _readers_schema: Optional[avro.schema.Schema]
 
@@ -982,6 +977,7 @@ class DatumReader:
 
 class DatumWriter:
     """DatumWriter for generic python objects."""
+
     _writers_schema: Optional[avro.schema.Schema]
 
     def __init__(self, writers_schema: Optional[avro.schema.Schema] = None) -> None:

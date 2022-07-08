@@ -294,6 +294,7 @@ class DataFileWriter(_DataFileMetadata):
 
 class DataFileReader(_DataFileMetadata):
     """Read files written by DataFileWriter."""
+
     __slots__ = (
         "_datum_decoder",
         "_datum_reader",
