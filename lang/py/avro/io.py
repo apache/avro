@@ -89,16 +89,7 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import (
-    IO,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
 
 import avro.constants
 import avro.errors
@@ -209,7 +200,7 @@ class BinaryDecoder:
 
     def __init__(self, reader: IO[bytes]) -> None:
         """
-        `reader` is a Python object on which we can call `read`, seek, and tell.
+        `reader` is a Python object on which we can call `read`, `seek`, and `tell`.
         """
         self._reader = reader
 

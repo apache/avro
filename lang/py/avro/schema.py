@@ -51,16 +51,16 @@ from typing import Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
-from avro.name import Name, Names, validate_basename
 from avro.constants import (
-    NAMED_TYPES,
-    PRIMITIVE_TYPES,
-    VALID_TYPES,
     INT_MAX_VALUE,
     INT_MIN_VALUE,
     LONG_MAX_VALUE,
     LONG_MIN_VALUE,
+    NAMED_TYPES,
+    PRIMITIVE_TYPES,
+    VALID_TYPES,
 )
+from avro.name import Name, Names, validate_basename
 
 #
 # Constants
