@@ -114,7 +114,7 @@ impl<R: Read> Block<R> {
         //    We need to resize to ensure that the buffer len is safe to read `n` elements.
         //
         // TODO: Figure out a way to avoid having to truncate for the second case.
-        self.buf.resize(n, 0);
+        self.buf.resize(util::safe_len(n)?, 0);
         self.reader
             .read_exact(&mut self.buf)
             .map_err(Error::ReadIntoBuf)?;
@@ -179,6 +179,10 @@ impl<R: Read> Block<R> {
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
         let item = from_avro_datum(&self.writer_schema, &mut block_bytes, read_schema)?;
+        if b_original == block_bytes.len() {
+            // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
+            return Err(Error::ReadBlock);
+        }
         self.buf_idx += b_original - block_bytes.len();
         self.message_count -= 1;
         Ok(Some(item))
