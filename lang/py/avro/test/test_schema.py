@@ -713,6 +713,20 @@ class TestMisc(unittest.TestCase):
         except avro.errors.InvalidName:  # pragma: no coverage
             self.fail("When enum symbol validation is disabled, an invalid symbol should not raise InvalidName.")
 
+    def test_parse_duplicate_symbol(self):
+        duplicate_symbol_schema = json.dumps({"type": "enum", "name": "AVRO3573", "symbols": ["A", "A", "B", "C", "D"]})
+        with self.assertRaisesRegex(
+            avro.errors.AvroException, r"Duplicate symbol: \[\'A\'\]", msg="When enum symbol has a duplicate, AvroException should raise."
+        ):
+            avro.schema.parse(duplicate_symbol_schema)
+
+    def test_parse_duplicate_symbols(self):
+        duplicate_symbols_schema = json.dumps({"type": "enum", "name": "AVRO3573", "symbols": ["A", "A", "B", "C", "C", "D"]})
+        with self.assertRaisesRegex(
+            avro.errors.AvroException, r"Duplicate symbols: \[\'A\', \'C\'\]", msg="When enum symbols have duplicates, AvroException should raise."
+        ):
+            avro.schema.parse(duplicate_symbols_schema)
+
 
 class SchemaParseTestCase(unittest.TestCase):
     """Enable generating parse test cases over all the valid and invalid example schema."""
