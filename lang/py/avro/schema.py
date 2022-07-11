@@ -573,9 +573,9 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             duplicate_symbols = {symbol for symbol in symbols if symbols.count(symbol) > 1}
 
             if len(duplicate_symbols) == 1:
-                raise avro.errors.AvroException(f"Duplicate symbol: {duplicate_symbols}")
+                raise avro.errors.AvroException(f"Duplicate symbol: {list(duplicate_symbols)}")
             else:
-                raise avro.errors.AvroException(f"Duplicate symbols: {duplicate_symbols}")
+                raise avro.errors.AvroException(f"Duplicate symbols: {list(duplicate_symbols)}")
 
         # Call parent ctor
         NamedSchema.__init__(self, "enum", name, namespace, names, other_props)
