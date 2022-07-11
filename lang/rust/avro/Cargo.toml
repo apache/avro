@@ -84,7 +84,7 @@ rand = { default-features = false, version = "0.8.5", features = ["default"] }
 [dev-dependencies]
 anyhow = { default-features = false, version = "1.0.57", features = ["std"] }
 apache-avro-test-helper = { default-features = false, version = "0.1.0", path = "../avro_test_helper" }
-criterion = { default-features = false, version = "0.3.5" }
+criterion = { default-features = false, version = "0.3.6" }
 hex-literal = { default-features = false, version = "0.3.4" }
 md-5 = { default-features = false, version = "0.10.1" }
 pretty_assertions = { default-features = false, version = "1.2.1", features = ["std"] }
