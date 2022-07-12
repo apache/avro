@@ -27,6 +27,7 @@ edition = "2018"
 keywords = ["avro", "data", "serialization", "wasm", "web assembly"]
 categories = ["encoding"]
 documentation = "https://docs.rs/apache-avro"
+publish = false
 
 
 [lib]
