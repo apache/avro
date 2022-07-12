@@ -19,6 +19,7 @@
 name = "apache-avro-test-helper"
 version = "0.1.0"
 edition = "2018"
+publish = false
 description = "Avro test helper. This crate is not supposed to be published!"
 
 [dependencies]
