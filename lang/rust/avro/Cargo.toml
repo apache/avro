@@ -63,7 +63,7 @@ libflate = { default-features = false, version = "1.2.0" }
 log = { default-features = false, version = "0.4.17" }
 num-bigint = { default-features = false, version = "0.4.3" }
 regex = { default-features = false, version = "1.5.6", features = ["std"] }
-serde = { default-features = false, version = "1.0.137", features = ["derive"] }
+serde = { default-features = false, version = "1.0.139", features = ["derive"] }
 serde_json = { default-features = false, version = "1.0.82", features = ["std"] }
 snap = { default-features = false, version = "1.0.5", optional = true }
 strum = { default-features = false, version = "0.24.1" }
