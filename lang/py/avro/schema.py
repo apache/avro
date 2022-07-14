@@ -303,7 +303,7 @@ class DecimalLogicalSchema(LogicalSchema):
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Max is {max_precision}.")
 
         if not isinstance(scale, int) or scale < 0:
-            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer.")
+            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer.")
 
         if scale > precision:
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Cannot be greater than precision {precision}.")
@@ -1132,7 +1132,7 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                 size = json_data.get("size")
                 if logical_type == "decimal":
                     precision = json_data.get("precision")
-                    scale = 0 if json_data.get("scale") is None else json_data.get("scale")
+                    scale = json_data.get("scale", 0)
                     try:
                         return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
                     except avro.errors.IgnoredLogicalType as warning:

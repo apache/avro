@@ -1,7 +1,6 @@
-
 ---
-title: "Documentation for master branch"
-linkTitle: "Next (not yet released)"
+title: "Apache Avro™ ++version++ Documentation"
+linkTitle: "++version++"
 type: docs
 weight: 10
 ---

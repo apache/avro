@@ -106,9 +106,9 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             buffer.extend_from_slice(&slice);
         }
         Value::Uuid(uuid) => encode_bytes(
-            #[allow(unknown_lints)] // for Rust 1.51.0
-            #[allow(clippy::unnecessary_to_owned)]
             // we need the call .to_string() to properly convert ASCII to UTF-8
+            #[allow(unknown_lints)] // for Rust 1.54.0
+            #[allow(clippy::unnecessary_to_owned)]
             &uuid.to_string(),
             buffer,
         ),

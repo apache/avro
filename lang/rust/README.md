@@ -526,7 +526,7 @@ fn main() -> Result<(), Error> {
     let mut record = Record::new(writer.schema()).unwrap();
     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
-    record.put("uuid", uuid::Uuid::new_v4());
+    record.put("uuid", uuid::Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
     record.put("date", Value::Date(1));
     record.put("time_millis", Value::TimeMillis(2));
     record.put("time_micros", Value::TimeMicros(3));
@@ -641,6 +641,10 @@ let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).u
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
 ```
+
+## Minimal supported Rust version
+
+1.54.0
 
 ## License
 This project is licensed under [Apache License 2.0](https://github.com/apache/avro/blob/master/LICENSE.txt).

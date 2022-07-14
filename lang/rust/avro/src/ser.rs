@@ -285,7 +285,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeSeq for SeqSerializer {
+impl ser::SerializeSeq for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
@@ -303,7 +303,7 @@ impl<'a> ser::SerializeSeq for SeqSerializer {
     }
 }
 
-impl<'a> ser::SerializeTuple for SeqSerializer {
+impl ser::SerializeTuple for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 

@@ -40,17 +40,22 @@ namespace Avro.Test
             public EnumResolutionEnum enumType { get; set; }
         }
 
+        class NullableEnumResolutionRecord
+        {
+            public EnumResolutionEnum? enumType { get; set; }
+        }
+
         [TestCase]
         public void TestEnumResolution()
         {
             Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
-                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
+                                               "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
 
             var testRecord = new EnumResolutionRecord();
 
             Schema readerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
-                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
-                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");;
+                                               "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
+                                               " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");;
             testRecord.enumType = EnumResolutionEnum.SECOND;
 
             // serialize
@@ -58,6 +63,28 @@ namespace Avro.Test
 
             // deserialize
             var rec2 = deserialize<EnumResolutionRecord>(stream, writerSchema, readerSchema);
+            Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
+        }
+
+        [TestCase]
+        public void TestNullableEnumResolution()
+        {
+            Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
+                                        "\"fields\":[{\"name\":\"enumType\",\"type\":[\"null\", { \"type\": \"enum\", \"name\": " +
+                                        "\"EnumType\",\"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]}] }]}");
+
+            var testRecord = new NullableEnumResolutionRecord();
+
+            Schema readerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
+                                               "\"fields\":[{\"name\":\"enumType\",\"type\":[\"null\", { \"type\": \"enum\", \"name\": " +
+                                               "\"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]}] }]}");
+            testRecord.enumType = EnumResolutionEnum.SECOND;
+
+            // serialize
+            var stream = serialize(writerSchema, testRecord);
+
+            // deserialize
+            var rec2 = deserialize<NullableEnumResolutionRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
         }
 
