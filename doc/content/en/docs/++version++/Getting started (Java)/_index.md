@@ -194,7 +194,7 @@ $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain
 ```
 
 ### Beta feature: Generating faster code
-In {{< avro_version >}} release we have introduced a new approach to generating code that speeds up decoding of objects by more than 10% and encoding by more than 30% (future performance enhancements are underway). To ensure a smooth introduction of this change into production systems, this feature is controlled by a feature flag, the system property org.apache.avro.specific.use_custom_coders. In this first release, this feature is off by default. To turn it on, set the system flag to true at runtime. In the sample above, for example, you could enable the fater coders as follows:
+In release 1.9.0, we introduced a new approach to generating code that speeds up decoding of objects by more than 10% and encoding by more than 30% (future performance enhancements are underway). To ensure a smooth introduction of this change into production systems, this feature is controlled by a feature flag, the system property org.apache.avro.specific.use_custom_coders. In this first release, this feature is off by default. To turn it on, set the system flag to true at runtime. In the sample above, for example, you could enable the fater coders as follows:
 
 $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
     -Dorg.apache.avro.specific.use_custom_coders=true

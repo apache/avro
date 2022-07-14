@@ -2,6 +2,7 @@
 title: "Privacy policy"
 linkTitle: "Privacy policy"
 weight: 3
+manualLink: https://hadoop.apache.org/privacy_policy.html
 ---
 
 <!--

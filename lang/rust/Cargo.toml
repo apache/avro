@@ -19,5 +19,9 @@
 members = [
     "avro_test_helper",
     "avro_derive",
-    "avro"
+    "avro",
+    "wasm-demo"
+]
+exclude = [
+    "fuzz"
 ]
