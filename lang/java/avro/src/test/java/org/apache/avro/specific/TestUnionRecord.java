@@ -116,15 +116,18 @@ public class TestUnionRecord extends SpecificRecordBase implements SpecificRecor
     this.amount = amount;
   }
 
+  @Override
   public SpecificData getSpecificData() {
     return MODEL$;
   }
 
+  @Override
   public org.apache.avro.Schema getSchema() {
     return SCHEMA$;
   }
 
   // Used by DatumWriter. Applications should not call.
+  @Override
   public Object get(int field$) {
     switch (field$) {
     case 0:
@@ -135,6 +138,7 @@ public class TestUnionRecord extends SpecificRecordBase implements SpecificRecor
   }
 
   // Used by DatumReader. Applications should not call.
+  @Override
   @SuppressWarnings(value = "unchecked")
   public void put(int field$, Object value$) {
     switch (field$) {
