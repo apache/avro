@@ -27,6 +27,7 @@ edition = "2018"
 keywords = ["avro", "data", "serialization", "wasm", "web assembly"]
 categories = ["encoding"]
 documentation = "https://docs.rs/apache-avro"
+publish = false
 
 
 [lib]
@@ -34,7 +35,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 apache-avro = { path = "../avro" }
-serde = { default-features = false, version = "1.0.137", features = ["derive"] }
+serde = { default-features = false, version = "1.0.139", features = ["derive"] }
 wasm-bindgen = "0.2.63"
 
 [dev-dependencies]

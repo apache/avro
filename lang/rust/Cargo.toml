@@ -22,3 +22,6 @@ members = [
     "avro",
     "wasm-demo"
 ]
+exclude = [
+    "fuzz"
+]
