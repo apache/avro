@@ -25,6 +25,9 @@
 
 namespace avro {
 
+// CustomFields class stores avro custom attributes.
+// Each field is represented by a unique name and value.
+// User is supposed to create CustomFields object and then add it to Schema.
 class AVRO_DECL CustomFields {
   public:
     // Retrieves the custom field json entity for that fieldName, returns an
