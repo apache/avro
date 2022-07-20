@@ -43,6 +43,7 @@
     <jetty.version>9.4.48.v20220622</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
+    <junit5.version>5.8.2</junit5.version>
     <netty.version>4.1.79.Final</netty.version>
     <protobuf.version>3.21.2</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
@@ -595,6 +596,12 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit5.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
