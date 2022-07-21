@@ -18,7 +18,9 @@
 package org.apache.avro.io.parsing;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -43,7 +45,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * schema <tt>sc</tt>. If there is already an entry for the given schema in the
    * given map <tt>seen</tt> then that entry is returned. Otherwise a new symbol
    * is generated and an entry is inserted into the map.
-   * 
+   *
    * @param sc   The schema for which the start symbol is required
    * @param seen A map of schema to symbol mapping done so far.
    * @return The start symbol for the schema
@@ -74,25 +76,40 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
       LitS wsc = new LitS(sc);
       Symbol rresult = seen.get(wsc);
       if (rresult == null) {
-        Symbol[] production = new Symbol[sc.getFields().size() * 3 + 2];
-        rresult = Symbol.seq(production);
-        seen.put(wsc, rresult);
-
-        int i = production.length;
-        int n = 0;
-        production[--i] = Symbol.RECORD_START;
-        for (Field f : sc.getFields()) {
-          production[--i] = Symbol.fieldAdjustAction(n, f.name(), f.aliases());
-          production[--i] = generate(f.schema(), seen);
-          production[--i] = Symbol.FIELD_END;
-          n++;
+        if (sc.hasChild()) {
+          this.generateRecord(sc, seen); // put root before to avoid infinite loop
+          final List<Schema> subs = sc.visitHierarchy().collect(Collectors.toList());
+          final Symbol alternatives = alternatives(subs, seen);
+          rresult = Symbol.seq(alternatives, Symbol.EXTENDS);
+          seen.put(wsc, rresult);
+          return rresult;
+        } else {
+          rresult = this.generateRecord(sc, seen);
         }
-        production[--i] = Symbol.RECORD_END;
       }
       return rresult;
     }
     default:
       throw new RuntimeException("Unexpected schema type");
     }
+  }
+
+  private Symbol generateRecord(Schema sc, Map<LitS, Symbol> seen) {
+    Symbol[] production = new Symbol[sc.getFields().size() * 3 + 2];
+    Symbol rresult = Symbol.seq(production);
+    LitS wsc = new LitS(sc);
+    seen.put(wsc, rresult);
+
+    int i = production.length;
+    int n = 0;
+    production[--i] = Symbol.RECORD_START;
+    for (Field f : sc.getFields()) {
+      production[--i] = Symbol.fieldAdjustAction(n, f.name(), f.aliases());
+      production[--i] = generate(f.schema(), seen);
+      production[--i] = Symbol.FIELD_END;
+      n++;
+    }
+    production[--i] = Symbol.RECORD_END;
+    return rresult;
   }
 }

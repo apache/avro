@@ -36,7 +36,7 @@ import org.apache.avro.util.Utf8;
  * and configure.
  * <p/>
  * ValidatingDecoder is not thread-safe.
- * 
+ *
  * @see Decoder
  * @see DecoderFactory
  */
@@ -238,6 +238,15 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     int result = in.readIndex();
+    parser.pushSymbol(top.getSymbol(result));
+    return result;
+  }
+
+  @Override
+  public int readExtends() throws IOException {
+    parser.advance(Symbol.EXTENDS);
+    Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
+    int result = in.readExtends();
     parser.pushSymbol(top.getSymbol(result));
     return result;
   }

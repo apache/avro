@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Resolver;
@@ -127,27 +128,40 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       }
       return Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(), adjs), Symbol.ENUM);
 
+    } else if (action instanceof Resolver.WriterExtends) {
+      Symbol result = seen.get(action);
+      if (result == null) {
+        final Resolver.WriterExtends we = (Resolver.WriterExtends) action;
+        result = simpleRecordGen(we.reader, seen, true);
+        seen.put(action, result);
+      }
+      return result;
     } else if (action instanceof Resolver.RecordAdjust) {
       Symbol result = seen.get(action);
       if (result == null) {
         final Resolver.RecordAdjust ra = (Resolver.RecordAdjust) action;
-        int defaultCount = ra.readerOrder.length - ra.firstDefault;
-        int count = 1 + ra.fieldActions.length + 3 * defaultCount;
-        final Symbol[] production = new Symbol[count];
-        result = Symbol.seq(production);
-        seen.put(action, result);
-        production[--count] = Symbol.fieldOrderAction(ra.readerOrder);
+        if (ra.reader.hasChild()) {
+          result = simpleRecordGen(ra.reader, seen, true);
+          seen.put(action, result);
+        } else {
+          int defaultCount = ra.readerOrder.length - ra.firstDefault;
+          int count = 1 + ra.fieldActions.length + 3 * defaultCount;
+          final Symbol[] production = new Symbol[count];
+          result = Symbol.seq(production);
+          seen.put(action, result);
+          production[--count] = Symbol.fieldOrderAction(ra.readerOrder);
 
-        final Resolver.Action[] actions = ra.fieldActions;
-        for (Resolver.Action wfa : actions) {
-          production[--count] = generate(wfa, seen);
-        }
-        for (int i = ra.firstDefault; i < ra.readerOrder.length; i++) {
-          final Schema.Field rf = ra.readerOrder[i];
-          byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
-          production[--count] = Symbol.defaultStartAction(bb);
-          production[--count] = simpleGen(rf.schema(), seen);
-          production[--count] = Symbol.DEFAULT_END_ACTION;
+          final Resolver.Action[] actions = ra.fieldActions;
+          for (Resolver.Action wfa : actions) {
+            production[--count] = generate(wfa, seen);
+          }
+          for (int i = ra.firstDefault; i < ra.readerOrder.length; i++) {
+            final Schema.Field rf = ra.readerOrder[i];
+            byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
+            production[--count] = Symbol.defaultStartAction(bb);
+            production[--count] = simpleGen(rf.schema(), seen);
+            production[--count] = Symbol.DEFAULT_END_ACTION;
+          }
         }
       }
       return result;
@@ -203,14 +217,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     case RECORD: {
       Symbol result = seen.get(s);
       if (result == null) {
-        final Symbol[] production = new Symbol[s.getFields().size() + 1];
-        result = Symbol.seq(production);
-        seen.put(s, result);
-        int i = production.length;
-        production[--i] = Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
-        for (Field f : s.getFields()) {
-          production[--i] = simpleGen(f.schema(), seen);
-        }
+        result = simpleRecordGen(s, seen, true);
+
         // FieldOrderAction is needed even though the field-order hasn't changed,
         // because the _reader_ doesn't know the field order hasn't changed, and
         // thus it will probably call {@ ResolvingDecoder.fieldOrder} to find out.
@@ -221,6 +229,35 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     default:
       throw new IllegalArgumentException("Unexpected schema: " + s);
     }
+  }
+
+  private Symbol simpleRecordGen(Schema s, Map<Object, Symbol> seen, boolean exploreHierarchy) {
+    if (s.hasChild() && exploreHierarchy) {
+      seen.put(s, Symbol.EXTENDS);
+      final List<Schema> subs = s.visitHierarchy().collect(Collectors.toList());
+      final Symbol[] symbols = new Symbol[subs.size()];
+      final String[] labels = new String[subs.size()];
+      int i = 0;
+      for (Schema b : s.visitHierarchy().collect(Collectors.toList())) {
+        symbols[i] = simpleRecordGen(b, seen, false);
+        labels[i++] = b.getFullName();
+      }
+      Symbol seq = Symbol.seq(Symbol.alt(symbols, labels), Symbol.EXTENDS);
+      seen.put(s, seq);
+      return seq;
+    } else {
+      final Symbol[] production = new Symbol[s.getFields().size() + 1];
+      Symbol result = Symbol.seq(production);
+      seen.put(s, result);
+
+      int i = production.length;
+      production[--i] = Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
+      for (Field f : s.getFields()) {
+        production[--i] = simpleGen(f.schema(), seen);
+      }
+      return result;
+    }
+
   }
 
   private static EncoderFactory factory = new EncoderFactory().configureBufferSize(32);

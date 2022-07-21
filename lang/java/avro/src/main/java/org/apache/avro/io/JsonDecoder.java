@@ -451,6 +451,26 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   }
 
   @Override
+  public int readExtends() throws IOException {
+    advance(Symbol.EXTENDS);
+    Symbol.Alternative a = (Symbol.Alternative) parser.popSymbol();
+
+    final String label;
+    if (in.getCurrentToken() == JsonToken.START_OBJECT && in.nextToken() == JsonToken.FIELD_NAME) {
+      label = in.getText();
+      in.nextToken();
+      parser.pushSymbol(Symbol.EXTENDS_END);
+    } else {
+      throw error("start-extends");
+    }
+    int n = a.findLabel(label);
+    if (n < 0)
+      throw new AvroTypeException("Unknown extension " + label);
+    parser.pushSymbol(a.getSymbol(n));
+    return n;
+  }
+
+  @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
