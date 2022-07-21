@@ -2032,7 +2032,7 @@ mod tests {
 
     // AVRO-3584 : recursion in type definitions
     #[test]
-    fn test_recursion_records() {
+    fn avro_3584_test_recursion_records() {
         use std::iter::FromIterator;
 
         // A and B are the same except the name.
@@ -2063,7 +2063,6 @@ mod tests {
         match schema_a {
             Schema::Record { fields, .. } => {
                 let f1 = fields.get(0);
-                let string = f1.unwrap().schema.canonical_form();
 
                 let refSchema = Schema::Ref {
                     name: Name::new("B").unwrap()
