@@ -43,6 +43,7 @@
     <jetty.version>9.4.48.v20220622</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13.2</junit.version>
+    <junit5.version>5.8.2</junit5.version>
     <netty.version>4.1.79.Final</netty.version>
     <protobuf.version>3.21.2</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
@@ -62,7 +63,7 @@
     <zstd-jni.version>1.5.2-3</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
-    <bundle-plugin-version>5.1.6</bundle-plugin-version>
+    <bundle-plugin-version>5.1.7</bundle-plugin-version>
     <exec-plugin.version>3.1.0</exec-plugin.version>
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
@@ -595,6 +596,12 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit5.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
