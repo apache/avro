@@ -18,41 +18,67 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   private static final long serialVersionUID = -6919829133416680993L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  public static org.apache.avro.Schema getClassSchema() { return CODER.SCHEMA$; }
 
-  private static final SpecificData MODEL$ = new SpecificData();
+  public static final class InternalCoders {
 
-  private static final BinaryMessageEncoder<OptionalGettersNullableFieldsTest> ENCODER =
-      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
+    private final org.apache.avro.Schema SCHEMA$;// = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
 
-  private static final BinaryMessageDecoder<OptionalGettersNullableFieldsTest> DECODER =
-      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
+    private final SpecificData MODEL$ = new SpecificData();
 
-  /**
-   * Return the BinaryMessageEncoder instance used by this class.
-   * @return the message encoder used by this class
-   */
-  public static BinaryMessageEncoder<OptionalGettersNullableFieldsTest> getEncoder() {
-    return ENCODER;
+    
+    public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        org.apache.avro.Schema currentSchema = parser.parse("{\"type\":\"record\",\"name\":\"OptionalGettersNullableFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that optional getters are created only for nullable fields\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"nullable_name\",\"type\":[\"string\",\"null\"]},{\"name\":\"favorite_number\",\"type\":[\"int\"]},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]},{\"name\":\"nullable_array\",\"type\":[{\"type\":\"array\",\"items\":\"string\"},\"null\"]}]}");
+
+        this.SCHEMA$ = currentSchema;
+
+            this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
+    }
+
+    private final BinaryMessageEncoder<OptionalGettersNullableFieldsTest> ENCODER;
+
+    private final BinaryMessageDecoder<OptionalGettersNullableFieldsTest> DECODER;
+
+    /**
+     * Return the BinaryMessageEncoder instance used by this class.
+     * @return the message encoder used by this class
+     */
+    public BinaryMessageEncoder<OptionalGettersNullableFieldsTest> getEncoder() {
+      return ENCODER;
+    }
+
+    /**
+     * Return the BinaryMessageDecoder instance used by this class.
+     * @return the message decoder used by this class
+     */
+     public BinaryMessageDecoder<OptionalGettersNullableFieldsTest> getDecoder() {
+      return DECODER;
+    }
+
+    /**
+     * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+     * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+     * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+     */
+    public BinaryMessageDecoder<OptionalGettersNullableFieldsTest> createDecoder(SchemaStore resolver) {
+      return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+    }
+
+    /**
+     * Deserializes a OptionalGettersNullableFieldsTest from a ByteBuffer.
+     * @param b a byte buffer holding serialized data for an instance of this class
+     * @return a OptionalGettersNullableFieldsTest instance decoded from the given buffer
+     * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+     */
+    public OptionalGettersNullableFieldsTest fromByteBuffer(
+        java.nio.ByteBuffer b) throws java.io.IOException {
+      return DECODER.decode(b);
+    }
   }
 
-  /**
-   * Return the BinaryMessageDecoder instance used by this class.
-   * @return the message decoder used by this class
-   */
-  public static BinaryMessageDecoder<OptionalGettersNullableFieldsTest> getDecoder() {
-    return DECODER;
-  }
-
-  /**
-   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
-   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
-   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
-   */
-  public static BinaryMessageDecoder<OptionalGettersNullableFieldsTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
-  }
+  public static final InternalCoders CODER = new InternalCoders();
 
   /**
    * Serializes this OptionalGettersNullableFieldsTest to a ByteBuffer.
@@ -60,18 +86,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
    * @throws java.io.IOException if this instance could not be serialized
    */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
-    return ENCODER.encode(this);
-  }
-
-  /**
-   * Deserializes a OptionalGettersNullableFieldsTest from a ByteBuffer.
-   * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a OptionalGettersNullableFieldsTest instance decoded from the given buffer
-   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
-   */
-  public static OptionalGettersNullableFieldsTest fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
-    return DECODER.decode(b);
+    return CODER.getEncoder().encode(this);
   }
 
   private java.lang.CharSequence name;
@@ -104,10 +119,10 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
   }
 
   @Override
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() { return CODER.MODEL$; }
 
   @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.Schema getSchema() { return CODER.SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
   @Override
@@ -270,7 +285,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
     }
 
     /**
@@ -306,7 +321,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.OptionalGettersNullableFieldsTest other) {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;
@@ -550,7 +565,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumWriter<OptionalGettersNullableFieldsTest>
-    WRITER$ = (org.apache.avro.io.DatumWriter<OptionalGettersNullableFieldsTest>)MODEL$.createDatumWriter(SCHEMA$);
+    WRITER$ = (org.apache.avro.io.DatumWriter<OptionalGettersNullableFieldsTest>)CODER.MODEL$.createDatumWriter(CODER.SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -559,7 +574,7 @@ public class OptionalGettersNullableFieldsTest extends org.apache.avro.specific.
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumReader<OptionalGettersNullableFieldsTest>
-    READER$ = (org.apache.avro.io.DatumReader<OptionalGettersNullableFieldsTest>)MODEL$.createDatumReader(SCHEMA$);
+    READER$ = (org.apache.avro.io.DatumReader<OptionalGettersNullableFieldsTest>)CODER.MODEL$.createDatumReader(CODER.SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

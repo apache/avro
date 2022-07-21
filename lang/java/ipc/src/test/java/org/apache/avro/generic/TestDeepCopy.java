@@ -75,7 +75,7 @@ public class TestDeepCopy {
     Interop interop = interopBuilder.build();
 
     // Verify that deepCopy works for all fields:
-    for (Field field : Interop.SCHEMA$.getFields()) {
+    for (Field field : Interop.getClassSchema().getFields()) {
       // Original field and deep copy should be equivalent:
       if (interop.get(field.pos()) instanceof ByteBuffer) {
         assertTrue(Arrays.equals(((ByteBuffer) interop.get(field.pos())).array(),
@@ -112,7 +112,7 @@ public class TestDeepCopy {
 
     StringablesRecord javaClassString = builder.build();
 
-    for (Field field : StringablesRecord.SCHEMA$.getFields()) {
+    for (Field field : StringablesRecord.getClassSchema().getFields()) {
       assertEquals(javaClassString.get(field.pos()),
           SpecificData.get().deepCopy(field.schema(), javaClassString.get(field.pos())));
     }

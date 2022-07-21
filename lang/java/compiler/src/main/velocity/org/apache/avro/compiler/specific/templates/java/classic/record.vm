@@ -36,7 +36,7 @@ import org.apache.avro.message.SchemaStore;
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getSchemaParentClass($schema.isError())} implements org.apache.avro.specific.SpecificRecord {
+public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getSchemaParentClass($schema)} implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
 
 #set ($schemaString = $this.javaSplit($schema.toString()))
@@ -49,69 +49,82 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
   }
 #end
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse($schemaString);
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  public static org.apache.avro.Schema getClassSchema() { return CODER.SCHEMA$; }
 
-  private static final SpecificData MODEL$ = new SpecificData();
-#set ($usedConversions = $this.getUsedConversionClasses($schema))
-#if (!$usedConversions.isEmpty())
-  static {
-#foreach ($conversion in $usedConversions)
-    MODEL$.addLogicalTypeConversion(new ${conversion}());
+  public static final class InternalCoders {
+
+    private final org.apache.avro.Schema SCHEMA$;// = new org.apache.avro.Schema.Parser().parse($schemaString);
+
+    private final SpecificData MODEL$ = new SpecificData();
+
+    #set ($usedConversions = $this.getUsedConversionClasses($schema))
+
+    public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        ${this.parseSchemas($schema)}
+
+    #foreach ($conversion in $usedConversions)
+        this.MODEL$.addLogicalTypeConversion(new ${conversion}());
+    #end
+#if (!$schema.isError())
+        this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
 #end
-  }
-#end
+    }
 
 #if (!$schema.isError())
-  private static final BinaryMessageEncoder<${this.mangleTypeIdentifier($schema.getName())}> ENCODER =
-      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
+    private final BinaryMessageEncoder<${this.mangleTypeIdentifier($schema.getName())}> ENCODER;
 
-  private static final BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> DECODER =
-      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
+    private final BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> DECODER;
 
-  /**
-   * Return the BinaryMessageEncoder instance used by this class.
-   * @return the message encoder used by this class
-   */
-  public static BinaryMessageEncoder<${this.mangleTypeIdentifier($schema.getName())}> getEncoder() {
-    return ENCODER;
+    /**
+     * Return the BinaryMessageEncoder instance used by this class.
+     * @return the message encoder used by this class
+     */
+    public BinaryMessageEncoder<${this.mangleTypeIdentifier($schema.getName())}> getEncoder() {
+      return ENCODER;
+    }
+
+    /**
+     * Return the BinaryMessageDecoder instance used by this class.
+     * @return the message decoder used by this class
+     */
+     public BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> getDecoder() {
+      return DECODER;
+    }
+
+    /**
+     * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+     * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+     * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+     */
+    public BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> createDecoder(SchemaStore resolver) {
+      return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+    }
+
+    /**
+     * Deserializes a ${schema.getName()} from a ByteBuffer.
+     * @param b a byte buffer holding serialized data for an instance of this class
+     * @return a ${schema.getName()} instance decoded from the given buffer
+     * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+     */
+    public ${this.mangleTypeIdentifier($schema.getName())} fromByteBuffer(
+        java.nio.ByteBuffer b) throws java.io.IOException {
+      return DECODER.decode(b);
+    }
+#end
   }
 
-  /**
-   * Return the BinaryMessageDecoder instance used by this class.
-   * @return the message decoder used by this class
-   */
-  public static BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> getDecoder() {
-    return DECODER;
-  }
+  public static final InternalCoders CODER = new InternalCoders();
 
-  /**
-   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
-   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
-   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
-   */
-  public static BinaryMessageDecoder<${this.mangleTypeIdentifier($schema.getName())}> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
-  }
-
+#if (!$schema.isError())
   /**
    * Serializes this ${schema.getName()} to a ByteBuffer.
    * @return a buffer holding the serialized data for this instance
    * @throws java.io.IOException if this instance could not be serialized
    */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
-    return ENCODER.encode(this);
-  }
-
-  /**
-   * Deserializes a ${schema.getName()} from a ByteBuffer.
-   * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a ${schema.getName()} instance decoded from the given buffer
-   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
-   */
-  public static ${this.mangleTypeIdentifier($schema.getName())} fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
-    return DECODER.decode(b);
+    return CODER.getEncoder().encode(this);
   }
 #end
 
@@ -178,10 +191,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 
 #end
   @Override
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() { return CODER.MODEL$; }
 
   @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.Schema getSchema() { return CODER.SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
   @Override
@@ -209,7 +222,6 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
   public org.apache.avro.Conversion<?> getConversion(int field) {
     return conversions[field];
   }
-
 #end
   // Used by DatumReader.  Applications should not call.
   @Override
@@ -284,7 +296,11 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
    * Creates a new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder.
    * @return A new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder
    */
+#if ($schema.class.simpleName == "ExtendedRecordSchema")
+  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder${this.mangleTypeIdentifier($schema.getName())}() {
+#else
   public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder() {
+#end
     return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
   }
 
@@ -334,7 +350,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
     }
 
     /**
@@ -362,7 +378,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
      */
     private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())} other) {
 #if ($schema.isError())      super(other)#else
-      super(SCHEMA$, MODEL$)#end;
+      super(CODER.SCHEMA$, CODER.MODEL$)#end;
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
@@ -462,7 +478,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
         if (${this.generateHasMethod($schema, $field)}()) {
           ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder(${this.mangle($field.name(), $schema.isError())}));
         } else {
-          ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder());
+          ${this.generateSetBuilderMethod($schema, $field)}(${this.javaType($field.schema())}.newBuilder((${this.javaType($field.schema())}) null));
         }
       }
       return ${this.mangle($field.name(), $schema.isError())}Builder;
@@ -543,7 +559,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumWriter<${this.mangleTypeIdentifier($schema.getName())}>
-    WRITER$ = (org.apache.avro.io.DatumWriter<${this.mangleTypeIdentifier($schema.getName())}>)MODEL$.createDatumWriter(SCHEMA$);
+    WRITER$ = (org.apache.avro.io.DatumWriter<${this.mangleTypeIdentifier($schema.getName())}>)CODER.MODEL$.createDatumWriter(CODER.SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -552,7 +568,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumReader<${this.mangleTypeIdentifier($schema.getName())}>
-    READER$ = (org.apache.avro.io.DatumReader<${this.mangleTypeIdentifier($schema.getName())}>)MODEL$.createDatumReader(SCHEMA$);
+    READER$ = (org.apache.avro.io.DatumReader<${this.mangleTypeIdentifier($schema.getName())}>)CODER.MODEL$.createDatumReader(CODER.SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
@@ -588,7 +604,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
 #foreach ($field in $schema.getFields())
 #set ($n = $this.mangle($field.name(), $schema.isError()))
 #set ($s = $field.schema())
-#set ($rs = "SCHEMA$.getField(""${n}"").schema()")
+#set ($rs = "CODER.SCHEMA$.getField(""${n}"").schema()")
 #decodeVar(2 "this.${n}" $s $rs)
 
 #set ($nv = $maxnv)
@@ -603,7 +619,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getS
         case $fieldno:
 #set ($n = $this.mangle($field.name(), $schema.isError()))
 #set ($s = $field.schema())
-#set ($rs = "SCHEMA$.getField(""${n}"").schema()")
+#set ($rs = "CODER.SCHEMA$.getField(""${n}"").schema()")
 #decodeVar(6 "this.${n}" $s $rs)
           break;
 

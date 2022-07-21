@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 public class TestSpecificRecordWithUnion {
   @Test
   void unionLogicalDecimalConversion() throws IOException {
-    final TestUnionRecord record = TestUnionRecord.newBuilder().setAmount(BigDecimal.ZERO).build();
+    final TestUnionRecord record = TestUnionRecord.newBuilderTestUnionRecord().setAmount(BigDecimal.ZERO).build();
     final Schema schema = SchemaBuilder.unionOf().nullType().and().type(record.getSchema()).endUnion();
 
     byte[] recordBytes = serializeRecord(

@@ -17,6 +17,47 @@
  */
 package org.apache.avro.compiler.specific;
 
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.specific.SpecificData;
+
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
@@ -25,41 +66,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-import org.apache.avro.AvroTypeException;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.generic.GenericData.StringType;
-import org.apache.avro.specific.SpecificData;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
@@ -926,6 +932,61 @@ public class TestSpecificCompiler {
         }
       }
     }
+  }
+
+  @Test
+  void inheritance() throws IOException, ReflectiveOperationException {
+    File parentFile = new File("src/test/resources/inheritance/parent.avsc");
+    Assertions.assertTrue(parentFile.exists());
+    File childFile = new File("src/test/resources/inheritance/child.avsc");
+    SpecificCompiler.compileSchema(new File[] { parentFile, childFile }, OUTPUT_DIR);
+
+    File f1 = new File(this.OUTPUT_DIR, "Parent.java");
+    File f2 = new File(this.OUTPUT_DIR, "Child.java");
+    Assertions.assertTrue(f2.exists());
+
+    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
+
+    // This sets up the class path that the compiler will use.
+    // I've added the .jar file that contains the DoStuff interface within in it...
+    List<String> optionList = Collections.emptyList(); // Arrays.asList("-classpath", this.OUTPUT_DIR.getName());
+
+    Iterable<? extends JavaFileObject> compilationUnit = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(f1, f2));
+    JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, optionList, null,
+        compilationUnit);
+    /*********************************************************************************************
+     * Compilation Requirements
+     **/
+    if (task.call()) {
+      /**
+       * Load and execute
+       *************************************************************************************************/
+      // Create a new custom class loader, pointing to the directory that contains the
+      // compiled
+      // classes, this should point to the top of the package structure!
+      URLClassLoader classLoader = new URLClassLoader(new URL[] { this.OUTPUT_DIR.toURI().toURL() },
+          Thread.currentThread().getContextClassLoader());
+      // Load the class from the classloader by name....
+      Class<?> parentClass = classLoader.loadClass("Parent");
+      // Create a new instance...
+      Object obj = parentClass.getDeclaredConstructor().newInstance();
+      Assertions.assertNotNull(obj);
+
+      Class<?> childClass = classLoader.loadClass("Child");
+      Assertions.assertEquals(parentClass, childClass.getSuperclass());
+      Object childObj = childClass.getDeclaredConstructor().newInstance();
+      Assertions.assertNotNull(childObj);
+
+    } else {
+      for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+        System.out.format("Error on line %d in %s : %s%n", diagnostic.getLineNumber(), diagnostic.getSource().toUri(),
+            diagnostic.getMessage(Locale.FRENCH));
+      }
+      Assertions.fail("can't compile");
+    }
+    fileManager.close();
   }
 
   public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {

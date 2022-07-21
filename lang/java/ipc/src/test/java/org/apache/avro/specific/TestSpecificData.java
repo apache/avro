@@ -51,7 +51,7 @@ public class TestSpecificData {
   @Test
   void testHashCode() {
     new TestRecord().hashCode();
-    SpecificData.get().hashCode(null, TestRecord.SCHEMA$);
+    SpecificData.get().hashCode(null, TestRecord.getClassSchema());
   }
 
   /** Make sure that even with nulls, toString() doesn't throw NPE. */
@@ -75,7 +75,7 @@ public class TestSpecificData {
     // define a record with a field that's a generated TestRecord
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
     List<Schema.Field> fields = new ArrayList<>();
-    fields.add(new Schema.Field("f", TestRecord.SCHEMA$, "", null));
+    fields.add(new Schema.Field("f", TestRecord.getClassSchema(), "", null));
     schema.setFields(fields);
 
     // create a generic instance of this record
@@ -96,17 +96,17 @@ public class TestSpecificData {
 
   @Test
   void convertGenericToSpecific() {
-    GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
+    GenericRecord generic = new GenericData.Record(TestRecord.getClassSchema());
     generic.put("name", "foo");
     generic.put("kind", new GenericData.EnumSymbol(Kind.SCHEMA$, "BAR"));
     generic.put("hash",
         new GenericData.Fixed(MD5.SCHEMA$, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
-    TestRecord specific = (TestRecord) SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
+    TestRecord specific = (TestRecord) SpecificData.get().deepCopy(TestRecord.getClassSchema(), generic);
   }
 
   @Test
   void getClassSchema() throws Exception {
-    assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
+    assertEquals(TestRecord.getClassSchema(), TestRecord.getClassSchema());
     assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
     assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
   }

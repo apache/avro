@@ -28,8 +28,6 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -115,10 +113,8 @@ public class TestGenericDatumWriter {
     assertEquals(mainRecord, o);
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = { true, false })
-  public void testWriteRecordExtension(boolean fastreader) throws IOException {
-    GenericData.get().setFastReaderEnabled(fastreader);
+  @Test
+  public void testWriteRecordExtension() throws IOException {
     String parent = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
         + "]}";
 
@@ -148,6 +144,7 @@ public class TestGenericDatumWriter {
     r1.put("f", parentObject);
     Object o1 = this.writeAndRead(r1, s);
     assertEquals(r1, o1);
+
   }
 
   private Object writeAndRead(GenericRecord r, Schema s) throws IOException {

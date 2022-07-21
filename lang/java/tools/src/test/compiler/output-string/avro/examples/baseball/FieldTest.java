@@ -16,47 +16,73 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class FieldTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 4609235620572341636L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static final SpecificData MODEL$ = new SpecificData();
-  static {
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
+
+  public static org.apache.avro.Schema getClassSchema() { return CODER.SCHEMA$; }
+
+  public static final class InternalCoders {
+
+    private final org.apache.avro.Schema SCHEMA$;// = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
+
+    private final SpecificData MODEL$ = new SpecificData();
+
+    
+    public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        org.apache.avro.Schema currentSchema = parser.parse("{\"type\":\"record\",\"name\":\"FieldTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test various field types\",\"fields\":[{\"name\":\"number\",\"type\":\"int\",\"doc\":\"The number of the player\"},{\"name\":\"last_name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"timestamp\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"timestampMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}},{\"name\":\"timeMillis\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"timeMicros\",\"type\":{\"type\":\"long\",\"logicalType\":\"time-micros\"}}]}");
+
+        this.SCHEMA$ = currentSchema;
+
+            this.MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+            this.MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
+            this.MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
+            this.MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
+            this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
+    }
+
+    private final BinaryMessageEncoder<FieldTest> ENCODER;
+
+    private final BinaryMessageDecoder<FieldTest> DECODER;
+
+    /**
+     * Return the BinaryMessageEncoder instance used by this class.
+     * @return the message encoder used by this class
+     */
+    public BinaryMessageEncoder<FieldTest> getEncoder() {
+      return ENCODER;
+    }
+
+    /**
+     * Return the BinaryMessageDecoder instance used by this class.
+     * @return the message decoder used by this class
+     */
+     public BinaryMessageDecoder<FieldTest> getDecoder() {
+      return DECODER;
+    }
+
+    /**
+     * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+     * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+     * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+     */
+    public BinaryMessageDecoder<FieldTest> createDecoder(SchemaStore resolver) {
+      return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+    }
+
+    /**
+     * Deserializes a FieldTest from a ByteBuffer.
+     * @param b a byte buffer holding serialized data for an instance of this class
+     * @return a FieldTest instance decoded from the given buffer
+     * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+     */
+    public FieldTest fromByteBuffer(
+        java.nio.ByteBuffer b) throws java.io.IOException {
+      return DECODER.decode(b);
+    }
   }
 
-  private static final BinaryMessageEncoder<FieldTest> ENCODER =
-      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
-
-  private static final BinaryMessageDecoder<FieldTest> DECODER =
-      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
-
-  /**
-   * Return the BinaryMessageEncoder instance used by this class.
-   * @return the message encoder used by this class
-   */
-  public static BinaryMessageEncoder<FieldTest> getEncoder() {
-    return ENCODER;
-  }
-
-  /**
-   * Return the BinaryMessageDecoder instance used by this class.
-   * @return the message decoder used by this class
-   */
-  public static BinaryMessageDecoder<FieldTest> getDecoder() {
-    return DECODER;
-  }
-
-  /**
-   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
-   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
-   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
-   */
-  public static BinaryMessageDecoder<FieldTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
-  }
+  public static final InternalCoders CODER = new InternalCoders();
 
   /**
    * Serializes this FieldTest to a ByteBuffer.
@@ -64,18 +90,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
    * @throws java.io.IOException if this instance could not be serialized
    */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
-    return ENCODER.encode(this);
-  }
-
-  /**
-   * Deserializes a FieldTest from a ByteBuffer.
-   * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a FieldTest instance decoded from the given buffer
-   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
-   */
-  public static FieldTest fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
-    return DECODER.decode(b);
+    return CODER.getEncoder().encode(this);
   }
 
   /** The number of the player */
@@ -112,10 +127,10 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   }
 
   @Override
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() { return CODER.MODEL$; }
 
   @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.Schema getSchema() { return CODER.SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
   @Override
@@ -146,7 +161,6 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   public org.apache.avro.Conversion<?> getConversion(int field) {
     return conversions[field];
   }
-
   // Used by DatumReader.  Applications should not call.
   @Override
   @SuppressWarnings(value="unchecked")
@@ -316,7 +330,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
     }
 
     /**
@@ -356,7 +370,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.FieldTest other) {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
       if (isValidValue(fields()[0], other.number)) {
         this.number = data().deepCopy(fields()[0].schema(), other.number);
         fieldSetFlags()[0] = true;
@@ -644,7 +658,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumWriter<FieldTest>
-    WRITER$ = (org.apache.avro.io.DatumWriter<FieldTest>)MODEL$.createDatumWriter(SCHEMA$);
+    WRITER$ = (org.apache.avro.io.DatumWriter<FieldTest>)CODER.MODEL$.createDatumWriter(CODER.SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -653,7 +667,7 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumReader<FieldTest>
-    READER$ = (org.apache.avro.io.DatumReader<FieldTest>)MODEL$.createDatumReader(SCHEMA$);
+    READER$ = (org.apache.avro.io.DatumReader<FieldTest>)CODER.MODEL$.createDatumReader(CODER.SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

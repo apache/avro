@@ -16,41 +16,69 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 8604146783520861700L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NoSettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that setters are omitted\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private static final SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<NoSettersTest> ENCODER =
-      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
+  public static org.apache.avro.Schema getClassSchema() { return CODER.SCHEMA$; }
 
-  private static final BinaryMessageDecoder<NoSettersTest> DECODER =
-      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
+  public static final class InternalCoders {
 
-  /**
-   * Return the BinaryMessageEncoder instance used by this class.
-   * @return the message encoder used by this class
-   */
-  public static BinaryMessageEncoder<NoSettersTest> getEncoder() {
-    return ENCODER;
+    private final org.apache.avro.Schema SCHEMA$;// = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NoSettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that setters are omitted\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+
+    private final SpecificData MODEL$ = new SpecificData();
+
+    
+    public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        org.apache.avro.Schema currentSchema = parser.parse("{\"type\":\"record\",\"name\":\"NoSettersTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that setters are omitted\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+
+        this.SCHEMA$ = currentSchema;
+
+            this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
+    }
+
+    private final BinaryMessageEncoder<NoSettersTest> ENCODER;
+
+    private final BinaryMessageDecoder<NoSettersTest> DECODER;
+
+    /**
+     * Return the BinaryMessageEncoder instance used by this class.
+     * @return the message encoder used by this class
+     */
+    public BinaryMessageEncoder<NoSettersTest> getEncoder() {
+      return ENCODER;
+    }
+
+    /**
+     * Return the BinaryMessageDecoder instance used by this class.
+     * @return the message decoder used by this class
+     */
+     public BinaryMessageDecoder<NoSettersTest> getDecoder() {
+      return DECODER;
+    }
+
+    /**
+     * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+     * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+     * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+     */
+    public BinaryMessageDecoder<NoSettersTest> createDecoder(SchemaStore resolver) {
+      return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+    }
+
+    /**
+     * Deserializes a NoSettersTest from a ByteBuffer.
+     * @param b a byte buffer holding serialized data for an instance of this class
+     * @return a NoSettersTest instance decoded from the given buffer
+     * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+     */
+    public NoSettersTest fromByteBuffer(
+        java.nio.ByteBuffer b) throws java.io.IOException {
+      return DECODER.decode(b);
+    }
   }
 
-  /**
-   * Return the BinaryMessageDecoder instance used by this class.
-   * @return the message decoder used by this class
-   */
-  public static BinaryMessageDecoder<NoSettersTest> getDecoder() {
-    return DECODER;
-  }
-
-  /**
-   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
-   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
-   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
-   */
-  public static BinaryMessageDecoder<NoSettersTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
-  }
+  public static final InternalCoders CODER = new InternalCoders();
 
   /**
    * Serializes this NoSettersTest to a ByteBuffer.
@@ -58,18 +86,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
    * @throws java.io.IOException if this instance could not be serialized
    */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
-    return ENCODER.encode(this);
-  }
-
-  /**
-   * Deserializes a NoSettersTest from a ByteBuffer.
-   * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a NoSettersTest instance decoded from the given buffer
-   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
-   */
-  public static NoSettersTest fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
-    return DECODER.decode(b);
+    return CODER.getEncoder().encode(this);
   }
 
   private java.lang.CharSequence name;
@@ -93,10 +110,10 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
   }
 
   @Override
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() { return CODER.MODEL$; }
 
   @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.Schema getSchema() { return CODER.SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
   @Override
@@ -185,7 +202,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
     }
 
     /**
@@ -209,7 +226,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.NoSettersTest other) {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;
@@ -318,7 +335,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumWriter<NoSettersTest>
-    WRITER$ = (org.apache.avro.io.DatumWriter<NoSettersTest>)MODEL$.createDatumWriter(SCHEMA$);
+    WRITER$ = (org.apache.avro.io.DatumWriter<NoSettersTest>)CODER.MODEL$.createDatumWriter(CODER.SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -327,7 +344,7 @@ public class NoSettersTest extends org.apache.avro.specific.SpecificRecordBase i
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumReader<NoSettersTest>
-    READER$ = (org.apache.avro.io.DatumReader<NoSettersTest>)MODEL$.createDatumReader(SCHEMA$);
+    READER$ = (org.apache.avro.io.DatumReader<NoSettersTest>)CODER.MODEL$.createDatumReader(CODER.SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

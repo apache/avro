@@ -323,6 +323,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
     throw new AvroRuntimeException("Not a record: " + this);
   }
 
+  public Schema getParent() {
+    throw new AvroRuntimeException("Not a record: " + this);
+  }
+
   public Stream<Schema> visitHierarchy() {
     throw new AvroRuntimeException("Not a record: " + this);
   }
@@ -1078,7 +1082,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     public List<Field> getFields() {
-      if (fields == null)
+      if (!this.hasFields())
         throw new AvroRuntimeException("Schema fields not set yet");
       return fields;
     }
@@ -1140,6 +1144,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     @Override
+    public Schema getParent() {
+      return null;
+    }
+
+    @Override
     public Stream<Schema> visitHierarchy() {
       final Stream<Schema> childsStream;
       if (this.hasChild()) {
@@ -1183,8 +1192,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!(o instanceof RecordSchema))
         return false;
       RecordSchema that = (RecordSchema) o;
-      if (!equalCachedHash(that))
-        return false;
       if (!equalNames(that))
         return false;
       if (!propsEqual(that))
@@ -1289,6 +1296,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
       super(name, doc, isError, fields);
       this.parent = parent;
       this.parent.addChild(this);
+    }
+
+    @Override
+    public Schema getParent() {
+      return parent;
     }
 
     @Override

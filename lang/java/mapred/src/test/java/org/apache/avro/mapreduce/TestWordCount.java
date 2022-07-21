@@ -71,7 +71,7 @@ public class TestWordCount {
   // permit data written as SpecficStats to be read as ReflectStats
   private static Schema REFLECT_STATS_SCHEMA = ReflectData.get().getSchema(ReflectStats.class);
   static {
-    REFLECT_STATS_SCHEMA.addAlias(TextStats.SCHEMA$.getFullName());
+    REFLECT_STATS_SCHEMA.addAlias(TextStats.getClassSchema().getFullName());
   }
 
   private static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
@@ -274,7 +274,7 @@ public class TestWordCount {
     job.setMapOutputValueClass(IntWritable.class);
 
     job.setReducerClass(SpecificStatsReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific");
@@ -344,14 +344,14 @@ public class TestWordCount {
     FileInputFormat.setInputPaths(job,
         new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
-    AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setInputKeySchema(job, TextStats.getClassSchema());
 
     job.setMapperClass(StatCountMapper.class);
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(IntWritable.class);
 
     job.setReducerClass(SpecificStatsReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");
@@ -421,14 +421,14 @@ public class TestWordCount {
     FileInputFormat.setInputPaths(job,
         new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
-    AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setInputKeySchema(job, TextStats.getClassSchema());
 
     job.setMapperClass(SortMapper.class);
-    AvroJob.setMapOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setMapOutputKeySchema(job, TextStats.getClassSchema());
     job.setMapOutputValueClass(NullWritable.class);
 
     job.setReducerClass(SortReducer.class);
-    AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
+    AvroJob.setOutputKeySchema(job, TextStats.getClassSchema());
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");

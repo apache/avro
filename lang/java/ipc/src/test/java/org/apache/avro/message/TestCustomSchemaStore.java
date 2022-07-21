@@ -49,7 +49,7 @@ public class TestCustomSchemaStore {
     }
   }
 
-  private BinaryMessageDecoder<NestedEvolve1> decoder = NestedEvolve1.createDecoder(new CustomSchemaStore());
+  private BinaryMessageDecoder<NestedEvolve1> decoder = NestedEvolve1.CODER.createDecoder(new CustomSchemaStore());
 
   @Test
   void compatibleReadWithSchemaFromSchemaStore() throws Exception {

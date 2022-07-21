@@ -696,4 +696,12 @@ public class TestSchema {
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
   }
+
+  @Test
+  void cycleRecord() {
+    String cycledSchema = "  { \"type\": \"record\", \"name\": \"type1\", \n" + "    \"fields\": [\n"
+        + "       { \"name\": \"f1\",  \"type\": {\"type\": \"array\", \"items\": \"type1\" }  }\n" + "    ]\n" + "  }";
+    Schema schema = new Schema.Parser().parse(cycledSchema);
+    Assertions.assertSame(schema, schema.getField("f1").schema().getElementType());
+  }
 }

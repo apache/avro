@@ -1549,7 +1549,7 @@ public class Perf {
 
   static class FooBarSpecificRecordTest extends SpecificTest<FooBarSpecificRecord> {
     public FooBarSpecificRecordTest() throws IOException {
-      super("FooBarSpecificRecordTest", FooBarSpecificRecord.SCHEMA$.toString());
+      super("FooBarSpecificRecordTest", FooBarSpecificRecord.getClassSchema().toString());
     }
 
     @Override

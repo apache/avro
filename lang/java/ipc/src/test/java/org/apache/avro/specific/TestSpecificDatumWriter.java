@@ -46,7 +46,7 @@ public class TestSpecificDatumWriter {
   @Test
   void resolveUnion() throws IOException {
     final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<>();
-    Schema schema = TestRecordWithUnion.SCHEMA$;
+    Schema schema = TestRecordWithUnion.getClassSchema();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
 
@@ -66,7 +66,7 @@ public class TestSpecificDatumWriter {
   @Test
   void incompleteRecord() throws IOException {
     final SpecificDatumWriter<TestRecord> writer = new SpecificDatumWriter<>();
-    Schema schema = TestRecord.SCHEMA$;
+    Schema schema = TestRecord.getClassSchema();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
 

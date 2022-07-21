@@ -70,8 +70,8 @@ public class TestWeather {
 
     job.setJobName("identity map weather");
 
-    AvroJob.setInputSchema(job, Weather.SCHEMA$);
-    AvroJob.setOutputSchema(job, Weather.SCHEMA$);
+    AvroJob.setInputSchema(job, Weather.getClassSchema());
+    AvroJob.setOutputSchema(job, Weather.getClassSchema());
 
     FileInputFormat.setInputPaths(job, input);
     FileOutputFormat.setOutputPath(job, output);
@@ -142,9 +142,9 @@ public class TestWeather {
 
     job.setJobName("sort weather");
 
-    AvroJob.setInputSchema(job, Weather.SCHEMA$);
-    AvroJob.setMapOutputSchema(job, Pair.getPairSchema(Weather.SCHEMA$, Schema.create(Type.NULL)));
-    AvroJob.setOutputSchema(job, Weather.SCHEMA$);
+    AvroJob.setInputSchema(job, Weather.getClassSchema());
+    AvroJob.setMapOutputSchema(job, Pair.getPairSchema(Weather.getClassSchema(), Schema.create(Type.NULL)));
+    AvroJob.setOutputSchema(job, Weather.getClassSchema());
 
     AvroJob.setMapperClass(job, SortMapper.class);
     AvroJob.setReducerClass(job, SortReducer.class);
