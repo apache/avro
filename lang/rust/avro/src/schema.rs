@@ -2030,6 +2030,51 @@ mod tests {
         assert_eq!(schema_c, schema_c_expected);
     }
 
+    // AVRO-3584 : recursion in type definitions
+    #[test]
+    fn test_recursion_records() {
+        use std::iter::FromIterator;
+
+        // A and B are the same except the name.
+        let schema_str_a = r#"{
+            "name": "A",
+            "type": "record",
+            "fields": [ {"name": "field_one", "type": "B"} ]
+        }"#;
+
+        let schema_str_b = r#"{
+            "name": "B",
+            "type": "record",
+            "fields": [   {"name": "field_one", "type": "A"} ]
+        }"#;
+
+        let list = Schema::parse_list(&[schema_str_a, schema_str_b])
+            .unwrap();
+
+        let schema_a = list
+            .first()
+            .unwrap()
+            .clone();
+        let schema_b = list
+            .get(1)
+            .unwrap()
+            .clone();
+
+        match schema_a {
+            Schema::Record { fields, .. } => {
+                let f1 = fields.get(0);
+                let string = f1.unwrap().schema.canonical_form();
+
+                let refSchema = Schema::Ref {
+                    name: Name::new("B").unwrap()
+                };
+                assert_eq!(refSchema, f1.unwrap().schema);
+            }
+            _ => panic!("Expected a record schema!")
+        }
+
+    }
+
     // AVRO-3248
     #[test]
     fn test_nullable_record() {
