@@ -2058,10 +2058,10 @@ mod tests {
             Schema::Record { fields, .. } => {
                 let f1 = fields.get(0);
 
-                let refSchema = Schema::Ref {
+                let ref_schema = Schema::Ref {
                     name: Name::new("B").unwrap()
                 };
-                assert_eq!(refSchema, f1.unwrap().schema);
+                assert_eq!(ref_schema, f1.unwrap().schema);
             }
             _ => panic!("Expected a record schema!")
         }
