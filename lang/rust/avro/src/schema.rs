@@ -2043,7 +2043,7 @@ mod tests {
         let schema_str_b = r#"{
             "name": "B",
             "type": "record",
-            "fields": [   {"name": "field_one", "type": "A"} ]
+            "fields": [ {"name": "field_one", "type": "A"} ]
         }"#;
 
         let list = Schema::parse_list(&[schema_str_a, schema_str_b])
