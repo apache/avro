@@ -2046,26 +2046,21 @@ mod tests {
             "fields": [ {"name": "field_one", "type": "A"} ]
         }"#;
 
-        let list = Schema::parse_list(&[schema_str_a, schema_str_b])
-            .unwrap();
+        let list = Schema::parse_list(&[schema_str_a, schema_str_b]).unwrap();
 
-        let schema_a = list
-            .first()
-            .unwrap()
-            .clone();
+        let schema_a = list.first().unwrap().clone();
 
         match schema_a {
             Schema::Record { fields, .. } => {
                 let f1 = fields.get(0);
 
                 let ref_schema = Schema::Ref {
-                    name: Name::new("B").unwrap()
+                    name: Name::new("B").unwrap(),
                 };
                 assert_eq!(ref_schema, f1.unwrap().schema);
             }
-            _ => panic!("Expected a record schema!")
+            _ => panic!("Expected a record schema!"),
         }
-
     }
 
     // AVRO-3248
