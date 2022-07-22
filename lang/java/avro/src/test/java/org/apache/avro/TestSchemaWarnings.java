@@ -17,10 +17,9 @@
  */
 package org.apache.avro;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -40,13 +39,13 @@ public class TestSchemaWarnings {
    */
   private final ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
 
-  @Before
+  @BeforeEach
   public void setupStdErr() {
     capturedErr.reset();
     System.setErr(new PrintStream(capturedErr));
   }
 
-  @AfterClass
+  @AfterAll
   public static void restoreStdErr() {
     System.setErr(originalErr);
   }
@@ -59,7 +58,7 @@ public class TestSchemaWarnings {
   }
 
   @Test
-  public void testWarnWhenTheLogicalTypeIsOnTheField() {
+  void warnWhenTheLogicalTypeIsOnTheField() {
     // A record with a single int field.
     Schema s = SchemaBuilder.record("A").fields().requiredInt("a1").endRecord();
 
@@ -93,7 +92,7 @@ public class TestSchemaWarnings {
   }
 
   @Test
-  public void testWarnWhenTheLogicalTypeIsIgnored() {
+  void warnWhenTheLogicalTypeIsIgnored() {
     // A record with a single int field.
     Schema s = SchemaBuilder.record("A").fields().requiredLong("a1").endRecord();
 

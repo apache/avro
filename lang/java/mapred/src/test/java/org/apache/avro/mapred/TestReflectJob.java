@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
+
 import java.io.BufferedInputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.fs.Path;
@@ -40,8 +43,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.ReflectDatumReader;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 
 public class TestReflectJob {
 
@@ -109,7 +111,7 @@ public class TestReflectJob {
 
   @Test
   @SuppressWarnings("deprecation")
-  public void testJob() throws Exception {
+  void job() throws Exception {
     JobConf job = new JobConf();
     String dir = "target/testReflectJob";
     Path inputPath = new Path(dir + "/in");
@@ -157,7 +159,7 @@ public class TestReflectJob {
     DataFileStream<WordCount> counts = new DataFileStream<>(in, reader);
     int numWords = 0;
     for (WordCount wc : counts) {
-      assertEquals(wc.word, WordCountUtil.COUNTS.get(wc.word), (Long) wc.count);
+      assertEquals(WordCountUtil.COUNTS.get(wc.word), (Long) wc.count, wc.word);
       numWords++;
     }
     in.close();

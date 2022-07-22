@@ -18,7 +18,8 @@
 
 package org.apache.avro.hadoop.io;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,21 +39,21 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroDatumConverterFactory {
   private Job mJob;
   private AvroDatumConverterFactory mFactory;
 
-  @Before
+  @BeforeEach
   public void setup() throws IOException {
     mJob = Job.getInstance();
     mFactory = new AvroDatumConverterFactory(mJob.getConfiguration());
   }
 
   @Test
-  public void testConvertAvroKey() throws IOException {
+  void convertAvroKey() throws IOException {
     AvroJob.setOutputKeySchema(mJob, Schema.create(Schema.Type.STRING));
 
     AvroKey<CharSequence> avroKey = new AvroKey<>("foo");
@@ -63,7 +64,7 @@ public class TestAvroDatumConverterFactory {
   }
 
   @Test
-  public void testConvertAvroValue() throws IOException {
+  void convertAvroValue() throws IOException {
     AvroJob.setOutputValueSchema(mJob, Schema.create(Schema.Type.INT));
 
     AvroValue<Integer> avroValue = new AvroValue<>(42);
@@ -74,13 +75,13 @@ public class TestAvroDatumConverterFactory {
   }
 
   @Test
-  public void testConvertBooleanWritable() {
+  void convertBooleanWritable() {
     AvroDatumConverter<BooleanWritable, Boolean> converter = mFactory.create(BooleanWritable.class);
     assertEquals(true, converter.convert(new BooleanWritable(true)));
   }
 
   @Test
-  public void testConvertBytesWritable() {
+  void convertBytesWritable() {
     AvroDatumConverter<BytesWritable, ByteBuffer> converter = mFactory.create(BytesWritable.class);
     ByteBuffer bytes = converter.convert(new BytesWritable(new byte[] { 1, 2, 3 }));
     assertEquals(1, bytes.get(0));
@@ -89,43 +90,43 @@ public class TestAvroDatumConverterFactory {
   }
 
   @Test
-  public void testConvertByteWritable() {
+  void convertByteWritable() {
     AvroDatumConverter<ByteWritable, GenericFixed> converter = mFactory.create(ByteWritable.class);
     assertEquals(42, converter.convert(new ByteWritable((byte) 42)).bytes()[0]);
   }
 
   @Test
-  public void testConvertDoubleWritable() {
+  void convertDoubleWritable() {
     AvroDatumConverter<DoubleWritable, Double> converter = mFactory.create(DoubleWritable.class);
     assertEquals(2.0, converter.convert(new DoubleWritable(2.0)), 0.00001);
   }
 
   @Test
-  public void testConvertFloatWritable() {
+  void convertFloatWritable() {
     AvroDatumConverter<FloatWritable, Float> converter = mFactory.create(FloatWritable.class);
     assertEquals(2.2f, converter.convert(new FloatWritable(2.2f)), 0.00001);
   }
 
   @Test
-  public void testConvertIntWritable() {
+  void convertIntWritable() {
     AvroDatumConverter<IntWritable, Integer> converter = mFactory.create(IntWritable.class);
     assertEquals(2, converter.convert(new IntWritable(2)).intValue());
   }
 
   @Test
-  public void testConvertLongWritable() {
+  void convertLongWritable() {
     AvroDatumConverter<LongWritable, Long> converter = mFactory.create(LongWritable.class);
     assertEquals(123L, converter.convert(new LongWritable(123L)).longValue());
   }
 
   @Test
-  public void testConvertNullWritable() {
+  void convertNullWritable() {
     AvroDatumConverter<NullWritable, Object> converter = mFactory.create(NullWritable.class);
     assertNull(converter.convert(NullWritable.get()));
   }
 
   @Test
-  public void testConvertText() {
+  void convertText() {
     AvroDatumConverter<Text, CharSequence> converter = mFactory.create(Text.class);
     assertEquals("foo", converter.convert(new Text("foo")).toString());
   }

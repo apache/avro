@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
+
 import java.io.BufferedInputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -37,22 +40,19 @@ import org.apache.avro.file.DataFileStream;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.reflect.ReflectDatumReader;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroMultipleInputs {
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
-  @Rule
-  public TemporaryFolder INPUT_DIR_1 = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR_1;
 
-  @Rule
-  public TemporaryFolder INPUT_DIR_2 = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR_2;
 
   /**
    * The input-1 record.
@@ -218,11 +218,11 @@ public class TestAvroMultipleInputs {
   }
 
   @Test
-  public void testJob() throws Exception {
+  void job() throws Exception {
     JobConf job = new JobConf();
-    Path inputPath1 = new Path(INPUT_DIR_1.getRoot().getPath());
-    Path inputPath2 = new Path(INPUT_DIR_2.getRoot().getPath());
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    Path inputPath1 = new Path(INPUT_DIR_1.getPath());
+    Path inputPath2 = new Path(INPUT_DIR_2.getPath());
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
 
     outputPath.getFileSystem(job).delete(outputPath, true);
 
@@ -249,7 +249,7 @@ public class TestAvroMultipleInputs {
 
     JobClient.runJob(job);
 
-    validateCompleteFile(new File(OUTPUT_DIR.getRoot(), "part-00000.avro"));
+    validateCompleteFile(new File(OUTPUT_DIR, "part-00000.avro"));
   }
 
   /**

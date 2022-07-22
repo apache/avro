@@ -23,42 +23,42 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.File;
 
 public class TestAvroInputFormat {
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   private JobConf conf;
   private FileSystem fs;
   private Path inputDir;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     conf = new JobConf();
     fs = FileSystem.getLocal(conf);
-    inputDir = new Path(DIR.getRoot().getPath());
+    inputDir = new Path(DIR.getPath());
   }
 
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     fs.delete(inputDir, true);
   }
 
   @SuppressWarnings("rawtypes")
   @Test
-  public void testIgnoreFilesWithoutExtension() throws Exception {
+  void ignoreFilesWithoutExtension() throws Exception {
     fs.mkdirs(inputDir);
     Path avroFile = new Path(inputDir, "somefile.avro");
     Path textFile = new Path(inputDir, "someotherfile.txt");

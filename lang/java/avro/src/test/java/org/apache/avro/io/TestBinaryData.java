@@ -18,8 +18,9 @@
 
 package org.apache.avro.io;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class TestBinaryData {
 
@@ -29,13 +30,13 @@ public class TestBinaryData {
    * normal 8). When skipping it, the next byte should be 10.
    */
   @Test
-  public void testSkipLong() {
+  void skipLong() {
     byte[] b = new byte[10];
     BinaryData.encodeLong(Long.MAX_VALUE, b, 0);
 
     final int nextIndex = BinaryData.skipLong(b, 0);
 
-    Assert.assertEquals(nextIndex, 10);
+    assertEquals(nextIndex, 10);
   }
 
 }

@@ -18,33 +18,33 @@
 
 package org.apache.avro.mapred;
 
+import java.io.File;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroTextSort {
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
-  @Test
   /**
    * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat and
    * AvroTextOutputFormat to produce a sorted "bytes" Avro file.
    */
-  public void testSort() throws Exception {
+  @Test
+  void sort() throws Exception {
     JobConf job = new JobConf();
-    String inputPath = INPUT_DIR.getRoot().getPath();
-    Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
+    String inputPath = INPUT_DIR.getPath();
+    Path outputPath = new Path(OUTPUT_DIR.getPath());
     outputPath.getFileSystem(job).delete(outputPath, true);
 
     WordCountUtil.writeLinesBytesFile(inputPath);

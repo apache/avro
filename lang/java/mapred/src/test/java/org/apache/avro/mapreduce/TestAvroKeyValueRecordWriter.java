@@ -18,10 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
@@ -50,11 +47,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroKeyValueRecordWriter {
   @Test
-  public void testWriteRecords() throws IOException {
+  void writeRecords() throws IOException {
     Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
     TaskAttemptContext context = mock(TaskAttemptContext.class);
@@ -111,7 +108,7 @@ public class TestAvroKeyValueRecordWriter {
   }
 
   @Test
-  public void testUsingReflection() throws Exception {
+  void usingReflection() throws Exception {
     Job job = Job.getInstance();
     Schema schema = ReflectData.get().getSchema(R1.class);
     AvroJob.setOutputValueSchema(job, schema);
@@ -153,7 +150,7 @@ public class TestAvroKeyValueRecordWriter {
   }
 
   @Test
-  public void testSyncableWriteRecords() throws IOException {
+  void syncableWriteRecords() throws IOException {
     Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
     TaskAttemptContext context = mock(TaskAttemptContext.class);

@@ -27,7 +27,7 @@ import org.apache.avro.codegentest.testdata.NullableLogicalTypesArray;
 import org.apache.avro.codegentest.testdata.RecordInArray;
 import org.apache.avro.codegentest.testdata.RecordInMap;
 import org.apache.avro.codegentest.testdata.RecordInUnion;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -36,21 +36,21 @@ import java.util.Collections;
 public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
 
   @Test
-  public void testNullableLogicalTypeInNestedRecord() {
+  void nullableLogicalTypeInNestedRecord() {
     final NestedLogicalTypesRecord nestedLogicalTypesRecord = NestedLogicalTypesRecord.newBuilder()
         .setNestedRecord(NestedRecord.newBuilder().setNullableDateField(LocalDate.now()).build()).build();
     verifySerDeAndStandardMethods(nestedLogicalTypesRecord);
   }
 
   @Test
-  public void testNullableLogicalTypeInArray() {
+  void nullableLogicalTypeInArray() {
     final NullableLogicalTypesArray logicalTypesArray = NullableLogicalTypesArray.newBuilder()
         .setArrayOfLogicalType(Collections.singletonList(LocalDate.now())).build();
     verifySerDeAndStandardMethods(logicalTypesArray);
   }
 
   @Test
-  public void testNullableLogicalTypeInRecordInArray() {
+  void nullableLogicalTypeInRecordInArray() {
     final NestedLogicalTypesArray nestedLogicalTypesArray = NestedLogicalTypesArray.newBuilder()
         .setArrayOfRecords(
             Collections.singletonList(RecordInArray.newBuilder().setNullableDateField(LocalDate.now()).build()))
@@ -59,14 +59,14 @@ public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
   }
 
   @Test
-  public void testNullableLogicalTypeInRecordInUnion() {
+  void nullableLogicalTypeInRecordInUnion() {
     final NestedLogicalTypesUnion nestedLogicalTypesUnion = NestedLogicalTypesUnion.newBuilder()
         .setUnionOfRecords(RecordInUnion.newBuilder().setNullableDateField(LocalDate.now()).build()).build();
     verifySerDeAndStandardMethods(nestedLogicalTypesUnion);
   }
 
   @Test
-  public void testNullableLogicalTypeInRecordInMap() {
+  void nullableLogicalTypeInRecordInMap() {
     final NestedLogicalTypesMap nestedLogicalTypesMap = NestedLogicalTypesMap.newBuilder()
         .setMapOfRecords(
             Collections.singletonMap("key", RecordInMap.newBuilder().setNullableDateField(LocalDate.now()).build()))
@@ -75,7 +75,7 @@ public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
   }
 
   @Test
-  public void testNullableLogicalTypeInRecordInFixedDecimal() {
+  void nullableLogicalTypeInRecordInFixedDecimal() {
     final NestedLogicalTypesUnionFixedDecimal nestedLogicalTypesUnionFixedDecimal = NestedLogicalTypesUnionFixedDecimal
         .newBuilder().setUnionOfFixedDecimal(new CustomDecimal(BigInteger.TEN, 15)).build();
     verifySerDeAndStandardMethods(nestedLogicalTypesUnionFixedDecimal);

@@ -17,7 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -194,7 +194,7 @@ public class TestSchemas {
   static void assertSchemaContains(Schema schemaSubset, Schema original) {
     String subset = schemaSubset.toString(false);
     String whole = original.toString(false);
-    assertTrue(String.format("Subset '%s' not found in '%s'", subset, whole), whole.contains(subset));
+    assertTrue(whole.contains(subset), String.format("Subset '%s' not found in '%s'", subset, whole));
   }
 
 }
