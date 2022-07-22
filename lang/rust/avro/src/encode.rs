@@ -827,4 +827,14 @@ pub(crate) mod tests {
             .expect(&success(&outer_record_variation_3, &schema));
         assert!(!buf.is_empty());
     }
+
+    #[test]
+    fn test_avro_3585_encode_uuids() {
+        let value = Value::String(String::from("00000000-0000-0000-0000-000000000000"));
+        let schema = Schema::Uuid;
+        let mut buffer = Vec::new();
+        let encoded = encode(&value, &schema, &mut buffer);
+        assert!(encoded.is_ok());
+        assert!(!buffer.is_empty());
+    }
 }
