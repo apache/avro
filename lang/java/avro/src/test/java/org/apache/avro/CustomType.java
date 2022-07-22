@@ -31,7 +31,7 @@ public final class CustomType {
 
   @Override
   public int hashCode() {
-    return super.hashCode();
+    return Objects.hashCode(name);
   }
 
   @Override
