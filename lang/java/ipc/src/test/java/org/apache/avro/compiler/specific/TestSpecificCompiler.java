@@ -17,9 +17,7 @@
  */
 package org.apache.avro.compiler.specific;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -51,20 +49,18 @@ import org.apache.avro.test.Kind;
 
 import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TestName;
 
 public class TestSpecificCompiler {
 
-  @Rule
-  public TestName name = new TestName();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
-
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   static final String PROTOCOL = "" + "{ \"protocol\": \"default\",\n" + "  \"types\":\n" + "    [\n" + "      {\n"
       + "       \"name\": \"finally\",\n" + "       \"type\": \"error\",\n"
@@ -73,41 +69,41 @@ public class TestSpecificCompiler {
       + "      \"response\": \"string\",\n" + "      \"errors\": [\"finally\"]\n" + "    }" + "   }\n" + "}\n";
 
   @Test
-  public void testEsc() {
+  void esc() {
     assertEquals("\\\"", SpecificCompiler.javaEscape("\""));
   }
 
   @Test
-  public void testMakePath() {
+  void makePath() {
     SpecificCompiler compiler = new SpecificCompiler();
     assertEquals("foo/bar/Baz.java".replace("/", File.separator), compiler.makePath("Baz", "foo.bar"));
     assertEquals("baz.java", compiler.makePath("baz", ""));
   }
 
   @Test
-  public void testPrimitiveSchemaGeneratesNothing() {
+  void primitiveSchemaGeneratesNothing() {
     assertEquals(0, new SpecificCompiler(new Schema.Parser().parse("\"double\"")).compile().size());
   }
 
   @Test
-  public void testSimpleEnumSchema() throws IOException {
+  void simpleEnumSchema(TestInfo testInfo) throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.BASIC_ENUM_SCHEMA))
         .compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
     assertEquals(o.path, "Test.java");
     assertTrue(o.contents.contains("public enum Test"));
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), outputs);
   }
 
   @Test
-  public void testMangleIfReserved() {
+  void mangleIfReserved() {
     assertEquals("foo", SpecificCompiler.mangle("foo"));
     assertEquals("goto$", SpecificCompiler.mangle("goto"));
   }
 
   @Test
-  public void testManglingForProtocols() throws IOException {
+  void manglingForProtocols(TestInfo testInfo) throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(Protocol.parse(PROTOCOL)).compile();
     Iterator<OutputFile> i = outputs.iterator();
     String errType = i.next().contents;
@@ -120,7 +116,7 @@ public class TestSpecificCompiler {
     assertTrue(protocol.contains("public interface default$"));
     assertTrue(protocol.contains(" finally$"));
 
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), outputs);
 
   }
 
@@ -133,7 +129,7 @@ public class TestSpecificCompiler {
       + "                {\"name\": \"short\", \"type\": \"volatile\" } ] }";
 
   @Test
-  public void testManglingForRecords() throws IOException {
+  void manglingForRecords(TestInfo testInfo) throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
@@ -142,11 +138,11 @@ public class TestSpecificCompiler {
     assertTrue(contents.contains("class volatile$ extends"));
     assertTrue(contents.contains("volatile$ short$;"));
 
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), outputs);
   }
 
   @Test
-  public void testManglingForEnums() throws IOException {
+  void manglingForEnums(TestInfo testInfo) throws IOException {
     String enumSchema = "" + "{ \"name\": \"instanceof\", \"type\": \"enum\","
         + "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
     Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(enumSchema)).compile();
@@ -155,27 +151,27 @@ public class TestSpecificCompiler {
 
     assertTrue(contents.contains("new$"));
 
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), outputs);
   }
 
   @Test
-  public void testSchemaSplit() throws IOException {
+  void schemaSplit(TestInfo testInfo) throws IOException {
     SpecificCompiler compiler = new SpecificCompiler(new Schema.Parser().parse(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), files);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), files);
   }
 
   @Test
-  public void testProtocolSplit() throws IOException {
+  void protocolSplit(TestInfo testInfo) throws IOException {
     SpecificCompiler compiler = new SpecificCompiler(Protocol.parse(PROTOCOL));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
-    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), files);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), files);
   }
 
   @Test
-  public void testSchemaWithDocs() {
+  void schemaWithDocs() {
     Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS))
         .compile();
     assertEquals(3, outputs.size());
@@ -203,7 +199,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testProtocolWithDocs() throws IOException {
+  void protocolWithDocs() throws IOException {
     Protocol protocol = TestProtocolParsing.getSimpleProtocol();
     Collection<OutputFile> out = new SpecificCompiler(protocol).compile();
     assertEquals(6, out.size());
@@ -215,26 +211,26 @@ public class TestSpecificCompiler {
         assertTrue(o.contents.contains("* Send a greeting"));
       }
     }
-    assertEquals("Missed generated protocol!", 1, count);
+    assertEquals(1, count, "Missed generated protocol!");
   }
 
   @Test
-  public void testNeedCompile() throws IOException, InterruptedException {
+  void needCompile() throws IOException, InterruptedException {
     String schema = "" + "{ \"name\": \"Foo\", \"type\": \"record\", "
         + "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" },"
         + "                {\"name\": \"short\", \"type\": \"Foo\" } ] }";
-    File inputFile = new File(INPUT_DIR.getRoot().getPath(), "input.avsc");
+    File inputFile = new File(INPUT_DIR.getPath(), "input.avsc");
     try (FileWriter fw = new FileWriter(inputFile)) {
       fw.write(schema);
     }
 
-    File outputDir = OUTPUT_DIR.getRoot();
+    File outputDir = OUTPUT_DIR;
 
     File outputFile = new File(outputDir, "Foo.java");
     outputFile.delete();
-    assertTrue(!outputFile.exists());
+    assertFalse(outputFile.exists());
     outputDir.delete();
-    assertTrue(!outputDir.exists());
+    assertFalse(outputDir.exists());
     SpecificCompiler.compileSchema(inputFile, outputDir);
     assertTrue(outputDir.exists());
     assertTrue(outputFile.exists());
@@ -266,7 +262,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void generateGetMethod() {
+  void generateGetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
     Field height_and_width = new Field("height_and_width", Schema.create(Type.STRING), null, null);
@@ -342,7 +338,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void generateSetMethod() {
+  void generateSetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
     Field height_and_width = new Field("height_and_width", Schema.create(Type.STRING), null, null);
@@ -418,7 +414,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void generateHasMethod() {
+  void generateHasMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
     Field height_and_width = new Field("height_and_width", Schema.create(Type.STRING), null, null);
@@ -494,7 +490,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void generateClearMethod() {
+  void generateClearMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
     Field Height = new Field("Height", Schema.create(Type.INT), null, null);
     Field height_and_width = new Field("height_and_width", Schema.create(Type.STRING), null, null);
@@ -570,7 +566,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testAnnotations() throws Exception {
+  void annotations() throws Exception {
     // an interface generated for protocol
     assertNotNull(Simple.class.getAnnotation(TestAnnotation.class));
     // a class generated for a record
@@ -587,7 +583,7 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testAliases() throws IOException {
+  void aliases() throws IOException {
     Schema s = new Schema.Parser().parse("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
         + "{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
     SpecificCompiler compiler = new SpecificCompiler(s);
@@ -648,7 +644,7 @@ public class TestSpecificCompiler {
       + "                {\"name\": \"ownerURL\", \"type\": [\"null\",{ \"type\": \"string\",\"java-class\": \"java.net.URL\"}], \"default\": null}]}";
 
   @Test
-  public void testGenerateExceptionCodeBlock() throws IOException {
+  void generateExceptionCodeBlock() throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA1)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;

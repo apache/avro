@@ -78,9 +78,7 @@ import static org.apache.avro.TestSchemas.STRING_SCHEMA;
 import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.assertSchemaContains;
 import static org.apache.avro.TestSchemas.list;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -105,7 +103,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +118,7 @@ public class TestSchemaCompatibility {
       new Schema.Field("oldfield1", INT_SCHEMA, null, null), new Schema.Field("oldfield2", STRING_SCHEMA, null, null)));
 
   @Test
-  public void testValidateSchemaPairMissingField() {
+  void validateSchemaPairMissingField() {
     final List<Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -132,7 +130,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairMissingSecondField() {
+  void validateSchemaPairMissingSecondField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -144,7 +142,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairAllFields() {
+  void validateSchemaPairAllFields() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
@@ -157,7 +155,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewFieldWithDefault() {
+  void validateSchemaNewFieldWithDefault() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, 42));
     final Schema reader = Schema.createRecord(readerFields);
@@ -170,7 +168,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewField() {
+  void validateSchemaNewField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
@@ -189,7 +187,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateArrayWriterSchema() {
+  void validateArrayWriterSchema() {
     final Schema validReader = Schema.createArray(STRING_SCHEMA);
     final Schema invalidReader = Schema.createMap(STRING_SCHEMA);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -209,7 +207,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidatePrimitiveWriterSchema() {
+  void validatePrimitiveWriterSchema() {
     final Schema validReader = Schema.create(Schema.Type.STRING);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), validReader, STRING_SCHEMA,
@@ -230,7 +228,7 @@ public class TestSchemaCompatibility {
    * Reader union schema must contain all writer union branches.
    */
   @Test
-  public void testUnionReaderWriterSubsetIncompatibility() {
+  void unionReaderWriterSubsetIncompatibility() {
     final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA, LONG_SCHEMA));
     final Schema unionReader = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
     final SchemaPairCompatibility result = checkReaderWriterCompatibility(unionReader, unionWriter);
@@ -371,14 +369,14 @@ public class TestSchemaCompatibility {
    * Tests reader/writer compatibility validation.
    */
   @Test
-  public void testReaderWriterCompatibility() {
+  void readerWriterCompatibility() {
     for (ReaderWriter readerWriter : COMPATIBLE_READER_WRITER_TEST_CASES) {
       final Schema reader = readerWriter.getReader();
       final Schema writer = readerWriter.getWriter();
       LOG.debug("Testing compatibility of reader {} with writer {}.", reader, writer);
       final SchemaPairCompatibility result = checkReaderWriterCompatibility(reader, writer);
-      assertEquals(String.format("Expecting reader %s to be compatible with writer %s, but tested incompatible.",
-          reader, writer), SchemaCompatibilityType.COMPATIBLE, result.getType());
+      assertEquals(SchemaCompatibilityType.COMPATIBLE, result.getType(), String
+          .format("Expecting reader %s to be compatible with writer %s, but tested incompatible.", reader, writer));
     }
   }
 
@@ -469,7 +467,7 @@ public class TestSchemaCompatibility {
    * Tests the reader/writer compatibility at decoding time.
    */
   @Test
-  public void testReaderWriterDecodingCompatibility() throws Exception {
+  void readerWriterDecodingCompatibility() throws Exception {
     for (DecodingTestCase testCase : DECODING_COMPATIBILITY_TEST_CASES) {
       final Schema readerSchema = testCase.getReaderSchema();
       final Schema writerSchema = testCase.getWriterSchema();
@@ -492,10 +490,11 @@ public class TestSchemaCompatibility {
       final DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
       final Object decodedDatum = datumReader.read(null, decoder);
 
-      assertEquals(String.format(
-          "Expecting decoded value %s when decoding value %s whose writer schema is %s "
-              + "using reader schema %s, but value was %s.",
-          expectedDecodedDatum, datum, writerSchema, readerSchema, decodedDatum), expectedDecodedDatum, decodedDatum);
+      assertEquals(expectedDecodedDatum, decodedDatum,
+          String.format(
+              "Expecting decoded value %s when decoding value %s whose writer schema is %s "
+                  + "using reader schema %s, but value was %s.",
+              expectedDecodedDatum, datum, writerSchema, readerSchema, decodedDatum));
     }
   }
 
@@ -509,7 +508,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void checkResolvingDecoder() throws IOException {
+  void checkResolvingDecoder() throws IOException {
     final Schema locationSchema = readSchemaFromResources("schema-location.json");
     final Schema writeSchema = readSchemaFromResources("schema-location-write.json");
 

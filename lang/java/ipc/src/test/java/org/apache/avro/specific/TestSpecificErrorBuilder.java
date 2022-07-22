@@ -17,55 +17,58 @@
  */
 package org.apache.avro.specific;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.apache.avro.test.errors.TestError;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the SpecificErrorBuilderBase class.
  */
 public class TestSpecificErrorBuilder {
   @Test
-  public void testSpecificErrorBuilder() {
+  void specificErrorBuilder() {
     TestError.Builder testErrorBuilder = TestError.newBuilder().setValue("value").setCause(new NullPointerException())
         .setMessage$("message$");
 
     // Test has methods
-    Assert.assertTrue(testErrorBuilder.hasValue());
-    Assert.assertNotNull(testErrorBuilder.getValue());
-    Assert.assertTrue(testErrorBuilder.hasCause());
-    Assert.assertNotNull(testErrorBuilder.getCause());
-    Assert.assertTrue(testErrorBuilder.hasMessage$());
-    Assert.assertNotNull(testErrorBuilder.getMessage$());
+    assertTrue(testErrorBuilder.hasValue());
+    assertNotNull(testErrorBuilder.getValue());
+    assertTrue(testErrorBuilder.hasCause());
+    assertNotNull(testErrorBuilder.getCause());
+    assertTrue(testErrorBuilder.hasMessage$());
+    assertNotNull(testErrorBuilder.getMessage$());
 
     TestError testError = testErrorBuilder.build();
-    Assert.assertEquals("value", testError.getValue());
-    Assert.assertEquals("value", testError.getMessage());
-    Assert.assertEquals("message$", testError.getMessage$());
+    assertEquals("value", testError.getValue());
+    assertEquals("value", testError.getMessage());
+    assertEquals("message$", testError.getMessage$());
 
     // Test copy constructor
-    Assert.assertEquals(testErrorBuilder, TestError.newBuilder(testErrorBuilder));
-    Assert.assertEquals(testErrorBuilder, TestError.newBuilder(testError));
+    assertEquals(testErrorBuilder, TestError.newBuilder(testErrorBuilder));
+    assertEquals(testErrorBuilder, TestError.newBuilder(testError));
 
     TestError error = new TestError("value", new NullPointerException());
     error.setMessage$("message");
-    Assert.assertEquals(error,
+    assertEquals(error,
         TestError.newBuilder().setValue("value").setCause(new NullPointerException()).setMessage$("message").build());
 
     // Test clear
     testErrorBuilder.clearValue();
-    Assert.assertFalse(testErrorBuilder.hasValue());
-    Assert.assertNull(testErrorBuilder.getValue());
+    assertFalse(testErrorBuilder.hasValue());
+    assertNull(testErrorBuilder.getValue());
     testErrorBuilder.clearCause();
-    Assert.assertFalse(testErrorBuilder.hasCause());
-    Assert.assertNull(testErrorBuilder.getCause());
+    assertFalse(testErrorBuilder.hasCause());
+    assertNull(testErrorBuilder.getCause());
     testErrorBuilder.clearMessage$();
-    Assert.assertFalse(testErrorBuilder.hasMessage$());
-    Assert.assertNull(testErrorBuilder.getMessage$());
+    assertFalse(testErrorBuilder.hasMessage$());
+    assertNull(testErrorBuilder.getMessage$());
   }
 
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
-  public void attemptToSetNonNullableFieldToNull() {
-    TestError.newBuilder().setMessage$(null);
+  @Test
+  void attemptToSetNonNullableFieldToNull() {
+    assertThrows(org.apache.avro.AvroRuntimeException.class, () -> {
+      TestError.newBuilder().setMessage$(null);
+    });
   }
 }

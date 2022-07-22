@@ -18,9 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
@@ -44,11 +42,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroKeyRecordWriter {
   @Test
-  public void testWrite() throws IOException {
+  void write() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
     GenericData dataModel = new ReflectData();
     CodecFactory compressionCodec = CodecFactory.nullCodec();
@@ -80,7 +78,7 @@ public class TestAvroKeyRecordWriter {
   }
 
   @Test
-  public void testSycnableWrite() throws IOException {
+  void sycnableWrite() throws IOException {
     Schema writerSchema = Schema.create(Schema.Type.INT);
     GenericData dataModel = new ReflectData();
     CodecFactory compressionCodec = CodecFactory.nullCodec();

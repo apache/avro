@@ -19,8 +19,7 @@ package org.apache.avro.util.internal;
 
 import static org.apache.avro.util.internal.JacksonUtils.toJsonNode;
 import static org.apache.avro.util.internal.JacksonUtils.toObject;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BigIntegerNode;
@@ -40,7 +39,7 @@ import java.util.Collections;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestJacksonUtils {
 
@@ -49,8 +48,8 @@ public class TestJacksonUtils {
   }
 
   @Test
-  public void testToJsonNode() {
-    assertEquals(null, toJsonNode(null));
+  void testToJsonNode() {
+    assertNull(toJsonNode(null));
     assertEquals(NullNode.getInstance(), toJsonNode(JsonProperties.NULL_VALUE));
     assertEquals(BooleanNode.TRUE, toJsonNode(true));
     assertEquals(IntNode.valueOf(1), toJsonNode(1));
@@ -73,8 +72,8 @@ public class TestJacksonUtils {
   }
 
   @Test
-  public void testToObject() {
-    assertEquals(null, toObject(null));
+  void testToObject() {
+    assertNull(toObject(null));
     assertEquals(JsonProperties.NULL_VALUE, toObject(NullNode.getInstance()));
     assertEquals(true, toObject(BooleanNode.TRUE));
     assertEquals(1, toObject(IntNode.valueOf(1)));

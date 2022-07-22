@@ -19,10 +19,14 @@ package org.apache.avro.ipc.netty;
 
 import org.apache.avro.ipc.Transceiver;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
@@ -35,16 +39,18 @@ import io.netty.channel.socket.SocketChannel;
 public class TestNettyTransceiverWhenFailsToConnect {
   SocketChannel channel = null;
 
-  @Test(expected = IOException.class)
-  public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
-    try (ServerSocket serverSocket = new ServerSocket(0)) {
-      try (Transceiver t = new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), 0, c -> {
-        channel = c;
-      })) {
-        Assert.fail("should have thrown an exception");
+  @Test
+  void nettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
+    assertThrows(IOException.class, () -> {
+      try (ServerSocket serverSocket = new ServerSocket(0)) {
+        try (Transceiver t = new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), 0, c -> {
+          channel = c;
+        })) {
+          fail("should have thrown an exception");
+        }
+      } finally {
+        assertTrue(channel == null || channel.isShutdown(), "Channel not shut down");
       }
-    } finally {
-      Assert.assertTrue("Channel not shut down", channel == null || channel.isShutdown());
-    }
+    });
   }
 }

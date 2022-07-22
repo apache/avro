@@ -22,11 +22,12 @@ package org.apache.avro.message;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -46,7 +47,7 @@ public class TestInteropSingleObjectEncoding {
   private static Schema SCHEMA;
   private static GenericRecordBuilder BUILDER;
 
-  @BeforeClass
+  @BeforeAll
   public static void setup() throws IOException {
     try (FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE)) {
       SCHEMA = new Schema.Parser().parse(fileInputStream);
@@ -55,11 +56,11 @@ public class TestInteropSingleObjectEncoding {
   }
 
   @Test
-  public void checkSingleObjectEncoding() throws IOException {
+  void checkSingleObjectEncoding() throws IOException {
     MessageEncoder<GenericData.Record> encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA);
     ByteBuffer buffer = encoder.encode(
         BUILDER.set("id", 42L).set("name", "Bill").set("tags", Arrays.asList("dog_lover", "cat_hater")).build());
     byte[] fileBuffer = Files.readAllBytes(MESSAGE_FILE.toPath());
-    Assert.assertArrayEquals(fileBuffer, buffer.array());
+    assertArrayEquals(fileBuffer, buffer.array());
   }
 }

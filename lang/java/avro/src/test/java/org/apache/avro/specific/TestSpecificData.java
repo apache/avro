@@ -18,7 +18,7 @@
 
 package org.apache.avro.specific;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,8 +35,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /*
  * If integerClass is primitive, reflection to find method will
@@ -47,7 +47,7 @@ public class TestSpecificData {
   private Class<?> intClass;
   private Class<?> integerClass;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     Schema intSchema = Schema.create(Type.INT);
     intClass = SpecificData.get().getClass(intSchema);
@@ -57,29 +57,33 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testClassTypes() {
+  void classTypes() {
     assertTrue(intClass.isPrimitive());
     assertFalse(integerClass.isPrimitive());
   }
 
   @Test
-  public void testPrimitiveParam() throws Exception {
+  void primitiveParam() throws Exception {
     assertNotNull(Reflection.class.getMethod("primitive", intClass));
   }
 
-  @Test(expected = NoSuchMethodException.class)
-  public void testPrimitiveParamError() throws Exception {
-    Reflection.class.getMethod("primitiveWrapper", intClass);
+  @Test
+  void primitiveParamError() throws Exception {
+    assertThrows(NoSuchMethodException.class, () -> {
+      Reflection.class.getMethod("primitiveWrapper", intClass);
+    });
   }
 
   @Test
-  public void testPrimitiveWrapperParam() throws Exception {
+  void primitiveWrapperParam() throws Exception {
     assertNotNull(Reflection.class.getMethod("primitiveWrapper", integerClass));
   }
 
-  @Test(expected = NoSuchMethodException.class)
-  public void testPrimitiveWrapperParamError() throws Exception {
-    Reflection.class.getMethod("primitive", integerClass);
+  @Test
+  void primitiveWrapperParamError() throws Exception {
+    assertThrows(NoSuchMethodException.class, () -> {
+      Reflection.class.getMethod("primitive", integerClass);
+    });
   }
 
   static class Reflection {
@@ -136,7 +140,7 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testSpecificRecordBase() {
+  void specificRecordBase() {
     final TestRecord record = new TestRecord();
     record.put("x", 1);
     record.put("y", "str");
@@ -145,7 +149,7 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testExternalizeable() throws Exception {
+  void externalizeable() throws Exception {
     final TestRecord before = new TestRecord();
     before.put("x", 1);
     before.put("y", "str");
@@ -162,7 +166,7 @@ public class TestSpecificData {
 
   /** Tests that non Stringable datum are rejected by specific writers. */
   @Test
-  public void testNonStringable() throws Exception {
+  void nonStringable() throws Exception {
     final Schema string = Schema.create(Type.STRING);
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);

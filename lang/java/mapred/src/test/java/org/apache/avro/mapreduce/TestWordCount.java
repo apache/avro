@@ -18,7 +18,10 @@
 
 package org.apache.avro.mapreduce;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,14 +54,12 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestWordCount {
-  @Rule
-  public TemporaryFolder tmpFolder = new TemporaryFolder();
+  @TempDir
+  public File tmpFolder;
   public static final Schema STATS_SCHEMA = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"}," + "{\"name\":\"name\",\"type\":\"string\"}]}");
 
@@ -223,7 +224,7 @@ public class TestWordCount {
   }
 
   @Test
-  public void testAvroGenericOutput() throws Exception {
+  void avroGenericOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -238,15 +239,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, STATS_SCHEMA);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-generic");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-generic");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA));
     Map<String, Integer> counts = new HashMap<>();
@@ -255,13 +256,13 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroSpecificOutput() throws Exception {
+  void avroSpecificOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -276,15 +277,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-specific");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-specific");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
@@ -293,13 +294,13 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroReflectOutput() throws Exception {
+  void avroReflectOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -314,15 +315,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, REFLECT_STATS_SCHEMA);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-reflect");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-reflect");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<ReflectStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new ReflectDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
@@ -331,13 +332,13 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroInput() throws Exception {
+  void avroInput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -353,15 +354,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-specific-input");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
@@ -370,13 +371,13 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testReflectInput() throws Exception {
+  void reflectInput() throws Exception {
     Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job,
         new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
@@ -391,15 +392,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, REFLECT_STATS_SCHEMA);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-reflect-input");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-reflect-input");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<ReflectStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new ReflectDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
@@ -408,13 +409,13 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroMapOutput() throws Exception {
+  void avroMapOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -430,15 +431,15 @@ public class TestWordCount {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-specific-input");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-specific-input");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
@@ -447,16 +448,16 @@ public class TestWordCount {
     }
     reader.close();
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   /**
    * Tests the MR output to text files when using AvroKey and AvroValue records.
    */
   @Test
-  public void testAvroUsingTextFileOutput() throws Exception {
+  void avroUsingTextFileOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -472,24 +473,24 @@ public class TestWordCount {
     AvroJob.setOutputValueSchema(job, Schema.create(Schema.Type.INT));
 
     job.setOutputFormatClass(TextOutputFormat.class);
-    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-text");
+    Path outputPath = new Path(tmpFolder.getPath() + "/out-text");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     Path filePath = outputFiles[0].getPath();
     InputStream inputStream = filePath.getFileSystem(job.getConfiguration()).open(filePath);
-    Assert.assertNotNull(inputStream);
+    assertNotNull(inputStream);
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-      Assert.assertTrue(reader.ready());
-      Assert.assertEquals("apple\t3", reader.readLine());
-      Assert.assertEquals("banana\t2", reader.readLine());
-      Assert.assertEquals("carrot\t1", reader.readLine());
-      Assert.assertFalse(reader.ready());
+      assertTrue(reader.ready());
+      assertEquals("apple\t3", reader.readLine());
+      assertEquals("banana\t2", reader.readLine());
+      assertEquals("carrot\t1", reader.readLine());
+      assertFalse(reader.ready());
     }
   }
 }

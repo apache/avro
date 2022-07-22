@@ -17,6 +17,9 @@
  */
 package org.apache.avro;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,23 +40,22 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestDataFileReflect {
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   /*
    * Test that using multiple schemas in a file works doing a union before writing
    * any records.
    */
   @Test
-  public void testMultiReflectWithUnionBeforeWriting() throws IOException {
-    File file = new File(DIR.getRoot().getPath(), "testMultiReflectWithUnionBeforeWriting.avro");
+  void multiReflectWithUnionBeforeWriting() throws IOException {
+    File file = new File(DIR.getPath(), "testMultiReflectWithUnionBeforeWriting.avro");
     CheckList<Object> check = new CheckList<>();
     try (FileOutputStream fos = new FileOutputStream(file)) {
 
@@ -80,7 +82,7 @@ public class TestDataFileReflect {
       for (Object datum : reader) {
         check.assertEquals(datum, count++);
       }
-      Assert.assertEquals(count, check.size());
+      assertEquals(count, check.size());
     }
   }
 
@@ -88,8 +90,8 @@ public class TestDataFileReflect {
    * Test that writing a record with a field that is null.
    */
   @Test
-  public void testNull() throws IOException {
-    File file = new File(DIR.getRoot().getPath(), "testNull.avro");
+  void testNull() throws IOException {
+    File file = new File(DIR.getPath(), "testNull.avro");
     CheckList<BarRecord> check = new CheckList<>();
 
     try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -113,13 +115,13 @@ public class TestDataFileReflect {
         for (BarRecord datum : reader) {
           check.assertEquals(datum, count++);
         }
-        Assert.assertEquals(count, check.size());
+        assertEquals(count, check.size());
       }
     }
   }
 
   @Test
-  public void testNew() throws IOException {
+  void testNew() throws IOException {
     ByteBuffer payload = ByteBuffer.allocateDirect(8 * 1024);
     for (int i = 0; i < 500; i++) {
       payload.putInt(1);
@@ -142,15 +144,15 @@ public class TestDataFileReflect {
     BinaryDecoder avroDecoder = DecoderFactory.get().binaryDecoder(inputStream, null);
     ByteBufferRecord deserialized = datumReader.read(null, avroDecoder);
 
-    Assert.assertEquals(bbr, deserialized);
+    assertEquals(bbr, deserialized);
   }
 
   /*
    * Test that writing out and reading in a nested class works
    */
   @Test
-  public void testNestedClass() throws IOException {
-    File file = new File(DIR.getRoot().getPath(), "testNull.avro");
+  void nestedClass() throws IOException {
+    File file = new File(DIR.getPath(), "testNull.avro");
 
     CheckList<BazRecord> check = new CheckList<>();
     try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -171,7 +173,7 @@ public class TestDataFileReflect {
         for (BazRecord datum : reader) {
           check.assertEquals(datum, count++);
         }
-        Assert.assertEquals(count, check.size());
+        assertEquals(count, check.size());
       }
     }
   }
@@ -188,10 +190,10 @@ public class TestDataFileReflect {
     }
 
     void assertEquals(Object toCheck, int i) {
-      Assert.assertNotNull(toCheck);
+      assertNotNull(toCheck);
       Object o = get(i);
-      Assert.assertNotNull(o);
-      Assert.assertEquals(toCheck, o);
+      assertNotNull(o);
+      Assertions.assertEquals(toCheck, o);
     }
   }
 

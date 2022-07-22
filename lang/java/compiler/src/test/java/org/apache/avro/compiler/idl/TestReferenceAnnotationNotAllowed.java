@@ -15,15 +15,15 @@
  */
 package org.apache.avro.compiler.idl;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestReferenceAnnotationNotAllowed {
 
   @Test
-  public void testReferenceAnnotationNotAllowed() {
+  void referenceAnnotationNotAllowed() {
 
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Idl idl = new Idl(cl.getResourceAsStream("AnnotationOnTypeReference.avdl"), "UTF-8");

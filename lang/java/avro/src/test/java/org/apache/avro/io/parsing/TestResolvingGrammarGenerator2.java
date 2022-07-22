@@ -32,17 +32,17 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** ResolvingGrammarGenerator tests that are not Parameterized. */
 public class TestResolvingGrammarGenerator2 {
   @Test
-  public void testFixed() throws java.io.IOException {
+  void fixed() throws java.io.IOException {
     new ResolvingGrammarGenerator().generate(Schema.createFixed("MyFixed", null, null, 10),
         Schema.create(Schema.Type.BYTES));
     new ResolvingGrammarGenerator().generate(Schema.create(Schema.Type.BYTES),
@@ -63,69 +63,71 @@ public class TestResolvingGrammarGenerator2 {
   Schema point3dMatchName = SchemaBuilder.record("Point").fields().requiredDouble("x").requiredDouble("y").name("z")
       .type().doubleType().doubleDefault(0.0).endRecord();
 
-  @Test(expected = SchemaValidationException.class)
-  public void testUnionResolutionNoStructureMatch() throws Exception {
-    // there is a short name match, but the structure does not match
-    Schema read = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), point3dNoDefault));
+  @Test
+  void unionResolutionNoStructureMatch() throws Exception {
+    assertThrows(SchemaValidationException.class, () -> {
+      // there is a short name match, but the structure does not match
+      Schema read = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), point3dNoDefault));
 
-    new SchemaValidatorBuilder().canBeReadStrategy().validateAll().validate(point2dFullname,
-        Collections.singletonList(read));
+      new SchemaValidatorBuilder().canBeReadStrategy().validateAll().validate(point2dFullname,
+          Collections.singletonList(read));
+    });
   }
 
   @Test
-  public void testUnionResolutionFirstStructureMatch2d() throws Exception {
+  void unionResolutionFirstStructureMatch2d() throws Exception {
     // multiple structure matches with no short or full name matches
     Schema read = Schema
         .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), point3dNoDefault, point2d, point3d));
 
     Symbol grammar = new ResolvingGrammarGenerator().generate(point2dFullname, read);
-    Assert.assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
+    assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
 
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction) grammar.production[1];
-    Assert.assertEquals(2, action.rindex);
+    assertEquals(2, action.rindex);
   }
 
   @Test
-  public void testUnionResolutionFirstStructureMatch3d() throws Exception {
+  void unionResolutionFirstStructureMatch3d() throws Exception {
     // multiple structure matches with no short or full name matches
     Schema read = Schema
         .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), point3dNoDefault, point3d, point2d));
 
     Symbol grammar = new ResolvingGrammarGenerator().generate(point2dFullname, read);
-    Assert.assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
+    assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
 
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction) grammar.production[1];
-    Assert.assertEquals(2, action.rindex);
+    assertEquals(2, action.rindex);
   }
 
   @Test
-  public void testUnionResolutionNamedStructureMatch() throws Exception {
+  void unionResolutionNamedStructureMatch() throws Exception {
     // multiple structure matches with a short name match
     Schema read = Schema
         .createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), point2d, point3dMatchName, point3d));
 
     Symbol grammar = new ResolvingGrammarGenerator().generate(point2dFullname, read);
-    Assert.assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
+    assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
 
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction) grammar.production[1];
-    Assert.assertEquals(2, action.rindex);
+    assertEquals(2, action.rindex);
   }
 
   @Test
-  public void testUnionResolutionFullNameMatch() throws Exception {
+  void unionResolutionFullNameMatch() throws Exception {
     // there is a full name match, so it should be chosen
     Schema read = Schema.createUnion(
         Arrays.asList(Schema.create(Schema.Type.NULL), point2d, point3dMatchName, point3d, point2dFullname));
 
     Symbol grammar = new ResolvingGrammarGenerator().generate(point2dFullname, read);
-    Assert.assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
+    assertTrue(grammar.production[1] instanceof Symbol.UnionAdjustAction);
 
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction) grammar.production[1];
-    Assert.assertEquals(4, action.rindex);
+    assertEquals(4, action.rindex);
   }
 
   @Test
-  public void testAvro2702StringProperties() throws IOException {
+  void avro2702StringProperties() throws IOException {
 
     // Create a nested record schema with string fields at two levels.
     Schema inner = SchemaBuilder.builder().record("B").fields().requiredString("b1").endRecord();

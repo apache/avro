@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapred.tether;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -31,9 +31,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 
-import org.junit.Rule;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.AvroJob;
@@ -42,7 +41,6 @@ import org.apache.avro.mapred.Pair;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.junit.rules.TemporaryFolder;
 
 /**
  * See also TestTetherTool for an example of how to submit jobs using the
@@ -50,11 +48,11 @@ import org.junit.rules.TemporaryFolder;
  */
 public class TestWordCountTether {
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   /**
    * Run a job using the given transport protocol
@@ -62,8 +60,8 @@ public class TestWordCountTether {
    * @param proto
    */
   private void _runjob(String proto) throws Exception {
-    String outputPathStr = OUTPUT_DIR.getRoot().getPath();
-    File inputPath = new File(INPUT_DIR.getRoot(), "lines.avro");
+    String outputPathStr = OUTPUT_DIR.getPath();
+    File inputPath = new File(INPUT_DIR, "lines.avro");
 
     JobConf job = new JobConf();
     Path outputPath = new Path(outputPathStr);
@@ -98,7 +96,7 @@ public class TestWordCountTether {
         new BufferedInputStream(new FileInputStream(outputPath + "/part-00000.avro")), reader);
     int numWords = 0;
     for (Pair<Utf8, Long> wc : counts) {
-      assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
+      assertEquals(WordCountUtil.COUNTS.get(wc.key().toString()), wc.value(), wc.key().toString());
       numWords++;
     }
 
@@ -114,7 +112,7 @@ public class TestWordCountTether {
    */
   @Test
   @SuppressWarnings("deprecation")
-  public void testJob() throws Exception {
+  void job() throws Exception {
     _runjob("sasl");
   }
 
@@ -125,7 +123,7 @@ public class TestWordCountTether {
    */
   @Test
   @SuppressWarnings("deprecation")
-  public void testhtp() throws Exception {
+  void htp() throws Exception {
     _runjob("http");
   }
 }

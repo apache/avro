@@ -17,8 +17,8 @@
  */
 package org.apache.avro.ipc.jetty;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -42,7 +42,7 @@ import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.ipc.stats.StatsPlugin;
 import org.apache.avro.ipc.stats.StatsServlet;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestStatsPluginAndServlet {
   Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", " + "\"messages\": { \"m\": {"
@@ -91,7 +91,7 @@ public class TestStatsPluginAndServlet {
   }
 
   @Test
-  public void testFullServerPath() throws Exception {
+  void fullServerPath() throws Exception {
     Responder r = new TestResponder(protocol);
     StatsPlugin statsPlugin = new StatsPlugin();
     r.addRPCPlugin(statsPlugin);
@@ -106,7 +106,7 @@ public class TestStatsPluginAndServlet {
   }
 
   @Test
-  public void testMultipleRPCs() throws IOException {
+  void multipleRPCs() throws IOException {
     org.apache.avro.ipc.stats.FakeTicks t = new org.apache.avro.ipc.stats.FakeTicks();
     StatsPlugin statsPlugin = new StatsPlugin(t, StatsPlugin.LATENCY_SEGMENTER, StatsPlugin.PAYLOAD_SEGMENTER);
     RPCContext context1 = makeContext();
@@ -126,7 +126,7 @@ public class TestStatsPluginAndServlet {
   }
 
   @Test
-  public void testPayloadSize() throws Exception {
+  void payloadSize() throws Exception {
     Responder r = new TestResponder(protocol);
     StatsPlugin statsPlugin = new StatsPlugin();
     r.addRPCPlugin(statsPlugin);

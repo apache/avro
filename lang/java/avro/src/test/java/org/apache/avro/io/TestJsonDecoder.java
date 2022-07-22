@@ -17,31 +17,32 @@
  */
 package org.apache.avro.io;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestJsonDecoder {
 
   @Test
-  public void testInt() throws Exception {
+  void testInt() throws Exception {
     checkNumeric("int", 1);
   }
 
   @Test
-  public void testLong() throws Exception {
+  void testLong() throws Exception {
     checkNumeric("long", 1L);
   }
 
   @Test
-  public void testFloat() throws Exception {
+  void testFloat() throws Exception {
     checkNumeric("float", 1.0F);
   }
 
   @Test
-  public void testDouble() throws Exception {
+  void testDouble() throws Exception {
     checkNumeric("double", 1.0);
   }
 
@@ -55,7 +56,7 @@ public class TestJsonDecoder {
     for (String record : records) {
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, record);
       GenericRecord r = reader.read(null, decoder);
-      Assert.assertEquals(value, r.get("n"));
+      assertEquals(value, r.get("n"));
     }
   }
 
@@ -63,16 +64,16 @@ public class TestJsonDecoder {
   // in schema,
   // it works.
   @Test
-  public void testReorderFields() throws Exception {
+  void reorderFields() throws Exception {
     String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"
         + "{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}" + "]}";
     Schema ws = new Schema.Parser().parse(w);
     DecoderFactory df = DecoderFactory.get();
     String data = "{\"a\":[1,2],\"l\":100}{\"l\": 200, \"a\":[1,2]}";
     JsonDecoder in = df.jsonDecoder(ws, data);
-    Assert.assertEquals(100, in.readLong());
+    assertEquals(100, in.readLong());
     in.skipArray();
-    Assert.assertEquals(200, in.readLong());
+    assertEquals(200, in.readLong());
     in.skipArray();
   }
 }
