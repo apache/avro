@@ -315,15 +315,9 @@ namespace Avro.Reflect
             }
 
             Type[] interfaces = actual.GetInterfaces();
-            foreach (Type interfaceType in interfaces)
-            {
-                if (interfaceType.IsGenericType &&
-                    interfaceType.GetGenericTypeDefinition() == expected)
-                {
-                    return interfaceType;
-                }
-            }
-            return null;
+            return interfaces.FirstOrDefault(interfaceType =>
+                interfaceType.IsGenericType &&
+                interfaceType.GetGenericTypeDefinition() == expected);
         }
     }
 }

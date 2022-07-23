@@ -34,7 +34,7 @@ namespace Avro.Test
     {
         public class IDictionaryTestClass : IDictionary<string, int>
         {
-            Dictionary<string, int> _pairs = new Dictionary<string, int>();
+            readonly Dictionary<string, int> _pairs = new Dictionary<string, int>();
             public int this[string key] { get => _pairs[key]; set => _pairs[key] = value; }
 
             public ICollection<string> Keys => _pairs.Keys;
