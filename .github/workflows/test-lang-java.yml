@@ -149,3 +149,7 @@ jobs:
       - name: Run Interop Tests
         working-directory: lang/java/ipc
         run: mvn -B test -P interop-data-test
+
+      - name: Test Reproducible Build
+        working-directory: .
+        run: mvn clean verify -DskipTests artifact:compare
