@@ -59,7 +59,7 @@
     <tukaani.version>1.9</tukaani.version>
     <mockito.version>4.6.1</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.47.0</grpc.version>
+    <grpc.version>1.48.0</grpc.version>
     <zstd-jni.version>1.5.2-3</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
