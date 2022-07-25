@@ -111,6 +111,7 @@ set (AVRO_SOURCE_FILES
         impl/json/JsonIO.cc
         impl/json/JsonDom.cc
         impl/Resolver.cc impl/Validator.cc
+        impl/CustomFields.cc
         )
 
 add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
