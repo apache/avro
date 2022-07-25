@@ -209,7 +209,6 @@
             <encoding>UTF-8</encoding>
             <additionalJOption>-Xdoclint:none</additionalJOption>
             <detectOfflineLinks>false</detectOfflineLinks>
-            <notimestamp>true</notimestamp>
           </configuration>
         </plugin>
         <plugin>
