@@ -391,6 +391,9 @@ void DataFileReaderBase::readDataBlock() {
             compressed_.insert(compressed_.end(), data, data + len);
         }
         len = compressed_.size();
+        if (len < 4)
+            throw Exception("Cannot read compressed data, expected at least 4 bytes, got " + std::to_string(len));
+
         int b1 = compressed_[len - 4] & 0xFF;
         int b2 = compressed_[len - 3] & 0xFF;
         int b3 = compressed_[len - 2] & 0xFF;
