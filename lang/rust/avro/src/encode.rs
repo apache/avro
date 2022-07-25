@@ -123,7 +123,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             }
         },
         Value::String(s) => match *schema {
-            Schema::String => {
+            Schema::String | Schema::Uuid => {
                 encode_bytes(s, buffer);
             }
             Schema::Enum { ref symbols, .. } => {
@@ -133,9 +133,6 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                     error!("Invalid symbol string {:?}.", &s[..]);
                     return Err(Error::GetEnumSymbol(s.clone()));
                 }
-            }
-            Schema::Uuid => {
-                encode_bytes(s, buffer);
             }
             _ => {
                 return Err(Error::EncodeValueAsSchemaError {
