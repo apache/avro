@@ -3838,7 +3838,7 @@ mod tests {
     fn validate_name_test() {
         let p = Parser::default();
         let r = p.validate_name(&"歳以上".to_owned());
-        assert_eq!(r, true);
+        assert!(r);
     }
 
 }
