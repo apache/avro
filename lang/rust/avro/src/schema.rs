@@ -1284,18 +1284,15 @@ impl Parser {
         &self,
         name: &String
     ) -> bool {
-        let i1 = name.len();
-        if &name.len() == 0 {
+        fn validate_char(index: usize, c: char) -> bool {
+            return c.is_alphabetic() || c == '_' || (index > 0 && c.is_alphanumeric());
+        }
+        if name.is_empty() {
             return false;
         }
-        let mut result : bool = name.chars().nth(0).unwrap().is_alphabetic();
-
-        let size = name.chars().count();
-        for i in 1..size {
-            result &= name.chars().nth(i).unwrap().is_alphanumeric();
-        }
-        return result;
+        return name.char_indices().all(|(index, c)|  validate_char(index, c));
     }
+
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
     /// `Schema`.
@@ -3835,10 +3832,14 @@ mod tests {
     }
 
     #[test]
-    fn validate_name_test() {
+    fn avro_3532_validate_name() {
         let p = Parser::default();
-        let r = p.validate_name(&"歳以上".to_owned());
-        assert!(r);
+
+        assert!( ! p.validate_name(&"".to_owned()));    // non empty
+        assert!( ! p.validate_name(&"123".to_owned())); // start with number
+        assert!( p.validate_name(&"Hello123".to_owned()));  // number after first.
+        assert!( p.validate_name(&"_AcceptUnderscore__".to_owned()));  // number after first.
+        assert!( p.validate_name(&"歳以上".to_owned())); // accept chinese.
     }
 
 }
