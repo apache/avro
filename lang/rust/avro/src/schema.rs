@@ -1280,19 +1280,17 @@ impl Parser {
         Ok(schema)
     }
 
-    fn validate_name(
-        &self,
-        name: &String
-    ) -> bool {
+    fn validate_name(&self, name: &String) -> bool {
         fn validate_char(index: usize, c: char) -> bool {
             return c.is_alphabetic() || c == '_' || (index > 0 && c.is_alphanumeric());
         }
         if name.is_empty() {
             return false;
         }
-        return name.char_indices().all(|(index, c)|  validate_char(index, c));
+        return name
+            .char_indices()
+            .all(|(index, c)| validate_char(index, c));
     }
-
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
     /// `Schema`.
@@ -3835,11 +3833,10 @@ mod tests {
     fn avro_3532_validate_name() {
         let p = Parser::default();
 
-        assert!( ! p.validate_name(&"".to_owned()));    // non empty
-        assert!( ! p.validate_name(&"123".to_owned())); // start with number
-        assert!( p.validate_name(&"Hello123".to_owned()));  // number after first.
-        assert!( p.validate_name(&"_AcceptUnderscore__".to_owned()));  // number after first.
-        assert!( p.validate_name(&"歳以上".to_owned())); // accept chinese.
+        assert!(!p.validate_name(&"".to_owned())); // non empty
+        assert!(!p.validate_name(&"123".to_owned())); // start with number
+        assert!(p.validate_name(&"Hello123".to_owned())); // number after first.
+        assert!(p.validate_name(&"_AcceptUnderscore__".to_owned())); // number after first.
+        assert!(p.validate_name(&"歳以上".to_owned())); // accept chinese.
     }
-
 }
