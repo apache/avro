@@ -22,7 +22,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.11.1-SNAPSHOT</version>
+    <version>1.11.1</version>
     <relativePath>../../../../../../../../../</relativePath>
   </parent>
 
