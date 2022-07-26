@@ -1282,7 +1282,7 @@ impl Parser {
 
     fn validate_name(&self, name: &String) -> bool {
         fn validate_char(index: usize, c: char) -> bool {
-            return c.is_alphabetic() || c == '_' || (index > 0 && c.is_alphanumeric());
+            c.is_alphabetic() || c == '_' || (index > 0 && c.is_alphanumeric())
         }
         if name.is_empty() {
             return false;
