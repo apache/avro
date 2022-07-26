@@ -1285,7 +1285,7 @@ impl Parser {
         name: &String
     ) -> bool {
         let i1 = name.len();
-        if i1 == 0 {
+        if &name.len() == 0 {
             return false;
         }
         let mut result : bool = name.chars().nth(0).unwrap().is_alphabetic();
