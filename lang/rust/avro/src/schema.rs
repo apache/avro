@@ -36,8 +36,6 @@ use std::{
 use strum_macros::{EnumDiscriminants, EnumString};
 
 lazy_static! {
-    static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
-
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
         Regex::new(r"^((?P<namespace>[A-Za-z_][A-Za-z0-9_\.]*)*\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
@@ -1258,7 +1256,7 @@ impl Parser {
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
             // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !ENUM_SYMBOL_NAME_R.is_match(symbol) {
+            if !self.validate_name(symbol) {
                 return Err(Error::EnumSymbolName(symbol.to_string()));
             }
 
@@ -1280,6 +1278,23 @@ impl Parser {
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
 
         Ok(schema)
+    }
+
+    fn validate_name(
+        &self,
+        name: &String
+    ) -> bool {
+        let i1 = name.len();
+        if i1 == 0 {
+            return false;
+        }
+        let mut result : bool = name.chars().nth(0).unwrap().is_alphabetic();
+
+        let size = name.chars().count();
+        for i in 1..size {
+            result &= name.chars().nth(i).unwrap().is_alphanumeric();
+        }
+        return result;
     }
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
@@ -3818,4 +3833,12 @@ mod tests {
             panic!("Expected Schema::Record");
         }
     }
+
+    #[test]
+    fn validate_name_test() {
+        let p = Parser::default();
+        let r = p.validate_name(&"歳以上".to_owned());
+        assert_eq!(r, true);
+    }
+
 }
