@@ -66,7 +66,7 @@ public abstract class CodecFactory {
   /** Snappy codec. */
   public static CodecFactory snappyCodec() {
     try {
-      return new SnappyCodec.Option();
+      return SnappyCodec.OPTION;
     } catch (Throwable t) {
       LOG.debug("Snappy was not available", t);
       return null;
