@@ -28,6 +28,9 @@ import org.xerial.snappy.Snappy;
 public class SnappyCodec extends Codec {
   private CRC32 crc32 = new CRC32();
 
+  private static final SnappyCodec INSTANCE = new SnappyCodec();
+  public static final CodecFactory OPTION = new SnappyCodec.Option();
+
   static class Option extends CodecFactory {
     static {
       // if snappy isn't available, this will throw an exception which we
@@ -37,7 +40,7 @@ public class SnappyCodec extends Codec {
 
     @Override
     protected Codec createInstance() {
-      return new SnappyCodec();
+      return SnappyCodec.INSTANCE;
     }
   }
 
