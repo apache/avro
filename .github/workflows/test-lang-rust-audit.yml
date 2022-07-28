@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
       #- name: Rust Audit
       #  uses: actions-rs/audit-check@v1
@@ -49,7 +49,7 @@ jobs:
       # Install it manually
       - name: Dependency Review
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v1
+        uses: actions/dependency-review-action@v2
       - name: Install Cargo Audit
         run: cargo install cargo-audit
       - name: Audit
