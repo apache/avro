@@ -44,7 +44,7 @@ jobs:
         - '3.0'
         - '3.1'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -53,7 +53,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -qqy bundler libsnappy-dev
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: .gem
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -84,7 +84,7 @@ jobs:
         - '3.0'
         - '3.1'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -93,7 +93,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -qqy bundler libsnappy-dev
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: .gem
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -104,7 +104,7 @@ jobs:
         run: bundle config path .gem
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
