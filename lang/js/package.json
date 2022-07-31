@@ -1,6 +1,6 @@
 {
   "name": "avro-js",
-  "version": "1.11.1",
+  "version": "1.11.2-SNAPSHOT",
   "author": "Avro Developers <dev@avro.apache.org>",
   "description": "JavaScript Avro implementation",
   "contributors": [
