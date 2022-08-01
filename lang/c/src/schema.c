@@ -33,7 +33,6 @@
 #include "jansson.h"
 #include "st.h"
 #include "schema.h"
-#include "unicode/uchar.h"
 
 #define DEFAULT_TABLE_SIZE 32
 
