@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <locale.h>
+#include <errno.h>
 
 #include "jansson.h"
 #include "st.h"
@@ -50,21 +51,34 @@ static void avro_schema_init(avro_schema_t schema, avro_type_t type)
 
 static int is_avro_id(const char *name)
 {
-    setlocale(LC_ALL, "en_US.UTF-8");
 	if (name) {
 		size_t len = strlen(name);
     	if (len < 1) {
     		return 0;
     	}
+
+    	locale_t loc = newlocale(LC_ALL_MASK, "en_US.UTF-8", (locale_t) 0);
+    	locale_t currentLoc = (locale_t) 0;
+    	if (loc) {
+            currentLoc = uselocale(loc);
+        }
+        else {
+            setlocale(LC_ALL, "en_US.UTF-8");
+        }
+
 	    size_t mbslen = mbstowcs(NULL, name, 0);
 	    wchar_t  wsName[mbslen + 1];
         mbstowcs(wsName, name, mbslen + 1);
         size_t i;
         for (i = 0; i < mbslen; i++) {
             if (!(u_isalpha(wsName[i])
-                 || wsName[i] == '_' || (i && isdigit(wsName[i])))) {
+                 || wsName[i] == L'_' || (i && isdigit(wsName[i])))) {
 				return 0;
             }
+        }
+        if (loc) {
+            freelocale(loc);
+            uselocale(currentLoc);
         }
 
 		/*

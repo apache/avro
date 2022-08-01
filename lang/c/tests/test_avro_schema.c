@@ -223,6 +223,7 @@ static int test_record(void)
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
 	avro_schema_record_field_append(schema, "prénom", avro_schema_string());
 	avro_schema_record_field_append(schema, "我", avro_schema_string());
+	avro_schema_record_field_append(schema, "_undescores_and_numbers123", avro_schema_string());
 	avro_schema_record_field_append(schema, "Not Good", avro_schema_string());
 
 	if (avro_schema_record_field_get_index(schema, "name") != 0) {
@@ -237,6 +238,11 @@ static int test_record(void)
 
     if (avro_schema_record_field_get_index(schema, "我") != 3) {
         fprintf(stderr, "Incorrect index for \"我\" field\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (avro_schema_record_field_get_index(schema, "_undescores_and_numbers123") != 4) {
+        fprintf(stderr, "Incorrect index for \"_undescores_and_numbers123\" field\n");
         exit(EXIT_FAILURE);
     }
 
