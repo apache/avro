@@ -27,12 +27,12 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <wctype.h>
 #include <locale.h>
 
 #include "jansson.h"
 #include "st.h"
 #include "schema.h"
+#include "unicode/uchar.h"
 
 #define DEFAULT_TABLE_SIZE 32
 
@@ -61,7 +61,7 @@ static int is_avro_id(const char *name)
         mbstowcs(wsName, name, mbslen + 1);
         size_t i;
         for (i = 0; i < mbslen; i++) {
-            if (!(iswalpha(wsName[i])
+            if (!(u_isalpha(wsName[i])
                  || wsName[i] == '_' || (i && isdigit(wsName[i])))) {
 				return 0;
             }
@@ -74,6 +74,12 @@ static int is_avro_id(const char *name)
 	}
 	return 0;
 }
+
+static check_avro_id_function user_check_avro_id_function = &is_avro_id;
+void set_check_avro_id_function(check_avro_id_function function) {
+    user_check_avro_id_function = function;
+}
+
 
 /* Splits a qualified name by the last period, e.g. fullname "foo.bar.Baz" into
  * name "Baz" and namespace "foo.bar". Sets name_out to the name part (pointing
@@ -326,7 +332,7 @@ avro_schema_t avro_schema_fixed(const char *name, const int64_t size)
 avro_schema_t avro_schema_fixed_ns(const char *name, const char *space,
 		const int64_t size)
 {
-	if (!is_avro_id(name)) {
+	if (!(*user_check_avro_id_function)(name)) {
 		avro_set_error("Invalid Avro identifier");
 		return NULL;
 	}
@@ -493,7 +499,7 @@ avro_schema_t avro_schema_enum(const char *name)
 
 avro_schema_t avro_schema_enum_ns(const char *name, const char *space)
 {
-	if (!is_avro_id(name)) {
+	if (!(*user_check_avro_id_function)(name)) {
 		avro_set_error("Invalid Avro identifier");
 		return NULL;
 	}
@@ -607,7 +613,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 	check_param(EINVAL, field_name, "field name");
 	check_param(EINVAL, is_avro_schema(field_schema), "field schema");
 
-	if (!is_avro_id(field_name)) {
+	if (!(*user_check_avro_id_function)(field_name)) {
 		avro_set_error("Invalid Avro identifier");
 		return EINVAL;
 	}
@@ -635,7 +641,7 @@ avro_schema_record_field_append(const avro_schema_t record_schema,
 
 avro_schema_t avro_schema_record(const char *name, const char *space)
 {
-	if (!is_avro_id(name)) {
+	if (!(*user_check_avro_id_function)(name)) {
 		avro_set_error("Invalid Avro identifier");
 		return NULL;
 	}

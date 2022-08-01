@@ -40,6 +40,9 @@ avro_schema_t avro_schema_double(void);
 avro_schema_t avro_schema_boolean(void);
 avro_schema_t avro_schema_null(void);
 
+typedef int (*check_avro_id_function)(const char*);
+void set_check_avro_id_function(check_avro_id_function function);
+
 avro_schema_t avro_schema_record(const char *name, const char *space);
 avro_schema_t avro_schema_record_field_get(const avro_schema_t
 					   record, const char *field_name);

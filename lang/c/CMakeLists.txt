@@ -149,6 +149,16 @@ else (ZLIB_FOUND)
     message("Disabled deflate codec. zlib not found.")
 endif (ZLIB_FOUND)
 
+find_package(ICU 71.1 COMPONENTS uc REQUIRED)
+if (ICU_FOUND)
+    set(ICU_PKG libicuuc)
+    link_directories(${ICU_LIBRARY_DIRS})
+    include_directories(${ICU_INCLUDE_DIRS})
+    message("Enabled ICU ${ICU_LIBRARIES}")
+else (ICU_FOUND)
+    message("Disabled ICU include=${ICU_INCLUDE_DIRS} lib=${ICU_LIBRARY_DIRS}.")
+endif (ICU_FOUND)
+
 find_package(Snappy)
 if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
     set(SNAPPY_PKG libsnappy)
@@ -168,7 +178,7 @@ if (LZMA_FOUND)
     add_definitions(-DLZMA_CODEC)
     include_directories(${LZMA_INCLUDE_DIRS})
     link_directories(${LZMA_LIBRARY_DIRS})
-    message("Enabled lzma codec")
+    message("Enabled lzma codec pkg=${LZMA_PKG}")
 else (LZMA_FOUND)
     set(LZMA_PKG "")
     set(LZMA_LIBRARIES "")
@@ -177,6 +187,7 @@ endif (LZMA_FOUND)
 
 set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
 set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@ @SNAPPY_PKG@")
+set(ICU_LIBRARIES ${ICU_LIBRARIES})
 
 # Jansson JSON library
 pkg_check_modules(JANSSON jansson>=2.3)
