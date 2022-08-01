@@ -21,11 +21,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <locale.h>
 #ifdef _WIN32
  #include "msdirent.h"
 #else
  #include <dirent.h>
 #endif
+
 
 int test_cases = 0;
 avro_writer_t avro_stderr;
@@ -209,15 +211,29 @@ static int test_map(void)
 
 static int test_record(void)
 {
+    setlocale(LC_ALL, "en_US.UTF-8");
+
 	avro_schema_t schema = avro_schema_record("person", NULL);
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
 	avro_schema_record_field_append(schema, "age", avro_schema_int());
+	avro_schema_record_field_append(schema, "prénom", avro_schema_string());
+	avro_schema_record_field_append(schema, "我", avro_schema_string());
 
 	if (avro_schema_record_field_get_index(schema, "name") != 0) {
 		fprintf(stderr, "Incorrect index for \"name\" field\n");
 		exit(EXIT_FAILURE);
 	}
+
+	if (avro_schema_record_field_get_index(schema, "prénom") != 2) {
+    	fprintf(stderr, "Incorrect index for \"prénom\" field\n");
+    	exit(EXIT_FAILURE);
+    }
+
+    if (avro_schema_record_field_get_index(schema, "我") != 3) {
+        fprintf(stderr, "Incorrect index for \"我\" field\n");
+        exit(EXIT_FAILURE);
+    }
 
 	if (avro_schema_record_field_get_index(schema, "unknown") != -1) {
 		fprintf(stderr, "Incorrect index for \"unknown\" field\n");

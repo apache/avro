@@ -27,10 +27,13 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <wctype.h>
+#include <locale.h>
 
 #include "jansson.h"
 #include "st.h"
 #include "schema.h"
+#include "unicode/uchar.h"
 
 #define DEFAULT_TABLE_SIZE 32
 
@@ -48,20 +51,25 @@ static void avro_schema_init(avro_schema_t schema, avro_type_t type)
 
 static int is_avro_id(const char *name)
 {
-	size_t i, len;
+    setlocale(LC_ALL, "en_US.UTF-8");
 	if (name) {
-		len = strlen(name);
-		if (len < 1) {
-			return 0;
-		}
-		for (i = 0; i < len; i++) {
-			if (!(isalpha(name[i])
-			      || name[i] == '_' || (i && isdigit(name[i])))) {
+		size_t len = strlen(name);
+    	if (len < 1) {
+    		return 0;
+    	}
+	    size_t mbslen = mbstowcs(NULL, name, 0);
+	    wchar_t  wsName[mbslen + 1];
+        mbstowcs(wsName, name, mbslen + 1);
+        size_t i;
+        for (i = 0; i < mbslen; i++) {
+            if (!(iswalpha(wsName[i])
+                 || wsName[i] == '_' || (i && isdigit(wsName[i])))) {
 				return 0;
-			}
-		}
+            }
+        }
+
 		/*
-		 * starts with [A-Za-z_] subsequent [A-Za-z0-9_]
+		 * starts with [Alpha or _] subsequent [Alpha or _ or 0-9]
 		 */
 		return 1;
 	}
