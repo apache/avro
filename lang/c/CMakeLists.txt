@@ -149,7 +149,7 @@ else (ZLIB_FOUND)
     message("Disabled deflate codec. zlib not found.")
 endif (ZLIB_FOUND)
 
-find_package(ICU 71.1 COMPONENTS uc REQUIRED)
+find_package(ICU COMPONENTS uc REQUIRED)
 if (ICU_FOUND)
     set(ICU_PKG libicuuc)
     link_directories(${ICU_LIBRARY_DIRS})
