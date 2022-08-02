@@ -67,15 +67,24 @@ static int is_avro_id(const char *name)
         }
 
 	    size_t mbslen = mbstowcs(NULL, name, 0);
-	    wchar_t  wsName[mbslen + 1];
+#ifdef __STDC_NO_VLA__
+        // compiler does not support variable length arrays
+	    wchar_t  *wsName = calloc(mbslen + 1, sizeof(wchar_t));
+#else
+        wchar_t  wsName[mbslen + 1];
+#endif
         mbstowcs(wsName, name, mbslen + 1);
         size_t i;
         for (i = 0; i < mbslen; i++) {
             if (!(u_isalpha(wsName[i])
-                 || wsName[i] == L'_' || (i && isdigit(wsName[i])))) {
+                 || wsName[i] == L'_' || (i && u_isdigit(wsName[i])))) {
 				return 0;
             }
         }
+#ifdef __STDC_NO_VLA__
+        // compiler does not support variable length arrays
+        free(wsName);
+#endif
         if (loc) {
             freelocale(loc);
             uselocale(currentLoc);
