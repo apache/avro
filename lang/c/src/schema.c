@@ -57,6 +57,7 @@ static int is_avro_id(const char *name)
     		return 0;
     	}
 
+        int result = 1;
     	locale_t loc = newlocale(LC_ALL_MASK, "en_US.UTF-8", (locale_t) 0);
     	locale_t currentLoc = (locale_t) 0;
     	if (loc) {
@@ -75,10 +76,11 @@ static int is_avro_id(const char *name)
 #endif
         mbstowcs(wsName, name, mbslen + 1);
         size_t i;
-        for (i = 0; i < mbslen; i++) {
+
+        for (i = 0; i < mbslen && result; i++) {
             if (!(u_isalpha(wsName[i])
                  || wsName[i] == L'_' || (i && u_isdigit(wsName[i])))) {
-				return 0;
+				result = 0;
             }
         }
 #ifdef __STDC_NO_VLA__
@@ -93,7 +95,7 @@ static int is_avro_id(const char *name)
 		/*
 		 * starts with [Alpha or _] subsequent [Alpha or _ or 0-9]
 		 */
-		return 1;
+		return result;
 	}
 	return 0;
 }
