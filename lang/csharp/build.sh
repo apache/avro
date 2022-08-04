@@ -68,7 +68,7 @@ do
 
       # build the tarball
       mkdir -p ${ROOT}/dist/csharp
-      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
+      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen codec LICENSE NOTICE)
 
       # build documentation
       doxygen Avro.dox
