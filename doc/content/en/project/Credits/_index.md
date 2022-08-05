@@ -33,8 +33,8 @@ aliases:
 
 Apache Avro's active committers are:
 
-| **username** |       **name**      |     **organization**    |       **roles**          | **timezone** |
-|:--------------|:---------------------|:-------------------------|:------------------------:|:--------------:|
+| **username** |       **name**      |     **organization**    |       **roles**        | **timezone** |
+|:-------------|:--------------------|:------------------------|:----------------------:|:------------:|
 |  blue        | Ryan Blue           | Netflix                 | spec, java, ruby       |   -8 |
 |  brucem      | Bruce Mitchener     | Army of Bruce           | c                      |   +7 |
 |  busbey      | Sean Busbey         | Cloudera                | java, ruby             |   -6 |
@@ -45,6 +45,7 @@ Apache Avro's active committers are:
 |  kojiromike  | Michael A. Smith    | Independent             | python, docker         |   -5 |
 |  massie      | Matt Massie         | UC Berkeley             | c                      |   -8 |
 |  martinkl    | Martin Kleppmann    | University of Cambridge | c, ruby                |    0 |
+|  mgrigorov   | Martin Grigorov     | Huawei                  | rust                   |   +2 |
 |  nielsbasjes | Niels Basjes        | Bol.com                 | java, docker           |   +1 |
 |  philz       | Philip Zeyliger     | Cloudera                | java                   |   -8 |
 |  rskraba     | Ryan Skraba         | Talend                  | java, docker           |   +1 |
