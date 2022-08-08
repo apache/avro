@@ -17,10 +17,17 @@
 
 [package]
 name = "apache-avro-test-helper"
-version = "0.1.0"
+version = "0.14.0"
 edition = "2018"
-publish = false
-description = "Avro test helper. This crate is not supposed to be published!"
+description = "Apache Avro tests helper."
+authors = ["Apache Avro team <dev@avro.apache.org>"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/apache/avro"
+keywords = ["avro", "data", "serialization", "test"]
+categories = ["encoding"]
+documentation = "https://docs.rs/apache-avro-test-helper"
+
 
 [dependencies]
 color-backtrace = { default-features = false, version = "0.5.1" }
