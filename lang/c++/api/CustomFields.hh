@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include "../impl/json/JsonDom.hh"
+#include "./json/JsonDom.hh"
 
 namespace avro {
 

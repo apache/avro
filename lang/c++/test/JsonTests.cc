@@ -22,7 +22,7 @@
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "../impl/json/JsonDom.hh"
+#include "../api/json/JsonDom.hh"
 
 namespace avro {
 namespace json {

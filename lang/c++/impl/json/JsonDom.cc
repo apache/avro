@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "JsonDom.hh"
+#include "../../api/json/JsonDom.hh"
 
 #include <stdexcept>
 
