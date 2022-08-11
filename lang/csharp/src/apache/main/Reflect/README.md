@@ -68,7 +68,6 @@ The type created for Map objects is specified by the Deserializer property MapTy
 public Type MapType { get; set; }
 ```
 By default the MapType is Dictionary<string,>
-```
 
 Basic deserialization is performed as in the following example:
 
@@ -101,7 +100,7 @@ Basic deserialization is performed as in the following example:
 
 The dotnet reflection libraries can add an amount of performance overhead. Efforts are made to minimize this by supporting a cache of class details obtained by reflection (PropertyInfo objects) so that property value lookups can be performed quickly and with as little overhead as possible. 
 
-The class cache can be created separately from the serializer/deserializer and reused. Ideally it should be singleton and managed by DI engien.
+The class cache can be created separately from the serializer/deserializer and reused. Ideally it should be singleton and managed by DI provider.
 There is build in extensions to IServiceCollection that register required service, including Reflect cache. Your code can look like:
 
 ```csharp
@@ -170,7 +169,7 @@ _Example TypedFieldConverter_:
 
 ### Default Converters
 
-Default converters are defined to convert between an Avro primitive and C# type without explicitly defining the converter for a field. Default converters are static and are registered with the dependency injection provider.
+Default converters are defined to convert between an Avro primitive and C# type without explicitly defining the converter for a field. Default converters are registered with the dependency injection provider.
 
 ```csharp
     //program.cs
