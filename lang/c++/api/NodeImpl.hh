@@ -32,7 +32,7 @@
 
 #include "Node.hh"
 #include "NodeConcepts.hh"
-#include "CustomFields.hh"
+#include "CustomAttributes.hh"
 
 namespace avro {
 
@@ -160,8 +160,8 @@ protected:
 
     void setLeafToSymbolic(size_t index, const NodePtr &node) override;
 
-    void doAddCustomAttribute(const CustomFields &customfields) override {
-      customAttributes_.add(customfields);
+    void doAddCustomAttribute(const CustomAttributes &customAttributes) override {
+      customAttributes_.add(customAttributes);
     }
 
     SchemaResolution furtherResolution(const Node &reader) const {
@@ -223,8 +223,8 @@ using MultiLeaves = concepts::MultiAttribute<NodePtr>;
 
 using NoLeafNames = concepts::NoAttribute<std::string>;
 using LeafNames = concepts::MultiAttribute<std::string>;
-using MultiAttributes = concepts::MultiAttribute<CustomFields>;
-using NoAttributes = concepts::NoAttribute<CustomFields>;
+using MultiAttributes = concepts::MultiAttribute<CustomAttributes>;
+using NoAttributes = concepts::NoAttribute<CustomAttributes>;
 
 using NoSize = concepts::NoAttribute<int>;
 using HasSize = concepts::SingleAttribute<int>;
