@@ -285,7 +285,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeSeq for SeqSerializer {
+impl ser::SerializeSeq for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
@@ -303,7 +303,7 @@ impl<'a> ser::SerializeSeq for SeqSerializer {
     }
 }
 
-impl<'a> ser::SerializeTuple for SeqSerializer {
+impl ser::SerializeTuple for SeqSerializer {
     type Ok = Value;
     type Error = Error;
 
@@ -485,6 +485,7 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Deserialize, Serialize, Clone)]

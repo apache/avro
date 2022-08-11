@@ -18,12 +18,13 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::{NamesRef, Namespace, ResolvedSchema, Schema},
+    schema::{Name, Namespace, ResolvedSchema, Schema},
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
 };
 use std::{
+    borrow::Borrow,
     collections::HashMap,
     convert::TryFrom,
     io::{ErrorKind, Read},
@@ -58,7 +59,7 @@ fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
             std::cmp::Ordering::Equal => return Ok(0),
             std::cmp::Ordering::Less => {
                 let _size = zag_i64(reader)?;
-                -raw_len
+                raw_len.checked_neg().ok_or(Error::IntegerOverflow)?
             }
             std::cmp::Ordering::Greater => raw_len,
         })
@@ -72,9 +73,9 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
     decode_internal(schema, rs.get_names(), &None, reader)
 }
 
-fn decode_internal<R: Read>(
+pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
     schema: &Schema,
-    names: &NamesRef,
+    names: &HashMap<Name, S>,
     enclosing_namespace: &Namespace,
     reader: &mut R,
 ) -> AvroResult<Value> {
@@ -273,7 +274,12 @@ fn decode_internal<R: Read>(
         Schema::Ref { ref name } => {
             let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
             if let Some(resolved) = names.get(&fully_qualified_name) {
-                decode_internal(resolved, names, &fully_qualified_name.namespace, reader)
+                decode_internal(
+                    resolved.borrow(),
+                    names,
+                    &fully_qualified_name.namespace,
+                    reader,
+                )
             } else {
                 Err(Error::SchemaResolutionError(fully_qualified_name))
             }
@@ -294,6 +300,7 @@ mod tests {
         },
         Decimal,
     };
+    use pretty_assertions::assert_eq;
     use std::collections::HashMap;
 
     #[test]

@@ -82,6 +82,13 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/lang/rust/"
     schedule:
+      interval: "daily"
+    open-pull-requests-limit: 20
+    target-branch: master
+    labels: [auto-dependencies]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
       interval: "weekly"
       day: "sunday"
-    open-pull-requests-limit: 20

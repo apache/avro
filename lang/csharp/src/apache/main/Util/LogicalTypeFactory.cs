@@ -39,6 +39,8 @@ namespace Avro.Util
             {
                 { Decimal.LogicalTypeName, new Decimal() },
                 { Date.LogicalTypeName, new Date() },
+                { LocalTimestampMillisecond.LogicalTypeName, new LocalTimestampMillisecond() },
+                { LocalTimestampMicrosecond.LogicalTypeName, new LocalTimestampMicrosecond() },
                 { TimeMillisecond.LogicalTypeName, new TimeMillisecond() },
                 { TimeMicrosecond.LogicalTypeName, new TimeMicrosecond() },
                 { TimestampMillisecond.LogicalTypeName, new TimestampMillisecond() },

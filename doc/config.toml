@@ -112,7 +112,7 @@ weight = 1
 section = ["HTML", "print", "RSS"]
 
 [params]
-avroversion = "1.11.0"
+avroversion = "++version++"
 copyright = "The Apache Software Foundation"
 privacy_policy = "http://www.apache.org/foundation/policies/privacy.html"
 
@@ -131,14 +131,16 @@ archived_version = false
 # The version number for the version of the docs represented in this doc set.
 # Used in the "version-banner" partial to display a version number for the 
 # current doc set.
-version = "1.11.0"
+version = "++version++"
 
 # A link to latest version of the docs. Used in the "version-banner" partial to
 # point people to the main doc site.
 url_latest_version = "https://avro.apache.org"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
-github_repo = "https://github.com/apache/avro/doc"
+github_repo = "https://github.com/apache/avro"
+github_subdir = "doc"
+
 # An optional link to a related project repo. For example, the sibling repository where your product code lives.
 github_project_repo = "https://github.com/apache/avro"
 
@@ -156,7 +158,7 @@ github_project_repo = "https://github.com/apache/avro"
 algolia_docsearch = false
 
 # Enable Lunr.js offline search
-offlineSearch = true
+offlineSearch = false
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true
@@ -217,6 +219,11 @@ enable = true
   icon = "fab fa-github"
   desc = "Development takes place here!"
 [[params.links.developer]]
+  name = "Issues"
+  url = "https://issues.apache.org/jira/projects/AVRO/issues"
+  icon = "fab fa-jira"
+  desc = "Track bugs and new features"
+[[params.links.developer]]
   name = "Chat with other project developers at Slack"
   url = "https://the-asf.slack.com/"
   icon = "fab fa-slack"
@@ -228,8 +235,8 @@ enable = true
   desc = "Discuss development issues around the project"
 
 [[params.versions]]
-  version = "next"
-  url = "/docs/next/"
+  version = "++version++ (Current)"
+  url = "/docs/++version++/"
 
 [[params.versions]]
   version = "1.11.0"

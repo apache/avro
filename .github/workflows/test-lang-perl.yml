@@ -41,7 +41,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -87,7 +87,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -116,7 +116,7 @@ jobs:
                                                        inc::Module::Install
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

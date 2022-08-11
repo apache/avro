@@ -47,6 +47,9 @@ pub enum Error {
     #[error("Invalid utf-8 string")]
     ConvertToUtf8(#[source] std::string::FromUtf8Error),
 
+    #[error("Invalid utf-8 string")]
+    ConvertToUtf8Error(#[source] std::str::Utf8Error),
+
     /// Describes errors happened while validating Avro data.
     #[error("Value does not match schema")]
     Validation,
@@ -256,11 +259,17 @@ pub enum Error {
     #[error("Unknown primitive type: {0}")]
     ParsePrimitive(String),
 
-    #[error("invalid JSON for {key:?}: {precision:?}")]
-    GetDecimalPrecisionFromJson {
+    #[error("invalid JSON for {key:?}: {value:?}")]
+    GetDecimalMetadataValueFromJson {
         key: String,
-        precision: serde_json::Value,
+        value: serde_json::Value,
     },
+
+    #[error("The decimal precision ({precision}) must be bigger or equal to the scale ({scale})")]
+    DecimalPrecisionLessThanScale { precision: usize, scale: usize },
+
+    #[error("The decimal precision ({precision}) must be a positive number")]
+    DecimalPrecisionMuBePositive { precision: usize },
 
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
@@ -337,6 +346,9 @@ pub enum Error {
     #[error("wrong magic in header")]
     HeaderMagic,
 
+    #[error("Message Header mismatch. Expected: {0:?}. Actual: {1:?}")]
+    SingleObjectHeaderMismatch([u8; 10], [u8; 10]),
+
     #[error("Failed to get JSON from avro.schema key in map")]
     GetAvroSchemaFromMap,
 
@@ -411,6 +423,16 @@ pub enum Error {
         value_kind: ValueKind,
         supported_schema: Vec<SchemaKind>,
     },
+    #[error(
+        "Internal buffer not drained properly. Re-initialize the single object writer struct!"
+    )]
+    IllegalSingleObjectWriterState,
+
+    #[error("Codec '{0}' is not supported/enabled")]
+    CodecNotSupported(String),
+
+    #[error("Invalid Avro data! Cannot read codec type from value that is not Value::Bytes.")]
+    BadCodecMetadata,
 }
 
 impl serde::ser::Error for Error {

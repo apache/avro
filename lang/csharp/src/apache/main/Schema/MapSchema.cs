@@ -73,8 +73,7 @@ namespace Avro
         private MapSchema(Schema valueSchema, PropertyMap cutsomProperties)
             : base(Type.Map, cutsomProperties)
         {
-            if (null == valueSchema) throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
-            this.ValueSchema = valueSchema;
+            ValueSchema = valueSchema ?? throw new ArgumentNullException(nameof(valueSchema), "valueSchema cannot be null.");
         }
 
         /// <summary>

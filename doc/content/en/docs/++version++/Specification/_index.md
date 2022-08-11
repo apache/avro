@@ -3,6 +3,8 @@ title: "Specification"
 linkTitle: "Specification"
 weight: 4
 date: 2021-10-25
+aliases:
+- spec.html
 ---
 
 <!--
@@ -179,9 +181,11 @@ For example, 16-byte quantity may be declared with:
 ```
 
 ### Names {#names}
-Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace. Equality of names is defined on the fullname.
+Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace, separated by a dot. Equality of names is defined on the fullname.
 
-The name portion of a fullname, record field names, and enum symbols must:
+Record fields and enum symbols have names as well (but no namespace). Equality of fields and enum symbols is defined on the name of the field/symbol within its scope (the record/enum that defines it). Fields and enum symbols across scopes are never equal.
+
+The name portion of the fullname of named types, record field names, and enum symbols must:
 
 * start with [A-Za-z_]
 * subsequently contain only [A-Za-z0-9_]
@@ -257,7 +261,7 @@ Complex types (`record`, `enum`, `array`, `map`, `fixed`) have no namespace, but
 A schema or protocol may not contain multiple definitions of a fullname. Further, a name must be defined before it is used ("before" in the depth-first, left-to-right traversal of the JSON parse tree, where the types attribute of a protocol is always deemed to come "before" the messages attribute.)
 
 ### Aliases
-Named types and fields may have aliases. An implementation may optionally use aliases to map a writer's schema to the reader's. This faciliates both schema evolution as well as processing disparate datasets.
+Named types and fields may have aliases. An implementation may optionally use aliases to map a writer's schema to the reader's. This facilitates both schema evolution as well as processing disparate datasets.
 
 Aliases function by re-writing the writer's schema using aliases from the reader's schema. For example, if the writer's schema was named "Foo" and the reader's schema is named "Bar" and has an alias of "Foo", then the implementation would act as though "Foo" were named "Bar" when reading. Similarly, if data was written as a record with a field named "x" and is read as a record with a field named "y" with alias "x", then the implementation would act as though "x" were named "y" when reading.
 
@@ -367,7 +371,7 @@ For example, the union schema `["null","string"]` would encode:
 
 * _null_ as zero (the index of "null" in the union):
 `00`
-* the string "a" as one (the index of "string" in the union, encoded as hex 02), followed by the serialized string:
+* the string "a" as one (the index of "string" in the union, 1, encoded as hex 02), followed by the serialized string:
 `02 02 61`
 NOTE: Currently for C/C++ implementations, the positions are practically an int, but theoretically a long. In reality, we don't expect unions with 215M members
 

@@ -2,6 +2,7 @@
 title: "License"
 linkTitle: "License"
 weight: 3
+manualLink: https://www.apache.org/licenses/
 ---
 
 <!--

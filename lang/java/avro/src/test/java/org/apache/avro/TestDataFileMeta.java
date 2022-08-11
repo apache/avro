@@ -30,25 +30,25 @@ import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestDataFileMeta {
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
-  @Test(expected = AvroRuntimeException.class)
+  @Test
   public void testUseReservedMeta() throws IOException {
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
-      w.setMeta("avro.foo", "bar");
+      Assertions.assertThrows(AvroRuntimeException.class, () -> w.setMeta("avro.foo", "bar"));
     }
   }
 
-  @Test()
+  @Test
   public void testUseMeta() throws IOException {
-    File f = new File(DIR.getRoot().getPath(), "testDataFileMeta.avro");
+    File f = new File(DIR, "testDataFileMeta.avro");
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.setMeta("hello", "bar");
       w.create(Schema.create(Type.NULL), f);
@@ -62,11 +62,11 @@ public class TestDataFileMeta {
 
   }
 
-  @Test(expected = AvroRuntimeException.class)
+  @Test
   public void testUseMetaAfterCreate() throws IOException {
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(Schema.create(Type.NULL), new ByteArrayOutputStream());
-      w.setMeta("foo", "bar");
+      Assertions.assertThrows(AvroRuntimeException.class, () -> w.setMeta("foo", "bar"));
     }
 
   }

@@ -177,9 +177,14 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #end
 
 #end
+  @Override
   public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
 #set ($i = 0)
@@ -207,6 +212,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #end
   // Used by DatumReader.  Applications should not call.
+  @Override
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {

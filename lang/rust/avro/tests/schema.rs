@@ -21,15 +21,8 @@ use apache_avro::{
     types::{Record, Value},
     Codec, Error, Reader, Schema, Writer,
 };
+use apache_avro_test_helper::init;
 use lazy_static::lazy_static;
-use log::debug;
-
-fn init() {
-    let _ = env_logger::builder()
-        .filter_level(log::LevelFilter::Trace)
-        .is_test(true)
-        .try_init();
-}
 
 const PRIMITIVE_EXAMPLES: &[(&str, bool)] = &[
     (r#""null""#, true),
@@ -159,7 +152,6 @@ const RECORD_EXAMPLES: &[(&str, bool)] = &[
         }"#,
         false,
     ),
-    // TODO: (#92) properly support recursive types and uncomment
     (
         r#"{
             "type": "record",
@@ -369,21 +361,13 @@ const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
 ];
 
 const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
-  /*
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 4,
-            "size": 10,
-            "scale": 2
-        }"#,
-        true,
-    ),
-    (
-        r#"{
-            "type": "bytes",
+            "type": {
+                "type": "fixed",
+                "name": "TestDecimal",
+                "size": 10
+            },
             "logicalType": "decimal",
             "precision": 4,
             "scale": 2
@@ -392,65 +376,97 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
     ),
     (
         r#"{
-            "type": "bytes",
+            "type": {
+                "type": "fixed",
+                "name": "ScaleIsImplicitlyZero",
+                "size": 10
+            },
             "logicalType": "decimal",
-            "precision": 2,
-            "scale": -2
+            "precision": 4
+        }"#,
+        true,
+    ),
+    (
+        r#"{
+            "type": {
+                "type": "fixed",
+                "name": "PrecisionMustBeGreaterThanZero",
+                "size": 10
+            },
+            "logicalType": "decimal",
+            "precision": 0
         }"#,
         false,
     ),
     (
         r#"{
-            "type": "bytes",
-            "logicalType": "decimal",
-            "precision": -2,
-            "scale": 2
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 4,
+             "scale": 2
+         }"#,
+        true,
+    ),
+    (
+        r#"{
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": -2
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "bytes",
-            "logicalType": "decimal",
-            "precision": 2,
-            "scale": 3
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": -2,
+             "scale": 2
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": -10,
-            "scale": 2,
-            "size": 5
-        }"#,
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": 3
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 2,
-            "scale": 3,
-            "size": 2
-        }"#,
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": -10,
+             "scale": 2,
+             "size": 5
+         }"#,
         false,
     ),
     (
         r#"{
-            "type": "fixed",
-            "logicalType": "decimal",
-            "name": "TestDecimal",
-            "precision": 2,
-            "scale": 2,
-            "size": -2
-        }"#,
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": 2,
+             "scale": 3,
+             "size": 2
+         }"#,
         false,
     ),
-   */
+    (
+        r#"{
+             "type": "fixed",
+             "logicalType": "decimal",
+             "name": "TestDecimal",
+             "precision": 2,
+             "scale": 2,
+             "size": -2
+         }"#,
+        false,
+    ),
 ];
 
 const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
@@ -618,7 +634,6 @@ fn test_correct_recursive_extraction() {
 #[test]
 fn test_parse() {
     init();
-
     for (raw_schema, valid) in EXAMPLES.iter() {
         let schema = Schema::parse_str(raw_schema);
         if *valid {
@@ -1153,7 +1168,6 @@ fn test_fullname_name_namespace_and_default_namespace_specified() {
 #[test]
 fn test_doc_attributes() {
     init();
-
     fn assert_doc(schema: &Schema) {
         match schema {
             Schema::Enum { doc, .. } => assert!(doc.is_some()),
@@ -1212,7 +1226,6 @@ fn test_other_attributes() {
 #[test]
 fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
     init();
-
     let raw_schema = r#"/not/a/real/file"#;
     let error = Schema::parse_str(raw_schema).unwrap_err();
 
@@ -1234,6 +1247,7 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
 // AVRO-3302
 #[test]
 fn test_record_schema_with_cyclic_references() {
+    init();
     let schema = Schema::parse_str(
         r#"
             {
@@ -1291,7 +1305,7 @@ fn test_record_schema_with_cyclic_references() {
 
     match Reader::new(&mut bytes.as_slice()) {
         Ok(mut reader) => match reader.next() {
-            Some(value) => debug!("{:?}", value.unwrap()),
+            Some(value) => log::debug!("{:?}", value.unwrap()),
             None => panic!("No value was read!"),
         },
         Err(err) => panic!("An error occurred while reading datum: {:?}", err),
@@ -1302,6 +1316,7 @@ fn test_record_schema_with_cyclic_references() {
 // TODO: (#93) add support for logical type and attributes and uncomment (may need some tweaks to compile)
 #[test]
 fn test_decimal_valid_type_attributes() {
+    init();
     let fixed_decimal = Schema::parse_str(DECIMAL_LOGICAL_TYPE_ATTRIBUTES[0]).unwrap();
     assert_eq!(4, fixed_decimal.get_attribute("precision"));
     assert_eq!(2, fixed_decimal.get_attribute("scale"));

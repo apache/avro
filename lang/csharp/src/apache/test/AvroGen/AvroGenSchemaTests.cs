@@ -28,7 +28,7 @@ namespace Avro.Test.AvroGen
 {
     [TestFixture]
 
-    class AvroGenTests
+    class AvroGenSchemaTests
     {
         private const string _customConversionWithLogicalTypes = @"
 {
@@ -316,7 +316,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> generatedFilesToCheck = null)
         {
             // Create temp folder
-            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
@@ -325,7 +325,7 @@ namespace Avro.Test.AvroGen
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
                 // Generate from schema file
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>()), Is.EqualTo(0));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, namespaceMapping ?? new Dictionary<string, string>(), false), Is.EqualTo(0));
 
                 // Check if all generated files exist
                 if (generatedFilesToCheck != null)
@@ -489,7 +489,7 @@ namespace Avro.Test.AvroGen
             })]
         public void GenerateSchema(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck);
         }
 
         [TestCase(
@@ -603,7 +603,7 @@ namespace Avro.Test.AvroGen
             IEnumerable<string> typeNamesToCheck,
             IEnumerable<string> generatedFilesToCheck)
         {
-            TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, new Dictionary<string, string> { { namespaceMappingFrom, namespaceMappingTo } }, generatedFilesToCheck);
         }
 
         [TestCase(_logicalTypesWithCustomConversion, typeof(AvroTypeException))]
@@ -611,7 +611,7 @@ namespace Avro.Test.AvroGen
         public void NotSupportedSchema(string schema, Type expectedException)
         {
             // Create temp folder
-            string outputDir = AvroGenHelper.CreateEmptyTemporyFolder(out string uniqueId);
+            string outputDir = AvroGenHelper.CreateEmptyTemporaryFolder(out string uniqueId);
 
             try
             {
@@ -619,7 +619,7 @@ namespace Avro.Test.AvroGen
                 string schemaFileName = Path.Combine(outputDir, $"{uniqueId}.avsc");
                 System.IO.File.WriteAllText(schemaFileName, schema);
 
-                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>()), Is.EqualTo(1));
+                Assert.That(AvroGenTool.GenSchema(schemaFileName, outputDir, new Dictionary<string, string>(), false), Is.EqualTo(1));
             }
             finally
             {
@@ -693,6 +693,10 @@ namespace Avro.Test.AvroGen
       { ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
       { ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
       { ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+      { ""name"" : ""nulliblelocaltimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""local-timestamp-millis""}]  },
+      { ""name"" : ""localtimestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""local-timestamp-millis""} },
+      { ""name"" : ""nullibilelocaltimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""local-timestamp-micros""}]  },
+      { ""name"" : ""locallocaltimestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""local-timestamp-micros""} },
       { ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
       { ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
       { ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
@@ -703,7 +707,7 @@ namespace Avro.Test.AvroGen
       { ""name"" : ""decimalfixed"", ""type"" : {""type"": {""type"" : ""fixed"", ""size"": 16, ""name"": ""df""}, ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
     ]
 }",
-            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
+            new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal), typeof(AvroDecimal?), typeof(AvroDecimal) })]
         [TestCase(@"
 {
   ""namespace"": ""enum.base"",
@@ -729,7 +733,7 @@ namespace Avro.Test.AvroGen
             new object[] { "enum.base.EnumInDifferentNamespace", "enum.base.other.AnEnum" })]
         public void GenerateSchemaCheckFields(string schema, object[] result)
         {
-            Assembly assembly = TestSchema(schema);
+            Assembly assembly = AvroGenHelper.TestSchema(schema);
 
             // Instantiate object
             Type type = assembly.GetType((string)result[0]);
@@ -770,6 +774,44 @@ namespace Avro.Test.AvroGen
                     Assert.That(field.GetType(), Is.EqualTo(stype));
                 }
             }
+        }
+
+        [TestCase(
+            _nullableLogicalTypesArray,
+            new string[]
+            {
+                "org.apache.avro.codegentest.testdata.NullableLogicalTypesArray"
+            },
+            new string[]
+            {
+                "NullableLogicalTypesArray.cs"
+            })]
+        [TestCase(
+            _nestedSomeNamespaceRecord,
+            new string[]
+            {
+                "org.apache.avro.codegentest.some.NestedSomeNamespaceRecord",
+                "org.apache.avro.codegentest.other.NestedOtherNamespaceRecord"
+            },
+            new string[]
+            {
+                "NestedSomeNamespaceRecord.cs",
+                "NestedOtherNamespaceRecord.cs"
+            })]
+        [TestCase(_schema_avro_2883,
+            new string[]
+            {
+                "my.avro.ns.TestModel",
+                "my.avro.ns.EventType",
+            },
+            new string[]
+            {
+                "TestModel.cs",
+                "EventType.cs"
+            })]
+        public void GenerateSchemaWithSkipDirectoriesOption(string schema, IEnumerable<string> typeNamesToCheck, IEnumerable<string> generatedFilesToCheck)
+        {
+            AvroGenHelper.TestSchema(schema, typeNamesToCheck, generatedFilesToCheck: generatedFilesToCheck, skipDirectories: true);
         }
     }
 }

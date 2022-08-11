@@ -17,6 +17,11 @@
 
 [workspace]
 members = [
+    "avro_test_helper",
+    "avro_derive",
     "avro",
-    "avro_derive"
+    "wasm-demo"
+]
+exclude = [
+    "fuzz"
 ]
