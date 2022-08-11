@@ -25,7 +25,6 @@ using Avro.Reflect;
 using NUnit.Framework;
 using System.Collections;
 using Avro.Reflect.Reflection;
-using Moq;
 using Avro.Reflect.Interface;
 
 namespace Avro.Test
