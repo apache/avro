@@ -38,7 +38,7 @@
 #include "buffer/BufferStream.hh"
 
 #include "AvroSerialize.hh"
-#include "CustomFields.hh"
+#include "CustomAttributes.hh"
 #include "NodeConcepts.hh"
 #include "NodeImpl.hh"
 #include "Types.hh"
@@ -74,12 +74,12 @@ struct TestSchema {
     void buildSchema() {
         RecordSchema record("RootRecord");
 
-        CustomFields customFieldLong;
-        customFieldLong.addField("extra_info_mylong", std::string("it's a long field"));
+        CustomAttributes customAttributeLong;
+        customAttributeLong.addAttribute("extra_info_mylong", std::string("it's a long field"));
         // Validate that adding a custom attribute with same name is not allowed
         bool caught = false;
         try {
-            customFieldLong.addField("extra_info_mylong", std::string("duplicate"));
+            customAttributeLong.addAttribute("extra_info_mylong", std::string("duplicate"));
         }
         catch(Exception &e) {
             std::cout << "(intentional) exception: " << e.what() << '\n';
@@ -87,7 +87,7 @@ struct TestSchema {
         }
         BOOST_CHECK_EQUAL(caught, true);
         // Add custom attribute for the field
-        record.addField("mylong", LongSchema(), customFieldLong);
+        record.addField("mylong", LongSchema(), customAttributeLong);
 
         IntSchema intSchema;
         avro::MapSchema map = MapSchema(IntSchema());
@@ -141,12 +141,12 @@ struct TestSchema {
         }
         BOOST_CHECK_EQUAL(caught, true);
 
-        CustomFields customFieldLong2;
-        customFieldLong2.addField("extra_info_mylong2",
+        CustomAttributes customAttributeLong2;
+        customAttributeLong2.addAttribute("extra_info_mylong2",
         std::string("it's a long field"));
-        customFieldLong2.addField("more_info_mylong2",
+        customAttributeLong2.addAttribute("more_info_mylong2",
         std::string("it's still a long field"));
-        record.addField("mylong2", LongSchema(), customFieldLong2);
+        record.addField("mylong2", LongSchema(), customAttributeLong2);
 
         record.addField("anotherint", intSchema);
 
@@ -432,34 +432,34 @@ struct TestSchema {
 
     // Create NodeRecord with custom attributes at field level
     // validate json serialization
-    void checkNodeRecordWithCustomField()
+    void checkNodeRecordWithCustomAttribute()
     {
         Name recordName("Test");
         HasName nameConcept(recordName);
         concepts::MultiAttribute<std::string> fieldNames;
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
-        concepts::MultiAttribute<CustomFields> customFields;
+        concepts::MultiAttribute<CustomAttributes> customAttributes;
 
-        CustomFields cf;
-        cf.addField("extra field", std::string("1"));
+        CustomAttributes cf;
+        cf.addAttribute("extra field", std::string("1"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
-        customFields.add(cf);
+        customAttributes.add(cf);
 
-        NodeRecord nodeRecordWithCustomField(nameConcept, fieldValues,
+        NodeRecord nodeRecordWithCustomAttribute(nameConcept, fieldValues,
                                             fieldNames, defaultValues,
-                                            customFields);
-        std::string expectedJsonWithCustomField =
+                                            customAttributes);
+        std::string expectedJsonWithCustomAttribute =
         "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
         "[{\"name\": \"f1\", \"type\": \"long\",\"extra field\": \"1\"}]}";
-        testNodeRecord(nodeRecordWithCustomField,
-                    expectedJsonWithCustomField);
+        testNodeRecord(nodeRecordWithCustomAttribute,
+                    expectedJsonWithCustomAttribute);
     }
 
     // Create NodeRecord without custom attributes at field level
     // validate json serialization
-    void checkNodeRecordWithoutCustomField()
+    void checkNodeRecordWithoutCustomAttribute()
     {
         Name recordName("Test");
         HasName nameConcept(recordName);
@@ -467,18 +467,18 @@ struct TestSchema {
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
 
-        CustomFields cf;
-        cf.addField("extra field", std::string("1"));
+        CustomAttributes cf;
+        cf.addAttribute("extra field", std::string("1"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
 
-        NodeRecord nodeRecordWithoutCustomField(nameConcept, fieldValues,
+        NodeRecord nodeRecordWithoutCustomAttribute(nameConcept, fieldValues,
                                             fieldNames, defaultValues);
-        std::string expectedJsonWithoutCustomField =
+        std::string expectedJsonWithoutCustomAttribute =
         "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
         "[{\"name\": \"f1\", \"type\": \"long\"}]}";
-        testNodeRecord(nodeRecordWithoutCustomField,
-                    expectedJsonWithoutCustomField);
+        testNodeRecord(nodeRecordWithoutCustomAttribute,
+                    expectedJsonWithoutCustomAttribute);
     }
 
     void test() {
@@ -503,8 +503,8 @@ struct TestSchema {
 
         createExampleSchema();
 
-        checkNodeRecordWithoutCustomField();
-        checkNodeRecordWithCustomField();
+        checkNodeRecordWithoutCustomAttribute();
+        checkNodeRecordWithCustomAttribute();
     }
 
     ValidSchema schema_;
