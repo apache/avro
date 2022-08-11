@@ -2,6 +2,20 @@
 
 This namespace contains classes that implement Avro serialization and deserialization for plain C# objects. The classes use .net reflection to implement the serializers. The interface is similar to the Generic and Specific serialization classes.
 
+## Dependency Injection
+
+Provide AddAvroReflect() IServiceCollection extension method to register necessry servcies.
+
+```csharp
+    public static Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        ...
+        builder.Services.AddAvroReflect();
+        ...
+    }
+```
+
 ## Serialization
 
 The approach starts with the schema and iterates both the schema and the dotnet type together in a depth first manner per the specification. Serialization is the same as the Generic serializer except where the serializer encounters:
@@ -12,14 +26,26 @@ The approach starts with the schema and iterates both the schema and the dotnet 
 Basic serialization is performed as in the following example:
 
 ```csharp
-    Schema schema; // created previously
-    T myObject; // created previously
-
-
-    var avroWriter = new ReflectWriter<T>(schema);
-    using (var stream = new MemoryStream(256))
+    public class TestClass
     {
-        avroWriter.Write(myObject, new BinaryEncoder(stream));
+        private readonly IReflectCache _cache;
+
+        public TestClass(IReflectCache cache)
+        {
+            _cache = cache;
+        }
+
+        puvlic void ExampleMethod()
+        {
+            Schema schema; // created previously
+            T myObject; // created previously
+      
+            var avroWriter = new ReflectWriter<T>(schema, _cache);
+            using (var stream = new MemoryStream(256))
+            {
+                avroWriter.Write(myObject, new BinaryEncoder(stream));
+            }
+        }
     }
 ```
 
@@ -47,27 +73,63 @@ By default the MapType is Dictionary<string,>
 Basic deserialization is performed as in the following example:
 
 ```csharp
-    Schema schema; // created previously
-
-    // using same writer and reader schema in this example.
-    var avroReader = new ReflectReader<T>(schema, schema);
-
-    using (var stream = new MemoryStream(serialized))
+    public class TestClass
     {
-        deserialized = avroReader.Read(null, new BinaryDecoder(stream));
+        private readonly IReflectCache _cache;
+
+        public TestClass(IReflectCache cache)
+        {
+            _cache = cache;
+        }
+
+        puvlic void ExampleMethod()
+        {
+            Schema schema; // created previously
+    
+            // using same writer and reader schema in this example.
+            var avroReader = new ReflectReader<T>(schema, schema, _cache);
+
+            using (var stream = new MemoryStream(serialized))
+            {
+                deserialized = avroReader.Read(null, new BinaryDecoder(stream));
+            }
+        }
     }
 ```
 
-## Class cache
+## Reflect cache
 
 The dotnet reflection libraries can add an amount of performance overhead. Efforts are made to minimize this by supporting a cache of class details obtained by reflection (PropertyInfo objects) so that property value lookups can be performed quickly and with as little overhead as possible. 
 
-The class cache can be created separately from the serializer/deserializer and reused.
+The class cache can be created separately from the serializer/deserializer and reused. Ideally it should be singleton and managed by DI engien.
+There is build in extensions to IServiceCollection that register required service, including Reflect cache. Your code can look like:
 
 ```csharp
-    var cache = new ClassCache();
-    var writer = new ReflectWriter<MultiList>(schema, cache);
-    var reader = new ReflectReader<MultiList>(schema, schema, cache);
+    //program.cs
+    public static Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        ...
+        builder.Services.AddAvroReflect();
+        ...
+    }
+   
+    //TestClass.cs
+    public class TestClass
+    {
+        private readonly IReflectCache _cache;
+
+        public TestClass(IReflectCache cache)
+        {
+            _cache = cache;
+        }
+
+        puvlic void ExampleMethod()
+        {
+            var writer = new ReflectWriter<MultiList>(schema, _cache);
+            var reader = new ReflectReader<MultiList>(schema, schema, _cache);
+        }
+    }
 ```
 The class cache is also used with default type conversions and with array serialization and deserialization.
 
@@ -108,13 +170,18 @@ _Example TypedFieldConverter_:
 
 ### Default Converters
 
-Default converters are defined to convert between an Avro primitive and C# type without explicitly defining the converter for a field. Default converters are static and are registered with the class cache.
+Default converters are defined to convert between an Avro primitive and C# type without explicitly defining the converter for a field. Default converters are static and are registered with the dependency injection provider.
 
 ```csharp
-    ClassCache.AddDefaultConverter<byte[], GenericFixed>((a,s)=>new GenericFixed(s as FixedSchema, a), (p,s)=>p.Value);
-    var writer = new ReflectWriter<GenericFixedRec>(schema);
-    var reader = new ReflectReader<GenericFixedRec>(schema, schema);
-
+    //program.cs
+    public static Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        ...
+        builder.Services.AddTransient<IAvroFieldConverter, DateTimeOffsetToLongConverter>();
+        builder.Services.AddAvroReflect();
+        ...
+    }
 ```
 ## Attributes
 
