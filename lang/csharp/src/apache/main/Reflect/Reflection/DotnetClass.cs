@@ -21,7 +21,7 @@ using System.Reflection;
 using System.Collections.Concurrent;
 using Avro;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Reflection
 {
     /// <summary>
     /// Collection of DotNetProperty objects to repre

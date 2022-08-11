@@ -59,5 +59,8 @@
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <Compile Remove="**/*.netstandard2.0.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Reflect\DependencyInjection\" />
+  </ItemGroup>
 
 </Project>

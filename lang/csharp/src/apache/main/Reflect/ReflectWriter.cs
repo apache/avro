@@ -18,6 +18,7 @@
 
 using Avro.IO;
 using Avro.Generic;
+using Avro.Reflect.Reflection;
 
 namespace Avro.Reflect
 {

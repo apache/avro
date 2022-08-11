@@ -18,7 +18,7 @@
 
  using System;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Interface
 {
     /// <summary>
     /// Converters can be added to properties with an AvroField attribute. Converters convert between the

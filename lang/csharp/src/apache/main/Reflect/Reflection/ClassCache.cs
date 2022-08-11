@@ -19,8 +19,10 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using Avro.Reflect.Converter;
+using Avro.Reflect.Interface;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Reflection
 {
     /// <summary>
     /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
@@ -75,7 +77,7 @@ namespace Avro.Reflect
         /// Find a default converter
         /// </summary>
         /// <param name="tag"></param>
-        /// <param name="propType"></param>
+        /// <param name="propType"></param>Ss
         /// <returns>The first matching converter - null if there isn't one</returns>
         public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {

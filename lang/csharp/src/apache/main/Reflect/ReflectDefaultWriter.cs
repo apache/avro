@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using Avro.IO;
+using Avro.Reflect.Reflection;
 using Avro.Specific;
 
 namespace Avro.Reflect
