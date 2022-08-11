@@ -49,3 +49,6 @@ jobs:
 
       - name: Test
         run: ./build.sh test
+
+      - name: Install
+        run: ./build.sh install
