@@ -49,6 +49,7 @@
 
   <!-- See lang/csharp/README.md for tool and library dependency update strategy -->
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonMinimumVersion)" />
     <PackageReference Include="System.CodeDom" Version="$(SystemCodeDomVersion)" />
   </ItemGroup>
@@ -58,9 +59,6 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <Compile Remove="**/*.netstandard2.0.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Reflect\DependencyInjection\" />
   </ItemGroup>
 
 </Project>

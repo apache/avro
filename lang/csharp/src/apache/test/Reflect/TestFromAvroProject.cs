@@ -25,6 +25,8 @@ using Avro.Generic;
 using Avro.Specific;
 using Avro.Reflect;
 using NUnit.Framework;
+using Avro.Reflect.Reflection;
+using Avro.Reflect.Interface;
 
 namespace Avro.Test
 {
@@ -166,9 +168,9 @@ namespace Avro.Test
                         schema = s;
                     }
                 }
-
-                var avroWriter = new ReflectWriter<Z>(schema);
-                var avroReader = new ReflectReader<Z>(schema, schema);
+                var cache = new ReflectCache(new List<IAvroFieldConverter>());
+                var avroWriter = new ReflectWriter<Z>(schema, cache);
+                var avroReader = new ReflectReader<Z>(schema, schema, cache);
 
                 byte[] serialized;
 

@@ -85,7 +85,7 @@ namespace Avro.Reflect.Reflection
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, IReflectCache cache)
         {
             _property = property;
             Converter = converter;
@@ -106,7 +106,7 @@ namespace Avro.Reflect.Reflection
             }
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema schema, IReflectCache cache)
             : this(property, schema, null, cache)
         {
         }

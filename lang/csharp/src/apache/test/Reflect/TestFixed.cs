@@ -23,6 +23,8 @@ using Avro.Reflect;
 using NUnit.Framework;
 using Avro.Reflect.Converter;
 using Avro.Reflect.Reflection;
+using Avro.Reflect.Interface;
+using System.Collections.Generic;
 
 namespace Avro.Test
 {
@@ -82,9 +84,9 @@ namespace Avro.Test
             var fixedRecWrite = new ByteArrayFixedRec() { myFixed = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} };
             var fixedRecBad = new ByteArrayFixedRec() { myFixed = new byte[10] };
             ByteArrayFixedRec fixedRecRead = null;
-
-            var writer = new ReflectWriter<ByteArrayFixedRec>(schema);
-            var reader = new ReflectReader<ByteArrayFixedRec>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<ByteArrayFixedRec>(schema, cache);
+            var reader = new ReflectReader<ByteArrayFixedRec>(schema, schema, cache);
 
             Assert.Throws(typeof(AvroException), ()=> {
                 using (var stream = new MemoryStream(256))
@@ -117,9 +119,9 @@ namespace Avro.Test
             }
             var fixedRecWrite = new GenericFixedConverterRec() { myFixed = new GenericFixed(fs) {Value = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} }};
             GenericFixedConverterRec fixedRecRead = null;
-
-            var writer = new ReflectWriter<GenericFixedConverterRec>(schema);
-            var reader = new ReflectReader<GenericFixedConverterRec>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<GenericFixedConverterRec>(schema, cache);
+            var reader = new ReflectReader<GenericFixedConverterRec>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {
@@ -147,9 +149,9 @@ namespace Avro.Test
             var fixedRecWrite = new GenericFixedRec() { myFixed = new GenericFixed(fs) {Value = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} }};
             GenericFixedRec fixedRecRead = null;
 
-            ClassCache.AddDefaultConverter<byte[], GenericFixed>((a,s)=>new GenericFixed(s as FixedSchema, a), (p,s)=>p.Value);
-            var writer = new ReflectWriter<GenericFixedRec>(schema);
-            var reader = new ReflectReader<GenericFixedRec>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter> {new FuncFieldConverter<byte[], GenericFixed>((a, s) => new GenericFixed(s as FixedSchema, a), (p, s) => p.Value)});
+            var writer = new ReflectWriter<GenericFixedRec>(schema, cache);
+            var reader = new ReflectReader<GenericFixedRec>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {

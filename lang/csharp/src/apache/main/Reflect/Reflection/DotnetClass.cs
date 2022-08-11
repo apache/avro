@@ -20,6 +20,7 @@ using System;
 using System.Reflection;
 using System.Collections.Concurrent;
 using Avro;
+using Avro.Reflect.Interface;
 
 namespace Avro.Reflect.Reflection
 {
@@ -38,7 +39,7 @@ namespace Avro.Reflect.Reflection
         /// <param name="t">type of the class</param>
         /// <param name="r">record schema</param>
         /// <param name="cache">class cache - can be reused</param>
-        public DotnetClass(Type t, RecordSchema r, ClassCache cache)
+        public DotnetClass(Type t, RecordSchema r, IReflectCache cache)
         {
             _type = t;
             foreach (var f in r.Fields)

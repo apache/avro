@@ -19,6 +19,7 @@
 using Avro.IO;
 using Avro.Generic;
 using Avro.Reflect.Reflection;
+using Avro.Reflect.Interface;
 
 namespace Avro.Reflect
 {
@@ -40,7 +41,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <param name="cache"></param>
-        public ReflectWriter(Schema schema, ClassCache cache = null)
+        public ReflectWriter(Schema schema, IReflectCache cache)
             : this(new ReflectDefaultWriter(typeof(T), schema, cache))
         {
         }

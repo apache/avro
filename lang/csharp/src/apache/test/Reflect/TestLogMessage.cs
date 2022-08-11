@@ -22,6 +22,8 @@ using System.IO;
 using Avro.IO;
 using Avro.Reflect;
 using Avro.Reflect.Conver;
+using Avro.Reflect.Interface;
+using Avro.Reflect.Reflection;
 using NUnit.Framework;
 
 namespace Avro.Test
@@ -82,8 +84,9 @@ namespace Avro.Test
         public void Serialize()
         {
             var schema = Schema.Parse(_logMessageSchemaV1);
-            var avroWriter = new ReflectWriter<LogMessage>(schema);
-            var avroReader = new ReflectReader<LogMessage>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var avroWriter = new ReflectWriter<LogMessage>(schema, cache);
+            var avroReader = new ReflectReader<LogMessage>(schema, schema, cache);
 
             byte[] serialized;
 

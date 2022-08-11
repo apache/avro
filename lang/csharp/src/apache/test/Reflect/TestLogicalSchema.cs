@@ -17,9 +17,12 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
 using Avro.Reflect;
+using Avro.Reflect.Interface;
+using Avro.Reflect.Reflection;
 using NUnit.Framework;
 
 namespace Avro.test.Reflect
@@ -49,8 +52,9 @@ namespace Avro.test.Reflect
             };
 
             var schema = Schema.Parse(SchemaJson);
-            var writer = new ReflectWriter<TestObject>(schema);
-            var reader = new ReflectReader<TestObject>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<TestObject>(schema, cache);
+            var reader = new ReflectReader<TestObject>(schema, schema, cache);
             var writeStream = new MemoryStream();
             var writeBinaryEncoder = new BinaryEncoder(writeStream);
 
@@ -109,8 +113,9 @@ namespace Avro.test.Reflect
             };
 
             var schema = Schema.Parse(SchemaJson);
-            var writer = new ReflectWriter<TestObject>(schema);
-            var reader = new ReflectReader<TestObject>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<TestObject>(schema, cache);
+            var reader = new ReflectReader<TestObject>(schema, schema, cache);
             var writeStream = new MemoryStream();
             var writeBinaryEncoder = new BinaryEncoder(writeStream);
 

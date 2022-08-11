@@ -1,80 +1,28 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Text;
 using Avro.Reflect.Converter;
 using Avro.Reflect.Interface;
 
 namespace Avro.Reflect.Reflection
 {
-    /// <summary>
-    /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
-    /// </summary>
-    public class ClassCache
+    internal class ReflectCache : IReflectCache
     {
-        private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
-
+        private ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
-
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+        private readonly IEnumerable<IAvroFieldConverter> _converters;
 
-        private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
+        public ReflectCache(IEnumerable<IAvroFieldConverter> converters)
         {
-            if (schema != null && GetClass(schema) != null)
-            {
-                return;
-            }
-
-            if (!dotnetClass.IsClass)
-            {
-                throw new AvroException($"Type {dotnetClass.Name} is not a class");
-            }
-
-            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
+            _converters = converters;
         }
 
         /// <summary>
-        /// Add a default field converter
-        /// </summary>
-        /// <param name="converter"></param>
-        public static void AddDefaultConverter(IAvroFieldConverter converter)
-        {
-            _defaultConverters.Add(converter);
-        }
-
-        /// <summary>
-        /// Add a converter defined using Func&lt;&gt;. The converter will be used whenever the source and target types
-        /// match and a specific attribute is not defined.
-        /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
-        /// <typeparam name="TAvro"></typeparam>
-        /// <typeparam name="TProperty"></typeparam>
-        public static void AddDefaultConverter<TAvro, TProperty>(Func<TAvro, Schema, TProperty> from, Func<TProperty, Schema, TAvro> to)
-        {
-            _defaultConverters.Add(new FuncFieldConverter<TAvro, TProperty>(from, to));
-        }
-
-        /// <summary>
-        /// Find a default converter
+        /// Find a registered converter
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="propType"></param>Ss
@@ -126,7 +74,7 @@ namespace Avro.Reflect.Reflection
                     return null;
             }
 
-            foreach (var c in _defaultConverters)
+            foreach (var c in _converters)
             {
                 if (c.GetAvroType() == avroType && c.GetPropertyType() == propType)
                 {
@@ -184,7 +132,7 @@ namespace Avro.Reflect.Reflection
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
-               return null;
+                return null;
             }
 
             return c;
@@ -262,7 +210,7 @@ namespace Avro.Reflect.Reflection
                     LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);
                     break;
                 case NamedSchema ns:
-                    EnumCache.AddEnumNameMapItem(ns, objType);
+                    AddEnumNameMapItem(ns, objType);
                     break;
                 case UnionSchema us:
                     if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null))
@@ -301,6 +249,42 @@ namespace Avro.Reflect.Reflection
 
                     break;
             }
+        }
+
+        /// <summary>
+        /// Lookup an entry in the cache - based on the schema fullname
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        public Type GetEnumeration(NamedSchema schema)
+        {
+            Type t;
+            if (!_nameEnumMap.TryGetValue(schema.Fullname, out t))
+            {
+                throw new AvroException($"Couldn't find enumeration for avro fullname: {schema.Fullname}");
+            }
+
+            return t;
+        }
+
+         private void AddEnumNameMapItem(NamedSchema schema, Type dotnetEnum)
+        {
+            _nameEnumMap.TryAdd(schema.Fullname, dotnetEnum);
+        }
+
+        private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
+        {
+            if (schema != null && GetClass(schema) != null)
+            {
+                return;
+            }
+
+            if (!dotnetClass.IsClass)
+            {
+                throw new AvroException($"Type {dotnetClass.Name} is not a class");
+            }
+
+            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
         }
     }
 }

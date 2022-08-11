@@ -25,6 +25,7 @@ using Avro.Reflect;
 using NUnit.Framework;
 using System.Collections;
 using Avro.Reflect.Reflection;
+using Avro.Reflect.Interface;
 
 namespace Avro.Test
 {
@@ -76,7 +77,7 @@ namespace Avro.Test
 
             // union types (except for [null, type]) need to be manually registered
             var unionSchema = schema as UnionSchema;
-            var cache = new ClassCache();
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             cache.LoadClassCache(typeof(Derived1), unionSchema[0]);
             cache.LoadClassCache(typeof(Derived2), unionSchema[1]);
             var x = schema as RecordSchema;
@@ -109,7 +110,7 @@ namespace Avro.Test
         public void ThrowsIfClassesNotLoadedTest()
         {
             var schema = Schema.Parse(BaseClassSchema);
-            var cache = new ClassCache();
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             Assert.Throws<AvroException>(() => new ReflectWriter<BaseClass>(schema, cache));
         }
 
@@ -130,9 +131,9 @@ namespace Avro.Test
             ";
             var schema = Schema.Parse(nullableSchema);
             var derived2write = new Derived2() { A = "derived2", C = 3.14 };
-
-            var writer = new ReflectWriter<Derived2>(schema);
-            var reader = new ReflectReader<Derived2>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<Derived2>(schema, cache);
+            var reader = new ReflectReader<Derived2>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {
@@ -171,7 +172,7 @@ namespace Avro.Test
 
             // union types (except for [null, type]) need to be manually registered
             var unionSchema = schema as UnionSchema;
-            var cache = new ClassCache();
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             cache.LoadClassCache(typeof(Derived2), unionSchema[2]);
 
             var writer = new ReflectWriter<object>(schema, cache);

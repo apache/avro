@@ -25,6 +25,8 @@ using Avro.Reflect;
 using NUnit.Framework;
 using System.Collections;
 using Avro.Reflect.Reflection;
+using Moq;
+using Avro.Reflect.Interface;
 
 namespace Avro.Test
 {
@@ -69,9 +71,9 @@ namespace Avro.Test
         {
             var schema = Schema.Parse(_simpleList);
             var fixedRecWrite = new List<string>() {"value"};
-
-            var writer = new ReflectWriter<List<string>>(schema);
-            var reader = new ReflectReader<List<string>>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<List<string>>(schema, cache);
+            var reader = new ReflectReader<List<string>>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {
@@ -88,9 +90,9 @@ namespace Avro.Test
         {
             var schema = Schema.Parse(_recordList);
             var fixedRecWrite = new List<ListRec>() { new ListRec() { S = "hello"}};
-
-            var writer = new ReflectWriter<List<ListRec>>(schema);
-            var reader = new ReflectReader<List<ListRec>>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<List<ListRec>>(schema, cache);
+            var reader = new ReflectReader<List<ListRec>>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {
@@ -167,7 +169,7 @@ namespace Avro.Test
             var schema = Schema.Parse(_recordList);
             var fixedRecWrite = new ConcurrentQueue<ConcurrentQueueRec>();
             fixedRecWrite.Enqueue(new ConcurrentQueueRec() { S = "hello"});
-            var cache = new ClassCache();
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             cache.AddArrayHelper("arrayOfA", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
             var writer = new ReflectWriter<ConcurrentQueue<ConcurrentQueueRec>>(schema, cache);
             var reader = new ReflectReader<ConcurrentQueue<ConcurrentQueueRec>>(schema, schema, cache);
@@ -222,7 +224,7 @@ namespace Avro.Test
             var fixedRecWrite = new MultiList() { one = new List<string>(), two = new ConcurrentQueue<string>() };
             fixedRecWrite.one.Add("hola");
             fixedRecWrite.two.Enqueue("hello");
-            var cache = new ClassCache();
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<string>));
             var writer = new ReflectWriter<MultiList>(schema, cache);
             var reader = new ReflectReader<MultiList>(schema, schema, cache);

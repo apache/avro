@@ -17,6 +17,8 @@
  */
  using Avro.IO;
 using Avro.Reflect;
+using Avro.Reflect.Interface;
+using Avro.Reflect.Reflection;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -122,9 +124,9 @@ namespace Avro.test.Reflect
                     },
                 }
             };
-
-            var writer = new ReflectWriter<Recursive>(schema);
-            var reader = new ReflectReader<Recursive>(schema, schema);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<Recursive>(schema, cache);
+            var reader = new ReflectReader<Recursive>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {

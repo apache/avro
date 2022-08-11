@@ -22,6 +22,8 @@ using NUnit.Framework;
 using Avro.IO;
 using Avro.Reflect;
 using Avro.Reflect.Reflection;
+using Avro.Reflect.Interface;
+using System.Collections.Generic;
 
 namespace Avro.Test
 {
@@ -92,7 +94,8 @@ namespace Avro.Test
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class
         {
             long initialPos = ms.Position;
-            var r = new ReflectReader<S>(ws, rs);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var r = new ReflectReader<S>(ws, rs, cache);
             Decoder d = new BinaryDecoder(ms);
             S output = r.Read(null, d);
             Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
@@ -103,18 +106,20 @@ namespace Avro.Test
         private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs) where S : class
         {
             input.Position = startPos;
-            var reader = new ReflectReader<S>(ws, rs);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var reader = new ReflectReader<S>(ws, rs, cache);
             Decoder d = new BinaryDecoder(input);
             S output = reader.Read(null, d);
             Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
-            AssertReflectRecordEqual(rs, expected, ws, output, reader.Reader.ClassCache);
+            AssertReflectRecordEqual(rs, expected, ws, output, cache);
         }
 
         private static Stream serialize<T>(Schema ws, T actual)
         {
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
             var ms = new MemoryStream();
             Encoder e = new BinaryEncoder(ms);
-            var w = new ReflectWriter<T>(ws);
+            var w = new ReflectWriter<T>(ws, cache);
             w.Write(actual, e);
             ms.Flush();
             ms.Position = 0;
@@ -125,7 +130,8 @@ namespace Avro.Test
         private static void checkAlternateSerializers<T>(byte[] expected, T value, Schema ws)
         {
             var ms = new MemoryStream();
-            var writer = new ReflectWriter<T>(ws);
+            var cache = new ReflectCache(new List<IAvroFieldConverter>());
+            var writer = new ReflectWriter<T>(ws, cache);
             var e = new BinaryEncoder(ms);
             writer.Write(value, e);
             var output = ms.ToArray();
@@ -134,7 +140,7 @@ namespace Avro.Test
             Assert.True(expected.SequenceEqual(output));
         }
 
-        private static void AssertReflectRecordEqual(Schema schema1, object rec1, Schema schema2, object rec2, ClassCache cache)
+        private static void AssertReflectRecordEqual(Schema schema1, object rec1, Schema schema2, object rec2, ReflectCache cache)
         {
             var recordSchema = (RecordSchema) schema1;
             foreach (var f in recordSchema.Fields)

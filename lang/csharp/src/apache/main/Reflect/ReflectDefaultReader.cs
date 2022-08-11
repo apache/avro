@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using Avro.IO;
+using Avro.Reflect.Interface;
 using Avro.Reflect.Reflection;
 using Avro.Specific;
 using Newtonsoft.Json.Linq;
@@ -38,12 +39,7 @@ namespace Avro.Reflect
         /// </summary>
         public Type MapType { get => _mapType; set => _mapType = value; }
 
-        private ClassCache _classCache = new ClassCache();
-
-        /// <summary>
-        /// Class cache
-        /// </summary>
-        public ClassCache ClassCache { get => _classCache; }
+        private IReflectCache _reflectCache;
 
         private Type _mapType = typeof(Dictionary<,>);
 
@@ -63,15 +59,11 @@ namespace Avro.Reflect
         /// <param name="writerSchema"></param>
         /// <param name="readerSchema"></param>
         /// <param name="cache"></param>
-        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema, ClassCache cache)
+        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema, IReflectCache cache)
             : base(writerSchema, readerSchema)
         {
-            if (cache != null)
-            {
-                _classCache = cache;
-            }
-
-            _classCache.LoadClassCache(objType, readerSchema);
+            _reflectCache = cache;
+            _reflectCache.LoadClassCache(objType, readerSchema);
         }
 
         /// <summary>
@@ -117,7 +109,7 @@ namespace Avro.Reflect
                     }
 
                     Type enumType = null;
-                    enumType = EnumCache.GetEnumeration(namedSchema);
+                    enumType = _reflectCache.GetEnumeration(namedSchema);
                     if (enumType == null)
                     {
                         throw new Exception(string.Format(CultureInfo.InvariantCulture,
@@ -142,7 +134,7 @@ namespace Avro.Reflect
                     }
 
                     Type recordtype = null;
-                    recordtype = _classCache.GetClass(recordSchema).GetClassType();
+                    recordtype = _reflectCache.GetClass(recordSchema).GetClassType();
                     if (recordtype == null)
                     {
                         throw new Exception(string.Format(CultureInfo.InvariantCulture,
@@ -158,7 +150,7 @@ namespace Avro.Reflect
                         throw new Exception("Unable to cast schema into an array schema");
                     }
 
-                    var arrayHelper = _classCache.GetArrayHelper(arraySchema, null);
+                    var arrayHelper = _reflectCache.GetArrayHelper(arraySchema, null);
                     return arrayHelper.ArrayType.MakeGenericType(new Type[] { GetTypeFromSchema(arraySchema.ItemSchema, false) });
 
                 case Schema.Type.Map:
@@ -309,7 +301,7 @@ namespace Avro.Reflect
 
                     JArray jarr = defaultValue as JArray;
                     var array = (IEnumerable)Activator.CreateInstance(GetTypeFromSchema(s, false));
-                    var arrayHelper = _classCache.GetArrayHelper(s as ArraySchema, array);
+                    var arrayHelper = _reflectCache.GetArrayHelper(s as ArraySchema, array);
                     foreach (JToken jitem in jarr)
                     {
                         arrayHelper.Add(GetDefaultValue((s as ArraySchema).ItemSchema, jitem));
@@ -342,7 +334,7 @@ namespace Avro.Reflect
                             throw new AvroException($"No default value for field {field.Name}");
                         }
 
-                        _classCache.GetClass(rcs).SetValue(rec, field, GetDefaultValue(field.Schema, val));
+                        _reflectCache.GetClass(rcs).SetValue(rec, field, GetDefaultValue(field.Schema, val));
                     }
 
                     return rec;
@@ -384,7 +376,7 @@ namespace Avro.Reflect
             var i = d.ReadEnum();
             var symbol = writerSchema[i];
             var es = readerSchema as EnumSchema;
-            var enumType = EnumCache.GetEnumeration(es);
+            var enumType = _reflectCache.GetEnumeration(es);
             return Enum.Parse(enumType, symbol);
         }
 
@@ -418,8 +410,8 @@ namespace Avro.Reflect
                     Field rf;
                     if (rs.TryGetField(wf.Name, out rf))
                     {
-//                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
-                        _classCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
+                        //                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
+                        _reflectCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
                     }
                     else
                     {
@@ -439,7 +431,7 @@ namespace Avro.Reflect
                     continue;
                 }
 
-                _classCache.GetClass(rs).SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
+                _reflectCache.GetClass(rs).SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
             }
 
             return rec;
@@ -486,14 +478,14 @@ namespace Avro.Reflect
                 array = reuse as IEnumerable;
                 if (array == null)
                     throw new AvroException("array object is not an IEnumerable");
-                arrayHelper = _classCache.GetArrayHelper(rs, array);
+                arrayHelper = _reflectCache.GetArrayHelper(rs, array);
 
                 arrayHelper.Clear();
             }
             else
             {
                 array = Activator.CreateInstance(GetTypeFromSchema(rs, false)) as IEnumerable;
-                arrayHelper = _classCache.GetArrayHelper(rs, array);
+                arrayHelper = _reflectCache.GetArrayHelper(rs, array);
             }
 
             int i = 0;
