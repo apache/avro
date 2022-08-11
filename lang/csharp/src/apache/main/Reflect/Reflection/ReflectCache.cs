@@ -28,10 +28,10 @@ namespace Avro.Reflect.Reflection
 {
     internal class ReflectCache : IReflectCache
     {
-        private ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
-        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+        private readonly ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
+        private readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private readonly ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        private readonly ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
         private readonly IEnumerable<IAvroFieldConverter> _converters;
 
         public ReflectCache(IEnumerable<IAvroFieldConverter> converters)

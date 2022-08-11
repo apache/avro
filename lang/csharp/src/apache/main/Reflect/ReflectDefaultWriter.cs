@@ -30,7 +30,7 @@ namespace Avro.Reflect
     /// </summary>
     public class ReflectDefaultWriter : SpecificDefaultWriter
     {
-        private IReflectCache _reflectCache;
+        private readonly IReflectCache _reflectCache;
 
         /// <summary>
         /// Constructor

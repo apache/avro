@@ -39,7 +39,7 @@ namespace Avro.Reflect
         /// </summary>
         public Type MapType { get => _mapType; set => _mapType = value; }
 
-        private IReflectCache _reflectCache;
+        private readonly IReflectCache _reflectCache;
 
         private Type _mapType = typeof(Dictionary<,>);
 
