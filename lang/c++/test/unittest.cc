@@ -467,8 +467,6 @@ struct TestSchema {
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
 
-        CustomAttributes cf;
-        cf.addAttribute("extra field", std::string("1"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
 
@@ -479,6 +477,15 @@ struct TestSchema {
         "[{\"name\": \"f1\", \"type\": \"long\"}]}";
         testNodeRecord(nodeRecordWithoutCustomAttribute,
                     expectedJsonWithoutCustomAttribute);
+    }
+
+    void checkCustomAttributes_getAttribute()
+    {
+        CustomAttributes cf;
+        cf.addAttribute("field1", std::string("1"));
+
+        BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").is_initialized());
     }
 
     void test() {
@@ -505,6 +512,7 @@ struct TestSchema {
 
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
+        checkCustomAttributes_getAttribute();
     }
 
     ValidSchema schema_;
