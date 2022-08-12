@@ -74,9 +74,9 @@ namespace Avro.Reflect.Service
             return new ReflectWriter<T>(writerSchema, _refletCache, _arrayService);
         }
 
-        internal void LoadClassCache(Type objType, Schema s)
+        internal void LoadClassCache(Type objType, Schema s, ConcurrentDictionary<string, Schema> fields = null)
         {
-            ConcurrentDictionary<string, Schema> previousFields = new ConcurrentDictionary<string, Schema>();
+            ConcurrentDictionary<string, Schema> previousFields = fields ?? new ConcurrentDictionary<string, Schema>();
 
             switch (s)
             {
@@ -103,11 +103,11 @@ namespace Avro.Reflect.Service
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
                         */
-                        //if (previousFields.TryAdd(f.Name, f.Schema))
-                        //{
-                        //    var t = c.GetPropertyType(f);
-                        //    LoadClassCache(t, f.Schema);
-                        //}
+                        if (previousFields.TryAdd(f.Name, f.Schema))
+                        {
+                            var t = c.GetPropertyType(f);
+                            LoadClassCache(t, f.Schema, previousFields);
+                        }
                     }
 
                     break;
@@ -122,7 +122,7 @@ namespace Avro.Reflect.Service
                         throw new AvroException($"{objType.Name} needs to be a generic type");
                     }
 
-                    LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
+                    LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema, previousFields);
                     break;
                 case MapSchema ms:
                     if (!typeof(IDictionary).IsAssignableFrom(objType))
@@ -140,7 +140,7 @@ namespace Avro.Reflect.Service
                         throw new AvroException($"First type parameter of {objType.Name} must be assignable to string");
                     }
 
-                    LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);
+                    LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema, previousFields);
                     break;
                 case NamedSchema ns:
                     _refletCache.AddEnum(ns.Fullname, objType);
@@ -158,13 +158,13 @@ namespace Avro.Reflect.Service
 
                             if (objType.IsClass)
                             {
-                                LoadClassCache(objType, o);
+                                LoadClassCache(objType, o, previousFields);
                             }
 
                             var innerType = Nullable.GetUnderlyingType(objType);
                             if (innerType != null && innerType.IsEnum)
                             {
-                                LoadClassCache(innerType, o);
+                                LoadClassCache(innerType, o, previousFields);
                             }
                         }
                     }
