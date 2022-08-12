@@ -70,7 +70,7 @@ namespace Avro.Reflect.Service
         private IDotnetProperty CreateDotnetProperty(Schema schema, PropertyInfo property)
         {
             var converter = _converterService.GetConverter(schema, property);
-            var type = converter?.GetPropertyType() ?? property.PropertyType;
+            var type = converter?.GetAvroType() ?? property.PropertyType;
 
             if (IsTypeCompatibleWithSchema(schema, type))
                 return new DotnetProperty(property, converter);

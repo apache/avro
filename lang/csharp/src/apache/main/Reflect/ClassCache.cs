@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using Avro.Reflect.Array;
 using Avro.Reflect.Converter;
@@ -40,6 +41,7 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
         private readonly ReflectFactory _reflectFactory;
+        private readonly ConverterService _converterService;
 
         /// <summary>
         /// Array service instance
@@ -54,6 +56,7 @@ namespace Avro.Reflect
         {
             ArrayService = new ArrayService(this);
             _reflectFactory = new ReflectFactory(this, ArrayService, new DotnetclassFactory(this));
+            _converterService = new ConverterService(new List<IAvroFieldConverter>());
         }
         
         /// <summary>
@@ -278,7 +281,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public IAvroFieldConverter GetConverter(Schema schema, PropertyInfo property)
         {
-            return GetDefaultConverter(schema.Tag, property.PropertyType);
+            return _converterService.GetConverter(schema, property) ?? GetDefaultConverter(schema.Tag, property.PropertyType);
         }
 
         #endregion
