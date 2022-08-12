@@ -21,6 +21,7 @@ using Avro.IO;
 using Avro.Generic;
 using Avro.Reflect;
 using NUnit.Framework;
+using Avro.Reflect.Converter;
 
 namespace Avro.Test
 {

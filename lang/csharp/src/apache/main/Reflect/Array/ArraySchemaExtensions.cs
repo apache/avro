@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Array
 {
     /// <summary>
     /// Extension methods for ArraySchema - make helper metadata look more like a property

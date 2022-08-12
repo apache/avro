@@ -19,8 +19,9 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using Avro.Reflect.Converter;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Model
 {
     internal class DotnetProperty
     {
