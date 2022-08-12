@@ -381,6 +381,10 @@ namespace Avro.Reflect
             var i = d.ReadEnum();
             var symbol = writerSchema[i];
             var es = readerSchema as EnumSchema;
+
+            if (es == null)
+                throw new AvroException($"Reader schema type {readerSchema.Tag} is not enum.");
+
             var enumType = _reflectCache.GetEnum(es.Fullname);
             return Enum.Parse(enumType, symbol);
         }
