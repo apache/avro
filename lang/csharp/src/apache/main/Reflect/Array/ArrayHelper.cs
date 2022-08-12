@@ -29,12 +29,12 @@ namespace Avro.Reflect.Array
     /// </summary>
     public class ArrayHelper : IArrayHelper
     {
-        private Type _defaultType = typeof(List<>);
+        private static Type _defaultType = typeof(List<>);
 
         /// <summary>
         /// Collection type to apply by default to all array objects. If not set this defaults to a generic List.
         /// </summary>
-        public Type DefaultType
+        public static Type DefaultType
         {
             get => _defaultType;
             set => _defaultType = value;

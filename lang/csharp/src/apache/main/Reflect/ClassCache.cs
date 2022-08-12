@@ -193,7 +193,7 @@ namespace Avro.Reflect
             _reflectFactory.LoadClassCache(objType, s);
         }
 
-        // IReflectCache is implemented for backward compatibility
+        // IReflectCache and IConverterService are implemented for backward compatibility
         #region IReflectCahce
 
         /// <summary>
