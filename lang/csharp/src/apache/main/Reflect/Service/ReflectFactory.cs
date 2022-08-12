@@ -103,11 +103,11 @@ namespace Avro.Reflect.Service
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
                         */
-                        if (previousFields.TryAdd(f.Name, f.Schema))
-                        {
-                            var t = c.GetPropertyType(f);
-                            LoadClassCache(t, f.Schema);
-                        }
+                        //if (previousFields.TryAdd(f.Name, f.Schema))
+                        //{
+                        //    var t = c.GetPropertyType(f);
+                        //    LoadClassCache(t, f.Schema);
+                        //}
                     }
 
                     break;
