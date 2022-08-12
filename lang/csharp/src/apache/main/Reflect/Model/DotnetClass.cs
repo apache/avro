@@ -21,7 +21,7 @@ using System.Reflection;
 using System.Collections.Concurrent;
 using Avro;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Model
 {
     /// <summary>
     /// Collection of DotNetProperty objects to repre
@@ -38,6 +38,7 @@ namespace Avro.Reflect
         /// <param name="t">type of the class</param>
         /// <param name="r">record schema</param>
         /// <param name="cache">class cache - can be reused</param>
+        [Obsolete]
         public DotnetClass(Type t, RecordSchema r, ClassCache cache)
         {
             _type = t;

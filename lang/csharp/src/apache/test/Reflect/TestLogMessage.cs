@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
 using Avro.Reflect;
+using Avro.Reflect.Converter;
 using NUnit.Framework;
 
 namespace Avro.Test
@@ -78,6 +79,7 @@ namespace Avro.Test
         }";
 
         [TestCase]
+        [Obsolete]
         public void Serialize()
         {
             var schema = Schema.Parse(_logMessageSchemaV1);

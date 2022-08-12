@@ -153,6 +153,7 @@ namespace Avro.Test
         ]
         }";
 
+        [Obsolete]
         public Z SerializeDeserialize(Z z)
         {
             try
@@ -194,6 +195,7 @@ namespace Avro.Test
         }
 
         [TestCase]
+        [Obsolete]
         public void DefaultZ()
         {
             var z = new Z()
@@ -338,6 +340,7 @@ namespace Avro.Test
             }
         }
         [TestCase]
+        [Obsolete]
         public void PopulatedZ()
         {
             var z = new Z()

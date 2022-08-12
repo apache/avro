@@ -27,6 +27,7 @@ namespace Avro.test.Reflect
     public class TestLogicalSchema
     {
         [TestCase]
+        [Obsolete]
         public void WriteAndReadObjectsWithLogicalSchemaFields_WithNullValues()
         {
             //Arrange
@@ -87,6 +88,7 @@ namespace Avro.test.Reflect
         }
 
         [TestCase]
+        [Obsolete]
         public void WriteAndReadObjectsWithLogicalSchemaFields_WithoutNullValues()
         {
             //Arrange

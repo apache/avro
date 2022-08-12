@@ -19,8 +19,9 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using Avro.Reflect.Converter;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Model
 {
     internal class DotnetProperty
     {
@@ -84,6 +85,7 @@ namespace Avro.Reflect
             return false;
         }
 
+        [Obsolete]
         public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
@@ -105,6 +107,7 @@ namespace Avro.Reflect
             }
         }
 
+        [Obsolete]
         public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
             : this(property, schema, null, cache)
         {

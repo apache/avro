@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 namespace Avro.test.Reflect
 {
     [TestFixture]
+    [Obsolete]
     public class TestRecursive
     {
         private const string _recurse = @"

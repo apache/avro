@@ -24,12 +24,14 @@ using Avro.IO;
 using Avro.Reflect;
 using NUnit.Framework;
 using System.Collections;
+using Avro.Reflect.Array;
 
 namespace Avro.Test
 {
 
 
     [TestFixture]
+    [Obsolete]
     public class TestArray
     {
         private class ListRec
@@ -161,6 +163,7 @@ namespace Avro.Test
 
 
         [TestCase]
+        [Obsolete]
         public void ConcurrentQueueTest()
         {
             var schema = Schema.Parse(_recordList);

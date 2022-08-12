@@ -21,6 +21,8 @@ using Avro.IO;
 using Avro.Generic;
 using Avro.Reflect;
 using NUnit.Framework;
+using Avro.Reflect.Converter;
+using System;
 
 namespace Avro.Test
 {
@@ -74,6 +76,7 @@ namespace Avro.Test
         }";
 
         [TestCase]
+        [System.Obsolete]
         public void ByteArray()
         {
             var schema = Schema.Parse(_fixedSchema);
@@ -101,6 +104,7 @@ namespace Avro.Test
         }
 
         [TestCase]
+        [System.Obsolete]
         public void GenericFixedConverterTest()
         {
             var schema = Schema.Parse(_fixedSchema);
@@ -130,6 +134,7 @@ namespace Avro.Test
         }
 
         [TestCase]
+        [Obsolete]
         public void GenericFixedDefaultConverter()
         {
             var schema = Schema.Parse(_fixedSchema);

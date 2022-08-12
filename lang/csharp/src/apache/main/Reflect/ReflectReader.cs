@@ -18,6 +18,7 @@
 
 using Avro.IO;
 using Avro.Generic;
+using System;
 
 namespace Avro.Reflect
 {
@@ -54,6 +55,7 @@ namespace Avro.Reflect
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
         /// <param name="cache">Class cache</param>
+        [Obsolete]
         public ReflectReader(Schema writerSchema, Schema readerSchema, ClassCache cache = null)
         {
             _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, cache);

@@ -19,13 +19,18 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using Avro.Reflect.Array;
+using Avro.Reflect.Converter;
+using Avro.Reflect.Model;
+using Avro.Reflect.Service;
 
 namespace Avro.Reflect
 {
     /// <summary>
     /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
     /// </summary>
-    public class ClassCache
+    [Obsolete()]
+    public class ClassCache : IReflectCache
     {
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
@@ -34,6 +39,19 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
+        /// <summary>
+        /// Array service instance
+        /// </summary>
+        [Obsolete()]
+        public IArrayService ArrayService { get; private set; }
+
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        public ClassCache()
+        {
+            ArrayService = new ArrayService(this);
+        }
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
             if (schema != null && GetClass(schema) != null)
@@ -46,13 +64,14 @@ namespace Avro.Reflect
                 throw new AvroException($"Type {dotnetClass.Name} is not a class");
             }
 
-            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
+            AddClass(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
         }
 
         /// <summary>
         /// Add a default field converter
         /// </summary>
         /// <param name="converter"></param>
+        [Obsolete()]
         public static void AddDefaultConverter(IAvroFieldConverter converter)
         {
             _defaultConverters.Add(converter);
@@ -66,6 +85,7 @@ namespace Avro.Reflect
         /// <param name="to"></param>
         /// <typeparam name="TAvro"></typeparam>
         /// <typeparam name="TProperty"></typeparam>
+        [Obsolete()]
         public static void AddDefaultConverter<TAvro, TProperty>(Func<TAvro, Schema, TProperty> from, Func<TProperty, Schema, TAvro> to)
         {
             _defaultConverters.Add(new FuncFieldConverter<TAvro, TProperty>(from, to));
@@ -77,6 +97,7 @@ namespace Avro.Reflect
         /// <param name="tag"></param>
         /// <param name="propType"></param>
         /// <returns>The first matching converter - null if there isn't one</returns>
+        [Obsolete()]
         public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {
             Type avroType;
@@ -140,6 +161,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="name">Name of the helper. Corresponds to metadata "helper" field in the schema.</param>
         /// <param name="helperType">Type of helper. Inherited from ArrayHelper</param>
+        [Obsolete()]
         public void AddArrayHelper(string name, Type helperType)
         {
             if (!typeof(ArrayHelper).IsAssignableFrom(helperType))
@@ -158,18 +180,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
         {
-            Type h;
-            // note ArraySchema is unnamed and doesn't have a FulllName, use "helper" metadata
-            // metadata is json string, strip quotes
-            string s = null;
-            s = schema.GetHelper();
-
-            if (s != null && _nameArrayMap.TryGetValue(s, out h))
-            {
-                return (ArrayHelper)Activator.CreateInstance(h, enumerable);
-            }
-
-            return (ArrayHelper)Activator.CreateInstance(typeof(ArrayHelper), enumerable);
+            return (ArrayHelper)ArrayService.GetArrayHelper(schema, enumerable);
         }
 
         /// <summary>
@@ -179,20 +190,15 @@ namespace Avro.Reflect
         /// <returns></returns>
         public DotnetClass GetClass(RecordSchema schema)
         {
-            DotnetClass c;
-            if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
-            {
-               return null;
-            }
-
-            return c;
+            return GetClass(schema.Fullname);
         }
 
         /// <summary>
-        /// Add an entry to the class cache.
+        ///  Add an entry to the class cache.
         /// </summary>
         /// <param name="objType">Type of the C# class</param>
         /// <param name="s">Schema</param>
+        [Obsolete()]
         public void LoadClassCache(Type objType, Schema s)
         {
             switch (s)
@@ -300,5 +306,80 @@ namespace Avro.Reflect
                     break;
             }
         }
+
+        // IReflectCache is implemented for backward compatibility
+        #region IReflectCahce
+
+        /// <summary>
+        /// Find a class that matches the schema full name.
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <returns></returns>
+        [Obsolete()]
+        public DotnetClass GetClass(string schemaFullName)
+        {
+            DotnetClass c;
+            if (!_nameClassMap.TryGetValue(schemaFullName, out c))
+            {
+                return null;
+            }
+
+            return c;
+        }
+
+        /// <summary>
+        /// Add a class that for schema full name.
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <param name="dotnetClass"></param>
+        [Obsolete()]
+        public void AddClass(string schemaFullName, DotnetClass dotnetClass)
+        {
+            _nameClassMap.TryAdd(schemaFullName, dotnetClass);
+        }
+
+        /// <summary>
+        /// Find a enum type that matches the schema full name.
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <returns></returns>
+        [Obsolete()]
+        public Type GetEnum(string schemaFullName)
+        {
+            return EnumCache.GetEnumeration(schemaFullName);
+        }
+
+        /// <summary>
+        /// Add a class that for schema full name.
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <param name="enumType"></param>
+        [Obsolete()]
+        public void AddEnum(string schemaFullName, Type enumType)
+        {
+            EnumCache.AddEnumNameMapItem(schemaFullName, enumType);
+        }
+
+        /// <summary>
+        /// Add an array helper type. Array helpers are used for collections that are not generic lists.
+        /// </summary>
+        /// <param name="arrayHelperName">Name of the helper. Corresponds to metadata "helper" field in the schema.</param>
+        public void AddArrayHelperType<T>(string arrayHelperName) where T : IArrayHelper
+        {
+            _nameArrayMap.TryAdd(arrayHelperName, typeof(T));
+        }
+
+        /// <summary>
+        /// Find an array helper type for an array schema node.
+        /// </summary>
+        /// <param name="arrayHelperName">Schema</param>
+        /// <param name="arrayHelperType">Schema</param>
+        /// <returns></returns>
+        public bool TryGetArrayHelperType(string arrayHelperName, out Type arrayHelperType)
+        {
+            return _nameArrayMap.TryGetValue(arrayHelperName, out arrayHelperType);
+        }
+
+        # endregion
     }
 }

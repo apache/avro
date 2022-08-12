@@ -21,20 +21,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
-namespace Avro.Reflect
+namespace Avro.Reflect.Array
 {
     /// <summary>
     /// Class to help serialize and deserialize arrays. Arrays need the following methods Count(), Add(), Clear().true
     /// This class allows these methods to be specified externally to the collection.
     /// </summary>
-    public class ArrayHelper
+    public class ArrayHelper : IArrayHelper
     {
-        private static Type _defaultType = typeof(List<>);
+        private Type _defaultType = typeof(List<>);
 
         /// <summary>
         /// Collection type to apply by default to all array objects. If not set this defaults to a generic List.
         /// </summary>
-        public static Type DefaultType
+        public Type DefaultType
         {
             get => _defaultType;
             set => _defaultType = value;

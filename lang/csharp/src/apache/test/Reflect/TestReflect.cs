@@ -21,10 +21,12 @@ using System.IO;
 using NUnit.Framework;
 using Avro.IO;
 using Avro.Reflect;
+using System;
 
 namespace Avro.Test
 {
     [TestFixture]
+    [Obsolete]
     class TestReflect
     {
 
@@ -88,6 +90,7 @@ namespace Avro.Test
             Assert.AreEqual( EnumResolutionEnum.SECOND, rec2.enumType );
         }
 
+        [Obsolete]
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class
         {
             long initialPos = ms.Position;
@@ -99,16 +102,19 @@ namespace Avro.Test
             return output;
         }
 
+        [Obsolete]
         private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs) where S : class
         {
             input.Position = startPos;
-            var reader = new ReflectReader<S>(ws, rs);
+            var classCache = new ClassCache();
+            var reader = new ReflectReader<S>(ws, rs, classCache);
             Decoder d = new BinaryDecoder(input);
             S output = reader.Read(null, d);
             Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
-            AssertReflectRecordEqual(rs, expected, ws, output, reader.Reader.ClassCache);
+            AssertReflectRecordEqual(rs, expected, ws, output, classCache);
         }
 
+        [Obsolete]
         private static Stream serialize<T>(Schema ws, T actual)
         {
             var ms = new MemoryStream();
@@ -121,6 +127,7 @@ namespace Avro.Test
             return ms;
         }
 
+        [Obsolete]
         private static void checkAlternateSerializers<T>(byte[] expected, T value, Schema ws)
         {
             var ms = new MemoryStream();
@@ -133,6 +140,7 @@ namespace Avro.Test
             Assert.True(expected.SequenceEqual(output));
         }
 
+        [System.Obsolete]
         private static void AssertReflectRecordEqual(Schema schema1, object rec1, Schema schema2, object rec2, ClassCache cache)
         {
             var recordSchema = (RecordSchema) schema1;

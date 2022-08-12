@@ -28,6 +28,7 @@ using System.Collections;
 namespace Avro.Test
 {
     [TestFixture]
+    [Obsolete]
     public class TestUnion
     {
         public const string BaseClassSchema = @"

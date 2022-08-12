@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using Avro.IO;
+using Avro.Reflect.Service;
 using Avro.Specific;
 
 namespace Avro.Reflect
@@ -28,12 +29,8 @@ namespace Avro.Reflect
     /// </summary>
     public class ReflectDefaultWriter : SpecificDefaultWriter
     {
-        private ClassCache _classCache = new ClassCache();
-
-        /// <summary>
-        /// Class cache
-        /// </summary>
-        public ClassCache ClassCache { get => _classCache; }
+        private readonly IReflectCache _reflectCache;
+        private readonly IArrayService _arrayService;
 
         /// <summary>
         /// Constructor
@@ -41,15 +38,15 @@ namespace Avro.Reflect
         /// <param name="objType"></param>
         /// <param name="schema"></param>
         /// <param name="cache"></param>
+        [Obsolete]
         public ReflectDefaultWriter(Type objType, Schema schema, ClassCache cache)
             : base(schema)
         {
-            if (cache != null)
-            {
-                _classCache = cache;
-            }
+            var classCache = cache ?? new ClassCache();
+            classCache.LoadClassCache(objType, schema);
 
-            _classCache.LoadClassCache(objType, schema);
+            _reflectCache = classCache;
+            _arrayService = classCache.ArrayService;
         }
 
         /// <summary>
@@ -75,7 +72,7 @@ namespace Avro.Reflect
             {
                 try
                 {
-                    var v = _classCache.GetClass(schema).GetValue(value, field);
+                    var v = _reflectCache.GetClass(schema.Fullname).GetValue(value, field);
 
                     Write(field.Schema, v, encoder);
                 }
@@ -125,7 +122,7 @@ namespace Avro.Reflect
                 throw new AvroTypeException("Array does not implement have registered ReflectArray derived type");
             }
 
-            var arrayHelper = _classCache.GetArrayHelper(schema, (IEnumerable)value);
+            var arrayHelper = _arrayService.GetArrayHelper(schema, (IEnumerable)value);
             long l = arrayHelper.Count();
             encoder.WriteArrayStart();
             encoder.SetItemCount(l);
@@ -188,9 +185,9 @@ namespace Avro.Reflect
                     return obj is string;
                 case Schema.Type.Error:
                 case Schema.Type.Record:
-                    return _classCache.GetClass(sc as RecordSchema).GetClassType() == obj.GetType();
+                    return _reflectCache.GetClass(sc.Fullname).GetClassType() == obj.GetType();
                 case Schema.Type.Enumeration:
-                    return EnumCache.GetEnumeration(sc as EnumSchema) == obj.GetType();
+                    return _reflectCache.GetEnum(sc.Fullname) == obj.GetType();
                 case Schema.Type.Array:
                     return obj is IEnumerable;
                 case Schema.Type.Map:

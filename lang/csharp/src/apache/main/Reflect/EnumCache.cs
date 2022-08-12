@@ -24,6 +24,7 @@ namespace Avro.Reflect
     /// <summary>
     /// Cache of enum types. Cache key is the schema fullname.
     /// </summary>
+    [Obsolete()]
     public static class EnumCache
     {
         private static ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
@@ -33,9 +34,21 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <param name="dotnetEnum"></param>
+        [Obsolete()]
         public static void AddEnumNameMapItem(NamedSchema schema, Type dotnetEnum)
         {
-            _nameEnumMap.TryAdd(schema.Fullname, dotnetEnum);
+            AddEnumNameMapItem(schema.Fullname, dotnetEnum);
+        }
+
+        /// <summary>
+        /// Add and entry to the cache
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <param name="dotnetEnum"></param>
+        [Obsolete()]
+        public static void AddEnumNameMapItem(string schemaFullName, Type dotnetEnum)
+        {
+            _nameEnumMap.TryAdd(schemaFullName, dotnetEnum);
         }
 
         /// <summary>
@@ -43,12 +56,24 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
+        [Obsolete()]
         public static Type GetEnumeration(NamedSchema schema)
         {
+            return GetEnumeration(schema.Fullname);
+        }
+
+        /// <summary>
+        /// Lookup an entry in the cache - based on the schema fullname
+        /// </summary>
+        /// <param name="schemaFullName"></param>
+        /// <returns></returns>
+        [Obsolete()]
+        public static Type GetEnumeration(string schemaFullName)
+        {
             Type t;
-            if (!_nameEnumMap.TryGetValue(schema.Fullname, out t))
+            if (!_nameEnumMap.TryGetValue(schemaFullName, out t))
             {
-                throw new AvroException($"Couldn't find enumeration for avro fullname: {schema.Fullname}");
+                throw new AvroException($"Couldn't find enumeration for avro fullname: {schemaFullName}");
             }
 
             return t;

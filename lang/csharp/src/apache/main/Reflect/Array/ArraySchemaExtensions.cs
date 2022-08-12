@@ -16,11 +16,14 @@
  * limitations under the License.
  */
 
-namespace Avro.Reflect
+using System;
+
+namespace Avro.Reflect.Array
 {
     /// <summary>
     /// Extension methods for ArraySchema - make helper metadata look more like a property
     /// </summary>
+    [Obsolete]
     public static class ArraySchemaExtensions
     {
         /// <summary>
@@ -28,6 +31,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="ars">this</param>
         /// <returns>value of the helper metadata - null if it isn't present</returns>
+        [Obsolete]
         public static string GetHelper(this ArraySchema ars)
         {
             string s = null;
