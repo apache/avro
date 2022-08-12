@@ -23,121 +23,61 @@ using Avro.Reflect.Converter;
 
 namespace Avro.Reflect.Model
 {
-    internal class DotnetProperty
+    /// <summary>
+    /// Class that represent Dotnet property
+    /// </summary>
+    internal class DotnetProperty : IDotnetProperty
     {
-        private PropertyInfo _property;
+        private readonly PropertyInfo _property;
+        private readonly IAvroFieldConverter _converter;
 
-        public IAvroFieldConverter Converter { get; set; }
-
-        private bool IsPropertyCompatible(Avro.Schema schema)
+        internal DotnetProperty(PropertyInfo property, IAvroFieldConverter converter)
         {
-            Type propType;
-            var schemaTag = schema.Tag;
-
-            if (Converter == null)
-            {
-                propType = _property.PropertyType;
-            }
-            else
-            {
-                propType = Converter.GetAvroType();
-            }
-
-            switch (schemaTag)
-            {
-                case Avro.Schema.Type.Null:
-                    return (Nullable.GetUnderlyingType(propType) != null) || (!propType.IsValueType);
-                case Avro.Schema.Type.Boolean:
-                    return propType == typeof(bool);
-                case Avro.Schema.Type.Int:
-                    return propType == typeof(int);
-                case Avro.Schema.Type.Long:
-                    return propType == typeof(long);
-                case Avro.Schema.Type.Float:
-                    return propType == typeof(float);
-                case Avro.Schema.Type.Double:
-                    return propType == typeof(double);
-                case Avro.Schema.Type.Bytes:
-                    return propType == typeof(byte[]);
-                case Avro.Schema.Type.String:
-                    return typeof(string).IsAssignableFrom(propType);
-                case Avro.Schema.Type.Record:
-                    //TODO: this probably should work for struct too
-                    return propType.IsClass;
-                case Avro.Schema.Type.Enumeration:
-                    return propType.IsEnum;
-                case Avro.Schema.Type.Array:
-                    return typeof(IEnumerable).IsAssignableFrom(propType);
-                case Avro.Schema.Type.Map:
-                    return typeof(IDictionary).IsAssignableFrom(propType);
-                case Avro.Schema.Type.Union:
-                    return true;
-                case Avro.Schema.Type.Fixed:
-                    return propType == typeof(byte[]);
-                case Avro.Schema.Type.Error:
-                    return propType.IsClass;
-                case Avro.Schema.Type.Logical:
-                    var logicalSchema = (LogicalSchema)schema;
-                    var type = logicalSchema.LogicalType.GetCSharpType(false);
-                    return type == propType;
-            }
-
-            return false;
-        }
-
-        [Obsolete]
-        public DotnetProperty(PropertyInfo property, Avro.Schema schema, IAvroFieldConverter converter, ClassCache cache)
-        {
+            _converter = converter;
             _property = property;
-            Converter = converter;
-
-            if (!IsPropertyCompatible(schema))
-            {
-                if (Converter == null)
-                {
-                    var c = cache.GetDefaultConverter(schema.Tag, _property.PropertyType);
-                    if (c != null)
-                    {
-                        Converter = c;
-                        return;
-                    }
-                }
-
-                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schema.Tag}");
-            }
         }
 
-        [Obsolete]
-        public DotnetProperty(PropertyInfo property, Avro.Schema schema, ClassCache cache)
-            : this(property, schema, null, cache)
+        /// <summary>
+        /// Get .Net property type
+        /// </summary>
+        /// <returns></returns>
+        public Type GetPropertyType()
         {
-        }
-
-        public virtual Type GetPropertyType()
-        {
-            if (Converter != null)
+            if (_converter != null)
             {
-                return Converter.GetAvroType();
+                return _converter.GetAvroType();
             }
 
             return _property.PropertyType;
         }
 
-        public virtual object GetValue(object o, Schema s)
+        /// <summary>
+        /// Get value
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public object GetValue(object o, Schema s)
         {
-            if (Converter != null)
+            if (_converter != null)
             {
-                return Converter.ToAvroType(_property.GetValue(o), s);
+                return _converter.ToAvroType(_property.GetValue(o), s);
             }
 
             return _property.GetValue(o);
         }
 
-        public virtual void SetValue(object o, object v, Schema s)
+        /// <summary>
+        /// Set value
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="v"></param>
+        /// <param name="s"></param>
+        public void SetValue(object o, object v, Schema s)
         {
-            if (Converter != null)
+            if (_converter != null)
             {
-                _property.SetValue(o, Converter.FromAvroType(v, s));
+                _property.SetValue(o, _converter.FromAvroType(v, s));
             }
             else
             {

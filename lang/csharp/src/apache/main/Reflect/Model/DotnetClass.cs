@@ -18,73 +18,28 @@
 
 using System;
 using System.Reflection;
-using System.Collections.Concurrent;
 using Avro;
+using System.Collections.Generic;
 
 namespace Avro.Reflect.Model
 {
     /// <summary>
     /// Collection of DotNetProperty objects to repre
     /// </summary>
-    public class DotnetClass
+    public class DotnetClass : IDotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
-
+        private Dictionary<string, IDotnetProperty> _propertyMap;
         private Type _type;
 
         /// <summary>
-        /// Constructor
+        /// Public constructor
         /// </summary>
-        /// <param name="t">type of the class</param>
-        /// <param name="r">record schema</param>
-        /// <param name="cache">class cache - can be reused</param>
-        [Obsolete]
-        public DotnetClass(Type t, RecordSchema r, ClassCache cache)
+        /// <param name="t"></param>
+        /// <param name="propertyMap"></param>
+        public DotnetClass(Type t, Dictionary<string, IDotnetProperty> propertyMap)
         {
             _type = t;
-            foreach (var f in r.Fields)
-            {
-                bool hasAttribute = false;
-                PropertyInfo prop = GetPropertyInfo(f);
-
-                foreach (var attr in prop.GetCustomAttributes(true))
-                {
-                    var avroAttr = attr as AvroFieldAttribute;
-                    if (avroAttr != null)
-                    {
-                        hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
-                        break;
-                    }
-                }
-
-                if (!hasAttribute)
-                {
-                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, cache));
-                }
-            }
-        }
-
-        private PropertyInfo GetPropertyInfo(Field f)
-        {
-            var prop = _type.GetProperty(f.Name);
-            if (prop != null)
-            {
-                return prop;
-            }
-            foreach (var p in _type.GetProperties())
-            {
-                foreach (var attr in p.GetCustomAttributes(true))
-                {
-                    var avroAttr = attr as AvroFieldAttribute;
-                    if (avroAttr != null && avroAttr.FieldName != null && avroAttr.FieldName == f.Name)
-                    {
-                        return p;
-                    }
-                }
-            }
-
-            throw new AvroException($"Class {_type.Name} doesn't contain property {f.Name}");
+            _propertyMap = propertyMap;
         }
 
         /// <summary>
@@ -95,7 +50,7 @@ namespace Avro.Reflect.Model
         /// <returns></returns>
         public object GetValue(object o, Field f)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
@@ -112,7 +67,7 @@ namespace Avro.Reflect.Model
         /// <param name="v">value for the property referenced by the field schema</param>
         public void SetValue(object o, Field f, object v)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");
@@ -137,7 +92,7 @@ namespace Avro.Reflect.Model
         /// <returns></returns>
         public Type GetPropertyType(Field f)
         {
-            DotnetProperty p;
+            IDotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))
             {
                 throw new AvroException($"ByPosClass doesn't contain property {f.Name}");

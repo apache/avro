@@ -35,14 +35,14 @@ namespace Avro.Reflect.Service
         /// </summary>
         /// <param name="schemaFullName"></param>
         /// <returns></returns>
-        DotnetClass GetClass(string schemaFullName);
+        IDotnetClass GetClass(string schemaFullName);
 
         /// <summary>
         /// Add a class that for schema full name.
         /// </summary>
         /// <param name="schemaFullName"></param>
         /// <param name="dotnetClass"></param>
-        void AddClass(string schemaFullName, DotnetClass dotnetClass);
+        void AddClass(string schemaFullName, IDotnetClass dotnetClass);
 
         /// <summary>
         /// Find a enum type that matches the schema full name.

@@ -52,6 +52,24 @@ namespace Avro.Reflect
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="objType"></param>
+        /// <param name="writerSchema"></param>
+        /// <param name="reflectCache"></param>
+        /// <param name="arrayService"></param>
+        public ReflectDefaultWriter(
+            Type objType,
+            Schema writerSchema,
+            IReflectCache reflectCache,
+            IArrayService arrayService)
+            : base(writerSchema)
+        {
+            _reflectCache = reflectCache;
+            _arrayService = arrayService;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         /// <param name="schema"></param>
         public ReflectDefaultWriter(Schema schema)
             : base(schema)

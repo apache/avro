@@ -19,6 +19,7 @@
 using Avro.IO;
 using Avro.Generic;
 using System;
+using Avro.Reflect.Service;
 
 namespace Avro.Reflect
 {
@@ -34,6 +35,17 @@ namespace Avro.Reflect
         public ReflectDefaultWriter Writer { get => _writer; }
 
         private readonly ReflectDefaultWriter _writer;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="reflectCache"></param>
+        /// <param name="arrayService"></param>
+        internal ReflectWriter(Schema schema, IReflectCache reflectCache, IArrayService arrayService)
+            : this(new ReflectDefaultWriter(typeof(T), schema, reflectCache, arrayService))
+        {
+        }
 
         /// <summary>
         /// Constructor
