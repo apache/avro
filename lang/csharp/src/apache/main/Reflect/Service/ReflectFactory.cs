@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using Avro.Reflect.Model;
@@ -75,7 +76,7 @@ namespace Avro.Reflect.Service
 
         internal void LoadClassCache(Type objType, Schema s)
         {
-            Dictionary<string, Schema> previousFields = new Dictionary<string, Schema>();
+            ConcurrentDictionary<string, Schema> previousFields = new ConcurrentDictionary<string, Schema>();
 
             switch (s)
             {
@@ -102,9 +103,8 @@ namespace Avro.Reflect.Service
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
                         */
-                        if (!previousFields.ContainsKey(f.Name))
+                        if (previousFields.TryAdd(f.Name, f.Schema))
                         {
-                            previousFields.Add(f.Name, f.Schema);
                             var t = c.GetPropertyType(f);
                             LoadClassCache(t, f.Schema);
                         }
