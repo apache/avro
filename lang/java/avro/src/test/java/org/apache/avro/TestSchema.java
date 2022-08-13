@@ -68,6 +68,21 @@ public class TestSchema {
   }
 
   @Test
+  public void testNames() {
+    Schema schema = Schema.createRecord("rec", "doc", "namespace", false);
+    List<Field> fields = new ArrayList<>();
+    fields.add(new Field("我", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("éhôÄç", Schema.create(Type.INT), null, null));
+    fields.add(new Field("中文", Schema.create(Type.INT), null, null));
+    fields.add(new Field("歳以上", Schema.create(Type.INT), null, null));
+    schema.setFields(fields);
+
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("歳以上", 34);
+    assertEquals(34, record.get("歳以上"));
+  }
+
+  @Test
   public void testCreateUnionVarargs() {
     List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Type.NULL));

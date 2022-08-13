@@ -36,8 +36,6 @@ use std::{
 use strum_macros::{EnumDiscriminants, EnumString};
 
 lazy_static! {
-    static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
-
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
         Regex::new(r"^((?P<namespace>[A-Za-z_][A-Za-z0-9_\.]*)*\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
@@ -1259,7 +1257,7 @@ impl Parser {
         let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
         for symbol in symbols.iter() {
             // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
-            if !ENUM_SYMBOL_NAME_R.is_match(symbol) {
+            if !self.validate_name(symbol) {
                 return Err(Error::EnumSymbolName(symbol.to_string()));
             }
 
@@ -1281,6 +1279,18 @@ impl Parser {
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
 
         Ok(schema)
+    }
+
+    fn validate_name(&self, name: &String) -> bool {
+        fn validate_char(index: usize, c: char) -> bool {
+            c.is_alphabetic() || c == '_' || (index > 0 && c.is_alphanumeric())
+        }
+        if name.is_empty() {
+            return false;
+        }
+        return name
+            .char_indices()
+            .all(|(index, c)| validate_char(index, c));
     }
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
@@ -3818,5 +3828,16 @@ mod tests {
         } else {
             panic!("Expected Schema::Record");
         }
+    }
+
+    #[test]
+    fn avro_3532_validate_name() {
+        let p = Parser::default();
+
+        assert!(!p.validate_name(&"".to_owned())); // non empty
+        assert!(!p.validate_name(&"123".to_owned())); // start with number
+        assert!(p.validate_name(&"Hello123".to_owned())); // number after first.
+        assert!(p.validate_name(&"_AcceptUnderscore__".to_owned())); // number after first.
+        assert!(p.validate_name(&"歳以上".to_owned())); // accept chinese.
     }
 }
