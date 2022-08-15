@@ -578,7 +578,7 @@ pub struct RecordField {
 }
 
 /// Represents any valid order for a `field` in a `record` Avro schema.
-#[derive(Clone, Debug, PartialEq, EnumString)]
+#[derive(Clone, Debug, Eq, PartialEq, EnumString)]
 #[strum(serialize_all = "kebab_case")]
 pub enum RecordFieldOrder {
     Ascending,
