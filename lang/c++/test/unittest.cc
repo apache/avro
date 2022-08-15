@@ -442,7 +442,12 @@ struct TestSchema {
         concepts::MultiAttribute<CustomAttributes> customAttributes;
 
         CustomAttributes cf;
-        cf.addAttribute("extra field", std::string("1"));
+        cf.addAttribute("stringField", std::string("\\\"field value with \\\"double quotes\\\"\\\""));
+        cf.addAttribute("booleanField", std::string("true"));
+        cf.addAttribute("numberField", std::string("1.23"));
+        cf.addAttribute("nullField", std::string("null"));
+        cf.addAttribute("arrayField", std::string("[1]"));
+        cf.addAttribute("mapField", std::string("{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
         customAttributes.add(cf);
@@ -452,7 +457,14 @@ struct TestSchema {
                                             customAttributes);
         std::string expectedJsonWithCustomAttribute =
         "{\"type\": \"record\", \"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\", \"type\": \"long\",\"extra field\": \"1\"}]}";
+        "[{\"name\": \"f1\", \"type\": \"long\", "
+        "\"arrayField\": \"[1]\", "
+        "\"booleanField\": \"true\", "
+        "\"mapField\": \"{\\\"key1\\\":\\\"value1\\\", \\\"key2\\\":\\\"value2\\\"}\", "
+        "\"nullField\": \"null\", "
+        "\"numberField\": \"1.23\", "
+        "\"stringField\": \"\\\"field value with \\\"double quotes\\\"\\\"\""
+        "}]}";
         testNodeRecord(nodeRecordWithCustomAttribute,
                     expectedJsonWithCustomAttribute);
     }
@@ -467,8 +479,6 @@ struct TestSchema {
         concepts::MultiAttribute<NodePtr> fieldValues;
         std::vector<GenericDatum> defaultValues;
 
-        CustomAttributes cf;
-        cf.addAttribute("extra field", std::string("1"));
         fieldNames.add("f1");
         fieldValues.add(NodePtr( new NodePrimitive(Type::AVRO_LONG)));
 
@@ -479,6 +489,15 @@ struct TestSchema {
         "[{\"name\": \"f1\", \"type\": \"long\"}]}";
         testNodeRecord(nodeRecordWithoutCustomAttribute,
                     expectedJsonWithoutCustomAttribute);
+    }
+
+    void checkCustomAttributes_getAttribute()
+    {
+        CustomAttributes cf;
+        cf.addAttribute("field1", std::string("1"));
+
+        BOOST_CHECK_EQUAL(std::string("1"), *cf.getAttribute("field1"));
+        BOOST_CHECK_EQUAL(false, cf.getAttribute("not_existing").is_initialized());
     }
 
     void test() {
@@ -505,6 +524,7 @@ struct TestSchema {
 
         checkNodeRecordWithoutCustomAttribute();
         checkNodeRecordWithCustomAttribute();
+        checkCustomAttributes_getAttribute();
     }
 
     ValidSchema schema_;
