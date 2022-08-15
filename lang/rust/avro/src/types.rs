@@ -369,11 +369,11 @@ impl Value {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
-                    return Some(format!(
+                    Some(format!(
                         "Unresolved schema reference: '{}'. Parsed names: {:?}",
                         name,
                         names.keys()
-                    ));
+                    ))
                 },
                 |s| self.validate_internal(s.borrow(), names),
             ),
