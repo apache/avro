@@ -3936,7 +3936,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_custom_attributes_schema_with_attributes() {
+    fn avro_3609_custom_attributes_schema_with_attributes() {
         let custom_attrs_suffix = r#"
                 "string_key": "value",
                 "number_key": 1.23,
@@ -3979,7 +3979,10 @@ mod tests {
                 Schema::parse_str(format!("{}{}", schema_str, custom_attrs_suffix).as_str())
                     .unwrap();
 
-            assert_eq!(schema.custom_attributes(), Some(&expected_custom_attibutes()));
+            assert_eq!(
+                schema.custom_attributes(),
+                Some(&expected_custom_attibutes())
+            );
         }
     }
 
@@ -3999,7 +4002,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_custom_attributes_record_field_without_attributes() {
+    fn avro_3609_custom_attributes_record_field_without_attributes() {
         let schema_str = r#"
             {
                 "type": "record",
@@ -4033,5 +4036,41 @@ mod tests {
             }
             _ => panic!("Expected Schema::Record"),
         }
+    }
+
+    // #[test]
+    #[allow(dead_code)]
+    // TODO: Do we want to support serializing the custom attributes?
+    fn avro_3609_custom_attributes_serialize_record_field() {
+        let schema_str = r#"
+            {
+                "type": "record",
+                "name": "Rec",
+                "doc": "A Record schema without custom attributes",
+                "fields": [
+                    {
+                        "name": "field_one",
+                        "type": "float",
+                        "string_key": "value",
+                        "number_key": 1.23,
+                        "null_key": null,
+                        "array_key": [1, 2, 3],
+                        "object_key": {
+                            "key": "value"
+                        }
+                    }
+                ]
+            }
+        "#;
+
+        let schema = Schema::parse_str(schema_str).unwrap();
+
+        let value = serde_json::to_value(&schema).unwrap();
+        let serialized = serde_json::to_string(&value).unwrap();
+        assert_eq!(
+            r#"{"doc":"A Record schema without custom attributes","fields":[{"name":"field_one","type":"float"}],"name":"Rec","type":"record"}"#,
+            &serialized
+        );
+        assert_eq!(schema, Schema::parse_str(&serialized).unwrap());
     }
 }

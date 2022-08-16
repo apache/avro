@@ -147,6 +147,7 @@ fn get_data_struct_schema_def(
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
+                            custom_attributes: Default::default(),
                         }
                 });
             }
