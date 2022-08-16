@@ -1037,6 +1037,7 @@ mod tests {
                         schema: Schema::Int,
                         order: RecordFieldOrder::Ignore,
                         position: 0,
+                        custom_attributes: Default::default(),
                     }],
                     lookup: Default::default(),
                     attributes: Default::default(),
@@ -1059,6 +1060,7 @@ mod tests {
                         },
                         order: RecordFieldOrder::Ignore,
                         position: 0,
+                        custom_attributes: Default::default(),
                     }],
                     lookup: [("field_name".to_string(), 0)].iter().cloned().collect(),
                     attributes: Default::default(),
@@ -1209,6 +1211,7 @@ mod tests {
                     schema: Schema::Long,
                     order: RecordFieldOrder::Ascending,
                     position: 0,
+                    custom_attributes: Default::default(),
                 },
                 RecordField {
                     name: "b".to_string(),
@@ -1217,6 +1220,7 @@ mod tests {
                     schema: Schema::String,
                     order: RecordFieldOrder::Ascending,
                     position: 1,
+                    custom_attributes: Default::default(),
                 },
             ],
             lookup: [("a".to_string(), 0), ("b".to_string(), 1)]

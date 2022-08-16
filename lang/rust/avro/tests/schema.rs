@@ -873,6 +873,7 @@ fn test_parse_reused_record_schema_by_fullname() {
                 ref schema,
                 order: _,
                 position: _,
+                custom_attributes: _,
             } = fields.get(2).unwrap();
 
             assert_eq!(name, "min_temp");
