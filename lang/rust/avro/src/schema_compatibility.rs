@@ -235,6 +235,7 @@ impl SchemaCompatibility {
                         aliases: _,
                         doc: _w_doc,
                         size: w_size,
+                        attributes: _,
                     } = writers_schema
                     {
                         if let Schema::Fixed {
@@ -242,6 +243,7 @@ impl SchemaCompatibility {
                             aliases: _,
                             doc: _r_doc,
                             size: r_size,
+                            attributes: _,
                         } = readers_schema
                         {
                             return w_name.fullname(None) == r_name.fullname(None)

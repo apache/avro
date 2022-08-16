@@ -107,6 +107,7 @@ pub enum Schema {
         doc: Documentation,
         fields: Vec<RecordField>,
         lookup: BTreeMap<String, usize>,
+        attributes: HashMap<String, Value>,
     },
     /// An `enum` Avro schema.
     Enum {
@@ -114,6 +115,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         symbols: Vec<String>,
+        attributes: HashMap<String, Value>,
     },
     /// A `fixed` Avro schema.
     Fixed {
@@ -121,6 +123,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         size: usize,
+        attributes: HashMap<String, Value>,
     },
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
@@ -340,7 +343,7 @@ impl<'de> Deserialize<'de> for Name {
     where
         D: serde::de::Deserializer<'de>,
     {
-        serde_json::Value::deserialize(deserializer).and_then(|value| {
+        Value::deserialize(deserializer).and_then(|value| {
             use serde::de::Error;
             if let Value::Object(json) = value {
                 Name::parse(&json).map_err(D::Error::custom)
@@ -1220,6 +1223,7 @@ impl Parser {
             doc: complex.doc(),
             fields,
             lookup,
+            attributes: Default::default(),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
@@ -1276,6 +1280,7 @@ impl Parser {
             aliases: aliases.clone(),
             doc: complex.doc(),
             symbols,
+            attributes: Default::default(),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
@@ -1357,6 +1362,7 @@ impl Parser {
             aliases: aliases.clone(),
             doc,
             size: size as usize,
+            attributes: Default::default(),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
@@ -1556,6 +1562,7 @@ impl Serialize for Schema {
                     aliases: None,
                     doc: None,
                     size: 12,
+                    attributes: Default::default(),
                 };
                 map.serialize_entry("type", &inner)?;
                 map.serialize_entry("logicalType", "duration")?;
@@ -1584,11 +1591,11 @@ impl Serialize for RecordField {
 
 /// Parses a **valid** avro schema into the Parsing Canonical Form.
 /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
-fn parsing_canonical_form(schema: &serde_json::Value) -> String {
+fn parsing_canonical_form(schema: &Value) -> String {
     match schema {
-        serde_json::Value::Object(map) => pcf_map(map),
-        serde_json::Value::String(s) => pcf_string(s),
-        serde_json::Value::Array(v) => pcf_array(v),
+        Value::Object(map) => pcf_map(map),
+        Value::String(s) => pcf_string(s),
+        Value::Array(v) => pcf_array(v),
         json => panic!(
             "got invalid JSON value for canonical form of schema: {0}",
             json
@@ -1596,7 +1603,7 @@ fn parsing_canonical_form(schema: &serde_json::Value) -> String {
     }
 }
 
-fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
+fn pcf_map(schema: &Map<String, Value>) -> String {
     // Look for the namespace variant up front.
     let ns = schema.get("namespace").and_then(|v| v.as_str());
     let mut fields = Vec::new();
@@ -1604,7 +1611,7 @@ fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
         // Reduce primitive types to their simple form. ([PRIMITIVE] rule)
         if schema.len() == 1 && k == "type" {
             // Invariant: function is only callable from a valid schema, so this is acceptable.
-            if let serde_json::Value::String(s) = v {
+            if let Value::String(s) = v {
                 return pcf_string(s);
             }
         }
@@ -1656,7 +1663,7 @@ fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
     format!("{{{}}}", inter)
 }
 
-fn pcf_array(arr: &[serde_json::Value]) -> String {
+fn pcf_array(arr: &[Value]) -> String {
     let inter = arr
         .iter()
         .map(parsing_canonical_form)
@@ -1764,7 +1771,7 @@ pub mod derive {
         T: AvroSchemaComponent,
     {
         fn get_schema() -> Schema {
-            T::get_schema_in_ctxt(&mut HashMap::default(), &Option::None)
+            T::get_schema_in_ctxt(&mut HashMap::default(), &None)
         }
     }
 
@@ -2026,6 +2033,7 @@ mod tests {
                 position: 0,
             }],
             lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
+            attributes: Default::default(),
         };
 
         assert_eq!(schema_c, schema_c_expected);
@@ -2113,6 +2121,7 @@ mod tests {
                 position: 0,
             }],
             lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
+            attributes: Default::default(),
         };
 
         assert_eq!(schema_option_a, schema_option_a_expected);
@@ -2161,6 +2170,7 @@ mod tests {
                 },
             ],
             lookup,
+            attributes: Default::default(),
         };
 
         assert_eq!(parsed, expected);
@@ -2230,11 +2240,13 @@ mod tests {
                         },
                     ],
                     lookup: node_lookup,
+                    attributes: Default::default(),
                 },
                 order: RecordFieldOrder::Ascending,
                 position: 0,
             }],
             lookup,
+            attributes: Default::default(),
         };
         assert_eq!(schema, expected);
 
@@ -2402,6 +2414,7 @@ mod tests {
                 },
             ],
             lookup,
+            attributes: Default::default(),
         };
         assert_eq!(schema, expected);
 
@@ -2462,6 +2475,7 @@ mod tests {
                 },
             ],
             lookup,
+            attributes: Default::default(),
         };
         assert_eq!(schema, expected);
 
@@ -2515,6 +2529,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                        attributes: Default::default(),
                     },
                     order: RecordFieldOrder::Ascending,
                     position: 0,
@@ -2531,12 +2546,14 @@ mod tests {
                         aliases: None,
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                        attributes: Default::default(),
                     },
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                 },
             ],
             lookup,
+            attributes: Default::default(),
         };
         assert_eq!(schema, expected);
 
@@ -2590,6 +2607,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        attributes: Default::default(),
                     },
                     order: RecordFieldOrder::Ascending,
                     position: 0,
@@ -2606,12 +2624,14 @@ mod tests {
                         aliases: None,
                         doc: None,
                         size: 456,
+                        attributes: Default::default(),
                     },
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                 },
             ],
             lookup,
+            attributes: Default::default(),
         };
         assert_eq!(schema, expected);
 
@@ -2636,6 +2656,7 @@ mod tests {
                 "clubs".to_owned(),
                 "hearts".to_owned(),
             ],
+            attributes: Default::default(),
         };
 
         assert_eq!(expected, schema);
@@ -2668,6 +2689,7 @@ mod tests {
             aliases: None,
             doc: None,
             size: 16usize,
+            attributes: Default::default(),
         };
 
         assert_eq!(expected, schema);
@@ -2685,6 +2707,7 @@ mod tests {
             aliases: None,
             doc: Some(String::from("FixedSchema documentation")),
             size: 16usize,
+            attributes: Default::default(),
         };
 
         assert_eq!(expected, schema);

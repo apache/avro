@@ -860,6 +860,7 @@ fn test_parse_reused_record_schema_by_fullname() {
             doc: _,
             ref fields,
             lookup: _,
+            attributes: _,
         } => {
             assert_eq!(name.fullname(None), "test.Weather", "Name does not match!");
 
