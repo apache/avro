@@ -107,7 +107,7 @@ pub enum Schema {
         doc: Documentation,
         fields: Vec<RecordField>,
         lookup: BTreeMap<String, usize>,
-        attributes: HashMap<String, Value>,
+        attributes: BTreeMap<String, Value>,
     },
     /// An `enum` Avro schema.
     Enum {
@@ -115,7 +115,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         symbols: Vec<String>,
-        attributes: HashMap<String, Value>,
+        attributes: BTreeMap<String, Value>,
     },
     /// A `fixed` Avro schema.
     Fixed {
@@ -123,7 +123,7 @@ pub enum Schema {
         aliases: Aliases,
         doc: Documentation,
         size: usize,
-        attributes: HashMap<String, Value>,
+        attributes: BTreeMap<String, Value>,
     },
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
@@ -346,9 +346,9 @@ impl<'de> Deserialize<'de> for Name {
         Value::deserialize(deserializer).and_then(|value| {
             use serde::de::Error;
             if let Value::Object(json) = value {
-                Name::parse(&json).map_err(D::Error::custom)
+                Name::parse(&json).map_err(Error::custom)
             } else {
-                Err(D::Error::custom(format!(
+                Err(Error::custom(format!(
                     "Expected a JSON object: {:?}",
                     value
                 )))
@@ -782,9 +782,20 @@ impl Schema {
         parser.parse_list()
     }
 
+    /// Parses an Avro schema from JSON.
     pub fn parse(value: &Value) -> AvroResult<Schema> {
         let mut parser = Parser::default();
         parser.parse(value, &None)
+    }
+
+    /// Returns the custom attributes (metadata) if the schema supports them.
+    pub fn custom_attributes(&self) -> Option<&BTreeMap<String, Value>> {
+        match self {
+            Schema::Record { attributes, .. }
+            | Schema::Enum { attributes, .. }
+            | Schema::Fixed { attributes, .. } => Some(attributes),
+            _ => None,
+        }
     }
 }
 
@@ -1223,11 +1234,27 @@ impl Parser {
             doc: complex.doc(),
             fields,
             lookup,
-            attributes: Default::default(),
+            attributes: self.get_custom_attributes(complex, vec!["fields"]),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
         Ok(schema)
+    }
+
+    fn get_custom_attributes(
+        &self,
+        complex: &Map<String, Value>,
+        excluded: Vec<&'static str>,
+    ) -> BTreeMap<String, Value> {
+        let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
+        for attribute in complex.iter() {
+            match attribute.0.as_str() {
+                "type" | "name" | "namespace" | "doc" | "aliases" => continue,
+                candidate if excluded.contains(&candidate) => continue,
+                _ => custom_attributes.insert(attribute.0.clone(), attribute.1.clone()),
+            };
+        }
+        custom_attributes
     }
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a
@@ -1280,7 +1307,7 @@ impl Parser {
             aliases: aliases.clone(),
             doc: complex.doc(),
             symbols,
-            attributes: Default::default(),
+            attributes: self.get_custom_attributes(complex, vec!["symbols"]),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
@@ -1362,7 +1389,7 @@ impl Parser {
             aliases: aliases.clone(),
             doc,
             size: size as usize,
-            attributes: Default::default(),
+            attributes: self.get_custom_attributes(complex, vec!["size"]),
         };
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
@@ -3840,6 +3867,101 @@ mod tests {
             }
         } else {
             panic!("Expected Schema::Record");
+        }
+    }
+
+    #[test]
+    fn avro_custom_attributes_without_attributes() {
+        let schemata_str = [
+            r#"
+            {
+                "type": "record",
+                "name": "Rec",
+                "doc": "A Record schema without custom attributes",
+                "fields": []
+            }
+            "#,
+            r#"
+            {
+                "type": "enum",
+                "name": "Enum",
+                "doc": "An Enum schema without custom attributes",
+                "symbols": []
+            }
+            "#,
+            r#"
+            {
+                "type": "fixed",
+                "name": "Fixed",
+                "doc": "A Fixed schema without custom attributes",
+                "size": 0
+            }
+            "#,
+        ];
+        for schema_str in schemata_str.iter() {
+            let schema = Schema::parse_str(schema_str).unwrap();
+            assert_eq!(schema.custom_attributes(), Some(&Default::default()));
+        }
+    }
+
+    #[test]
+    fn avro_custom_attributes_with_attributes() {
+        let custom_attrs_suffix = r#"
+                "string_key": "value",
+                "number_key": 1.23,
+                "null_key": null,
+                "array_key": [1, 2, 3],
+                "object_key": {
+                    "key": "value"
+                }
+            }
+        "#;
+        let schemata_str = [
+            r#"
+            {
+                "type": "record",
+                "name": "Rec",
+                "namespace": "ns",
+                "doc": "A Record schema with custom attributes",
+                "fields": [],
+            "#,
+            r#"
+            {
+                "type": "enum",
+                "name": "Enum",
+                "namespace": "ns",
+                "doc": "An Enum schema with custom attributes",
+                "symbols": [],
+            "#,
+            r#"
+            {
+                "type": "fixed",
+                "name": "Fixed",
+                "namespace": "ns",
+                "doc": "A Fixed schema with custom attributes",
+                "size": 2,
+            "#,
+        ];
+        use serde_json::json;
+
+        for schema_str in schemata_str.iter() {
+            let schema =
+                Schema::parse_str(format!("{}{}", schema_str, custom_attrs_suffix).as_str())
+                    .unwrap();
+
+            let mut expected_attibutes: BTreeMap<String, Value> = Default::default();
+            expected_attibutes.insert("string_key".to_string(), Value::String("value".to_string()));
+            expected_attibutes.insert("number_key".to_string(), json!(1.23));
+            expected_attibutes.insert("null_key".to_string(), Value::Null);
+            expected_attibutes.insert(
+                "array_key".to_string(),
+                Value::Array(vec![json!(1), json!(2), json!(3)]),
+            );
+            let mut object_value: HashMap<String, Value> = HashMap::new();
+            object_value.insert("key".to_string(), Value::String("value".to_string()));
+            expected_attibutes.insert("object_key".to_string(), json!(object_value));
+
+            assert_eq!(schema.custom_attributes(), Some(&expected_attibutes));
         }
     }
 }
