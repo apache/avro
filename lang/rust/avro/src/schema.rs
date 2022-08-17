@@ -1262,11 +1262,11 @@ impl Parser {
         excluded: Vec<&'static str>,
     ) -> BTreeMap<String, Value> {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
-        for attribute in complex.iter() {
-            match attribute.0.as_str() {
+        for (key, value) in complex {
+            match key.as_str() {
                 "type" | "name" | "namespace" | "doc" | "aliases" => continue,
                 candidate if excluded.contains(&candidate) => continue,
-                _ => custom_attributes.insert(attribute.0.clone(), attribute.1.clone()),
+                _ => custom_attributes.insert(key.clone(), value.clone()),
             };
         }
         custom_attributes
@@ -3935,18 +3935,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn avro_3609_custom_attributes_schema_with_attributes() {
-        let custom_attrs_suffix = r#"
-                "string_key": "value",
-                "number_key": 1.23,
-                "null_key": null,
-                "array_key": [1, 2, 3],
-                "object_key": {
-                    "key": "value"
-                }
+    const CUSTOM_ATTRS_SUFFIX: &str = r#"
+            "string_key": "value",
+            "number_key": 1.23,
+            "null_key": null,
+            "array_key": [1, 2, 3],
+            "object_key": {
+                "key": "value"
             }
         "#;
+
+    #[test]
+    fn avro_3609_custom_attributes_schema_with_attributes() {
         let schemata_str = [
             r#"
             {
@@ -3955,6 +3955,8 @@ mod tests {
                 "namespace": "ns",
                 "doc": "A Record schema with custom attributes",
                 "fields": [],
+                {{{}}}
+            }
             "#,
             r#"
             {
@@ -3963,6 +3965,8 @@ mod tests {
                 "namespace": "ns",
                 "doc": "An Enum schema with custom attributes",
                 "symbols": [],
+                {{{}}}
+            }
             "#,
             r#"
             {
@@ -3971,13 +3975,19 @@ mod tests {
                 "namespace": "ns",
                 "doc": "A Fixed schema with custom attributes",
                 "size": 2,
+                {{{}}}
+            }
             "#,
         ];
 
         for schema_str in schemata_str.iter() {
-            let schema =
-                Schema::parse_str(format!("{}{}", schema_str, custom_attrs_suffix).as_str())
-                    .unwrap();
+            let schema = Schema::parse_str(
+                schema_str
+                    .to_owned()
+                    .replace("{{{}}}", CUSTOM_ATTRS_SUFFIX)
+                    .as_str(),
+            )
+            .unwrap();
 
             assert_eq!(
                 schema.custom_attributes(),
@@ -4003,7 +4013,8 @@ mod tests {
 
     #[test]
     fn avro_3609_custom_attributes_record_field_without_attributes() {
-        let schema_str = r#"
+        let schema_str = String::from(
+            r#"
             {
                 "type": "record",
                 "name": "Rec",
@@ -4012,19 +4023,15 @@ mod tests {
                     {
                         "name": "field_one",
                         "type": "float",
-                        "string_key": "value",
-                        "number_key": 1.23,
-                        "null_key": null,
-                        "array_key": [1, 2, 3],
-                        "object_key": {
-                            "key": "value"
-                        }
+                        {{{}}}
                     }
                 ]
             }
-        "#;
+        "#,
+        );
 
-        let schema = Schema::parse_str(schema_str).unwrap();
+        let schema =
+            Schema::parse_str(schema_str.replace("{{{}}}", CUSTOM_ATTRS_SUFFIX).as_str()).unwrap();
 
         match schema {
             Schema::Record { name, fields, .. } => {
@@ -4036,41 +4043,5 @@ mod tests {
             }
             _ => panic!("Expected Schema::Record"),
         }
-    }
-
-    // #[test]
-    #[allow(dead_code)]
-    // TODO: Do we want to support serializing the custom attributes?
-    fn avro_3609_custom_attributes_serialize_record_field() {
-        let schema_str = r#"
-            {
-                "type": "record",
-                "name": "Rec",
-                "doc": "A Record schema without custom attributes",
-                "fields": [
-                    {
-                        "name": "field_one",
-                        "type": "float",
-                        "string_key": "value",
-                        "number_key": 1.23,
-                        "null_key": null,
-                        "array_key": [1, 2, 3],
-                        "object_key": {
-                            "key": "value"
-                        }
-                    }
-                ]
-            }
-        "#;
-
-        let schema = Schema::parse_str(schema_str).unwrap();
-
-        let value = serde_json::to_value(&schema).unwrap();
-        let serialized = serde_json::to_string(&value).unwrap();
-        assert_eq!(
-            r#"{"doc":"A Record schema without custom attributes","fields":[{"name":"field_one","type":"float"}],"name":"Rec","type":"record"}"#,
-            &serialized
-        );
-        assert_eq!(schema, Schema::parse_str(&serialized).unwrap());
     }
 }
