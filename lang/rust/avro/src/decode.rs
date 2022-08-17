@@ -344,6 +344,7 @@ mod tests {
             doc: None,
             name: Name::new("decimal").unwrap(),
             aliases: None,
+            attributes: Default::default(),
         });
         let schema = Schema::Decimal {
             inner,
@@ -370,6 +371,7 @@ mod tests {
             name: Name::new("decimal").unwrap(),
             aliases: None,
             doc: None,
+            attributes: Default::default(),
         });
         let schema = Schema::Decimal {
             inner,

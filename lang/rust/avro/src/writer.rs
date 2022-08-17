@@ -686,6 +686,7 @@ mod tests {
             aliases: None,
             doc: None,
             size,
+            attributes: Default::default(),
         };
         let value = vec![0u8; size];
         logical_type_test(
@@ -725,6 +726,7 @@ mod tests {
             aliases: None,
             doc: None,
             size: 12,
+            attributes: Default::default(),
         };
         let value = Value::Duration(Duration::new(
             Months::new(256),

@@ -147,6 +147,7 @@ fn get_data_struct_schema_def(
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
+                            custom_attributes: Default::default(),
                         }
                 });
             }
@@ -179,6 +180,7 @@ fn get_data_struct_schema_def(
             doc: #record_doc,
             fields: schema_fields,
             lookup,
+            attributes: Default::default(),
         }
     })
 }
@@ -204,6 +206,7 @@ fn get_data_enum_schema_def(
                 aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*],
+                attributes: Default::default(),
             }
         })
     } else {
