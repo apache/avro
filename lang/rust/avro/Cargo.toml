@@ -82,7 +82,7 @@ quad-rand = { default-features = false, version = "0.2.1" }
 rand = { default-features = false, version = "0.8.5", features = ["default"] }
 
 [dev-dependencies]
-anyhow = { default-features = false, version = "1.0.61", features = ["std"] }
+anyhow = { default-features = false, version = "1.0.62", features = ["std"] }
 apache-avro-test-helper = { default-features = false, version = "0.14.0", path = "../avro_test_helper" }
 criterion = { default-features = false, version = "0.3.6" }
 hex-literal = { default-features = false, version = "0.3.4" }
