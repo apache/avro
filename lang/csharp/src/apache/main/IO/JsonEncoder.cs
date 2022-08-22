@@ -294,9 +294,7 @@ namespace Avro.IO
             writer.WriteEndObject();
         }
 
-        /// <summary>
-        /// Start an array item.
-        /// </summary>
+        /// <inheritdoc />
         public override void StartItem()
         {
             if (!isEmpty.Get(Pos))
