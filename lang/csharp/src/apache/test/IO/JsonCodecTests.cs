@@ -145,16 +145,14 @@ namespace Avro.Test
         }
 
         [TestCase("{\"int\":123}")]
-        [TestCase("{\"long\":456}")]
+        [TestCase("{\"string\":\"12345678-1234-5678-1234-123456789012\"}")]
         [TestCase("null")]
         public void TestJsonUnionWithLogicalTypes(String value)
         {
             Schema schema = Schema.Parse(
                 "[\"null\",\n" +
                 "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
-                "    { \"type\": \"long\" }\n" +
-                // The following does not work due to https://issues.apache.org/jira/browse/AVRO-3613
-                //"    { \"type\": \"long\", \"logicalType\": \"timestamp-millis\" }\n" +
+                "    { \"type\": \"string\", \"logicalType\": \"uuid\" }\n" +
                 "]");
             GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
             Decoder decoder = new JsonDecoder(schema, value);
