@@ -44,6 +44,9 @@ namespace Avro.IO.Parsing
 
         private readonly SkipHandler skipHandler;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SkipParser"/> class.
+        /// </summary>
         public SkipParser(Symbol root, ActionHandler symbolHandler, SkipHandler skipHandler) : base(root, symbolHandler)
         {
             this.skipHandler = skipHandler;

@@ -85,7 +85,7 @@ namespace Avro.IO.Parsing
                             production[--i] = Symbol.RecordStart;
                             foreach (Field f in ((RecordSchema)sc).Fields)
                             {
-                                production[--i] = Symbol.fieldAdjustAction(n, f.Name, f.Aliases);
+                                production[--i] = new Symbol.FieldAdjustAction(n, f.Name, f.Aliases);
                                 production[--i] = Generate(f.Schema, seen);
                                 production[--i] = Symbol.FieldEnd;
                                 n++;

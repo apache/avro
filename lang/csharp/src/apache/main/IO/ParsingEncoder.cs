@@ -32,44 +32,66 @@ namespace Avro.IO
         /// </summary>
         private long[] counts = new long[10];
 
+        /// <summary>
+        /// Position into the counts stack.
+        /// </summary>
         protected int Pos = -1;
 
+        /// <inheritdoc />
         public abstract void WriteNull();
 
+        /// <inheritdoc />
         public abstract void WriteBoolean(bool value);
 
+        /// <inheritdoc />
         public abstract void WriteInt(int value);
 
+        /// <inheritdoc />
         public abstract void WriteLong(long value);
 
+        /// <inheritdoc />
         public abstract void WriteFloat(float value);
 
+        /// <inheritdoc />
         public abstract void WriteDouble(double value);
 
+        /// <inheritdoc />
         public abstract void WriteBytes(byte[] value);
 
+        /// <inheritdoc />
         public abstract void WriteBytes(byte[] value, int offset, int length);
 
+        /// <inheritdoc />
         public abstract void WriteString(string value);
 
+        /// <inheritdoc />
         public abstract void WriteEnum(int value);
 
+        /// <inheritdoc />
         public abstract void WriteArrayStart();
 
+        /// <inheritdoc />
         public abstract void WriteArrayEnd();
 
+        /// <inheritdoc />
         public abstract void WriteMapStart();
 
+        /// <inheritdoc />
         public abstract void WriteMapEnd();
 
+        /// <inheritdoc />
         public abstract void WriteUnionIndex(int value);
 
+        /// <inheritdoc />
         public abstract void WriteFixed(byte[] data);
 
+        /// <inheritdoc />
         public abstract void WriteFixed(byte[] data, int start, int len);
 
+        /// <inheritdoc />
         public abstract void Flush();
 
+        /// <inheritdoc />
         public void SetItemCount(long value)
         {
             if (counts[Pos] != 0)
@@ -81,13 +103,15 @@ namespace Avro.IO
             counts[Pos] = value;
         }
 
+        /// <inheritdoc />
         public void StartItem()
         {
             counts[Pos]--;
         }
 
         /// <summary>
-        /// Push a new collection on to the stack. </summary>
+        /// Push a new collection on to the stack.
+        /// </summary>
         protected void Push()
         {
             if (++Pos == counts.Length)
@@ -98,6 +122,9 @@ namespace Avro.IO
             counts[Pos] = 0;
         }
 
+        /// <summary>
+        /// Pop a new collection on to the stack.
+        /// </summary>
         protected void Pop()
         {
             if (counts[Pos] != 0)
@@ -108,6 +135,9 @@ namespace Avro.IO
             Pos--;
         }
 
+        /// <summary>
+        /// Returns the position into the stack.
+        /// </summary>
         protected int Depth()
         {
             return Pos;

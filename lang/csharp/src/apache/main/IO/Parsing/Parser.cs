@@ -45,9 +45,18 @@ namespace Avro.IO.Parsing
         }
 
         private readonly ActionHandler symbolHandler;
+        /// <summary>
+        /// Stack of symbols.
+        /// </summary>
         protected Symbol[] Stack;
+        /// <summary>
+        /// Position of the stack.
+        /// </summary>
         protected int Pos;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Parser"/> class.
+        /// </summary>
         public Parser(Symbol root, ActionHandler symbolHandler)
         {
             this.symbolHandler = symbolHandler;
@@ -209,6 +218,9 @@ namespace Avro.IO.Parsing
             return Pos;
         }
 
+        /// <summary>
+        /// Resets the stack.
+        /// </summary>
         public virtual void Reset()
         {
             Pos = 1;

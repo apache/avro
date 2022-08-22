@@ -119,11 +119,15 @@ namespace Avro.IO.Parsing
         }
 
         /// <summary>
-        /// A wrapper around Schema that does "==" equality. </summary>
+        /// A wrapper around Schema that does "==" equality.
+        /// </summary>
         protected class LitS
         {
             private readonly Schema actual;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="LitS"/> class.
+            /// </summary>
             public LitS(Schema actual)
             {
                 this.actual = actual;
@@ -143,6 +147,9 @@ namespace Avro.IO.Parsing
                 return actual.Equals(((LitS)o).actual);
             }
 
+            /// <summary>
+            /// Returns the hash code for the current <see cref="LitS" />.
+            /// </summary>
             public override int GetHashCode()
             {
                 return actual.GetHashCode();

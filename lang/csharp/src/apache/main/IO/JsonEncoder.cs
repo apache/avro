@@ -41,20 +41,30 @@ namespace Avro.IO
         // Has anything been written into the collections?
         private readonly BitArray isEmpty = new BitArray(100);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
+        /// </summary>
         public JsonEncoder(Schema sc, Stream stream) : this(sc, getJsonWriter(stream, false))
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
+        /// </summary>
         public JsonEncoder(Schema sc, Stream stream, bool pretty) : this(sc, getJsonWriter(stream, pretty))
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
+        /// </summary>
         public JsonEncoder(Schema sc, JsonWriter writer)
         {
             Configure(writer);
             this.parser = new Parser((new JsonGrammarGenerator()).Generate(sc), this);
         }
 
+        /// <inheritdoc />
         public override void Flush()
         {
             parser.ProcessImplicitActions();
@@ -77,6 +87,9 @@ namespace Avro.IO
             return writer;
         }
 
+        /// <summary>
+        /// Whether to include the namespace.
+        /// </summary>
         public virtual bool IncludeNamespace
         {
             get { return includeNamespace; }
@@ -105,55 +118,62 @@ namespace Avro.IO
         /// Otherwise, this JsonEncoder will flush its current output and then
         /// reconfigure its output to use the provided JsonWriter.
         /// </summary>
-        /// <param name="writer"> The JsonWriter to direct output to. Cannot be null. </param>
+        /// <param name="jsonWriter"> The JsonWriter to direct output to. Cannot be null. </param>
         /// <returns> this JsonEncoder </returns>
-        public JsonEncoder Configure(JsonWriter writer)
+        public JsonEncoder Configure(JsonWriter jsonWriter)
         {
             if (null != parser)
             {
                 Flush();
             }
 
-            this.writer = writer;
+            this.writer = jsonWriter;
             return this;
         }
 
+        /// <inheritdoc />
         public override void WriteNull()
         {
             parser.Advance(Symbol.Null);
             writer.WriteNull();
         }
 
+        /// <inheritdoc />
         public override void WriteBoolean(bool b)
         {
             parser.Advance(Symbol.Boolean);
             writer.WriteValue(b);
         }
 
+        /// <inheritdoc />
         public override void WriteInt(int n)
         {
             parser.Advance(Symbol.Int);
             writer.WriteValue(n);
         }
 
+        /// <inheritdoc />
         public override void WriteLong(long n)
         {
             parser.Advance(Symbol.Long);
             writer.WriteValue(n);
         }
 
+        /// <inheritdoc />
         public override void WriteFloat(float f)
         {
             parser.Advance(Symbol.Float);
             writer.WriteValue(f);
         }
 
+        /// <inheritdoc />
         public override void WriteDouble(double d)
         {
             parser.Advance(Symbol.Double);
             writer.WriteValue(d);
         }
 
+        /// <inheritdoc />
         public override void WriteString(string str)
         {
             parser.Advance(Symbol.String);
@@ -168,11 +188,13 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override void WriteBytes(byte[] bytes)
         {
             WriteBytes(bytes, 0, bytes.Length);
         }
 
+        /// <inheritdoc />
         public override void WriteBytes(byte[] bytes, int start, int len)
         {
             parser.Advance(Symbol.Bytes);
@@ -185,11 +207,13 @@ namespace Avro.IO
             writer.WriteValue(iso.GetString(bytes, start, len));
         }
 
+        /// <inheritdoc />
         public override void WriteFixed(byte[] bytes)
         {
             WriteFixed(bytes, 0, bytes.Length);
         }
 
+        /// <inheritdoc />
         public override void WriteFixed(byte[] bytes, int start, int len)
         {
             parser.Advance(Symbol.Fixed);
@@ -203,6 +227,7 @@ namespace Avro.IO
             writeByteArray(bytes, start, len);
         }
 
+        /// <inheritdoc />
         public override void WriteEnum(int e)
         {
             parser.Advance(Symbol.Enum);
@@ -215,6 +240,7 @@ namespace Avro.IO
             writer.WriteValue(top.GetLabel(e));
         }
 
+        /// <inheritdoc />
         public override void WriteArrayStart()
         {
             parser.Advance(Symbol.ArrayStart);
@@ -228,6 +254,7 @@ namespace Avro.IO
             isEmpty.Set(Depth(), true);
         }
 
+        /// <inheritdoc />
         public override void WriteArrayEnd()
         {
             if (!isEmpty.Get(Pos))
@@ -240,6 +267,7 @@ namespace Avro.IO
             writer.WriteEndArray();
         }
 
+        /// <inheritdoc />
         public override void WriteMapStart()
         {
             Push();
@@ -254,6 +282,7 @@ namespace Avro.IO
             writer.WriteStartObject();
         }
 
+        /// <inheritdoc />
         public override void WriteMapEnd()
         {
             if (!isEmpty.Get(Pos))
@@ -267,6 +296,9 @@ namespace Avro.IO
             writer.WriteEndObject();
         }
 
+        /// <summary>
+        /// Start an array item.
+        /// </summary>
         public new void StartItem()
         {
             if (!isEmpty.Get(Pos))
@@ -283,6 +315,7 @@ namespace Avro.IO
             isEmpty.Set(Depth(), false);
         }
 
+        /// <inheritdoc />
         public override void WriteUnionIndex(int unionIndex)
         {
             parser.Advance(Symbol.Union);
@@ -298,6 +331,9 @@ namespace Avro.IO
             parser.PushSymbol(symbol);
         }
 
+        /// <summary>
+        /// Perform an action based on the given input.
+        /// </summary>
         public virtual Symbol DoAction(Symbol input, Symbol top)
         {
             if (top is Symbol.FieldAdjustAction)

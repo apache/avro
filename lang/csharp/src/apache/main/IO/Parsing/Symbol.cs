@@ -153,11 +153,23 @@ namespace Avro.IO.Parsing
             return new ResolvingAction(w, r);
         }
 
+        /// <summary>
+        /// Fixup symbol.
+        /// </summary>
         protected class Fixup
         {
+            /// <summary>
+            /// The symbols.
+            /// </summary>
             public readonly Symbol[] Symbols;
+            /// <summary>
+            /// The position.
+            /// </summary>
             public readonly int Pos;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Fixup"/> class.
+            /// </summary>
             public Fixup(Symbol[] symbols, int pos)
             {
                 this.Symbols = symbols;
@@ -165,11 +177,17 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// Flatten the given sub-array of symbols into a sub-array of symbols.
+        /// </summary>
         protected virtual Symbol Flatten(IDictionary<Sequence, Sequence> map, IDictionary<Sequence, IList<Fixup>> map2)
         {
             return this;
         }
 
+        /// <summary>
+        /// Returns the flattened size.
+        /// </summary>
         public virtual int FlattenedSize()
         {
             return 1;
@@ -295,21 +313,34 @@ namespace Avro.IO.Parsing
             return result;
         }
 
+        /// <summary>
+        /// Terminal symbol.
+        /// </summary>
         protected class Terminal : Symbol
         {
+            /// <summary>
+            /// Printable name.
+            /// </summary>
             public readonly string PrintName;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.Terminal"/> class.
+            /// </summary>
             public Terminal(string printName) : base(Kind.Terminal)
             {
                 this.PrintName = printName;
             }
 
+            /// <inheritdoc />
             public override string ToString()
             {
                 return PrintName;
             }
         }
 
+        /// <summary>
+        /// Implicit action.
+        /// </summary>
         public class ImplicitAction : Symbol
         {
             /// <summary>
@@ -319,18 +350,30 @@ namespace Avro.IO.Parsing
             /// </summary>
             public readonly bool IsTrailing;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.ImplicitAction"/> class.
+            /// </summary>
             public ImplicitAction() : this(false)
             {
             }
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.ImplicitAction"/> class.
+            /// </summary>
             public ImplicitAction(bool isTrailing) : base(Kind.ImplicitAction)
             {
                 this.IsTrailing = isTrailing;
             }
         }
 
+        /// <summary>
+        /// Root symbol.
+        /// </summary>
         protected class Root : Symbol
         {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.Root"/> class.
+            /// </summary>
             public Root(params Symbol[] symbols) : base(Kind.Root, makeProduction(symbols))
             {
                 Production[0] = this;
@@ -345,22 +388,35 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// Sequence symbol.
+        /// </summary>
         protected class Sequence : Symbol, IEnumerable<Symbol>
         {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.Sequence"/> class.
+            /// </summary>
             public Sequence(Symbol[] productions) : base(Kind.Sequence, productions)
             {
             }
 
+            /// <summary>
+            /// Get the symbol at the given index.
+            /// </summary>
             public virtual Symbol Get(int index)
             {
                 return Production[index];
             }
 
+            /// <summary>
+            /// Returns the number of symbols.
+            /// </summary>
             public virtual int Size()
             {
                 return Production.Length;
             }
 
+            /// <inheritdoc />
             public IEnumerator<Symbol> GetEnumerator()
             {
                 return Enumerable.Reverse(Production).GetEnumerator();
@@ -371,6 +427,7 @@ namespace Avro.IO.Parsing
                 return this.GetEnumerator();
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -394,16 +451,26 @@ namespace Avro.IO.Parsing
                 return result;
             }
 
+            /// <inheritdoc />
             public override int FlattenedSize()
             {
                 return FlattenedSize(Production, 0);
             }
         }
 
+        /// <summary>
+        /// Repeater symbol.
+        /// </summary>
         public class Repeater : Symbol
         {
+            /// <summary>
+            /// The end symbol.
+            /// </summary>
             public readonly Symbol End;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.Repeater"/> class.
+            /// </summary>
             public Repeater(Symbol end, params Symbol[] sequenceToRepeat) : base(Kind.Repeater,
                 makeProduction(sequenceToRepeat))
             {
@@ -418,6 +485,7 @@ namespace Avro.IO.Parsing
                 return result;
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -498,32 +566,56 @@ namespace Avro.IO.Parsing
             return false;
         }
 
+        /// <summary>
+        /// Alternative symbol.
+        /// </summary>
         public class Alternative : Symbol
         {
+            /// <summary>
+            /// The symbols.
+            /// </summary>
             public readonly Symbol[] Symbols;
+            /// <summary>
+            /// The labels.
+            /// </summary>
             public readonly string[] Labels;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.Alternative"/> class.
+            /// </summary>
             public Alternative(Symbol[] symbols, string[] labels) : base(Kind.Alternative)
             {
                 this.Symbols = symbols;
                 this.Labels = labels;
             }
 
+            /// <summary>
+            /// Returns the symbol at the given index.
+            /// </summary>
             public virtual Symbol GetSymbol(int index)
             {
                 return Symbols[index];
             }
 
+            /// <summary>
+            /// Returns the label at the given index.
+            /// </summary>
             public virtual string GetLabel(int index)
             {
                 return Labels[index];
             }
 
+            /// <summary>
+            /// Returns the size.
+            /// </summary>
             public virtual int Size()
             {
                 return Symbols.Length;
             }
 
+            /// <summary>
+            /// Returns the index of the given label.
+            /// </summary>
             public virtual int FindLabel(string label)
             {
                 if (!ReferenceEquals(label, null))
@@ -540,6 +632,7 @@ namespace Avro.IO.Parsing
                 return -1;
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -553,31 +646,61 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// The error action.
+        /// </summary>
         public class ErrorAction : ImplicitAction
         {
+            /// <summary>
+            /// The error message.
+            /// </summary>
             public readonly string Msg;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.ErrorAction"/> class.
+            /// </summary>
             public ErrorAction(string msg)
             {
                 this.Msg = msg;
             }
         }
 
+        /// <summary>
+        /// Int check action.
+        /// </summary>
         public class IntCheckAction : Symbol
         {
+            /// <summary>
+            /// The size.
+            /// </summary>
             public readonly int Size;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.IntCheckAction"/> class.
+            /// </summary>
             public IntCheckAction(int size) : base(Kind.ExplicitAction)
             {
                 this.Size = size;
             }
         }
 
+        /// <summary>
+        /// The enum adjust action.
+        /// </summary>
         public class EnumAdjustAction : IntCheckAction
         {
+            /// <summary>
+            /// Whether no adjustments are needed.
+            /// </summary>
             public readonly bool NoAdjustments;
+            /// <summary>
+            /// The adjustments.
+            /// </summary>
             public readonly object[] Adjustments;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.EnumAdjustAction"/> class.
+            /// </summary>
             public EnumAdjustAction(int rsymCount, object[] adjustments) : base(rsymCount)
             {
                 this.Adjustments = adjustments;
@@ -596,21 +719,37 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// The writer union action.
+        /// </summary>
         public class WriterUnionAction : ImplicitAction
         {
         }
 
+        /// <summary>
+        /// The resolving action.
+        /// </summary>
         public class ResolvingAction : ImplicitAction
         {
+            /// <summary>
+            /// The writer.
+            /// </summary>
             public readonly Symbol Writer;
+            /// <summary>
+            /// The reader.
+            /// </summary>
             public readonly Symbol Reader;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.ResolvingAction"/> class.
+            /// </summary>
             public ResolvingAction(Symbol writer, Symbol reader)
             {
                 this.Writer = writer;
                 this.Reader = reader;
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -618,15 +757,25 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// The skip action.
+        /// </summary>
         public class SkipAction : ImplicitAction
         {
+            /// <summary>
+            /// The symbol to skip.
+            /// </summary>
             public readonly Symbol SymToSkip;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.SkipAction"/> class.
+            /// </summary>
             public SkipAction(Symbol symToSkip) : base(true)
             {
                 this.SymToSkip = symToSkip;
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -634,17 +783,27 @@ namespace Avro.IO.Parsing
             }
         }
 
-        public static FieldAdjustAction fieldAdjustAction(int rindex, string fname, IList<string> aliases)
-        {
-            return new FieldAdjustAction(rindex, fname, aliases);
-        }
-
+        /// <summary>
+        /// The field adjust action.
+        /// </summary>
         public class FieldAdjustAction : ImplicitAction
         {
+            /// <summary>
+            /// The index.
+            /// </summary>
             public readonly int RIndex;
+            /// <summary>
+            /// The field name.
+            /// </summary>
             public readonly string FName;
+            /// <summary>
+            /// The field aliases.
+            /// </summary>
             public readonly IList<string> Aliases;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.FieldAdjustAction"/> class.
+            /// </summary>
             public FieldAdjustAction(int rindex, string fname, IList<string> aliases)
             {
                 this.RIndex = rindex;
@@ -653,16 +812,23 @@ namespace Avro.IO.Parsing
             }
         }
 
-        public static FieldOrderAction fieldOrderAction(Field[] fields)
-        {
-            return new FieldOrderAction(fields);
-        }
-
+        /// <summary>
+        /// THe field order action.
+        /// </summary>
         public sealed class FieldOrderAction : ImplicitAction
         {
+            /// <summary>
+            /// Whether no reorder is needed.
+            /// </summary>
             public readonly bool NoReorder;
+            /// <summary>
+            /// The fields.
+            /// </summary>
             public readonly Field[] Fields;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.FieldOrderAction"/> class.
+            /// </summary>
             public FieldOrderAction(Field[] fields)
             {
                 this.Fields = fields;
@@ -676,32 +842,49 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// The default start action.
+        /// </summary>
         public class DefaultStartAction : ImplicitAction
         {
+            /// <summary>
+            /// The contents.
+            /// </summary>
             public readonly byte[] Contents;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.DefaultStartAction"/> class.
+            /// </summary>
             public DefaultStartAction(byte[] contents)
             {
                 this.Contents = contents;
             }
         }
 
-        public static UnionAdjustAction unionAdjustAction(int rindex, Symbol sym)
-        {
-            return new UnionAdjustAction(rindex, sym);
-        }
-
+        /// <summary>
+        /// The union adjust action.
+        /// </summary>
         public class UnionAdjustAction : ImplicitAction
         {
+            /// <summary>
+            /// The index.
+            /// </summary>
             public readonly int RIndex;
+            /// <summary>
+            /// The symbol to parser.
+            /// </summary>
             public readonly Symbol SymToParse;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.UnionAdjustAction"/> class.
+            /// </summary>
             public UnionAdjustAction(int rindex, Symbol symToParse)
             {
                 this.RIndex = rindex;
                 this.SymToParse = symToParse;
             }
 
+            /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
@@ -709,20 +892,35 @@ namespace Avro.IO.Parsing
             }
         }
 
+        /// <summary>
+        /// The enum labels action.
+        /// </summary>
         public class EnumLabelsAction : IntCheckAction
         {
+            /// <summary>
+            /// The symbols.
+            /// </summary>
             public readonly IList<string> Symbols;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Symbol.EnumLabelsAction"/> class.
+            /// </summary>
             public EnumLabelsAction(IList<string> symbols) : base(symbols.Count)
             {
                 this.Symbols = symbols;
             }
 
+            /// <summary>
+            /// Returns the label at the given index.
+            /// </summary>
             public virtual string GetLabel(int n)
             {
                 return Symbols[n];
             }
 
+            /// <summary>
+            /// Returns index of the given label.
+            /// </summary>
             public virtual int FindLabel(string l)
             {
                 if (!ReferenceEquals(l, null))
@@ -745,34 +943,102 @@ namespace Avro.IO.Parsing
         /// </summary>
         public static readonly Symbol Null = new Terminal("null");
 
+        /// <summary>
+        /// Boolean
+        /// </summary>
         public static readonly Symbol Boolean = new Terminal("boolean");
+        /// <summary>
+        /// Int
+        /// </summary>
         public static readonly Symbol Int = new Terminal("int");
+        /// <summary>
+        /// Long
+        /// </summary>
         public static readonly Symbol Long = new Terminal("long");
+        /// <summary>
+        /// Float
+        /// </summary>
         public static readonly Symbol Float = new Terminal("float");
+        /// <summary>
+        /// Double
+        /// </summary>
         public static readonly Symbol Double = new Terminal("double");
+        /// <summary>
+        /// String
+        /// </summary>
         public static readonly Symbol String = new Terminal("string");
+        /// <summary>
+        /// Bytes
+        /// </summary>
         public static readonly Symbol Bytes = new Terminal("bytes");
+        /// <summary>
+        /// Fixed
+        /// </summary>
         public static readonly Symbol Fixed = new Terminal("fixed");
+        /// <summary>
+        /// Enum
+        /// </summary>
         public static readonly Symbol Enum = new Terminal("enum");
+        /// <summary>
+        /// Union
+        /// </summary>
         public static readonly Symbol Union = new Terminal("union");
 
+        /// <summary>
+        /// ArrayStart
+        /// </summary>
         public static readonly Symbol ArrayStart = new Terminal("array-start");
+        /// <summary>
+        /// ArrayEnd
+        /// </summary>
         public static readonly Symbol ArrayEnd = new Terminal("array-end");
+        /// <summary>
+        /// MapStart
+        /// </summary>
         public static readonly Symbol MapStart = new Terminal("map-start");
+        /// <summary>
+        /// MapEnd
+        /// </summary>
         public static readonly Symbol MapEnd = new Terminal("map-end");
+        /// <summary>
+        /// ItemEnd
+        /// </summary>
         public static readonly Symbol ItemEnd = new Terminal("item-end");
 
+        /// <summary>
+        /// WriterUnion
+        /// </summary>
         public static readonly Symbol WriterUnion = new WriterUnionAction();
 
-        /* a pseudo terminal used by parsers */
+        /// <summary>
+        /// FieldAction - a pseudo terminal used by parsers
+        /// </summary>
         public static readonly Symbol FieldAction = new Terminal("field-action");
 
+        /// <summary>
+        /// RecordStart
+        /// </summary>
         public static readonly Symbol RecordStart = new ImplicitAction(false);
+        /// <summary>
+        /// RecordEnd
+        /// </summary>
         public static readonly Symbol RecordEnd = new ImplicitAction(true);
+        /// <summary>
+        /// UnionEnd
+        /// </summary>
         public static readonly Symbol UnionEnd = new ImplicitAction(true);
+        /// <summary>
+        /// FieldEnd
+        /// </summary>
         public static readonly Symbol FieldEnd = new ImplicitAction(true);
 
+        /// <summary>
+        /// DefaultEndAction
+        /// </summary>
         public static readonly Symbol DefaultEndAction = new ImplicitAction(true);
+        /// <summary>
+        /// MapKeyMarker
+        /// </summary>
         public static readonly Symbol MapKeyMarker = new Terminal("map-key-marker");
     }
 }

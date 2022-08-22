@@ -54,10 +54,16 @@ namespace Avro.IO
             Configure(str);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
+        /// </summary>
         public JsonDecoder(Schema schema, Stream stream) : this(getSymbol(schema), stream)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
+        /// </summary>
         public JsonDecoder(Schema schema, string str) : this(getSymbol(schema), str)
         {
         }
@@ -77,7 +83,7 @@ namespace Avro.IO
         /// <returns> this JsonDecoder </returns>
         public JsonDecoder Configure(Stream stream)
         {
-            parser.Reset();
+            Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
             this.reader = new JsonTextReader(new StreamReader(stream));
@@ -95,7 +101,7 @@ namespace Avro.IO
         /// <returns> this JsonDecoder </returns>
         public JsonDecoder Configure(string str)
         {
-            parser.Reset();
+            Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
             this.reader = new JsonTextReader(new StringReader(str));
@@ -105,10 +111,11 @@ namespace Avro.IO
 
         private void advance(Symbol symbol)
         {
-            this.parser.ProcessTrailingImplicitActions();
-            parser.Advance(symbol);
+            this.Parser.ProcessTrailingImplicitActions();
+            Parser.Advance(symbol);
         }
 
+        /// <inheritdoc />
         public override void ReadNull()
         {
             advance(Symbol.Null);
@@ -122,6 +129,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override bool ReadBoolean()
         {
             advance(Symbol.Boolean);
@@ -137,6 +145,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override int ReadInt()
         {
             advance(Symbol.Int);
@@ -152,6 +161,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override long ReadLong()
         {
             advance(Symbol.Long);
@@ -167,6 +177,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override float ReadFloat()
         {
             advance(Symbol.Float);
@@ -182,6 +193,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override double ReadDouble()
         {
             advance(Symbol.Double);
@@ -197,12 +209,13 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override string ReadString()
         {
             advance(Symbol.String);
-            if (parser.TopSymbol() == Symbol.MapKeyMarker)
+            if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
-                parser.Advance(Symbol.MapKeyMarker);
+                Parser.Advance(Symbol.MapKeyMarker);
                 if (reader.TokenType != JsonToken.PropertyName)
                 {
                     throw error("map-key");
@@ -221,12 +234,13 @@ namespace Avro.IO
             return result;
         }
 
+        /// <inheritdoc />
         public override void SkipString()
         {
             advance(Symbol.String);
-            if (parser.TopSymbol() == Symbol.MapKeyMarker)
+            if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
-                parser.Advance(Symbol.MapKeyMarker);
+                Parser.Advance(Symbol.MapKeyMarker);
                 if (reader.TokenType != JsonToken.PropertyName)
                 {
                     throw error("map-key");
@@ -243,6 +257,7 @@ namespace Avro.IO
             reader.Read();
         }
 
+        /// <inheritdoc />
         public override byte[] ReadBytes()
         {
             advance(Symbol.Bytes);
@@ -265,6 +280,7 @@ namespace Avro.IO
             return result;
         }
 
+        /// <inheritdoc />
         public override void SkipBytes()
         {
             advance(Symbol.Bytes);
@@ -281,7 +297,7 @@ namespace Avro.IO
         private void checkFixed(int size)
         {
             advance(Symbol.Fixed);
-            Symbol.IntCheckAction top = (Symbol.IntCheckAction)parser.PopSymbol();
+            Symbol.IntCheckAction top = (Symbol.IntCheckAction)Parser.PopSymbol();
             if (size != top.Size)
             {
                 throw new AvroTypeException("Incorrect length for fixed binary: expected " + top.Size +
@@ -289,11 +305,13 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override void ReadFixed(byte[] bytes)
         {
             ReadFixed(bytes, 0, bytes.Length);
         }
 
+        /// <inheritdoc />
         public override void ReadFixed(byte[] bytes, int start, int len)
         {
             checkFixed(len);
@@ -314,6 +332,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override void SkipFixed(int length)
         {
             checkFixed(length);
@@ -337,17 +356,19 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         protected override void SkipFixed()
         {
             advance(Symbol.Fixed);
-            Symbol.IntCheckAction top = (Symbol.IntCheckAction)parser.PopSymbol();
+            Symbol.IntCheckAction top = (Symbol.IntCheckAction)Parser.PopSymbol();
             doSkipFixed(top.Size);
         }
 
+        /// <inheritdoc />
         public override int ReadEnum()
         {
             advance(Symbol.Enum);
-            Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction)parser.PopSymbol();
+            Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction)Parser.PopSymbol();
             if (reader.TokenType == JsonToken.String)
             {
                 string label = Convert.ToString(reader.Value);
@@ -366,6 +387,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override long ReadArrayStart()
         {
             advance(Symbol.ArrayStart);
@@ -380,6 +402,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override long ReadArrayNext()
         {
             advance(Symbol.ItemEnd);
@@ -390,7 +413,7 @@ namespace Avro.IO
         {
             if (reader.TokenType == JsonToken.EndArray)
             {
-                parser.Advance(Symbol.ArrayEnd);
+                Parser.Advance(Symbol.ArrayEnd);
                 reader.Read();
                 return 0;
             }
@@ -400,6 +423,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override void SkipArray()
         {
             advance(Symbol.ArrayStart);
@@ -415,6 +439,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override long ReadMapStart()
         {
             advance(Symbol.MapStart);
@@ -429,6 +454,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override long ReadMapNext()
         {
             advance(Symbol.ItemEnd);
@@ -449,6 +475,7 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override void SkipMap()
         {
             advance(Symbol.MapStart);
@@ -464,10 +491,11 @@ namespace Avro.IO
             }
         }
 
+        /// <inheritdoc />
         public override int ReadUnionIndex()
         {
             advance(Symbol.Union);
-            Symbol.Alternative a = (Symbol.Alternative)parser.PopSymbol();
+            Symbol.Alternative a = (Symbol.Alternative)Parser.PopSymbol();
 
             string label;
             if (reader.TokenType == JsonToken.Null)
@@ -481,7 +509,7 @@ namespace Avro.IO
                 {
                     label = Convert.ToString(reader.Value);
                     reader.Read();
-                    parser.PushSymbol(Symbol.UnionEnd);
+                    Parser.PushSymbol(Symbol.UnionEnd);
                 }
                 else
                 {
@@ -499,50 +527,59 @@ namespace Avro.IO
                 throw new AvroTypeException("Unknown union branch " + label);
             }
 
-            parser.PushSymbol(a.GetSymbol(n));
+            Parser.PushSymbol(a.GetSymbol(n));
             return n;
         }
 
+        /// <inheritdoc />
         public override void SkipNull()
         {
             ReadNull();
         }
 
+        /// <inheritdoc />
         public override void SkipBoolean()
         {
             ReadBoolean();
         }
 
+        /// <inheritdoc />
         public override void SkipInt()
         {
             ReadInt();
         }
 
+        /// <inheritdoc />
         public override void SkipLong()
         {
             ReadLong();
         }
 
+        /// <inheritdoc />
         public override void SkipFloat()
         {
             ReadFloat();
         }
 
+        /// <inheritdoc />
         public override void SkipDouble()
         {
             ReadDouble();
         }
 
+        /// <inheritdoc />
         public override void SkipEnum()
         {
             ReadEnum();
         }
 
+        /// <inheritdoc />
         public override void SkipUnionIndex()
         {
             ReadUnionIndex();
         }
 
+        /// <inheritdoc />
         public override Symbol DoAction(Symbol input, Symbol top)
         {
             if (top is Symbol.FieldAdjustAction)

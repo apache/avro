@@ -26,82 +26,128 @@ namespace Avro.IO
     /// </summary>
     public abstract class ParsingDecoder : Decoder, Parser.ActionHandler, SkipParser.SkipHandler
     {
+        /// <inheritdoc />
         public abstract void ReadNull();
 
+        /// <inheritdoc />
         public abstract bool ReadBoolean();
 
+        /// <inheritdoc />
         public abstract int ReadInt();
 
+        /// <inheritdoc />
         public abstract long ReadLong();
 
+        /// <inheritdoc />
         public abstract float ReadFloat();
 
+        /// <inheritdoc />
         public abstract double ReadDouble();
 
+        /// <inheritdoc />
         public abstract byte[] ReadBytes();
 
+        /// <inheritdoc />
         public abstract string ReadString();
 
+        /// <inheritdoc />
         public abstract int ReadEnum();
 
+        /// <inheritdoc />
         public abstract long ReadArrayStart();
 
+        /// <inheritdoc />
         public abstract long ReadArrayNext();
 
+        /// <inheritdoc />
         public abstract long ReadMapStart();
 
+        /// <inheritdoc />
         public abstract long ReadMapNext();
 
+        /// <inheritdoc />
         public abstract int ReadUnionIndex();
 
+        /// <inheritdoc />
         public abstract void ReadFixed(byte[] buffer);
 
+        /// <inheritdoc />
         public abstract void ReadFixed(byte[] buffer, int start, int length);
 
+        /// <inheritdoc />
         public abstract void SkipNull();
 
+        /// <inheritdoc />
         public abstract void SkipBoolean();
 
+        /// <inheritdoc />
         public abstract void SkipInt();
 
+        /// <inheritdoc />
         public abstract void SkipLong();
 
+        /// <inheritdoc />
         public abstract void SkipFloat();
 
+        /// <inheritdoc />
         public abstract void SkipDouble();
 
+        /// <inheritdoc />
         public abstract void SkipBytes();
 
+        /// <inheritdoc />
         public abstract void SkipString();
 
+        /// <inheritdoc />
         public abstract void SkipEnum();
 
+        /// <inheritdoc />
         public abstract void SkipUnionIndex();
 
+        /// <inheritdoc />
         public abstract void SkipFixed(int len);
 
+        /// <summary>
+        ///  Skips an array on the stream.
+        /// </summary>
         public abstract void SkipArray();
 
+        /// <summary>
+        ///  Skips a map on the stream.
+        /// </summary>
         public abstract void SkipMap();
 
+        /// <inheritdoc />
         public abstract Symbol DoAction(Symbol input, Symbol top);
-        protected readonly SkipParser parser;
 
+        /// <summary>
+        /// The parser.
+        /// </summary>
+        protected readonly SkipParser Parser;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ParsingDecoder"/> class.
+        /// </summary>
         protected ParsingDecoder(Symbol root)
         {
-            this.parser = new SkipParser(root, this, this);
+            this.Parser = new SkipParser(root, this, this);
         }
 
+        /// <summary>
+        ///  Skips a fixed type on the stream.
+        /// </summary>
         protected abstract void SkipFixed();
 
+        /// <inheritdoc />
         public virtual void SkipAction()
         {
-            parser.PopSymbol();
+            Parser.PopSymbol();
         }
 
+        /// <inheritdoc />
         public virtual void SkipTopSymbol()
         {
-            Symbol top = parser.TopSymbol();
+            Symbol top = Parser.TopSymbol();
             if (top == Symbol.Null)
             {
                 ReadNull();
