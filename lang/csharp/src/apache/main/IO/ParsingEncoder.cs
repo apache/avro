@@ -92,7 +92,7 @@ namespace Avro.IO
         public abstract void Flush();
 
         /// <inheritdoc />
-        public void SetItemCount(long value)
+        public virtual void SetItemCount(long value)
         {
             if (counts[Pos] != 0)
             {
@@ -104,7 +104,7 @@ namespace Avro.IO
         }
 
         /// <inheritdoc />
-        public void StartItem()
+        public virtual void StartItem()
         {
             counts[Pos]--;
         }

@@ -297,7 +297,7 @@ namespace Avro.IO
         /// <summary>
         /// Start an array item.
         /// </summary>
-        public new void StartItem()
+        public override void StartItem()
         {
             if (!isEmpty.Get(Pos))
             {
