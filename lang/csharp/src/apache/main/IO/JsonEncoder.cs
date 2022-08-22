@@ -39,7 +39,7 @@ namespace Avro.IO
         private bool includeNamespace = true;
 
         // Has anything been written into the collections?
-        private readonly BitArray isEmpty = new BitArray(100);
+        private readonly BitArray isEmpty = new BitArray(64);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
