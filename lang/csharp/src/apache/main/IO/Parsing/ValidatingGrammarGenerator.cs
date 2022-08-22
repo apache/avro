@@ -79,8 +79,8 @@ namespace Avro.IO.Parsing
                 case Schema.Type.Record:
                     {
                         LitS wsc = new LitS(sc);
-                        Symbol rresult = seen.ContainsKey(wsc) ? seen[wsc] : null;
-                        if (rresult == null)
+                        Symbol rresult;
+                        if (!seen.TryGetValue(wsc, out rresult))
                         {
                             Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count];
 
@@ -139,7 +139,17 @@ namespace Avro.IO.Parsing
             /// </summary>
             public override bool Equals(object o)
             {
-                if (!(o is LitS))
+                if (o is null)
+                {
+                    return false;
+                }
+
+                if (Object.ReferenceEquals(this, o))
+                {
+                    return true;
+                }
+
+                if (this.GetType() != o.GetType())
                 {
                     return false;
                 }

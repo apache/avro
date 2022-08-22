@@ -73,8 +73,8 @@ namespace Avro.IO.Parsing
                 case Schema.Type.Record:
                     {
                         LitS wsc = new LitS(sc);
-                        Symbol rresult = seen.ContainsKey(wsc) ? seen[wsc] : null;
-                        if (rresult == null)
+                        Symbol rresult;
+                        if (!seen.TryGetValue(wsc, out rresult))
                         {
                             Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count * 3 + 2];
                             rresult = Symbol.NewSeq(production);
@@ -91,7 +91,7 @@ namespace Avro.IO.Parsing
                                 n++;
                             }
 
-                            production[--i] = Symbol.RecordEnd;
+                            production[i - 1] = Symbol.RecordEnd;
                         }
 
                         return rresult;

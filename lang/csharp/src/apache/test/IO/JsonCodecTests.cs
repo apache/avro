@@ -19,6 +19,7 @@
 using System;
 using NUnit.Framework;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Avro.Generic;
 using Avro.IO;
@@ -156,9 +157,8 @@ namespace Avro.Test
 
             string[] records = { "{\"n\":1}", "{\"n\":1.0}" };
 
-            foreach (string record in records)
+            foreach (JsonDecoder decoder in records.Select(r => new JsonDecoder(schema, r)))
             {
-                Decoder decoder = new JsonDecoder(schema, record);
                 GenericRecord r = reader.Read(null, decoder);
                 Assert.AreEqual(value, r["n"]);
             }

@@ -158,10 +158,15 @@ namespace Avro.IO.Parsing
         /// </summary>
         protected class Fixup
         {
+            private Symbol[] symbols;
+
             /// <summary>
             /// The symbols.
             /// </summary>
-            public readonly Symbol[] Symbols;
+            public Symbol[] Symbols
+            {
+                get { return (Symbol[])symbols.Clone(); }
+            }
             /// <summary>
             /// The position.
             /// </summary>
@@ -172,7 +177,7 @@ namespace Avro.IO.Parsing
             /// </summary>
             public Fixup(Symbol[] symbols, int pos)
             {
-                this.Symbols = symbols;
+                this.symbols = symbols;
                 this.Pos = pos;
             }
         }
@@ -232,56 +237,56 @@ namespace Avro.IO.Parsing
         /// The fix-ups gets finally filled when we know the symbols to occupy those
         /// patches.
         /// </summary>
-        /// <param name="in">    The array of input symbols to flatten </param>
+        /// <param name="input">    The array of input symbols to flatten </param>
         /// <param name="start"> The position where the input sub-array starts. </param>
-        /// <param name="out">   The output that receives the flattened list of symbols. The
+        /// <param name="output">   The output that receives the flattened list of symbols. The
         ///              output array should have sufficient space to receive the
         ///              expanded sub-array of symbols. </param>
         /// <param name="skip">  The position where the output input sub-array starts. </param>
         /// <param name="map">   A map of symbols which have already been expanded. Useful for
         ///              handling recursive definitions and for caching. </param>
         /// <param name="map2">  A map to to store the list of fix-ups. </param>
-        protected static void Flatten(Symbol[] @in, int start, Symbol[] @out, int skip,
+        protected static void Flatten(Symbol[] input, int start, Symbol[] output, int skip,
             IDictionary<Sequence, Sequence> map, IDictionary<Sequence, IList<Fixup>> map2)
         {
-            for (int i = start, j = skip; i < @in.Length; i++)
+            for (int i = start, j = skip; i < input.Length; i++)
             {
-                Symbol s = @in[i].Flatten(map, map2);
+                Symbol s = input[i].Flatten(map, map2);
                 if (s is Sequence)
                 {
                     Symbol[] p = s.Production;
-                    IList<Fixup> l = map2.ContainsKey((Sequence)s) ? map2[(Sequence)s] : null;
-                    if (l == null)
+                    IList<Fixup> l;
+                    if (!map2.TryGetValue((Sequence)s, out l))
                     {
-                        Array.Copy(p, 0, @out, j, p.Length);
+                        Array.Copy(p, 0, output, j, p.Length);
                         // Copy any fixups that will be applied to p to add missing symbols
                         foreach (IList<Fixup> fixups in map2.Values)
                         {
-                            copyFixups(fixups, @out, j, p);
+                            copyFixups(fixups, output, j, p);
                         }
                     }
                     else
                     {
-                        l.Add(new Fixup(@out, j));
+                        l.Add(new Fixup(output, j));
                     }
 
                     j += p.Length;
                 }
                 else
                 {
-                    @out[j++] = s;
+                    output[j++] = s;
                 }
             }
         }
 
-        private static void copyFixups(IList<Fixup> fixups, Symbol[] @out, int outPos, Symbol[] toCopy)
+        private static void copyFixups(IList<Fixup> fixups, Symbol[] output, int outPos, Symbol[] toCopy)
         {
             for (int i = 0, n = fixups.Count; i < n; i += 1)
             {
                 Fixup fixup = fixups[i];
                 if (fixup.Symbols == toCopy)
                 {
-                    fixups.Add(new Fixup(@out, fixup.Pos + outPos));
+                    fixups.Add(new Fixup(output, fixup.Pos + outPos));
                 }
             }
         }
@@ -431,8 +436,8 @@ namespace Avro.IO.Parsing
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
-                Sequence result = map.ContainsKey(this) ? map[this] : null;
-                if (result == null)
+                Sequence result;
+                if (!map.TryGetValue(this, out result))
                 {
                     result = new Sequence(new Symbol[FlattenedSize()]);
                     map[this] = result;
