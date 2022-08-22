@@ -21,10 +21,10 @@ using Avro.IO.Parsing;
 namespace Avro.IO
 {
     /// <summary>
-    /// Base class for <a href="parsing/package-summary.html">parser</a>-based
-    /// <seealso cref="Decoder"/>s.
+    /// Base class for a <see cref="Parsing.Parser"/>-based
+    /// <see cref="Decoder"/>s.
     /// </summary>
-    public abstract class ParsingDecoder : Decoder, Parser.ActionHandler, SkipParser.SkipHandler
+    public abstract class ParsingDecoder : Decoder, Parser.IActionHandler, SkipParser.ISkipHandler
     {
         /// <inheritdoc />
         public abstract void ReadNull();

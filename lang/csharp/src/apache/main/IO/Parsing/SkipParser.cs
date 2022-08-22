@@ -29,7 +29,7 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// The clients implement this interface to skip symbols and actions.
         /// </summary>
-        public interface SkipHandler
+        public interface ISkipHandler
         {
             /// <summary>
             /// Skips the action at the top of the stack.
@@ -42,12 +42,12 @@ namespace Avro.IO.Parsing
             void SkipTopSymbol();
         }
 
-        private readonly SkipHandler skipHandler;
+        private readonly ISkipHandler skipHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SkipParser"/> class.
         /// </summary>
-        public SkipParser(Symbol root, ActionHandler symbolHandler, SkipHandler skipHandler) : base(root, symbolHandler)
+        public SkipParser(Symbol root, IActionHandler symbolHandler, ISkipHandler skipHandler) : base(root, symbolHandler)
         {
             this.skipHandler = skipHandler;
         }

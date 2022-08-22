@@ -31,7 +31,7 @@ namespace Avro.IO.Parsing
         /// needs help from outside to handle implicit and explicit actions. The clients
         /// implement this interface to provide this help.
         /// </summary>
-        public interface ActionHandler
+        public interface IActionHandler
         {
             /// <summary>
             /// Handle the action symbol <tt>top</tt> when the <tt>input</tt> is sought to be
@@ -44,7 +44,7 @@ namespace Avro.IO.Parsing
             Symbol DoAction(Symbol input, Symbol top);
         }
 
-        private readonly ActionHandler symbolHandler;
+        private readonly IActionHandler symbolHandler;
         /// <summary>
         /// Stack of symbols.
         /// </summary>
@@ -57,7 +57,7 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
         /// </summary>
-        public Parser(Symbol root, ActionHandler symbolHandler)
+        public Parser(Symbol root, IActionHandler symbolHandler)
         {
             this.symbolHandler = symbolHandler;
             this.Stack = new Symbol[5]; // Start small to make sure expansion code works
@@ -165,8 +165,8 @@ namespace Avro.IO.Parsing
 
         /// <summary>
         /// Pushes the production for the given symbol <tt>sym</tt>. If <tt>sym</tt> is a
-        /// repeater and <tt>input</tt> is either <seealso cref="Symbol.ArrayEnd"/> or
-        /// <seealso cref="Symbol.MapEnd"/> pushes nothing.
+        /// repeater and <tt>input</tt> is either <see cref="Symbol.ArrayEnd"/> or
+        /// <see cref="Symbol.MapEnd"/> pushes nothing.
         /// </summary>
         /// <param name="sym"> </param>
         public void PushProduction(Symbol sym)

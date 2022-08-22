@@ -25,14 +25,14 @@ using Newtonsoft.Json;
 namespace Avro.IO
 {
     /// <summary>
-    /// An <seealso cref="Encoder"/> for Avro's JSON data encoding.
+    /// An <see cref="Encoder"/> for Avro's JSON data encoding.
     ///
     /// JsonEncoder buffers output, and data may not appear on the output until
-    /// <seealso cref="Encoder.Flush()"/> is called.
+    /// <see cref="Encoder.Flush()"/> is called.
     ///
     /// JsonEncoder is not thread-safe.
     /// </summary>
-    public class JsonEncoder : ParsingEncoder, Parser.ActionHandler
+    public class JsonEncoder : ParsingEncoder, Parser.IActionHandler
     {
         private readonly Parser parser;
         private JsonWriter writer;
@@ -99,12 +99,11 @@ namespace Avro.IO
 
         /// <summary>
         /// Reconfigures this JsonEncoder to use the output stream provided.
-        /// <p/>
         /// Otherwise, this JsonEncoder will flush its current output and then
         /// reconfigure its output to use a default UTF8 JsonWriter that writes to the
-        /// provided OutputStream.
+        /// provided Stream.
         /// </summary>
-        /// <param name="stream"> The OutputStream to direct output to. Cannot be null. </param>
+        /// <param name="stream"> The Stream to direct output to. Cannot be null. </param>
         /// <returns> this JsonEncoder </returns>
         public JsonEncoder Configure(Stream stream)
         {
@@ -114,7 +113,6 @@ namespace Avro.IO
 
         /// <summary>
         /// Reconfigures this JsonEncoder to output to the JsonWriter provided.
-        /// <p/>
         /// Otherwise, this JsonEncoder will flush its current output and then
         /// reconfigure its output to use the provided JsonWriter.
         /// </summary>

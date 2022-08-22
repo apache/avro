@@ -85,7 +85,7 @@ namespace Avro.IO.Parsing
                             Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count];
 
                             // We construct a symbol without filling the array. Please see
-                            // <seealso cref="Symbol.production"/> for the reason.
+                            // <see cref="Symbol.production"/> for the reason.
                             rresult = Symbol.NewSeq(production);
                             seen[wsc] = rresult;
 

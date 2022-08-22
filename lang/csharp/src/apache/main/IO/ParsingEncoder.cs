@@ -21,8 +21,8 @@ using System;
 namespace Avro.IO
 {
     /// <summary>
-    /// Base class for <a href="parsing/package-summary.html">parser</a>-based
-    /// <seealso cref="Encoder"/>s.
+    /// Base class for a <see cref="Parsing.Parser"/>-based
+    /// <see cref="Encoder"/>s.
     /// </summary>
     public abstract class ParsingEncoder : Encoder
     {

@@ -351,7 +351,7 @@ namespace Avro.IO.Parsing
             /// <summary>
             /// Set to <tt>true</tt> if and only if this implicit action is a trailing
             /// action. That is, it is an action that follows real symbol. E.g
-            /// <seealso cref="Symbol.DefaultEndAction"/>.
+            /// <see cref="Symbol.DefaultEndAction"/>.
             /// </summary>
             public readonly bool IsTrailing;
 

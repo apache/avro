@@ -26,7 +26,7 @@ using Newtonsoft.Json;
 namespace Avro.IO
 {
     /// <summary>
-    /// A <seealso cref="Decoder"/> for Avro's JSON data encoding.
+    /// A <see cref="Decoder"/> for Avro's JSON data encoding.
     ///
     /// JsonDecoder is not thread-safe.
     /// </summary>
@@ -75,7 +75,6 @@ namespace Avro.IO
 
         /// <summary>
         /// Reconfigures this JsonDecoder to use the InputStream provided.
-        /// <p/>
         /// Otherwise, this JsonDecoder will reset its state and then reconfigure its
         /// input.
         /// </summary>
@@ -93,7 +92,6 @@ namespace Avro.IO
 
         /// <summary>
         /// Reconfigures this JsonDecoder to use the String provided for input.
-        /// <p/>
         /// Otherwise, this JsonDecoder will reset its state and then reconfigure its
         /// input.
         /// </summary>
@@ -756,26 +754,6 @@ namespace Avro.IO
             {
                 pos++;
                 return true;
-            }
-
-            public new void Skip()
-            {
-                JsonToken tkn = elements[pos].Token;
-                int level = (tkn == JsonToken.StartArray || tkn == JsonToken.EndArray) ? 1 : 0;
-                while (level > 0)
-                {
-                    switch (elements[++pos].Token)
-                    {
-                        case JsonToken.StartArray:
-                        case JsonToken.StartObject:
-                            level++;
-                            break;
-                        case JsonToken.EndArray:
-                        case JsonToken.EndObject:
-                            level--;
-                            break;
-                    }
-                }
             }
         }
 
