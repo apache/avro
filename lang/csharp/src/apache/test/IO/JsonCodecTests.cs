@@ -120,7 +120,7 @@ namespace Avro.Test
 
 
         [TestCase]
-        public void testJsonRecordOrderingWithProjection2()
+        public void TestJsonRecordOrderingWithProjection2()
         {
             String value =
                 "{\"b\": { \"b1\": \"h\", \"b2\": [3.14, 3.56], \"b3\": 1.4}, \"a\": {\"a2\":true, \"a1\": null}}";
@@ -142,6 +142,25 @@ namespace Avro.Test
 
             Assert.AreEqual("{\"a\":{\"a1\":null,\"a2\":true}}",
                 fromDatumToJson(o, readerSchema, false));
+        }
+
+        [TestCase("{\"int\":123}")]
+        [TestCase("{\"long\":456}")]
+        [TestCase("null")]
+        public void TestJsonUnionWithLogicalTypes(String value)
+        {
+            Schema schema = Schema.Parse(
+                "[\"null\",\n" +
+                "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
+                "    { \"type\": \"long\" }\n" +
+                // The following does not work due to https://issues.apache.org/jira/browse/AVRO-3613
+                //"    { \"type\": \"long\", \"logicalType\": \"timestamp-millis\" }\n" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true));
         }
 
         [TestCase("int", 1)]

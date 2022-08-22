@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using Avro.Generic;
 
 namespace Avro.IO.Parsing
 {
@@ -112,7 +113,8 @@ namespace Avro.IO.Parsing
                     }
 
                     return Symbol.NewSeq(Symbol.NewAlt(symbols, labels), Symbol.Union);
-
+                case Schema.Type.Logical:
+                    return Generate((sc as LogicalSchema).BaseSchema, seen);
                 default:
                     throw new Exception("Unexpected schema type");
             }

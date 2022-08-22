@@ -96,6 +96,8 @@ namespace Avro.IO.Parsing
 
                         return rresult;
                     }
+                case Schema.Type.Logical:
+                    return Generate((sc as LogicalSchema).BaseSchema, seen);
                 default:
                     throw new Exception("Unexpected schema type");
             }
