@@ -108,7 +108,7 @@ namespace Avro.IO.Parsing
                     foreach (Schema b in ((UnionSchema)sc).Schemas)
                     {
                         symbols[i] = Generate(b, seen);
-                        labels[i] = b.Fullname;
+                        labels[i] = schemaFullname(b);
                         i++;
                     }
 
@@ -118,6 +118,15 @@ namespace Avro.IO.Parsing
                 default:
                     throw new Exception("Unexpected schema type");
             }
+        }
+
+        private string schemaFullname(Schema sc)
+        {
+            if (sc.Tag == Schema.Type.Logical)
+            {
+                return schemaFullname(((sc as LogicalSchema).BaseSchema));
+            }
+            return sc.Fullname;
         }
 
         /// <summary>
