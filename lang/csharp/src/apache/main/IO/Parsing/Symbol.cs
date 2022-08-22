@@ -158,7 +158,7 @@ namespace Avro.IO.Parsing
         /// </summary>
         protected class Fixup
         {
-            private Symbol[] symbols;
+            private readonly Symbol[] symbols;
 
             /// <summary>
             /// The symbols.
@@ -177,7 +177,7 @@ namespace Avro.IO.Parsing
             /// </summary>
             public Fixup(Symbol[] symbols, int pos)
             {
-                this.symbols = symbols;
+                this.symbols = (Symbol[])symbols.Clone();
                 this.Pos = pos;
             }
         }

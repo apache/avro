@@ -157,10 +157,9 @@ namespace Avro.Test
 
             string[] records = { "{\"n\":1}", "{\"n\":1.0}" };
 
-            foreach (JsonDecoder decoder in records.Select(r => new JsonDecoder(schema, r)))
+            foreach (GenericRecord g in records.Select(r => reader.Read(null, new JsonDecoder(schema, r))))
             {
-                GenericRecord r = reader.Read(null, decoder);
-                Assert.AreEqual(value, r["n"]);
+                Assert.AreEqual(value, g["n"]);
             }
         }
 
