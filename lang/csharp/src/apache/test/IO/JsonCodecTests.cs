@@ -161,6 +161,25 @@ namespace Avro.Test
             Assert.AreEqual(value, fromDatumToJson(o, schema, true));
         }
 
+        [TestCase("{\"int\":123}")]
+        [TestCase("{\"myrecord\":{\"f1\":123}}")]
+        [TestCase("null")]
+        public void TestJsonUnionWithRecord(String value)
+        {
+            Schema schema = Schema.Parse(
+
+                "[\"null\",\n" +
+                "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
+                "    {\"type\":\"record\",\"name\":\"myrecord\", \"namespace\":\"com\"," +
+                "        \"fields\":[{\"name\":\"f1\",\"type\": \"int\"}]}" +
+                "]");
+            GenericDatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
+            Decoder decoder = new JsonDecoder(schema, value);
+            object o = reader.Read(null, decoder);
+
+            Assert.AreEqual(value, fromDatumToJson(o, schema, true));
+        }
+
         [TestCase("int", 1)]
         [TestCase("long", 1L)]
         [TestCase("float", 1.0F)]
