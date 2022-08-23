@@ -36,7 +36,7 @@ namespace Avro.Test
     [TestFixture]
     public class JsonCodecTests
     {
-        [TestCase]
+        [Test]
         public void TestJsonEncoderWhenIncludeNamespaceOptionIsFalse()
         {
             string value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
@@ -50,7 +50,7 @@ namespace Avro.Test
                 JObject.Parse(fromAvroToJson(avroBytes, schema, false))));
         }
 
-        [TestCase]
+        [Test]
         public void TestJsonEncoderWhenIncludeNamespaceOptionIsTrue()
         {
             string value = "{\"b\": {\"string\":\"myVal\"}, \"a\": 1}";
@@ -64,7 +64,7 @@ namespace Avro.Test
                 JObject.Parse(fromAvroToJson(avroBytes, schema, true))));
         }
 
-        [TestCase]
+        [Test]
         public void TestJsonRecordOrdering()
         {
             string value = "{\"b\": 2, \"a\": 1}";
@@ -78,7 +78,7 @@ namespace Avro.Test
             Assert.AreEqual("{\"a\":1,\"b\":2}", fromDatumToJson(o, schema, false));
         }
 
-        [TestCase]
+        [Test]
         public void TestJsonRecordOrdering2()
         {
             string value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
@@ -96,7 +96,7 @@ namespace Avro.Test
                 fromDatumToJson(o, schema, false));
         }
 
-        [TestCase]
+        [Test]
         public void TestJsonRecordOrderingWithProjection()
         {
             String value = "{\"b\": { \"b3\": 1.4, \"b2\": 3.14, \"b1\": \"h\"}, \"a\": {\"a2\":true, \"a1\": null}}";
@@ -119,7 +119,7 @@ namespace Avro.Test
         }
 
 
-        [TestCase]
+        [Test]
         public void TestJsonRecordOrderingWithProjection2()
         {
             String value =
@@ -181,7 +181,7 @@ namespace Avro.Test
         }
 
         // Ensure that even if the order of fields in JSON is different from the order in schema, it works.
-        [TestCase]
+        [Test]
         public void TestJsonDecoderReorderFields()
         {
             String w = "{\"type\":\"record\",\"name\":\"R\",\"fields\":" + "[{\"type\":\"long\",\"name\":\"l\"},"

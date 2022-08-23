@@ -76,6 +76,12 @@ namespace Avro
         }
 
         /// <inheritdoc />
+        public override string Name
+        {
+            get { return BaseSchema.Name; }
+        }
+
+        /// <inheritdoc />
         public override string Fullname
         {
             get { return BaseSchema.Fullname; }
