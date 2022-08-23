@@ -70,7 +70,7 @@ static bool validate(const NodePtr &node, SymbolMap &symbolMap) {
 
     node->lock();
     auto leaves = node->leaves();
-    for (auto i = 0; i < leaves; ++i) {
+    for (long unsigned int i = 0; i < leaves; ++i) {
         const NodePtr &leaf(node->leafAt(i));
 
         if (!validate(leaf, symbolMap)) {
