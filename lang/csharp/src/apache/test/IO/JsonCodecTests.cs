@@ -162,7 +162,7 @@ namespace Avro.Test
         }
 
         [TestCase("{\"int\":123}")]
-        [TestCase("{\"myrecord\":{\"f1\":123}}")]
+        [TestCase("{\"com.myrecord\":{\"f1\":123}}")]
         [TestCase("null")]
         public void TestJsonUnionWithRecord(String value)
         {
