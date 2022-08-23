@@ -23,7 +23,7 @@
 #include "union_array_union.hh"
 #include "union_map_union.hh"
 
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #ifdef min
 #undef min

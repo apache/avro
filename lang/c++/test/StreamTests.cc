@@ -19,7 +19,7 @@
 #include "Exception.hh"
 #include "Stream.hh"
 #include "boost/filesystem.hpp"
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 
 namespace avro {
