@@ -29,7 +29,7 @@ namespace Avro.IO.Parsing
     {
         /// <summary>
         /// Returns the non-terminal that is the start symbol for the grammar for the
-        /// grammar for the given schema <tt>sc</tt>.
+        /// grammar for the given schema <tt>schema</tt>.
         /// </summary>
         public override Symbol Generate(Schema schema)
         {

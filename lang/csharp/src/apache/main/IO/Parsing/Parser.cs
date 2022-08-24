@@ -37,10 +37,10 @@ namespace Avro.IO.Parsing
             /// Handle the action symbol <tt>top</tt> when the <tt>input</tt> is sought to be
             /// taken off the stack.
             /// </summary>
-            /// <param name="input"> The input symbol from the caller of advance </param>
+            /// <param name="input"> The input symbol from the caller of Advance </param>
             /// <param name="top">   The symbol at the top the stack. </param>
-            /// <returns> <tt>null</tt> if advance() is to continue processing the stack. If
-            ///         not <tt>null</tt> the return value will be returned by advance(). </returns>
+            /// <returns> <tt>null</tt> if Advance() is to continue processing the stack. If
+            ///         not <tt>null</tt> the return value will be returned by Advance(). </returns>
             Symbol DoAction(Symbol input, Symbol top);
         }
 
@@ -76,7 +76,7 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// Recursively replaces the symbol at the top of the stack with its production,
         /// until the top is a terminal. Then checks if the top symbol matches the
-        /// terminal symbol supplied <tt>terminal</tt>.
+        /// terminal symbol supplied <tt>input</tt>.
         /// </summary>
         /// <param name="input"> The symbol to match against the terminal at the top of the
         ///              stack. </param>

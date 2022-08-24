@@ -690,41 +690,6 @@ namespace Avro.IO.Parsing
         }
 
         /// <summary>
-        /// The enum adjust action.
-        /// </summary>
-        public class EnumAdjustAction : IntCheckAction
-        {
-            /// <summary>
-            /// Whether no adjustments are needed.
-            /// </summary>
-            public readonly bool NoAdjustments;
-            /// <summary>
-            /// The adjustments.
-            /// </summary>
-            public readonly object[] Adjustments;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="Symbol.EnumAdjustAction"/> class.
-            /// </summary>
-            public EnumAdjustAction(int rsymCount, object[] adjustments) : base(rsymCount)
-            {
-                this.Adjustments = adjustments;
-                bool noAdj = true;
-                if (adjustments != null)
-                {
-                    int count = Math.Min(rsymCount, adjustments.Length);
-                    noAdj = (adjustments.Length <= rsymCount);
-                    for (int i = 0; noAdj && i < count; i++)
-                    {
-                        noAdj &= ((adjustments[i] is int) && i == ((int?)adjustments[i]).Value);
-                    }
-                }
-
-                this.NoAdjustments = noAdj;
-            }
-        }
-
-        /// <summary>
         /// The writer union action.
         /// </summary>
         public class WriterUnionAction : ImplicitAction

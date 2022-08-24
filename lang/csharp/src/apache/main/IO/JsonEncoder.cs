@@ -88,7 +88,7 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Whether to include the namespace.
+        /// Whether to include a union label when generating JSON.
         /// </summary>
         public virtual bool IncludeNamespace
         {

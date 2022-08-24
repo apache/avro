@@ -22,7 +22,7 @@ namespace Avro.IO.Parsing
 {
     /// <summary>
     /// A parser that capable of skipping as well read and write. This class is used
-    /// by decoders who (unlink encoders) are required to implement methods to skip.
+    /// by decoders who (unlike encoders) are required to implement methods to skip.
     /// </summary>
     public class SkipParser : Parser
     {
