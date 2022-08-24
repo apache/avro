@@ -544,9 +544,9 @@ NodeImpl<A, B, C, D, E>::printBasicInfo(std::ostream &os) const {
         os << " " << sizeAttribute_.get();
     }
     os << '\n';
-    int count = leaves();
+    size_t count = leaves();
     count = count ? count : names();
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
         if (C::hasAttribute) {
             os << "name " << nameAt(i) << '\n';
         }

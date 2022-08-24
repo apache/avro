@@ -21,7 +21,7 @@
 #include "ValidSchema.hh"
 #include <fstream>
 
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 
 void testLargeSchema() {
