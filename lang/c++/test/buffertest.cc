@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <boost/bind.hpp>
 
