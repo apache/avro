@@ -634,6 +634,13 @@ impl RecordField {
         }
         custom_attributes
     }
+
+    pub fn is_nullable(&self) -> bool {
+        match self.schema {
+            Schema::Union(ref inner) => inner.is_nullable(),
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
