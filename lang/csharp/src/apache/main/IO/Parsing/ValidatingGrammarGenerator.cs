@@ -80,8 +80,7 @@ namespace Avro.IO.Parsing
                 case Schema.Type.Record:
                     {
                         LitS wsc = new LitS(sc);
-                        Symbol rresult;
-                        if (!seen.TryGetValue(wsc, out rresult))
+                        if (!seen.TryGetValue(wsc, out Symbol rresult))
                         {
                             Symbol[] production = new Symbol[((RecordSchema)sc).Fields.Count];
 

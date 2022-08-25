@@ -102,56 +102,39 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// A convenience method to construct a root symbol.
         /// </summary>
-        public static Symbol NewRoot(params Symbol[] symbols)
-        {
-            return new Root(symbols);
-        }
+        public static Symbol NewRoot(params Symbol[] symbols) => new Root(symbols);
 
         /// <summary>
         /// A convenience method to construct a sequence.
         /// </summary>
         /// <param name="production"> The constituent symbols of the sequence. </param>
-        public static Symbol NewSeq(params Symbol[] production)
-        {
-            return new Sequence(production);
-        }
+        public static Symbol NewSeq(params Symbol[] production) => new Sequence(production);
 
         /// <summary>
         /// A convenience method to construct a repeater.
         /// </summary>
         /// <param name="endSymbol"> The end symbol. </param>
         /// <param name="symsToRepeat"> The symbols to repeat in the repeater. </param>
-        public static Symbol NewRepeat(Symbol endSymbol, params Symbol[] symsToRepeat)
-        {
-            return new Repeater(endSymbol, symsToRepeat);
-        }
+        public static Symbol NewRepeat(Symbol endSymbol, params Symbol[] symsToRepeat) =>
+            new Repeater(endSymbol, symsToRepeat);
 
         /// <summary>
         /// A convenience method to construct a union.
         /// </summary>
-        public static Symbol NewAlt(Symbol[] symbols, string[] labels)
-        {
-            return new Alternative(symbols, labels);
-        }
+        public static Symbol NewAlt(Symbol[] symbols, string[] labels) => new Alternative(symbols, labels);
 
         /// <summary>
         /// A convenience method to construct an ErrorAction.
         /// </summary>
         /// <param name="e"> </param>
-        protected static Symbol Error(string e)
-        {
-            return new ErrorAction(e);
-        }
+        protected static Symbol Error(string e) => new ErrorAction(e);
 
         /// <summary>
         /// A convenience method to construct a ResolvingAction.
         /// </summary>
         /// <param name="w"> The writer symbol </param>
         /// <param name="r"> The reader symbol </param>
-        protected static Symbol Resolve(Symbol w, Symbol r)
-        {
-            return new ResolvingAction(w, r);
-        }
+        protected static Symbol Resolve(Symbol w, Symbol r) => new ResolvingAction(w, r);
 
         /// <summary>
         /// Fixup symbol.
@@ -186,18 +169,12 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// Flatten the given sub-array of symbols into a sub-array of symbols.
         /// </summary>
-        protected virtual Symbol Flatten(IDictionary<Sequence, Sequence> map, IDictionary<Sequence, IList<Fixup>> map2)
-        {
-            return this;
-        }
+        protected virtual Symbol Flatten(IDictionary<Sequence, Sequence> map, IDictionary<Sequence, IList<Fixup>> map2) => this;
 
         /// <summary>
         /// Returns the flattened size.
         /// </summary>
-        public virtual int FlattenedSize()
-        {
-            return 1;
-        }
+        public virtual int FlattenedSize() => 1;
 
         /// <summary>
         /// Flattens the given sub-array of symbols into an sub-array of symbols. Every
@@ -256,8 +233,7 @@ namespace Avro.IO.Parsing
                 if (s is Sequence)
                 {
                     Symbol[] p = s.Production;
-                    IList<Fixup> l;
-                    if (!map2.TryGetValue((Sequence)s, out l))
+                    if (!map2.TryGetValue((Sequence)s, out IList<Fixup> l))
                     {
                         Array.Copy(p, 0, output, j, p.Length);
                         // Copy any fixups that will be applied to p to add missing symbols
@@ -338,10 +314,7 @@ namespace Avro.IO.Parsing
             }
 
             /// <inheritdoc />
-            public override string ToString()
-            {
-                return PrintName;
-            }
+            public override string ToString() => PrintName;
         }
 
         /// <summary>
@@ -409,36 +382,28 @@ namespace Avro.IO.Parsing
             /// <summary>
             /// Get the symbol at the given index.
             /// </summary>
-            public virtual Symbol Get(int index)
-            {
-                return Production[index];
-            }
+            public virtual Symbol this[int index] => Production[index];
+
+            /// <summary>
+            /// Get the symbol at the given index.
+            /// </summary>
+            public virtual Symbol Get(int index) => Production[index];
 
             /// <summary>
             /// Returns the number of symbols.
             /// </summary>
-            public virtual int Size()
-            {
-                return Production.Length;
-            }
+            public virtual int Size() => Production.Length;
 
             /// <inheritdoc />
-            public IEnumerator<Symbol> GetEnumerator()
-            {
-                return Enumerable.Reverse(Production).GetEnumerator();
-            }
+            public IEnumerator<Symbol> GetEnumerator() => Enumerable.Reverse(Production).GetEnumerator();
 
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
             /// <inheritdoc />
             protected override Symbol Flatten(IDictionary<Sequence, Sequence> map,
                 IDictionary<Sequence, IList<Fixup>> map2)
             {
-                Sequence result;
-                if (!map.TryGetValue(this, out result))
+                if (!map.TryGetValue(this, out Sequence result))
                 {
                     result = new Sequence(new Symbol[FlattenedSize()]);
                     map[this] = result;
@@ -458,10 +423,7 @@ namespace Avro.IO.Parsing
             }
 
             /// <inheritdoc />
-            public override int FlattenedSize()
-            {
-                return FlattenedSize(Production, 0);
-            }
+            public override int FlattenedSize() => FlattenedSize(Production, 0);
         }
 
         /// <summary>
