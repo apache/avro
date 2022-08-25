@@ -63,12 +63,8 @@ namespace Avro.IO.Parsing
             ExplicitAction
         }
 
-        private readonly Kind symKind;
-
         /// The kind of this symbol.
-        public Kind SymKind => symKind;
-
-        private readonly Symbol[] production;
+        public Kind SymKind { get; private set; }
 
         /// <summary>
         /// The production for this symbol. If this symbol is a terminal this is
@@ -85,7 +81,7 @@ namespace Avro.IO.Parsing
         /// final and thus keeping symbol immutable gives some comfort. See various
         /// generators how we generate records.
         /// </summary>
-        public Symbol[] Production => production;
+        public Symbol[] Production { get; private set; }
 
         /// <summary>
         /// Constructs a new symbol of the given kind.
@@ -99,8 +95,8 @@ namespace Avro.IO.Parsing
         /// </summary>
         protected Symbol(Kind kind, Symbol[] production)
         {
-            this.production = production;
-            symKind = kind;
+            Production = production;
+            SymKind = kind;
         }
 
         /// <summary>
@@ -172,12 +168,10 @@ namespace Avro.IO.Parsing
                 get { return (Symbol[])symbols.Clone(); }
             }
 
-            private readonly int pos;
-
             /// <summary>
             /// The position.
             /// </summary>
-            public int Pos => pos;
+            public int Pos { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Fixup"/> class.
@@ -185,7 +179,7 @@ namespace Avro.IO.Parsing
             public Fixup(Symbol[] symbols, int pos)
             {
                 this.symbols = (Symbol[])symbols.Clone();
-                this.pos = pos;
+                Pos = pos;
             }
         }
 
@@ -330,19 +324,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         protected class Terminal : Symbol
         {
-            private readonly string printName;
-
             /// <summary>
             /// Printable name.
             /// </summary>
-            public string PrintName => printName;
+            public string PrintName { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.Terminal"/> class.
             /// </summary>
             public Terminal(string printName) : base(Kind.Terminal)
             {
-                this.printName = printName;
+                PrintName = printName;
             }
 
             /// <inheritdoc />
@@ -357,14 +349,12 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class ImplicitAction : Symbol
         {
-            private readonly bool isTrailing;
-
             /// <summary>
             /// Set to <tt>true</tt> if and only if this implicit action is a trailing
             /// action. That is, it is an action that follows real symbol. E.g
             /// <see cref="Symbol.DefaultEndAction"/>.
             /// </summary>
-            public bool IsTrailing => isTrailing;
+            public bool IsTrailing { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.ImplicitAction"/> class.
@@ -378,7 +368,7 @@ namespace Avro.IO.Parsing
             /// </summary>
             public ImplicitAction(bool isTrailing) : base(Kind.ImplicitAction)
             {
-                this.isTrailing = isTrailing;
+                IsTrailing = isTrailing;
             }
         }
 
@@ -479,12 +469,10 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class Repeater : Symbol
         {
-            private readonly Symbol end;
-
             /// <summary>
             /// The end symbol.
             /// </summary>
-            public Symbol End => end;
+            public Symbol End { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.Repeater"/> class.
@@ -492,7 +480,7 @@ namespace Avro.IO.Parsing
             public Repeater(Symbol end, params Symbol[] sequenceToRepeat) : base(Kind.Repeater,
                 MakeProduction(sequenceToRepeat))
             {
-                this.end = end;
+                End = end;
                 Production[0] = this;
             }
 
@@ -589,27 +577,23 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class Alternative : Symbol
         {
-            private readonly Symbol[] symbols;
-
             /// <summary>
             /// The symbols.
             /// </summary>
-            public Symbol[] Symbols => symbols;
-
-            private readonly string[] labels;
+            public Symbol[] Symbols { get; private set; }
 
             /// <summary>
             /// The labels.
             /// </summary>
-            public string[] Labels => labels;
+            public string[] Labels { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.Alternative"/> class.
             /// </summary>
             public Alternative(Symbol[] symbols, string[] labels) : base(Kind.Alternative)
             {
-                this.symbols = symbols;
-                this.labels = labels;
+                Symbols = symbols;
+                Labels = labels;
             }
 
             /// <summary>
@@ -674,19 +658,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class ErrorAction : ImplicitAction
         {
-            private readonly string msg;
-
             /// <summary>
             /// The error message.
             /// </summary>
-            public string Msg => msg;
+            public string Msg { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.ErrorAction"/> class.
             /// </summary>
             public ErrorAction(string msg)
             {
-                this.msg = msg;
+                Msg = msg;
             }
         }
 
@@ -695,19 +677,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class IntCheckAction : Symbol
         {
-            private readonly int size;
-
             /// <summary>
             /// The size.
             /// </summary>
-            public int Size => size;
+            public int Size { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.IntCheckAction"/> class.
             /// </summary>
             public IntCheckAction(int size) : base(Kind.ExplicitAction)
             {
-                this.size = size;
+                Size = size;
             }
         }
 
@@ -723,27 +703,23 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class ResolvingAction : ImplicitAction
         {
-            private readonly Symbol writer;
-
             /// <summary>
             /// The writer.
             /// </summary>
-            public Symbol Writer => writer;
-
-            private readonly Symbol reader;
+            public Symbol Writer { get; private set; }
 
             /// <summary>
             /// The reader.
             /// </summary>
-            public Symbol Reader => reader;
+            public Symbol Reader { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.ResolvingAction"/> class.
             /// </summary>
             public ResolvingAction(Symbol writer, Symbol reader)
             {
-                this.writer = writer;
-                this.reader = reader;
+                Writer = writer;
+                Reader = reader;
             }
 
             /// <inheritdoc />
@@ -759,19 +735,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class SkipAction : ImplicitAction
         {
-            private readonly Symbol symToSkip;
-
             /// <summary>
             /// The symbol to skip.
             /// </summary>
-            public Symbol SymToSkip => symToSkip;
+            public Symbol SymToSkip { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.SkipAction"/> class.
             /// </summary>
             public SkipAction(Symbol symToSkip) : base(true)
             {
-                this.symToSkip = symToSkip;
+                SymToSkip = symToSkip;
             }
 
             /// <inheritdoc />
@@ -787,35 +761,29 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class FieldAdjustAction : ImplicitAction
         {
-            private readonly int rIndex;
-
             /// <summary>
             /// The index.
             /// </summary>
-            public int RIndex => rIndex;
-
-            private readonly string fName;
+            public int RIndex { get; private set; }
 
             /// <summary>
             /// The field name.
             /// </summary>
-            public string FName => fName;
-
-            private readonly IList<string> aliases;
+            public string FName { get; private set; }
 
             /// <summary>
             /// The field aliases.
             /// </summary>
-            public IList<string> Aliases => aliases;
+            public IList<string> Aliases { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.FieldAdjustAction"/> class.
             /// </summary>
             public FieldAdjustAction(int rindex, string fname, IList<string> aliases)
             {
-                this.rIndex = rindex;
-                this.fName = fname;
-                this.aliases = aliases;
+                RIndex = rindex;
+                FName = fname;
+                Aliases = aliases;
             }
         }
 
@@ -824,33 +792,29 @@ namespace Avro.IO.Parsing
         /// </summary>
         public sealed class FieldOrderAction : ImplicitAction
         {
-            private readonly bool noReorder;
-
             /// <summary>
             /// Whether no reorder is needed.
             /// </summary>
-            public bool NoReorder => noReorder;
-
-            private readonly Field[] fields;
+            public bool NoReorder { get; private set; }
 
             /// <summary>
             /// The fields.
             /// </summary>
-            public Field[] Fields => fields;
+            public Field[] Fields { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.FieldOrderAction"/> class.
             /// </summary>
             public FieldOrderAction(Field[] fields)
             {
-                this.fields = fields;
+                Fields = fields;
                 bool noReorder = true;
                 for (int i = 0; noReorder && i < fields.Length; i++)
                 {
                     noReorder &= (i == fields[i].Pos);
                 }
 
-                this.noReorder = noReorder;
+                NoReorder = noReorder;
             }
         }
 
@@ -859,19 +823,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class DefaultStartAction : ImplicitAction
         {
-            private readonly byte[] contents;
-
             /// <summary>
             /// The contents.
             /// </summary>
-            public byte[] Contents => contents;
+            public byte[] Contents { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.DefaultStartAction"/> class.
             /// </summary>
             public DefaultStartAction(byte[] contents)
             {
-                this.contents = contents;
+                Contents = contents;
             }
         }
 
@@ -880,27 +842,23 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class UnionAdjustAction : ImplicitAction
         {
-            private readonly int rIndex;
-
             /// <summary>
             /// The index.
             /// </summary>
-            public int RIndex => rIndex;
-
-            private readonly Symbol symToParse;
+            public int RIndex { get; private set; }
 
             /// <summary>
             /// The symbol to parser.
             /// </summary>
-            public Symbol SymToParse => symToParse;
+            public Symbol SymToParse { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.UnionAdjustAction"/> class.
             /// </summary>
             public UnionAdjustAction(int rindex, Symbol symToParse)
             {
-                this.rIndex = rindex;
-                this.symToParse = symToParse;
+                RIndex = rindex;
+                SymToParse = symToParse;
             }
 
             /// <inheritdoc />
@@ -916,19 +874,17 @@ namespace Avro.IO.Parsing
         /// </summary>
         public class EnumLabelsAction : IntCheckAction
         {
-            private readonly IList<string> symbols;
-
             /// <summary>
             /// The symbols.
             /// </summary>
-            public IList<string> Symbols => symbols;
+            public IList<string> Symbols { get; private set; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.EnumLabelsAction"/> class.
             /// </summary>
             public EnumLabelsAction(IList<string> symbols) : base(symbols.Count)
             {
-                this.symbols = symbols;
+                Symbols = symbols;
             }
 
             /// <summary>
