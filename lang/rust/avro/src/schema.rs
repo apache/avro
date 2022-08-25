@@ -635,6 +635,7 @@ impl RecordField {
         custom_attributes
     }
 
+    /// Returns true if this `RecordField` is nullable, meaning the schema is a `UnionSchema` where the first variant is `Null`.
     pub fn is_nullable(&self) -> bool {
         match self.schema {
             Schema::Union(ref inner) => inner.is_nullable(),
@@ -691,10 +692,11 @@ impl UnionSchema {
             Some((i, &self.schemas[i]))
         } else {
             // slow path (required for matching logical or named types)
-            self.schemas
-                .iter()
-                .enumerate()
-                .find(|(_, schema)| value.validate(schema))
+            self.schemas.iter().enumerate().find(|(_, schema)| {
+                let rs =
+                    ResolvedSchema::try_from(*schema).expect("Schema didn't successfully parse");
+                value.validate_internal(schema, rs.get_names()).is_none()
+            })
         }
     }
 }
@@ -2021,6 +2023,45 @@ mod tests {
             SchemaKind::Bytes
         );
         assert_eq!(variants.next(), None);
+    }
+
+    // AVRO-3621
+    #[test]
+    fn test_nullable_record_field() {
+        let nullable_record_field = RecordField {
+            name: "next".to_string(),
+            doc: None,
+            default: None,
+            schema: Schema::Union(
+                UnionSchema::new(vec![
+                    Schema::Null,
+                    Schema::Ref {
+                        name: Name {
+                            name: "LongList".to_owned(),
+                            namespace: None,
+                        },
+                    },
+                ])
+                .unwrap(),
+            ),
+            order: RecordFieldOrder::Ascending,
+            position: 1,
+            custom_attributes: Default::default(),
+        };
+
+        assert!(nullable_record_field.is_nullable());
+
+        let non_nullable_record_field = RecordField {
+            name: "next".to_string(),
+            doc: None,
+            default: Some(json!(2)),
+            schema: Schema::Long,
+            order: RecordFieldOrder::Ascending,
+            position: 1,
+            custom_attributes: Default::default(),
+        };
+
+        assert!(!non_nullable_record_field.is_nullable());
     }
 
     // AVRO-3248
