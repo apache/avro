@@ -130,7 +130,7 @@ namespace Avro.IO
         /// </summary>
         protected ParsingDecoder(Symbol root)
         {
-            this.Parser = new SkipParser(root, this, this);
+            Parser = new SkipParser(root, this, this);
         }
 
         /// <summary>

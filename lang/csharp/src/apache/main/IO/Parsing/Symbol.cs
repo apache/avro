@@ -262,7 +262,7 @@ namespace Avro.IO.Parsing
                         // Copy any fixups that will be applied to p to add missing symbols
                         foreach (IList<Fixup> fixups in map2.Values)
                         {
-                            copyFixups(fixups, output, j, p);
+                            CopyFixups(fixups, output, j, p);
                         }
                     }
                     else
@@ -279,7 +279,7 @@ namespace Avro.IO.Parsing
             }
         }
 
-        private static void copyFixups(IList<Fixup> fixups, Symbol[] output, int outPos, Symbol[] toCopy)
+        private static void CopyFixups(IList<Fixup> fixups, Symbol[] output, int outPos, Symbol[] toCopy)
         {
             for (int i = 0, n = fixups.Count; i < n; i += 1)
             {
@@ -379,12 +379,12 @@ namespace Avro.IO.Parsing
             /// <summary>
             /// Initializes a new instance of the <see cref="Symbol.Root"/> class.
             /// </summary>
-            public Root(params Symbol[] symbols) : base(Kind.Root, makeProduction(symbols))
+            public Root(params Symbol[] symbols) : base(Kind.Root, MakeProduction(symbols))
             {
                 Production[0] = this;
             }
 
-            private static Symbol[] makeProduction(Symbol[] symbols)
+            private static Symbol[] MakeProduction(Symbol[] symbols)
             {
                 Symbol[] result = new Symbol[FlattenedSize(symbols, 0) + 1];
                 Flatten(symbols, 0, result, 1, new Dictionary<Sequence, Sequence>(),
@@ -477,13 +477,13 @@ namespace Avro.IO.Parsing
             /// Initializes a new instance of the <see cref="Symbol.Repeater"/> class.
             /// </summary>
             public Repeater(Symbol end, params Symbol[] sequenceToRepeat) : base(Kind.Repeater,
-                makeProduction(sequenceToRepeat))
+                MakeProduction(sequenceToRepeat))
             {
                 this.End = end;
                 Production[0] = this;
             }
 
-            private static Symbol[] makeProduction(Symbol[] p)
+            private static Symbol[] MakeProduction(Symbol[] p)
             {
                 Symbol[] result = new Symbol[p.Length + 1];
                 Array.Copy(p, 0, result, 1, p.Length);
@@ -504,12 +504,12 @@ namespace Avro.IO.Parsing
         /// Returns true if the Parser contains any Error symbol, indicating that it may
         /// fail for some inputs.
         /// </summary>
-        private static bool hasErrors(Symbol symbol)
+        private static bool HasErrors(Symbol symbol)
         {
-            return hasErrors(symbol, new HashSet<Symbol>());
+            return HasErrors(symbol, new HashSet<Symbol>());
         }
 
-        private static bool hasErrors(Symbol symbol, ISet<Symbol> visited)
+        private static bool HasErrors(Symbol symbol, ISet<Symbol> visited)
         {
             // avoid infinite recursion
             if (visited.Contains(symbol))
@@ -522,7 +522,7 @@ namespace Avro.IO.Parsing
             switch (symbol.SymKind)
             {
                 case Kind.Alternative:
-                    return hasErrors(symbol, ((Alternative)symbol).Symbols, visited);
+                    return HasErrors(symbol, ((Alternative)symbol).Symbols, visited);
                 case Kind.ExplicitAction:
                     return false;
                 case Kind.ImplicitAction:
@@ -533,16 +533,16 @@ namespace Avro.IO.Parsing
 
                     if (symbol is UnionAdjustAction)
                     {
-                        return hasErrors(((UnionAdjustAction)symbol).SymToParse, visited);
+                        return HasErrors(((UnionAdjustAction)symbol).SymToParse, visited);
                     }
 
                     return false;
                 case Kind.Repeater:
                     Repeater r = (Repeater)symbol;
-                    return hasErrors(r.End, visited) || hasErrors(symbol, r.Production, visited);
+                    return HasErrors(r.End, visited) || HasErrors(symbol, r.Production, visited);
                 case Kind.Root:
                 case Kind.Sequence:
-                    return hasErrors(symbol, symbol.Production, visited);
+                    return HasErrors(symbol, symbol.Production, visited);
                 case Kind.Terminal:
                     return false;
                 default:
@@ -550,7 +550,7 @@ namespace Avro.IO.Parsing
             }
         }
 
-        private static bool hasErrors(Symbol root, Symbol[] symbols, ISet<Symbol> visited)
+        private static bool HasErrors(Symbol root, Symbol[] symbols, ISet<Symbol> visited)
         {
             if (null != symbols)
             {
@@ -561,7 +561,7 @@ namespace Avro.IO.Parsing
                         continue;
                     }
 
-                    if (hasErrors(s, visited))
+                    if (HasErrors(s, visited))
                     {
                         return true;
                     }
@@ -715,8 +715,8 @@ namespace Avro.IO.Parsing
             /// </summary>
             public ResolvingAction(Symbol writer, Symbol reader)
             {
-                this.Writer = writer;
-                this.Reader = reader;
+                Writer = writer;
+                Reader = reader;
             }
 
             /// <inheritdoc />

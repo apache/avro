@@ -60,15 +60,15 @@ namespace Avro.IO.Parsing
         public Parser(Symbol root, IActionHandler symbolHandler)
         {
             this.symbolHandler = symbolHandler;
-            this.Stack = new Symbol[5]; // Start small to make sure expansion code works
-            this.Stack[0] = root;
-            this.Pos = 1;
+            Stack = new Symbol[5]; // Start small to make sure expansion code works
+            Stack[0] = root;
+            Pos = 1;
         }
 
         /// <summary>
         /// If there is no sufficient room in the stack, use this expand it.
         /// </summary>
-        private void expandStack()
+        private void ExpandStack()
         {
             Array.Resize(ref Stack, Stack.Length + Math.Max(Stack.Length, 1024));
         }
@@ -174,7 +174,7 @@ namespace Avro.IO.Parsing
             Symbol[] p = sym.Production;
             while (Pos + p.Length > Stack.Length)
             {
-                expandStack();
+                ExpandStack();
             }
 
             Array.Copy(p, 0, Stack, Pos, p.Length);
@@ -204,7 +204,7 @@ namespace Avro.IO.Parsing
         {
             if (Pos == Stack.Length)
             {
-                expandStack();
+                ExpandStack();
             }
 
             Stack[Pos++] = sym;

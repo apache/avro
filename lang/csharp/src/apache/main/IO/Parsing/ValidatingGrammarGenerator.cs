@@ -151,7 +151,7 @@ namespace Avro.IO.Parsing
                     return true;
                 }
 
-                if (this.GetType() != o.GetType())
+                if (GetType() != o.GetType())
                 {
                     return false;
                 }

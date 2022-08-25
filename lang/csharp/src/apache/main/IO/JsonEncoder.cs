@@ -44,14 +44,14 @@ namespace Avro.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
         /// </summary>
-        public JsonEncoder(Schema sc, Stream stream) : this(sc, getJsonWriter(stream, false))
+        public JsonEncoder(Schema sc, Stream stream) : this(sc, GetJsonWriter(stream, false))
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonEncoder"/> class.
         /// </summary>
-        public JsonEncoder(Schema sc, Stream stream, bool pretty) : this(sc, getJsonWriter(stream, pretty))
+        public JsonEncoder(Schema sc, Stream stream, bool pretty) : this(sc, GetJsonWriter(stream, pretty))
         {
         }
 
@@ -61,7 +61,7 @@ namespace Avro.IO
         public JsonEncoder(Schema sc, JsonWriter writer)
         {
             Configure(writer);
-            this.parser = new Parser((new JsonGrammarGenerator()).Generate(sc), this);
+            parser = new Parser((new JsonGrammarGenerator()).Generate(sc), this);
         }
 
         /// <inheritdoc />
@@ -76,7 +76,7 @@ namespace Avro.IO
 
         // by default, one object per line.
         // with pretty option use default pretty printer with root line separator.
-        private static JsonWriter getJsonWriter(Stream stream, bool pretty)
+        private static JsonWriter GetJsonWriter(Stream stream, bool pretty)
         {
             JsonWriter writer = new JsonTextWriter(new StreamWriter(stream));
             if (pretty)
@@ -93,7 +93,7 @@ namespace Avro.IO
         public virtual bool IncludeNamespace
         {
             get { return includeNamespace; }
-            set { this.includeNamespace = value; }
+            set { includeNamespace = value; }
         }
 
 
@@ -104,11 +104,9 @@ namespace Avro.IO
         /// provided Stream.
         /// </summary>
         /// <param name="stream"> The Stream to direct output to. Cannot be null. </param>
-        /// <returns> this JsonEncoder </returns>
-        public JsonEncoder Configure(Stream stream)
+        public void Configure(Stream stream)
         {
-            this.Configure(getJsonWriter(stream, false));
-            return this;
+            Configure(GetJsonWriter(stream, false));
         }
 
         /// <summary>
@@ -117,16 +115,14 @@ namespace Avro.IO
         /// reconfigure its output to use the provided JsonWriter.
         /// </summary>
         /// <param name="jsonWriter"> The JsonWriter to direct output to. Cannot be null. </param>
-        /// <returns> this JsonEncoder </returns>
-        public JsonEncoder Configure(JsonWriter jsonWriter)
+        public void Configure(JsonWriter jsonWriter)
         {
             if (null != parser)
             {
                 Flush();
             }
 
-            this.writer = jsonWriter;
-            return this;
+            writer = jsonWriter;
         }
 
         /// <inheritdoc />
@@ -196,10 +192,10 @@ namespace Avro.IO
         public override void WriteBytes(byte[] bytes, int start, int len)
         {
             parser.Advance(Symbol.Bytes);
-            writeByteArray(bytes, start, len);
+            WriteByteArray(bytes, start, len);
         }
 
-        private void writeByteArray(byte[] bytes, int start, int len)
+        private void WriteByteArray(byte[] bytes, int start, int len)
         {
             Encoding iso = Encoding.GetEncoding("ISO-8859-1");
             writer.WriteValue(iso.GetString(bytes, start, len));
@@ -222,7 +218,7 @@ namespace Avro.IO
                                             " but received " + len + " bytes.");
             }
 
-            writeByteArray(bytes, start, len);
+            WriteByteArray(bytes, start, len);
         }
 
         /// <inheritdoc />

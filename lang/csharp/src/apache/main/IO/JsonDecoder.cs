@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Avro.IO.Parsing;
 using Newtonsoft.Json;
@@ -41,7 +42,7 @@ namespace Avro.IO
             public readonly IDictionary<string, IList<JsonElement>> SavedFields =
                 new Dictionary<string, IList<JsonElement>>();
 
-            public JsonReader OrigParser;
+            public JsonReader OrigParser { get; set; }
         }
 
         private JsonDecoder(Symbol root, Stream stream) : base(root)
@@ -57,18 +58,18 @@ namespace Avro.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
         /// </summary>
-        public JsonDecoder(Schema schema, Stream stream) : this(getSymbol(schema), stream)
+        public JsonDecoder(Schema schema, Stream stream) : this(GetSymbol(schema), stream)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonDecoder"/> class.
         /// </summary>
-        public JsonDecoder(Schema schema, string str) : this(getSymbol(schema), str)
+        public JsonDecoder(Schema schema, string str) : this(GetSymbol(schema), str)
         {
         }
 
-        private static Symbol getSymbol(Schema schema)
+        private static Symbol GetSymbol(Schema schema)
         {
             return (new JsonGrammarGenerator()).Generate(schema);
         }
@@ -79,15 +80,13 @@ namespace Avro.IO
         /// input.
         /// </summary>
         /// <param name="stream"> The InputStream to read from. Cannot be null. </param>
-        /// <returns> this JsonDecoder </returns>
-        public JsonDecoder Configure(Stream stream)
+        public void Configure(Stream stream)
         {
             Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
-            this.reader = new JsonTextReader(new StreamReader(stream));
-            this.reader.Read();
-            return this;
+            reader = new JsonTextReader(new StreamReader(stream));
+            reader.Read();
         }
 
         /// <summary>
@@ -96,41 +95,39 @@ namespace Avro.IO
         /// input.
         /// </summary>
         /// <param name="str"> The String to read from. Cannot be null. </param>
-        /// <returns> this JsonDecoder </returns>
-        public JsonDecoder Configure(string str)
+        public void Configure(string str)
         {
             Parser.Reset();
             reorderBuffers.Clear();
             currentReorderBuffer = null;
-            this.reader = new JsonTextReader(new StringReader(str));
-            this.reader.Read();
-            return this;
+            reader = new JsonTextReader(new StringReader(str));
+            reader.Read();
         }
 
-        private void advance(Symbol symbol)
+        private void Advance(Symbol symbol)
         {
-            this.Parser.ProcessTrailingImplicitActions();
+            Parser.ProcessTrailingImplicitActions();
             Parser.Advance(symbol);
         }
 
         /// <inheritdoc />
         public override void ReadNull()
         {
-            advance(Symbol.Null);
+            Advance(Symbol.Null);
             if (reader.TokenType == JsonToken.Null)
             {
                 reader.Read();
             }
             else
             {
-                throw error("null");
+                throw TypeError("null");
             }
         }
 
         /// <inheritdoc />
         public override bool ReadBoolean()
         {
-            advance(Symbol.Boolean);
+            Advance(Symbol.Boolean);
             if (reader.TokenType == JsonToken.Boolean)
             {
                 bool result = Convert.ToBoolean(reader.Value);
@@ -139,14 +136,14 @@ namespace Avro.IO
             }
             else
             {
-                throw error("boolean");
+                throw TypeError("boolean");
             }
         }
 
         /// <inheritdoc />
         public override int ReadInt()
         {
-            advance(Symbol.Int);
+            Advance(Symbol.Int);
             if (reader.TokenType == JsonToken.Integer || reader.TokenType == JsonToken.Float)
             {
                 int result = Convert.ToInt32(reader.Value);
@@ -155,14 +152,14 @@ namespace Avro.IO
             }
             else
             {
-                throw error("int");
+                throw TypeError("int");
             }
         }
 
         /// <inheritdoc />
         public override long ReadLong()
         {
-            advance(Symbol.Long);
+            Advance(Symbol.Long);
             if (reader.TokenType == JsonToken.Integer || reader.TokenType == JsonToken.Float)
             {
                 long result = Convert.ToInt64(reader.Value);
@@ -171,14 +168,14 @@ namespace Avro.IO
             }
             else
             {
-                throw error("long");
+                throw TypeError("long");
             }
         }
 
         /// <inheritdoc />
         public override float ReadFloat()
         {
-            advance(Symbol.Float);
+            Advance(Symbol.Float);
             if (reader.TokenType == JsonToken.Integer || reader.TokenType == JsonToken.Float)
             {
                 float result = (float)Convert.ToDouble(reader.Value);
@@ -187,14 +184,14 @@ namespace Avro.IO
             }
             else
             {
-                throw error("float");
+                throw TypeError("float");
             }
         }
 
         /// <inheritdoc />
         public override double ReadDouble()
         {
-            advance(Symbol.Double);
+            Advance(Symbol.Double);
             if (reader.TokenType == JsonToken.Integer || reader.TokenType == JsonToken.Float)
             {
                 double result = Convert.ToDouble(reader.Value);
@@ -203,27 +200,27 @@ namespace Avro.IO
             }
             else
             {
-                throw error("double");
+                throw TypeError("double");
             }
         }
 
         /// <inheritdoc />
         public override string ReadString()
         {
-            advance(Symbol.String);
+            Advance(Symbol.String);
             if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
                 Parser.Advance(Symbol.MapKeyMarker);
                 if (reader.TokenType != JsonToken.PropertyName)
                 {
-                    throw error("map-key");
+                    throw TypeError("map-key");
                 }
             }
             else
             {
                 if (reader.TokenType != JsonToken.String)
                 {
-                    throw error("string");
+                    throw TypeError("string");
                 }
             }
 
@@ -235,20 +232,20 @@ namespace Avro.IO
         /// <inheritdoc />
         public override void SkipString()
         {
-            advance(Symbol.String);
+            Advance(Symbol.String);
             if (Parser.TopSymbol() == Symbol.MapKeyMarker)
             {
                 Parser.Advance(Symbol.MapKeyMarker);
                 if (reader.TokenType != JsonToken.PropertyName)
                 {
-                    throw error("map-key");
+                    throw TypeError("map-key");
                 }
             }
             else
             {
                 if (reader.TokenType != JsonToken.String)
                 {
-                    throw error("string");
+                    throw TypeError("string");
                 }
             }
 
@@ -258,20 +255,20 @@ namespace Avro.IO
         /// <inheritdoc />
         public override byte[] ReadBytes()
         {
-            advance(Symbol.Bytes);
+            Advance(Symbol.Bytes);
             if (reader.TokenType == JsonToken.String)
             {
-                byte[] result = readByteArray();
+                byte[] result = ReadByteArray();
                 reader.Read();
                 return result;
             }
             else
             {
-                throw error("bytes");
+                throw TypeError("bytes");
             }
         }
 
-        private byte[] readByteArray()
+        private byte[] ReadByteArray()
         {
             Encoding iso = Encoding.GetEncoding("ISO-8859-1");
             byte[] result = iso.GetBytes(Convert.ToString(reader.Value));
@@ -281,20 +278,20 @@ namespace Avro.IO
         /// <inheritdoc />
         public override void SkipBytes()
         {
-            advance(Symbol.Bytes);
+            Advance(Symbol.Bytes);
             if (reader.TokenType == JsonToken.String)
             {
                 reader.Read();
             }
             else
             {
-                throw error("bytes");
+                throw TypeError("bytes");
             }
         }
 
-        private void checkFixed(int size)
+        private void CheckFixed(int size)
         {
-            advance(Symbol.Fixed);
+            Advance(Symbol.Fixed);
             Symbol.IntCheckAction top = (Symbol.IntCheckAction)Parser.PopSymbol();
             if (size != top.Size)
             {
@@ -312,10 +309,10 @@ namespace Avro.IO
         /// <inheritdoc />
         public override void ReadFixed(byte[] bytes, int start, int len)
         {
-            checkFixed(len);
+            CheckFixed(len);
             if (reader.TokenType == JsonToken.String)
             {
-                byte[] result = readByteArray();
+                byte[] result = ReadByteArray();
                 reader.Read();
                 if (result.Length != len)
                 {
@@ -326,22 +323,22 @@ namespace Avro.IO
             }
             else
             {
-                throw error("fixed");
+                throw TypeError("fixed");
             }
         }
 
         /// <inheritdoc />
         public override void SkipFixed(int length)
         {
-            checkFixed(length);
-            doSkipFixed(length);
+            CheckFixed(length);
+            DoSkipFixed(length);
         }
 
-        private void doSkipFixed(int length)
+        private void DoSkipFixed(int length)
         {
             if (reader.TokenType == JsonToken.String)
             {
-                byte[] result = readByteArray();
+                byte[] result = ReadByteArray();
                 reader.Read();
                 if (result.Length != length)
                 {
@@ -350,22 +347,22 @@ namespace Avro.IO
             }
             else
             {
-                throw error("fixed");
+                throw TypeError("fixed");
             }
         }
 
         /// <inheritdoc />
         protected override void SkipFixed()
         {
-            advance(Symbol.Fixed);
+            Advance(Symbol.Fixed);
             Symbol.IntCheckAction top = (Symbol.IntCheckAction)Parser.PopSymbol();
-            doSkipFixed(top.Size);
+            DoSkipFixed(top.Size);
         }
 
         /// <inheritdoc />
         public override int ReadEnum()
         {
-            advance(Symbol.Enum);
+            Advance(Symbol.Enum);
             Symbol.EnumLabelsAction top = (Symbol.EnumLabelsAction)Parser.PopSymbol();
             if (reader.TokenType == JsonToken.String)
             {
@@ -381,33 +378,33 @@ namespace Avro.IO
             }
             else
             {
-                throw error("fixed");
+                throw TypeError("fixed");
             }
         }
 
         /// <inheritdoc />
         public override long ReadArrayStart()
         {
-            advance(Symbol.ArrayStart);
+            Advance(Symbol.ArrayStart);
             if (reader.TokenType == JsonToken.StartArray)
             {
                 reader.Read();
-                return doArrayNext();
+                return DoArrayNext();
             }
             else
             {
-                throw error("array-start");
+                throw TypeError("array-start");
             }
         }
 
         /// <inheritdoc />
         public override long ReadArrayNext()
         {
-            advance(Symbol.ItemEnd);
-            return doArrayNext();
+            Advance(Symbol.ItemEnd);
+            return DoArrayNext();
         }
 
-        private long doArrayNext()
+        private long DoArrayNext()
         {
             if (reader.TokenType == JsonToken.EndArray)
             {
@@ -424,47 +421,47 @@ namespace Avro.IO
         /// <inheritdoc />
         public override void SkipArray()
         {
-            advance(Symbol.ArrayStart);
+            Advance(Symbol.ArrayStart);
             if (reader.TokenType == JsonToken.StartArray)
             {
                 reader.Skip();
                 reader.Read();
-                advance(Symbol.ArrayEnd);
+                Advance(Symbol.ArrayEnd);
             }
             else
             {
-                throw error("array-start");
+                throw TypeError("array-start");
             }
         }
 
         /// <inheritdoc />
         public override long ReadMapStart()
         {
-            advance(Symbol.MapStart);
+            Advance(Symbol.MapStart);
             if (reader.TokenType == JsonToken.StartObject)
             {
                 reader.Read();
-                return doMapNext();
+                return DoMapNext();
             }
             else
             {
-                throw error("map-start");
+                throw TypeError("map-start");
             }
         }
 
         /// <inheritdoc />
         public override long ReadMapNext()
         {
-            advance(Symbol.ItemEnd);
-            return doMapNext();
+            Advance(Symbol.ItemEnd);
+            return DoMapNext();
         }
 
-        private long doMapNext()
+        private long DoMapNext()
         {
             if (reader.TokenType == JsonToken.EndObject)
             {
                 reader.Read();
-                advance(Symbol.MapEnd);
+                Advance(Symbol.MapEnd);
                 return 0;
             }
             else
@@ -476,23 +473,23 @@ namespace Avro.IO
         /// <inheritdoc />
         public override void SkipMap()
         {
-            advance(Symbol.MapStart);
+            Advance(Symbol.MapStart);
             if (reader.TokenType == JsonToken.StartObject)
             {
                 reader.Skip();
                 reader.Read();
-                advance(Symbol.MapEnd);
+                Advance(Symbol.MapEnd);
             }
             else
             {
-                throw error("map-start");
+                throw TypeError("map-start");
             }
         }
 
         /// <inheritdoc />
         public override int ReadUnionIndex()
         {
-            advance(Symbol.Union);
+            Advance(Symbol.Union);
             Symbol.Alternative a = (Symbol.Alternative)Parser.PopSymbol();
 
             string label;
@@ -511,12 +508,12 @@ namespace Avro.IO
                 }
                 else
                 {
-                    throw error("start-union");
+                    throw TypeError("start-union");
                 }
             }
             else
             {
-                throw error("start-union");
+                throw TypeError("start-union");
             }
 
             int n = a.FindLabel(label);
@@ -591,7 +588,7 @@ namespace Avro.IO
                     {
                         currentReorderBuffer.SavedFields.Remove(name);
                         currentReorderBuffer.OrigParser = reader;
-                        reader = makeParser(node);
+                        reader = MakeParser(node);
                         return null;
                     }
                 }
@@ -613,7 +610,7 @@ namespace Avro.IO
                                 currentReorderBuffer = new ReorderBuffer();
                             }
 
-                            currentReorderBuffer.SavedFields[fn] = getValueAsTree(reader);
+                            currentReorderBuffer.SavedFields[fn] = GetValueAsTree(reader);
                         }
                     } while (reader.TokenType == JsonToken.PropertyName);
 
@@ -638,7 +635,7 @@ namespace Avro.IO
                 }
                 else
                 {
-                    throw error("record-start");
+                    throw TypeError("record-start");
                 }
             }
             else if (top == Symbol.RecordEnd || top == Symbol.UnionEnd)
@@ -653,7 +650,8 @@ namespace Avro.IO
                 {
                     if (currentReorderBuffer != null && currentReorderBuffer.SavedFields.Count > 0)
                     {
-                        throw error("Unknown fields: " + currentReorderBuffer.SavedFields.Keys);
+                        throw TypeError("Unknown fields: " + currentReorderBuffer.SavedFields.Keys
+                            .Aggregate((x, y) => x + ", " + y ));
                     }
 
                     currentReorderBuffer = reorderBuffers.Pop();
@@ -673,13 +671,15 @@ namespace Avro.IO
 
         private class JsonElement
         {
-            public readonly JsonToken Token;
-            public readonly object Value;
+            private readonly JsonToken token;
+            public JsonToken Token => token;
+            private readonly object value;
+            public object Value => value;
 
             public JsonElement(JsonToken t, object value)
             {
-                this.Token = t;
-                this.Value = value;
+                token = t;
+                this.value = value;
             }
 
             public JsonElement(JsonToken t) : this(t, null)
@@ -687,7 +687,7 @@ namespace Avro.IO
             }
         }
 
-        private static IList<JsonElement> getValueAsTree(JsonReader reader)
+        private static IList<JsonElement> GetValueAsTree(JsonReader reader)
         {
             int level = 0;
             IList<JsonElement> result = new List<JsonElement>();
@@ -723,7 +723,7 @@ namespace Avro.IO
             return result;
         }
 
-        private JsonReader makeParser(in IList<JsonElement> elements)
+        private JsonReader MakeParser(in IList<JsonElement> elements)
         {
             return new JsonElementReader(elements);
         }
@@ -757,7 +757,7 @@ namespace Avro.IO
             }
         }
 
-        private AvroTypeException error(string type)
+        private AvroTypeException TypeError(string type)
         {
             return new AvroTypeException("Expected " + type + ". Got " + reader.TokenType);
         }
