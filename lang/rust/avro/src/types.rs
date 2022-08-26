@@ -954,7 +954,7 @@ mod tests {
         schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
         types::Value,
     };
-    use apache_avro_test_helper::logger::assert_logged;
+    use apache_avro_test_helper::logger::{assert_logged, assert_not_logged};
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
@@ -1293,6 +1293,9 @@ mod tests {
         assert!(!value.validate(&schema));
         assert_logged(
             r#"Invalid value: Record([("a", Long(42)), ("c", String("foo"))]) for schema: Record { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, default: None, schema: Long, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "b", doc: None, default: None, schema: String, order: Ascending, position: 1, custom_attributes: {} }, RecordField { name: "c", doc: None, default: Some(Null), schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }), order: Ascending, position: 2, custom_attributes: {} }], lookup: {"a": 0, "b": 1, "c": 2}, attributes: {} }. Reason: Could not find matching type in union"#,
+        );
+        assert_not_logged(
+            r#"Invalid value: String("foo") for schema: Int. Reason: Unsupported value-schema combination"#,
         );
 
         let value = Value::Record(vec![
