@@ -692,11 +692,10 @@ impl UnionSchema {
             Some((i, &self.schemas[i]))
         } else {
             // slow path (required for matching logical or named types)
-            self.schemas.iter().enumerate().find(|(_, schema)| {
-                let rs =
-                    ResolvedSchema::try_from(*schema).expect("Schema didn't successfully parse");
-                value.validate_internal(schema, rs.get_names()).is_none()
-            })
+            self.schemas
+                .iter()
+                .enumerate()
+                .find(|(_, schema)| value.validate(schema))
         }
     }
 }
