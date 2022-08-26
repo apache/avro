@@ -56,8 +56,11 @@ pub fn clear_log_messages() {
 }
 
 pub fn assert_not_logged(unexpected_message: &str) {
-    if let Some(last_log) = LOG_MESSAGES.borrow().last() {
-        assert_ne!(last_log, unexpected_message);
+    if let Some(_last_log) = LOG_MESSAGES.borrow().last() {
+        panic!(
+            "The following log message should not have been logged: '{}'",
+            unexpected_message
+        );
     }
 }
 
