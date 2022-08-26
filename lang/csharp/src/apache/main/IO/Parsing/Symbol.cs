@@ -587,7 +587,7 @@ namespace Avro.IO.Parsing
             /// </summary>
             public virtual int FindLabel(string label)
             {
-                if (!ReferenceEquals(label, null))
+                if (label != null)
                 {
                     for (int i = 0; i < Labels.Length; i++)
                     {
@@ -860,13 +860,13 @@ namespace Avro.IO.Parsing
             /// <summary>
             /// Returns index of the given label.
             /// </summary>
-            public virtual int FindLabel(string l)
+            public virtual int FindLabel(string label)
             {
-                if (!ReferenceEquals(l, null))
+                if (label != null)
                 {
                     for (int i = 0; i < Symbols.Count; i++)
                     {
-                        if (l.Equals(Symbols[i]))
+                        if (label.Equals(Symbols[i]))
                         {
                             return i;
                         }
@@ -880,104 +880,105 @@ namespace Avro.IO.Parsing
         /// <summary>
         /// The terminal symbols for the grammar.
         /// </summary>
-        public static readonly Symbol Null = new Terminal("null");
+        public static Symbol Null { get; } = new Terminal("null");
 
         /// <summary>
         /// Boolean
         /// </summary>
-        public static readonly Symbol Boolean = new Terminal("boolean");
+        public static Symbol Boolean { get; } = new Terminal("boolean");
+
         /// <summary>
         /// Int
         /// </summary>
-        public static readonly Symbol Int = new Terminal("int");
+        public static Symbol Int { get; } = new Terminal("int");
         /// <summary>
         /// Long
         /// </summary>
-        public static readonly Symbol Long = new Terminal("long");
+        public static Symbol Long { get; } = new Terminal("long");
         /// <summary>
         /// Float
         /// </summary>
-        public static readonly Symbol Float = new Terminal("float");
+        public static Symbol Float { get; } = new Terminal("float");
         /// <summary>
         /// Double
         /// </summary>
-        public static readonly Symbol Double = new Terminal("double");
+        public static Symbol Double { get; } = new Terminal("double");
         /// <summary>
         /// String
         /// </summary>
-        public static readonly Symbol String = new Terminal("string");
+        public static Symbol String { get; } = new Terminal("string");
         /// <summary>
         /// Bytes
         /// </summary>
-        public static readonly Symbol Bytes = new Terminal("bytes");
+        public static Symbol Bytes { get; } = new Terminal("bytes");
         /// <summary>
         /// Fixed
         /// </summary>
-        public static readonly Symbol Fixed = new Terminal("fixed");
+        public static Symbol Fixed { get; } = new Terminal("fixed");
         /// <summary>
         /// Enum
         /// </summary>
-        public static readonly Symbol Enum = new Terminal("enum");
+        public static Symbol Enum { get; } = new Terminal("enum");
         /// <summary>
         /// Union
         /// </summary>
-        public static readonly Symbol Union = new Terminal("union");
+        public static Symbol Union { get; } = new Terminal("union");
 
         /// <summary>
         /// ArrayStart
         /// </summary>
-        public static readonly Symbol ArrayStart = new Terminal("array-start");
+        public static Symbol ArrayStart { get; } = new Terminal("array-start");
         /// <summary>
         /// ArrayEnd
         /// </summary>
-        public static readonly Symbol ArrayEnd = new Terminal("array-end");
+        public static Symbol ArrayEnd { get; } = new Terminal("array-end");
         /// <summary>
         /// MapStart
         /// </summary>
-        public static readonly Symbol MapStart = new Terminal("map-start");
+        public static Symbol MapStart { get; } = new Terminal("map-start");
         /// <summary>
         /// MapEnd
         /// </summary>
-        public static readonly Symbol MapEnd = new Terminal("map-end");
+        public static Symbol MapEnd { get; } = new Terminal("map-end");
         /// <summary>
         /// ItemEnd
         /// </summary>
-        public static readonly Symbol ItemEnd = new Terminal("item-end");
+        public static Symbol ItemEnd { get; } = new Terminal("item-end");
 
         /// <summary>
         /// WriterUnion
         /// </summary>
-        public static readonly Symbol WriterUnion = new WriterUnionAction();
+        public static Symbol WriterUnion { get; } = new WriterUnionAction();
 
         /// <summary>
         /// FieldAction - a pseudo terminal used by parsers
         /// </summary>
-        public static readonly Symbol FieldAction = new Terminal("field-action");
+        public static Symbol FieldAction { get; } = new Terminal("field-action");
 
         /// <summary>
         /// RecordStart
         /// </summary>
-        public static readonly Symbol RecordStart = new ImplicitAction(false);
+        public static Symbol RecordStart { get; } = new ImplicitAction(false);
         /// <summary>
         /// RecordEnd
         /// </summary>
-        public static readonly Symbol RecordEnd = new ImplicitAction(true);
+        public static Symbol RecordEnd { get; } = new ImplicitAction(true);
         /// <summary>
         /// UnionEnd
         /// </summary>
-        public static readonly Symbol UnionEnd = new ImplicitAction(true);
+        public static Symbol UnionEnd { get; } = new ImplicitAction(true);
         /// <summary>
         /// FieldEnd
         /// </summary>
-        public static readonly Symbol FieldEnd = new ImplicitAction(true);
+        public static Symbol FieldEnd { get; } = new ImplicitAction(true);
 
         /// <summary>
         /// DefaultEndAction
         /// </summary>
-        public static readonly Symbol DefaultEndAction = new ImplicitAction(true);
+        public static Symbol DefaultEndAction { get; } = new ImplicitAction(true);
         /// <summary>
         /// MapKeyMarker
         /// </summary>
-        public static readonly Symbol MapKeyMarker = new Terminal("map-key-marker");
+        public static Symbol MapKeyMarker { get; } = new Terminal("map-key-marker");
     }
 }
