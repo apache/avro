@@ -55,6 +55,12 @@ pub fn clear_log_messages() {
     LOG_MESSAGES.borrow_mut().clear();
 }
 
+pub fn assert_not_logged(unexpected_message: &str) {
+    if let Some(last_log) = LOG_MESSAGES.borrow().last() {
+        assert_ne!(last_log, unexpected_message);
+    }
+}
+
 pub fn assert_logged(expected_message: &str) {
     assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
 }
