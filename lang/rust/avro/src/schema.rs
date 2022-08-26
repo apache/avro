@@ -2027,7 +2027,7 @@ mod tests {
 
     // AVRO-3621
     #[test]
-    fn test_nullable_record_field() {
+    fn test_avro_3621_nullable_record_field() {
         let nullable_record_field = RecordField {
             name: "next".to_string(),
             doc: None,
