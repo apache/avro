@@ -28,9 +28,9 @@ namespace Avro.Reflect.Model
     /// </summary>
     public class DotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        private readonly ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
-        private Type _type;
+        private readonly Type _type;
 
         /// <summary>
         /// Constructor
@@ -46,15 +46,11 @@ namespace Avro.Reflect.Model
                 bool hasAttribute = false;
                 PropertyInfo prop = GetPropertyInfo(f);
 
-                foreach (var attr in prop.GetCustomAttributes(true))
+                foreach (var attr in prop.GetCustomAttributes(typeof(AvroFieldAttribute), true))
                 {
-                    var avroAttr = attr as AvroFieldAttribute;
-                    if (avroAttr != null)
-                    {
-                        hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
-                        break;
-                    }
+                    hasAttribute = true;
+                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, ((AvroFieldAttribute)attr).Converter, cache));
+                    break;
                 }
 
                 if (!hasAttribute)
@@ -73,10 +69,10 @@ namespace Avro.Reflect.Model
             }
             foreach (var p in _type.GetProperties())
             {
-                foreach (var attr in p.GetCustomAttributes(true))
+                foreach (var attr in p.GetCustomAttributes(typeof(AvroFieldAttribute), true))
                 {
-                    var avroAttr = attr as AvroFieldAttribute;
-                    if (avroAttr != null && avroAttr.FieldName != null && avroAttr.FieldName == f.Name)
+                    var avroAttr = (AvroFieldAttribute)attr;
+                    if (avroAttr.FieldName != null && avroAttr.FieldName == f.Name)
                     {
                         return p;
                     }

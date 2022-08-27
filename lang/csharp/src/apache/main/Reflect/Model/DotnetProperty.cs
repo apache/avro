@@ -25,7 +25,7 @@ namespace Avro.Reflect.Model
 {
     internal class DotnetProperty
     {
-        private PropertyInfo _property;
+        private readonly PropertyInfo _property;
 
         public IAvroFieldConverter Converter { get; set; }
 
