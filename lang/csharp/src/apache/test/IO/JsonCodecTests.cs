@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using Avro.Generic;
 using Avro.IO;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Avro.Test
@@ -36,6 +37,73 @@ namespace Avro.Test
     [TestFixture]
     public class JsonCodecTests
     {
+        [TestCase("{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                  " { \"name\" : \"f1\", \"type\": \"int\" }, " +
+                  " { \"name\" : \"f2\", \"type\": \"float\" } " +
+                  "] }",
+            "{ \"f2\": 10.4, \"f1\": 10 } ")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s1\" ")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s2\" ")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 5 }", "\"hello\"")]
+        [TestCase("{ \"type\": \"array\", \"items\": \"int\" }", "[ 10, 20, 30 ]")]
+        [TestCase("{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": 10, \"k2\": 20, \"k3\": 30 }")]
+        [TestCase("[ \"int\", \"long\" ]", "{ \"int\": 10 }")]
+        [TestCase("\"string\"", "\"hello\"")]
+        [TestCase("\"bytes\"", "\"hello\"")]
+        [TestCase("\"int\"", "10")]
+        [TestCase("\"long\"", "10")]
+        [TestCase("\"float\"", "10.0")]
+        [TestCase("\"double\"", "10.0")]
+        [TestCase("\"boolean\"", "true")]
+        [TestCase("\"boolean\"", "false")]
+        [TestCase("\"null\"", "null")]
+        public void TestJsonAllTypesValidValues(String schemaStr, String value)
+        {
+            Schema schema = Schema.Parse(schemaStr);
+            byte[] avroBytes = fromJsonToAvro(value, schema);
+
+            Assert.IsTrue(JToken.DeepEquals(JToken.Parse(value),
+                JToken.Parse(fromAvroToJson(avroBytes, schema, true))));
+        }
+
+        [TestCase("{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                  " { \"name\" : \"f1\", \"type\": \"int\" }, " +
+                  " { \"name\" : \"f2\", \"type\": \"float\" } " +
+                  "] }",
+            "{ \"f4\": 10.4, \"f3\": 10 } ")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s3\" ")]
+        [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"")]
+        [TestCase("{ \"type\": \"array\", \"items\": \"int\" }", "[ \"10\", \"20\", \"30\" ]")]
+        [TestCase("{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": \"10\", \"k2\": \"20\"}")]
+        [TestCase("[ \"int\", \"long\" ]", "10")]
+        [TestCase("\"string\"", "10")]
+        [TestCase("\"bytes\"", "10")]
+        [TestCase("\"int\"", "\"hi\"")]
+        [TestCase("\"long\"", "\"hi\"")]
+        [TestCase("\"float\"", "\"hi\"")]
+        [TestCase("\"double\"", "\"hi\"")]
+        [TestCase("\"boolean\"", "\"hi\"")]
+        [TestCase("\"boolean\"", "\"hi\"")]
+        [TestCase("\"null\"", "\"hi\"")]
+        public void TestJsonAllTypesInvalidValues(String schemaStr, String value)
+        {
+            Schema schema = Schema.Parse(schemaStr);
+            Assert.Throws<AvroTypeException>(() => fromJsonToAvro(value, schema));
+        }
+
+        [TestCase("{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " +
+                  " { \"name\" : \"f1\", \"type\": \"int\" }, " +
+                  " { \"name\" : \"f2\", \"type\": \"float\" } " +
+                  "] }",
+            "{ \"f2\": 10.4, \"f1")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", "s1")]
+        [TestCase("\"string\"", "\"hi")]
+        public void TestJsonMalformed(String schemaStr, String value)
+        {
+            Schema schema = Schema.Parse(schemaStr);
+            Assert.Throws<JsonReaderException>(() => fromJsonToAvro(value, schema));
+        }
+
         [Test]
         public void TestJsonEncoderWhenIncludeNamespaceOptionIsFalse()
         {
