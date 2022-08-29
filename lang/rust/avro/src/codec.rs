@@ -34,7 +34,7 @@ use crc32fast::Hasher;
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, PartialEq, EnumIter, EnumString, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.

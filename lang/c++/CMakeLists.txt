@@ -64,7 +64,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Werror")
 if (AVRO_ADD_PROTECTOR_FLAGS)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -D_GLIBCXX_DEBUG")
     # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
@@ -111,7 +111,7 @@ set (AVRO_SOURCE_FILES
         impl/json/JsonIO.cc
         impl/json/JsonDom.cc
         impl/Resolver.cc impl/Validator.cc
-        impl/CustomFields.cc
+        impl/CustomAttributes.cc
         )
 
 add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})

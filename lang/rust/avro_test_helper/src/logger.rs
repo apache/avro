@@ -55,6 +55,16 @@ pub fn clear_log_messages() {
     LOG_MESSAGES.borrow_mut().clear();
 }
 
+pub fn assert_not_logged(unexpected_message: &str) {
+    match LOG_MESSAGES.borrow().last() {
+        Some(last_log) if last_log == unexpected_message => panic!(
+            "The following log message should not have been logged: '{}'",
+            unexpected_message
+        ),
+        _ => (),
+    }
+}
+
 pub fn assert_logged(expected_message: &str) {
     assert_eq!(LOG_MESSAGES.borrow_mut().pop().unwrap(), expected_message);
 }

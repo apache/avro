@@ -20,14 +20,14 @@ use zerocopy::U32;
 
 /// A struct representing duration that hides the details of endianness and conversion between
 /// platform-native u32 and byte arrays.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Duration {
     months: Months,
     days: Days,
     millis: Millis,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Months(U32<LittleEndian>);
 
 impl Months {
@@ -54,7 +54,7 @@ impl AsRef<[u8; 4]> for Months {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Days(U32<LittleEndian>);
 
 impl Days {
@@ -81,7 +81,7 @@ impl AsRef<[u8; 4]> for Days {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Millis(U32<LittleEndian>);
 
 impl Millis {

@@ -150,7 +150,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                     .get(*idx as usize)
                     .expect("Invalid Union validation occurred");
                 encode_long(*idx as i64, buffer);
-                encode_internal(&*item, inner_schema, names, enclosing_namespace, buffer)?;
+                encode_internal(item, inner_schema, names, enclosing_namespace, buffer)?;
             } else {
                 error!("invalid schema type for Union: {:?}", schema);
                 return Err(Error::EncodeValueAsSchemaError {
