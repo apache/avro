@@ -96,7 +96,7 @@ namespace Avro.Test
                   " { \"name\" : \"f2\", \"type\": \"float\" } " +
                   "] }",
             "{ \"f2\": 10.4, \"f1")]
-        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", "s1")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": [ \"s1\", \"s2\"] }", "s1")]
         [TestCase("\"string\"", "\"hi")]
         public void TestJsonMalformed(String schemaStr, String value)
         {
