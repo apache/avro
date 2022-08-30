@@ -71,7 +71,7 @@ namespace Avro.Test
                   " { \"name\" : \"f2\", \"type\": \"float\" } " +
                   "] }",
             "{ \"f4\": 10.4, \"f3\": 10 } ")]
-        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s3\" ")]
+        [TestCase("{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": [ \"s1\", \"s2\"] }", " \"s3\" ")]
         [TestCase("{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"")]
         [TestCase("{ \"type\": \"array\", \"items\": \"int\" }", "[ \"10\", \"20\", \"30\" ]")]
         [TestCase("{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": \"10\", \"k2\": \"20\"}")]
