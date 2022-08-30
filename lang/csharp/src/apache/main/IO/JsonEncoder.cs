@@ -28,7 +28,7 @@ namespace Avro.IO
     /// An <see cref="Encoder"/> for Avro's JSON data encoding.
     ///
     /// JsonEncoder buffers output, and data may not appear on the output until
-    /// <see cref="Encoder.Flush()"/> is called.
+    /// <see cref="Flush()"/> is called.
     ///
     /// JsonEncoder is not thread-safe.
     /// </summary>
