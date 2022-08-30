@@ -75,6 +75,18 @@ namespace Avro
             writer.WriteEndObject();
         }
 
+        /// <inheritdoc />
+        public override string Name
+        {
+            get { return BaseSchema.Name; }
+        }
+
+        /// <inheritdoc />
+        public override string Fullname
+        {
+            get { return BaseSchema.Fullname; }
+        }
+
         /// <summary>
         /// Checks if this schema can read data written by the given schema. Used for decoding data.
         /// </summary>
