@@ -114,6 +114,7 @@ namespace Avro.Generic
         protected void WriteNull(object value, Encoder encoder)
         {
             if (value != null) throw TypeMismatch(value, "null", "null");
+            encoder.WriteNull();
         }
 
         /// <summary>
