@@ -187,5 +187,10 @@ namespace Avro.IO
         /// <param name="start">Position within data where the contents start.</param>
         /// <param name="len">Number of bytes to write.</param>
         void WriteFixed(byte[] data, int start, int len);
+
+        /// <summary>
+        /// Flushes the encoder.
+        /// </summary>
+        void Flush();
     }
 }
