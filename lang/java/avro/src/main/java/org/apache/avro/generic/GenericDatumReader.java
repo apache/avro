@@ -459,7 +459,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     if (stringClass == CharSequence.class) {
       return readString(old, in);
     }
-    return this.getReaderCache().newInstanceFromString(stringClass, in.readString());
+    return this.newInstanceFromString(stringClass, in.readString());
   }
 
   /**
