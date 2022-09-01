@@ -641,10 +641,10 @@ class TestMisc(unittest.TestCase):
             None,
             None,
         )
-        # A name cannot start with dot."
+        # A name cannot start with dot.
         self.assertRaises(avro.errors.InvalidName, avro.schema.Name, ".a", None, None)
         self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "o..a", None, None)
-        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, ".a", None, None)
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "a.", None, None)
 
     def test_null_namespace(self):
         """The empty string may be used as a namespace to indicate the null namespace."""
