@@ -9,7 +9,7 @@
   - Make sure that the pull request corresponds to a [JIRA issue](https://issues.apache.org/jira/projects/AVRO/issues). Exceptions are made for typos in JavaDoc or documentation files, which need no JIRA issue.
   
   - Name the pull request in the form "AVRO-XXXX: [component] Title of the pull request", where *AVRO-XXXX* should be replaced by the actual issue number. 
-    The *component* is optional, and but can help identify the correct reviewers faster: either the language ("java", "python") or subsystem such as "build" or "doc" are good candidates.  
+    The *component* is optional, but can help identify the correct reviewers faster: either the language ("java", "python") or subsystem such as "build" or "doc" are good candidates.  
 
   - Fill out the template below to describe the changes contributed by the pull request. That will give reviewers the context they need to do the review.
   
