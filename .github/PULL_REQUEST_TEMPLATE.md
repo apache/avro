@@ -33,7 +33,7 @@
 
 ## What is the purpose of the change
 
-*(For example: This pull request improves file read performance by buffering data.)*
+*(For example: This pull request improves file read performance by buffering data, fixing AVRO-XXXX.)*
 
 
 ## Verifying this change
