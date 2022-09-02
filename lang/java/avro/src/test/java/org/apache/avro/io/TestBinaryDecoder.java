@@ -58,12 +58,21 @@ public class TestBinaryDecoder {
     return Arrays.asList(new Object[][] { { true }, { false }, });
   }
 
-  private Decoder newDecoderWithNoData() throws IOException {
+  private Decoder newDecoderWithNoData() {
     return newDecoder(new byte[0]);
   }
 
   private BinaryDecoder newDecoder(byte[] bytes, int start, int len) {
-    return factory.binaryDecoder(bytes, start, len, null);
+    return this.newDecoder(bytes, start, len, null);
+  }
+
+  private BinaryDecoder newDecoder(byte[] bytes, int start, int len, BinaryDecoder reuse) {
+    if (useDirect) {
+      final ByteArrayInputStream input = new ByteArrayInputStream(bytes, start, len);
+      return factory.directBinaryDecoder(input, reuse);
+    } else {
+      return factory.binaryDecoder(bytes, start, len, reuse);
+    }
   }
 
   private BinaryDecoder newDecoder(InputStream in) {
@@ -78,8 +87,16 @@ public class TestBinaryDecoder {
     }
   }
 
-  private Decoder newDecoder(byte[] bytes) {
-    return factory.binaryDecoder(bytes, null);
+  private BinaryDecoder newDecoder(byte[] bytes, BinaryDecoder reuse) {
+    if (this.useDirect) {
+      return this.factory.directBinaryDecoder(new ByteArrayInputStream(bytes), reuse);
+    } else {
+      return factory.binaryDecoder(bytes, reuse);
+    }
+  }
+
+  private BinaryDecoder newDecoder(byte[] bytes) {
+    return this.newDecoder(bytes, null);
   }
 
   /** Verify EOFException throw at EOF */
@@ -202,8 +219,8 @@ public class TestBinaryDecoder {
 
     BinaryDecoder initOnInputStream = newDecoder(new byte[50], 0, 30);
     initOnInputStream = newDecoder(is2, initOnInputStream);
-    BinaryDecoder initOnArray = newDecoder(is3, null);
-    initOnArray = factory.binaryDecoder(data, 0, data.length, initOnArray);
+    BinaryDecoder initOnArray = this.newDecoder(is3, null);
+    initOnArray = this.newDecoder(data, initOnArray);
 
     for (Object datum : records) {
       Assert.assertEquals("InputStream based BinaryDecoder result does not match", datum,
@@ -220,13 +237,13 @@ public class TestBinaryDecoder {
 
   @Test
   public void testInputStreamProxy() throws IOException {
-    Decoder d = newDecoder(data);
-    if (d instanceof BinaryDecoder) {
+    BinaryDecoder d = newDecoder(data);
+    if (d != null) {
       BinaryDecoder bd = (BinaryDecoder) d;
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
-      bd = factory.binaryDecoder(data, bd);
+      bd = this.newDecoder(data, bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamSkips(test, check);
@@ -250,7 +267,7 @@ public class TestBinaryDecoder {
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       // detach input stream and decoder from old source
-      factory.binaryDecoder(new byte[56], null);
+      this.newDecoder(new byte[56]);
       try (InputStream bad = bd.inputStream(); InputStream check2 = new ByteArrayInputStream(data)) {
         validateInputStreamReads(test, check);
         Assert.assertNotEquals(bad.read(), check2.read());
@@ -367,7 +384,14 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = this.newDecoder(bad);
 
-    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, () -> bd.readBytes(null));
+    final RuntimeException ex = Assert.assertThrows("Malformed data. Length is negative: -1", RuntimeException.class,
+        () -> bd.readBytes(null));
+    if (this.useDirect) {
+      Assert.assertTrue("Exception not IllegalArgumentException but " + ex.getClass(),
+          ex instanceof IllegalArgumentException);
+    } else {
+      Assert.assertTrue("Exception not AvroRuntimeException but " + ex.getClass(), ex instanceof AvroRuntimeException);
+    }
   }
 
   @Test
@@ -376,8 +400,14 @@ public class TestBinaryDecoder {
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = this.newDecoder(bad);
 
-    Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
-        UnsupportedOperationException.class, () -> bd.readBytes(null));
+    Throwable error = Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+        Throwable.class, () -> bd.readBytes(null));
+    if (this.useDirect) {
+      Assert.assertTrue("Exception not OutOfMemoryError but " + error.getClass(), error instanceof OutOfMemoryError);
+    } else {
+      Assert.assertTrue("Exception not UnsupportedOperationException but " + error.getClass(),
+          error instanceof UnsupportedOperationException);
+    }
   }
 
   @Test
@@ -389,8 +419,14 @@ public class TestBinaryDecoder {
       System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
       Decoder bd = this.newDecoder(bad);
 
-      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed", AvroRuntimeException.class,
-          () -> bd.readBytes(null));
+      final Exception exception = Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed",
+          Exception.class, () -> bd.readBytes(null));
+      if (this.useDirect) {
+        Assert.assertTrue("Exception not EOFException but " + exception.getClass(), exception instanceof EOFException);
+      } else {
+        Assert.assertTrue("Exception not AvroRuntimeException but " + exception.getClass(),
+            exception instanceof AvroRuntimeException);
+      }
     } finally {
       System.clearProperty("org.apache.avro.limits.bytes.maxLength");
     }
