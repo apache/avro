@@ -117,7 +117,7 @@ void Validator::fixedAdvance() {
     compoundStack_.pop_back();
 }
 
-int Validator::nextSizeExpected() const {
+size_t Validator::nextSizeExpected() const {
     return compoundStack_.back().node->fixedSize();
 }
 

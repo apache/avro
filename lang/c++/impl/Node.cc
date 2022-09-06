@@ -86,8 +86,8 @@ void Node::setLogicalType(LogicalType logicalType) {
             if (type_ == AVRO_FIXED) {
                 // Max precision that can be supported by the current size of
                 // the FIXED type.
-                long maxPrecision = floor(log10(2.0) * (8.0 * fixedSize() - 1));
-                if (logicalType.precision() > maxPrecision) {
+                size_t maxPrecision = (size_t) floor(log10(2.0) * (8.0 * (double) fixedSize() - 1));
+                if ((size_t) logicalType.precision() > maxPrecision) {
                     throw Exception(
                         boost::format(
                             "DECIMAL precision %1% is too large for the "

@@ -75,7 +75,7 @@ Symbol Symbol::enumAdjustSymbol(const NodePtr &writer, const NodePtr &reader) {
     }
 
     size_t wc = writer->names();
-    vector<int> adj;
+    vector<size_t> adj;
     adj.reserve(wc);
 
     vector<string> err;

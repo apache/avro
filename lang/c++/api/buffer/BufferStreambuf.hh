@@ -130,12 +130,12 @@ protected:
             size_t inBuffer = egptr() - gptr();
 
             if (inBuffer) {
-                auto remaining = static_cast<size_t>(len - bytesCopied);
-                size_t toCopy = std::min(inBuffer, remaining);
+                auto remaining = len - bytesCopied;
+                size_t toCopy = std::min(inBuffer, (size_t) remaining);
                 memcpy(c, gptr(), toCopy);
                 c += toCopy;
                 bytesCopied += toCopy;
-                gbump(toCopy);
+                gbump((int) toCopy);
             }
 
             if (bytesCopied < len) {

@@ -133,6 +133,17 @@ int64_t getLongField(const Entity &e, const Object &m,
     return it->second.longValue();
 }
 
+int32_t getIntField(const Entity &e, const Object &m,
+                    const string &fieldName) {
+    auto it = findField(e, m, fieldName);
+    if (it->second.type() == EntityType::Long) {
+        return it->second.intValue();
+    }
+
+    ensureType<int32_t>(it->second, fieldName);
+    return it->second.intValue();
+}
+
 // Unescape double quotes (") for de-serialization.  This method complements the
 // method NodeImpl::escape() which is used for serialization.
 static void unescape(string &s) {
@@ -335,11 +346,12 @@ static LogicalType makeLogicalType(const Entity &e, const Object &m) {
     if (typeField == "decimal") {
         LogicalType decimalType(LogicalType::DECIMAL);
         try {
-            decimalType.setPrecision(getLongField(e, m, "precision"));
+            decimalType.setPrecision(getIntField(e, m, "precision"));
             if (containsField(m, "scale")) {
-                decimalType.setScale(getLongField(e, m, "scale"));
+                decimalType.setScale(getIntField(e, m, "scale"));
             }
         } catch (Exception &ex) {
+            std::cerr << "LogicalType::makeLogicalType => Exception " << ex.what() << std::endl;
             // If any part of the logical type is malformed, per the standard we
             // must ignore the whole attribute.
             return LogicalType(LogicalType::NONE);
@@ -384,7 +396,7 @@ static NodePtr makeEnumNode(const Entity &e,
 
 static NodePtr makeFixedNode(const Entity &e,
                              const Name &name, const Object &m) {
-    int v = static_cast<int>(getLongField(e, m, "size"));
+    size_t v = getLongField(e, m, "size");
     if (v <= 0) {
         throw Exception(boost::format("Size for fixed is not positive: %1%") % e.toString());
     }

@@ -38,6 +38,7 @@ class Entity;
 
 typedef bool Bool;
 typedef int64_t Long;
+typedef int32_t Int;
 typedef double Double;
 typedef std::string String;
 typedef std::vector<Entity> Array;
@@ -53,6 +54,7 @@ enum class EntityType {
     Null,
     Bool,
     Long,
+    Int,
     Double,
     String,
     Arr,
@@ -82,6 +84,9 @@ public:
     Entity(Long v, size_t line = 0) : type_(EntityType::Long), value_(v), line_(line) {}
     // Not explicit because do want implicit conversion
     // NOLINTNEXTLINE(google-explicit-constructor)
+    Entity(Int v, size_t line = 0) : type_(EntityType::Int), value_(v), line_(line) {}
+    // Not explicit because do want implicit conversion
+    // NOLINTNEXTLINE(google-explicit-constructor)
     Entity(Double v, size_t line = 0) : type_(EntityType::Double), value_(v), line_(line) {}
     // Not explicit because do want implicit conversion
     // NOLINTNEXTLINE(google-explicit-constructor)
@@ -106,6 +111,8 @@ public:
         ensureType(EntityType::Long);
         return boost::any_cast<Long>(value_);
     }
+
+    Int intValue() const;
 
     Double doubleValue() const {
         ensureType(EntityType::Double);
@@ -143,6 +150,12 @@ template<>
 struct type_traits<int64_t> {
     static EntityType type() { return EntityType::Long; }
     static const char *name() { return "long"; }
+};
+
+template<>
+struct type_traits<int32_t> {
+    static EntityType type() { return EntityType::Int; }
+    static const char *name() { return "int"; }
 };
 
 template<>

@@ -45,7 +45,7 @@ public:
         return AVRO_UNKNOWN;
     }
 
-    static int nextSizeExpected() {
+    static size_t nextSizeExpected() {
         return 0;
     }
 
@@ -58,7 +58,7 @@ public:
     }
 
     void checkTypeExpected(Type) {}
-    void checkFixedSizeExpected(int) {}
+    void checkFixedSizeExpected(size_t) {}
 };
 
 /// This class is used by both the ValidatingSerializer and ValidationParser
@@ -81,7 +81,7 @@ public:
         return nextType_;
     }
 
-    int nextSizeExpected() const;
+    size_t nextSizeExpected() const;
 
     bool getCurrentRecordName(std::string &name) const;
     bool getNextFieldName(std::string &name) const;
@@ -95,7 +95,7 @@ public:
         advance();
     }
 
-    void checkFixedSizeExpected(int size) {
+    void checkFixedSizeExpected(size_t size) {
         if (nextSizeExpected() != size) {
             throw Exception(
                 boost::format("Wrong size for fixed, got %1%, expected %2%")
@@ -108,7 +108,7 @@ private:
     using flag_t = uint32_t;
 
     static flag_t typeToFlag(Type type) {
-        flag_t flag = (1L << type);
+        flag_t flag = (1 << type);
         return flag;
     }
 
