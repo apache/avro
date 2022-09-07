@@ -22,8 +22,12 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * Currently tested against Avro 1.11.0
     * Avro 1.9.0-1.10.2 were last supported in version 1.2.1 
 * Support for Kotlin
-    * Currently tested against Kotlin plugin versions 1.3.20-1.3.72 and 1.4.0-1.4.32 and 1.5.0-1.5.31 using the latest compatible version of Gradle
-    * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
+    * Dropped integration with the Kotlin plugin in plugin version 1.4.0, as Kotlin 1.7.x would require compile-time dependency on a specific Kotlin version
+      * Wiring between the tasks added by the plugin and the Kotlin compilation tasks can either be added by your build logic, or a derived plugin
+    * Plugin version 1.3.0 was the last version with tested support for Kotlin 
+      * It is believed to work with Kotlin 1.6.x as well
+      * It was tested against Kotlin plugin versions 1.3.20-1.3.72 and 1.4.0-1.4.32 and 1.5.0-1.5.31 using the latest compatible version of Gradle
+      * It was tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
     * Kotlin plugin versions 1.4.20-1.4.32 require special settings to work with Java 17+; see [KT-43704](https://youtrack.jetbrains.com/issue/KT-43704#focus=Comments-27-4639603.0-0)
     * Kotlin plugin version 1.3.30 is not compatible with Gradle 7.0+
     * Kotlin plugin versions starting with 1.4.0 require Gradle 5.3+

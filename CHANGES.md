@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Drop support for Kotlin plugin integration
 
 ## 1.3.0
 * Built using Avro 1.11.0

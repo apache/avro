@@ -205,14 +205,11 @@ if (JavaVersion.current().java10Compatible) {
     sourceCompatibility = 8
 }
 
-def latestKotlinVersion = "1.5.31"
-
 test {
     useJUnitPlatform()
     systemProperties = [
         avroVersion: compileAvroVersion,
         gradleVersion: gradle.gradleVersion,
-        kotlinPluginVersion: latestKotlinVersion,
     ]
 //    finalizedBy jacocoTestReport // report is always generated after tests run
 }
@@ -225,30 +222,9 @@ tasks.create(name: "testCompatibility", type: Test) {
         avroVersion: findProperty("avroVersion"),
         gradleVersion: findProperty("gradleVersion"),
     ]
-    filter {
-        excludeTestsMatching "*KotlinPlugin*"
-    }
     reports {
         html.destination = file("$buildDir/reports/tests/compatibility")
         junitXml.destination = file("$buildDir/reports/tests/compatibility")
-    }
-}
-
-tasks.create(name: "testKotlinPluginCompatibility", type: Test) {
-    description = "Test cross-compatibility of the plugin with the Kotlin plugin"
-    group = "Verification"
-    useJUnitPlatform()
-    systemProperties = [
-        avroVersion: findProperty("avroVersion"),
-        gradleVersion: findProperty("gradleVersion"),
-        kotlinPluginVersion: findProperty("kotlinPluginVersion"),
-    ]
-    filter {
-        includeTestsMatching "*KotlinPlugin*"
-    }
-    reports {
-        html.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
-        junitXml.destination = file("$buildDir/reports/tests/kotlinPluginCompatibility")
     }
 }
 
