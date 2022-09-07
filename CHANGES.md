@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 1.4.0
 * Drop support for Kotlin plugin integration
 
 ## 1.3.0
