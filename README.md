@@ -1,3 +1,9 @@
+# Seeking New Maintainer
+
+For more details, see [the discussion](https://github.com/davidmc24/gradle-avro-plugin/discussions/208).
+
+If no new maintainer is found, this project will be archived on October 22, 2023 (the 10 year anniversary of this project's first public commit).
+
 # Overview
 
 This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Java code generation for [Apache Avro](http://avro.apache.org/).  It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files.
