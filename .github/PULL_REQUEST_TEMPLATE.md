@@ -19,8 +19,6 @@
   
   - Each commit in the pull request has a meaningful commit message (including the JIRA id)
 
-  - Once all items of the checklist are addressed, remove the above text and this checklist, leaving only the filled out template below.
-
   - Every commit message references Jira issues in their subject lines. In addition, commits follow the guidelines from [How to write a good git commit message](https://chris.beams.io/posts/git-commit/)
     1. Subject is separated from body by a blank line
     1. Subject is limited to 50 characters (not including Jira issue reference)
