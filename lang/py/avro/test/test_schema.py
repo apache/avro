@@ -579,6 +579,18 @@ class TestMisc(unittest.TestCase):
         fullname = avro.schema.Name("a", "o.a.h", None).fullname
         self.assertEqual(fullname, "o.a.h.a")
 
+    def test_name_inlined_space(self):
+        """Space inlined with name is correctly splitted out."""
+        name = avro.schema.Name("o.a", None)
+        self.assertEqual(name.fullname, "o.a")
+        self.assertEqual(name.name, "a")
+        self.assertEqual(name.space, "o")
+
+        name = avro.schema.Name("o.a.h.a", None)
+        self.assertEqual(name.fullname, "o.a.h.a")
+        self.assertEqual(name.name, "a")
+        self.assertEqual(name.space, "o.a.h")
+
     def test_fullname_space_specified(self):
         """When name contains dots, namespace should be ignored."""
         fullname = avro.schema.Name("a.b.c.d", "o.a.h", None).fullname
@@ -629,6 +641,10 @@ class TestMisc(unittest.TestCase):
             None,
             None,
         )
+        # A name cannot start with dot.
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, ".a", None, None)
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "o..a", None, None)
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "a.", None, None)
 
     def test_null_namespace(self):
         """The empty string may be used as a namespace to indicate the null namespace."""

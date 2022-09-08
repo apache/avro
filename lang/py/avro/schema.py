@@ -263,8 +263,8 @@ class NamedSchema(Schema):
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
-        self.set_prop("name", name)
-        if namespace is not None:
+        self.set_prop("name", new_name.name)
+        if new_name.space:
             self.set_prop("namespace", new_name.space)
 
         # Store full name as calculated from name, namespace
