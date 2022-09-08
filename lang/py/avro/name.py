@@ -51,6 +51,7 @@ class Name:
     """Class to describe Avro name."""
 
     _full: Optional[str] = None
+    _name: Optional[str] = None
 
     def __init__(self, name_attr: Optional[str] = None, space_attr: Optional[str] = None, default_space: Optional[str] = None) -> None:
         """The fullname is determined in one of the following ways:
@@ -80,6 +81,7 @@ class Name:
         if name_attr == "":
             raise avro.errors.SchemaParseException("Name must not be the empty string.")
         # The empty string may be used as a namespace to indicate the null namespace.
+        self._name = name_attr.split(".")[-1]
         self._full = (
             name_attr
             if "." in name_attr or space_attr == "" or not (space_attr or default_space)
@@ -90,6 +92,10 @@ class Name:
     def __eq__(self, other: object) -> bool:
         """Equality of names is defined on the fullname and is case-sensitive."""
         return hasattr(other, "fullname") and self.fullname == getattr(other, "fullname")
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
 
     @property
     def fullname(self) -> Optional[str]:

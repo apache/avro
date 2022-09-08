@@ -68,6 +68,8 @@ import static org.apache.avro.TestSchemas.LONG_SCHEMA;
 import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.NS_RECORD1;
 import static org.apache.avro.TestSchemas.NS_RECORD2;
+import static org.apache.avro.TestSchemas.WITH_NS;
+import static org.apache.avro.TestSchemas.WITHOUT_NS;
 import static org.apache.avro.TestSchemas.NULL_SCHEMA;
 import static org.apache.avro.TestSchemas.ReaderWriter;
 import static org.apache.avro.TestSchemas.STRING_ARRAY_SCHEMA;
@@ -322,7 +324,7 @@ public class TestSchemaCompatibility {
 
       // This is comparing two records that have an inner array of records with
       // different namespaces.
-      new ReaderWriter(NS_RECORD1, NS_RECORD2));
+      new ReaderWriter(NS_RECORD1, NS_RECORD2), new ReaderWriter(WITHOUT_NS, WITH_NS));
 
   // -----------------------------------------------------------------------------------------------
 
