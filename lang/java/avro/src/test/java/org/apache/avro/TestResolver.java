@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.data.TimeConversions;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
@@ -15,7 +14,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class ResolverTest {
+class TestResolver {
 
   /**
    * Test promote action INT -> LONG, with logical type for LONG.
