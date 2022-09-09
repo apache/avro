@@ -678,9 +678,9 @@ impl UnionSchema {
         &self.schemas
     }
 
-    /// Returns true if the first variant of this `UnionSchema` is `Null`.
+    /// Returns true if the any of the variants of this `UnionSchema` is `Null`.
     pub fn is_nullable(&self) -> bool {
-        !self.schemas.is_empty() && self.schemas[0] == Schema::Null
+        !self.schemas.is_empty() && self.schemas.iter().any(|s| s == &Schema::Null)
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
@@ -4088,6 +4088,116 @@ mod tests {
                 let field = &fields[0];
                 assert_eq!(&field.name, "field_one");
                 assert_eq!(field.custom_attributes, expected_custom_attibutes());
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_first() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["null", "long"], "default": null}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(Value::Null));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert!(union.is_nullable());
+                        assert_eq!(union.variants()[0], Schema::Null);
+                        assert_eq!(union.variants()[1], Schema::Long);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_last() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["long","null"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert_eq!(union.variants()[0], Schema::Long);
+                        assert_eq!(union.variants()[1], Schema::Null);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_the_middle() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["long","null","int"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 3);
+                        assert_eq!(union.variants()[0], Schema::Long);
+                        assert_eq!(union.variants()[1], Schema::Null);
+                        assert_eq!(union.variants()[2], Schema::Int);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
             }
             _ => panic!("Expected Schema::Record"),
         }

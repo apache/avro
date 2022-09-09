@@ -17,7 +17,7 @@
 
 [package]
 name = "apache-avro"
-version = "0.14.0"
+version = "0.15.0"
 authors = ["Apache Avro team <dev@avro.apache.org>"]
 description = "A library for working with Apache Avro in Rust"
 license = "Apache-2.0"
