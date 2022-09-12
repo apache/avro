@@ -27,7 +27,7 @@ const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 #[test]
 fn test_schema() {
     let directory: ReadDir = scan_shared_folder();
-    directory.for_each(|f: Result<DirEntry, Error>| -> () {
+    directory.for_each(|f: Result<DirEntry, Error>| {
         let e: DirEntry = match f {
             Err(error) => panic!("Can't get file {:?}", error.to_string()),
             Ok(entry) => entry,
@@ -79,5 +79,5 @@ fn test_folder(folder: &str) {
 }
 
 fn scan_shared_folder() -> ReadDir {
-    return std::fs::read_dir(ROOT_DIRECTORY).expect("Can't read root folder");
+    std::fs::read_dir(ROOT_DIRECTORY).expect("Can't read root folder")
 }
