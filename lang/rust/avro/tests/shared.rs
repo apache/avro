@@ -15,12 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::types::Value;
-use apache_avro::{Codec, Reader, Schema, Writer};
-use std::fs::{DirEntry, File, ReadDir};
-use std::io::{BufReader, Error};
-use std::path::Path;
-use std::slice::Iter;
+use apache_avro::{types::Value, Codec, Reader, Schema, Writer};
+use std::{
+    fs::{DirEntry, File, ReadDir},
+    io::{BufReader, Error},
+    path::Path,
+    slice::Iter,
+};
 
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 
