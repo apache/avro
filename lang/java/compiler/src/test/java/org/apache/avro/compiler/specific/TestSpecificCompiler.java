@@ -34,6 +34,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -42,6 +43,12 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -61,6 +68,13 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
   private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
+  /**
+   * JDK 18+ generates a warning for each member field which does not implement
+   * java.io.Serializable. Since Avro is an alternative serialization format, we
+   * can just ignore this warning.
+   */
+  private static final String NON_TRANSIENT_INSTANCE_FIELD_MESSAGE = "non-transient instance field of a serializable class declared with a non-serializable type";
 
   @Rule
   public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
@@ -82,7 +96,9 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(dstDir, outputs, false);
   }
 
-  /** Uses the system's java compiler to actually compile the generated code. */
+  /**
+   * Uses the system's java compiler to actually compile the generated code.
+   */
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs,
       boolean ignoreWarnings) throws IOException {
     if (outputs.isEmpty()) {
@@ -101,13 +117,16 @@ public class TestSpecificCompiler {
     DiagnosticListener<JavaFileObject> diagnosticListener = diagnostic -> {
       switch (diagnostic.getKind()) {
       case ERROR:
-        // Do not add these to warnings because they will fail the compile, anyway.
+        // Do not add these to warnings because they will fail the compilation, anyway.
         LOG.error("{}", diagnostic);
         break;
       case WARNING:
       case MANDATORY_WARNING:
-        LOG.warn("{}", diagnostic);
-        warnings.add(diagnostic);
+        String message = diagnostic.getMessage(Locale.ROOT);
+        if (!NON_TRANSIENT_INSTANCE_FIELD_MESSAGE.equals(message)) {
+          LOG.warn("{}", diagnostic);
+          warnings.add(diagnostic);
+        }
         break;
       case NOTE:
       case OTHER:
@@ -344,7 +363,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use LocalDateTime for local-timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaType(localTimestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -368,7 +388,8 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use ByteBuffer type", "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
-    Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() type",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -517,6 +538,46 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\"," + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},"
+        + "{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-custom\"}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(1, usedCustomLogicalTypeFactories.size());
+    final Map.Entry<String, String> entry = usedCustomLogicalTypeFactories.entrySet().iterator().next();
+    Assert.assertEquals("string-custom", entry.getKey());
+    Assert.assertEquals("org.apache.avro.compiler.specific.TestSpecificCompiler.StringCustomLogicalTypeFactory",
+        entry.getValue());
+  }
+
+  @Test
+  public void testEmptyGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-custom", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+        + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
+        + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
+        + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
+        + "[{\"name\":\"nullableDateField\","
+        + "\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+
+    final Map<String, String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(0, usedCustomLogicalTypeFactories.size());
+  }
+
+  @Test
   public void testGetUsedConversionClassesForNullableLogicalTypes() throws Exception {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
@@ -625,7 +686,12 @@ public class TestSpecificCompiler {
    */
   public void testManglingReservedIdentifiers(String schema, boolean throwsTypeExceptionOnPrimitive,
       String dstDirPrefix) throws IOException {
-    for (String reserved : SpecificData.RESERVED_WORDS) {
+    Set<String> reservedIdentifiers = new HashSet<>();
+    reservedIdentifiers.addAll(SpecificData.RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.TYPE_IDENTIFIER_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.ACCESSOR_MUTATOR_RESERVED_WORDS);
+    reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
+    for (String reserved : reservedIdentifiers) {
       try {
         Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), dstDirPrefix + "_" + reserved),
@@ -719,8 +785,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -743,8 +809,8 @@ public class TestSpecificCompiler {
         compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
-    Assert.assertEquals("Should use null for decimal if the flag is off", "null",
-        compiler.conversionInstance(uuidSchema));
+    Assert.assertEquals("Should use org.apache.avro.Conversions.UUIDConversion() for uuid if the flag is off",
+        "new org.apache.avro.Conversions.UUIDConversion()", compiler.conversionInstance(uuidSchema));
   }
 
   @Test
@@ -858,6 +924,31 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(1, itWorksFound);
+  }
+
+  @Test
+  public void testPojoWithUUID() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    File avsc = new File("src/main/resources/logical-uuid.avsc");
+    compiler.compileToDestination(avsc, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("guid")) {
+          assertTrue(line.contains("java.util.UUID"));
+        }
+      }
+    }
+  }
+
+  public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new LogicalType("string-custom");
+    }
   }
 
 }

@@ -15,17 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using Avro.IO;
-using System.CodeDom;
-using System.CodeDom.Compiler;
 using Avro.Specific;
-using System.Reflection;
 using Avro.Test.Specific;
 using System.Collections.Generic;
+using Avro.Generic;
+using Avro.Test.Generic;
+using Avro.Test.Specific.@return;
+
+#if !NETCOREAPP
+using System.CodeDom;
+using System.CodeDom.Compiler;
+using System.Reflection;
+#endif
 
 namespace Avro.Test
 {
@@ -63,7 +70,7 @@ namespace Avro.Test
 	""type"" : ""record"",
 	""name"" : ""Z"",
 	""fields"" :
-			[ 	
+			[
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
 				{ ""name"" : ""myUBool"", ""type"" : [ ""boolean"", ""null"" ] },
@@ -71,7 +78,7 @@ namespace Avro.Test
 				{ ""name"" : ""myUFloat"", ""type"" : [ ""float"", ""null"" ] },
 				{ ""name"" : ""myUBytes"", ""type"" : [ ""bytes"", ""null"" ] },
 				{ ""name"" : ""myUString"", ""type"" : [ ""string"", ""null"" ] },
-				
+
 				{ ""name"" : ""myInt"", ""type"" : ""int"" },
 				{ ""name"" : ""myLong"", ""type"" : ""long"" },
 				{ ""name"" : ""myBool"", ""type"" : ""boolean"" },
@@ -81,7 +88,7 @@ namespace Avro.Test
 				{ ""name"" : ""myString"", ""type"" : ""string"" },
 				{ ""name"" : ""myNull"", ""type"" : ""null"" },
 
-				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },								
+				{ ""name"" : ""myFixed"", ""type"" : ""MyFixed"" },
 				{ ""name"" : ""myA"", ""type"" : ""A"" },
 				{ ""name"" : ""myE"", ""type"" : ""MyEnum"" },
 				{ ""name"" : ""myArray"", ""type"" : { ""type"" : ""array"", ""items"" : ""bytes"" } },
@@ -265,6 +272,68 @@ namespace Avro.Test
             Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
         }
 
+        [TestCase(0L)]
+        [TestCase(100L)]
+        [TestCase(-100L)]
+        [TestCase(0.0)]
+        [TestCase(100.0)]
+        [TestCase(-100.0)]
+        public void TestDoubleLongUnion(object value)
+        {
+            var testRecord = new DoubleLongUnionRecord();
+            testRecord.Property = value;
+
+            // serialize
+            var stream = serialize(DoubleLongUnionRecord._SCHEMA, testRecord);
+
+            // deserialize
+            var rec2 = deserialize<DoubleLongUnionRecord>(stream, DoubleLongUnionRecord._SCHEMA, DoubleLongUnionRecord._SCHEMA);
+            Assert.AreEqual(value, rec2.Property);
+            Assert.AreEqual(value.GetType(), rec2.Property.GetType());
+        }
+
+        [TestCase(0)]
+        [TestCase(100)]
+        [TestCase(-100)]
+        [TestCase(0.0f)]
+        [TestCase(100.0f)]
+        [TestCase(-100.0f)]
+        [TestCase("0")]
+        [TestCase("100")]
+        public void TestDoubleLongUnionNoMatchException(object value)
+        {
+            Assert.Throws<AvroException>(() => serialize(DoubleLongUnionRecord._SCHEMA, new DoubleLongUnionRecord() { Property = value }));
+        }
+
+        [Test]
+        public void TestArrayWithReservedWords()
+        {
+            var srcRecord = new ComplexTypeWithReservedWords
+            {
+                Record = new Record
+                {
+                    name = "Name"
+                },
+                ArrayItems = new List<ArrayItem>
+                {
+                     new ArrayItem
+                    {
+                        id = 2,
+                        name = "ArrayName"
+                    }
+                }
+            };
+
+            var stream = serialize(ComplexTypeWithReservedWords._SCHEMA, srcRecord);
+            var dstRecord = deserialize<ComplexTypeWithReservedWords>(stream, ComplexTypeWithReservedWords._SCHEMA, ComplexTypeWithReservedWords._SCHEMA);
+
+            Assert.NotNull(dstRecord);
+            Assert.AreEqual("Name", dstRecord.Record.name);
+            Assert.AreEqual(1, dstRecord.ArrayItems.Count);
+            Assert.AreEqual("ArrayName", dstRecord.ArrayItems[0].name);
+            Assert.AreEqual(2, dstRecord.ArrayItems[0].id);
+        }
+
         [Test]
         public void TestEmbeddedGenerics()
         {
@@ -405,6 +474,43 @@ namespace Avro.Test
             Assert.AreEqual(0, dstRecord.UserMatrix[2].Count);
         }
 
+        private static void serializeGeneric<T>(string writerSchema, T actual, out Stream stream, out Schema ws)
+        {
+            var ms = new MemoryStream();
+            Encoder e = new BinaryEncoder(ms);
+            ws = Schema.Parse(writerSchema);
+            GenericWriter<T> w = new GenericWriter<T>(ws);
+            w.Write(actual, e);
+            ms.Flush();
+            ms.Position = 0;
+            stream = ms;
+        }
+        
+        [Test]
+        public void DeserializeToLogicalTypeWithDefault()
+        {
+            var writerSchemaString = @"{
+    ""type"": ""record"",
+    ""name"": ""RecordWithOptionalLogicalType"",
+    ""namespace"": ""Avro.Test.Specific.return"",
+    ""fields"": [      
+    ]}";
+
+            var writerSchema = Schema.Parse(writerSchemaString);
+
+            Stream stream;
+
+            serializeGeneric(writerSchemaString,
+                GenericTests.MkRecord(new object[] { }, (RecordSchema)writerSchema),
+                out stream,
+                out _);
+
+            RecordWithOptionalLogicalType output = deserialize<RecordWithOptionalLogicalType>(stream, writerSchema, RecordWithOptionalLogicalType._SCHEMA);
+
+            Assert.AreEqual(output.x, new DateTime(1970, 1, 11));
+
+        }
+        
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
         {
             long initialPos = ms.Position;
@@ -498,7 +604,7 @@ namespace Avro.Test
         }
 
         /// <summary>
-        /// Asserts that two lists are equal, delegating the work of comapring
+        /// Asserts that two lists are equal, delegating the work of comparing
         /// <see cref="ISpecificRecord"/> entries to
         /// <see cref="AssertSpecificRecordEqual(ISpecificRecord, ISpecificRecord)"/>.
         /// </summary>
@@ -559,7 +665,7 @@ namespace Avro.Test
         public Schema Schema
         {
             get
-            { 
+            {
                 return Schema.Parse(@"{
    ""type"":""record"",
    ""name"":""EnumRecord"",

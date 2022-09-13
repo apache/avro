@@ -39,6 +39,9 @@ change_java_version() {
 
 # ===========================================================================
 
+# This might not have been sourced if the entrypoint is not bash
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+
 set -xe
 cd "${0%/*}"
 
@@ -101,13 +104,14 @@ do
       (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
+      (cd lang/rust; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/js; ./build.sh interop-data-generate)
-      (cd lang/ruby; rake generate_interop)
+      (cd lang/ruby; ./build.sh interop-data-generate)
       (cd lang/php; ./build.sh interop-data-generate)
       (cd lang/perl; ./build.sh interop-data-generate)
 
@@ -118,7 +122,7 @@ do
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/js; ./build.sh interop-data-test)
-      (cd lang/ruby; rake interop)
+      (cd lang/ruby; ./build.sh interop-data-test)
       (cd lang/php; ./build.sh test-interop)
       (cd lang/perl; ./build.sh interop-data-test)
 
@@ -166,13 +170,21 @@ do
       (cd lang/js; ./build.sh dist)
       (cd lang/ruby; ./build.sh dist)
       (cd lang/php; ./build.sh dist)
+      (cd lang/rust; ./build.sh dist)
 
       mkdir -p dist/perl
       (cd lang/perl; ./build.sh dist)
       cp "lang/perl/Avro-$VERSION.tar.gz" dist/perl/
 
       # build docs
-      (cd doc; ant)
+      cp -r doc/ build/staging-web/
+      find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
+      mv build/staging-web/content/en/docs/++version++ build/staging-web/content/en/docs/"${VERSION,,}"
+      read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+      # If it was a SNAPSHOT, it was lowercased during the build.
+      cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
+      cp -R "build/$DOC_DIR/api" build/staging-web/public/docs/"${VERSION,,}"/
+      ( cd build/staging-web/public/docs/; ln -s "${VERSION,,}" current )
       # add LICENSE and NOTICE for docs
       mkdir -p "build/$DOC_DIR"
       cp doc/LICENSE "build/$DOC_DIR"
@@ -204,7 +216,7 @@ do
 
     clean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
@@ -226,11 +238,13 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
       ;;
 
     veryclean)
       rm -rf build dist
-      (cd doc; ant clean)
+      rm -rf doc/public/ doc/resources/ doc/node_modules/ doc/package-lock.json doc/.hugo_build.lock
 
       (mvn -B clean)
       rm -rf lang/java/*/userlogs/
@@ -252,6 +266,8 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
+      (cd lang/rust; ./build.sh clean)
 
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules
@@ -323,7 +339,7 @@ do
     docker-test)
       tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
         docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v "${PWD}:/avro/" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+      docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)

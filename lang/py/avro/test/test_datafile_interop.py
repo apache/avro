@@ -37,11 +37,16 @@ class TestDataFileInterop(unittest.TestCase):
         for filename in _INTEROP_DATA_DIR.iterdir():
             self.assertGreater(os.stat(filename).st_size, 0)
             base_ext = filename.stem.split("_", 1)
-            if len(base_ext) < 2 or base_ext[1] not in avro.codecs.KNOWN_CODECS:
+            if len(base_ext) > 1 and base_ext[1] not in avro.codecs.KNOWN_CODECS:
                 print(f"SKIPPING {filename} due to an unsupported codec\n")
                 continue
             i = None
             with self.subTest(filename=filename), avro.datafile.DataFileReader(filename.open("rb"), avro.io.DatumReader()) as dfr:
+
+                user_metadata = dfr.get_meta("user_metadata")
+                if user_metadata is not None:
+                    self.assertEqual(user_metadata, b"someByteArray")
+
                 for i, datum in enumerate(cast(avro.datafile.DataFileReader, dfr), 1):
                     self.assertIsNotNone(datum)
                 self.assertIsNotNone(i)

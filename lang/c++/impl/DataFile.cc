@@ -118,9 +118,12 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
     lastSync_ = stream_->byteCount();
 }
 
-DataFileWriterBase::~DataFileWriterBase() {
+DataFileWriterBase::~DataFileWriterBase()
+{
     if (stream_) {
-        close();
+        try {
+            close();
+        } catch(...) {}
     }
 }
 
@@ -232,9 +235,8 @@ void DataFileWriterBase::flush() {
     sync();
 }
 
-boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
-
 DataFileSync DataFileWriterBase::makeSync() {
+    boost::mt19937 random(static_cast<uint32_t>(time(nullptr)));
     DataFileSync sync;
     std::generate(sync.begin(), sync.end(), random);
     return sync;
@@ -257,14 +259,14 @@ void DataFileWriterBase::setMetadata(const string &key, const string &value) {
     metadata_[key] = v;
 }
 
-DataFileReaderBase::DataFileReaderBase(const char *filename) : filename_(filename), codec_(NULL_CODEC), stream_(fileSeekableInputStream(filename)),
-                                                               decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
-                                                               blockEnd_(-1) {
+DataFileReaderBase::DataFileReaderBase(const char *filename) : filename_(filename), stream_(fileSeekableInputStream(filename)),
+                                                               decoder_(binaryDecoder()), objectCount_(0), eof_(false),
+                                                               codec_(NULL_CODEC), blockStart_(-1), blockEnd_(-1) {
     readHeader();
 }
 
-DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) : codec_(NULL_CODEC), stream_(std::move(inputStream)),
-                                                                                   decoder_(binaryDecoder()), objectCount_(0), eof_(false) {
+DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) : stream_(std::move(inputStream)),
+                                                                                   decoder_(binaryDecoder()), objectCount_(0), eof_(false), codec_(NULL_CODEC) {
     readHeader();
 }
 
@@ -392,6 +394,9 @@ void DataFileReaderBase::readDataBlock() {
             compressed_.insert(compressed_.end(), data, data + len);
         }
         len = compressed_.size();
+        if (len < 4)
+            throw Exception("Cannot read compressed data, expected at least 4 bytes, got " + std::to_string(len));
+
         int b1 = compressed_[len - 4] & 0xFF;
         int b2 = compressed_[len - 3] & 0xFF;
         int b3 = compressed_[len - 2] & 0xFF;

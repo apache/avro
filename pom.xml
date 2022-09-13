@@ -22,12 +22,12 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>23</version>
+    <version>27</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.11.0-SNAPSHOT</version>
+  <version>1.12.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
@@ -45,16 +45,25 @@
     <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
+
     <!-- plugin versions -->
-    <antrun-plugin.version>3.0.0</antrun-plugin.version>
+    <apache-rat-plugin.version>0.14</apache-rat-plugin.version>
     <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
-    <checkstyle.version>8.42</checkstyle.version>
-    <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
-    <maven-plugin-plugin.version>3.6.1</maven-plugin-plugin.version>
+    <checkstyle.version>9.3</checkstyle.version>
+    <enforcer-plugin.version>3.1.0</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.6.1</extra-enforcer-rules.version>
+    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+    <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
+    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
+    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
+    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
+    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
-    <extra-enforcer-rules.version>1.3</extra-enforcer-rules.version>
-    <spotless-maven-plugin.version>2.11.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.23.0</spotless-maven-plugin.version>
     <surefire.version>3.0.0-M5</surefire.version>
+
+    <!-- Pin output timestamp to make the Java build reproducible -->
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
   </properties>
 
   <modules>
@@ -108,8 +117,41 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>${maven-gpg-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <notimestamp>true</notimestamp>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>${maven-plugin-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven-source-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>${apache-rat-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -314,15 +356,19 @@
                 <!-- version control files -->
                 <!-- may not be in the root folder if using git-svn -->
                 <exclude>**/.git/**</exclude>
+                <exclude>**/.gitattributes</exclude>
                 <exclude>**/.gitignore</exclude>
+                <exclude>**/.gitmodules</exclude>
+                <!-- Docsy -->
+                <exclude>doc/build/**</exclude>
+                <exclude>doc/themes/docsy/**</exclude>
+                <exclude>doc/examples/java-example/target/**</exclude>
+                <exclude>doc/examples/mr-example/target/**</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
                 <exclude>**/*.rej</exclude>
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
-                <exclude>doc/build/**</exclude>
-                <exclude>doc/examples/java-example/target/**</exclude>
-                <exclude>doc/examples/mr-example/target/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
                 <exclude>lang/java/**/target/**</exclude>
                 <exclude>lang/js/node_modules/**</exclude>
@@ -375,6 +421,7 @@
                 <exclude>**/*.avro</exclude> <!-- binary format -->
                 <exclude>**/*.avro12</exclude> <!-- binary format -->
                 <exclude>**/*.avsc</exclude> <!-- does not allow comments -->
+                <exclude>**/*.avdl</exclude> <!-- does not allow comments -->
                 <exclude>**/*.avpr</exclude> <!-- does not allow comments -->
                 <exclude>**/*.json</exclude> <!-- does not allow comments -->
                 <exclude>**/*.p12</exclude>  <!-- binary format, cert -->
@@ -402,6 +449,7 @@
                 <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
+                <exclude>lang/csharp/src/apache/codec/*/obj/**</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
                 <exclude>lang/java/mapred/userlogs/**</exclude>
                 <exclude>lang/java/tools/userlogs/**</exclude>

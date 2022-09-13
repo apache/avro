@@ -370,6 +370,34 @@ NS_RECORD2 = parse(
         }
     )
 )
+WITHOUT_NAMESPACE_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "Record",
+            "fields": [
+                {
+                    "name": "f1",
+                    "type": "int",
+                }
+            ],
+        },
+    )
+)
+WITH_NAMESPACE_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "ns.Record",
+            "fields": [
+                {
+                    "name": "f1",
+                    "type": "int",
+                }
+            ],
+        },
+    )
+)
 
 UNION_INT_RECORD1 = UnionSchema(
     [
@@ -403,7 +431,7 @@ RECORD1_WITH_ENUM_AB = parse(
         {
             "type": SchemaType.RECORD,
             "name": "Record1",
-            "fields": [{"name": "field1", "type": dict(ENUM1_AB_SCHEMA.to_json())}],
+            "fields": [{"name": "field1", "type": ENUM1_AB_SCHEMA.to_json()}],
         }
     )
 )
@@ -412,7 +440,7 @@ RECORD1_WITH_ENUM_ABC = parse(
         {
             "type": SchemaType.RECORD,
             "name": "Record1",
-            "fields": [{"name": "field1", "type": dict(ENUM1_ABC_SCHEMA.to_json())}],
+            "fields": [{"name": "field1", "type": ENUM1_ABC_SCHEMA.to_json()}],
         }
     )
 )
@@ -583,6 +611,7 @@ class TestCompatibility(unittest.TestCase):
         self.assertIsInstance(reader, UnionSchema)
         self.assertIsInstance(writer, UnionSchema)
         self.assertFalse(self.are_compatible(reader, writer))
+
         # testReaderWriterCompatibility
         compatible_reader_writer_test_cases = [
             (BOOLEAN_SCHEMA, BOOLEAN_SCHEMA),
@@ -659,6 +688,7 @@ class TestCompatibility(unittest.TestCase):
                 ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD,
             ),
             (NS_RECORD1, NS_RECORD2),
+            (WITHOUT_NAMESPACE_RECORD, WITH_NAMESPACE_RECORD),
         ]
 
         for (reader, writer) in compatible_reader_writer_test_cases:

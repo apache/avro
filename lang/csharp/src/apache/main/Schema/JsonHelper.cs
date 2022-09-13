@@ -82,7 +82,7 @@ namespace Avro
         /// </summary>
         /// <param name="jtok">JSON object to read</param>
         /// <param name="field">property name</param>
-        /// <returns>null if property doesn't exist, otherise returns property boolean value</returns>
+        /// <returns>null if property doesn't exist, otherwise returns property boolean value</returns>
         public static bool? GetOptionalBoolean(JToken jtok, string field)
         {
             if (null == jtok) throw new ArgumentNullException(nameof(jtok), "jtok cannot be null.");
@@ -98,7 +98,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Writes JSON property name and value if value is not null
+        /// Writes JSON property name and value if value is not null or empty
         /// </summary>
         /// <param name="writer">JSON writer</param>
         /// <param name="key">property name</param>
@@ -110,5 +110,18 @@ namespace Avro
             writer.WriteValue(value);
         }
 
+
+        /// <summary>
+        /// Write JSON property name and value, if value is not null
+        /// </summary>
+        /// <param name="writer">JSON writer</param>
+        /// <param name="key">property name</param>
+        /// <param name="value">property value</param>
+        internal static void writeIfNotNull(JsonTextWriter writer, string key, string value)
+        {
+            if (value == null) return;
+            writer.WritePropertyName(key);
+            writer.WriteValue(value);
+        }
     }
 }

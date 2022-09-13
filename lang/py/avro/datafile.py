@@ -24,8 +24,9 @@ https://avro.apache.org/docs/current/spec.html#Object+Container+Files
 """
 import io
 import json
+import warnings
 from types import TracebackType
-from typing import BinaryIO, MutableMapping, Optional, Type, cast
+from typing import IO, AnyStr, BinaryIO, MutableMapping, Optional, Type, cast
 
 import avro.codecs
 import avro.errors
@@ -38,18 +39,21 @@ MAGIC = bytes(b"Obj" + bytearray([VERSION]))
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
 SYNC_INTERVAL = 4000 * SYNC_SIZE  # TODO(hammer): make configurable
-META_SCHEMA: avro.schema.RecordSchema = avro.schema.parse(
-    json.dumps(
-        {
-            "type": "record",
-            "name": "org.apache.avro.file.Header",
-            "fields": [
-                {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": MAGIC_SIZE}},
-                {"name": "meta", "type": {"type": "map", "values": "bytes"}},
-                {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": SYNC_SIZE}},
-            ],
-        }
-    )
+META_SCHEMA = cast(
+    avro.schema.RecordSchema,
+    avro.schema.parse(
+        json.dumps(
+            {
+                "type": "record",
+                "name": "org.apache.avro.file.Header",
+                "fields": [
+                    {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": MAGIC_SIZE}},
+                    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+                    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": SYNC_SIZE}},
+                ],
+            }
+        )
+    ),
 )
 
 NULL_CODEC = "null"
@@ -156,16 +160,19 @@ class DataFileWriter(_DataFileMetadata):
     _datum_writer: avro.io.DatumWriter
     _encoder: avro.io.BinaryEncoder
     _header_written: bool
-    _writer: BinaryIO
+    _writer: IO[bytes]
     block_count: int
     sync_marker: bytes
 
     def __init__(
-        self, writer: BinaryIO, datum_writer: avro.io.DatumWriter, writers_schema: Optional[avro.schema.Schema] = None, codec: str = NULL_CODEC
+        self, writer: IO[AnyStr], datum_writer: avro.io.DatumWriter, writers_schema: Optional[avro.schema.Schema] = None, codec: str = NULL_CODEC
     ) -> None:
         """If the schema is not present, presume we're appending."""
-        self._writer = writer
-        self._encoder = avro.io.BinaryEncoder(writer)
+        if hasattr(writer, "mode") and "b" not in writer.mode:
+            warnings.warn(avro.errors.AvroWarning(f"Writing binary data to a writer {writer!r} that's opened for text"))
+        bytes_writer = cast(IO[bytes], getattr(writer, "buffer", writer))
+        self._writer = bytes_writer
+        self._encoder = avro.io.BinaryEncoder(bytes_writer)
         self._datum_writer = datum_writer
         self._buffer_writer = io.BytesIO()
         self._buffer_encoder = avro.io.BinaryEncoder(self._buffer_writer)
@@ -195,7 +202,7 @@ class DataFileWriter(_DataFileMetadata):
         self.datum_writer.writers_schema = writers_schema
 
     @property
-    def writer(self) -> BinaryIO:
+    def writer(self) -> IO[bytes]:
         return self._writer
 
     @property
@@ -300,16 +307,19 @@ class DataFileReader(_DataFileMetadata):
     _datum_reader: avro.io.DatumReader
     _file_length: int
     _raw_decoder: avro.io.BinaryDecoder
-    _reader: BinaryIO
+    _reader: IO[bytes]
     block_count: int
     sync_marker: bytes
 
     # TODO(hammer): allow user to specify expected schema?
     # TODO(hammer): allow user to specify the encoder
 
-    def __init__(self, reader, datum_reader):
-        self._reader = reader
-        self._raw_decoder = avro.io.BinaryDecoder(reader)
+    def __init__(self, reader: IO[AnyStr], datum_reader: avro.io.DatumReader) -> None:
+        if hasattr(reader, "mode") and "b" not in reader.mode:
+            warnings.warn(avro.errors.AvroWarning(f"Reader binary data from a reader {reader!r} that's opened for text"))
+        bytes_reader = cast(IO[bytes], getattr(reader, "buffer", reader))
+        self._reader = bytes_reader
+        self._raw_decoder = avro.io.BinaryDecoder(bytes_reader)
         self._datum_decoder = None  # Maybe reset at every block.
         self._datum_reader = datum_reader
 
@@ -327,7 +337,7 @@ class DataFileReader(_DataFileMetadata):
         return self
 
     @property
-    def reader(self) -> BinaryIO:
+    def reader(self) -> IO[bytes]:
         return self._reader
 
     @property

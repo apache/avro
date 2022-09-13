@@ -18,13 +18,13 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
@@ -38,6 +38,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
+import org.apache.avro.util.internal.ThreadLocalWithInitial;
 
 /** {@link DatumReader} for generic Java objects. */
 public class GenericDatumReader<D> implements DatumReader<D> {
@@ -105,8 +106,8 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     creatorResolver = null;
   }
 
-  private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocal
-      .withInitial(WeakIdentityHashMap::new);
+  private static final ThreadLocal<Map<Schema, Map<Schema, ResolvingDecoder>>> RESOLVER_CACHE = ThreadLocalWithInitial
+      .of(WeakIdentityHashMap::new);
 
   /**
    * Gets a resolving decoder for use by this GenericDatumReader. Unstable API.
@@ -210,7 +211,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   }
 
   /**
-   * Convert a underlying representation of a logical type (such as a ByteBuffer)
+   * Convert an underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
    *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
@@ -451,14 +452,14 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representation. By default, this calls {@link #readString(Object,Decoder)}.
    */
   protected Object readString(Object old, Schema expected, Decoder in) throws IOException {
-    Class stringClass = getStringClass(expected);
+    Class stringClass = this.getReaderCache().getStringClass(expected);
     if (stringClass == String.class) {
       return in.readString();
     }
     if (stringClass == CharSequence.class) {
       return readString(old, in);
     }
-    return newInstanceFromString(stringClass, in.readString());
+    return this.newInstanceFromString(stringClass, in.readString());
   }
 
   /**
@@ -497,32 +498,86 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     }
   }
 
-  private Map<Schema, Class> stringClassCache = new IdentityHashMap<>();
+  /**
+   * This class is used to reproduce part of IdentityHashMap in ConcurrentHashMap
+   * code.
+   */
+  private static final class IdentitySchemaKey {
+    private final Schema schema;
 
-  private Class getStringClass(Schema s) {
-    Class c = stringClassCache.get(s);
-    if (c == null) {
-      c = findStringClass(s);
-      stringClassCache.put(s, c);
+    private final int hashcode;
+
+    public IdentitySchemaKey(Schema schema) {
+      this.schema = schema;
+      this.hashcode = System.identityHashCode(schema);
     }
-    return c;
+
+    @Override
+    public int hashCode() {
+      return this.hashcode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null || !(obj instanceof GenericDatumReader.IdentitySchemaKey)) {
+        return false;
+      }
+      IdentitySchemaKey key = (IdentitySchemaKey) obj;
+      return this == key || this.schema == key.schema;
+    }
   }
 
-  private final Map<Class, Constructor> stringCtorCache = new HashMap<>();
+  // VisibleForTesting
+  static class ReaderCache {
+    private final Map<IdentitySchemaKey, Class> stringClassCache = new ConcurrentHashMap<>();
+
+    private final Map<Class, Function<String, Object>> stringCtorCache = new ConcurrentHashMap<>();
+
+    private final Function<Schema, Class> findStringClass;
+
+    public ReaderCache(Function<Schema, Class> findStringClass) {
+      this.findStringClass = findStringClass;
+    }
+
+    public Object newInstanceFromString(Class c, String s) {
+      final Function<String, Object> ctor = stringCtorCache.computeIfAbsent(c, this::buildFunction);
+      return ctor.apply(s);
+    }
+
+    private Function<String, Object> buildFunction(Class c) {
+      final Constructor ctor;
+      try {
+        ctor = c.getDeclaredConstructor(String.class);
+      } catch (NoSuchMethodException e) {
+        throw new AvroRuntimeException(e);
+      }
+      ctor.setAccessible(true);
+
+      return (String s) -> {
+        try {
+          return ctor.newInstance(s);
+        } catch (ReflectiveOperationException e) {
+          throw new AvroRuntimeException(e);
+        }
+      };
+    }
+
+    public Class getStringClass(final Schema s) {
+      final IdentitySchemaKey key = new IdentitySchemaKey(s);
+      return this.stringClassCache.computeIfAbsent(key, (IdentitySchemaKey k) -> this.findStringClass.apply(k.schema));
+    }
+  }
+
+  private final ReaderCache readerCache = new ReaderCache(this::findStringClass);
+
+  // VisibleForTesting
+  ReaderCache getReaderCache() {
+    return readerCache;
+  }
 
   @SuppressWarnings("unchecked")
   protected Object newInstanceFromString(Class c, String s) {
-    try {
-      Constructor ctor = stringCtorCache.get(c);
-      if (ctor == null) {
-        ctor = c.getDeclaredConstructor(String.class);
-        ctor.setAccessible(true);
-        stringCtorCache.put(c, ctor);
-      }
-      return ctor.newInstance(s);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
-      throw new AvroRuntimeException(e);
-    }
+    return this.getReaderCache().newInstanceFromString(c, s);
   }
 
   /**

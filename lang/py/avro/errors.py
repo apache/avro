@@ -32,12 +32,20 @@ class AvroException(Exception):
     """The base class for exceptions in avro."""
 
 
+class InvalidAvroBinaryEncoding(AvroException):
+    """For invalid numbers of bytes read."""
+
+
 class SchemaParseException(AvroException):
     """Raised when a schema failed to parse."""
 
 
 class InvalidName(SchemaParseException):
     """User attempted to parse a schema with an invalid name."""
+
+
+class InvalidDefault(SchemaParseException):
+    """User attempted to parse a schema with an invalid default."""
 
 
 class AvroWarning(UserWarning):
@@ -53,10 +61,11 @@ class AvroTypeException(AvroException):
 
     def __init__(self, *args):
         try:
-            expected_schema, datum = args[:2]
+            expected_schema, name, datum = args[:3]
         except (IndexError, ValueError):
             return super().__init__(*args)
-        return super().__init__(f"The datum {datum} of the type {type(datum)} is not an example of the schema {_safe_pretty(expected_schema)}")
+        pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
+        return super().__init__(f'The datum "{datum}" provided for "{name}" is not an example of the schema {pretty_expected}')
 
 
 class InvalidDefaultException(AvroTypeException):

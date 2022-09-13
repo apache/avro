@@ -47,7 +47,7 @@ import java.nio.file.StandardOpenOption;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class TestEncoders {
   private static final int ENCODER_BUFFER_SIZE = 32;

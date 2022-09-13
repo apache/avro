@@ -17,10 +17,10 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
+
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
@@ -40,31 +42,23 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.util.RandomData;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
 public class TestDataFile {
   private static final Logger LOG = LoggerFactory.getLogger(TestDataFile.class);
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
-  private final CodecFactory codec;
-
-  public TestDataFile(CodecFactory codec) {
-    this.codec = codec;
-    LOG.info("Running with codec: " + codec);
-  }
-
-  @Parameters
-  public static List<Object[]> codecs() {
+  public static Stream<Arguments> codecs() {
     List<Object[]> r = new ArrayList<>();
     r.add(new Object[] { null });
     r.add(new Object[] { CodecFactory.deflateCodec(0) });
@@ -81,7 +75,7 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.zstandardCodec(18, true) });
     r.add(new Object[] { CodecFactory.zstandardCodec(0, false, false) });
     r.add(new Object[] { CodecFactory.zstandardCodec(0, false, true) });
-    return r;
+    return r.stream().map(Arguments::of);
   }
 
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
@@ -92,28 +86,30 @@ public class TestDataFile {
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
-  private File makeFile() {
-    return new File(DIR.getRoot().getPath(), "test-" + codec + ".avro");
+  private File makeFile(CodecFactory codec) {
+    return new File(DIR, "test-" + codec + ".avro");
   }
 
-  @Test
-  public void runTestsInOrder() throws Exception {
-    testGenericWrite();
-    testGenericRead();
-    testSplits();
-    testSyncDiscovery();
-    testGenericAppend();
-    testReadWithHeader();
-    testFSync(false);
-    testFSync(true);
+  @ParameterizedTest
+  @MethodSource("codecs")
+  public void runTestsInOrder(CodecFactory codec) throws Exception {
+    LOG.info("Running with codec: " + codec);
+    testGenericWrite(codec);
+    testGenericRead(codec);
+    testSplits(codec);
+    testSyncDiscovery(codec);
+    testGenericAppend(codec);
+    testReadWithHeader(codec);
+    testFSync(codec, false);
+    testFSync(codec, true);
   }
 
-  private void testGenericWrite() throws IOException {
+  private void testGenericWrite(CodecFactory codec) throws IOException {
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(100);
     if (codec != null) {
       writer.setCodec(codec);
     }
-    writer.create(SCHEMA, makeFile());
+    writer.create(SCHEMA, makeFile(codec));
     try {
       int count = 0;
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -132,7 +128,7 @@ public class TestDataFile {
           } catch (DataFileWriter.AppendWriteException e) {
             System.out.println("Ignoring: " + e);
           }
-          assertTrue("failed to throw when expected", threwProperly);
+          assertTrue(threwProperly, "failed to throw when expected");
         }
       }
     } finally {
@@ -148,11 +144,11 @@ public class TestDataFile {
       doubleCloseEx = e;
     }
 
-    assertNull("Double close() threw an unexpected exception", doubleCloseEx);
+    assertNull(doubleCloseEx, "Double close() threw an unexpected exception");
   }
 
-  private void testGenericRead() throws IOException {
-    try (DataFileReader<Object> reader = new DataFileReader<>(makeFile(), new GenericDatumReader<>())) {
+  private void testGenericRead(CodecFactory codec) throws IOException {
+    try (DataFileReader<Object> reader = new DataFileReader<>(makeFile(codec), new GenericDatumReader<>())) {
       Object datum = null;
       if (VALIDATE) {
         for (Object expected : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -167,8 +163,8 @@ public class TestDataFile {
     }
   }
 
-  private void testSplits() throws IOException {
-    File file = makeFile();
+  private void testSplits(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
     try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       Random rand = new Random(SEED);
       int splits = 10; // number of splits
@@ -190,8 +186,8 @@ public class TestDataFile {
     }
   }
 
-  private void testSyncDiscovery() throws IOException {
-    File file = makeFile();
+  private void testSyncDiscovery(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
     try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       // discover the sync points
       ArrayList<Long> syncs = new ArrayList<>();
@@ -214,8 +210,8 @@ public class TestDataFile {
     }
   }
 
-  private void testGenericAppend() throws IOException {
-    File file = makeFile();
+  private void testGenericAppend(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
     long start = file.length();
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).appendTo(file)) {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
@@ -238,8 +234,8 @@ public class TestDataFile {
     }
   }
 
-  private void testReadWithHeader() throws IOException {
-    File file = makeFile();
+  private void testReadWithHeader(CodecFactory codec) throws IOException {
+    File file = makeFile(codec);
     try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       // get a header for this file
       DataFileStream.Header header = reader.getHeader();
@@ -249,14 +245,14 @@ public class TestDataFile {
       try (DataFileReader<Object> readerTrue = DataFileReader.openReader(sin, new GenericDatumReader<>(), header,
           true);) {
 
-        assertNotNull("Should be able to reopen from arbitrary point", readerTrue.next());
+        assertNotNull(readerTrue.next(), "Should be able to reopen from arbitrary point");
         long validPos = readerTrue.previousSync();
         // post sync, we know of a valid sync point: re-open with seek (sync == false)
         sin.seek(validPos);
         try (DataFileReader<Object> readerFalse = DataFileReader.openReader(sin, new GenericDatumReader<>(), header,
             false)) {
-          assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
-          assertNotNull("Should be able to reopen at sync point", readerFalse.next());
+          assertEquals(validPos, sin.tell(), "Should not move from sync point on reopen");
+          assertNotNull(readerFalse.next(), "Should be able to reopen at sync point");
         }
 
       }
@@ -310,12 +306,12 @@ public class TestDataFile {
     assertTrue(out.flushCount < currentCount && out.flushCount >= flushCounter);
   }
 
-  private void testFSync(boolean useFile) throws IOException {
+  private void testFSync(CodecFactory codec, boolean useFile) throws IOException {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setFlushOnEveryBlock(false);
       TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
       if (useFile) {
-        File f = makeFile();
+        File f = makeFile(codec);
         try (SeekableFileInput in = new SeekableFileInput(f)) {
           writer.appendTo(in, out);
         }

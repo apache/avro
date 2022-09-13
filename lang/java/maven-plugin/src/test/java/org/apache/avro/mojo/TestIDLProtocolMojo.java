@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +38,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
   @Test
   public void testIdlProtocolMojo() throws Exception {
     final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+    final TestLog log = new TestLog();
+    mojo.setLog(log);
 
     assertNotNull(mojo);
     mojo.execute();
@@ -48,11 +51,18 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
+
+    assertEquals(Collections.singletonList(
+        "[WARN] Found documentation comment at line 23, column 5. Ignoring previous one at line 22, column 5: \"Ignored Doc Comment\""
+            + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?"),
+        log.getLogEntries());
   }
 
   @Test
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
     final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
+    final TestLog log = new TestLog();
+    mojo.setLog(log);
 
     assertNotNull(mojo);
     mojo.execute();
@@ -65,5 +75,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(schemaUserContent.contains("It works!"));
+
+    // The previous test already verifies the warnings.
+    assertFalse(log.getLogEntries().isEmpty());
   }
 }

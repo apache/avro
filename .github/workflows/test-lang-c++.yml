@@ -28,17 +28,30 @@ defaults:
   run:
     working-directory: lang/c++
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Dependencies
-        run: sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev
+        run: sudo apt update && sudo apt-get install -qqy cppcheck libboost-all-dev libsnappy-dev cmake
+
+      - name: Clean
+        run: ./build.sh clean
 
       - name: Lint
         run: ./build.sh lint
 
       - name: Test
         run: ./build.sh test
+
+      - name: Release build
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..

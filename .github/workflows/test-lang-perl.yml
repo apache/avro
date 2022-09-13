@@ -28,6 +28,10 @@ defaults:
   run:
     working-directory: lang/perl
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Perl ${{ matrix.perl }} Tests
@@ -37,7 +41,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -63,7 +67,11 @@ jobs:
                                                        Module::Install::Repository \
                                                        Regexp::Common \
                                                        Try::Tiny \
-                                                       inc::Module::Install
+                                                       inc::Module::Install \
+                                                       Module::Install::ReadmeFromPod \
+                                                       Test::Exception \
+                                                       IO::String \
+                                                       Object::Tiny
 
       - name: Lint
         run: ./build.sh lint
@@ -79,7 +87,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -108,7 +116,7 @@ jobs:
                                                        inc::Module::Install
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

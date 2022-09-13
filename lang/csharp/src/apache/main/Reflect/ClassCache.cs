@@ -32,6 +32,7 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -75,7 +76,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="propType"></param>
-        /// <returns>The first matching converter - null if there isnt one</returns>
+        /// <returns>The first matching converter - null if there isn't one</returns>
         public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {
             Type avroType;
@@ -158,7 +159,7 @@ namespace Avro.Reflect
         public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
         {
             Type h;
-            // note ArraySchema is unamed and doesnt have a FulllName, use "helper" metadata
+            // note ArraySchema is unnamed and doesn't have a FulllName, use "helper" metadata
             // metadata is json string, strip quotes
             string s = null;
             s = schema.GetHelper();
@@ -214,8 +215,16 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
+                        /*              
+                        //.StackOverflowException
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
+                        */
+                        if (_previousFields.TryAdd(f.Name, f.Schema))
+                        {
+                            var t = c.GetPropertyType(f);
+                            LoadClassCache(t, f.Schema);
+                        }
                     }
 
                     break;
@@ -254,17 +263,27 @@ namespace Avro.Reflect
                     EnumCache.AddEnumNameMapItem(ns, objType);
                     break;
                 case UnionSchema us:
-                    if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null) && objType.IsClass)
+                    if (us.Schemas.Count == 2 && (us.Schemas[0].Tag == Schema.Type.Null || us.Schemas[1].Tag == Schema.Type.Null))
                     {
                         // in this case objType will match the non null type in the union
                         foreach (var o in us.Schemas)
                         {
-                            if (o.Tag != Schema.Type.Null)
+                            if (o.Tag == Schema.Type.Null)
+                            {
+                                continue;
+                            }
+
+                            if (objType.IsClass)
                             {
                                 LoadClassCache(objType, o);
                             }
-                        }
 
+                            var innerType = Nullable.GetUnderlyingType(objType);
+                            if (innerType != null && innerType.IsEnum)
+                            {
+                                LoadClassCache(innerType, o);
+                            }
+                        }
                     }
                     else
                     {

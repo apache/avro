@@ -26,6 +26,14 @@ on:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
 
+defaults:
+  run:
+    working-directory: lang/rust
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -35,11 +43,29 @@ jobs:
           - stable
           - beta
           - nightly
-          - 1.48.0  # MSRV
+          - 1.54.0  # MSRV
+        target:
+          - x86_64-unknown-linux-gnu
+          - wasm32-unknown-unknown
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
 
       - name: Rust Toolchain
         uses: actions-rs/toolchain@v1
@@ -48,28 +74,165 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
           components: rustfmt
+          target: ${{ matrix.target }}
 
       - name: Rust Format
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --manifest-path lang/rust/Cargo.toml --all -- --check
 
       - name: Rust Build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-features --all-targets
+          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
 
       - name: Rust Test
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features --all-targets
+          args: --manifest-path lang/rust/Cargo.toml --all-features --target ${{ matrix.target }}
+
+      - name: Rust Test AVRO-3549
+        if: matrix.target != 'wasm32-unknown-unknown'
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path lang/rust/Cargo.toml --target ${{ matrix.target }} test_avro_3549_read_not_enabled_codec
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
+        if: matrix.target != 'wasm32-unknown-unknown'
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --doc
+          args: --manifest-path lang/rust/Cargo.toml --doc
+
+  interop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-stable-
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java Avro for Interop Test
+        working-directory: .
+        run: mvn -B install -DskipTests
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Resources
+        working-directory: lang/java/avro
+        run: mvn -B -P interop-data-generate generate-resources
+
+      - name: Generate interop data
+        run: ./build.sh interop-data-generate
+
+      - name: Rust reads interop files created by Java and Rust
+        run: ./build.sh interop-data-test
+
+      - uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: 5.32
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                            libcpan-uploader-perl \
+                                                            libencode-perl \
+                                                            libio-string-perl \
+                                                            libjansson-dev \
+                                                            libjson-xs-perl \
+                                                            libmodule-install-perl \
+                                                            libmodule-install-readmefrompod-perl \
+                                                            libobject-tiny-perl \
+                                                            libsnappy-dev \
+                                                            libtest-exception-perl \
+                                                            libtest-pod-perl
+          cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
+                                                       Error::Simple \
+                                                       Module::Install::Repository \
+                                                       Object::Tiny \
+                                                       Regexp::Common \
+                                                       Try::Tiny \
+                                                       inc::Module::Install
+
+
+      - name: Perl reads interop files created by Java and Rust
+        working-directory: lang/perl
+        run: ./build.sh interop-data-test
+
+  web-assembly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-stable-
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build the Web Assembly demo app
+        run: wasm-pack build wasm-demo
+
+      - name: Test the Web Assembly demo app
+        run: RUST_BACKTRACE=1 wasm-pack test --headless --firefox wasm-demo

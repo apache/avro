@@ -25,10 +25,12 @@ package $this.mangle($schema.getNamespace());
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public enum ${this.mangle($schema.getName())} implements org.apache.avro.generic.GenericEnumSymbol<${this.mangle($schema.getName())}> {
+public enum ${this.mangleTypeIdentifier($schema.getName())} implements org.apache.avro.generic.GenericEnumSymbol<${this.mangleTypeIdentifier($schema.getName())}> {
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($foreach.hasNext), #end#end
   ;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 }

@@ -23,7 +23,8 @@ namespace Avro.File
     /// <summary>
     /// Implements deflate compression and decompression.
     /// </summary>
-    /// <seealso cref="DeflateStream"/>
+    /// <seealso cref="Codec" />
+    /// <seealso cref="DeflateStream" />
     public class DeflateCodec : Codec
     {
         /// <inheritdoc/>
@@ -37,12 +38,27 @@ namespace Avro.File
             {
                 Compress.Write(uncompressedData, 0, uncompressedData.Length);
             }
+
             return outStream.ToArray();
         }
 
         /// <inheritdoc/>
-        public override byte[] Decompress(byte[] compressedData)
+        public override void Compress(MemoryStream inputStream, MemoryStream outputStream)
         {
+            outputStream.SetLength(0);
+            using (DeflateStream Compress =
+                        new DeflateStream(outputStream,
+                        CompressionMode.Compress,
+                        true))
+            {
+                Compress.Write(inputStream.GetBuffer(), 0, (int)inputStream.Length);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override byte[] Decompress(byte[] compressedData, int length)
+        {
+
             MemoryStream inStream = new MemoryStream(compressedData);
             MemoryStream outStream = new MemoryStream();
 
@@ -52,14 +68,20 @@ namespace Avro.File
             {
                 CopyTo(Decompress, outStream);
             }
+
             return outStream.ToArray();
         }
 
+        /// <summary>
+        /// Copies to stream.
+        /// </summary>
+        /// <param name="from">stream you are copying from</param>
+        /// <param name="to">stream you are copying to</param>
         private static void CopyTo(Stream from, Stream to)
         {
             byte[] buffer = new byte[4096];
             int read;
-            while((read = from.Read(buffer, 0, buffer.Length)) != 0)
+            while ((read = from.Read(buffer, 0, buffer.Length)) != 0)
             {
                 to.Write(buffer, 0, read);
             }
@@ -74,9 +96,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public override bool Equals(object other)
         {
-            if (this == other)
-                return true;
-            return this.GetType().Name == other.GetType().Name;
+            return this == other || GetType().Name == other.GetType().Name;
         }
 
         /// <inheritdoc/>

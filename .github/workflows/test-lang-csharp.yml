@@ -28,13 +28,29 @@ defaults:
   run:
     working-directory: lang/csharp
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/cache@v2
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
+      - uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -47,13 +63,38 @@ jobs:
       - name: Test
         run: ./build.sh test
 
+      # Build and test against .NET 7
+      # .NET 7 is not released yet, however this is a good way to test if the project is ready for the release
+      # Once .NET 7 is officially released, this can be removed and 7.0.x can be used instead above
+      - name: Install .NET SDK 7.0 (pre-release)
+        uses: actions/setup-dotnet@v2
+        with:
+          include-prerelease: true
+          dotnet-version: |
+            7.0.x
+      
+      - name: Test .NET 7.0 (pre-release)
+        run: ./build.sh test
+
   interop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      - name: Add libzstd
+        shell: bash
+        run: sudo apt-get install -y libzstd-dev
+
+      - name: Install .NET SDKs
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

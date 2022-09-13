@@ -59,7 +59,7 @@ function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
   cp -r api AUTHORS build.sh CMakeLists.txt ChangeLog \
-    LICENSE NOTICE impl jsonschemas NEWS parser README scripts test examples \
+    LICENSE NOTICE impl jsonschemas NEWS parser README test examples \
     $BUILD_CPP
   find $BUILD_CPP -name '.svn' | xargs rm -rf
   cp ../../share/VERSION.txt $BUILD_CPP
@@ -71,7 +71,7 @@ function do_dist() {
   fi
 }
 
-(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
+(mkdir -p build; cd build; cmake --version; cmake -G "Unix Makefiles" ..)
 for target in "$@"
 do
 
@@ -79,7 +79,7 @@ case "$target" in
   lint)
     # some versions of cppcheck seem to require an explicit
     # "--error-exitcode" option to return non-zero code
-    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ .
+    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ api examples impl test
     ;;
 
   test)

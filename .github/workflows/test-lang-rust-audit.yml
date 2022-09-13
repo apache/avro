@@ -27,13 +27,30 @@ on:
       - lang/rust/Cargo.toml
       - lang/rust/Cargo.lock
 
+defaults:
+  run:
+    working-directory: lang/rust
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Rust Audit
-        uses: actions-rs/audit-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/checkout@v3
+      # Currently does not work. See https://github.com/actions-rs/audit-check/issues/194
+      #- name: Rust Audit
+      #  uses: actions-rs/audit-check@v1
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      # Install it manually
+      - name: Dependency Review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v2
+      - name: Install Cargo Audit
+        run: cargo install cargo-audit
+      - name: Audit
+        run: cargo audit

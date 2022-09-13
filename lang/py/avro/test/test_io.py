@@ -72,12 +72,26 @@ SCHEMAS_TO_VALIDATE = tuple(
             decimal.Decimal("-3.1415"),
         ),
         (
+            {
+                "type": "fixed",
+                "logicalType": "decimal",
+                "name": "Test",
+                "size": 8,
+                "precision": 1,
+            },
+            decimal.Decimal("3"),
+        ),
+        (
             {"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4},
             decimal.Decimal("3.1415"),
         ),
         (
             {"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4},
             decimal.Decimal("-3.1415"),
+        ),
+        (
+            {"type": "bytes", "logicalType": "decimal", "precision": 1},
+            decimal.Decimal("3"),
         ),
         ({"type": "enum", "name": "Test", "symbols": ["A", "B"]}, "B"),
         ({"type": "array", "items": "long"}, [1, 3, 2]),
@@ -162,6 +176,14 @@ SCHEMAS_TO_VALIDATE = tuple(
                 ],
             },
             {"value": {"car": {"value": "head"}, "cdr": {"value": None}}},
+        ),
+        (
+            {"type": "record", "name": "record", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "record"]}]},
+            {"value": 0, "next": {"value": 1, "next": None}},
+        ),
+        (
+            {"type": "record", "name": "ns.long", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.long"]}]},
+            {"value": 0, "next": {"value": 1, "next": None}},
         ),
     )
 )
@@ -426,6 +448,58 @@ class DefaultValueTestCase(unittest.TestCase):
             self.assertEqual(datum_to_read, datum_read)
 
 
+class TestIncompatibleSchemaReading(unittest.TestCase):
+    def test_deserialization_fails(self) -> None:
+
+        reader_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "namespace": "example.avro",
+                    "type": "record",
+                    "name": "User",
+                    "fields": [
+                        {"name": "name", "type": "string"},
+                        {"name": "age", "type": "int"},
+                        {"name": "location", "type": "string"},
+                    ],
+                }
+            )
+        )
+        writer_schema = avro.schema.parse(
+            json.dumps(
+                {
+                    "namespace": "example.avro",
+                    "type": "record",
+                    "name": "IncompatibleUser",
+                    "fields": [
+                        {"name": "name", "type": "int"},
+                        {"name": "age", "type": "int"},
+                        {"name": "location", "type": "string"},
+                    ],
+                }
+            )
+        )
+
+        incompatibleUserRecord = {"name": 100, "age": 21, "location": "Woodford"}
+        writer = avro.io.DatumWriter(writer_schema)
+        with io.BytesIO() as writer_bio:
+            enc = avro.io.BinaryEncoder(writer_bio)
+            writer.write(incompatibleUserRecord, enc)
+            enc_bytes = writer_bio.getvalue()
+        reader = avro.io.DatumReader(reader_schema)
+        with io.BytesIO(enc_bytes) as reader_bio:
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
+
+        incompatibleUserRecord = {"name": -10, "age": 21, "location": "Woodford"}
+        with io.BytesIO() as writer_bio:
+            enc = avro.io.BinaryEncoder(writer_bio)
+            writer.write(incompatibleUserRecord, enc)
+            enc_bytes = writer_bio.getvalue()
+        reader = avro.io.DatumReader(reader_schema)
+        with io.BytesIO(enc_bytes) as reader_bio:
+            self.assertRaises(avro.errors.InvalidAvroBinaryEncoding, reader.read, avro.io.BinaryDecoder(reader_bio))
+
+
 class TestMisc(unittest.TestCase):
     def test_decimal_bytes_small_scale(self) -> None:
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
@@ -538,7 +612,7 @@ class TestMisc(unittest.TestCase):
         datum_read = read_datum(writer, writers_schema, readers_schema)
         self.assertEqual(datum_to_read, datum_read)
 
-    def test_type_exception(self) -> None:
+    def test_type_exception_int(self) -> None:
         writers_schema = avro.schema.parse(
             json.dumps(
                 {
@@ -552,7 +626,24 @@ class TestMisc(unittest.TestCase):
             )
         )
         datum_to_write = {"E": 5, "F": "Bad"}
-        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema)
+        with self.assertRaises(avro.errors.AvroTypeException) as exc:
+            write_datum(datum_to_write, writers_schema)
+        assert str(exc.exception) == 'The datum "Bad" provided for "F" is not an example of the schema "int"'
+
+    def test_type_exception_long(self) -> None:
+        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        datum_to_write = {"foo": 5.0}
+
+        with self.assertRaises(avro.errors.AvroTypeException) as exc:
+            write_datum(datum_to_write, writers_schema)
+        assert str(exc.exception) == 'The datum "5.0" provided for "foo" is not an example of the schema "long"'
+
+    def test_type_exception_record(self) -> None:
+        writers_schema = avro.schema.parse(json.dumps({"type": "record", "name": "Test", "fields": [{"name": "foo", "type": "long"}]}))
+        datum_to_write = ("foo", 5.0)
+
+        with self.assertRaisesRegex(avro.errors.AvroTypeException, r"The datum \".*\" provided for \".*\" is not an example of the schema [\s\S]*"):
+            write_datum(datum_to_write, writers_schema)
 
 
 def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) -> unittest.TestSuite:
@@ -568,6 +659,7 @@ def load_tests(loader: unittest.TestLoader, default_tests: None, pattern: None) 
         SchemaPromotionTestCase(write_type, read_type) for write_type, read_type in itertools.combinations(("int", "long", "float", "double"), 2)
     )
     suite.addTests(DefaultValueTestCase(field_type, default) for field_type, default in DEFAULT_VALUE_EXAMPLES)
+    suite.addTests(loader.loadTestsFromTestCase(TestIncompatibleSchemaReading))
     return suite
 
 

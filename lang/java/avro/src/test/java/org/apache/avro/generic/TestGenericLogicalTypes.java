@@ -19,7 +19,7 @@
 package org.apache.avro.generic;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,20 +44,20 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestGenericLogicalTypes {
 
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @TempDir
+  public File temp;
 
   public static final GenericData GENERIC = new GenericData();
 
-  @BeforeClass
+  @BeforeAll
   public static void addLogicalTypes() {
     GENERIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
     GENERIC.addLogicalTypeConversion(new Conversions.UUIDConversion());
@@ -75,7 +75,8 @@ public class TestGenericLogicalTypes {
     List<UUID> expected = Arrays.asList(u1, u2);
 
     File test = write(Schema.create(Schema.Type.STRING), u1.toString(), u2.toString());
-    Assert.assertEquals("Should convert Strings to UUIDs", expected, read(GENERIC.createDatumReader(uuidSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(uuidSchema), test),
+        "Should convert Strings to UUIDs");
   }
 
   @Test
@@ -90,8 +91,8 @@ public class TestGenericLogicalTypes {
     List<String> expected = Arrays.asList(u1.toString(), u2.toString());
 
     File test = write(GENERIC, uuidSchema, u1, u2);
-    Assert.assertEquals("Should read UUIDs as Strings", expected,
-        read(GenericData.get().createDatumReader(stringSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(stringSchema), test),
+        "Should read UUIDs as Strings");
   }
 
   @Test
@@ -109,8 +110,8 @@ public class TestGenericLogicalTypes {
     List<String> expected = Arrays.asList(u1.toString(), u2.toString());
 
     File test = write(GENERIC, nullableUuidSchema, u1, u2);
-    Assert.assertEquals("Should read UUIDs as Strings", expected,
-        read(GenericData.get().createDatumReader(nullableStringSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(nullableStringSchema), test),
+        "Should read UUIDs as Strings");
   }
 
   @Test
@@ -130,8 +131,8 @@ public class TestGenericLogicalTypes {
     GenericFixed d2fixed = conversion.toFixed(d2, fixedSchema, decimal);
 
     File test = write(fixedSchema, d1fixed, d2fixed);
-    Assert.assertEquals("Should convert fixed to BigDecimals", expected,
-        read(GENERIC.createDatumReader(decimalSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(decimalSchema), test),
+        "Should convert fixed to BigDecimals");
   }
 
   @Test
@@ -150,8 +151,8 @@ public class TestGenericLogicalTypes {
     List<GenericFixed> expected = Arrays.asList(d1fixed, d2fixed);
 
     File test = write(GENERIC, decimalSchema, d1, d2);
-    Assert.assertEquals("Should read BigDecimals as fixed", expected,
-        read(GenericData.get().createDatumReader(fixedSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(fixedSchema), test),
+        "Should read BigDecimals as fixed");
   }
 
   @Test
@@ -209,8 +210,8 @@ public class TestGenericLogicalTypes {
     ByteBuffer d2bytes = conversion.toBytes(d2, bytesSchema, decimal);
 
     File test = write(bytesSchema, d1bytes, d2bytes);
-    Assert.assertEquals("Should convert bytes to BigDecimals", expected,
-        read(GENERIC.createDatumReader(decimalSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(decimalSchema), test),
+        "Should convert bytes to BigDecimals");
   }
 
   @Test
@@ -230,8 +231,8 @@ public class TestGenericLogicalTypes {
     List<ByteBuffer> expected = Arrays.asList(d1bytes, d2bytes);
 
     File test = write(GENERIC, decimalSchema, d1bytes, d2bytes);
-    Assert.assertEquals("Should read BigDecimals as bytes", expected,
-        read(GenericData.get().createDatumReader(bytesSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(bytesSchema), test),
+        "Should read BigDecimals as bytes");
   }
 
   private <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
@@ -252,7 +253,7 @@ public class TestGenericLogicalTypes {
 
   @SuppressWarnings("unchecked")
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
-    File file = temp.newFile();
+    File file = new File(temp, "out.avro");
     DatumWriter<D> writer = model.createDatumWriter(schema);
 
     try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
@@ -318,8 +319,8 @@ public class TestGenericLogicalTypes {
 
   private void checkCopy(Object original, Object copy, boolean notSame) {
     if (notSame)
-      Assert.assertNotSame(original, copy);
-    Assert.assertEquals(original, copy);
+      Assertions.assertNotSame(original, copy);
+    Assertions.assertEquals(original, copy);
   }
 
   @Test
@@ -339,8 +340,8 @@ public class TestGenericLogicalTypes {
     Long i2long = 0L;
 
     File test = write(longSchema, i1long, i2long);
-    Assert.assertEquals("Should convert long to LocalDateTime", expected,
-        read(GENERIC.createDatumReader(timestampSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(timestampSchema), test),
+        "Should convert long to LocalDateTime");
   }
 
   @Test
@@ -359,8 +360,8 @@ public class TestGenericLogicalTypes {
     List<Long> expected = Arrays.asList(d1long, d2long);
 
     File test = write(GENERIC, timestampSchema, i1, i2);
-    Assert.assertEquals("Should read LocalDateTime as longs", expected,
-        read(GenericData.get().createDatumReader(timestampSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(timestampSchema), test),
+        "Should read LocalDateTime as longs");
   }
 
   @Test
@@ -380,8 +381,8 @@ public class TestGenericLogicalTypes {
     Long i2long = conversion.toLong(i2, longSchema, timestamp);
 
     File test = write(longSchema, i1long, i2long);
-    Assert.assertEquals("Should convert long to LocalDateTime", expected,
-        read(GENERIC.createDatumReader(timestampSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(timestampSchema), test),
+        "Should convert long to LocalDateTime");
   }
 
   @Test
@@ -400,7 +401,7 @@ public class TestGenericLogicalTypes {
     List<Long> expected = Arrays.asList(d1long, d2long);
 
     File test = write(GENERIC, timestampSchema, i1, i2);
-    Assert.assertEquals("Should read LocalDateTime as longs", expected,
-        read(GenericData.get().createDatumReader(timestampSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(timestampSchema), test),
+        "Should read LocalDateTime as longs");
   }
 }

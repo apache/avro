@@ -18,12 +18,12 @@
 package org.apache.avro.file;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.util.NonCopyingByteArrayOutputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -31,6 +31,7 @@ import org.apache.commons.compress.utils.IOUtils;
 /** * Implements xz compression and decompression. */
 public class XZCodec extends Codec {
   public final static int DEFAULT_COMPRESSION = 6;
+  private static final int DEFAULT_BUFFER_SIZE = 8192;
 
   static class Option extends CodecFactory {
     private int compressionLevel;
@@ -45,7 +46,6 @@ public class XZCodec extends Codec {
     }
   }
 
-  private ByteArrayOutputStream outputBuffer;
   private int compressionLevel;
 
   public XZCodec(int compressionLevel) {
@@ -59,31 +59,22 @@ public class XZCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     try (OutputStream outputStream = new XZCompressorOutputStream(baos, compressionLevel)) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
-    return ByteBuffer.wrap(baos.toByteArray());
+    return baos.asByteBuffer();
   }
 
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
-    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    NonCopyingByteArrayOutputStream baos = new NonCopyingByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     InputStream bytesIn = new ByteArrayInputStream(data.array(), computeOffset(data), data.remaining());
 
     try (InputStream ios = new XZCompressorInputStream(bytesIn)) {
       IOUtils.copy(ios, baos);
     }
-    return ByteBuffer.wrap(baos.toByteArray());
-  }
-
-  // get and initialize the output buffer for use.
-  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-    if (null == outputBuffer) {
-      outputBuffer = new ByteArrayOutputStream(suggestedLength);
-    }
-    outputBuffer.reset();
-    return outputBuffer;
+    return baos.asByteBuffer();
   }
 
   @Override

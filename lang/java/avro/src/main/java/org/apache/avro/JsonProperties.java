@@ -33,7 +33,7 @@ import java.io.IOException;
 
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.JsonPropertiesAccessor;
-import org.apache.avro.reflect.MapEntry;
+import org.apache.avro.util.MapEntry;
 import org.apache.avro.util.internal.JacksonUtils;
 
 import com.fasterxml.jackson.core.JsonGenerator;

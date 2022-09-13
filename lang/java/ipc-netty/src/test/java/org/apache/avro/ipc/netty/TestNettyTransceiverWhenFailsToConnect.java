@@ -38,7 +38,7 @@ public class TestNettyTransceiverWhenFailsToConnect {
   @Test(expected = IOException.class)
   public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
     try (ServerSocket serverSocket = new ServerSocket(0)) {
-      try (Transceiver t = new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), 1, c -> {
+      try (Transceiver t = new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), 0, c -> {
         channel = c;
       })) {
         Assert.fail("should have thrown an exception");

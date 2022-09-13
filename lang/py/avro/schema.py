@@ -45,10 +45,10 @@ import decimal
 import hashlib
 import json
 import math
-import sys
 import uuid
 import warnings
-from typing import FrozenSet, Mapping, MutableMapping, Optional, Sequence, cast
+from pathlib import Path
+from typing import FrozenSet, Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
@@ -351,8 +351,8 @@ class NamedSchema(Schema):
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
-        self.set_prop("name", name)
-        if namespace is not None:
+        self.set_prop("name", new_name.name)
+        if new_name.space:
             self.set_prop("namespace", new_name.space)
 
         # Store full name as calculated from name, namespace
@@ -391,7 +391,7 @@ class DecimalLogicalSchema(LogicalSchema):
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal precision {precision}. Max is {max_precision}.")
 
         if not isinstance(scale, int) or scale < 0:
-            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a positive integer.")
+            raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Must be a non-negative integer.")
 
         if scale > precision:
             raise avro.errors.IgnoredLogicalType(f"Invalid decimal scale {scale}. Cannot be greater than precision {precision}.")
@@ -502,18 +502,15 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
         @arg writer: the schema to match against
         @return bool
         """
-        return (
-            self.type == writer.type
-            or {
-                "float": self.type == "double",
-                "int": self.type in {"double", "float", "long"},
-                "long": self.type
-                in {
-                    "double",
-                    "float",
-                },
-            }.get(writer.type, False)
-        )
+        return self.type == writer.type or {
+            "float": self.type == "double",
+            "int": self.type in {"double", "float", "long"},
+            "long": self.type
+            in {
+                "double",
+                "float",
+            },
+        }.get(writer.type, False)
 
     def to_json(self, names=None):
         if len(self.props) == 1:
@@ -670,6 +667,11 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         self.set_prop("symbols", symbols)
         if doc is not None:
             self.set_prop("doc", doc)
+
+        if other_props and "default" in other_props:
+            default = other_props["default"]
+            if default not in symbols:
+                raise avro.errors.InvalidDefault(f"Enum default '{default}' is not a valid member of symbols '{symbols}'")
 
     @property
     def symbols(self) -> Sequence[str]:
@@ -1155,7 +1157,7 @@ def get_other_props(all_props: Mapping[str, object], reserved_props: Sequence[st
 
 def make_bytes_decimal_schema(other_props):
     """Make a BytesDecimalSchema from just other_props."""
-    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0))
+    return BytesDecimalSchema(other_props.get("precision"), other_props.get("scale", 0), other_props)
 
 
 def make_logical_schema(logical_type, type_, other_props):
@@ -1218,7 +1220,7 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                 size = json_data.get("size")
                 if logical_type == "decimal":
                     precision = json_data.get("precision")
-                    scale = 0 if json_data.get("scale") is None else json_data.get("scale")
+                    scale = json_data.get("scale", 0)
                     try:
                         return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
                     except avro.errors.IgnoredLogicalType as warning:
@@ -1277,27 +1279,22 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
     raise avro.errors.SchemaParseException(fail_msg)
 
 
-# TODO(hammer): make method for reading from a file?
-
-
-def parse(json_string, validate_enum_symbols=True):
+def parse(json_string: str, validate_enum_symbols: bool = True) -> Schema:
     """Constructs the Schema from the JSON text.
 
     @arg json_string: The json string of the schema to parse
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
     @return Schema
     """
-    # parse the JSON
     try:
         json_data = json.loads(json_string)
-    except Exception as e:
-        msg = f"Error parsing JSON: {json_string}, error = {e}"
-        new_exception = avro.errors.SchemaParseException(msg)
-        traceback = sys.exc_info()[2]
-        raise new_exception.with_traceback(traceback)
+    except json.decoder.JSONDecodeError as e:
+        raise avro.errors.SchemaParseException(f"Error parsing JSON: {json_string}, error = {e}") from e
+    return make_avsc_object(json_data, Names(), validate_enum_symbols)
 
-    # Initialize the names object
-    names = Names()
 
-    # construct the Avro Schema object
-    return make_avsc_object(json_data, names, validate_enum_symbols)
+def from_path(path: Union[Path, str], validate_enum_symbols: bool = True) -> Schema:
+    """
+    Constructs the Schema from a path to an avsc (json) file.
+    """
+    return parse(Path(path).read_text(), validate_enum_symbols)

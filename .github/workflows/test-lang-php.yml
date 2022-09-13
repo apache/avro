@@ -28,6 +28,10 @@ defaults:
   run:
     working-directory: lang/php
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: PHP ${{ matrix.php }} Test
@@ -40,18 +44,19 @@ jobs:
         - '8.0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Get Composer Cache Directory
         id: composer-cache
         run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -75,15 +80,16 @@ jobs:
         - '8.0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          tools: composer:2.2.5
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -102,7 +108,7 @@ jobs:
         working-directory: lang/java/avro
         run: mvn -B -P interop-data-generate generate-resources
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: kjdev/php-ext-zstd
           path: lang/php/php-ext-zstd
@@ -118,7 +124,7 @@ jobs:
           echo "extension=zstd.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-zstd.ini
           php -m
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: kjdev/php-ext-snappy
           path: lang/php/php-ext-snappy

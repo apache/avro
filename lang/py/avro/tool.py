@@ -23,37 +23,42 @@ Command-line tool
 NOTE: The API for the command-line tool is experimental.
 """
 
+import argparse
 import http.server
 import os.path
 import sys
 import threading
 import urllib.parse
 import warnings
+from pathlib import Path
 
 import avro.datafile
 import avro.io
 import avro.ipc
 import avro.protocol
 
+server_should_shutdown = False
+responder: "GenericResponder"
+
 
 class GenericResponder(avro.ipc.Responder):
-    def __init__(self, proto, msg, datum):
-        proto_json = open(proto, "rb").read()
-        avro.ipc.Responder.__init__(self, avro.protocol.parse(proto_json))
+    def __init__(self, proto, msg, datum) -> None:
+        avro.ipc.Responder.__init__(self, avro.protocol.parse(Path(proto).read_text()))
         self.msg = msg
         self.datum = datum
 
-    def invoke(self, message, request):
-        if message.name == self.msg:
-            print(f"Message: {message.name} Datum: {self.datum}", file=sys.stderr)
-            # server will shut down after processing a single Avro request
-            global server_should_shutdown
-            server_should_shutdown = True
-            return self.datum
+    def invoke(self, message, request) -> object:
+        global server_should_shutdown
+        if message.name != self.msg:
+            return None
+        print(f"Message: {message.name} Datum: {self.datum}", file=sys.stderr)
+        # server will shut down after processing a single Avro request
+        server_should_shutdown = True
+        return self.datum
 
 
 class GenericHandler(http.server.BaseHTTPRequestHandler):
-    def do_POST(self):
+    def do_POST(self) -> None:
         self.responder = responder
         call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
@@ -70,11 +75,15 @@ class GenericHandler(http.server.BaseHTTPRequestHandler):
             quitter.start()
 
 
-def run_server(uri, proto, msg, datum):
-    url_obj = urllib.parse.urlparse(uri)
-    server_addr = (url_obj.hostname, url_obj.port)
+def run_server(uri: str, proto: str, msg: str, datum: object) -> None:
     global responder
     global server_should_shutdown
+    url_obj = urllib.parse.urlparse(uri)
+    if url_obj.hostname is None:
+        raise RuntimeError(f"uri {uri} must have a hostname.")
+    if url_obj.port is None:
+        raise RuntimeError(f"uri {uri} must have a port.")
+    server_addr = (url_obj.hostname, url_obj.port)
     server_should_shutdown = False
     responder = GenericResponder(proto, msg, datum)
     server = http.server.HTTPServer(server_addr, GenericHandler)
@@ -85,74 +94,64 @@ def run_server(uri, proto, msg, datum):
     server.serve_forever()
 
 
-def send_message(uri, proto, msg, datum):
+def send_message(uri, proto, msg, datum) -> None:
     url_obj = urllib.parse.urlparse(uri)
     client = avro.ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
-    proto_json = open(proto, "rb").read()
-    requestor = avro.ipc.Requestor(avro.protocol.parse(proto_json), client)
+    requestor = avro.ipc.Requestor(avro.protocol.parse(Path(proto).read_text()), client)
     print(requestor.request(msg, datum))
 
 
-##
-# TODO: Replace this with fileinput()
+def _parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments"""
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(required=True, dest="command") if sys.version_info >= (3, 7) else parser.add_subparsers(dest="command")
+    subparser_dump = subparsers.add_parser("dump", help="Dump an avro file")
+    subparser_dump.add_argument("input_file", type=argparse.FileType("rb"))
+    subparser_rpcreceive = subparsers.add_parser("rpcreceive", help="receive a message")
+    subparser_rpcreceive.add_argument("uri")
+    subparser_rpcreceive.add_argument("proto")
+    subparser_rpcreceive.add_argument("msg")
+    subparser_rpcreceive.add_argument("-file", type=argparse.FileType("rb"), required=False)
+    subparser_rpcsend = subparsers.add_parser("rpcsend", help="send a message")
+    subparser_rpcsend.add_argument("uri")
+    subparser_rpcsend.add_argument("proto")
+    subparser_rpcsend.add_argument("msg")
+    subparser_rpcsend.add_argument("-file", type=argparse.FileType("rb"))
+    return parser.parse_args()
 
 
-def file_or_stdin(f):
-    return sys.stdin if f == "-" else open(f, "rb")
-
-
-def main(args=sys.argv):
-    if len(args) == 1:
-        print(f"Usage: {args[0]} [dump|rpcreceive|rpcsend]")
-        return 1
-
-    if args[1] == "dump":
-        if len(args) != 3:
-            print(f"Usage: {args[0]} dump input_file")
-            return 1
-        for d in avro.datafile.DataFileReader(file_or_stdin(args[2]), avro.io.DatumReader()):
-            print(repr(d))
-    elif args[1] == "rpcreceive":
-        usage_str = f"Usage: {args[0]} rpcreceive uri protocol_file message_name (-data d | -file f)"
-        if len(args) not in [5, 7]:
-            print(usage_str)
-            return 1
-        uri, proto, msg = args[2:5]
-        datum = None
-        if len(args) > 5:
-            if args[5] == "-file":
-                reader = open(args[6], "rb")
-                datum_reader = avro.io.DatumReader()
-                dfr = avro.datafile.DataFileReader(reader, datum_reader)
-                datum = next(dfr)
-            elif args[5] == "-data":
-                print("JSON Decoder not yet implemented.")
-                return 1
-            else:
-                print(usage_str)
-                return 1
-        run_server(uri, proto, msg, datum)
-    elif args[1] == "rpcsend":
-        usage_str = f"Usage: {args[0]} rpcsend uri protocol_file message_name (-data d | -file f)"
-        if len(args) not in [5, 7]:
-            print(usage_str)
-            return 1
-        uri, proto, msg = args[2:5]
-        datum = None
-        if len(args) > 5:
-            if args[5] == "-file":
-                reader = open(args[6], "rb")
-                datum_reader = avro.io.DatumReader()
-                dfr = avro.datafile.DataFileReader(reader, datum_reader)
-                datum = next(dfr)
-            elif args[5] == "-data":
-                print("JSON Decoder not yet implemented.")
-                return 1
-            else:
-                print(usage_str)
-                return 1
-        send_message(uri, proto, msg, datum)
+def main_dump(args: argparse.Namespace) -> int:
+    print("\n".join(f"{d!r}" for d in avro.datafile.DataFileReader(args.input_file, avro.io.DatumReader())))
     return 0
+
+
+def main_rpcreceive(args: argparse.Namespace) -> int:
+    datum = None
+    if args.file:
+        with avro.datafile.DataFileReader(args.file, avro.io.DatumReader()) as dfr:
+            datum = next(dfr)
+    run_server(args.uri, args.proto, args.msg, datum)
+    return 0
+
+
+def main_rpcsend(args: argparse.Namespace) -> int:
+    datum = None
+    if args.file:
+        with avro.datafile.DataFileReader(args.file, avro.io.DatumReader()) as dfr:
+            datum = next(dfr)
+    send_message(args.uri, args.proto, args.msg, datum)
+    return 0
+
+
+def main() -> int:
+    args = _parse_args()
+    if args.command == "dump":
+        return main_dump(args)
+    if args.command == "rpcreceive":
+        return main_rpcreceive(args)
+    if args.command == "rpcsend":
+        return main_rpcsend(args)
+    return 1
 
 
 if __name__ == "__main__":
@@ -162,4 +161,4 @@ if __name__ == "__main__":
             "with the python io module. Try doing `python -m avro.tool` instead."
         )
 
-    sys.exit(main(sys.argv))
+    sys.exit(main())

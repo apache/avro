@@ -804,27 +804,37 @@ static string readGuard(const string &filename) {
 
 int main(int argc, char **argv) {
     const string NS("namespace");
-    const string OUT("output");
-    const string IN("input");
+    const string OUT_FILE("output");
+    const string IN_FILE("input");
     const string INCLUDE_PREFIX("include-prefix");
     const string NO_UNION_TYPEDEF("no-union-typedef");
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")("include-prefix,p", po::value<string>()->default_value("avro"),
+    desc.add_options()("help,h", "produce help message")("version,V", "produce version information")("include-prefix,p", po::value<string>()->default_value("avro"),
                                                          "prefix for include headers, - for none, default: avro")("no-union-typedef,U", "do not generate typedefs for unions in records")("namespace,n", po::value<string>(), "set namespace for generated code")("input,i", po::value<string>(), "input file")("output,o", po::value<string>(), "output file to generate");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help") || vm.count(IN) == 0 || vm.count(OUT) == 0) {
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
+
+    if (vm.count("version")) {
+        std::cout << AVRO_VERSION << std::endl;
+        return 0;
+    }
+
+    if (vm.count(IN_FILE) == 0 || vm.count(OUT_FILE) == 0) {
         std::cout << desc << std::endl;
         return 1;
     }
 
     string ns = vm.count(NS) > 0 ? vm[NS].as<string>() : string();
-    string outf = vm.count(OUT) > 0 ? vm[OUT].as<string>() : string();
-    string inf = vm.count(IN) > 0 ? vm[IN].as<string>() : string();
+    string outf = vm.count(OUT_FILE) > 0 ? vm[OUT_FILE].as<string>() : string();
+    string inf = vm.count(IN_FILE) > 0 ? vm[IN_FILE].as<string>() : string();
     string incPrefix = vm[INCLUDE_PREFIX].as<string>();
     bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
     if (incPrefix == "-") {

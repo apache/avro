@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Collection;
 import java.util.Map;
 
@@ -92,8 +94,16 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         ((Collection<?>) old).clear();
         return old;
       }
+
       if (collectionClass.isAssignableFrom(ArrayList.class))
         return new ArrayList<>();
+
+      if (collectionClass.isAssignableFrom(HashSet.class))
+        return new HashSet<>();
+
+      if (collectionClass.isAssignableFrom(HashMap.class))
+        return new HashMap<>();
+
       return SpecificData.newInstance(collectionClass, schema);
     }
 
@@ -135,7 +145,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       return readCollection(c, expectedType, l, in);
     } else if (array instanceof Map) {
       // Only for non-string keys, we can use NS_MAP_* fields
-      // So we check the samee explicitly here
+      // So we check the same explicitly here
       if (ReflectData.isNonStringMapSchema(expected)) {
         Collection<Object> c = new ArrayList<>();
         readCollection(c, expectedType, l, in);

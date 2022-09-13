@@ -25,7 +25,7 @@ namespace Avro.Util
     /// </summary>
     public class TimeMillisecond : LogicalUnixEpochType<TimeSpan>
     {
-        private static readonly TimeSpan _maxTime = new TimeSpan(23, 59, 59);
+        private static readonly TimeSpan _exclusiveUpperBound = TimeSpan.FromDays(1);
 
         /// <summary>
         /// The logical type name for TimeMillisecond.
@@ -50,17 +50,29 @@ namespace Avro.Util
         {
             var time = (TimeSpan)logicalValue;
 
-            if (time > _maxTime)
-                throw new ArgumentOutOfRangeException(nameof(logicalValue), "A 'time-millis' value can only have the range '00:00:00' to '23:59:59'.");
+            ThrowIfOutOfRange(time, nameof(logicalValue));
 
+            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time.TotalMilliseconds;
             return (int)(time - UnixEpochDateTime.TimeOfDay).TotalMilliseconds;
         }
 
         /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
-            var noMs = (int)baseValue;
-            return UnixEpochDateTime.TimeOfDay.Add(TimeSpan.FromMilliseconds(noMs));
+            var time = TimeSpan.FromMilliseconds((int)baseValue);
+
+            ThrowIfOutOfRange(time, nameof(baseValue));
+
+            // Note: UnixEpochDateTime.TimeOfDay is '00:00:00'. This could be 'return time;'
+            return UnixEpochDateTime.TimeOfDay.Add(time);
+        }
+
+        private static void ThrowIfOutOfRange(TimeSpan time, string paramName)
+        {
+            if (time.Ticks < 0 || time >= _exclusiveUpperBound)
+            {
+                throw new ArgumentOutOfRangeException(paramName, $"A '{LogicalTypeName}' value must be at least '{TimeSpan.Zero}' and less than '{_exclusiveUpperBound}'.");
+            }
         }
     }
 }

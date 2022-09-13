@@ -39,6 +39,9 @@ import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
 import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_DEFAULT;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_1;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA_NAMESPACE_2;
 import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_RECORD;
 import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
@@ -65,6 +68,8 @@ import static org.apache.avro.TestSchemas.LONG_SCHEMA;
 import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.NS_RECORD1;
 import static org.apache.avro.TestSchemas.NS_RECORD2;
+import static org.apache.avro.TestSchemas.WITH_NS;
+import static org.apache.avro.TestSchemas.WITHOUT_NS;
 import static org.apache.avro.TestSchemas.NULL_SCHEMA;
 import static org.apache.avro.TestSchemas.ReaderWriter;
 import static org.apache.avro.TestSchemas.STRING_ARRAY_SCHEMA;
@@ -259,6 +264,10 @@ public class TestSchemaCompatibility {
       new ReaderWriter(INT_MAP_SCHEMA, INT_MAP_SCHEMA), new ReaderWriter(LONG_MAP_SCHEMA, INT_MAP_SCHEMA),
 
       new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA), new ReaderWriter(ENUM1_ABC_SCHEMA, ENUM1_AB_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA_DEFAULT, ENUM1_ABC_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA, ENUM1_AB_SCHEMA_NAMESPACE_1),
+      new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA),
+      new ReaderWriter(ENUM1_AB_SCHEMA_NAMESPACE_1, ENUM1_AB_SCHEMA_NAMESPACE_2),
 
       // String-to/from-bytes, introduced in Avro 1.7.7
       new ReaderWriter(STRING_SCHEMA, BYTES_SCHEMA), new ReaderWriter(BYTES_SCHEMA, STRING_SCHEMA),
@@ -315,7 +324,7 @@ public class TestSchemaCompatibility {
 
       // This is comparing two records that have an inner array of records with
       // different namespaces.
-      new ReaderWriter(NS_RECORD1, NS_RECORD2));
+      new ReaderWriter(NS_RECORD1, NS_RECORD2), new ReaderWriter(WITHOUT_NS, WITH_NS));
 
   // -----------------------------------------------------------------------------------------------
 

@@ -85,6 +85,7 @@ FIXED_EXAMPLES = [
 ENUM_EXAMPLES = [
     ValidTestSchema({"type": "enum", "name": "Test", "symbols": ["A", "B"]}),
     ValidTestSchema({"type": "enum", "name": "AVRO2174", "symbols": ["nowhitespace"]}),
+    InvalidTestSchema({"type": "enum", "name": "bad_default", "symbols": ["A"], "default": "B"}, comment="AVRO-3229"),
     InvalidTestSchema({"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}),
     InvalidTestSchema({"type": "enum", "name": [0, 1, 1, 2, 3, 5, 8], "symbols": ["Golden", "Mean"]}),
     InvalidTestSchema({"type": "enum", "symbols": ["I", "will", "fail", "no", "name"]}),
@@ -117,6 +118,19 @@ UNION_EXAMPLES = [
     InvalidTestSchema(["null", "null"]),
     InvalidTestSchema(["long", "long"]),
     InvalidTestSchema([{"type": "array", "items": "long"}, {"type": "array", "items": "string"}]),
+]
+
+NAME_EXAMPLES = [
+    ValidTestSchema({"type": "enum", "name": "record", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "record", "name": "record", "fields": [{"name": "f", "type": "long"}]}),
+    InvalidTestSchema({"type": "enum", "name": "int", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "enum", "name": "ns.int", "symbols": ["A", "B"]}),
+    ValidTestSchema({"type": "enum", "namespace": "ns", "name": "int", "symbols": ["A", "B"]}),
+    ValidTestSchema(
+        {"type": "record", "name": "LinkedList", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "LinkedList"]}]}
+    ),
+    ValidTestSchema({"type": "record", "name": "record", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "record"]}]}),
+    ValidTestSchema({"type": "record", "name": "ns.int", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.int"]}]}),
 ]
 
 NAMED_IN_UNION_EXAMPLES = [
@@ -407,7 +421,7 @@ IGNORED_LOGICAL_TYPE = [
     ),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2},
-        warnings=[avro.errors.IgnoredLogicalType("Invalid decimal scale -2. Must be a positive integer.")],
+        warnings=[avro.errors.IgnoredLogicalType("Invalid decimal scale -2. Must be a non-negative integer.")],
     ),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2},
@@ -710,6 +724,7 @@ EXAMPLES += ENUM_EXAMPLES
 EXAMPLES += ARRAY_EXAMPLES
 EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
+EXAMPLES += NAME_EXAMPLES
 EXAMPLES += NAMED_IN_UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
@@ -763,6 +778,18 @@ class TestMisc(unittest.TestCase):
         fullname = avro.schema.Name("a", "o.a.h", None).fullname
         self.assertEqual(fullname, "o.a.h.a")
 
+    def test_name_inlined_space(self):
+        """Space inlined with name is correctly splitted out."""
+        name = avro.schema.Name("o.a", None)
+        self.assertEqual(name.fullname, "o.a")
+        self.assertEqual(name.name, "a")
+        self.assertEqual(name.space, "o")
+
+        name = avro.schema.Name("o.a.h.a", None)
+        self.assertEqual(name.fullname, "o.a.h.a")
+        self.assertEqual(name.name, "a")
+        self.assertEqual(name.space, "o.a.h")
+
     def test_fullname_space_specified(self):
         """When name contains dots, namespace should be ignored."""
         fullname = avro.schema.Name("a.b.c.d", "o.a.h", None).fullname
@@ -813,6 +840,10 @@ class TestMisc(unittest.TestCase):
             None,
             None,
         )
+        # A name cannot start with dot.
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, ".a", None, None)
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "o..a", None, None)
+        self.assertRaises(avro.errors.InvalidName, avro.schema.Name, "a.", None, None)
 
     def test_null_namespace(self):
         """The empty string may be used as a namespace to indicate the null namespace."""
@@ -822,7 +853,7 @@ class TestMisc(unittest.TestCase):
 
     def test_exception_is_not_swallowed_on_parse_error(self):
         """A specific exception message should appear on a json parse error."""
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             avro.errors.SchemaParseException,
             r"Error parsing JSON: /not/a/real/file",
             avro.schema.parse,
@@ -841,16 +872,16 @@ class TestMisc(unittest.TestCase):
             }
         )
 
-        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
-
         fixed_decimal = fixed_decimal_schema.parse()
         self.assertEqual(4, fixed_decimal.get_prop("precision"))
         self.assertEqual(2, fixed_decimal.get_prop("scale"))
         self.assertEqual(2, fixed_decimal.get_prop("size"))
 
+        bytes_decimal_schema = ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4})
         bytes_decimal = bytes_decimal_schema.parse()
         self.assertEqual(4, bytes_decimal.get_prop("precision"))
         self.assertEqual(0, bytes_decimal.get_prop("scale"))
+        self.assertEqual("decimal", bytes_decimal.get_prop("logicalType"))
 
     def test_fixed_decimal_valid_max_precision(self):
         # An 8 byte number can represent any 18 digit number.
@@ -928,19 +959,21 @@ class SchemaParseTestCase(unittest.TestCase):
         # Never hide repeated warnings when running this test case.
         warnings.simplefilter("always")
 
-    def parse_valid(self):
+    def parse_valid(self) -> None:
         """Parsing a valid schema should not error, but may contain warnings."""
-        with warnings.catch_warnings(record=True) as actual_warnings:
-            try:
-                self.test_schema.parse()
-            except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
-                self.fail(f"Valid schema failed to parse: {self.test_schema!s}")
-            actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
-            if self.test_schema.warnings:
-                expected_messages = [str(w) for w in self.test_schema.warnings]
-                self.assertEqual(actual_messages, expected_messages)
-            else:
-                self.assertEqual(actual_messages, [])
+        test_warnings = self.test_schema.warnings or []
+        try:
+            warnings.filterwarnings(action="error", category=avro.errors.IgnoredLogicalType)
+            self.test_schema.parse()
+        except (avro.errors.IgnoredLogicalType) as e:
+            self.assertIn(type(e), (type(w) for w in test_warnings))
+            self.assertIn(str(e), (str(w) for w in test_warnings))
+        except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
+            self.fail(f"Valid schema failed to parse: {self.test_schema!s}")
+        else:
+            self.assertEqual([], test_warnings)
+        finally:
+            warnings.filterwarnings(action="default", category=avro.errors.IgnoredLogicalType)
 
     def parse_invalid(self):
         """Parsing an invalid schema should error."""

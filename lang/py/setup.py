@@ -102,7 +102,8 @@ class GenerateInteropDataCommand(setuptools.Command):
 
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
-        avro.test.gen_interop_data.generate(self.schema_file, os.path.join(self.output_path, "py.avro"))
+        with open(self.schema_file) as schema_file, open(os.path.join(self.output_path, "py.avro"), "wb") as output:
+            avro.test.gen_interop_data.generate(schema_file, output)
 
 
 def _get_version():

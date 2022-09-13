@@ -18,8 +18,8 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,18 +68,16 @@ public class TestAvroKeyRecordReader {
     Configuration conf = new Configuration();
 
     // Create a mock input split for this record reader.
-    FileSplit inputSplit = createMock(FileSplit.class);
-    expect(inputSplit.getPath()).andReturn(new Path("/path/to/an/avro/file")).anyTimes();
-    expect(inputSplit.getStart()).andReturn(0L).anyTimes();
-    expect(inputSplit.getLength()).andReturn(avroFileInput.length()).anyTimes();
+    FileSplit inputSplit = mock(FileSplit.class);
+    when(inputSplit.getPath()).thenReturn(new Path("/path/to/an/avro/file"));
+    when(inputSplit.getStart()).thenReturn(0L);
+    when(inputSplit.getLength()).thenReturn(avroFileInput.length());
 
     // Create a mock task attempt context for this record reader.
-    TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    expect(context.getConfiguration()).andReturn(conf).anyTimes();
+    TaskAttemptContext context = mock(TaskAttemptContext.class);
+    when(context.getConfiguration()).thenReturn(conf);
 
     // Initialize the record reader.
-    replay(inputSplit);
-    replay(context);
     recordReader.initialize(inputSplit, context);
 
     assertEquals("Progress should be zero before any records are read", 0.0f, recordReader.getProgress(), 0.0f);
@@ -123,7 +121,9 @@ public class TestAvroKeyRecordReader {
     recordReader.close();
 
     // Verify the expected calls on the mocks.
-    verify(inputSplit);
-    verify(context);
+    verify(inputSplit).getPath();
+    verify(inputSplit, times(2)).getStart();
+    verify(inputSplit).getLength();
+    verify(context, atLeastOnce()).getConfiguration();
   }
 }

@@ -20,7 +20,7 @@
 #include "GenericDatum.hh"
 #include "ValidSchema.hh"
 
-#include <boost/test/included/unit_test_framework.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -105,6 +105,13 @@ const char *basicSchemas[] = {
     // namespace with '$' in it.
     "{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"a.b$\",\"fields\":"
     "[{\"name\":\"f\",\"type\":\"long\"}]}",
+
+    // Custom attribute(s) for field in record
+    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
+        "[{\"name\": \"f1\",\"type\": \"long\",\"extra field\": \"1\"}]}",
+    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
+        "[{\"name\": \"f1\",\"type\": \"long\","
+        "\"extra field1\": \"1\",\"extra field2\": \"2\"}]}"
 };
 
 const char *basicSchemaErrors[] = {
@@ -217,6 +224,15 @@ const char *roundTripSchemas[] = {
     // namespace with '$' in it.
     "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
     "[{\"name\":\"f\",\"type\":\"long\"}]}",
+
+    // Custom fields
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
+        "{\"name\":\"f2\",\"type\":\"int\"}]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\",\"extra_field\":\"1\"},"
+        "{\"name\":\"f2\",\"type\":\"int\","
+        "\"extra_field1\":\"21\",\"extra_field2\":\"22\"}]}",
 };
 
 const char *malformedLogicalTypes[] = {
@@ -351,6 +367,10 @@ static void testLogicalTypes() {
         \"type\": \"string\",\n\
         \"logicalType\": \"uuid\"\n\
     }";
+    // AVRO-2923 Union with LogicalType
+    const char* unionType = "[\n\
+        {\"type\":\"string\", \"logicalType\":\"uuid\"},\"null\"\n\
+    ]";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -433,6 +453,15 @@ static void testLogicalTypes() {
         BOOST_CHECK(schema.root()->type() == AVRO_STRING);
         LogicalType logicalType = schema.root()->logicalType();
         BOOST_CHECK(logicalType.type() == LogicalType::UUID);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(unionType);
+        ValidSchema schema = compileJsonSchemaFromString(unionType);
+        BOOST_CHECK(schema.root()->type() == AVRO_UNION);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::NONE);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
     }
