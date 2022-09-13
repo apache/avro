@@ -68,7 +68,7 @@ fn test_folder(folder: &str) {
         writer.flush().expect("Error on flush");
         let bytes: Vec<u8> = writer.into_inner().unwrap();
         let reader_bis =
-            Reader::with_schema(&schema, &bytes[..]).expect("Can't read fflushed vector");
+            Reader::with_schema(&schema, &bytes[..]).expect("Can't read flushed vector");
 
         let mut records_iter: Iter<Value> = records.iter();
         for r2 in reader_bis {
