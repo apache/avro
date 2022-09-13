@@ -30,7 +30,7 @@ fn test_schema() {
     let directory: ReadDir = scan_shared_folder();
     directory.for_each(|f: Result<DirEntry, Error>| {
         let e: DirEntry = match f {
-            Err(error) => panic!("Can't get file {:?}", error.to_string()),
+            Err(error) => panic!("Can't get file {:?}", error),
             Ok(entry) => entry,
         };
         log::warn!("{:?}", e.file_name());
