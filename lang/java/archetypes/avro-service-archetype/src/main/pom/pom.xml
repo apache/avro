@@ -35,7 +35,7 @@
   <properties>
     <avro.version>${project.version}</avro.version>
     <jackson-bom.version>${jackson-bom.version}</jackson-bom.version>
-    <junit.version>${junit.version}</junit.version>
+    <junit5.version>${junit5.version}</junit5.version>
     <logback.version>1.2.3</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
@@ -79,9 +79,9 @@
       <version>\${logback.version}</version>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>\${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>\${junit5.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
