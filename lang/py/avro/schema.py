@@ -107,8 +107,8 @@ def _is_timezone_aware_datetime(dt: datetime.datetime) -> bool:
 
 
 # Fingerprint Constants
-_EMPTY64_FINGERPRINT = 0xC15D213AA4D7A795
-_FINGERPRINT_TABLE = tuple(reduce(lambda fp, _: (fp >> 1) ^ (_EMPTY64_FINGERPRINT & -(fp & 1)), range(8), i) for i in range(256))
+_EMPTY64_FINGERPRINT: int = 0xC15D213AA4D7A795
+_FINGERPRINT_TABLE: tuple = tuple(reduce(lambda fp, _: (fp >> 1) ^ (_EMPTY64_FINGERPRINT & -(fp & 1)), range(8), i) for i in range(256))
 
 
 # All algorithms guaranteed by hashlib are supported:
@@ -129,7 +129,7 @@ _FINGERPRINT_TABLE = tuple(reduce(lambda fp, _: (fp >> 1) ^ (_EMPTY64_FINGERPRIN
 SUPPORTED_ALGORITHMS: FrozenSet[str] = frozenset({"CRC-64-AVRO"} | hashlib.algorithms_guaranteed)
 
 
-def _crc_64_fingerprint(data):
+def _crc_64_fingerprint(data: bytes) -> bytes:
     """The 64-bit Rabin Fingerprint.
 
     As described in the Avro specification.
@@ -285,7 +285,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         Consider the mixins EqualByPropsMixin and EqualByJsonMixin
         """
 
-    def fingerprint(self, algorithm="CRC-64-AVRO"):
+    def fingerprint(self, algorithm="CRC-64-AVRO") -> bytes:
         """
         Generate fingerprint for supplied algorithm.
 
