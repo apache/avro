@@ -239,7 +239,7 @@ public class TestBinaryDecoder {
   public void testInputStreamProxy() throws IOException {
     BinaryDecoder d = newDecoder(data);
     if (d != null) {
-      BinaryDecoder bd = (BinaryDecoder) d;
+      BinaryDecoder bd = d;
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
@@ -384,14 +384,7 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = this.newDecoder(bad);
 
-    final RuntimeException ex = Assert.assertThrows("Malformed data. Length is negative: -1", RuntimeException.class,
-        () -> bd.readBytes(null));
-    if (this.useDirect) {
-      Assert.assertTrue("Exception not IllegalArgumentException but " + ex.getClass(),
-          ex instanceof IllegalArgumentException);
-    } else {
-      Assert.assertTrue("Exception not AvroRuntimeException but " + ex.getClass(), ex instanceof AvroRuntimeException);
-    }
+    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, () -> bd.readBytes(null));
   }
 
   @Test
@@ -400,14 +393,8 @@ public class TestBinaryDecoder {
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = this.newDecoder(bad);
 
-    Throwable error = Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
-        Throwable.class, () -> bd.readBytes(null));
-    if (this.useDirect) {
-      Assert.assertTrue("Exception not OutOfMemoryError but " + error.getClass(), error instanceof OutOfMemoryError);
-    } else {
-      Assert.assertTrue("Exception not UnsupportedOperationException but " + error.getClass(),
-          error instanceof UnsupportedOperationException);
-    }
+    Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+        UnsupportedOperationException.class, () -> bd.readBytes(null));
   }
 
   @Test
@@ -419,14 +406,8 @@ public class TestBinaryDecoder {
       System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
       Decoder bd = this.newDecoder(bad);
 
-      final Exception exception = Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed",
-          Exception.class, () -> bd.readBytes(null));
-      if (this.useDirect) {
-        Assert.assertTrue("Exception not EOFException but " + exception.getClass(), exception instanceof EOFException);
-      } else {
-        Assert.assertTrue("Exception not AvroRuntimeException but " + exception.getClass(),
-            exception instanceof AvroRuntimeException);
-      }
+      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed", AvroRuntimeException.class,
+          () -> bd.readBytes(null));
     } finally {
       System.clearProperty("org.apache.avro.limits.bytes.maxLength");
     }
