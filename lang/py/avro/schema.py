@@ -47,6 +47,7 @@ import json
 import math
 import uuid
 import warnings
+from functools import reduce
 from pathlib import Path
 from typing import FrozenSet, Mapping, MutableMapping, Optional, Sequence, Union, cast
 
@@ -103,6 +104,50 @@ LONG_MAX_VALUE = (1 << 63) - 1
 
 def _is_timezone_aware_datetime(dt: datetime.datetime) -> bool:
     return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
+
+
+# Fingerprint Constants
+_EMPTY64_FINGERPRINT = 0xC15D213AA4D7A795
+_FINGERPRINT_TABLE = tuple(reduce(lambda fp, _: (fp >> 1) ^ (_EMPTY64_FINGERPRINT & -(fp & 1)), range(8), i) for i in range(256))
+
+
+# All algorithms guaranteed by hashlib are supported:
+#     - 'blake2b',
+#     - 'blake2s',
+#     - 'md5',
+#     - 'sha1',
+#     - 'sha224',
+#     - 'sha256',
+#     - 'sha384',
+#     - 'sha3_224',
+#     - 'sha3_256',
+#     - 'sha3_384',
+#     - 'sha3_512',
+#     - 'sha512',
+#     - 'shake_128',
+#     - 'shake_256'
+SUPPORTED_ALGORITHMS: FrozenSet[str] = frozenset({"CRC-64-AVRO"} | hashlib.algorithms_guaranteed)
+
+
+def _crc_64_fingerprint(data):
+    """The 64-bit Rabin Fingerprint.
+
+    As described in the Avro specification.
+
+    Args:
+        data: A bytes object containing the UTF-8 encoded parsing canonical
+        form of an Avro schema.
+    Returns:
+        A bytes object with a length of eight.
+    """
+    result = _EMPTY64_FINGERPRINT
+
+    for b in data:
+        result = (result >> 8) ^ _FINGERPRINT_TABLE[(result ^ b) & 0xFF]
+
+    # Although not mentioned in the Avro specification, the Java
+    # implementation gives fingerprint bytes in little-endian order
+    return result.to_bytes(length=8, byteorder="little", signed=False)
 
 
 #
@@ -170,94 +215,7 @@ class CanonicalPropertiesMixin(PropertiesMixin):
         return collections.OrderedDict((key, props[key]) for key in CANONICAL_FIELD_ORDER if key in props)
 
 
-class FingerprintMixin:
-    """
-    A Mixin to generate schema fingerprints for supported algorithms
-    """
-
-    _FP_TABLE = None
-    _EMPTY64 = 0xC15D213AA4D7A795
-
-    # All algorithms guaranteed by hashlib are supported
-    # Supported Algorithms are:
-    #     - 'blake2b',
-    #     - 'blake2s',
-    #     - 'md5',
-    #     - 'sha1',
-    #     - 'sha224',
-    #     - 'sha256',
-    #     - 'sha384',
-    #     - 'sha3_224',
-    #     - 'sha3_256',
-    #     - 'sha3_384',
-    #     - 'sha3_512',
-    #     - 'sha512',
-    #     - 'shake_128',
-    #     - 'shake_256'
-    algorithms = set(hashlib.algorithms_guaranteed)
-    # Additionally, we provide a custom implementation of 64-bit Rabin fingerprint
-    algorithms.update({"CRC-64-AVRO"})
-    SUPPORTED_ALGORITHMS: FrozenSet[str] = frozenset(algorithms)
-
-    def fingerprint(self, algorithm="CRC-64-AVRO"):
-        """
-        Generate fingerprint for supplied algorithm.
-
-        'CRC-64-AVRO' will be used as the algorithm by default, but any
-        algorithm supported by hashlib (as can be referenced with
-        `hashlib.algorithms_guaranteed`) can be specified.
-
-        `algorithm` param is used as an algorithm name, and NoSuchAlgorithmException
-        will be thrown if the algorithm is not among supported.
-        """
-        schema = self.canonical_form.encode("utf-8")
-
-        if algorithm not in self.SUPPORTED_ALGORITHMS:
-            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
-
-        if algorithm == "CRC-64-AVRO":
-            return self._crc_64_fingerprint(schema)
-
-        # Generate digests with hashlib for all other algorithms
-        # Lowercase algorithm to support algorithm strings sent by other languages like Java
-        h = hashlib.new(algorithm.lower(), schema)
-        return h.digest()
-
-    def _populate_fp_table(self):
-        self._FP_TABLE = []
-
-        for i in range(256):
-            fp = i
-            for _ in range(8):
-                mask = -(fp & 1)
-                fp = (fp >> 1) ^ (self._EMPTY64 & mask)
-
-            self._FP_TABLE.append(fp)
-
-    def _crc_64_fingerprint(self, data):
-        """The 64-bit Rabin Fingerprint.
-
-        As described in the Avro specification.
-
-        Args:
-            data: A bytes object containing the UTF-8 encoded parsing canonical
-            form of an Avro schema.
-        Returns:
-            A bytes object with a length of eight.
-        """
-        if self._FP_TABLE is None:
-            self._populate_fp_table()
-        result = self._EMPTY64
-
-        for b in data:
-            result = (result >> 8) ^ self._FP_TABLE[(result ^ b) & 0xFF]
-
-        # Although not mentioned in the Avro specification, the Java
-        # implementation gives fingerprint bytes in little-endian order
-        return result.to_bytes(length=8, byteorder="little", signed=False)
-
-
-class Schema(abc.ABC, CanonicalPropertiesMixin, FingerprintMixin):
+class Schema(abc.ABC, CanonicalPropertiesMixin):
     """Base class for all Schema classes."""
 
     _reserved_properties = SCHEMA_RESERVED_PROPS
@@ -326,6 +284,30 @@ class Schema(abc.ABC, CanonicalPropertiesMixin, FingerprintMixin):
         Determines how two schema are compared.
         Consider the mixins EqualByPropsMixin and EqualByJsonMixin
         """
+
+    def fingerprint(self, algorithm="CRC-64-AVRO"):
+        """
+        Generate fingerprint for supplied algorithm.
+
+        'CRC-64-AVRO' will be used as the algorithm by default, but any
+        algorithm supported by hashlib (as can be referenced with
+        `hashlib.algorithms_guaranteed`) can be specified.
+
+        `algorithm` param is used as an algorithm name, and NoSuchAlgorithmException
+        will be thrown if the algorithm is not among supported.
+        """
+        schema = self.canonical_form.encode("utf-8")
+
+        if algorithm not in SUPPORTED_ALGORITHMS:
+            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
+
+        if algorithm == "CRC-64-AVRO":
+            return _crc_64_fingerprint(schema)
+
+        # Generate digests with hashlib for all other algorithms
+        # Lowercase algorithm to support algorithm strings sent by other languages like Java
+        h = hashlib.new(algorithm.lower(), schema)
+        return h.digest()
 
 
 class NamedSchema(Schema):

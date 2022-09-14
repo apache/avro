@@ -519,14 +519,13 @@ IGNORED_LOGICAL_TYPE = [
     ),
 ]
 
-"""
-Fingerprint examples are in the form of tuples:
-        - Value in Position 0 is schema
-        - Value in Position 1 is an array of fingerprints:
-            - Position 0 is CRC-64-AVRO fingerprint
-            - Position 0 is MD5 fingerprint
-            - Position 0 is SHA256 fingerprint
-"""
+
+# Fingerprint examples are in the form of tuples:
+# - Value in Position 0 is schema
+# - Value in Position 1 is an array of fingerprints:
+#     - Position 0 is CRC-64-AVRO fingerprint
+#     - Position 0 is MD5 fingerprint
+#     - Position 0 is SHA256 fingerprint
 FINGERPRINT_EXAMPLES = [
     ('"int"', ["8f5c393f1ad57572", "ef524ea1b91e73173d938ade36c1db32", "3f2b87a9fe7cc9b13835598c3981cd45e3e355309e5090aa0933d7becb6fba45"]),
     ('{"type": "int"}', ["8f5c393f1ad57572", "ef524ea1b91e73173d938ade36c1db32", "3f2b87a9fe7cc9b13835598c3981cd45e3e355309e5090aa0933d7becb6fba45"]),
@@ -923,14 +922,14 @@ class TestMisc(unittest.TestCase):
         test_schema_string = json.dumps({"type": "enum", "name": "AVRO2174", "symbols": ["white space"]})
 
         try:
-            case = avro.schema.parse(test_schema_string, validate_enum_symbols=True)
+            avro.schema.parse(test_schema_string, validate_enum_symbols=True)
         except avro.errors.InvalidName:
             pass
         else:
             self.fail("When enum symbol validation is enabled, " "an invalid symbol should raise InvalidName.")
 
         try:
-            case = avro.schema.parse(test_schema_string, validate_enum_symbols=False)
+            avro.schema.parse(test_schema_string, validate_enum_symbols=False)
         except avro.errors.InvalidName:
             self.fail("When enum symbol validation is disabled, " "an invalid symbol should not raise InvalidName.")
 
