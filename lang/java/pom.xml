@@ -42,7 +42,6 @@
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.48.v20220622</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit.version>4.13.2</junit.version>
     <junit5.version>5.9.0</junit5.version>
     <netty.version>4.1.81.Final</netty.version>
     <protobuf.version>3.21.5</protobuf.version>
@@ -157,13 +156,14 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M7</version>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
               <include>**/Test**</include>
             </includes>
             <excludes>
-              <!-- A few innner classes are not to be tested -->
+              <!-- A few inner classes are not to be tested -->
               <exclude>**/*$*</exclude>
               <!-- exclude the generated classes under apache.avro.test, some of
                 these match **/Test** and are not JUnit tests -->
@@ -592,9 +592,9 @@
     will inherit these dependencies directly, and can opt out if necessary with <excludes> -->
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>${junit5.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
