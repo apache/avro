@@ -22,12 +22,16 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
@@ -128,9 +132,9 @@ public class RandomData implements Iterable<Object> {
     case BYTES:
       return randomBytes(random, 40);
     case INT:
-      return random.nextInt();
+      return this.randomInt(random, schema.getLogicalType());
     case LONG:
-      return random.nextLong();
+      return this.randomLong(random, schema.getLogicalType());
     case FLOAT:
       return random.nextFloat();
     case DOUBLE:
@@ -145,6 +149,23 @@ public class RandomData implements Iterable<Object> {
   }
 
   private static final Charset UTF8 = StandardCharsets.UTF_8;
+
+  private int randomInt(Random random, LogicalType type) {
+    if (type instanceof LogicalTypes.TimeMillis) {
+      return random.nextInt((int) Duration.ofDays(1).toMillis() - 1);
+    }
+    // LogicalTypes.Date LocalDate.MAX.toEpochDay() > Integer.MAX;
+    return random.nextInt();
+  }
+
+  private long randomLong(Random random, LogicalType type) {
+    if (type instanceof LogicalTypes.TimeMicros) {
+      return ThreadLocalRandom.current().nextLong(Duration.ofDays(1).toMillis() * 1000L);
+    }
+    // For LogicalTypes.TimestampMillis, every long would be OK,
+    // Instant.MAX.toEpochMilli() failed and would be > Long.MAX_VALUE ...
+    return random.nextLong();
+  }
 
   private Object randomString(Random random, int maxLength) {
     int length = random.nextInt(maxLength);
