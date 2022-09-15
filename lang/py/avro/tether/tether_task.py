@@ -318,7 +318,7 @@ class TetherTask(abc.ABC):
 
         Parameters
         ------------------------------------------------------
-        data - Sould containg the bytes encoding the serialized data
+        data - Sould containing the bytes encoding the serialized data
               - I think this gets represented as a tring
         count - how many input records are provided in the binary stream
         """

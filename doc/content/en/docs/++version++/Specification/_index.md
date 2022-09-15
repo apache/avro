@@ -564,7 +564,7 @@ A transport is a system that supports:
 
 * **transmission of request messages**
 * **receipt of corresponding response messages**
-Servers may send a response message back to the client corresponding to a request message. The mechanism of correspondance is transport-specific. For example, in HTTP it is implicit, since HTTP directly supports requests and responses. But a transport that multiplexes many client threads over a single socket would need to tag messages with unique identifiers.
+Servers may send a response message back to the client corresponding to a request message. The mechanism of correspondence is transport-specific. For example, in HTTP it is implicit, since HTTP directly supports requests and responses. But a transport that multiplexes many client threads over a single socket would need to tag messages with unique identifiers.
 
 Transports may be either stateless or stateful. In a stateless transport, messaging assumes no established connection state, while stateful transports establish connections that may be used for multiple messages. This distinction is discussed further in the [handshake](#handshake) section below.
 
