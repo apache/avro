@@ -15,6 +15,8 @@
  */
 package com.github.davidmc24.gradle.plugin.avro
 
+import com.github.davidmc24.gradle.plugin.avro.test.custom.CommentGenerator
+import com.github.davidmc24.gradle.plugin.avro.test.custom.TimestampGenerator
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Unroll
@@ -266,6 +268,42 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains("Custom template")
     }
 
+    def "supports configuring velocity tool classes"() {
+        given:
+        copyAvroTools("buildSrc/src/main/java")
+        copyAvroTools("src/main/java")
+        def templatesDir = projectFolder("templates/alternateTemplates")
+        copyResource("user.avsc", avroDir)
+        copyResource("record-tools.vm", templatesDir, "record.vm")
+        // This functionality doesn't work with the plugins DSL syntax.
+        // To load files from the buildscript classpath you need to load the plugin from it as well.
+        buildFile << """
+        |buildscript {
+        |    dependencies {
+        |        classpath files(${readPluginClasspath()})
+        |        classpath files(["${templatesDir.parentFile.toURI()}"])
+        |    }
+        |}
+        |apply plugin: "com.github.davidmc24.gradle.plugin.avro"
+        |avro {
+        |    templateDirectory = "/alternateTemplates/"
+        |    additionalVelocityToolClasses = ['com.github.davidmc24.gradle.plugin.avro.test.custom.TimestampGenerator',
+        |                                     'com.github.davidmc24.gradle.plugin.avro.test.custom.CommentGenerator']
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the velocity tools have been applied"
+        content.contains(CommentGenerator.CUSTOM_COMMENT)
+        content.contains(TimestampGenerator.MESSAGE_PREFIX)
+    }
+
     def "rejects unsupported stringType values"() {
         given:
         copyResource("user.avsc", avroDir)
@@ -347,5 +385,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def matcher = content =~ /(?s)public class ${className} extends org\.apache\.avro\.specific\.\SpecificRecordBase implements org\.apache\.avro\.specific\.SpecificRecord \{(?<mainClassContent>.*)public static class Builder/
         assert matcher.find()
         return matcher.group("mainClassContent")
+    }
+
+    private void copyAvroTools(String destDir) {
+        copyFile("src/test/java", destDir,
+                "com/github/davidmc24/gradle/plugin/avro/test/custom/CommentGenerator.java")
+        copyFile("src/test/java", destDir,
+                "com/github/davidmc24/gradle/plugin/avro/test/custom/TimestampGenerator.java")
     }
 }

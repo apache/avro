@@ -17,7 +17,10 @@ package com.github.davidmc24.gradle.plugin.avro;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,6 +61,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<String> stringType;
     private final Property<String> fieldVisibility;
     private final Property<String> templateDirectory;
+    private final ListProperty<String> additionalVelocityToolClasses;
     private final Property<Boolean> createOptionalGetters;
     private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> optionalGettersForNullableFieldsOnly;
@@ -79,6 +83,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.stringType = objects.property(String.class).convention(Constants.DEFAULT_STRING_TYPE);
         this.fieldVisibility = objects.property(String.class).convention(Constants.DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
+        this.additionalVelocityToolClasses =
+                objects.listProperty(String.class).convention(Collections.emptyList());
         this.createOptionalGetters = objects.property(Boolean.class).convention(Constants.DEFAULT_CREATE_OPTIONAL_GETTERS);
         this.gettersReturnOptional = objects.property(Boolean.class).convention(Constants.DEFAULT_GETTERS_RETURN_OPTIONAL);
         this.optionalGettersForNullableFieldsOnly = objects.property(Boolean.class)
@@ -145,6 +151,16 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     public void setTemplateDirectory(String templateDirectory) {
         this.templateDirectory.set(templateDirectory);
+    }
+
+    @Optional
+    @Input
+    public ListProperty<String> getAdditionalVelocityToolClasses() {
+        return additionalVelocityToolClasses;
+    }
+
+    public void setAdditionalVelocityToolClasses(List<String> additionalVelocityToolClasses) {
+        this.additionalVelocityToolClasses.set(additionalVelocityToolClasses);
     }
 
     public Property<Boolean> isCreateSetters() {
@@ -248,6 +264,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using stringType {}", stringTypeProvider.get().name());
         getLogger().debug("Using fieldVisibility {}", fieldVisibilityProvider.get().name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory().getOrNull());
+        getLogger().debug("Using additionalVelocityToolClasses '{}'", getAdditionalVelocityToolClasses().getOrNull());
         getLogger().debug("Using createSetters {}", isCreateSetters().get());
         getLogger().debug("Using createOptionalGetters {}", isCreateOptionalGetters().get());
         getLogger().debug("Using gettersReturnOptional {}", isGettersReturnOptional().get());
@@ -321,6 +338,27 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         compiler.setFieldVisibility(fieldVisibilityProvider.get());
         if (getTemplateDirectory().isPresent()) {
             compiler.setTemplateDir(getTemplateDirectory().get());
+        }
+        if (getAdditionalVelocityToolClasses().isPresent()) {
+            List<Object> tools = getAdditionalVelocityToolClasses().get().stream()
+                    .map(s -> {
+                        try {
+                            return Class.forName(s);
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException("unable to load velocity tool class " + s, e);
+                        }
+                    })
+                    .map(aClass -> {
+                        try {
+                            return aClass.getConstructor().newInstance();
+                        } catch (InstantiationException
+                                 | NoSuchMethodException
+                                 | InvocationTargetException
+                                 | IllegalAccessException e) {
+                            throw new RuntimeException("Unable to instantiate velocity tool class using default constructor: " + aClass, e);
+                        }
+                    }).collect(Collectors.toList());
+            compiler.setAdditionalVelocityTools(tools);
         }
         compiler.setCreateOptionalGetters(createOptionalGetters.get());
         compiler.setGettersReturnOptional(gettersReturnOptional.get());

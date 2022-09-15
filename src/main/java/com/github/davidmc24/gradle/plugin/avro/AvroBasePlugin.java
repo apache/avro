@@ -32,6 +32,7 @@ public class AvroBasePlugin implements Plugin<Project> {
             task.getStringType().convention(avroExtension.getStringType());
             task.getFieldVisibility().convention(avroExtension.getFieldVisibility());
             task.getTemplateDirectory().convention(avroExtension.getTemplateDirectory());
+            task.getAdditionalVelocityToolClasses().convention(avroExtension.getAdditionalVelocityToolClasses());
             task.isCreateSetters().convention(avroExtension.isCreateSetters());
             task.isCreateOptionalGetters().convention(avroExtension.isCreateOptionalGetters());
             task.isGettersReturnOptional().convention(avroExtension.isGettersReturnOptional());
