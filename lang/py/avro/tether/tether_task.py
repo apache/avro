@@ -318,8 +318,8 @@ class TetherTask(abc.ABC):
 
         Parameters
         ------------------------------------------------------
-        data - Sould containing the bytes encoding the serialized data
-              - I think this gets represented as a tring
+        data - Should contain the bytes encoding the serialized data
+              - I think this gets represented as a string
         count - how many input records are provided in the binary stream
         """
         try:
