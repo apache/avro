@@ -27,6 +27,14 @@
 */}}
 		<span class="navbar-logo"><img src="/docs/++version++/logo.svg" width="100" height="30" style="margin: 0 10px"></span><span class="text-uppercase font-weight-bold">{{ .Site.Title }}</span>
 	</a>
+	
+	<select onchange="window.location.href = this.options[this.selectedIndex].value;this.selectedIndex=0">
+    	    <option value="" selected style="display:none">ASF Links</option>
+	    {{ range .Site.Params.asf.links }}
+            <option value="{{ .url }}">{{ .name }}</option>
+           {{ end }}
+       </select>
+
 	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
 		<ul class="navbar-nav mt-2 mt-lg-0">
 			{{ $p := . }}

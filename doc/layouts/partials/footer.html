@@ -23,26 +23,29 @@
 <footer class="bg-dark py-5 row d-print-none">
   <div class="container-fluid mx-sm-5">
     <div class="row">
-      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+      <div class="col-4 col-sm-3 text-xs-center order-sm-2">
         {{ with $links }}
         {{ with index . "user"}}
         {{ template "footer-links-block"  . }}
         {{ end }}
         {{ end }}
       </div>
-      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+      <div class="col-4 col-sm-3 text-right text-xs-center order-sm-3">
         {{ with $links }}
         {{ with index . "developer"}}
         {{ template "footer-links-block"  . }}
         {{ end }}
         {{ end }}
       </div>
-      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
-        {{ with .Site.Params.copyright }}<small class="text-white">&copy; {{ now.Year}} {{ .}} {{ T "footer_all_rights_reserved" }}</small>{{ end }}
+      <div class="col-10 col-sm-3 text-center py-2 order-sm-2">
+        {{ with .Site.Params }}<a href="{{ .apache_foundation }}"><small class="text-white">&copy; {{ now.Year}} {{ .copyright }} </small></a><small class="text-white">{{ T "footer_all_rights_reserved" }}</small>{{ end }}
 	{{ if not .Site.Params.ui.footer_about_disable }}
 		{{ with .Site.GetPage "about" }}<p class="mt-2"><a href="{{ .RelPermalink }}">{{ .Title }}</a></p>{{ end }}
 	{{ end }}
       <p><small class="text-white">Apache Avro, Avro&trade;, Apache&reg;, and the Apache feather logo are either registered trademarks or trademarks of The Apache Software Foundation.</small></p>
+      </div>
+      <div class="col-5 col-sm-3 order-sm-2">
+          {{ with .Site.Params }}<a href="{{ .apache_events_url }}"><img src="{{ .apache_events_logo }}"></a>{{ end }}
       </div>
     </div>
   </div>
