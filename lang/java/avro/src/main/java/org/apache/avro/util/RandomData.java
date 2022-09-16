@@ -163,7 +163,7 @@ public class RandomData implements Iterable<Object> {
       return ThreadLocalRandom.current().nextLong(Duration.ofDays(1).toMillis() * 1000L);
     }
     // For LogicalTypes.TimestampMillis, every long would be OK,
-    // Instant.MAX.toEpochMilli() failed and would be > Long.MAX_VALUE ...
+    // Instant.MAX.toEpochMilli() failed and would be > Long.MAX_VALUE.
     return random.nextLong();
   }
 
