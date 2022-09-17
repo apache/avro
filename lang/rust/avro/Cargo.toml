@@ -57,7 +57,7 @@ apache-avro-derive = { default-features = false, version = "0.14.0", path = "../
 byteorder = { default-features = false, version = "1.4.3" }
 bzip2 = { default-features = false, version = "0.4.3", optional = true }
 crc32fast = { default-features = false, version = "1.3.2", optional = true }
-digest = { default-features = false, version = "0.10.3", features = ["core-api"] }
+digest = { default-features = false, version = "0.10.5", features = ["core-api"] }
 lazy_static = { default-features = false, version = "1.4.0" }
 libflate = { default-features = false, version = "1.2.0" }
 log = { default-features = false, version = "0.4.17" }
