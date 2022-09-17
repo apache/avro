@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Added support for `additionalVelocityTool` thanks to a contribution from [dcracauer](https://github.com/dcracauer); see https://github.com/davidmc24/gradle-avro-plugin/pull/211
 
 ## 1.4.0
 * Drop support for Kotlin plugin integration
