@@ -82,7 +82,7 @@ Actually, it will attempt to process an "avro" directory in every `SourceSet` (m
 There are a number of configuration options supported in the `avro` block.
 
 | option                               | default               | description                                                    |
-| -------------------------------------| --------------------- | ---------------------------------------------------------------|
+|--------------------------------------| --------------------- |----------------------------------------------------------------|
 | createSetters                        | `true`                | `createSetters` passed to Avro compiler                        |
 | createOptionalGetters                | `false`               | `createOptionalGetters` passed to Avro compiler                |
 | gettersReturnOptional                | `false`               | `gettersReturnOptional` passed to Avro compiler                |
@@ -91,6 +91,7 @@ There are a number of configuration options supported in the `avro` block.
 | outputCharacterEncoding              | see below             | `outputCharacterEncoding` passed to Avro compiler              |
 | stringType                           | `"String"`            | `stringType` passed to Avro compiler                           |
 | templateDirectory                    | see below             | `templateDir` passed to Avro compiler                          |
+| additionalVelocityToolClasses        | see below             | `additionalVelocityTools` passed to Avro compiler              |
 | enableDecimalLogicalType             | `true`                | `enableDecimalLogicalType` passed to Avro compiler             |
 
 Additionally, the `avro` extension exposes the following methods:
@@ -221,6 +222,20 @@ If desired, you can override the template set used by either setting this proper
 ```groovy
 avro {
     templateDirectory = "/path/to/velocity/templates"
+}
+```
+
+## additionalVelocityToolClasses
+
+When overriding the default set of Velocity templates provided with Avro, it is often desirable to provide additional tools to use during generation. 
+The class names you provide will be made available for use in your Velocity templates. An instance of each class provided will be created using 
+the default constructor (required). When registered, they will be available as $class.simpleName(). Given the example configuration below,
+two tools would be registered, and be available as escape and json.
+ 
+
+```groovy
+avro {
+  additionalVelocityToolClasses = ['com.yourpackage.Escape', 'com.yourpackage.JSON']
 }
 ```
 

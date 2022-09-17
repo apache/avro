@@ -16,6 +16,8 @@
 package com.github.davidmc24.gradle.plugin.avro;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
@@ -27,6 +29,8 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class DefaultAvroExtension implements AvroExtension {
@@ -34,6 +38,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<String> stringType;
     private final Property<String> fieldVisibility;
     private final Property<String> templateDirectory;
+    private final ListProperty<String> additionalVelocityToolClasses;
     private final Property<Boolean> createSetters;
     private final Property<Boolean> createOptionalGetters;
     private final Property<Boolean> gettersReturnOptional;
@@ -48,6 +53,8 @@ public class DefaultAvroExtension implements AvroExtension {
         this.stringType = objects.property(String.class).convention(Constants.DEFAULT_STRING_TYPE);
         this.fieldVisibility = objects.property(String.class).convention(Constants.DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
+        this.additionalVelocityToolClasses =
+                objects.listProperty(String.class).convention(Collections.emptyList());
         this.createSetters = objects.property(Boolean.class).convention(Constants.DEFAULT_CREATE_SETTERS);
         this.createOptionalGetters = objects.property(Boolean.class).convention(Constants.DEFAULT_CREATE_OPTIONAL_GETTERS);
         this.gettersReturnOptional = objects.property(Boolean.class).convention(Constants.DEFAULT_GETTERS_RETURN_OPTIONAL);
@@ -106,6 +113,16 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setTemplateDirectory(String templateDirectory) {
         this.templateDirectory.set(templateDirectory);
+    }
+
+    @Optional
+    @Input
+    public ListProperty<String> getAdditionalVelocityToolClasses() {
+        return additionalVelocityToolClasses;
+    }
+
+    public void setAdditionalVelocityToolClasses(List<String> additionalVelocityToolClasses) {
+        this.additionalVelocityToolClasses.set(additionalVelocityToolClasses);
     }
 
     @Override

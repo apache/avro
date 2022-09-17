@@ -27,6 +27,7 @@ public interface AvroExtension {
     Property<String> getStringType();
     Property<String> getFieldVisibility();
     Property<String> getTemplateDirectory();
+    ListProperty<String> getAdditionalVelocityToolClasses();
     Property<Boolean> isCreateSetters();
     Property<Boolean> isCreateOptionalGetters();
     Property<Boolean> isGettersReturnOptional();
