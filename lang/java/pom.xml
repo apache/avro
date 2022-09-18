@@ -46,7 +46,7 @@
     <netty.version>4.1.81.Final</netty.version>
     <protobuf.version>3.21.5</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
-    <slf4j.version>1.7.36</slf4j.version>
+    <slf4j.version>2.0.1</slf4j.version>
     <reload4j.version>1.2.22</reload4j.version>
     <snappy.version>1.1.8.4</snappy.version>
     <velocity.version>2.3</velocity.version>
