@@ -36,7 +36,7 @@ darling = { default-features = false, version = "0.14.1" }
 proc-macro2 = { default-features = false, version = "1.0.43" }
 quote = { default-features = false, version = "1.0.21" }
 serde_json = { default-features = false, version = "1.0.85", features = ["std"] }
-syn = { default-features = false, version = "1.0.99", features = ["full", "fold"] }
+syn = { default-features = false, version = "1.0.100", features = ["full", "fold"] }
 
 [dev-dependencies]
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
