@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 1.5.0
 * Added support for `additionalVelocityTool` thanks to a contribution from [dcracauer](https://github.com/dcracauer); see https://github.com/davidmc24/gradle-avro-plugin/pull/211
 * Built using Avro 1.11.1
 * Built using Gradle 7.5.1
