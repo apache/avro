@@ -88,4 +88,4 @@ criterion = { default-features = false, version = "0.3.6" }
 hex-literal = { default-features = false, version = "0.3.4" }
 md-5 = { default-features = false, version = "0.10.4" }
 pretty_assertions = { default-features = false, version = "1.3.0", features = ["std"] }
-sha2 = { default-features = false, version = "0.10.5" }
+sha2 = { default-features = false, version = "0.10.6" }
