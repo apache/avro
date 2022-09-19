@@ -40,7 +40,7 @@
     <hadoop.version>3.3.4</hadoop.version>
     <jackson-bom.version>2.12.7</jackson-bom.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.48.v20220622</jetty.version>
+    <jetty.version>9.4.49.v20220914</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.9.0</junit5.version>
     <netty.version>4.1.81.Final</netty.version>
