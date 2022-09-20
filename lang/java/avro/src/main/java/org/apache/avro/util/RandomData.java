@@ -44,6 +44,8 @@ import org.apache.avro.generic.GenericRecord;
 public class RandomData implements Iterable<Object> {
   public static final String USE_DEFAULT = "use-default";
 
+  private static final int MILLIS_IN_DAY = (int) Duration.ofDays(1).toMillis();
+
   private final Schema root;
   private final long seed;
   private final int count;
@@ -152,7 +154,7 @@ public class RandomData implements Iterable<Object> {
 
   private int randomInt(Random random, LogicalType type) {
     if (type instanceof LogicalTypes.TimeMillis) {
-      return random.nextInt((int) Duration.ofDays(1).toMillis() - 1);
+      return random.nextInt(RandomData.MILLIS_IN_DAY - 1);
     }
     // LogicalTypes.Date LocalDate.MAX.toEpochDay() > Integer.MAX;
     return random.nextInt();
@@ -160,7 +162,7 @@ public class RandomData implements Iterable<Object> {
 
   private long randomLong(Random random, LogicalType type) {
     if (type instanceof LogicalTypes.TimeMicros) {
-      return ThreadLocalRandom.current().nextLong(Duration.ofDays(1).toMillis() * 1000L);
+      return ThreadLocalRandom.current().nextLong(RandomData.MILLIS_IN_DAY * 1000L);
     }
     // For LogicalTypes.TimestampMillis, every long would be OK,
     // Instant.MAX.toEpochMilli() failed and would be > Long.MAX_VALUE.
