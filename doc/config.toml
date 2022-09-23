@@ -114,7 +114,11 @@ section = ["HTML", "print", "RSS"]
 [params]
 avroversion = "++version++"
 copyright = "The Apache Software Foundation"
+apache_foundation = "https://www.apache.org/"
+apache_events_logo = "https://www.apache.org/events/current-event-234x60.png"
+apache_events_url = "https://www.apache.org/events/current-event.html"
 privacy_policy = "http://www.apache.org/foundation/policies/privacy.html"
+license = "http://www.apache.org/licenses/"
 
 # First one is picked as the Twitter card image if not set on page.
 # images = ["images/project-illustration.png"]
@@ -194,6 +198,29 @@ no = 'Sorry to hear that. Please <a href="https://github.com/USERNAME/REPOSITORY
 # add "hide_readingtime: true" to the page's front matter
 [params.ui.readingtime]
 enable = true
+
+[params.asf]
+[[params.asf.links]]
+name = "ASF Web Site"
+url = "http://www.apache.org/"
+
+[[params.asf.links]]
+name = "License"
+url = "http://www.apache.org/licenses/"
+
+[[params.asf.links]]
+name = "Donate"
+url = "http://www.apache.org/foundation/sponsorship.html"
+
+
+[[params.asf.links]]
+name = "Thanks"
+url = "http://www.apache.org/foundation/thanks.html"
+
+[[params.asf.links]]
+name = "Security"
+url = "http://www.apache.org/security/"
+
 
 [params.links]
 # End user relevant links. These will show up on left side of footer and in the community page if you have one.
