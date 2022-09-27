@@ -455,6 +455,17 @@ where
     }
 }
 
+/// Reads the marker bytes from Avro bytes generated earlier by a `Writer`
+pub fn read_marker(bytes: &[u8]) -> [u8; 16] {
+    assert!(
+        bytes.len() > 16,
+        "The bytes are too short to read a marker from them"
+    );
+    let mut marker = [0_u8; 16];
+    marker.clone_from_slice(&bytes[(bytes.len() - 16)..]);
+    marker
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
