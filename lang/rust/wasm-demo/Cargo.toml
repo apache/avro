@@ -35,7 +35,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 apache-avro = { path = "../avro" }
-serde = { default-features = false, version = "1.0.144", features = ["derive"] }
+serde = { default-features = false, version = "1.0.145", features = ["derive"] }
 wasm-bindgen = "0.2.83"
 
 [dev-dependencies]
