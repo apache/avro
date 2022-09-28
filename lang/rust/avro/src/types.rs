@@ -953,10 +953,12 @@ mod tests {
         duration::{Days, Duration, Millis, Months},
         schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
         types::Value,
+        to_value,
     };
     use apache_avro_test_helper::logger::{assert_logged, assert_not_logged};
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
+    use serde::{Serialize, Deserialize};
 
     #[test]
     fn validate() {
@@ -2390,5 +2392,37 @@ Field with name '"b"' is not a member of the map items"#,
             !test_outer3.validate(&schema),
             "field b record is invalid against the schema"
         ); // this should pass, but doesn't
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructFixedField {
+        field: [u8; 6]
+    }
+
+    #[test]
+    fn test_avro_3631_serialize_fixed_fields() {
+        let test = TestStructFixedField {
+            field: [1; 6]
+        };
+        let value: Value = to_value(test).unwrap();
+        let schema = Schema::parse_str(
+            r#"
+            {
+                "type": "record",
+                "name": "TestStructFixedField",
+                "fields": [
+                    {
+                        "name": "field",
+                        "type": {
+                            "name": "field",
+                            "type": "fixed",
+                            "size": 6
+                        }
+                    }
+                ]
+            }
+            "#
+        ).unwrap();
+        assert!(value.validate(&schema));
     }
 }
