@@ -48,7 +48,7 @@ pub struct Writer<'a, W> {
     #[builder(default = 0, setter(skip))]
     num_values: usize,
     #[builder(default = generate_sync_marker())]
-    marker: Vec<u8>,
+    marker: [u8; 16],
     #[builder(default = false, setter(skip))]
     has_header: bool,
     #[builder(default)]
@@ -94,7 +94,7 @@ impl<'a, W: Write> Writer<'a, W> {
             .schema(schema)
             .writer(writer)
             .codec(codec)
-            .marker(marker.to_vec())
+            .marker(marker)
             .build();
         w.has_header = true;
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
@@ -538,16 +538,24 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn generate_sync_marker() -> Vec<u8> {
-    std::iter::repeat_with(rand::random).take(16).collect()
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
+    std::iter::repeat_with(rand::random)
+        .take(16)
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
 }
 
 #[cfg(target_arch = "wasm32")]
-fn generate_sync_marker() -> Vec<u8> {
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
     std::iter::repeat_with(quad_rand::rand)
         .take(4)
         .flat_map(|i| i.to_be_bytes())
-        .collect()
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
 }
 
 #[cfg(test)]
