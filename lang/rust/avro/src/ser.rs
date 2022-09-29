@@ -677,6 +677,11 @@ mod tests {
         Val2(f32, f32, f32),
     }
 
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructFixedField {
+        field: [u8; 6],
+    }
+
     #[test]
     fn test_to_value() {
         let test = Test {
@@ -996,6 +1001,20 @@ mod tests {
             to_value(test).unwrap(),
             expected,
             "error serializing tuple untagged enum"
+        );
+    }
+
+    #[test]
+    fn test_to_value_fixed_field_avro_3631() {
+        let test = TestStructFixedField { field: [1; 6] };
+        let expected = Value::Record(vec![(
+            "field".to_owned(),
+            Value::Fixed(6, Vec::from(test.field.clone())),
+        )]);
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing fixed array"
         );
     }
 }
