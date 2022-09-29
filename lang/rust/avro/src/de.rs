@@ -1550,4 +1550,18 @@ mod tests {
         assert_eq!(raw_bytes.unwrap().0, expected_bytes);
         Ok(())
     }
+
+    fn test_avro_3631_struct_fixed_field() {
+        #[derive(Debug, Serialize, Deserialize)]
+        struct TestStructFixedField {
+            field: [u8; 6],
+        }
+
+        let value = Value::Record(vec![(
+            "field".to_string(),
+            Value::Fixed(6, vec![0, 0, 0, 0, 0, 0]),
+        )]);
+        let _deserialized: TestStructFixedField = from_value(&value).unwrap();
+
+    }
 }
