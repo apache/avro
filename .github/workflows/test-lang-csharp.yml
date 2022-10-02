@@ -43,7 +43,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
             3.1.x
@@ -67,7 +67,7 @@ jobs:
       # .NET 7 is not released yet, however this is a good way to test if the project is ready for the release
       # Once .NET 7 is officially released, this can be removed and 7.0.x can be used instead above
       - name: Install .NET SDK 7.0 (pre-release)
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           include-prerelease: true
           dotnet-version: |
@@ -86,7 +86,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
             3.1.x
