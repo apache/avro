@@ -54,7 +54,7 @@
     <ant.version>1.10.12</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.21</commons-compress.version>
-    <commons-text.version>1.9</commons-text.version>
+    <commons-text.version>1.10.0</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
     <mockito.version>4.8.0</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
