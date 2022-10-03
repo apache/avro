@@ -3128,12 +3128,11 @@ Field with name '"b"' is not a member of the map items"#,
     fn avro_3631_test_serialize_fixed_fields() {
         #[derive(Debug, Serialize, Deserialize)]
         struct TestStructFixedField {
-            field: ByteArray<6>,
+            #[serde(with = "serde_bytes")]
+            field: [u8; 6],
         }
 
-        let test = TestStructFixedField {
-            field: ByteArray::new([1; 6]),
-        };
+        let test = TestStructFixedField { field: [1; 6] };
         let value: Value = to_value(test).unwrap();
         let schema = Schema::parse_str(
             r#"

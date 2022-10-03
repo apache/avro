@@ -677,11 +677,6 @@ mod tests {
         Val2(f32, f32, f32),
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
-    struct TestStructFixedField {
-        field: ByteArray<6>,
-    }
-
     #[test]
     fn test_to_value() -> TestResult {
         let test = Test {
@@ -1040,12 +1035,16 @@ mod tests {
 
     #[test]
     fn avro_3631_test_to_value_fixed_field() {
-        let test = TestStructFixedField {
-            field: ByteArray::new([1; 6]),
-        };
+        #[derive(Debug, Serialize, Deserialize)]
+        struct TestStructFixedField {
+            #[serde(with = "serde_bytes")]
+            field: [u8; 6],
+        }
+
+        let test = TestStructFixedField { field: [1; 6] };
         let expected = Value::Record(vec![(
             "field".to_owned(),
-            Value::Fixed(6, Vec::from(test.field.clone().into_array())),
+            Value::Fixed(6, Vec::from(test.field.clone())),
         )]);
         assert_eq!(
             expected,
