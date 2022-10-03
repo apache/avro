@@ -668,6 +668,8 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use serial_test::serial;
     use std::sync::atomic::Ordering;
+    use serde::Serialize;
+    use serde_bytes::ByteArray;
     use uuid::Uuid;
 
     use apache_avro_test_helper::TestResult;
@@ -1554,7 +1556,7 @@ mod tests {
     fn test_avro_3631_struct_fixed_field() {
         #[derive(Debug, Serialize, Deserialize)]
         struct TestStructFixedField {
-            field: [u8; 6],
+            field: ByteArray<6>,
         }
 
         let value = Value::Record(vec![(
@@ -1562,6 +1564,5 @@ mod tests {
             Value::Fixed(6, vec![0, 0, 0, 0, 0, 0]),
         )]);
         let _deserialized: TestStructFixedField = from_value(&value).unwrap();
-
     }
 }
