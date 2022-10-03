@@ -119,7 +119,7 @@ jobs:
           python3 -m pip install python-snappy zstandard
 
       - name: Setup C# for Generating Interop Data
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
             3.1.x
