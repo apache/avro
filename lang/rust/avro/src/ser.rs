@@ -1093,21 +1093,23 @@ mod tests {
         struct TestStructFixedField<'a> {
             // will be serialized as Value::Array<Vec<Value::Int>>
             array_field: &'a [u8],
+            vec_field: Vec<u8>,
 
             // will be serialized as Value::Fixed
             #[serde(serialize_with = "avro_serialize_fixed")]
             fixed_field: [u8; 6],
             #[serde(serialize_with = "avro_serialize_fixed")]
             fixed_field2: &'a [u8],
+            #[serde(serialize_with = "avro_serialize_fixed")]
+            vec_field2: Vec<u8>,
 
             // will be serialized as Value::Bytes
             #[serde(serialize_with = "avro_serialize_bytes")]
             bytes_field: &'a [u8],
             #[serde(serialize_with = "avro_serialize_bytes")]
             bytes_field2: [u8; 6],
-
-            // will be serialized as Value::Array<Vec<Value::Int>>
-            vec_field: Vec<u8>,
+            #[serde(serialize_with = "avro_serialize_bytes")]
+            vec_field3: Vec<u8>,
         }
 
         let test = TestStructFixedField {
@@ -1117,12 +1119,23 @@ mod tests {
             fixed_field: [1; 6],
             fixed_field2: &[6, 66],
             vec_field: vec![3, 33],
+            vec_field2: vec![4, 44],
+            vec_field3: vec![5, 55],
         };
         let expected = Value::Record(vec![
             (
                 "array_field".to_owned(),
                 Value::Array(
                     test.array_field
+                        .iter()
+                        .map(|i| Value::Int(*i as i32))
+                        .collect(),
+                ),
+            ),
+            (
+                "vec_field".to_owned(),
+                Value::Array(
+                    test.vec_field
                         .iter()
                         .map(|i| Value::Int(*i as i32))
                         .collect(),
@@ -1137,6 +1150,10 @@ mod tests {
                 Value::Fixed(2, Vec::from(test.fixed_field2)),
             ),
             (
+                "vec_field2".to_owned(),
+                Value::Fixed(2, Vec::from(test.vec_field2.clone())),
+            ),
+            (
                 "bytes_field".to_owned(),
                 Value::Bytes(Vec::from(test.bytes_field)),
             ),
@@ -1145,13 +1162,8 @@ mod tests {
                 Value::Bytes(Vec::from(test.bytes_field2)),
             ),
             (
-                "vec_field".to_owned(),
-                Value::Array(
-                    test.vec_field
-                        .iter()
-                        .map(|i| Value::Int(*i as i32))
-                        .collect(),
-                ),
+                "vec_field3".to_owned(),
+                Value::Bytes(Vec::from(test.vec_field3.clone())),
             ),
         ]);
         assert_eq!(expected, to_value(test).unwrap());
