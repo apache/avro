@@ -613,10 +613,7 @@ impl Value {
                     }
                 })
             }
-            (v, s) => Some(format!(
-                "Unsupported value-schema combination! Value: {:?}, schema: {:?}",
-                v, s
-            )),
+            (_v, _s) => Some("Unsupported value-schema combination".to_string()),
         }
     }
 
@@ -1231,7 +1228,7 @@ mod tests {
                 Value::Int(42),
                 Schema::Boolean,
                 false,
-                "Invalid value: Int(42) for schema: Boolean. Reason: Unsupported value-schema combination! Value: Int(42), schema: Boolean",
+                "Invalid value: Int(42) for schema: Boolean. Reason: Unsupported value-schema combination",
             ),
             (
                 Value::Union(0, Box::new(Value::Null)),
@@ -1249,7 +1246,7 @@ mod tests {
                 Value::Union(0, Box::new(Value::Null)),
                 Schema::Union(UnionSchema::new(vec![Schema::Double, Schema::Int])?),
                 false,
-                "Invalid value: Union(0, Null) for schema: Union(UnionSchema { schemas: [Double, Int], variant_index: {Int: 1, Double: 0} }). Reason: Unsupported value-schema combination! Value: Null, schema: Double",
+                "Invalid value: Union(0, Null) for schema: Union(UnionSchema { schemas: [Double, Int], variant_index: {Int: 1, Double: 0} }). Reason: Unsupported value-schema combination",
             ),
             (
                 Value::Union(3, Box::new(Value::Int(42))),
@@ -1289,9 +1286,9 @@ mod tests {
                 Value::Array(vec![Value::Boolean(true)]),
                 Schema::array(Schema::Long),
                 false,
-                "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, attributes: {} }). Reason: Unsupported value-schema combination! Value: Boolean(true), schema: Long",
+                "Invalid value: Array([Boolean(true)]) for schema: Array(ArraySchema { items: Long, attributes: {} }). Reason: Unsupported value-schema combination",
             ),
-            (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination! Value: Record([]), schema: Null"),
+            (Value::Record(vec![]), Schema::Null, false, "Invalid value: Record([]) for schema: Null. Reason: Unsupported value-schema combination"),
             (
                 Value::Fixed(12, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
                 Schema::Duration,
@@ -1377,7 +1374,6 @@ mod tests {
             name: Name::new("some_fixed").unwrap(),
             aliases: None,
             doc: None,
-            default: None,
             attributes: Default::default(),
         });
 
@@ -1561,7 +1557,7 @@ mod tests {
         ]);
         assert!(!value.validate(&schema));
         assert_logged(
-            r#"Invalid value: Record([("a", Boolean(false)), ("b", String("foo"))]) for schema: Record(RecordSchema { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, aliases: None, default: None, schema: Long, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "b", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 1, custom_attributes: {} }, RecordField { name: "c", doc: None, aliases: None, default: Some(Null), schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }), order: Ascending, position: 2, custom_attributes: {} }], lookup: {"a": 0, "b": 1, "c": 2}, attributes: {} }). Reason: Unsupported value-schema combination! Value: Boolean(false), schema: Long"#,
+            r#"Invalid value: Record([("a", Boolean(false)), ("b", String("foo"))]) for schema: Record(RecordSchema { name: Name { name: "some_record", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "a", doc: None, aliases: None, default: None, schema: Long, order: Ascending, position: 0, custom_attributes: {} }, RecordField { name: "b", doc: None, aliases: None, default: None, schema: String, order: Ascending, position: 1, custom_attributes: {} }, RecordField { name: "c", doc: None, aliases: None, default: Some(Null), schema: Union(UnionSchema { schemas: [Null, Int], variant_index: {Null: 0, Int: 1} }), order: Ascending, position: 2, custom_attributes: {} }], lookup: {"a": 0, "b": 1, "c": 2}, attributes: {} }). Reason: Unsupported value-schema combination"#,
         );
 
         let value = Value::Record(vec![
@@ -1733,7 +1729,6 @@ Field with name '"b"' is not a member of the map items"#,
                     aliases: None,
                     size: 20,
                     doc: None,
-                    default: None,
                     attributes: Default::default(),
                 }))
             }))
@@ -3046,7 +3041,6 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
-                default: None,
                 attributes: Default::default()
             }))?,
             Value::Fixed(3, vec![97, 98, 99])
@@ -3059,7 +3053,6 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
-                default: None,
                 attributes: Default::default()
             }))
             .is_err(),);
@@ -3071,7 +3064,6 @@ Field with name '"b"' is not a member of the map items"#,
                 aliases: None,
                 doc: None,
                 size: 3,
-                default: None,
                 attributes: Default::default()
             }))
             .is_err(),);
