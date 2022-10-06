@@ -17,8 +17,7 @@
 
 //! Logic for serde-compatible serialization.
 use crate::{types::Value, Error};
-use ref_thread_local::ref_thread_local;
-use ref_thread_local::RefThreadLocal;
+use ref_thread_local::{ref_thread_local, RefThreadLocal};
 use serde::{ser, Serialize};
 use std::{collections::HashMap, iter::once};
 
@@ -1131,19 +1130,19 @@ mod tests {
             ),
             (
                 "fixed_field".to_owned(),
-                Value::Fixed(6, Vec::from(test.fixed_field.clone())),
+                Value::Fixed(6, Vec::from(test.fixed_field)),
             ),
             (
                 "fixed_field2".to_owned(),
-                Value::Fixed(2, Vec::from(test.fixed_field2.clone())),
+                Value::Fixed(2, Vec::from(test.fixed_field2)),
             ),
             (
                 "bytes_field".to_owned(),
-                Value::Bytes(Vec::from(test.bytes_field.clone())),
+                Value::Bytes(Vec::from(test.bytes_field)),
             ),
             (
                 "bytes_field2".to_owned(),
-                Value::Bytes(Vec::from(test.bytes_field2.clone())),
+                Value::Bytes(Vec::from(test.bytes_field2)),
             ),
             (
                 "vec_field".to_owned(),

@@ -3118,6 +3118,8 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn avro_3631_test_serialize_fixed_fields() {
+        use crate::{avro_serialize_bytes, avro_serialize_fixed};
+
         #[derive(Debug, Serialize, Deserialize)]
         struct TestStructFixedField {
             #[serde(with = "serde_bytes")]
