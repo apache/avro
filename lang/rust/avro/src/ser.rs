@@ -1089,7 +1089,7 @@ mod tests {
 
     #[test]
     fn avro_3631_test_to_value_fixed_field() {
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, Serialize)]
         struct TestStructFixedField<'a> {
             // will be serialized as Value::Array<Vec<Value::Int>>
             array_field: &'a [u8],
