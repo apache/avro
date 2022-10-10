@@ -1362,4 +1362,86 @@ mod test_derive {
             myenum: MyEnum::Bar,
         });
     }
+
+    #[test]
+    fn test_basic_struct_with_skip_attribute() {
+        // Note: If using the skip attribute together with serialization,
+        // the serde's skip attribute needs also to be added
+
+        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+        struct TestBasicStructNoSchema {
+            field: bool,
+        }
+
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithSkipAttribute {
+            #[avro(skip)]
+            #[serde(skip)]
+            condition: bool,
+            #[avro(skip = false)]
+            a: f64,
+            #[avro(skip)]
+            #[serde(skip)]
+            map: HashMap<String, i32>,
+            array: Vec<i32>,
+            #[avro(skip = true)]
+            #[serde(skip)]
+            mystruct: TestBasicStructNoSchema,
+            b: i32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithSkipAttribute",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":"double"
+                },
+                {
+                    "name":"array",
+                    "type":{
+                        "type":"array",
+                        "items":"int"
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, fields, .. } = TestBasicStructWithSkipAttribute::get_schema()
+        {
+            assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "condition" => panic!("Unexpected field 'condition'"),
+                    "mystruct" => panic!("Unexpected field 'mystruct'"),
+                    "map" => panic!("Unexpected field 'map'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!("TestBasicStructWithSkipAttribute schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicStructWithSkipAttribute::get_schema());
+
+        // Note: If serde its skip attribute is used on a field, the field its type
+        // needs the trait 'Default' to be implemented, since it is skipping the serialization process.
+        // Copied or cloned objects within 'serde_assert()' doesn't "copy" (serialize/deserialze)
+        // these fields, so no values are initialized here for skipped fields.
+        serde_assert(TestBasicStructWithSkipAttribute {
+            condition: bool::default(), // <- skipped
+            a: 987.654,
+            map: HashMap::default(), // <- skipped
+            array: vec![4, 5, 6],
+            mystruct: TestBasicStructNoSchema::default(), // <- skipped
+            b: 321,
+        });
+    }
 }
