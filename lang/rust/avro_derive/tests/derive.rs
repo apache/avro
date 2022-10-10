@@ -1444,4 +1444,62 @@ mod test_derive {
             b: 321,
         });
     }
+
+    #[test]
+    fn test_basic_struct_with_rename_attribute() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithRenameAttribute {
+            #[avro(rename = "a1")]
+            #[serde(rename = "a1")]
+            a: bool,
+            b: i32,
+            #[avro(rename = "c1")]
+            #[serde(rename = "c1")]
+            c: f32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithRenameAttribute",
+            "fields": [
+                {
+                    "name":"a1",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                },
+                {
+                    "name":"c1",
+                    "type":"float"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { name, fields, .. } =
+            TestBasicStructWithRenameAttribute::get_schema()
+        {
+            assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "a" => panic!("Unexpected field name 'a': must be 'a1'"),
+                    "c" => panic!("Unexpected field name 'c': must be 'c1'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!("TestBasicStructWithRenameAttribute schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicStructWithRenameAttribute::get_schema());
+
+        serde_assert(TestBasicStructWithRenameAttribute {
+            a: true,
+            b: 321,
+            c: 987.654,
+        });
+    }
 }
