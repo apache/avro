@@ -32,6 +32,8 @@ struct FieldOptions {
     doc: Option<String>,
     #[darling(default)]
     default: Option<String>,
+    #[darling(default)]
+    skip: Option<bool>,
 }
 
 #[derive(FromAttributes)]
@@ -117,11 +119,16 @@ fn get_data_struct_schema_def(
     let mut record_field_exprs = vec![];
     match s.fields {
         syn::Fields::Named(ref a) => {
-            for (position, field) in a.named.iter().enumerate() {
+            let mut index: usize = 0;
+            for field in a.named.iter() {
                 let name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
                 let doc = preserve_optional(field_attrs.doc);
+                let skip = field_attrs.skip;
+                if skip.is_some() && skip.unwrap() {
+                    continue;
+                }
                 let default_value = match field_attrs.default {
                     Some(default_value) => {
                         let _: serde_json::Value = serde_json::from_str(&default_value[..])
@@ -138,7 +145,7 @@ fn get_data_struct_schema_def(
                     None => quote! { None },
                 };
                 let schema_expr = type_to_schema_expr(&field.ty)?;
-                let position = position;
+                let position = index;
                 record_field_exprs.push(quote! {
                     apache_avro::schema::RecordField {
                             name: #name.to_string(),
@@ -150,6 +157,7 @@ fn get_data_struct_schema_def(
                             custom_attributes: Default::default(),
                         }
                 });
+                index += 1;
             }
         }
         syn::Fields::Unnamed(_) => {
