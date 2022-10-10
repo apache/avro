@@ -33,6 +33,8 @@ struct FieldOptions {
     #[darling(default)]
     default: Option<String>,
     #[darling(default)]
+    rename: Option<String>,
+    #[darling(default)]
     skip: Option<bool>,
 }
 
@@ -121,10 +123,14 @@ fn get_data_struct_schema_def(
         syn::Fields::Named(ref a) => {
             let mut index: usize = 0;
             for field in a.named.iter() {
-                let name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
+                let mut name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
                 let doc = preserve_optional(field_attrs.doc);
+                let rename = field_attrs.rename;
+                if rename.is_some() {
+                    name = rename.unwrap();
+                }
                 let skip = field_attrs.skip;
                 if skip.is_some() && skip.unwrap() {
                     continue;
