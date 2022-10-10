@@ -229,6 +229,9 @@ pub enum Error {
     #[error("Unions cannot contain duplicate types")]
     GetUnionDuplicate,
 
+    #[error("Union's first type {0:?} must match the `default`'s value type {1:?}")]
+    GetDefaultUnion(SchemaKind, ValueKind),
+
     #[error("JSON value {0} claims to be u64 but cannot be converted")]
     GetU64FromJson(serde_json::Number),
 
