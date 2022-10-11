@@ -127,12 +127,10 @@ fn get_data_struct_schema_def(
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
                 let doc = preserve_optional(field_attrs.doc);
-                let rename = field_attrs.rename;
-                if rename.is_some() {
-                    name = rename.unwrap();
+                if let Some(rename) = field_attrs.rename {
+                    name = rename
                 }
-                let skip = field_attrs.skip;
-                if skip.is_some() && skip.unwrap() {
+                if let Some(true) = field_attrs.skip {
                     continue;
                 }
                 let default_value = match field_attrs.default {
