@@ -1043,11 +1043,12 @@ mod test_derive {
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct TestBasicWithBool {
         a: bool,
+        b: Option<bool>,
     }
 
     proptest! {
     #[test]
-    fn test_basic_with_bool(a in any::<bool>()) {
+    fn avro_3634_test_basic_with_bool(a in any::<bool>(), b in any::<Option<bool>>()) {
         let schema = r#"
         {
             "type":"record",
@@ -1056,6 +1057,10 @@ mod test_derive {
                 {
                     "name":"a",
                     "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":["null","boolean"]
                 }
             ]
         }
@@ -1070,7 +1075,7 @@ mod test_derive {
         }
         assert_eq!(schema, TestBasicWithBool::get_schema());
 
-        serde_assert(TestBasicWithBool { a });
+        serde_assert(TestBasicWithBool { a, b });
     }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]

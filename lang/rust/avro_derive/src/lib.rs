@@ -92,7 +92,6 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
             )])
         }
     };
-
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
@@ -237,7 +236,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
         let schema = match &type_string[..] {
             "bool" => quote! {apache_avro::schema::Schema::Boolean},
             "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::schema::Schema::Int},
-            "i64" => quote! {apache_avro::schema::Schema::Long},
+            "u32" | "i64" => quote! {apache_avro::schema::Schema::Long},
             "f32" => quote! {apache_avro::schema::Schema::Float},
             "f64" => quote! {apache_avro::schema::Schema::Double},
             "String" | "str" => quote! {apache_avro::schema::Schema::String},
