@@ -17,7 +17,7 @@
 
 [package]
 name = "apache-avro-derive"
-version = "0.14.0"
+version = "0.15.0"
 authors = ["Apache Avro team <dev@avro.apache.org>"]
 description = "A library for deriving Avro schemata from Rust structs and enums"
 license = "Apache-2.0"
