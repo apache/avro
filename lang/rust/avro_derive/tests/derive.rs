@@ -1364,7 +1364,7 @@ mod test_derive {
     }
 
     #[test]
-    fn test_basic_struct_with_skip_attribute() {
+    fn avro_3633_test_basic_struct_with_skip_attribute() {
         // Note: If using the skip attribute together with serialization,
         // the serde's skip attribute needs also to be added
 
@@ -1415,8 +1415,8 @@ mod test_derive {
         "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, fields, .. } = TestBasicStructWithSkipAttribute::get_schema()
-        {
+        let derived_schema = TestBasicStructWithSkipAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
             assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
             for field in fields {
                 match field.name.as_str() {
@@ -1427,11 +1427,14 @@ mod test_derive {
                 }
             }
         } else {
-            panic!("TestBasicStructWithSkipAttribute schema must be a record schema")
+            panic!(
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
         }
-        assert_eq!(schema, TestBasicStructWithSkipAttribute::get_schema());
+        assert_eq!(schema, derived_schema);
 
-        // Note: If serde its skip attribute is used on a field, the field its type
+        // Note: If serde's `skip` attribute is used on a field, the field's type
         // needs the trait 'Default' to be implemented, since it is skipping the serialization process.
         // Copied or cloned objects within 'serde_assert()' doesn't "copy" (serialize/deserialze)
         // these fields, so no values are initialized here for skipped fields.
@@ -1446,7 +1449,7 @@ mod test_derive {
     }
 
     #[test]
-    fn test_basic_struct_with_rename_attribute() {
+    fn avro_3633_test_basic_struct_with_rename_attribute() {
         #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
         struct TestBasicStructWithRenameAttribute {
             #[avro(rename = "a1")]
@@ -1480,9 +1483,8 @@ mod test_derive {
         "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, fields, .. } =
-            TestBasicStructWithRenameAttribute::get_schema()
-        {
+        let derived_schema = TestBasicStructWithRenameAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
             assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
             for field in fields {
                 match field.name.as_str() {
@@ -1492,9 +1494,12 @@ mod test_derive {
                 }
             }
         } else {
-            panic!("TestBasicStructWithRenameAttribute schema must be a record schema")
+            panic!(
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
         }
-        assert_eq!(schema, TestBasicStructWithRenameAttribute::get_schema());
+        assert_eq!(schema, derived_schema);
 
         serde_assert(TestBasicStructWithRenameAttribute {
             a: true,
