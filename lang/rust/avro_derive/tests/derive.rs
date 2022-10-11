@@ -1362,4 +1362,149 @@ mod test_derive {
             myenum: MyEnum::Bar,
         });
     }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_skip_attribute() {
+        // Note: If using the skip attribute together with serialization,
+        // the serde's skip attribute needs also to be added
+
+        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+        struct TestBasicStructNoSchema {
+            field: bool,
+        }
+
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithSkipAttribute {
+            #[avro(skip)]
+            #[serde(skip)]
+            condition: bool,
+            #[avro(skip = false)]
+            a: f64,
+            #[avro(skip)]
+            #[serde(skip)]
+            map: HashMap<String, i32>,
+            array: Vec<i32>,
+            #[avro(skip = true)]
+            #[serde(skip)]
+            mystruct: TestBasicStructNoSchema,
+            b: i32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithSkipAttribute",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":"double"
+                },
+                {
+                    "name":"array",
+                    "type":{
+                        "type":"array",
+                        "items":"int"
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithSkipAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
+            assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "condition" => panic!("Unexpected field 'condition'"),
+                    "mystruct" => panic!("Unexpected field 'mystruct'"),
+                    "map" => panic!("Unexpected field 'map'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        // Note: If serde's `skip` attribute is used on a field, the field's type
+        // needs the trait 'Default' to be implemented, since it is skipping the serialization process.
+        // Copied or cloned objects within 'serde_assert()' doesn't "copy" (serialize/deserialze)
+        // these fields, so no values are initialized here for skipped fields.
+        serde_assert(TestBasicStructWithSkipAttribute {
+            condition: bool::default(), // <- skipped
+            a: 987.654,
+            map: HashMap::default(), // <- skipped
+            array: vec![4, 5, 6],
+            mystruct: TestBasicStructNoSchema::default(), // <- skipped
+            b: 321,
+        });
+    }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_rename_attribute() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithRenameAttribute {
+            #[avro(rename = "a1")]
+            #[serde(rename = "a1")]
+            a: bool,
+            b: i32,
+            #[avro(rename = "c1")]
+            #[serde(rename = "c1")]
+            c: f32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithRenameAttribute",
+            "fields": [
+                {
+                    "name":"a1",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                },
+                {
+                    "name":"c1",
+                    "type":"float"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithRenameAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
+            assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "a" => panic!("Unexpected field name 'a': must be 'a1'"),
+                    "c" => panic!("Unexpected field name 'c': must be 'c1'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        serde_assert(TestBasicStructWithRenameAttribute {
+            a: true,
+            b: 321,
+            c: 987.654,
+        });
+    }
 }

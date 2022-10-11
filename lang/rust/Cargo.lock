@@ -67,7 +67,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-derive"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "apache-avro",
  "darling",
@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-test-helper"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "color-backtrace",
  "ctor",
