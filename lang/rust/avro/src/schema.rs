@@ -1860,6 +1860,7 @@ pub mod derive {
         );
     );
 
+    impl_schema!(bool, Schema::Boolean);
     impl_schema!(i8, Schema::Int);
     impl_schema!(i16, Schema::Int);
     impl_schema!(i32, Schema::Int);
