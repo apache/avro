@@ -1041,6 +1041,44 @@ mod test_derive {
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    struct TestBasicWithBool {
+        a: bool,
+        b: Option<bool>,
+    }
+
+    proptest! {
+    #[test]
+    fn avro_3634_test_basic_with_bool(a in any::<bool>(), b in any::<Option<bool>>()) {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithBool",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":["null","boolean"]
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicWithBool::get_schema();
+
+        if let Schema::Record { name, .. } = derived_schema {
+            assert_eq!("TestBasicWithBool", name.fullname(None))
+        } else {
+            panic!("TestBasicWithBool schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithBool::get_schema());
+
+        serde_assert(TestBasicWithBool { a, b });
+    }}
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
     struct TestBasicWithU32 {
         a: u32,
     }
