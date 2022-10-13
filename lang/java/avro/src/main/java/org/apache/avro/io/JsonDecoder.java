@@ -426,6 +426,8 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       label = in.getText();
       in.nextToken();
       parser.pushSymbol(Symbol.UNION_END);
+    } else if (a.labels.length == 2 && a.findLabel("null") >= 0) {
+      label = "null".equals(a.labels[0]) ? a.labels[1] : a.labels[0];
     } else {
       throw error("start-union");
     }
