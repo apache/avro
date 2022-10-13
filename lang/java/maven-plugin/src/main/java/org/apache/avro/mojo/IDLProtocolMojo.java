@@ -31,6 +31,7 @@ import org.apache.avro.compiler.idl.ParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 
+import org.apache.avro.mojo.model.MavenNamespaceToPackageMapping;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
@@ -93,6 +94,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         final SpecificCompiler compiler = new SpecificCompiler(protocol);
         compiler.setStringType(GenericData.StringType.valueOf(stringType));
         compiler.setTemplateDir(templateDirectory);
+        compiler.setNamespaceMappings(MavenNamespaceToPackageMapping.toCompilerType(namespaceMappings));
         compiler.setFieldVisibility(getFieldVisibility());
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);

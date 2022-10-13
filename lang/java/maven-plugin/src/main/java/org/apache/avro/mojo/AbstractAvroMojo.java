@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.mojo.model.MavenNamespaceToPackageMapping;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -191,6 +192,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter default-value="false"
    */
   protected boolean enableDecimalLogicalType;
+
+  /**
+   * Transformations to be applied when converting an Avro namespace to a Java
+   * package-name.
+   *
+   * @parameter property="namespaceMappings"
+   */
+  protected MavenNamespaceToPackageMapping[] namespaceMappings = new MavenNamespaceToPackageMapping[0];
 
   /**
    * The current Maven project.
