@@ -117,6 +117,7 @@ public class SpecificCompiler {
   private VelocityEngine velocityEngine;
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
+  private List<String[]> namespaceMappings; // array always has length=2, ie this is really List<Pair<String,String>>
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
   private boolean optionalGettersForNullableFieldsOnly = false;
@@ -232,6 +233,80 @@ public class SpecificCompiler {
    */
   public void setFieldVisibility(FieldVisibility fieldVisibility) {
     this.fieldVisibility = fieldVisibility;
+  }
+
+  /**
+   * Define how an AVRO namespace gets converted to a Java packagename by
+   * providing mappings of format "namespace->packagename".
+   * <p>
+   * The default behaviour is to map namespace to packagename directly, ie the
+   * namespace becomes the packagename. However the parameters to this method can
+   * override this, causing specific namespace prefixes to be mapped to specific
+   * packages. Example: "some.namespace->my.package" causes an avro
+   * record-declaration for "some.namespace.data.SomeRecord" to generate Java
+   * class "my.package.data.SomeRecord".
+   * </p>
+   * <p>
+   * Empty namespaces and empty packagenames are not accepted.
+   * </p>
+   */
+  public void setNamespaceMappings(String... mappings) {
+    if ((mappings == null) || (mappings.length == 0)) {
+      return;
+    }
+
+    List<String[]> items = new ArrayList<>(mappings.length);
+    for (String mapping : mappings) {
+      String[] parts = mapping.split("->");
+      if (parts.length != 2) {
+        throw new IllegalArgumentException("Invalid namespace mappings: expected 'namespace->packagename'");
+      }
+      if (StringUtils.isBlank(parts[0]) || StringUtils.isBlank(parts[1])) {
+        throw new IllegalArgumentException("Invalid namespace mappings: expected 'namespace->packagename'");
+      }
+      items.add(parts);
+    }
+    this.namespaceMappings = items;
+  }
+
+  /**
+   * Transform an AVRO namespace to a Java package-name, and then encode any
+   * special words which are not valid in Java package names ("mangling").
+   */
+  public String mapNamespace(String namespace) {
+    return mangle(mapNamespaceToPackage(namespace));
+  }
+
+  /**
+   * Transform an AVRO namespace to a Java package-name, using mappings registered
+   * via method setNamespaceMappings.
+   */
+  public String mapNamespaceToPackage(String namespace) {
+    if ((namespace == null) || (namespaceMappings == null)) {
+      return namespace;
+    }
+
+    for (String[] entry : namespaceMappings) {
+      String sourceNamespacePrefix = entry[0];
+      if (!namespace.startsWith(sourceNamespacePrefix)) {
+        continue;
+      }
+
+      String targetPackagePrefix = entry[1];
+      if (namespace.equals(sourceNamespacePrefix)) {
+        return targetPackagePrefix;
+      }
+
+      int len = sourceNamespacePrefix.length();
+      if (namespace.charAt(len) != '.') {
+        continue;
+      }
+
+      String namespaceSuffix = namespace.substring(len); // starts with "."
+      return targetPackagePrefix + namespaceSuffix;
+    }
+
+    return namespace; // no custom mapping found, so use namespace as packagename
   }
 
   public boolean isCreateSetters() {
@@ -568,7 +643,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String mangledName = mangleTypeIdentifier(protocol.getName());
-    outputFile.path = makePath(mangledName, mangle(protocol.getNamespace()));
+    outputFile.path = makePath(mangledName, mapNamespace(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -640,7 +715,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String name = mangleTypeIdentifier(schema.getName());
-    outputFile.path = makePath(name, mangle(schema.getNamespace()));
+    outputFile.path = makePath(name, mapNamespace(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;

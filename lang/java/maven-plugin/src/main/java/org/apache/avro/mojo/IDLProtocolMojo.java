@@ -94,6 +94,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         compiler.setStringType(GenericData.StringType.valueOf(stringType));
         compiler.setTemplateDir(templateDirectory);
         compiler.setFieldVisibility(getFieldVisibility());
+        compiler.setNamespaceMappings(namespaceMappings);
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);
         compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);

@@ -193,6 +193,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean enableDecimalLogicalType;
 
   /**
+   * Transformations to be applied when converting an Avro namespace to a Java
+   * package-name. Values are of format "namespacePrefix->packageName"
+   *
+   * @parameter property="namespaceMappings"
+   */
+  protected String[] namespaceMappings = new String[0];
+
+  /**
    * The current Maven project.
    *
    * @parameter default-value="${project}"
