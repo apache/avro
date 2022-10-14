@@ -83,7 +83,7 @@ mod test_derive {
         unreachable!()
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasic {
         a: i32,
         b: String,
@@ -117,7 +117,7 @@ mod test_derive {
         serde_assert(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     struct TestBasicNamespace {
         a: i32,
@@ -151,7 +151,7 @@ mod test_derive {
         }
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.complex.namespace")]
     struct TestComplexNamespace {
         a: TestBasicNamespace,
@@ -388,7 +388,7 @@ mod test_derive {
         serde_assert(inner_struct);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestOptional {
         a: Option<i32>,
     }
@@ -581,7 +581,7 @@ mod test_derive {
         serde_assert(test_generic);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     enum TestAllowedEnum {
         A,
         B,
@@ -589,7 +589,7 @@ mod test_derive {
         D,
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestAllowedEnumNested {
         a: TestAllowedEnum,
         b: String,
@@ -724,7 +724,7 @@ mod test_derive {
         serde_assert(list)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestSimpleArray {
         a: [i32; 4],
     }
@@ -805,7 +805,7 @@ mod test_derive {
         serde_assert(test)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct Testu8 {
         a: Vec<u8>,
         b: [u8; 2],
@@ -913,7 +913,7 @@ mod test_derive {
         ser(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
     struct TestBasicWithAttributes {
         #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
@@ -953,7 +953,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     struct TestBasicWithOuterDocAttributes {
@@ -994,7 +994,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     /// that spans
@@ -1040,7 +1040,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithLargeDoc::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasicWithBool {
         a: bool,
         b: Option<bool>,
@@ -1078,7 +1078,7 @@ mod test_derive {
         serde_assert(TestBasicWithBool { a, b });
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasicWithU32 {
         a: u32,
     }
@@ -1109,7 +1109,7 @@ mod test_derive {
         serde_assert(TestBasicWithU32 { a });
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     struct TestBasicStructWithAliases {
         a: i32,
@@ -1149,7 +1149,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1191,7 +1191,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases2 { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     enum TestBasicEnumWithAliases {
         A,
@@ -1230,7 +1230,7 @@ mod test_derive {
         serde_assert(TestBasicEnumWithAliases::A);
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1273,7 +1273,7 @@ mod test_derive {
 
     #[test]
     fn test_basic_struct_with_defaults() {
-        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq)]
+        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq, Eq)]
         enum MyEnum {
             Foo,
             Bar,
@@ -1406,7 +1406,7 @@ mod test_derive {
         // Note: If using the skip attribute together with serialization,
         // the serde's skip attribute needs also to be added
 
-        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq)]
+        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
         struct TestBasicStructNoSchema {
             field: bool,
         }

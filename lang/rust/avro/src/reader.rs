@@ -559,7 +559,7 @@ mod tests {
       ]
     }
     "#;
-        #[derive(Default, Debug, Deserialize, PartialEq)]
+        #[derive(Default, Debug, Deserialize, PartialEq, Eq)]
         struct TestRecord3240 {
             a: i64,
             b: String,
