@@ -599,59 +599,59 @@ mod tests {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
     struct Test {
         a: i64,
         b: String,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     struct TestInner {
         a: Test,
         b: i32,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     struct TestUnitExternalEnum {
         a: UnitExternalEnum,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     enum UnitExternalEnum {
         Val1,
         Val2,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     struct TestUnitInternalEnum {
         a: UnitInternalEnum,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     #[serde(tag = "t")]
     enum UnitInternalEnum {
         Val1,
         Val2,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     struct TestUnitAdjacentEnum {
         a: UnitAdjacentEnum,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     #[serde(tag = "t", content = "v")]
     enum UnitAdjacentEnum {
         Val1,
         Val2,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     struct TestUnitUntaggedEnum {
         a: UnitUntaggedEnum,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq)]
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
     #[serde(untagged)]
     enum UnitUntaggedEnum {
         Val1,
@@ -918,12 +918,12 @@ mod tests {
         // AVRO-3232 test for deserialize_any on missing fields on the destination struct:
         // Error: DeserializeValue("Unsupported union")
         // Error: DeserializeValue("incorrect value of type: String")
-        #[derive(Debug, Deserialize, PartialEq)]
+        #[derive(Debug, Deserialize, PartialEq, Eq)]
         struct RecordInUnion {
             record_in_union: i32,
         }
 
-        #[derive(Debug, Deserialize, PartialEq)]
+        #[derive(Debug, Deserialize, PartialEq, Eq)]
         struct StructWithMissingFields {
             a_string: String,
             a_record: Option<RecordInUnion>,
