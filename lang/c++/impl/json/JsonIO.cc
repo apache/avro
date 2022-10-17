@@ -363,24 +363,24 @@ string JsonParser::decodeString(const string &s, bool binary) {
                                                 "Invalid byte for binary: %1%%2%")
                                             % ch % string(e, 4));
                         } else {
-                            result.push_back((char) n);
+                            result.push_back(static_cast<char>(n));
                             continue;
                         }
                     }
                     if (n < 0x80) {
                         result.push_back(static_cast<char>(n));
                     } else if (n < 0x800) {
-                        result.push_back((char) ((n >> 6) | 0xc0));
-                        result.push_back((char) ((n & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n >> 6) | 0xc0));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else if (n < 0x10000) {
-                        result.push_back((char) ((n >> 12) | 0xe0));
-                        result.push_back((char) (((n >> 6) & 0x3f) | 0x80));
-                        result.push_back((char) ((n & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n >> 12) | 0xe0));
+                        result.push_back(static_cast<char>(((n >> 6) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else if (n < 110000) {
-                        result.push_back((char) ((n >> 18) | 0xf0));
-                        result.push_back((char) (((n >> 12) & 0x3f) | 0x80));
-                        result.push_back((char) (((n >> 6) & 0x3f) | 0x80));
-                        result.push_back((char) ((n & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n >> 18) | 0xf0));
+                        result.push_back(static_cast<char>(((n >> 12) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>(((n >> 6) & 0x3f) | 0x80));
+                        result.push_back(static_cast<char>((n & 0x3f) | 0x80));
                     } else {
                         throw Exception(boost::format(
                                             "Invalid unicode value: %1%i%2%")
