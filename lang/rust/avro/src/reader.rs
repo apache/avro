@@ -396,9 +396,9 @@ impl GenericSingleObjectReader {
 
     pub fn read_value<R: Read>(&self, reader: &mut R) -> AvroResult<Value> {
         let mut header: [u8; 10] = [0; 10];
-        match reader.read(&mut header) {
-            Ok(size) => {
-                if size == 10 && self.expected_header == header {
+        match reader.read_exact(&mut header) {
+            Ok(_) => {
+                if self.expected_header == header {
                     decode_internal(
                         self.write_schema.get_root_schema(),
                         self.write_schema.get_names(),
