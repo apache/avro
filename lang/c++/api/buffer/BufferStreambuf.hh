@@ -135,7 +135,7 @@ protected:
                 memcpy(c, gptr(), toCopy);
                 c += toCopy;
                 bytesCopied += toCopy;
-                gbump((int) toCopy);
+                gbump(static_cast<int>(toCopy));
             }
 
             if (bytesCopied < len) {

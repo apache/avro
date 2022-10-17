@@ -142,7 +142,7 @@ private:
     };
 
     std::vector<CompoundType> compoundStack_;
-    std::vector<int64_t> counters_;
+    std::vector<uint64_t> counters_;
 };
 
 } // namespace avro

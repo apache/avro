@@ -474,7 +474,7 @@ public:
         avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
         std::ifstream just_for_length(
             filename, std::ifstream::ate | std::ifstream::binary);
-        std::streamoff length = just_for_length.tellg();
+        auto length = just_for_length.tellg();
         int splits = 10;
         std::streamoff end = length;     // end of split
         std::streamoff remaining = end;  // bytes remaining

@@ -368,7 +368,7 @@ string JsonParser::decodeString(const string &s, bool binary) {
                         }
                     }
                     if (n < 0x80) {
-                        result.push_back((char) n);
+                        result.push_back(static_cast<char>(n));
                     } else if (n < 0x800) {
                         result.push_back((char) ((n >> 6) | 0xc0));
                         result.push_back((char) ((n & 0x3f) | 0x80));
