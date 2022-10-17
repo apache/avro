@@ -396,12 +396,12 @@ static NodePtr makeEnumNode(const Entity &e,
 
 static NodePtr makeFixedNode(const Entity &e,
                              const Name &name, const Object &m) {
-    size_t v = getLongField(e, m, "size");
+    auto v = getLongField(e, m, "size");
     if (v <= 0) {
         throw Exception(boost::format("Size for fixed is not positive: %1%") % e.toString());
     }
     NodePtr node =
-        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
+        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(static_cast<size_t>(v))));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
