@@ -121,6 +121,7 @@ public class SpecificCompiler {
   private boolean gettersReturnOptional = false;
   private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
+  private boolean createNullSafeAnnotations = false;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
@@ -243,6 +244,17 @@ public class SpecificCompiler {
    */
   public void setCreateSetters(boolean createSetters) {
     this.createSetters = createSetters;
+  }
+
+  public boolean isCreateNullSafeAnnotations() {
+    return this.createNullSafeAnnotations;
+  }
+
+  /**
+   * Set to true to add jetbrains @Nullable and @NotNull annotations
+   */
+  public void setCreateNullSafeAnnotations(boolean createNullSafeAnnotations) {
+    this.createNullSafeAnnotations = createNullSafeAnnotations;
   }
 
   public boolean isCreateOptionalGetters() {

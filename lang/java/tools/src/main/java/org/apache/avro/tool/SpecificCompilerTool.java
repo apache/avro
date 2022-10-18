@@ -50,7 +50,7 @@ public class SpecificCompilerTool implements Tool {
     if (origArgs.size() < 3) {
       System.err
           .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] "
-              + "[-noSetters] [-addExtraOptionalGetters] [-optionalGetters <optionalGettersType>] "
+              + "[-noSetters] [-nullSafeAnnotations] [-addExtraOptionalGetters] [-optionalGetters <optionalGettersType>] "
               + "[-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
       System.err.println(" outputdir - directory to write generated java");
@@ -58,6 +58,7 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -string - use java.lang.String instead of Utf8");
       System.err.println(" -fieldVisibility [private|public] - use either and default private");
       System.err.println(" -noSetters - do not generate setters");
+      System.err.println(" -nullSafeAnnotations - add @Nullable and @NotNull annotations");
       System.err
           .println(" -addExtraOptionalGetters - generate extra getters with this format: 'getOptional<FieldName>'");
       System.err.println(
@@ -72,6 +73,7 @@ public class SpecificCompilerTool implements Tool {
     compilerOpts.stringType = StringType.CharSequence;
     compilerOpts.useLogicalDecimal = false;
     compilerOpts.createSetters = true;
+    compilerOpts.createNullSafeAnnotations = false;
     compilerOpts.optionalGettersType = Optional.empty();
     compilerOpts.addExtraOptionalGetters = false;
     compilerOpts.encoding = Optional.empty();
@@ -83,6 +85,11 @@ public class SpecificCompilerTool implements Tool {
     if (args.contains("-noSetters")) {
       compilerOpts.createSetters = false;
       args.remove(args.indexOf("-noSetters"));
+    }
+
+    if (args.contains("-nullSafeAnnotations")) {
+      compilerOpts.createNullSafeAnnotations = true;
+      args.remove(args.indexOf("-nullSafeAnnotations"));
     }
 
     if (args.contains("-addExtraOptionalGetters")) {
@@ -172,6 +179,7 @@ public class SpecificCompilerTool implements Tool {
       throws IOException {
     compiler.setStringType(opts.stringType);
     compiler.setCreateSetters(opts.createSetters);
+    compiler.setCreateNullSafeAnnotations(opts.createNullSafeAnnotations);
 
     opts.optionalGettersType.ifPresent(choice -> {
       compiler.setGettersReturnOptional(true);
@@ -267,6 +275,7 @@ public class SpecificCompilerTool implements Tool {
     Optional<FieldVisibility> fieldVisibility;
     boolean useLogicalDecimal;
     boolean createSetters;
+    boolean createNullSafeAnnotations;
     boolean addExtraOptionalGetters;
     Optional<OptionalGettersType> optionalGettersType;
     Optional<String> templateDir;

@@ -60,6 +60,7 @@
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.50.0</grpc.version>
     <zstd-jni.version>1.5.2-4</zstd-jni.version>
+    <jetbrains-annotations.version>23.0.0</jetbrains-annotations.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.8</bundle-plugin-version>
@@ -584,6 +585,11 @@
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
         <version>${zstd-jni.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${jetbrains-annotations.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
