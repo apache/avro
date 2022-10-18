@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
@@ -295,6 +296,15 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
               throw new AvroRuntimeException("Failed to set " + field);
             }
             return;
+          }
+        }
+        if (Optional.class.isAssignableFrom(accessor.getField().getType())) {
+          try {
+            Object value = readWithoutConversion(oldDatum, field.schema(), in);
+            accessor.set(record, Optional.ofNullable(value));
+            return;
+          } catch (IllegalAccessException e) {
+            throw new AvroRuntimeException("Failed to set " + field);
           }
         }
         try {

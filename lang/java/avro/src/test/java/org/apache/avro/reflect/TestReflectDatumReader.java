@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -123,6 +124,40 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(deserialized, decoder);
 
     assertEquals(pojoWithMap, deserialized);
+  }
+
+  @Test
+  public void testRead_PojoWithOptional() throws IOException {
+    PojoWithOptional pojoWithOptional = new PojoWithOptional();
+    pojoWithOptional.setId(42);
+    pojoWithOptional.setRelatedId(Optional.of(13));
+
+    byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithOptional, PojoWithOptional.class);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+    ReflectDatumReader<PojoWithOptional> reflectDatumReader = new ReflectDatumReader<>(PojoWithOptional.class);
+
+    PojoWithOptional deserialized = new PojoWithOptional();
+    reflectDatumReader.read(deserialized, decoder);
+
+    assertEquals(pojoWithOptional, deserialized);
+  }
+
+  @Test
+  public void testRead_PojoWithEmptyOptional() throws IOException {
+    PojoWithOptional pojoWithOptional = new PojoWithOptional();
+    pojoWithOptional.setId(42);
+    pojoWithOptional.setRelatedId(Optional.empty());
+
+    byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithOptional, PojoWithOptional.class);
+
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+    ReflectDatumReader<PojoWithOptional> reflectDatumReader = new ReflectDatumReader<>(PojoWithOptional.class);
+
+    PojoWithOptional deserialized = new PojoWithOptional();
+    reflectDatumReader.read(deserialized, decoder);
+
+    assertEquals(pojoWithOptional, deserialized);
   }
 
   public static class PojoWithList {
@@ -307,6 +342,54 @@ public class TestReflectDatumReader {
         return other.relatedIds == null;
       } else
         return relatedIds.equals(other.relatedIds);
+    }
+  }
+
+  public static class PojoWithOptional {
+    private int id;
+
+    private Optional<Integer> relatedId;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public Optional<Integer> getRelatedId() {
+      return relatedId;
+    }
+
+    public void setRelatedId(Optional<Integer> relatedId) {
+      this.relatedId = relatedId;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + id;
+      result = prime * result + ((relatedId == null) ? 0 : relatedId.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PojoWithOptional other = (PojoWithOptional) obj;
+      if (id != other.id)
+        return false;
+      if (relatedId == null) {
+        return other.relatedId == null;
+      } else
+        return relatedId.equals(other.relatedId);
     }
   }
 }
