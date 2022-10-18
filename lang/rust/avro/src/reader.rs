@@ -805,7 +805,7 @@ mod tests {
     }
 
     #[test]
-    fn test_avro_3507_single_object_reader_incomplete_reads() {
+    fn avro_3642_test_single_object_reader_incomplete_reads() {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
