@@ -396,9 +396,9 @@ impl GenericSingleObjectReader {
 
     pub fn read_value<R: Read>(&self, reader: &mut R) -> AvroResult<Value> {
         let mut header: [u8; 10] = [0; 10];
-        match reader.read(&mut header) {
-            Ok(size) => {
-                if size == 10 && self.expected_header == header {
+        match reader.read_exact(&mut header) {
+            Ok(_) => {
+                if self.expected_header == header {
                     decode_internal(
                         self.write_schema.get_root_schema(),
                         self.write_schema.get_names(),
@@ -795,6 +795,38 @@ mod tests {
         )
         .expect("Encode should succeed");
         let mut to_read = &to_read[..];
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let val = generic_reader
+            .read_value(&mut to_read)
+            .expect("Should read");
+        let expected_value: Value = obj.into();
+        assert_eq!(expected_value, val);
+    }
+
+    #[test]
+    fn avro_3642_test_single_object_reader_incomplete_reads() {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        // The two-byte marker, to show that the message uses this single-record format
+        let to_read_1 = vec![0xC3, 0x01];
+        let mut to_read_2 = Vec::<u8>::new();
+        to_read_2.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        let mut to_read_3 = Vec::<u8>::new();
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read_3,
+        )
+        .expect("Encode should succeed");
+        let mut to_read = (&to_read_1[..]).chain(&to_read_2[..]).chain(&to_read_3[..]);
         let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
             .expect("Schema should resolve");
         let val = generic_reader
