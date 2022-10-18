@@ -811,8 +811,8 @@ mod tests {
             b: 3.33,
             c: vec!["cat".into(), "dog".into()],
         };
-        let mut to_read_1 = Vec::<u8>::new();
-        to_read_1.extend_from_slice(&[0xC3, 0x01]);
+        // The two-byte marker, to show that the message uses this single-record format
+        let to_read_1 = vec![0xC3, 0x01];
         let mut to_read_2 = Vec::<u8>::new();
         to_read_2.extend_from_slice(
             &TestSingleObjectReader::get_schema()
