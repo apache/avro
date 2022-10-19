@@ -366,6 +366,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Null => visitor.visit_unit(),
+            Value::Union(_i, ref x) => match **x {
+                Value::Null => visitor.visit_unit(),
+                _ => Err(de::Error::custom("not a null")),
+            },
             _ => Err(de::Error::custom("not a null")),
         }
     }
@@ -658,6 +662,17 @@ mod tests {
         Val2,
     }
 
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+    struct TestNullExternalEnum {
+        a: NullExternalEnum,
+    }
+
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+    enum NullExternalEnum {
+        Val1(()),
+        Val2(u64),
+    }
+
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
     struct TestSingleValueExternalEnum {
         a: SingleValueExternalEnum,
@@ -767,6 +782,26 @@ mod tests {
         assert_eq!(
             final_value, expected,
             "Error deserializing unit untagged enum"
+        );
+    }
+
+    #[test]
+    fn test_from_value_null_enum() {
+        let expected = TestNullExternalEnum {
+            a: NullExternalEnum::Val1(()),
+        };
+
+        let test = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::String("Val1".to_owned())),
+                ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
+            ]),
+        )]);
+        let final_value: TestNullExternalEnum = from_value(&test).unwrap();
+        assert_eq!(
+            final_value, expected,
+            "Error deserializing null external enum"
         );
     }
 
