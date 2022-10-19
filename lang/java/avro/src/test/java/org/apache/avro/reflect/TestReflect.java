@@ -1281,6 +1281,34 @@ public class TestReflect {
     check(ClassWithMultipleAliasesOnField.class, expectedSchema.toString());
   }
 
+  private static class NullableDefaultTest {
+    @Nullable
+    @AvroDefault("1")
+    int foo;
+  }
+
+  @Test
+  public void testAvroNullableDefault() {
+    check(NullableDefaultTest.class,
+        "{\"type\":\"record\",\"name\":\"NullableDefaultTest\","
+            + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+            + "{\"name\":\"foo\",\"type\":[\"int\",\"null\"],\"default\":1}]}");
+  }
+
+  private static class UnionDefaultTest {
+    @Union({String.class, Integer.class})
+    @AvroDefault("1")
+    Object foo;
+  }
+
+  @Test
+  public void testAvroUnionDefault() {
+    check(UnionDefaultTest.class,
+        "{\"type\":\"record\",\"name\":\"UnionDefaultTest\","
+            + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+            + "{\"name\":\"foo\",\"type\":[\"int\",\"string\"],\"default\":1}]}");
+  }
+
   private static class DefaultTest {
     @AvroDefault("1")
     int foo;

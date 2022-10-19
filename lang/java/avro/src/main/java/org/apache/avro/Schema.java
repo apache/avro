@@ -1619,6 +1619,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return defaultValue;
   }
 
+  /**
+   * Checks if a JSON value matches the schema.
+   *
+   * @param jsonValue a value to check against the schema
+   * @return true if the value is valid according to this schema
+   */
+  public boolean isValidValue(JsonNode jsonValue) {
+    return isValidDefault(this, jsonValue);
+  }
+
   private static boolean isValidDefault(Schema schema, JsonNode defaultValue) {
     if (defaultValue == null)
       return false;

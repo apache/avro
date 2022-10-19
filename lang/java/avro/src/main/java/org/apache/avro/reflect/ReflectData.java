@@ -17,6 +17,7 @@
  */
 package org.apache.avro.reflect;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
@@ -37,6 +38,7 @@ import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.MapUtil;
+import org.apache.avro.util.internal.JacksonUtils;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -62,9 +64,11 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -752,6 +756,25 @@ public class ReflectData extends SpecificData {
               if (STRING_OUTER_PARENT_REFERENCE.equals(fieldName)) {
                 throw new AvroTypeException("Class " + fullName + " must be a static inner class");
               }
+
+              // We need to reorder the union types if the default value is not of the first schema.
+              // Avro requires that the default value is of the same type as the first schema in the union.
+              if (fieldSchema.getType() == Schema.Type.UNION && defaultValue != null) {
+                List<Schema> unionTypes = fieldSchema.getTypes();
+                JsonNode defJson = JacksonUtils.toJsonNode(defaultValue);
+                // we only need to reorder the types if the default value is not compatible with the first schema
+                for (int i = 1; i < unionTypes.size(); i++) {
+                  Schema s = unionTypes.get(i);
+                  if (s.isValidValue(defJson)) {
+                    ArrayList<Schema> reordered = new ArrayList<>(unionTypes);
+                    reordered.remove(s);
+                    reordered.add(0, s);
+                    fieldSchema = Schema.createUnion(reordered);
+                    break;
+                  }
+                }
+              }
+
               Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
