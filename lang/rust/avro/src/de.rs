@@ -662,17 +662,6 @@ mod tests {
         Val2,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-    struct TestNullExternalEnum {
-        a: NullExternalEnum,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-    enum NullExternalEnum {
-        Val1(()),
-        Val2(u64),
-    }
-
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
     struct TestSingleValueExternalEnum {
         a: SingleValueExternalEnum,
@@ -786,23 +775,69 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_null_enum() {
-        let expected = TestNullExternalEnum {
-            a: NullExternalEnum::Val1(()),
-        };
+    fn avro_3645_3646_test_from_value_enum() {
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        struct TestNullExternalEnum {
+            a: NullExternalEnum,
+        }
 
-        let test = Value::Record(vec![(
-            "a".to_owned(),
-            Value::Record(vec![
-                ("type".to_owned(), Value::String("Val1".to_owned())),
-                ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-            ]),
-        )]);
-        let final_value: TestNullExternalEnum = from_value(&test).unwrap();
-        assert_eq!(
-            final_value, expected,
-            "Error deserializing null external enum"
-        );
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        enum NullExternalEnum {
+            Val1,
+            Val2(),
+            Val3(()),
+            Val4(u64),
+        }
+
+        let data = vec![
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val1,
+                },
+                Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val2(),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                        ("value".to_owned(), Value::Array(vec![])),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val3(()),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
+                        ("value".to_owned(), Value::Union(2, Box::new(Value::Null))),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val4(123),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(3, "Val4".to_owned())),
+                        ("value".to_owned(), Value::Union(3, Value::Long(123).into())),
+                    ]),
+                )]),
+            ),
+        ];
+
+        for (expected, test) in data.iter() {
+            let actual: TestNullExternalEnum = from_value(test).unwrap();
+            assert_eq!(actual, *expected);
+        }
     }
 
     #[test]

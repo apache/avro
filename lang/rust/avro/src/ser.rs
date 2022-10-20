@@ -1000,7 +1000,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_3646_test_to_value_null_enum() {
+    fn avro_3646_test_to_value_enum() {
         #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
         struct TestNullExternalEnum2 {
             a: NullExternalEnum2,
@@ -1010,7 +1010,8 @@ mod tests {
         enum NullExternalEnum2 {
             Val1,
             Val2(),
-            Val3(u64),
+            Val3(()),
+            Val4(u64),
         }
 
         let test_val1 = TestNullExternalEnum2 {
@@ -1045,14 +1046,14 @@ mod tests {
         );
 
         let test_val3 = TestNullExternalEnum2 {
-            a: NullExternalEnum2::Val3(123),
+            a: NullExternalEnum2::Val3(()),
         };
 
         let expected_val3 = Value::Record(vec![(
             "a".to_owned(),
             Value::Record(vec![
                 ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
-                ("value".to_owned(), Value::Union(2, Value::Long(123).into())),
+                ("value".to_owned(), Value::Union(2, Value::Null.into())),
             ]),
         )]);
 
@@ -1060,6 +1061,24 @@ mod tests {
         assert_eq!(
             actual_val3, expected_val3,
             "error serializing null external enum, val3"
+        );
+
+        let test_val4 = TestNullExternalEnum2 {
+            a: NullExternalEnum2::Val4(123),
+        };
+
+        let expected_val4 = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(3, "Val4".to_owned())),
+                ("value".to_owned(), Value::Union(3, Value::Long(123).into())),
+            ]),
+        )]);
+
+        let actual_val4 = to_value(test_val4).unwrap();
+        assert_eq!(
+            actual_val4, expected_val4,
+            "error serializing null external enum, val4"
         );
     }
 }
