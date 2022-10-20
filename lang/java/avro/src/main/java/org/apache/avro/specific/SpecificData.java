@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -384,6 +385,8 @@ public class SpecificData extends GenericData {
         if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
           throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
+      } else if (Optional.class.isAssignableFrom(raw)) {
+        return Schema.createUnion(Schema.create(Schema.Type.NULL), createSchema(params[0], names));
       } else {
         return createSchema(raw, names);
       }
