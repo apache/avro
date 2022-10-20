@@ -1002,83 +1002,66 @@ mod tests {
     #[test]
     fn avro_3646_test_to_value_enum() {
         #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-        struct TestNullExternalEnum2 {
-            a: NullExternalEnum2,
+        struct TestNullExternalEnum {
+            a: NullExternalEnum,
         }
 
         #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-        enum NullExternalEnum2 {
+        enum NullExternalEnum {
             Val1,
             Val2(),
             Val3(()),
             Val4(u64),
         }
 
-        let test_val1 = TestNullExternalEnum2 {
-            a: NullExternalEnum2::Val1,
-        };
+        let data = vec![
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val1,
+                },
+                Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val2(),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                        ("value".to_owned(), Value::Array(vec![])),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val3(()),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
+                        ("value".to_owned(), Value::Union(2, Value::Null.into())),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val4(123),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(3, "Val4".to_owned())),
+                        ("value".to_owned(), Value::Union(3, Value::Long(123).into())),
+                    ]),
+                )]),
+            ),
+        ];
 
-        let expected_val1 =
-            Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
-
-        let actual_val1 = to_value(test_val1).unwrap();
-        assert_eq!(
-            actual_val1, expected_val1,
-            "error serializing null external enum, val1"
-        );
-
-        let test_val2 = TestNullExternalEnum2 {
-            a: NullExternalEnum2::Val2(),
-        };
-
-        let expected_val2 = Value::Record(vec![(
-            "a".to_owned(),
-            Value::Record(vec![
-                ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
-                ("value".to_owned(), Value::Array(vec![])),
-            ]),
-        )]);
-
-        let actual_val2 = to_value(test_val2).unwrap();
-        assert_eq!(
-            actual_val2, expected_val2,
-            "error serializing null external enum, val2"
-        );
-
-        let test_val3 = TestNullExternalEnum2 {
-            a: NullExternalEnum2::Val3(()),
-        };
-
-        let expected_val3 = Value::Record(vec![(
-            "a".to_owned(),
-            Value::Record(vec![
-                ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
-                ("value".to_owned(), Value::Union(2, Value::Null.into())),
-            ]),
-        )]);
-
-        let actual_val3 = to_value(test_val3).unwrap();
-        assert_eq!(
-            actual_val3, expected_val3,
-            "error serializing null external enum, val3"
-        );
-
-        let test_val4 = TestNullExternalEnum2 {
-            a: NullExternalEnum2::Val4(123),
-        };
-
-        let expected_val4 = Value::Record(vec![(
-            "a".to_owned(),
-            Value::Record(vec![
-                ("type".to_owned(), Value::Enum(3, "Val4".to_owned())),
-                ("value".to_owned(), Value::Union(3, Value::Long(123).into())),
-            ]),
-        )]);
-
-        let actual_val4 = to_value(test_val4).unwrap();
-        assert_eq!(
-            actual_val4, expected_val4,
-            "error serializing null external enum, val4"
-        );
+        for (test, expected) in &data {
+            let actual = to_value(test).unwrap();
+            assert_eq!(actual, *expected,);
+        }
     }
 }
