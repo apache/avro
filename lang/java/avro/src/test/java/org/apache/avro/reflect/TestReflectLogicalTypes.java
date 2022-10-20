@@ -21,6 +21,8 @@ package org.apache.avro.reflect;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -631,6 +633,78 @@ public class TestReflectLogicalTypes {
         LogicalTypes.fromSchema(actual.getField("localDateTime").schema()));
   }
 
+  @Test
+  public void testReflectedSchemaWithMultipleDateConversions() throws IOException {
+    ReflectData reflect = ReflectData.get();
+    reflect.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    reflect.addLogicalTypeConversion(new SqlDateConversion());
+
+    Schema schema = reflect.getSchema(RecordWithDates.class);
+
+    RecordWithDates recordWithDates = new RecordWithDates();
+    recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
+    recordWithDates.localDate = LocalDate.parse("2021-01-01");
+    recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
+    recordWithDates.dateArray = new Date[0];
+    recordWithDates.localDateArray = new LocalDate[0];
+
+    File test = write(reflect, schema, recordWithDates);
+
+    RecordWithDates actualRecordWithDates = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", recordWithDates, actualRecordWithDates);
+
+    schema = reflect.getSchema(NestedDates.class);
+
+    NestedDates nestedDates = new NestedDates();
+    nestedDates.recordWithDates = recordWithDates;
+    nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+    nestedDates.emptyRecordWithDatesList = new ArrayList<>();
+    nestedDates.recordWithDateArray = new RecordWithDates[] { recordWithDates };
+    nestedDates.emtpyRecordWithDateArray = new RecordWithDates[0];
+
+    test = write(reflect, schema, nestedDates);
+
+    NestedDates actualNestedDates = (NestedDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", nestedDates, actualNestedDates);
+  }
+
+  @Test
+  public void testReflectedSchemaAllowNullWithMultipleDateConversions() throws IOException {
+    ReflectData reflect = ReflectData.AllowNull.get();
+    reflect.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    reflect.addLogicalTypeConversion(new SqlDateConversion());
+
+    Schema schema = reflect.getSchema(RecordWithDates.class);
+
+    RecordWithDates recordWithDates = new RecordWithDates();
+    recordWithDates.date = Date.valueOf("2021-01-01");
+    recordWithDates.dates = Collections.singletonList(Date.valueOf("2021-01-01"));
+    recordWithDates.localDate = LocalDate.parse("2021-01-01");
+    recordWithDates.localDates = Arrays.asList(LocalDate.parse("2021-01-01"), LocalDate.parse("2021-01-02"));
+    recordWithDates.dateArray = new Date[] { Date.valueOf("2021-01-01") };
+    recordWithDates.localDateArray = new LocalDate[] { LocalDate.parse("2021-01-02") };
+
+    File test = write(reflect, schema, recordWithDates);
+
+    RecordWithDates actualRecordWithDates = (RecordWithDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", recordWithDates, actualRecordWithDates);
+
+    schema = reflect.getSchema(NestedDates.class);
+
+    NestedDates nestedDates = new NestedDates();
+    nestedDates.recordWithDates = recordWithDates;
+    nestedDates.recordWithDatesList = Arrays.asList(recordWithDates, recordWithDates);
+    nestedDates.emptyRecordWithDatesList = null; // test nullable array
+    nestedDates.recordWithDateArray = new RecordWithDates[] { recordWithDates };
+    nestedDates.emtpyRecordWithDateArray = null;
+
+    test = write(reflect, schema, nestedDates);
+
+    NestedDates actualNestedDates = (NestedDates) read(reflect.createDatumReader(schema), test).get(0);
+    Assert.assertEquals("Should convert Date and LocalDate", nestedDates, actualNestedDates);
+  }
+
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
     List<D> data = new ArrayList<>();
 
@@ -764,6 +838,94 @@ class RecordWithTimestamps {
       return false;
     }
     RecordWithTimestamps that = (RecordWithTimestamps) obj;
-    return Objects.equals(that.localDateTime, that.localDateTime);
+    return Objects.equals(this.localDateTime, that.localDateTime);
+  }
+}
+
+class RecordWithDates {
+  LocalDate localDate;
+  Date date;
+  List<LocalDate> localDates;
+  List<Date> dates;
+  LocalDate[] localDateArray;
+  Date[] dateArray;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    RecordWithDates that = (RecordWithDates) o;
+    return Objects.equals(localDate, that.localDate) && Objects.equals(date, that.date)
+        && Objects.equals(localDates, that.localDates) && Objects.equals(dates, that.dates)
+        && Arrays.equals(localDateArray, that.localDateArray) && Arrays.equals(dateArray, that.dateArray);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(localDate, date, localDates, dates);
+    result = 31 * result + Arrays.hashCode(localDateArray);
+    result = 31 * result + Arrays.hashCode(dateArray);
+    return result;
+  }
+}
+
+class NestedDates {
+  RecordWithDates recordWithDates;
+  List<RecordWithDates> recordWithDatesList;
+  List<RecordWithDates> emptyRecordWithDatesList;
+  RecordWithDates[] recordWithDateArray;
+  RecordWithDates[] emtpyRecordWithDateArray;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    NestedDates that = (NestedDates) o;
+    return Objects.equals(recordWithDates, that.recordWithDates)
+        && Objects.equals(recordWithDatesList, that.recordWithDatesList)
+        && Objects.equals(emptyRecordWithDatesList, that.emptyRecordWithDatesList)
+        && Arrays.equals(recordWithDateArray, that.recordWithDateArray)
+        && Arrays.equals(emtpyRecordWithDateArray, that.emtpyRecordWithDateArray);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(recordWithDates, recordWithDatesList, emptyRecordWithDatesList);
+    result = 31 * result + Arrays.hashCode(recordWithDateArray);
+    result = 31 * result + Arrays.hashCode(emtpyRecordWithDateArray);
+    return result;
+  }
+}
+
+class SqlDateConversion extends Conversion<Date> {
+
+  @Override
+  public Class<Date> getConvertedType() {
+    return Date.class;
+  }
+
+  @Override
+  public String getLogicalTypeName() {
+    return "date";
+  }
+
+  @Override
+  public Date fromInt(Integer daysFromEpoch, Schema schema, LogicalType type) {
+    return Date.valueOf(LocalDate.ofEpochDay(daysFromEpoch));
+  }
+
+  @Override
+  public Integer toInt(Date date, Schema schema, LogicalType type) {
+    long epochDays = date.toLocalDate().toEpochDay();
+    return (int) epochDays;
+  }
+
+  @Override
+  public Schema getRecommendedSchema() {
+    return LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
   }
 }

@@ -19,6 +19,8 @@ package org.apache.avro.reflect;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -72,18 +74,13 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     super(data);
   }
 
-  @Override
-  protected Object newArray(Object old, int size, Schema schema) {
+  protected Object newArray(Object old, int size, Schema schema, Class<?> cls) {
     Class<?> collectionClass = ReflectData.getClassProp(schema, SpecificData.CLASS_PROP);
-    Class<?> elementClass = ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
 
+    // java-element-class takes priority over cls
+    Class<?> elementClass = ReflectData.getClassProp(schema, SpecificData.ELEMENT_PROP);
     if (elementClass == null) {
-      // see if the element class will be converted and use that class
-      // logical types cannot conflict with java-element-class
-      Conversion<?> elementConversion = getData().getConversionFor(schema.getElementType().getLogicalType());
-      if (elementConversion != null) {
-        elementClass = elementConversion.getConvertedType();
-      }
+      elementClass = cls;
     }
 
     if (collectionClass == null && elementClass == null)
@@ -110,10 +107,6 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     if (elementClass == null) {
       elementClass = collectionClass.getComponentType();
     }
-    if (elementClass == null) {
-      ReflectData data = (ReflectData) getData();
-      elementClass = data.getClass(schema.getElementType());
-    }
     return Array.newInstance(elementClass, size);
   }
 
@@ -133,22 +126,29 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
    * representations.
    */
   protected Object readArray(Object old, Schema expected, ResolvingDecoder in) throws IOException {
-    Schema expectedType = expected.getElementType();
+    return readArray(old, null, expected, in);
+  }
+
+  private Object readArray(Object old, Type type, Schema expected, ResolvingDecoder in) throws IOException {
+    Class<?> elementClass = getElementClass(type);
+    Schema elementSchema = expected.getElementType();
+
     long l = in.readArrayStart();
     if (l <= 0) {
-      return newArray(old, 0, expected);
+      return newArray(old, 0, expected, elementClass);
     }
-    Object array = newArray(old, (int) l, expected);
+    Object array = newArray(old, (int) l, expected, elementClass);
+
     if (array instanceof Collection) {
       @SuppressWarnings("unchecked")
       Collection<Object> c = (Collection<Object>) array;
-      return readCollection(c, expectedType, l, in);
+      return readCollection(c, elementClass, elementSchema, l, in);
     } else if (array instanceof Map) {
       // Only for non-string keys, we can use NS_MAP_* fields
       // So we check the same explicitly here
       if (ReflectData.isNonStringMapSchema(expected)) {
         Collection<Object> c = new ArrayList<>();
-        readCollection(c, expectedType, l, in);
+        readCollection(c, elementClass, elementSchema, l, in);
         Map m = (Map) array;
         for (Object ele : c) {
           IndexedRecord rec = ((IndexedRecord) ele);
@@ -162,68 +162,52 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         throw new AvroRuntimeException(msg);
       }
     } else {
-      return readJavaArray(array, expectedType, l, in);
+      return readJavaArray(array, elementClass, elementSchema, l, in);
     }
   }
 
-  private Object readJavaArray(Object array, Schema expectedType, long l, ResolvingDecoder in) throws IOException {
-    Class<?> elementType = array.getClass().getComponentType();
-    if (elementType.isPrimitive()) {
-      return readPrimitiveArray(array, elementType, l, in);
+  private Class<?> getElementClass(Type type) {
+    if (type instanceof Class && ((Class<?>) type).isArray()) {
+      // get array element class
+      return ((Class<?>) type).getComponentType();
+    } else if (type instanceof ParameterizedType
+        && Collection.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType())) {
+      // get collection element class
+      return (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
     } else {
-      return readObjectArray((Object[]) array, expectedType, l, in);
+      return null;
     }
   }
 
-  private Object readPrimitiveArray(Object array, Class<?> c, long l, ResolvingDecoder in) throws IOException {
-    return ArrayAccessor.readArray(array, c, l, in);
-  }
-
-  private Object readObjectArray(Object[] array, Schema expectedType, long l, ResolvingDecoder in) throws IOException {
-    LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
-    int index = 0;
-    if (logicalType != null && conversion != null) {
-      do {
-        int limit = index + (int) l;
-        while (index < limit) {
-          Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
-          array[index] = element;
-          index++;
-        }
-      } while ((l = in.arrayNext()) > 0);
-    } else {
-      do {
-        int limit = index + (int) l;
-        while (index < limit) {
-          Object element = readWithoutConversion(null, expectedType, in);
-          array[index] = element;
-          index++;
-        }
-      } while ((l = in.arrayNext()) > 0);
-    }
-    return array;
-  }
-
-  private Object readCollection(Collection<Object> c, Schema expectedType, long l, ResolvingDecoder in)
+  private Object readJavaArray(Object array, Class<?> elementClass, Schema expected, long l, ResolvingDecoder in)
       throws IOException {
-    LogicalType logicalType = expectedType.getLogicalType();
-    Conversion<?> conversion = getData().getConversionFor(logicalType);
-    if (logicalType != null && conversion != null) {
-      do {
-        for (int i = 0; i < l; i++) {
-          Object element = readWithConversion(null, expectedType, logicalType, conversion, in);
-          c.add(element);
-        }
-      } while ((l = in.arrayNext()) > 0);
+    Class<?> arrayElementClass = array.getClass().getComponentType();
+    if (arrayElementClass.isPrimitive()) {
+      return ArrayAccessor.readArray(array, arrayElementClass, l, in);
     } else {
+      int index = 0;
       do {
-        for (int i = 0; i < l; i++) {
-          Object element = readWithoutConversion(null, expectedType, in);
-          c.add(element);
+        int limit = index + (int) l;
+        while (index < limit) {
+          Object element = readAndConvert(null, elementClass, expected, in);
+          ((Object[]) array)[index] = element;
+          index++;
         }
       } while ((l = in.arrayNext()) > 0);
+
+      return array;
     }
+  }
+
+  private Object readCollection(Collection<Object> c, Class<?> cls, Schema expectedType, long l, ResolvingDecoder in)
+      throws IOException {
+    do {
+      for (long i = 0; i < l; i++) {
+        Object element = readAndConvert(null, cls, expectedType, in);
+        c.add(element);
+      }
+    } while ((l = in.arrayNext()) > 0);
+
     return c;
   }
 
@@ -284,21 +268,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
             throw new AvroRuntimeException("Failed to read Stringable", e);
           }
         }
-        LogicalType logicalType = field.schema().getLogicalType();
-        if (logicalType != null) {
-          Conversion<?> conversion = getData().getConversionByClass(accessor.getField().getType(), logicalType);
-          if (conversion != null) {
-            try {
-              accessor.set(record, convert(readWithoutConversion(oldDatum, field.schema(), in), field.schema(),
-                  logicalType, conversion));
-            } catch (IllegalAccessException e) {
-              throw new AvroRuntimeException("Failed to set " + field);
-            }
-            return;
-          }
-        }
+
         try {
-          accessor.set(record, readWithoutConversion(oldDatum, field.schema(), in));
+          accessor.set(record, readAndConvert(oldDatum, accessor.getField().getGenericType(), field.schema(), in));
           return;
         } catch (IllegalAccessException e) {
           throw new AvroRuntimeException("Failed to set " + field);
@@ -306,5 +278,82 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       }
     }
     super.readField(record, field, oldDatum, in, state);
+  }
+
+  // read and convert data
+  private Object readAndConvert(Object old, Type type, Schema expected, ResolvingDecoder in) throws IOException {
+    Object value;
+
+    switch (expected.getType()) {
+    case RECORD:
+      value = readRecord(old, expected, in);
+      break;
+    case ENUM:
+      value = readEnum(expected, in);
+      break;
+    case ARRAY:
+      value = readArray(old, type, expected, in);
+      break;
+    case MAP:
+      value = readMap(old, expected, in);
+      break;
+    case UNION:
+      value = readAndConvert(old, type, expected.getTypes().get(in.readIndex()), in);
+      break;
+    case FIXED:
+      value = readFixed(old, expected, in);
+      break;
+    case STRING:
+      value = readString(old, expected, in);
+      break;
+    case BYTES:
+      value = readBytes(old, expected, in);
+      break;
+    case INT:
+      value = readInt(old, expected, in);
+      break;
+    case LONG:
+      value = in.readLong();
+      break;
+    case FLOAT:
+      value = in.readFloat();
+      break;
+    case DOUBLE:
+      value = in.readDouble();
+      break;
+    case BOOLEAN:
+      value = in.readBoolean();
+      break;
+    case NULL:
+      in.readNull();
+      return null;
+    default:
+      throw new AvroRuntimeException("Unknown type: " + expected);
+    }
+
+    // convert
+    LogicalType logicalType = expected.getLogicalType();
+    if (logicalType != null) {
+      Conversion<?> conversion = getConversion(type, logicalType);
+      if (conversion != null) {
+        return convert(value, expected, logicalType, conversion);
+      }
+    }
+
+    return value;
+  }
+
+  private Conversion<?> getConversion(Type type, LogicalType logicalType) {
+    if (type instanceof Class<?>) {
+      // get conversion by class for un-parametrized Class (including Array)
+      return getData().getConversionByClass((Class<?>) type, logicalType);
+    } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class<?>) {
+      // get conversion by class for parametrized Class (e.g. Collection, user defined
+      // parameterized class)
+      return getData().getConversionByClass((Class<?>) ((ParameterizedType) type).getRawType(), logicalType);
+    } else {
+      // fallback to get conversion by logical type
+      return getData().getConversionFor(logicalType);
+    }
   }
 }
