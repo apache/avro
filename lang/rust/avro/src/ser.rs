@@ -998,4 +998,68 @@ mod tests {
             "error serializing tuple untagged enum"
         );
     }
+
+    #[test]
+    fn avro_3646_test_to_value_null_enum() {
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        struct TestNullExternalEnum2 {
+            a: NullExternalEnum2,
+        }
+
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        enum NullExternalEnum2 {
+            Val1,
+            Val2(),
+            Val3(u64),
+        }
+
+        let test_val1 = TestNullExternalEnum2 {
+            a: NullExternalEnum2::Val1,
+        };
+
+        let expected_val1 =
+            Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+
+        let actual_val1 = to_value(test_val1).unwrap();
+        assert_eq!(
+            actual_val1, expected_val1,
+            "error serializing null external enum, val1"
+        );
+
+        let test_val2 = TestNullExternalEnum2 {
+            a: NullExternalEnum2::Val2(),
+        };
+
+        let expected_val2 = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                ("value".to_owned(), Value::Array(vec![])),
+            ]),
+        )]);
+
+        let actual_val2 = to_value(test_val2).unwrap();
+        assert_eq!(
+            actual_val2, expected_val2,
+            "error serializing null external enum, val2"
+        );
+
+        let test_val3 = TestNullExternalEnum2 {
+            a: NullExternalEnum2::Val3(123),
+        };
+
+        let expected_val3 = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
+                ("value".to_owned(), Value::Union(2, Value::Long(123).into())),
+            ]),
+        )]);
+
+        let actual_val3 = to_value(test_val3).unwrap();
+        assert_eq!(
+            actual_val3, expected_val3,
+            "error serializing null external enum, val3"
+        );
+    }
 }
