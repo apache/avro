@@ -618,8 +618,8 @@ public class ReflectData extends SpecificData {
     defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
     if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
-      Schema defaultType = fieldSchema.getTypes().get(0);
-      if (defaultType.getType() == Schema.Type.NULL) {
+      boolean acceptNull = fieldSchema.getTypes().stream().map(Schema::getType).anyMatch((t) -> t == Schema.Type.NULL);
+      if (acceptNull) {
         defaultValue = JsonProperties.NULL_VALUE;
       }
     }
