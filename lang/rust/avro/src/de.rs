@@ -21,8 +21,6 @@ use serde::{
     de::{self, DeserializeSeed, Visitor},
     forward_to_deserialize_any, Deserialize,
 };
-use std::fmt::Formatter;
-use std::marker::PhantomData;
 use std::{
     collections::{
         hash_map::{Keys, Values},
@@ -472,7 +470,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                     let mut arr = [0_u8; 6];
                     arr.clone_from_slice(items);
                     visitor.visit_bytes(&arr)
-                },
+                }
                 Value::Null => visitor.visit_seq(SeqDeserializer::new(&[])),
                 _ => Err(de::Error::custom(format!(
                     "Expected an Array, Fixed or Null, but got: {inner:?}"

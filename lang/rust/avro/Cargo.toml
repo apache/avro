@@ -30,11 +30,20 @@ categories.workspace = true
 documentation.workspace = true
 
 [features]
+<<<<<<< HEAD
 bzip = ["dep:bzip2"]
 derive = ["dep:apache-avro-derive"]
 snappy = ["dep:crc32fast", "dep:snap"]
 xz = ["dep:xz2"]
 zstandard = ["dep:zstd"]
+=======
+bzip = ["bzip2"]
+derive = ["apache-avro-derive"]
+snappy = ["crc32fast", "snap"]
+xz = ["xz2"]
+zstandard = ["zstd"]
+bytes = ["serde-byte-array"]
+>>>>>>> 16129448b (AVRO-3531: Code formatting)
 
 [lib]
 # disable benchmarks to allow passing criterion arguments to `cargo bench`
