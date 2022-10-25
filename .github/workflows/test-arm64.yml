@@ -15,6 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
@@ -22,13 +30,12 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}:/avro"
+            --volume "${PWD}:/avro" --volume "${HOME}/.m2:/root/.m2" --workdir /avro/lang/java
           install: |
             apt-get update -q
             apt-get install -q -y openjdk-8-jdk wget tar
           run: |
             set -x
-            cd /avro
             export MAVEN_VERSION="3.8.5"
             wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
             tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
@@ -37,7 +44,274 @@ jobs:
             export PATH="$M2_HOME/bin:$JAVA_HOME/bin:$PATH"
             java -version
             mvn -version
-            cd lang/java
             ./build.sh clean test
             
-      
+  c:
+    name: C on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro"  --workdir /avro/lang/c
+          install: |
+            apt-get update -q
+            apt-get install -q -y libjansson-dev liblzma-dev libsnappy-dev cmake
+          run: |
+            set -x
+            ./build.sh clean test
+
+  cplusplus:
+    name: C++ on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro"  --workdir /avro/lang/c++
+          install: |
+            apt-get update -q
+            apt-get install -q -y libboost-all-dev cmake
+          run: |
+            set -x
+            ./build.sh clean test
+
+  csharp:
+    name: C# on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Nuget
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --volume "$HOME/.nuget/packages:/root/.nuget/packages"  --workdir /avro/lang/csharp
+          install: |
+            apt-get update -q
+            apt-get install -q -y wget libzstd-dev
+            wget https://dot.net/v1/dotnet-install.sh
+            ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
+            ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+            ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
+          run: |
+            set -x
+            export PATH=$HOME/.dotnet:$PATH
+            dotnet --list-sdks
+            ./build.sh clean test
+
+  python:
+    name: Python on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro"  --workdir /avro/lang/py
+          install: |
+            apt-get update -q
+            apt-get install -q -y python3.9 python3-pip libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
+            python3 -m pip install --upgrade pip setuptools tox-wheel
+          run: |
+            set -x
+            ./build.sh clean test
+
+  ruby:
+    name: Ruby on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache gems
+        uses: actions/cache@v3
+        with:
+          path: .gem
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --workdir /avro/lang/ruby
+          install: |
+            apt-get update -q
+            apt-get install -q -y ruby-dev bundler libsnappy-dev
+          run: |
+            set -x
+            ./build.sh clean test
+  
+
+  rust:
+    name: Rust on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --volume "$HOME/.cargo:/root/.cargo" --volume "$HOME/target:/root/avro/target"  --workdir /avro/lang/rust
+          install: |
+            apt-get update -q
+            apt-get install -q -y cargo
+          run: |
+            set -x
+            ./build.sh clean test
+
+  perl:
+    name: Perl on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --workdir /avro/lang/perl
+          install: |
+            apt-get update -q
+            apt-get install -q -y libjansson-dev libcompress-raw-zlib-perl libcpan-uploader-perl libencode-perl libio-string-perl libjson-xs-perl libmodule-install-perl libmodule-install-readmefrompod-perl libobject-tiny-perl libperl-critic-perl libsnappy-dev libtest-exception-perl libtest-pod-perl cpanminus make gcc wget
+            cpanm Error::Simple
+            cpanm Regexp::Common
+            cpanm Try::Tiny
+            cpanm Compress::Zstd
+            cpanm Module::Install::Repository
+            cpanm inc::Module::Install
+          run: |
+            set -x
+            ./build.sh clean test
+
+  php:
+    name: PHP on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --workdir /avro/lang/php
+          install: |
+            apt-get update -q
+            apt-get install -q -y wget php php-xml php-mbstring php-curl php-gmp php-bz2 unzip libtidy-dev libpq5
+            php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+            php -r "if (hash_file('sha384', 'composer-setup.php') === file_get_contents('https://composer.github.io/installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+            php composer-setup.php --version=2.2.5
+            php -r "unlink('composer-setup.php');"
+            mv composer.phar /usr/local/bin/composer
+          run: |
+            set -x
+            echo $PATH
+            which composer
+            composer --version
+            ./build.sh clean test
+
+  javascript:
+    name: JavaScript on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro" --volume "$HOME/.npm:/root/.npm" --workdir /avro/lang/js
+          install: |
+            apt-get update -q
+            apt-get install -q -y nodejs
+          run: |
+            set -x
+            ./build.sh clean test
