@@ -1,0 +1,43 @@
+name: CI on Linux ARM64
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  java:
+    name: Java on Linux ARM64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/avro"
+          install: |
+            apt-get update -q
+            apt-get install -q -y openjdk-8-jdk wget tar
+          run: |
+            set -x
+            cd /avro
+            export MAVEN_VERSION="3.8.5"
+            wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+            tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+            export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+            export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-arm64"
+            export PATH="$M2_HOME/bin:$JAVA_HOME/bin:$PATH"
+            java -version
+            mvn -version
+            cd lang/java
+            ./build.sh clean test
+            
+      
