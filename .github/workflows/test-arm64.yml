@@ -9,7 +9,7 @@ on:
 jobs:
   java:
     name: Java on Linux ARM64
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-xl
 
     steps:
       - name: Checkout
@@ -26,6 +26,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -57,14 +59,16 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}:/avro"  --workdir /avro/lang/c
+            --volume "${PWD}:/avro" --workdir /avro/lang/c
           install: |
             apt-get update -q
-            apt-get install -q -y libjansson-dev liblzma-dev libsnappy-dev cmake
+            apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
           run: |
             set -x
             ./build.sh clean test
@@ -80,6 +84,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -87,7 +93,7 @@ jobs:
             --volume "${PWD}:/avro"  --workdir /avro/lang/c++
           install: |
             apt-get update -q
-            apt-get install -q -y libboost-all-dev cmake
+            apt-get install -q -y gcc g++ libboost-all-dev cmake
           run: |
             set -x
             ./build.sh clean test
@@ -95,6 +101,8 @@ jobs:
   csharp:
     name: C# on Linux ARM64
     runs-on: ubuntu-latest
+    env:
+      GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
 
     steps:
       - name: Checkout
@@ -111,6 +119,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -118,11 +128,11 @@ jobs:
             --volume "${PWD}:/avro" --volume "$HOME/.nuget/packages:/root/.nuget/packages"  --workdir /avro/lang/csharp
           install: |
             apt-get update -q
-            apt-get install -q -y wget libzstd-dev
+            apt-get install -q -y wget libzstd-dev libicu-dev
             wget https://dot.net/v1/dotnet-install.sh
-            ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
-            ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
-            ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
+            bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
+            bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+            bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
           run: |
             set -x
             export PATH=$HOME/.dotnet:$PATH
@@ -131,7 +141,7 @@ jobs:
 
   python:
     name: Python on Linux ARM64
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-xl
 
     steps:
       - name: Checkout
@@ -140,17 +150,27 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
+            BENCH_MAX_WRITE_SECONDS: 300 
+            BENCH_MAX_READ_SECONDS: 300
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}:/avro"  --workdir /avro/lang/py
+            --volume "${PWD}:/avro" --workdir /avro/lang/py
           install: |
             apt-get update -q
-            apt-get install -q -y python3.9 python3-pip libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
+            apt-get install -q -y software-properties-common 
+            add-apt-repository -y ppa:deadsnakes/ppa
+            apt-get update -q
+            apt-get install -q -y python3.6 python3.7 python3.8 python3.9 python3.10 python3-pip git libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
             python3 -m pip install --upgrade pip setuptools tox-wheel
           run: |
             set -x
+            echo $BENCH_MAX_WRITE_SECONDS
+            echo $BENCH_MAX_READ_SECONDS
+            git config --global --add safe.directory /avro
             ./build.sh clean test
 
   ruby:
@@ -173,6 +193,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -188,7 +210,7 @@ jobs:
 
   rust:
     name: Rust on Linux ARM64
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04-xl
 
     steps:
       - name: Checkout
@@ -212,17 +234,21 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "$HOME/.cargo:/root/.cargo" --volume "$HOME/target:/root/avro/target"  --workdir /avro/lang/rust
           install: |
+            set -x
             apt-get update -q
-            apt-get install -q -y cargo
+            apt-get install -q -y cargo rustc
           run: |
             set -x
-            ./build.sh clean test
+            cargo test --all --jobs 1
+#            ./build.sh clean test
 
   perl:
     name: Perl on Linux ARM64
@@ -235,6 +261,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -264,6 +292,8 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
@@ -287,6 +317,8 @@ jobs:
   javascript:
     name: JavaScript on Linux ARM64
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: "16.18.0"
 
     steps:
       - name: Checkout
@@ -300,18 +332,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-
       - name: Build
         uses: uraimo/run-on-arch-action@v2
         with:
+          env: |
+            GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "$HOME/.npm:/root/.npm" --workdir /avro/lang/js
           install: |
+            set -x
             apt-get update -q
-            apt-get install -q -y nodejs
+            apt-get install -q -y wget tar xz-utils
+            wget https://nodejs.org/dist/v${{ env.NODE_VERSION }}/node-v${{ env.NODE_VERSION }}-linux-arm64.tar.xz
+            tar xf node-v${{ env.NODE_VERSION }}-linux-arm64.tar.xz
           run: |
             set -x
+            export PATH=/node-v${{ env.NODE_VERSION }}-linux-arm64/bin:$PATH
             ./build.sh clean test
