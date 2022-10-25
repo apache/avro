@@ -148,19 +148,19 @@ const UNION_EXAMPLES: &[(&str, bool)] = &[
     ),
     (
         r#"{"name": "foo", "type": ["string", "long"], "default": 1}"#,
-        false,
+        true,
     ),
     (
         r#"{"name": "foo", "type": ["string", "null"], "default": null}"#,
-        false,
+        true,
     ),
     (
         r#"{"name": "foo", "type": ["null", "string"], "default": "null"}"#,
-        false,
+        true,
     ),
     (
         r#"{"name": "foo", "type": ["long", "string"], "default": "str"}"#,
-        false,
+        true,
     ),
 ];
 
