@@ -36,8 +36,8 @@ A Schema is represented in [JSON](https://www.json.org/) by one of:
 
 * A JSON string, naming a defined type.
 * A JSON object, of the form:
-```json
-{"type": "typeName" ...attributes...}
+```js
+{"type": "typeName", ...attributes...}
 ```
 where _typeName_ is either a primitive or derived type name, as defined below. Attributes not defined in this document are permitted as metadata, but must not affect the format of serialized data.
 * A JSON array, representing a union of embedded types.
@@ -97,7 +97,7 @@ Records use the type name "record" and support the following attributes:
   * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
 
 For example, a linked-list of 64-bit values may be defined with:
-```json
+```jsonc
 {
   "type": "record",
   "name": "LongList",
@@ -810,27 +810,27 @@ A `time-millis` logical type annotates an Avro `int`, where the int stores the n
 ### Time (microsecond precision)
 The `time-micros` logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one microsecond.
 
-A `time-micros` logical type annotates an Avro long, where the long stores the number of microseconds after midnight, 00:00:00.000000.
+A `time-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds after midnight, 00:00:00.000000.
 
 ### Timestamp (millisecond precision)
 The `timestamp-millis` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
-A `timestamp-millis` logical type annotates an Avro long, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+A `timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
 
 ### Timestamp (microsecond precision)
 The `timestamp-micros` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
-A `timestamp-micros` logical type annotates an Avro long, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+A `timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
 
 ### Local timestamp (millisecond precision)
 The `local-timestamp-millis` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
 
-A `local-timestamp-millis` logical type annotates an Avro long, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
+A `local-timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
 
 ### Local timestamp (microsecond precision)
 The `local-timestamp-micros` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
 
-A `local-timestamp-micros` logical type annotates an Avro long, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
+A `local-timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
 
 ### Duration
 The `duration` logical type represents an amount of time defined by a number of months, days and milliseconds. This is not equivalent to a number of milliseconds, because, depending on the moment in time from which the duration is measured, the number of days in the month and number of milliseconds in a day may differ. Other standard periods such as years, quarters, hours and minutes can be expressed through these basic periods.
