@@ -716,18 +716,9 @@ class TestMisc(unittest.TestCase):
     def test_parse_duplicate_symbol(self):
         duplicate_symbol_schema = json.dumps({"type": "enum", "name": "AVRO3573", "symbols": ["A", "A", "B", "C", "D"]})
         with self.assertRaisesRegex(
-            avro.errors.AvroException, r"Duplicate symbol: \[\'A\'\]", msg="When enum symbol has a duplicate, AvroException should raise."
+            avro.errors.AvroException, r"Duplicate enum symbol: A", msg="When enum symbol has a duplicate, AvroException should raise."
         ):
             avro.schema.parse(duplicate_symbol_schema)
-
-    def test_parse_duplicate_symbols(self):
-        duplicate_symbols_schema = json.dumps({"type": "enum", "name": "AVRO3573", "symbols": ["A", "A", "B", "C", "C", "D"]})
-        with self.assertRaisesRegex(
-            avro.errors.AvroException,
-            r"Duplicate symbols: (\[\'A\', \'C\'\])|(\[\'C\', \'A\'\])",
-            msg="When enum symbols have duplicates, AvroException should raise.",
-        ):
-            avro.schema.parse(duplicate_symbols_schema)
 
 
 class SchemaParseTestCase(unittest.TestCase):
