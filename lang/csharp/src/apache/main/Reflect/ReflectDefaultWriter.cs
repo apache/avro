@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using Avro.IO;
+using Avro.Reflect.Interfaces.Services;
 using Avro.Specific;
 
 namespace Avro.Reflect
@@ -28,12 +29,14 @@ namespace Avro.Reflect
     /// </summary>
     public class ReflectDefaultWriter : SpecificDefaultWriter
     {
-        private ClassCache _classCache = new ClassCache();
-
         /// <summary>
         /// Class cache
         /// </summary>
-        public ClassCache ClassCache { get => _classCache; }
+        [Obsolete]
+        public ClassCache ClassCache { get => _cacheService as ClassCache; }
+
+        private readonly ICacheService _cacheService;
+        private readonly IArrayService _arrayService;
 
         /// <summary>
         /// Constructor
@@ -44,12 +47,24 @@ namespace Avro.Reflect
         public ReflectDefaultWriter(Type objType, Schema schema, ClassCache cache)
             : base(schema)
         {
-            if (cache != null)
-            {
-                _classCache = cache;
-            }
+            var classCache = cache ?? new ClassCache();
+            classCache.LoadClassCache(objType, schema);
+            _cacheService = classCache;
+            _arrayService = classCache;
+        }
 
-            _classCache.LoadClassCache(objType, schema);
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="objType"></param>
+        /// <param name="schema"></param>
+        /// <param name="cacheService"></param>
+        /// <param name="arrayService"></param>
+        public ReflectDefaultWriter(Type objType, Schema schema, ICacheService cacheService, IArrayService arrayService)
+            : base(schema)
+        {
+            _cacheService = cacheService;
+            _arrayService = arrayService;
         }
 
         /// <summary>
@@ -75,7 +90,7 @@ namespace Avro.Reflect
             {
                 try
                 {
-                    var v = _classCache.GetClass(schema).GetValue(value, field);
+                    var v = _cacheService.GetClass(schema).GetValue(value, field);
 
                     Write(field.Schema, v, encoder);
                 }
@@ -125,7 +140,7 @@ namespace Avro.Reflect
                 throw new AvroTypeException("Array does not implement have registered ReflectArray derived type");
             }
 
-            var arrayHelper = _classCache.GetArrayHelper(schema, (IEnumerable)value);
+            var arrayHelper = _arrayService.GetArrayHelper(schema, (IEnumerable)value);
             long l = arrayHelper.Count();
             encoder.WriteArrayStart();
             encoder.SetItemCount(l);
@@ -188,7 +203,7 @@ namespace Avro.Reflect
                     return obj is string;
                 case Schema.Type.Error:
                 case Schema.Type.Record:
-                    return _classCache.GetClass(sc as RecordSchema).GetClassType() == obj.GetType();
+                    return _cacheService.GetClass(sc as RecordSchema).GetClassType() == obj.GetType();
                 case Schema.Type.Enumeration:
                     return EnumCache.GetEnumeration(sc as EnumSchema) == obj.GetType();
                 case Schema.Type.Array:
