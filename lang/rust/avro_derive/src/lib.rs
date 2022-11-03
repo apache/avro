@@ -21,9 +21,7 @@ use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use syn::{
-    parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Error, Type, TypePath,
-};
+use syn::{parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Type, TypePath};
 
 #[derive(FromAttributes)]
 #[darling(attributes(avro))]
@@ -86,7 +84,7 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
             input.ident.span(),
         )?,
         _ => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 input.ident.span(),
                 "AvroSchema derive only works for structs and simple enums ",
             )])
@@ -139,7 +137,7 @@ fn get_data_struct_schema_def(
                     Some(default_value) => {
                         let _: serde_json::Value = serde_json::from_str(&default_value[..])
                             .map_err(|e| {
-                                vec![Error::new(
+                                vec![syn::Error::new(
                                     field.ident.span(),
                                     format!("Invalid avro default json: \n{}", e),
                                 )]
@@ -167,13 +165,13 @@ fn get_data_struct_schema_def(
             }
         }
         syn::Fields::Unnamed(_) => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 error_span,
                 "AvroSchema derive does not work for tuple structs",
             )])
         }
         syn::Fields::Unit => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 error_span,
                 "AvroSchema derive does not work for unit structs",
             )])
@@ -224,7 +222,7 @@ fn get_data_enum_schema_def(
             }
         })
     } else {
-        Err(vec![Error::new(
+        Err(vec![syn::Error::new(
             error_span,
             "AvroSchema derive does not work for enums with non unit structs",
         )])
