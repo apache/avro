@@ -314,6 +314,8 @@
               <searchRegex>import\s+[^\*\s]+\*;(\r\n|\r|\n)</searchRegex>
               <replacement>$1</replacement>
             </replaceRegex>
+            <!-- Allow spotless:off/spotless:on comment pairs to keep ASCII-formatted tables intact -->
+            <toggleOffOn/>
           </java>
         </configuration>
         <executions>

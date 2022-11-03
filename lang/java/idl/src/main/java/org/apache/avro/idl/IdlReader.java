@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 import org.apache.avro.JsonProperties;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Protocol;
@@ -68,6 +69,7 @@ import org.apache.avro.idl.IdlParser.ResultTypeContext;
 import org.apache.avro.idl.IdlParser.SchemaPropertyContext;
 import org.apache.avro.idl.IdlParser.UnionTypeContext;
 import org.apache.avro.idl.IdlParser.VariableDeclarationContext;
+import org.apache.avro.util.UtfTextUtils;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -83,6 +85,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
@@ -134,7 +137,10 @@ public class IdlReader {
    * Predicate to check for valid names. Should probably be delegated to the
    * Schema class.
    */
-  private static final Predicate<String> VALID_NAME = Pattern.compile("[_\\p{L}][_\\p{L}\\d]*").asPredicate();
+  private static final Predicate<String> VALID_NAME = Pattern
+      .compile("[_\\p{L}][_\\p{LD}]*", Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE | Pattern.CANON_EQ)
+      .asPredicate();
+
   private static final Set<String> INVALID_TYPE_NAMES = new HashSet<>(Arrays.asList("boolean", "int", "long", "float",
       "double", "bytes", "string", "null", "date", "time_ms", "timestamp_ms", "localtimestamp_ms", "uuid"));
   private static final String CLASSPATH_SCHEME = "classpath";
@@ -159,15 +165,13 @@ public class IdlReader {
     return schema;
   }
 
-  private void setTypes(Map<String, Schema> types) {
+  private void setTypes(Collection<Schema> types) {
     names.clear();
-    for (Schema schema : types.values()) {
-      addSchema(schema);
-    }
+    addTypes(types);
   }
 
-  public void addTypes(Map<String, Schema> types) {
-    for (Schema schema : types.values()) {
+  public void addTypes(Collection<Schema> types) {
+    for (Schema schema : types) {
       addSchema(schema);
     }
   }
@@ -185,18 +189,26 @@ public class IdlReader {
   }
 
   IdlFile parse(URI location) throws IOException {
-    try (InputStream stream = location.toURL().openStream()) {
-      readLocations.add(location);
-      URI inputDir = location;
-      if ("jar".equals(location.getScheme())) {
-        String jarUriAsString = location.toString();
-        String pathFromJarRoot = jarUriAsString.substring(jarUriAsString.indexOf("!/") + 2);
-        inputDir = URI.create(CLASSPATH_SCHEME + ":/" + pathFromJarRoot);
-      }
-      inputDir = inputDir.resolve(".");
-
-      return parse(inputDir, CharStreams.fromStream(stream, StandardCharsets.UTF_8));
+    readLocations.add(location);
+    URI inputDir = location;
+    if ("jar".equals(location.getScheme())) {
+      String jarUriAsString = location.toString();
+      String pathFromJarRoot = jarUriAsString.substring(jarUriAsString.indexOf("!/") + 2);
+      inputDir = URI.create(CLASSPATH_SCHEME + ":/" + pathFromJarRoot);
     }
+    inputDir = inputDir.resolve(".");
+
+    try (InputStream stream = location.toURL().openStream()) {
+      String inputString = UtfTextUtils.readAllBytes(stream, null);
+      return parse(inputDir, CharStreams.fromString(inputString));
+    }
+  }
+
+  /**
+   * Parse an IDL file from a string, using the given directory for imports.
+   */
+  public IdlFile parse(URI directory, CharSequence source) throws IOException {
+    return parse(directory, CharStreams.fromString(source.toString()));
   }
 
   /**
@@ -219,8 +231,14 @@ public class IdlReader {
     parser.setTrace(false);
     parser.setBuildParseTree(false);
 
-    // Trigger parsing.
-    parser.idlFile();
+    try {
+      // Trigger parsing.
+      parser.idlFile();
+    } catch (SchemaParseException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new SchemaParseException(e);
+    }
 
     return parseListener.getIdlFile();
   }
@@ -440,10 +458,11 @@ public class IdlReader {
           break;
         case IdlParser.Schema:
           try (InputStream stream = importLocation.toURL().openStream()) {
-            Schema.Parser parser = new Schema.Parser();
-            parser.addTypes(getTypes().values()); // inherit names
-            parser.parse(stream);
-            setTypes(parser.getTypes()); // update names
+            JsonSchemaParser parser = new JsonSchemaParser();
+            Collection<Schema> types = new ArrayList<>(names.values());
+            parser.parse(types, importLocation.resolve("."), UtfTextUtils.readAllBytes(stream, null));
+            // Ensure we're only changing (adding to) the known types when a parser succeeds
+            types.forEach(IdlReader.this::addSchema);
           }
           break;
         }
