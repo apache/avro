@@ -68,7 +68,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
 
     match value {
         Value::Null => (),
-        Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
+        Value::Boolean(b) => buffer.push(u8::from(*b)),
         // Pattern | Pattern here to signify that these _must_ have the same encoding.
         Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
         Value::Long(i)
