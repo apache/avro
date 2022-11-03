@@ -139,20 +139,56 @@ macro_rules! to_value(
     );
 );
 
+macro_rules! try_from_value(
+    ($type:ty, $variant:ident, $error:ident) => (
+        impl TryFrom<Value> for $type {
+            type Error = Error;
+
+            fn try_from(value: Value) -> AvroResult<Self> {
+                match value {
+                    Value::$variant(v) => Ok(v),
+                    other => Err(Error::$error(other.into())),
+                }
+            }
+        }
+    );
+);
+
 to_value!(bool, Value::Boolean);
+try_from_value!(bool, Boolean, GetBoolean);
 to_value!(i32, Value::Int);
+try_from_value!(i32, Int, GetInt);
 to_value!(i64, Value::Long);
+try_from_value!(i64, Long, GetLong);
 to_value!(f32, Value::Float);
+try_from_value!(f32, Float, GetFloat);
 to_value!(f64, Value::Double);
+try_from_value!(f64, Double, GetDouble);
 to_value!(String, Value::String);
+try_from_value!(String, String, GetString);
 to_value!(Vec<u8>, Value::Bytes);
+try_from_value!(Vec<u8>, Bytes, GetBytes);
 to_value!(uuid::Uuid, Value::Uuid);
+try_from_value!(uuid::Uuid, Uuid, GetUuid);
 to_value!(Decimal, Value::Decimal);
+try_from_value!(Decimal, Decimal, GetDecimal);
 to_value!(Duration, Value::Duration);
+try_from_value!(Duration, Duration, GetDuration);
 
 impl From<()> for Value {
     fn from(_: ()) -> Self {
         Self::Null
+    }
+}
+
+impl TryFrom<Value> for () {
+    type Error = crate::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::Null => Ok(()),
+            other => Err(Self::Error::GetNull(other.into())),
+        }
     }
 }
 
@@ -161,6 +197,17 @@ impl From<usize> for Value {
         i64::try_from(value)
             .expect("cannot convert usize to i64")
             .into()
+    }
+}
+
+impl TryFrom<Value> for usize {
+    type Error = crate::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::Int(int) => Ok(int as usize),
+            other => Err(Self::Error::GetInt(other.into())),
+        }
     }
 }
 

@@ -42,3 +42,4 @@ syn = { default-features = false, version = "1.0.103", features = ["full", "fold
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
 proptest = { default-features = false, version = "1.0.0", features = ["std"] }
 serde = { default-features = false, version = "1.0.147", features = ["derive"] }
+uuid = "1.2.1"

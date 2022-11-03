@@ -115,6 +115,12 @@ pub enum Error {
     #[error("expected UUID, got: {0:?}")]
     GetUuid(ValueKind),
 
+    #[error("expected Decimal, got: {0:?}")]
+    GetDecimal(ValueKind),
+
+    #[error("expected Duration, got: {0:?}")]
+    GetDuration(ValueKind),
+
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
 
@@ -237,6 +243,9 @@ pub enum Error {
 
     #[error("JSON value {0} claims to be i64 but cannot be converted")]
     GetI64FromJson(serde_json::Number),
+
+    #[error("Failed to convert from type to apache_avro::types::Value")]
+    ConvertFromValue(String),
 
     #[error("Cannot convert u64 to usize: {1}")]
     ConvertU64ToUsize(#[source] std::num::TryFromIntError, u64),

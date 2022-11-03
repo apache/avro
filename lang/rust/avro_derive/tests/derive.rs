@@ -15,26 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#[macro_use]
+extern crate serde;
+
+use std::collections::HashMap;
+
+use proptest::prelude::*;
+use serde::{de::DeserializeOwned, ser::Serialize};
+
 use apache_avro::{
     from_value,
     schema::{derive::AvroSchemaComponent, AvroSchema},
     Reader, Schema, Writer,
 };
 use apache_avro_derive::*;
-use proptest::prelude::*;
-use serde::{de::DeserializeOwned, ser::Serialize};
-use std::collections::HashMap;
-
-#[macro_use]
-extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use apache_avro::schema::Alias;
     use std::{
         borrow::{Borrow, Cow},
         sync::Mutex,
     };
+
+    use apache_avro::{schema::Alias, types::Value, AvroValue};
+    use std::convert::TryFrom;
 
     use super::*;
 
@@ -116,6 +120,28 @@ mod test_derive {
         };
         serde_assert(test);
     }}
+
+    #[derive(AvroValue, Clone, Debug, PartialEq, Eq)]
+    struct TestValueBasic {
+        a: String,
+        b: HashMap<String, i32>,
+        c: Option<bool>,
+        d: Option<Vec<String>>,
+    }
+
+    proptest! {
+        #[test]
+        fn test_value_smoke_test(a: String, b: HashMap<String, i32>, c: Option<bool>, d: Option<Vec<String>>) {
+            let test = TestValueBasic {
+                a,
+                b,
+                c,
+                d,
+            };
+            let converted = TestValueBasic::try_from(Value::from(test.clone()))?;
+            assert_eq!(test, converted);
+        }
+    }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
@@ -581,7 +607,7 @@ mod test_derive {
         serde_assert(test_generic);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, AvroValue, Clone, PartialEq, Eq)]
     enum TestAllowedEnum {
         A,
         B,
@@ -1560,5 +1586,28 @@ mod test_derive {
         } else {
             panic!("Unexpected schema type for {:?}", derived_schema)
         }
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroValue, AvroSchema, Clone, PartialEq)]
+    enum TestValueEnum {
+        A,
+        B,
+        C,
+        D,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, AvroValue, Clone, PartialEq)]
+    struct TestValue {
+        f_boolean: bool,
+        f_int: i32,
+        f_long: i64,
+        f_float: f32,
+        f_double: f64,
+        f_string: String,
+        f_string_opt: Option<String>,
+        f_string_array_opt: Option<Vec<String>>,
+        f_enum: TestValueEnum,
+        f_array: Vec<String>,
+        f_map: HashMap<String, bool>,
     }
 }
