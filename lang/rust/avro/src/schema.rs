@@ -1707,7 +1707,7 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
                 _ => Cow::Borrowed(name),
             };
 
-            fields.push((k, format!("{}:{}", pcf_string(k), pcf_string(&*n))));
+            fields.push((k, format!("{}:{}", pcf_string(k), pcf_string(&n))));
             continue;
         }
 
