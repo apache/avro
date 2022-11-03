@@ -65,7 +65,7 @@ fn bench_read_json(
 fn bench_big_schema_json_read_10_000_record(c: &mut Criterion) {
     bench_read_json(
         c,
-        &make_big_json_record,
+        make_big_json_record,
         10_000,
         "big schema, read 10k JSON records",
     );
