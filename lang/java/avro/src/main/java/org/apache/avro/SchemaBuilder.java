@@ -17,30 +17,26 @@
  */
 package org.apache.avro;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.util.internal.JacksonUtils;
+
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.util.internal.JacksonUtils;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * <p>
@@ -383,18 +379,17 @@ public class SchemaBuilder {
       return (props != null);
     }
 
-    final <T extends JsonProperties> T addPropsTo(T jsonable) {
+    final void addPropsTo(JsonProperties jsonable) {
       if (hasProps()) {
         for (Map.Entry<String, JsonNode> prop : props.entrySet()) {
           jsonable.addProp(prop.getKey(), prop.getValue());
         }
       }
-      return jsonable;
     }
 
     /**
-     * a self-type for chaining builder subclasses. Concrete subclasses must return
-     * 'this'
+     * A self-type for chaining builder subclasses. Concrete subclasses must return
+     * 'this'.
      **/
     protected abstract S self();
   }
@@ -443,22 +438,20 @@ public class SchemaBuilder {
       return names;
     }
 
-    final Schema addAliasesTo(Schema schema) {
+    final void addAliasesTo(Schema schema) {
       if (null != aliases) {
         for (String alias : aliases) {
           schema.addAlias(alias);
         }
       }
-      return schema;
     }
 
-    final Field addAliasesTo(Field field) {
+    final void addAliasesTo(Field field) {
       if (null != aliases) {
         for (String alias : aliases) {
           field.addAlias(alias);
         }
       }
-      return field;
     }
   }
 
@@ -488,16 +481,15 @@ public class SchemaBuilder {
 
     final String space() {
       if (null == namespace) {
-        return names().namespace;
+        return names().namespace();
       }
       return namespace;
     }
 
-    final Schema completeSchema(Schema schema) {
+    final void completeSchema(Schema schema) {
       addPropsTo(schema);
       addAliasesTo(schema);
       names().put(schema);
-      return schema;
     }
 
     final Completion<R> context() {
@@ -514,7 +506,7 @@ public class SchemaBuilder {
 
     protected PrimitiveBuilder(Completion<R> context, NameContext names, Schema.Type type) {
       this.context = context;
-      this.immutable = names.getFullname(type.getName());
+      this.immutable = names.resolveWithFallback(type.getName(), null);
     }
 
     private R end() {
@@ -883,89 +875,6 @@ public class SchemaBuilder {
   }
 
   /**
-   * internal class for passing the naming context around. This allows for the
-   * following:
-   * <li>Cache and re-use primitive schemas when they do not set properties.</li>
-   * <li>Provide a default namespace for nested contexts (as the JSON Schema spec
-   * does).</li>
-   * <li>Allow previously defined named types or primitive types to be referenced
-   * by name.</li>
-   **/
-  private static class NameContext {
-    private static final Set<String> PRIMITIVES = new HashSet<>();
-    static {
-      PRIMITIVES.add("null");
-      PRIMITIVES.add("boolean");
-      PRIMITIVES.add("int");
-      PRIMITIVES.add("long");
-      PRIMITIVES.add("float");
-      PRIMITIVES.add("double");
-      PRIMITIVES.add("bytes");
-      PRIMITIVES.add("string");
-    }
-    private final HashMap<String, Schema> schemas;
-    private final String namespace;
-
-    private NameContext() {
-      this.schemas = new HashMap<>();
-      this.namespace = null;
-      schemas.put("null", Schema.create(Schema.Type.NULL));
-      schemas.put("boolean", Schema.create(Schema.Type.BOOLEAN));
-      schemas.put("int", Schema.create(Schema.Type.INT));
-      schemas.put("long", Schema.create(Schema.Type.LONG));
-      schemas.put("float", Schema.create(Schema.Type.FLOAT));
-      schemas.put("double", Schema.create(Schema.Type.DOUBLE));
-      schemas.put("bytes", Schema.create(Schema.Type.BYTES));
-      schemas.put("string", Schema.create(Schema.Type.STRING));
-    }
-
-    private NameContext(HashMap<String, Schema> schemas, String namespace) {
-      this.schemas = schemas;
-      this.namespace = "".equals(namespace) ? null : namespace;
-    }
-
-    private NameContext namespace(String namespace) {
-      return new NameContext(schemas, namespace);
-    }
-
-    private Schema get(String name, String namespace) {
-      return getFullname(resolveName(name, namespace));
-    }
-
-    private Schema getFullname(String fullName) {
-      Schema schema = schemas.get(fullName);
-      if (schema == null) {
-        throw new SchemaParseException("Undefined name: " + fullName);
-      }
-      return schema;
-    }
-
-    private void put(Schema schema) {
-      String fullName = schema.getFullName();
-      if (schemas.containsKey(fullName)) {
-        throw new SchemaParseException("Can't redefine: " + fullName);
-      }
-      schemas.put(fullName, schema);
-    }
-
-    private String resolveName(String name, String space) {
-      if (PRIMITIVES.contains(name) && space == null) {
-        return name;
-      }
-      int lastDot = name.lastIndexOf('.');
-      if (lastDot < 0) { // short name
-        if (space == null) {
-          space = namespace;
-        }
-        if (space != null && !"".equals(space)) {
-          return space + "." + name;
-        }
-      }
-      return name;
-    }
-  }
-
-  /**
    * A common API for building types within a context. BaseTypeBuilder can build
    * all types other than Unions. {@link TypeBuilder} can additionally build
    * Unions.
@@ -1013,7 +922,7 @@ public class SchemaBuilder {
      * context will be used.
      **/
     public final R type(String name, String namespace) {
-      return type(names.get(name, namespace));
+      return type(names.resolve(name, namespace));
     }
 
     /**
@@ -2138,14 +2047,18 @@ public class SchemaBuilder {
   /**
    * Builds a Field in the context of a {@link FieldAssembler}.
    *
+   * <p>
    * Usage is to first configure any of the optional parameters and then to call
-   * one of the type methods to complete the field. For example
+   * one of the type methods to complete the field. For example:
+   * </p>
    *
    * <pre>
    *   .namespace("org.apache.example").orderDescending().type()
    * </pre>
    *
+   * <p>
    * Optional parameters for a field are namespace, doc, order, and aliases.
+   * </p>
    */
   public final static class FieldBuilder<R> extends NamedBuilder<FieldBuilder<R>> {
     private final FieldAssembler<R> fields;
@@ -2157,13 +2070,13 @@ public class SchemaBuilder {
       this.fields = fields;
     }
 
-    /** Set this field to have ascending order. Ascending is the default **/
+    /** Set this field to have ascending order. Ascending is the default. **/
     public FieldBuilder<R> orderAscending() {
       order = Schema.Field.Order.ASCENDING;
       return self();
     }
 
-    /** Set this field to have descending order. Descending is the default **/
+    /** Set this field to have descending order. **/
     public FieldBuilder<R> orderDescending() {
       order = Schema.Field.Order.DESCENDING;
       return self();
@@ -2241,7 +2154,7 @@ public class SchemaBuilder {
      * specification.
      */
     public GenericDefault<R> type(String name, String namespace) {
-      Schema schema = names().get(name, namespace);
+      Schema schema = names().resolve(name, namespace);
       return type(schema);
     }
 
@@ -2251,7 +2164,7 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema) {
-      return completeField(schema, (JsonNode) null);
+      return completeField(schema, null);
     }
 
     private FieldAssembler<R> completeField(Schema schema, JsonNode defaultVal) {
@@ -2567,9 +2480,8 @@ public class SchemaBuilder {
   }
 
   /**
-   * Completion<R> is for internal builder use, all subclasses are private.
-   *
-   * Completion is an object that takes a Schema and returns some result.
+   * Completion<R> is for internal builder use, all subclasses are private. It
+   * takes a Schema and returns some result.
    */
   private abstract static class Completion<R> {
     abstract R complete(Schema schema);
@@ -2720,10 +2632,10 @@ public class SchemaBuilder {
         // special case since GenericData.toString() is incorrect for bytes
         // note that this does not handle the case of a default value with nested bytes
         ByteBuffer bytes = ((ByteBuffer) o);
-        ((Buffer) bytes).mark();
+        bytes.mark();
         byte[] data = new byte[bytes.remaining()];
         bytes.get(data);
-        ((Buffer) bytes).reset(); // put the buffer back the way we got it
+        bytes.reset(); // put the buffer back the way we got it
         s = new String(data, StandardCharsets.ISO_8859_1);
         char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";

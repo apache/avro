@@ -17,12 +17,6 @@
  */
 package org.apache.avro;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Field.Order;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -34,12 +28,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Field.Order;
 
 /**
  * A set of messages forming an application protocol.
@@ -75,6 +76,9 @@ public class Protocol extends JsonProperties {
 
   private static final Set<String> FIELD_RESERVED = Collections
       .unmodifiableSet(new HashSet<>(Arrays.asList("name", "type", "doc", "default", "aliases")));
+
+  private static final Set<Schema.Type> NAMED_SCHEMA_TYPES = EnumSet.of(Schema.Type.RECORD, Schema.Type.ENUM,
+      Schema.Type.FIXED);
 
   /** A protocol message. */
   public class Message extends JsonProperties {
@@ -245,7 +249,7 @@ public class Protocol extends JsonProperties {
   private String namespace;
   private String doc;
 
-  private Schema.Names types = new Schema.Names();
+  private NameContext types = new NameContext();
   private final Map<String, Message> messages = new LinkedHashMap<>();
   private byte[] md5;
 
@@ -277,6 +281,7 @@ public class Protocol extends JsonProperties {
     this.name = name;
     this.doc = doc;
     this.namespace = namespace;
+    this.types = new NameContext().namespace(namespace);
   }
 
   public Protocol(String name, String namespace) {
@@ -300,19 +305,20 @@ public class Protocol extends JsonProperties {
 
   /** The types of this protocol. */
   public Collection<Schema> getTypes() {
-    return types.values();
+    return types.typesByName().values();
   }
 
   /** Returns the named type. */
   public Schema getType(String name) {
-    return types.get(name);
+    return types.resolve(name);
   }
 
   /** Set the types of this protocol. */
   public void setTypes(Collection<Schema> newTypes) {
-    types = new Schema.Names();
+    types = new NameContext().namespace(namespace);
     for (Schema s : newTypes)
-      types.add(s);
+      if (NAMED_SCHEMA_TYPES.contains(s.getType()))
+        types.put(s);
   }
 
   /** The messages of this protocol. */
@@ -412,8 +418,6 @@ public class Protocol extends JsonProperties {
   }
 
   void toJson(JsonGenerator gen) throws IOException {
-    types.space(namespace);
-
     gen.writeStartObject();
     gen.writeStringField("protocol", name);
     if (namespace != null) {
@@ -424,8 +428,8 @@ public class Protocol extends JsonProperties {
       gen.writeStringField("doc", doc);
     writeProps(gen);
     gen.writeArrayFieldStart("types");
-    Schema.Names resolved = new Schema.Names(namespace);
-    for (Schema type : types.values())
+    NameContext resolved = new NameContext().namespace(namespace);
+    for (Schema type : types.typesByName().values())
       if (!resolved.contains(type))
         type.toJson(resolved, gen);
     gen.writeEndArray();
@@ -501,7 +505,7 @@ public class Protocol extends JsonProperties {
     if (nameNode == null)
       return; // no namespace defined
     this.namespace = nameNode.textValue();
-    types.space(this.namespace);
+    this.types = new NameContext().namespace(namespace);
   }
 
   private void parseDoc(JsonNode json) {
@@ -628,7 +632,7 @@ public class Protocol extends JsonProperties {
         throw new SchemaParseException("Errors not an array: " + json);
       for (JsonNode decl : decls) {
         String name = decl.textValue();
-        Schema schema = this.types.get(name);
+        Schema schema = this.types.resolve(name);
         if (schema == null)
           throw new SchemaParseException("Undefined error: " + name);
         if (!schema.isError())
