@@ -361,6 +361,25 @@ namespace Avro.Test
         }
 
         [TestCase]
+        public void TestRecordFieldNames() {
+            var fields = new List<Field>
+                {
+                    new Field(PrimitiveSchema.Create(Schema.Type.Long),
+                        "歳以上",
+                        null,
+                        0,
+                        null,
+                        null,
+                        Field.SortOrder.ignore,
+                        null)
+                };
+            var recordSchema = RecordSchema.Create("LongList", fields, null, new[] { "LinkedLongs" });
+
+            Field f = recordSchema.Fields[0];
+            Assert.AreEqual("歳以上", f.Name);
+        }
+
+        [TestCase]
         public void TestRecordCreationWithRecursiveRecord()
         {
             string schema = "{\"type\":\"record\",\"name\":\"LongList\",\"aliases\":[\"LinkedLongs\"],\"fields\":[{\"name\":\"value\",\"type\":\"long\"},{\"name\":\"next\",\"type\":[\"null\",\"LongList\"]}]}";
