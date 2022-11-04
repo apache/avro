@@ -20,7 +20,6 @@ extern crate darling;
 use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-
 use syn::{parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Type, TypePath};
 
 #[derive(FromAttributes)]
@@ -184,7 +183,7 @@ fn get_data_struct_schema_def(
                             .map_err(|e| {
                                 vec![syn::Error::new(
                                     field.ident.span(),
-                                    format!("Invalid avro default json: \n{}", e),
+                                    format!("Invalid avro default json: \n{e}"),
                                 )]
                             })?;
                         quote! {
@@ -336,7 +335,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
     } else {
         Err(vec![syn::Error::new_spanned(
             ty,
-            format!("Unable to generate schema for type: {:?}", ty),
+            format!("Unable to generate schema for type: {ty:?}"),
         )])
     }
 }
@@ -395,7 +394,7 @@ fn preserve_vec(op: Vec<impl quote::ToTokens>) -> TokenStream {
 }
 
 fn darling_to_syn(e: darling::Error) -> Vec<syn::Error> {
-    let msg = format!("{}", e);
+    let msg = format!("{e}");
     let token_errors = e.write_errors();
     vec![syn::Error::new(token_errors.span(), msg)]
 }
