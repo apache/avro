@@ -56,6 +56,14 @@ pub fn proc_macro_derive_avro_schema(input: proc_macro::TokenStream) -> proc_mac
         .into()
 }
 
+#[proc_macro_derive(AvroValue)]
+pub fn proc_macro_derive_avro_value(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let mut input = parse_macro_input!(input as DeriveInput);
+    derive_avro_value(&mut input)
+        .unwrap_or_else(to_compile_errors)
+        .into()
+}
+
 fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
     let named_type_options =
         NamedTypeOptions::from_attributes(&input.attrs[..]).map_err(darling_to_syn)?;
@@ -103,6 +111,43 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
                     named_schemas.insert(name.clone(), apache_avro::schema::Schema::Ref{name: name.clone()});
                     #schema_def
                 }
+            }
+        }
+    })
+}
+
+fn derive_avro_value(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
+    let (from_value_def, into_value_def) = match &input.data {
+        syn::Data::Enum(e) => {
+            let (from_matches, into_matches) = get_data_enum_value_defs(e, input.ident.span())?;
+            (
+                quote!(match value {
+                    #(#from_matches),*
+                }),
+                quote!(match value {
+                    #(#into_matches),*
+                }),
+            )
+        }
+        _ => {
+            return Err(vec![syn::Error::new(
+                input.ident.span(),
+                "AvroValue derive only works for structs and simple enums ",
+            )])
+        }
+    };
+    let ident = &input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    Ok(quote! {
+        impl #impl_generics From<apache_avro::types::Value> for #ident #ty_generics #where_clause {
+            fn from(value: apache_avro::types::Value) -> Self {
+                #from_value_def
+            }
+        }
+
+        impl #impl_generics From<#ident #ty_generics> for apache_avro::types::Value #where_clause {
+            fn from(value: #ident #ty_generics) -> Self {
+                #into_value_def
             }
         }
     })
@@ -227,6 +272,29 @@ fn get_data_enum_schema_def(
             "AvroSchema derive does not work for enums with non unit structs",
         )])
     }
+}
+
+fn get_data_enum_value_defs(
+    e: &syn::DataEnum,
+    error_span: Span,
+) -> Result<(Vec<TokenStream>, Vec<TokenStream>), Vec<syn::Error>> {
+    if !e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
+        return Err(vec![syn::Error::new(
+            error_span,
+            "AvroValue derive does not work for enums with non unit structs",
+        )]);
+    }
+    Ok(e.variants.iter().enumerate().fold(
+        (vec![], vec![]),
+        |(mut from_matches, mut into_matches), (index, variant)| {
+            let variant_string = variant.ident.to_string();
+            from_matches.push(quote! {apache_avro::types::Value::Enum(#index, _) => #variant});
+            into_matches.push(
+                quote! {#variant => apache_avro::types::Value::Enum(#index, #variant_string.to_string())},
+            );
+            (from_matches, into_matches)
+        },
+    ))
 }
 
 /// Takes in the Tokens of a type and returns the tokens of an expression with return type `Schema`
@@ -420,6 +488,27 @@ mod tests {
         match syn::parse2::<DeriveInput>(basic_enum) {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_ok())
+            }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
+        };
+    }
+
+    #[test]
+    fn test_basic_enum_value() {
+        let basic_enum = quote! {
+            enum Basic {
+                A,
+                B,
+                C,
+                D
+            }
+        };
+        match syn::parse2::<DeriveInput>(basic_enum) {
+            Ok(mut input) => {
+                assert!(derive_avro_value(&mut input).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
