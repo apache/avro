@@ -116,9 +116,32 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
 }
 
 fn derive_avro_value(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Error>> {
+    let ident = &input.ident;
     let (from_value_def, into_value_def) = match &input.data {
+        syn::Data::Struct(s) => {
+            let (field_idents, from_field_assigns, into_fields) =
+                get_data_struct_value_defs(s, input.ident.span())?;
+            (
+                quote!(
+                    let record_fields = match value {
+                        apache_avro::types::Value::Record(fields)  => fields,
+                        _ => panic!("AvroValue derive structs must be converted from an apache_avro::types::Value::Record")
+                    };
+
+                    #(#from_field_assigns)*
+
+                    #ident {
+                        #(#field_idents),*
+                    }
+                ),
+                quote!(apache_avro::types::Value::Record(vec![
+                    #(#into_fields),*
+                ])),
+            )
+        }
         syn::Data::Enum(e) => {
-            let (from_matches, into_matches) = get_data_enum_value_defs(e, input.ident.span())?;
+            let (from_matches, into_matches) =
+                get_data_enum_value_defs(ident, e, input.ident.span())?;
             (
                 quote!(match value {
                     #(#from_matches),*
@@ -241,6 +264,64 @@ fn get_data_struct_schema_def(
     })
 }
 
+fn get_data_struct_value_defs(
+    s: &syn::DataStruct,
+    error_span: Span,
+) -> Result<(Vec<proc_macro2::Ident>, Vec<TokenStream>, Vec<TokenStream>), Vec<syn::Error>> {
+    let fields = match s.fields {
+        syn::Fields::Named(ref named_fields) => named_fields,
+        syn::Fields::Unnamed(_) => {
+            return Err(vec![syn::Error::new(
+                error_span,
+                "AvroValue derive does not work for tuple structs",
+            )])
+        }
+        syn::Fields::Unit => {
+            return Err(vec![syn::Error::new(
+                error_span,
+                "AvroValue derive does not work for unit structs",
+            )])
+        }
+    };
+    let mut into_fields = vec![];
+    let mut field_idents = vec![];
+    let mut from_field_assigns = vec![];
+    let mut index = 0_usize;
+    for field in fields.named.iter() {
+        let field_attrs =
+            FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
+        let field_ident = field
+            .ident
+            .clone()
+            .expect("AvroValue requires only named struct fields");
+        let name = match field_attrs.rename {
+            Some(name_attr) => name_attr,
+            None => field_ident.to_string(),
+        };
+        let value_expr = type_to_value_expr(&field.ty).unwrap_or_else(to_compile_errors);
+        field_idents.push(field_ident.clone());
+
+        // for cases in which the field was skipped, we must have a field-value, so we assume that
+        // the field implements default, and assign a default value to it. We skip incrementing
+        // the index, here, since it is not included in the record field
+        from_field_assigns.push(match field_attrs.skip {
+            Some(true) => {
+                quote!(let #field_ident = Default::default(););
+                continue;
+            }
+            _ => quote!(
+                let #field_ident = match record_fields.get(#index) {
+                    Some((_, #value_expr(field_value))) => field_value.clone(),
+                    _ => panic!("Attempt to convert invalid apache_avro::types::Record fields into AvroValue"),
+                };
+            ),
+        });
+        into_fields.push(quote!( (#name, #value_expr(value.#field_ident) )));
+        index += 1;
+    }
+    Ok((field_idents, from_field_assigns, into_fields))
+}
+
 fn get_data_enum_schema_def(
     full_schema_name: &str,
     doc: Option<String>,
@@ -274,6 +355,7 @@ fn get_data_enum_schema_def(
 }
 
 fn get_data_enum_value_defs(
+    ident: &syn::Ident,
     e: &syn::DataEnum,
     error_span: Span,
 ) -> Result<(Vec<TokenStream>, Vec<TokenStream>), Vec<syn::Error>> {
@@ -286,8 +368,9 @@ fn get_data_enum_value_defs(
     Ok(e.variants.iter().enumerate().fold(
         (vec![], vec![]),
         |(mut from_matches, mut into_matches), (index, variant)| {
+            let index = index as u32;
             let variant_string = variant.ident.to_string();
-            from_matches.push(quote! {apache_avro::types::Value::Enum(#index, _) => #variant});
+            from_matches.push(quote! {apache_avro::types::Value::Enum(#index, _) => #ident::#variant});
             into_matches.push(
                 quote! {#variant => apache_avro::types::Value::Enum(#index, #variant_string.to_string())},
             );
@@ -337,6 +420,46 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
             ty,
             format!("Unable to generate schema for type: {ty:?}"),
         )])
+    }
+}
+
+/// Takes in the Tokens of a type and returns the tokens of an expression with return type `Schema`
+fn type_to_value_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
+    match ty {
+        Type::Path(p) => {
+            let type_string = p.path.segments.last().unwrap().ident.to_string();
+            let value = match &type_string[..] {
+                "bool" => quote! {apache_avro::types::Value::Boolean},
+                "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::types::Value::Int},
+                "u32" | "i64" => quote! {apache_avro::types::Value::Long},
+                "f32" => quote! {apache_avro::types::Value::Float},
+                "f64" => quote! {apache_avro::types::Value::Double},
+                "String" | "str" => quote! {apache_avro::types::Value::String},
+                "char" => {
+                    return Err(vec![syn::Error::new_spanned(
+                        ty,
+                        "AvroSchema: Cannot guarantee successful deserialization of this type",
+                    )])
+                }
+                "u64" => {
+                    return Err(vec![syn::Error::new_spanned(
+                        ty,
+                        "Cannot guarantee successful serialization of this type due to overflow concerns",
+                    )])
+                }
+                _ => {
+                    panic!(
+                        "Field type {} not suppoorted in AvroValue conversion",
+                        type_string
+                    );
+                }
+            };
+            Ok(value)
+        }
+        _ => Err(vec![syn::Error::new_spanned(
+            ty,
+            format!("Unable to generate value for type: {ty:?}"),
+        )]),
     }
 }
 
@@ -402,6 +525,7 @@ fn darling_to_syn(e: darling::Error) -> Vec<syn::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn basic_case() {
         let test_struct = quote! {
@@ -414,6 +538,26 @@ mod tests {
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
                 assert!(derive_avro_schema(&mut input).is_ok())
+            }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {:?}",
+                error
+            ),
+        };
+    }
+
+    #[test]
+    fn basic_case_value() {
+        let test_struct = quote! {
+            struct A {
+                a: i32,
+                b: String
+            }
+        };
+
+        match syn::parse2::<DeriveInput>(test_struct) {
+            Ok(mut input) => {
+                assert!(derive_avro_value(&mut input).is_ok())
             }
             Err(error) => panic!(
                 "Failed to parse as derive input when it should be able to. Error: {:?}",
