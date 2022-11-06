@@ -31,7 +31,7 @@ namespace Avro.Reflect
     {
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
-        private readonly ConcurrentDictionary<string, IDotnetClass> _nameClassMap = new ConcurrentDictionary<string, IDotnetClass>();
+        private readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
@@ -179,15 +179,25 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public IDotnetClass GetClass(RecordSchema schema)
+        public DotnetClass GetClass(RecordSchema schema)
         {
-            IDotnetClass c;
+            DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
                return null;
             }
 
             return c;
+        }
+
+        /// <summary>
+        /// Find a class that matches the schema full name.
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        IDotnetClass ICacheService.GetClass(RecordSchema schema)
+        {
+            return GetClass(schema);
         }
 
         /// <summary>
