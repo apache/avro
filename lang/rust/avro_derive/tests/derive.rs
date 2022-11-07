@@ -1545,4 +1545,20 @@ mod test_derive {
             c: 987.654,
         });
     }
+
+    #[test]
+    fn test_avro_3663_raw_identifier_field_name() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestRawIdent {
+            r#type: bool,
+        }
+
+        let derived_schema = TestRawIdent::get_schema();
+        if let Schema::Record { fields, .. } = derived_schema {
+            let field = fields.get(0).expect("TestRawIdent must contain a field");
+            assert_eq!(field.name, "type");
+        } else {
+            panic!("Unexpected schema type for {:?}", derived_schema)
+        }
+    }
 }
