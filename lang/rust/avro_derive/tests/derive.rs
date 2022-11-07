@@ -1546,12 +1546,11 @@ mod test_derive {
         });
     }
 
-
     #[test]
-    fn test_avro_3663_raw_identifier_field_name() {     
+    fn test_avro_3663_raw_identifier_field_name() {
         #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
         struct TestRawIdent {
-            r#type: bool
+            r#type: bool,
         }
 
         let derived_schema = TestRawIdent::get_schema();
