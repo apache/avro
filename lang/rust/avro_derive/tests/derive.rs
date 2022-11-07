@@ -1559,7 +1559,7 @@ mod test_derive {
             let field = fields.get(0).expect("TestRawIdent must contain a field");
             assert_eq!(field.name, "type");
         } else {
-            panic!("Unexpected schema type")
+            panic!("Unexpected schema type for {:?}", derived_schema)
         }
     }
 }
