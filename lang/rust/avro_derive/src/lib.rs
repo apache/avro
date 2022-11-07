@@ -123,6 +123,9 @@ fn get_data_struct_schema_def(
             let mut index: usize = 0;
             for field in a.named.iter() {
                 let mut name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
+                if let Some(raw_name) = name.strip_prefix("r#") {
+                    name = raw_name.to_string();
+                }
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
                 let doc = preserve_optional(field_attrs.doc);
