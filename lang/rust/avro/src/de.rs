@@ -404,9 +404,16 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
             Value::Union(_i, ref inner) => match **inner {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-                _ => Err(de::Error::custom("not an array")),
+                Value::Null => visitor.visit_seq(SeqDeserializer::new(&[])),
+                _ => Err(de::Error::custom(format!(
+                    "Expected an Array or Null, got: {:?}",
+                    inner
+                ))),
             },
-            _ => Err(de::Error::custom("not an array")),
+            _ => Err(de::Error::custom(format!(
+                "Expected an Array or Union, got: {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -452,15 +459,22 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
             Value::Union(_i, ref inner) => match **inner {
                 Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
-                _ => Err(de::Error::custom("not a record")),
+                Value::Null => visitor.visit_map(StructDeserializer::new(&[])),
+                _ => Err(de::Error::custom(format!(
+                    "Expected a Record or Null, got: {:?}",
+                    inner
+                ))),
             },
-            _ => Err(de::Error::custom("not a record")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Record or Union, got: {:?}",
+                self.input
+            ))),
         }
     }
 
     fn deserialize_enum<V>(
         self,
-        _: &'static str,
+        _enum_name: &'static str,
         _variants: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
