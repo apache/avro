@@ -473,6 +473,11 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
+        let value = if self.fields.is_empty() {
+            Value::Null
+        } else {
+            Value::Record(self.fields)
+        };
         Ok(Value::Record(vec![
             (
                 "type".to_owned(),
@@ -480,7 +485,7 @@ impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
             ),
             (
                 "value".to_owned(),
-                Value::Union(self.index, Box::new(Value::Record(self.fields))),
+                Value::Union(self.index, Box::new(value)),
             ),
         ]))
     }
