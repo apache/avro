@@ -235,6 +235,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     {
         let serialized = value.serialize(self)?;
         let idx = match serialized {
+            // assumes that the Null variant is always the first one, as in Avro's Union
             Value::Null => 0,
             _ => index,
         };

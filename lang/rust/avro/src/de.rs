@@ -845,6 +845,18 @@ mod tests {
                     "a".to_owned(),
                     Value::Record(vec![
                         ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                        ("value".to_owned(), Value::Union(1, Box::new(Value::Null))),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val2(),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
                         ("value".to_owned(), Value::Array(vec![])),
                     ]),
                 )]),
