@@ -17,6 +17,7 @@
 
 mod enums {
     use apache_avro::{to_value, types::Value, Schema};
+    use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
     const SCHEMA_STR: &str = r#"
@@ -173,6 +174,57 @@ mod enums {
             (
                 TestNullExternalEnum {
                     a: NullExternalEnum::Null(()),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(0, "Null".to_owned())),
+                        ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Long(123),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Long".to_owned())),
+                        ("value".to_owned(), Value::Union(1, Value::Long(123).into())),
+                    ]),
+                )]),
+            ),
+        ];
+
+        for (test, expected) in &data {
+            let actual = to_value(test).unwrap();
+            assert_eq!(actual, *expected,);
+            if !actual.validate(&schema) {
+                panic!("Cannot validate value: {:?}", actual);
+            }
+        }
+    }
+
+    #[test]
+    fn avro_3646_test_to_value_enum_with_struct_variant() {
+        let schema = Schema::parse_str(SCHEMA_STR).unwrap();
+
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        struct TestNullExternalEnum {
+            a: NullExternalEnum,
+        }
+
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        enum NullExternalEnum {
+            Null {},   // struct_variant
+            Long(u64), // newtype_variant
+        }
+
+        let data = vec![
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Null {},
                 },
                 Value::Record(vec![(
                     "a".to_owned(),
