@@ -301,7 +301,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 .map_err(|e| de::Error::custom(e.to_string()))
                 .and_then(|s| visitor.visit_borrowed_str(s)),
             Value::Uuid(ref u) => visitor.visit_str(&u.to_string()),
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Uuid, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -320,7 +323,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::String(ref s) => visitor.visit_borrowed_str(s),
                 _ => Err(de::Error::custom("not a string|bytes|fixed")),
             },
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -332,7 +338,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
             Value::Uuid(ref u) => visitor.visit_bytes(u.as_bytes()),
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Uuid, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -345,7 +354,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 visitor.visit_byte_buf(bytes.to_owned())
             }
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -356,7 +368,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::Union(_i, ref inner) if inner.as_ref() == &Value::Null => visitor.visit_none(),
             Value::Union(_i, ref inner) => visitor.visit_some(&Deserializer::new(inner)),
-            _ => Err(de::Error::custom("not a union")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -368,15 +383,21 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Null => visitor.visit_unit(),
             Value::Union(_i, ref x) => match **x {
                 Value::Null => visitor.visit_unit(),
-                _ => Err(de::Error::custom("not a null")),
+                _ => Err(de::Error::custom(format!(
+                    "Expected a Null, but got {:?}",
+                    self.input
+                ))),
             },
-            _ => Err(de::Error::custom("not a null")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Null|Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
     fn deserialize_unit_struct<V>(
         self,
-        _: &'static str,
+        _struct_name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -387,7 +408,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
 
     fn deserialize_newtype_struct<V>(
         self,
-        _: &'static str,
+        _struct_name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -406,12 +427,12 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
                 Value::Null => visitor.visit_seq(SeqDeserializer::new(&[])),
                 _ => Err(de::Error::custom(format!(
-                    "Expected an Array or Null, got: {:?}",
+                    "Expected an Array or Null, but got: {:?}",
                     inner
                 ))),
             },
             _ => Err(de::Error::custom(format!(
-                "Expected an Array or Union, got: {:?}",
+                "Expected an Array or Union, but got: {:?}",
                 self.input
             ))),
         }
@@ -426,8 +447,8 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
 
     fn deserialize_tuple_struct<V>(
         self,
-        _: &'static str,
-        _: usize,
+        _struct_name: &'static str,
+        _len: usize,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -442,14 +463,17 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
-            _ => Err(de::Error::custom("not a map")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Map, but got {:?}",
+                self.input
+            ))),
         }
     }
 
     fn deserialize_struct<V>(
         self,
-        _: &'static str,
-        _: &'static [&'static str],
+        _struct_name: &'static str,
+        _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -486,7 +510,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(fields)),
             // This has to be a unit Enum
             Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(field)),
-            _ => Err(de::Error::custom("not an enum")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Record|Enum, but got {:?}",
+                self.input
+            ))),
         }
     }
 

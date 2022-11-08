@@ -404,7 +404,10 @@ impl ser::SerializeMap for MapSerializer {
             self.indices.insert(key, self.values.len());
             Ok(())
         } else {
-            Err(ser::Error::custom("map key is not a string"))
+            Err(ser::Error::custom(format!(
+                "Expected Map's key to be a String, but got {:?}",
+                key
+            )))
         }
     }
 
@@ -730,7 +733,13 @@ mod tests {
             a: UnitExternalEnum::Val1,
         };
 
-        let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(0, "Val1".to_owned())),
+                ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
+            ]),
+        )]);
 
         assert_eq!(
             to_value(test).unwrap(),
