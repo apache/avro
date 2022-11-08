@@ -16,7 +16,7 @@
 // under the License.
 
 mod enums {
-    use apache_avro::{to_value, types::Value, Schema};
+    use apache_avro::{from_value, to_value, types::Value, Schema};
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
@@ -101,6 +101,8 @@ mod enums {
             if !actual.validate(&schema) {
                 panic!("Cannot validate value: {:?}", actual);
             }
+            let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
+            assert_eq!(deserialized, *test);
         }
     }
 
@@ -152,6 +154,8 @@ mod enums {
             if !actual.validate(&schema) {
                 panic!("Cannot validate value: {:?}", actual);
             }
+            let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
+            assert_eq!(deserialized, *test);
         }
     }
 
@@ -203,6 +207,8 @@ mod enums {
             if !actual.validate(&schema) {
                 panic!("Cannot validate value: {:?}", actual);
             }
+            let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
+            assert_eq!(deserialized, *test);
         }
     }
 
@@ -254,6 +260,8 @@ mod enums {
             if !actual.validate(&schema) {
                 panic!("Cannot validate value: {:?}", actual);
             }
+            let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
+            assert_eq!(deserialized, *test);
         }
     }
 }
