@@ -15,12 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+extern crate core;
 extern crate darling;
 
 use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Type, TypePath};
+use syn::{
+    parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Field, GenericArgument,
+    PathSegment, Type, TypePath,
+};
 
 #[derive(FromAttributes)]
 #[darling(attributes(avro))]
@@ -125,18 +129,21 @@ fn derive_avro_value(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Er
                 quote!(
                     let record_fields = match value {
                         apache_avro::types::Value::Record(fields)  => fields,
-                        _ => panic!("AvroValue derive structs must be converted from an apache_avro::types::Value::Record")
+                        other_value => return Err(Self::Error::GetRecord{
+                            expected: vec![],
+                            other: other_value.into(),
+                        })
                     };
 
                     #(#from_field_assigns)*
 
-                    #ident {
+                    Ok(Self {
                         #(#field_idents),*
-                    }
+                    })
                 ),
-                quote!(apache_avro::types::Value::Record(vec![
-                    #(#into_fields),*
-                ])),
+                quote!(Ok(apache_avro::types::Value::Record(vec![
+                    #(#into_fields)*
+                ]))),
             )
         }
         syn::Data::Enum(e) => {
@@ -144,10 +151,12 @@ fn derive_avro_value(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Er
                 get_data_enum_value_defs(ident, e, input.ident.span())?;
             (
                 quote!(match value {
-                    #(#from_matches),*
+                    #(#from_matches)*
+                    _ => return Err(Self::Error::GetEnumUnknownIndexValue),
+
                 }),
                 quote!(match value {
-                    #(#into_matches),*
+                    #(#into_matches)*
                 }),
             )
         }
@@ -161,14 +170,17 @@ fn derive_avro_value(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::Er
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
-        impl #impl_generics From<apache_avro::types::Value> for #ident #ty_generics #where_clause {
-            fn from(value: apache_avro::types::Value) -> Self {
+        impl #impl_generics std::convert::TryFrom<apache_avro::types::Value> for #ident #ty_generics #where_clause {
+            type Error = apache_avro::Error;
+
+            fn try_from(value: apache_avro::types::Value) -> Result<Self, Self::Error> {
                 #from_value_def
             }
         }
+        impl #impl_generics std::convert::TryFrom<#ident #ty_generics> for apache_avro::types::Value #where_clause {
+            type Error = apache_avro::Error;
 
-        impl #impl_generics From<#ident #ty_generics> for apache_avro::types::Value #where_clause {
-            fn from(value: #ident #ty_generics) -> Self {
+            fn try_from(value: #ident #ty_generics) -> Result<Self, Self::Error> {
                 #into_value_def
             }
         }
@@ -298,7 +310,7 @@ fn get_data_struct_value_defs(
             Some(name_attr) => name_attr,
             None => field_ident.to_string(),
         };
-        let value_expr = type_to_value_expr(&field.ty).unwrap_or_else(to_compile_errors);
+        let value_expr = type_to_value_expr(&field.ty)?;
         field_idents.push(field_ident.clone());
 
         // for cases in which the field was skipped, we must have a field-value, so we assume that
@@ -309,17 +321,283 @@ fn get_data_struct_value_defs(
                 quote!(let #field_ident = Default::default(););
                 continue;
             }
-            _ => quote!(
-                let #field_ident = match record_fields.get(#index) {
-                    Some((_, #value_expr(field_value))) => field_value.clone(),
-                    _ => panic!("Attempt to convert invalid apache_avro::types::Record fields into AvroValue"),
-                };
-            ),
+            _ => data_struct_value_assignment(field, index)?,
         });
-        into_fields.push(quote!( (#name, #value_expr(value.#field_ident) )));
+        into_fields.push(data_struct_value_record_field(
+            name,
+            &field_ident,
+            value_expr,
+        ));
         index += 1;
     }
     Ok((field_idents, from_field_assigns, into_fields))
+}
+
+fn data_struct_value_record_field(
+    name: String,
+    field_ident: &proc_macro2::Ident,
+    value_expr: ValueExpr,
+) -> TokenStream {
+    let value_ident = Some(proc_macro2::Ident::new("value", field_ident.span()));
+    let record_value = data_struct_value_field_as_value(
+        field_ident.clone(),
+        value_ident,
+        value_expr,
+        field_ident.span(),
+    );
+    quote!((#name.to_string(), #record_value),)
+}
+
+fn data_struct_value_field_as_value(
+    ident: proc_macro2::Ident,
+    receiver_ident: Option<proc_macro2::Ident>,
+    value_expr: ValueExpr,
+    span: proc_macro2::Span,
+) -> TokenStream {
+    match value_expr {
+        ValueExpr::Convertable(type_name) => match receiver_ident {
+            Some(recv) => quote!(
+                apache_avro::types::Value::try_from(#recv.#ident).map_err(|_| {
+                    apache_avro::Error::ConvertFromValue(#type_name.to_string())
+                })?
+            ),
+            None => quote!(
+                apache_avro::types::Value::try_from(#ident).map_err(|_| {
+                    apache_avro::Error::ConvertFromValue(#type_name.to_string())
+                })?,
+            ),
+        },
+        ValueExpr::Scalar(value_variant, _) => match receiver_ident {
+            Some(recv) => quote!(#value_variant(#recv.#ident)),
+            None => quote!(#value_variant(#ident)),
+        },
+        ValueExpr::Option(value_variant) => {
+            let inner_expr = data_struct_value_field_as_value(
+                proc_macro2::Ident::new("item", span),
+                None,
+                *value_variant,
+                span,
+            );
+            match receiver_ident {
+                Some(recv) => quote!(match #recv.#ident {
+                    Some(item) => apache_avro::types::Value::Union(1, Box::new(#inner_expr)),
+                    None => apache_avro::types::Value::Union(0, Box::new(apache_avro::types::Value::Null)),
+                }),
+                None => quote!(match #ident {
+                    Some(item) => apache_avro::types::Value::Union(1, Box::new(#inner_expr)),
+                    None => apache_avro::types::Value::Union(0, Box::new(apache_avro::types::Value::Null)),
+                }),
+            }
+        }
+        ValueExpr::Array(value_variant) => {
+            let inner_expr = data_struct_value_field_as_value(
+                proc_macro2::Ident::new("item", span),
+                None,
+                *value_variant,
+                span,
+            );
+            match receiver_ident {
+                Some(recv) => {
+                    quote!(
+                        let mut #(ident)_values = vec![];
+                        for item in #recv.#ident.into_iter() {
+                            let item_value = #inner_expr;
+                            #(ident)_values.push(item_value);
+                        }
+                        item_values
+                    )
+                }
+                None => {
+                    quote!(
+                        let mut #(ident)_values = vec![];
+                        for item in #ident.into_iter() {
+                            let item_value = #inner_expr;
+                            #(ident)_values.push(item_value);
+                        }
+                        item_values
+                    )
+                }
+            }
+        }
+        ValueExpr::Map(value_variant) => {
+            let inner_expr = data_struct_value_field_as_value(
+                proc_macro2::Ident::new("value", span),
+                None,
+                *value_variant,
+                span,
+            );
+            match receiver_ident {
+                Some(recv) => quote!(
+                    let mut #(ident)_values = std::collections::HashMap::new();
+                    for (key, value) in #recv.#ident.into_iter() {
+                        #(ident)_values.insert(key, #inner_expr);
+                    }
+                    #(ident)_values
+                ),
+                None => quote!(
+                    let mut #(ident)_values = std::collections::HashMap::new();
+                    for (key, value) in #ident.into_iter() {
+                        #(ident)_values.insert(key, #inner_expr);
+                    }
+                    #(ident)_values
+                ),
+            }
+        }
+    }
+}
+
+fn data_struct_value_assignment(
+    field: &Field,
+    index: usize,
+) -> Result<TokenStream, Vec<syn::Error>> {
+    let field_ident = field.clone().ident.unwrap();
+    let ident = proc_macro2::Ident::new("value", field.span());
+    let value_expr = type_to_value_expr(&field.ty)?;
+    let value_assignment =
+        data_struct_value_field_as_assigned(quote!(#ident), None, value_expr, ident.span());
+    Ok(quote!(let #field_ident = match record_fields.get(#index) {
+        Some((_, value)) => {
+            #value_assignment
+        },
+        _ => return Err(Self::Error::GetField(format!("index: {}", #index)))
+    };))
+}
+
+fn data_struct_value_field_as_assigned(
+    var_expr: proc_macro2::TokenStream,
+    receiver_ident: Option<proc_macro2::Ident>,
+    value_expr: ValueExpr,
+    span: proc_macro2::Span,
+) -> TokenStream {
+    match value_expr {
+        ValueExpr::Convertable(_) => match receiver_ident {
+            Some(recv) => quote!(#recv.#var_expr.try_into()?),
+            None => quote!(#var_expr.try_into()?),
+        },
+        ValueExpr::Scalar(value_expr, value_error) => match receiver_ident {
+            Some(recv) => quote!(match #recv.#var_expr {
+                #value_expr(field_value) => field_value.clone(),
+                other_value => return Err(Self::Error::#value_error(other_value.into())),
+            }),
+            None => quote!(match #var_expr {
+                #value_expr(field_value) => field_value.clone(),
+                other_value => return Err(Self::Error::#value_error(other_value.into())),
+            }),
+        },
+        ValueExpr::Option(value_variant) => {
+            let union_ident = proc_macro2::Ident::new("union_value", span);
+            let value_expr = data_struct_value_field_as_assigned(
+                quote!(*#union_ident.clone()),
+                None,
+                *value_variant,
+                var_expr.span(),
+            );
+            let inner_expr = quote!(
+                apache_avro::types::Value::Union(0, _) => None,
+                apache_avro::types::Value::Union(1, union_value) => Some(#value_expr.clone()),
+                apache_avro::types::Value::Union(union_index, _) => {
+                    return Err(Self::Error::GetUnionVariant{
+                        index: union_index as i64,
+                        num_variants: 2,
+                    })
+                },
+            );
+            match receiver_ident {
+                Some(recv) => quote!(match #recv.#var_expr {
+                    #inner_expr
+                }),
+                None => quote!(match #var_expr {
+                    #inner_expr
+                }),
+            }
+        }
+        ValueExpr::Array(value_variant) => {
+            let var_ident = proc_macro2::Ident::new("item_value", span);
+            let value_expr = data_struct_value_field_as_assigned(
+                quote!(#var_ident),
+                None,
+                *value_variant,
+                var_expr.span(),
+            );
+            match receiver_ident {
+                Some(recv) => quote!(match apache_avro:#recv.#var_expr {
+                    apache_avro::types::Value::Array(item_values) => {
+                        let mut items = vec![];
+                        for item in item_values {
+                            let item = #value_expr;
+                            items.push(item);
+                        }
+                        items
+                    }
+                    other_value => {
+                        return Err(Self::Error::GetArray{
+                            expected: apache_avro::schema::SchemaKind::Array,
+                            other: other_value.into()
+                        })
+                    }
+                }),
+                None => quote!(match #var_expr {
+                    apache_avro::types::Value::Array(item_values) => {
+                        let mut items = vec![];
+                        for item in item_values {
+                            let item = #value_expr;
+                            items.push(item);
+                        }
+                        items
+
+                    }
+                    other_value => {
+                        return Err(Self::Error::GetArray{
+                            expected: apache_avro::schema::SchemaKind::Array,
+                            other: other_value.into()
+                        })
+                    }
+                }),
+            }
+        }
+        ValueExpr::Map(value_variant) => {
+            let var_ident = proc_macro2::Ident::new("item_value", span);
+            let value_expr = data_struct_value_field_as_assigned(
+                quote!(#var_ident),
+                None,
+                *value_variant,
+                var_expr.span(),
+            );
+            match receiver_ident {
+                Some(recv) => quote!(match #recv.#var_expr {
+                    apache_avro::types::Value::Map(value_map) => {
+
+                    }
+                        // value_map
+                        //     .into_iter()
+                        //     .map(|(item_key, item_value)| => {
+                        //         (item_key, #value_expr)
+                        //     }).collect::<std::collections::HashMap<String, apache_avro::types::Value>>()
+                    other_value => {
+                        return Err(Self::Error::GetMap{
+                            expected: apache_avro::schema::SchemaKind::Map,
+                            other: other_value.into()
+                        })
+                    }
+                }),
+                None => quote!(match #var_expr {
+                    apache_avro::types::Value::Map(field_value_pairs) => {
+                        field_value_pairs
+                            .into_iter()
+                            .map(|(item_key, item_value)| {
+                                (item_key, #value_expr)
+                            }).collect::<std::collections::HashMap<String, apache_avro::types::Value>>()
+                    }
+                    other_value => {
+                        return Err(Self::Error::GetMap{
+                            expected: apache_avro::schema::SchemaKind::Map,
+                            other: other_value.into()
+                        })
+                    }
+                }),
+            }
+        }
+    }
 }
 
 fn get_data_enum_schema_def(
@@ -370,9 +648,13 @@ fn get_data_enum_value_defs(
         |(mut from_matches, mut into_matches), (index, variant)| {
             let index = index as u32;
             let variant_string = variant.ident.to_string();
-            from_matches.push(quote! {apache_avro::types::Value::Enum(#index, _) => #ident::#variant});
+            from_matches.push(quote!(
+                apache_avro::types::Value::Enum(#index, _) => Ok(#ident::#variant),)
+            );
             into_matches.push(
-                quote! {#variant => apache_avro::types::Value::Enum(#index, #variant_string.to_string())},
+                quote!(
+                    #ident::#variant => Ok(apache_avro::types::Value::Enum(#index, #variant_string.to_string())),
+                )
             );
             (from_matches, into_matches)
         },
@@ -423,22 +705,65 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
     }
 }
 
+/// A parsed union of the Avro value expressions to create the required serialization/deserializaion
+/// patterns required for converting simple & complex field values
+enum ValueExpr {
+    Scalar(TokenStream, TokenStream),
+    Option(Box<ValueExpr>),
+    Array(Box<ValueExpr>),
+    Map(Box<ValueExpr>),
+    Convertable(String),
+}
+
 /// Takes in the Tokens of a type and returns the tokens of an expression with return type `Schema`
-fn type_to_value_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
+fn type_to_value_expr(ty: &Type) -> Result<ValueExpr, Vec<syn::Error>> {
     match ty {
         Type::Path(p) => {
-            let type_string = p.path.segments.last().unwrap().ident.to_string();
-            let value = match &type_string[..] {
-                "bool" => quote! {apache_avro::types::Value::Boolean},
-                "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::types::Value::Int},
-                "u32" | "i64" => quote! {apache_avro::types::Value::Long},
-                "f32" => quote! {apache_avro::types::Value::Float},
-                "f64" => quote! {apache_avro::types::Value::Double},
-                "String" | "str" => quote! {apache_avro::types::Value::String},
+            let path_segment = p.path.segments.last().unwrap();
+            let type_string = &path_segment.ident.to_string()[..];
+            let value = match type_string {
+                "bool" => {
+                    ValueExpr::Scalar(
+                        quote!(apache_avro::types::Value::Boolean),
+                        quote!(GetBoolean)
+                    )
+                },
+                "i8" | "i16" | "i32" | "u8" | "u16" => ValueExpr::Scalar(
+                    quote!(apache_avro::types::Value::Int),
+                    quote!(GetInt)
+                ),
+                "u32" | "i64" => ValueExpr::Scalar(
+                    quote!(apache_avro::types::Value::Long),
+                    quote!(GetLong)
+                ),
+                "f32" => ValueExpr::Scalar(
+                    quote!(apache_avro::types::Value::Float),
+                    quote!(GetFloat)
+                ),
+                "f64" => ValueExpr::Scalar(
+                    quote!(apache_avro::types::Value::Double),
+                    quote!(GetDouble)
+                ),
+                "String" | "str" => ValueExpr::Scalar(
+                    quote!(apache_avro::types::Value::String),
+                    quote!(GetString)
+                ),
+                "Option" => {
+                    let inner_ty = get_path_inner_type(ty, path_segment, 0)?;
+                    ValueExpr::Option(Box::new(type_to_value_expr(&inner_ty)?))
+                }
+                "Vec" => {
+                    let inner_ty = get_path_inner_type(ty, path_segment, 0)?;
+                    ValueExpr::Array(Box::new(type_to_value_expr(&inner_ty)?))
+                }
+                "HashMap" => {
+                    let inner_ty = get_path_inner_type(ty, path_segment, 1)?;
+                    ValueExpr::Map(Box::new(type_to_value_expr(&inner_ty)?))
+                }
                 "char" => {
                     return Err(vec![syn::Error::new_spanned(
                         ty,
-                        "AvroSchema: Cannot guarantee successful deserialization of this type",
+                        "AvroValue: Cannot guarantee successful deserialization of this type",
                     )])
                 }
                 "u64" => {
@@ -447,11 +772,8 @@ fn type_to_value_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
                         "Cannot guarantee successful serialization of this type due to overflow concerns",
                     )])
                 }
-                _ => {
-                    panic!(
-                        "Field type {} not suppoorted in AvroValue conversion",
-                        type_string
-                    );
+                other_type => {
+                    ValueExpr::Convertable(other_type.to_string())
                 }
             };
             Ok(value)
@@ -468,6 +790,35 @@ fn type_to_value_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
 /// - `A<T> -> <A<T> as apache_avro::schema::derive::AvroSchemaComponent>::get_schema_in_ctxt()`
 fn type_path_schema_expr(p: &TypePath) -> TokenStream {
     quote! {<#p as apache_avro::schema::derive::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}
+}
+
+/// Returns the generic type argument from a PathType at the specified index
+fn get_path_inner_type(
+    ty: &Type,
+    path_segment: &PathSegment,
+    index: usize,
+) -> Result<Type, Vec<syn::Error>> {
+    match path_segment.clone().arguments {
+        syn::PathArguments::AngleBracketed(angle_bracket) => {
+            let gen_args: Vec<GenericArgument> = angle_bracket
+                .args
+                .iter()
+                .cloned()
+                .filter(|arg| matches!(arg, syn::GenericArgument::Type(_)))
+                .collect();
+            match gen_args.get(index) {
+                Some(syn::GenericArgument::Type(ty)) => Ok(ty.clone()),
+                _ => Err(vec![syn::Error::new_spanned(
+                    ty,
+                    "TypePath has unexpected type arguments",
+                )]),
+            }
+        }
+        _ => Err(vec![syn::Error::new_spanned(
+            ty,
+            "AvroValue Option type has unexpected type arguments",
+        )]),
+    }
 }
 
 /// Stolen from serde

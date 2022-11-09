@@ -17,7 +17,7 @@
 
 use apache_avro::{
     from_value,
-    schema::{derive::AvroSchemaComponent, AvroSchema},
+    schema::{derive::AvroSchemaComponent, AvroSchema, AvroValue},
     Reader, Schema, Writer,
 };
 use apache_avro_derive::*;
@@ -30,7 +30,7 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use apache_avro::schema::Alias;
+    use apache_avro::{schema::Alias, Decimal, Duration};
     use std::{
         borrow::{Borrow, Cow},
         sync::Mutex,
@@ -115,6 +115,15 @@ mod test_derive {
             b,
         };
         serde_assert(test);
+    }}
+
+    proptest! {
+    #[test]
+    fn test_value_smoke_test(a: i32, b: String) {
+        let test = TestBasic {
+            a,
+            b,
+        };
     }}
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
@@ -1560,5 +1569,28 @@ mod test_derive {
         } else {
             panic!("Unexpected schema type for {:?}", derived_schema)
         }
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroValue, AvroSchema, Clone, PartialEq)]
+    enum TestValueEnum {
+        A,
+        B,
+        C,
+        D,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, AvroValue, Clone, PartialEq)]
+    struct TestValue {
+        f_boolean: bool,
+        f_int: i32,
+        f_long: i64,
+        f_float: f32,
+        f_double: f64,
+        f_string: String,
+        f_string_opt: Option<String>,
+        f_string_array_opt: Option<Vec<String>>,
+        f_enum: TestValueEnum,
+        f_array: Vec<String>,
+        f_map: HashMap<String, bool>,
     }
 }

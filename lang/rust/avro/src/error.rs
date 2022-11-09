@@ -238,6 +238,9 @@ pub enum Error {
     #[error("JSON value {0} claims to be i64 but cannot be converted")]
     GetI64FromJson(serde_json::Number),
 
+    #[error("Failed to convert from type to apache_avro::types::Value")]
+    ConvertFromValue(String),
+
     #[error("Cannot convert u64 to usize: {1}")]
     ConvertU64ToUsize(#[source] std::num::TryFromIntError, u64),
 
