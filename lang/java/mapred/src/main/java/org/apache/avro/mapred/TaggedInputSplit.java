@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -46,7 +47,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
 
   private Schema schema;
 
-  private Schema.Parser schemaParser = new Schema.Parser();
+  private SchemaParser schemaParser = new SchemaParser();
 
   private Configuration conf;
 

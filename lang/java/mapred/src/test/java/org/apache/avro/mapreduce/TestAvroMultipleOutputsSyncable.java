@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -54,9 +55,9 @@ public class TestAvroMultipleOutputsSyncable {
   @TempDir
   public File tmpFolder;
 
-  public static final Schema STATS_SCHEMA = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
+  public static final Schema STATS_SCHEMA = new SchemaParser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"}," + "{\"name\":\"name\",\"type\":\"string\"}]}");
-  public static final Schema STATS_SCHEMA_2 = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
+  public static final Schema STATS_SCHEMA_2 = new SchemaParser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count1\",\"type\":\"int\"}," + "{\"name\":\"name1\",\"type\":\"string\"}]}");
 
   private static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {

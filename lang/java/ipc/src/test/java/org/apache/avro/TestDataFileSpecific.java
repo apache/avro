@@ -45,7 +45,7 @@ public class TestDataFileSpecific {
     File file = new File(DIR.getPath(), "testSpecificDatumReaderDefaultCtor");
 
     // like the specific Foo, but with another field
-    Schema s1 = new Schema.Parser()
+    Schema s1 = new SchemaParser()
         .parse("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
             + "{\"name\":\"label\",\"type\":\"string\"}," + "{\"name\":\"id\",\"type\":\"int\"}]}");
 

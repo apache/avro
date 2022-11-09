@@ -48,8 +48,9 @@ public class TestSchema {
     String schemaString = s.toString();
     int mid = schemaString.length() / 2;
 
-    Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
-    Schema parsedArrayOfStringSchema = new org.apache.avro.Schema.Parser().parse(schemaString.substring(0, mid),
+    // This test only works because Schema#toString() yields JSON
+    Schema parsedStringSchema = new org.apache.avro.SchemaParser().parse(s.toString());
+    Schema parsedArrayOfStringSchema = JsonSchemaParser.parseInternal(schemaString.substring(0, mid),
         schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
@@ -106,7 +107,7 @@ public class TestSchema {
   @Test
   void parseEmptySchema() {
     assertThrows(SchemaParseException.class, () -> {
-      new Schema.Parser().parse("");
+      new SchemaParser().parse("");
     });
   }
 
@@ -199,7 +200,7 @@ public class TestSchema {
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
 
-      Schema payload = new Schema.Parser().parse(jsonSchema);
+      Schema payload = new SchemaParser().parse(jsonSchema);
       oos.writeObject(payload);
 
       try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
@@ -216,7 +217,7 @@ public class TestSchema {
         + "\"fields\":" + "[{\"name\":\"childField\",\"type\":\"string\"}]}";
     String parent = "{\"type\":\"record\"," + "\"name\":\"Parent\"," + "\"namespace\":\"org.apache.avro.nested\","
         + "\"fields\":" + "[{\"name\":\"child\",\"type\":\"Child\"}]}";
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
     Schema childSchema = parser.parse(child);
     Schema parentSchema = parser.parse(parent);
     String parentWithoutInlinedChildReference = parentSchema.toString(Collections.singleton(childSchema), false);
@@ -391,10 +392,10 @@ public class TestSchema {
     final String schemaString = "{\n  \"type\" : \"record\",\n  \"name\" : \"ns.int\",\n"
         + "  \"fields\" : [ \n    {\"name\" : \"value\", \"type\" : \"int\"}, \n"
         + "    {\"name\" : \"next\", \"type\" : [ \"null\", \"ns.int\" ]}\n  ]\n}";
-    final Schema schema = new Schema.Parser().parse(schemaString);
+    final Schema schema = new SchemaParser().parse(schemaString);
     String toString = schema.toString(true);
 
-    final Schema schema2 = new Schema.Parser().parse(toString);
+    final Schema schema2 = new SchemaParser().parse(toString);
     assertEquals(schema, schema2);
   }
 

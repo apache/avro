@@ -20,6 +20,7 @@
 package org.apache.avro.message;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.jupiter.api.BeforeAll;
@@ -50,7 +51,7 @@ public class TestInteropSingleObjectEncoding {
   @BeforeAll
   public static void setup() throws IOException {
     try (FileInputStream fileInputStream = new FileInputStream(SCHEMA_FILE)) {
-      SCHEMA = new Schema.Parser().parse(fileInputStream);
+      SCHEMA = new SchemaParser().parse(fileInputStream);
       BUILDER = new GenericRecordBuilder(SCHEMA);
     }
   }

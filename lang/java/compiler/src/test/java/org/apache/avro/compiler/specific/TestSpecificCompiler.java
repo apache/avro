@@ -49,10 +49,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.specific.SpecificData;
 import org.junit.jupiter.api.BeforeEach;
@@ -147,7 +149,7 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
     Schema schema = parser.parse(this.src);
     SpecificCompiler compiler = new SpecificCompiler(schema);
     String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
@@ -526,7 +528,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+    final Schema schema = new SchemaParser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
         + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\",\"type\":" + "{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
@@ -548,7 +550,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(true);
 
-    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
+    final Schema schema = new SchemaParser().parse("{\"type\":\"record\"," + "\"name\":\"NestedLogicalTypesRecord\","
         + "\"namespace\":\"org.apache.avro.codegentest.testdata\","
         + "\"doc\":\"Test nested types with logical types in generated Java classes\"," + "\"fields\":["
         + "{\"name\":\"nestedRecord\"," + "\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":"
@@ -597,7 +599,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -609,7 +611,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -621,7 +623,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -633,7 +635,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -645,7 +647,7 @@ public class TestSpecificCompiler {
   void getUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
     SpecificCompiler compiler = createCompiler();
 
-    final Schema schema = new Schema.Parser().parse(
+    final Schema schema = new SchemaParser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
@@ -675,7 +677,7 @@ public class TestSpecificCompiler {
     reservedIdentifiers.addAll(SpecificCompiler.ERROR_RESERVED_WORDS);
     for (String reserved : reservedIdentifiers) {
       try {
-        Schema s = new Schema.Parser().parse(schema.replace("__test__", reserved));
+        Schema s = new SchemaParser().parse(schema.replace("__test__", reserved));
         assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, dstDirPrefix + "_" + reserved),
             new SpecificCompiler(s).compile());
       } catch (AvroTypeException e) {
@@ -725,7 +727,7 @@ public class TestSpecificCompiler {
 
   @Test
   void logicalTypesWithMultipleFields() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
+    Schema logicalTypesWithMultipleFields = new SchemaParser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR, "testLogicalTypesWithMultipleFields"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile(), true);
@@ -733,7 +735,7 @@ public class TestSpecificCompiler {
 
   @Test
   void unionAndFixedFields() throws Exception {
-    Schema unionTypesWithMultipleFields = new Schema.Parser()
+    Schema unionTypesWithMultipleFields = new SchemaParser()
         .parse(new File("src/test/resources/union_and_fixed_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testUnionAndFixedFields"),
         new SpecificCompiler(unionTypesWithMultipleFields).compile());
@@ -741,7 +743,7 @@ public class TestSpecificCompiler {
 
   @Test
   void logicalTypesWithMultipleFieldsDateTime() throws Exception {
-    Schema logicalTypesWithMultipleFields = new Schema.Parser()
+    Schema logicalTypesWithMultipleFields = new SchemaParser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(this.outputFile, "testLogicalTypesWithMultipleFieldsDateTime"),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());

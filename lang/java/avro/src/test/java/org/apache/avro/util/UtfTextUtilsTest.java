@@ -17,14 +17,14 @@
  */
 package org.apache.avro.util;
 
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -96,6 +96,7 @@ class UtfTextUtilsTest {
     assertEquals("A", UtfTextUtils.readAllBytes(new ByteArrayInputStream(hexBytes("EFBBBF41")), null));
 
     assertEquals("A", UtfTextUtils.readAllBytes(new ByteArrayInputStream(hexBytes("41")), StandardCharsets.UTF_8));
+    assertEquals("A", UtfTextUtils.readAllBytes(new ByteArrayInputStream(hexBytes("41")), StandardCharsets.ISO_8859_1));
     assertEquals("A", UtfTextUtils.readAllBytes(new ByteArrayInputStream(hexBytes("41")), null));
 
     // Invalid UCS-4 encoding should throw an IOException instead of an

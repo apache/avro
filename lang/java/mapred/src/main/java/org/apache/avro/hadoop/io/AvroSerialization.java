@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.util.Collection;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
@@ -209,7 +210,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyWriterSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_WRITER_SCHEMA);
-    return null == json ? null : new Schema.Parser().parse(json);
+    return null == json ? null : new SchemaParser().parse(json);
   }
 
   /**
@@ -221,7 +222,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyReaderSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_READER_SCHEMA);
-    return null == json ? null : new Schema.Parser().parse(json);
+    return null == json ? null : new SchemaParser().parse(json);
   }
 
   /**
@@ -233,7 +234,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueWriterSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_WRITER_SCHEMA);
-    return null == json ? null : new Schema.Parser().parse(json);
+    return null == json ? null : new SchemaParser().parse(json);
   }
 
   /**
@@ -245,7 +246,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueReaderSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_READER_SCHEMA);
-    return null == json ? null : new Schema.Parser().parse(json);
+    return null == json ? null : new SchemaParser().parse(json);
   }
 
   /**

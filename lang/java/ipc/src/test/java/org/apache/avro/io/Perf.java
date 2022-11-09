@@ -18,8 +18,8 @@
 package org.apache.avro.io;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
@@ -33,6 +33,7 @@ import java.util.Random;
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.TypeEnum;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -464,7 +465,7 @@ public class Perf {
 
     BasicTest(String name, String json, int factor) throws IOException {
       super(name, CYCLES, COUNT / factor);
-      this.schema = new Schema.Parser().parse(json);
+      this.schema = new SchemaParser().parse(json);
     }
 
     @Override
@@ -1108,7 +1109,7 @@ public class Perf {
 
     public RecordWithDefault() throws IOException {
       super("RecordWithDefault");
-      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
+      readerSchema = new SchemaParser().parse(RECORD_SCHEMA_WITH_DEFAULT);
       isWriteTest = false;
     }
 
@@ -1152,7 +1153,7 @@ public class Perf {
 
     public RecordWithOutOfOrder() throws IOException {
       super("RecordWithOutOfOrder");
-      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+      readerSchema = new SchemaParser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
       isWriteTest = false;
     }
 
@@ -1192,7 +1193,7 @@ public class Perf {
 
     public RecordWithPromotion() throws IOException {
       super("RecordWithPromotion");
-      readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
+      readerSchema = new SchemaParser().parse(RECORD_SCHEMA_WITH_PROMOTION);
       isWriteTest = false;
     }
 
@@ -1425,7 +1426,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
+      return new SchemaParser().parse(RECORD_SCHEMA_WITH_DEFAULT);
     }
   }
 
@@ -1436,7 +1437,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
+      return new SchemaParser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
     }
   }
 
@@ -1447,7 +1448,7 @@ public class Perf {
 
     @Override
     protected Schema getReaderSchema() {
-      return new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
+      return new SchemaParser().parse(RECORD_SCHEMA_WITH_PROMOTION);
     }
   }
 
@@ -1899,7 +1900,7 @@ public class Perf {
     public ResolvingTest(String name, String r, String w) throws IOException {
       super(name, mkSchema(r));
       isWriteTest = false;
-      this.writeSchema = new Schema.Parser().parse(mkSchema(w));
+      this.writeSchema = new SchemaParser().parse(mkSchema(w));
     }
 
     @Override

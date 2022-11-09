@@ -17,27 +17,6 @@
  */
 package org.apache.avro.reflect;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.LogicalType;
-import org.apache.avro.Protocol;
-import org.apache.avro.Protocol.Message;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaNormalization;
-import org.apache.avro.generic.GenericContainer;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.BinaryData;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.specific.FixedSize;
-import org.apache.avro.specific.SpecificData;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.MapUtil;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -65,6 +44,28 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversion;
+import org.apache.avro.JsonProperties;
+import org.apache.avro.LogicalType;
+import org.apache.avro.Protocol;
+import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
+import org.apache.avro.generic.GenericContainer;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericFixed;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.FixedSize;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -692,7 +693,7 @@ public class ReflectData extends SpecificData {
       }
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null) // explicit schema
-        return new Schema.Parser().parse(explicit.value());
+        return new SchemaParser().parse(explicit.value());
       if (CharSequence.class.isAssignableFrom(c)) // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c)) // bytes
@@ -884,7 +885,7 @@ public class ReflectData extends SpecificData {
 
     AvroSchema explicit = field.getAnnotation(AvroSchema.class);
     if (explicit != null) // explicit schema
-      return new Schema.Parser().parse(explicit.value());
+      return new SchemaParser().parse(explicit.value());
 
     Union union = field.getAnnotation(Union.class);
     if (union != null)
@@ -937,7 +938,7 @@ public class ReflectData extends SpecificData {
           names);
       for (Annotation annotation : parameter.getAnnotations()) {
         if (annotation instanceof AvroSchema) // explicit schema
-          paramSchema = new Schema.Parser().parse(((AvroSchema) annotation).value());
+          paramSchema = new SchemaParser().parse(((AvroSchema) annotation).value());
         else if (annotation instanceof Union) // union
           paramSchema = getAnnotatedUnion(((Union) annotation), names);
         else if (annotation instanceof Nullable) // nullable
@@ -957,7 +958,7 @@ public class ReflectData extends SpecificData {
 
     AvroSchema explicit = method.getAnnotation(AvroSchema.class);
     if (explicit != null) // explicit schema
-      response = new Schema.Parser().parse(explicit.value());
+      response = new SchemaParser().parse(explicit.value());
 
     List<Schema> errs = new ArrayList<>();
     errs.add(Protocol.SYSTEM_ERROR); // every method can throw

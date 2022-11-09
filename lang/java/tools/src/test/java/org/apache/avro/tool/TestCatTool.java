@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
@@ -63,9 +64,9 @@ public class TestCatTool {
   private static final double SAMPLERATE = .01;
   private static final double SAMPLERATE_TOO_SMALL = .00000001;
 
-  private final Schema INTSCHEMA = new Schema.Parser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
+  private final Schema INTSCHEMA = new SchemaParser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
       + "\"fields\":[ " + "{\"name\":\"value\",\"type\":\"int\"} " + "]}");
-  private final Schema STRINGSCHEMA = new Schema.Parser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
+  private final Schema STRINGSCHEMA = new SchemaParser().parse("{\"type\":\"record\", " + "\"name\":\"myRecord\", "
       + "\"fields\":[ {\"name\":\"value\",\"type\":\"string\"} " + "]}");
   private static final CodecFactory DEFLATE = CodecFactory.deflateCodec(9);
   private static final CodecFactory SNAPPY = CodecFactory.snappyCodec();

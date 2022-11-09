@@ -25,10 +25,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import joptsimple.OptionParser;
-
 import joptsimple.OptionSet;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 
 /**
  * Utility to convert an Avro @{Schema} to its canonical form.
@@ -58,7 +58,7 @@ public class SchemaNormalizationTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(args.get(0), stdin);
     BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
 
-    Schema schema = new Schema.Parser().parse(inStream);
+    Schema schema = new SchemaParser().parse(inStream);
 
     String canonicalForm = SchemaNormalization.toParsingForm(schema);
 

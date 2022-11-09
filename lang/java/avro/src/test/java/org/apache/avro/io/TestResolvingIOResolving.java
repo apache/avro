@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -52,9 +53,9 @@ public class TestResolvingIOResolving {
 
   @Test
   public void testResolving() throws IOException {
-    Schema writerSchema = new Schema.Parser().parse(sJsWrtSchm);
+    Schema writerSchema = new SchemaParser().parse(sJsWrtSchm);
     byte[] bytes = TestValidatingIO.make(writerSchema, sWrtCls, oaWrtVals, eEnc);
-    Schema readerSchema = new Schema.Parser().parse(sJsRdrSchm);
+    Schema readerSchema = new SchemaParser().parse(sJsRdrSchm);
     TestValidatingIO.print(eEnc, iSkipL, writerSchema, readerSchema, oaWrtVals, oaRdrVals);
     TestResolvingIO.check(writerSchema, readerSchema, bytes, sRdrCls, oaRdrVals, eEnc, iSkipL);
   }

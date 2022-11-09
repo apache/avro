@@ -35,9 +35,10 @@ import java.util.Set;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
+import org.apache.avro.generic.GenericData.StringType;
 
 /**
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
@@ -149,7 +150,7 @@ public class SpecificCompilerTool implements Tool {
     }
 
     if ("schema".equals(method)) {
-      Schema.Parser parser = new Schema.Parser();
+      SchemaParser parser = new SchemaParser();
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(schema);

@@ -24,10 +24,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
-import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
@@ -47,7 +47,7 @@ public class TestCreateRandomFileTool {
   private static final File OUT_FILE = new File(DIR, "random.avro");
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
-  private final Schema.Parser schemaParser = new Schema.Parser();
+  private final SchemaParser schemaParser = new SchemaParser();
 
   private static final long SEED = System.currentTimeMillis();
 

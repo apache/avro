@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -73,7 +74,7 @@ public class UnchangedUnionTest {
 
     public TestStateEncode() {
       super();
-      this.schema = new Schema.Parser().parse(mkSchema(UNCHANGED_UNION));
+      this.schema = new SchemaParser().parse(mkSchema(UNCHANGED_UNION));
     }
 
     /**
@@ -114,7 +115,7 @@ public class UnchangedUnionTest {
 
     public TestStateDecode() {
       super();
-      this.schema = new Schema.Parser().parse(mkSchema(UNCHANGED_UNION));
+      this.schema = new SchemaParser().parse(mkSchema(UNCHANGED_UNION));
     }
 
     /**

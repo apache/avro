@@ -17,9 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Record;
@@ -45,6 +43,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class TestReadingWritingDataInEvolvedSchemas {
@@ -390,10 +391,10 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @Test
   public void aliasesInSchema() throws Exception {
-    Schema writer = new Schema.Parser()
+    Schema writer = new SchemaParser()
         .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
             + "{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
-    Schema reader = new Schema.Parser()
+    Schema reader = new SchemaParser()
         .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
             + "{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n" + "]}\n");
 

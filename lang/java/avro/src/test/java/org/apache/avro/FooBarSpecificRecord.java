@@ -30,7 +30,7 @@ import org.apache.avro.specific.SpecificData;
 public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecordBase
     implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 1031933828916876443L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal(
       "{\"type\":\"record\",\"name\":\"FooBarSpecificRecord\",\"namespace\":\"org.apache.avro\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nicknames\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}},{\"name\":\"relatedids\",\"type\":{\"type\":\"array\",\"items\":\"int\"}},{\"name\":\"typeEnum\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"TypeEnum\",\"symbols\":[\"a\",\"b\",\"c\"]}],\"default\":null}]}");
 
   public static org.apache.avro.Schema getClassSchema() {

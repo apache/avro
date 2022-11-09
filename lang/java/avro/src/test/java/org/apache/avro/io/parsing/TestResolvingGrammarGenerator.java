@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
@@ -52,7 +53,7 @@ public class TestResolvingGrammarGenerator {
   private final JsonNode data;
 
   public TestResolvingGrammarGenerator(String jsonSchema, String jsonData) throws IOException {
-    this.schema = new Schema.Parser().parse(jsonSchema);
+    this.schema = new SchemaParser().parse(jsonSchema);
     JsonFactory factory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
 

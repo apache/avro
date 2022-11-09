@@ -24,6 +24,7 @@ import java.util.Collections;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.SchemaValidationException;
 import org.apache.avro.SchemaValidatorBuilder;
 import org.apache.avro.generic.GenericData;
@@ -135,7 +136,7 @@ public class TestResolvingGrammarGenerator2 {
         .nullType().and().type(inner).endUnion().noDefault().endRecord();
 
     // Make a copy with the two string fields annotated.
-    Schema outer2 = new Schema.Parser().parse(outer.toString());
+    Schema outer2 = new SchemaParser().parse(outer.toString());
     outer2.getField("a1").schema().addProp(GenericData.STRING_PROP, "String");
     Schema inner2 = outer2.getField("inner").schema().getTypes().get(1);
     inner2.getField("b1").schema().addProp(GenericData.STRING_PROP, "String");

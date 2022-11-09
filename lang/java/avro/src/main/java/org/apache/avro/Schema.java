@@ -111,7 +111,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private String schemaString;
 
     private Object readResolve() {
-      return new Schema.Parser().parse(schemaString);
+      return JsonSchemaParser.parseInternal(schemaString);
     }
   }
 
@@ -1522,7 +1522,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * A parser for JSON-format schemas. Each named schema parsed with a parser is
    * added to the names known to the parser so that subsequently parsed schemas
    * may refer to it by name.
+   *
+   * @deprecated Use the new {@link org.apache.avro.SchemaParser} instead. It is a
+   *             near drop-in replacement.
    */
+  @Deprecated
   public static class Parser {
     private NameContext nameContext;
     private boolean validate;
@@ -1532,7 +1536,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       this(new NameContext());
     }
 
-    public Parser(NameContext nameContext) {
+    Parser(NameContext nameContext) {
       this.nameContext = nameContext;
       this.validate = true;
       this.validateDefaults = true;
@@ -1598,7 +1602,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /**
      * Parse a schema from the provided file. If named, the schema is added to the
      * names known to this parser.
+     *
+     * @deprecated Use {@link org.apache.avro.SchemaParser#parse(File)} instead. It
+     *             is a drop-in replacement.
      */
+    @Deprecated
     public Schema parse(File file) throws IOException {
       return parse(FACTORY.createParser(file), false);
     }
@@ -1606,7 +1614,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /**
      * Parse a schema from the provided stream. If named, the schema is added to the
      * names known to this parser. The input stream stays open after the parsing.
+     *
+     * @deprecated Use {@link org.apache.avro.SchemaParser#parse(InputStream)}
+     *             instead. It is a drop-in replacement.
      */
+    @Deprecated
     public Schema parse(InputStream in) throws IOException {
       return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE), true);
     }
@@ -1614,14 +1626,24 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /**
      * Parse a schema from the provided reader. If named, the schema is added to the
      * names known to this parser. The reader stays open after the parsing.
+     *
+     * @deprecated Use {@link org.apache.avro.SchemaParser#parse(Reader)} instead.
+     *             It is a drop-in replacement.
      */
+    @Deprecated
     public Schema parse(Reader in) throws IOException {
       return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE), true);
     }
 
     /**
      * Read a schema from one or more json strings
+     *
+     * @deprecated Use
+     *             {@link org.apache.avro.JsonSchemaParser#parseInternal(String...)}
+     *             instead. The replacement does NO validation, as it is intended to
+     *             be used with validated schemata in generated code.
      */
+    @Deprecated
     public Schema parse(String s, String... more) {
       StringBuilder b = new StringBuilder(s);
       for (String part : more) {
@@ -1633,7 +1655,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     /**
      * Parse a schema from the provided string. If named, the schema is added to the
      * names known to this parser.
+     *
+     * @deprecated Use {@link org.apache.avro.SchemaParser#parse(CharSequence)}
+     *             instead. It is a drop-in replacement.
      */
+    @Deprecated
     public Schema parse(String s) {
       try {
         return parse(FACTORY.createParser(s), false);
@@ -1684,11 +1710,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents or they are
    *                     invalid
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser#parse(File)} instead.
    */
   @Deprecated
   public static Schema parse(File file) throws IOException {
-    return new Parser().parse(file);
+    return new SchemaParser().parse(file);
   }
 
   /**
@@ -1699,32 +1725,32 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents or they are
    *                     invalid
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser#parse(InputStream)} instead.
    */
   @Deprecated
   public static Schema parse(InputStream in) throws IOException {
-    return new Parser().parse(in);
+    return new SchemaParser().parse(in);
   }
 
   /**
    * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link SchemaParser#parse(CharSequence)} instead.
    */
   @Deprecated
-  public static Schema parse(String jsonSchema) {
-    return new Parser().parse(jsonSchema);
+  public static Schema parse(String formattedSchema) {
+    return new SchemaParser().parse(formattedSchema);
   }
 
   /**
    * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @param validate true if names should be validated, false if not.
-   * @deprecated use {@link Schema.Parser} instead.
+   * @deprecated use {@link org.apache.avro.SchemaParser} instead.
    */
   @Deprecated
   public static Schema parse(String jsonSchema, boolean validate) {
-    return new Parser().setValidate(validate).parse(jsonSchema);
+    return JsonSchemaParser.parseInternal(jsonSchema);
   }
 
   static final Map<String, Type> PRIMITIVES = new HashMap<>();

@@ -28,8 +28,7 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
-import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -76,7 +75,7 @@ public class FromTextTool implements Tool {
 
     DataFileWriter<ByteBuffer> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(codecFactory);
-    writer.create(new Schema.Parser().parse(TEXT_FILE_SCHEMA), outStream);
+    writer.create(new SchemaParser().parse(TEXT_FILE_SCHEMA), outStream);
 
     ByteBuffer line = ByteBuffer.allocate(128);
     boolean returnSeen = false;

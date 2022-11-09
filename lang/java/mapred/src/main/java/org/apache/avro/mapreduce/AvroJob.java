@@ -19,6 +19,7 @@
 package org.apache.avro.mapreduce;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.hadoop.io.AvroKeyComparator;
 import org.apache.avro.hadoop.io.AvroSerialization;
@@ -158,7 +159,7 @@ public final class AvroJob {
    */
   public static Schema getInputKeySchema(Configuration conf) {
     String schemaString = conf.get(CONF_INPUT_KEY_SCHEMA);
-    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
+    return schemaString != null ? new SchemaParser().parse(schemaString) : null;
   }
 
   /**
@@ -169,7 +170,7 @@ public final class AvroJob {
    */
   public static Schema getInputValueSchema(Configuration conf) {
     String schemaString = conf.get(CONF_INPUT_VALUE_SCHEMA);
-    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
+    return schemaString != null ? new SchemaParser().parse(schemaString) : null;
   }
 
   /**
@@ -200,7 +201,7 @@ public final class AvroJob {
    */
   public static Schema getOutputKeySchema(Configuration conf) {
     String schemaString = conf.get(CONF_OUTPUT_KEY_SCHEMA);
-    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
+    return schemaString != null ? new SchemaParser().parse(schemaString) : null;
   }
 
   /**
@@ -211,6 +212,6 @@ public final class AvroJob {
    */
   public static Schema getOutputValueSchema(Configuration conf) {
     String schemaString = conf.get(CONF_OUTPUT_VALUE_SCHEMA);
-    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
+    return schemaString != null ? new SchemaParser().parse(schemaString) : null;
   }
 }

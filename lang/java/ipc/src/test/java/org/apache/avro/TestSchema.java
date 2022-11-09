@@ -82,51 +82,51 @@ public class TestSchema {
 
   @Test
   void testNull(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.NULL), new Schema.Parser().parse("\"null\""));
-    assertEquals(Schema.create(Type.NULL), new Schema.Parser().parse("{\"type\":\"null\"}"));
+    assertEquals(Schema.create(Type.NULL), new SchemaParser().parse("\"null\""));
+    assertEquals(Schema.create(Type.NULL), new SchemaParser().parse("{\"type\":\"null\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"null\"", "null", null);
   }
 
   @Test
   void testBoolean(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.BOOLEAN), new Schema.Parser().parse("\"boolean\""));
-    assertEquals(Schema.create(Type.BOOLEAN), new Schema.Parser().parse("{\"type\":\"boolean\"}"));
+    assertEquals(Schema.create(Type.BOOLEAN), new SchemaParser().parse("\"boolean\""));
+    assertEquals(Schema.create(Type.BOOLEAN), new SchemaParser().parse("{\"type\":\"boolean\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"boolean\"", "true", Boolean.TRUE);
   }
 
   @Test
   void string(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.STRING), new Schema.Parser().parse("\"string\""));
-    assertEquals(Schema.create(Type.STRING), new Schema.Parser().parse("{\"type\":\"string\"}"));
+    assertEquals(Schema.create(Type.STRING), new SchemaParser().parse("\"string\""));
+    assertEquals(Schema.create(Type.STRING), new SchemaParser().parse("{\"type\":\"string\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
   @Test
   void bytes(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.BYTES), new Schema.Parser().parse("\"bytes\""));
-    assertEquals(Schema.create(Type.BYTES), new Schema.Parser().parse("{\"type\":\"bytes\"}"));
+    assertEquals(Schema.create(Type.BYTES), new SchemaParser().parse("\"bytes\""));
+    assertEquals(Schema.create(Type.BYTES), new SchemaParser().parse("{\"type\":\"bytes\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"bytes\"", "\"\\u0000ABC\\u00FF\"",
         ByteBuffer.wrap(new byte[] { 0, 65, 66, 67, -1 }));
   }
 
   @Test
   void testInt(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.INT), new Schema.Parser().parse("\"int\""));
-    assertEquals(Schema.create(Type.INT), new Schema.Parser().parse("{\"type\":\"int\"}"));
+    assertEquals(Schema.create(Type.INT), new SchemaParser().parse("\"int\""));
+    assertEquals(Schema.create(Type.INT), new SchemaParser().parse("{\"type\":\"int\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"int\"", "9", 9);
   }
 
   @Test
   void testLong(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.LONG), new Schema.Parser().parse("\"long\""));
-    assertEquals(Schema.create(Type.LONG), new Schema.Parser().parse("{\"type\":\"long\"}"));
+    assertEquals(Schema.create(Type.LONG), new SchemaParser().parse("\"long\""));
+    assertEquals(Schema.create(Type.LONG), new SchemaParser().parse("{\"type\":\"long\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"long\"", "11", 11L);
   }
 
   @Test
   void testFloat(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.FLOAT), new Schema.Parser().parse("\"float\""));
-    assertEquals(Schema.create(Type.FLOAT), new Schema.Parser().parse("{\"type\":\"float\"}"));
+    assertEquals(Schema.create(Type.FLOAT), new SchemaParser().parse("\"float\""));
+    assertEquals(Schema.create(Type.FLOAT), new SchemaParser().parse("{\"type\":\"float\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"float\"", "1.1", 1.1f);
     checkDefault("\"float\"", "\"NaN\"", Float.NaN);
     checkDefault("\"float\"", "\"Infinity\"", Float.POSITIVE_INFINITY);
@@ -135,8 +135,8 @@ public class TestSchema {
 
   @Test
   void testDouble(TestInfo testInfo) throws Exception {
-    assertEquals(Schema.create(Type.DOUBLE), new Schema.Parser().parse("\"double\""));
-    assertEquals(Schema.create(Type.DOUBLE), new Schema.Parser().parse("{\"type\":\"double\"}"));
+    assertEquals(Schema.create(Type.DOUBLE), new SchemaParser().parse("\"double\""));
+    assertEquals(Schema.create(Type.DOUBLE), new SchemaParser().parse("{\"type\":\"double\"}"));
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "\"double\"", "1.2", 1.2);
     checkDefault("\"double\"", "\"NaN\"", Double.NaN);
     checkDefault("\"double\"", "\"Infinity\"", Double.POSITIVE_INFINITY);
@@ -146,7 +146,7 @@ public class TestSchema {
   @Test
   void array(TestInfo testInfo) throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
-    Schema schema = new Schema.Parser().parse(json);
+    Schema schema = new SchemaParser().parse(json);
     Collection<Long> array = new GenericData.Array<>(1, schema);
     array.add(1L);
     check(new File(DIR, testInfo.getTestMethod().get().getName()), json, "[1]", array);
@@ -177,7 +177,7 @@ public class TestSchema {
   void record(TestInfo testInfo) throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
         + "[{\"name\":\"f\", \"type\":\"long\", \"foo\":\"bar\"}]}";
-    Schema schema = new Schema.Parser().parse(recordJson);
+    Schema schema = new SchemaParser().parse(recordJson);
 
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
@@ -185,7 +185,7 @@ public class TestSchema {
 
     // test field props
     assertEquals("bar", schema.getField("f").getProp("foo"));
-    assertEquals("bar", new Schema.Parser().parse(schema.toString()).getField("f").getProp("foo"));
+    assertEquals("bar", new SchemaParser().parse(schema.toString()).getField("f").getProp("foo"));
     schema.getField("f").addProp("baz", "boo");
     assertEquals("boo", schema.getField("f").getProp("baz"));
 
@@ -205,16 +205,16 @@ public class TestSchema {
 
   @Test
   void invalidNameTolerance() {
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}");
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}");
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}");
+    JsonSchemaParser.parseInternal("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}");
+    JsonSchemaParser.parseInternal("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}");
+    JsonSchemaParser.parseInternal("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}");
   }
 
   @Test
   void mapInRecord(TestInfo testInfo) throws Exception {
     String json = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
         + "[{\"name\":\"f\", \"type\": {\"type\":\"map\", \"values\":\"long\"}}]}";
-    Schema schema = new Schema.Parser().parse(json);
+    Schema schema = new SchemaParser().parse(json);
 
     HashMap<Utf8, Long> map = new HashMap<>();
     map.put(new Utf8("a"), 1L);
@@ -226,7 +226,7 @@ public class TestSchema {
   @Test
   void testEnum(TestInfo testInfo) throws Exception {
     check(new File(DIR, testInfo.getTestMethod().get().getName()), BASIC_ENUM_SCHEMA, "\"B\"",
-        new GenericData.EnumSymbol(new Schema.Parser().parse(BASIC_ENUM_SCHEMA), "B"), false);
+        new GenericData.EnumSymbol(new SchemaParser().parse(BASIC_ENUM_SCHEMA), "B"), false);
     checkParseError("{\"type\":\"enum\"}"); // symbols required
     checkParseError("{\"type\":\"enum\",\"symbols\": [\"X\"]}"); // name reqd
     // check no duplicate symbols
@@ -240,7 +240,7 @@ public class TestSchema {
   @Test
   void fixed(TestInfo testInfo) throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
-    Schema schema = new Schema.Parser().parse(json);
+    Schema schema = new SchemaParser().parse(json);
     check(new File(DIR, testInfo.getTestMethod().get().getName()), json, "\"a\"",
         new GenericData.Fixed(schema, new byte[] { (byte) 'a' }), false);
     checkParseError("{\"type\":\"fixed\"}"); // size required
@@ -258,8 +258,8 @@ public class TestSchema {
   void recursiveEquals() throws Exception {
     String jsonSchema = "{\"type\":\"record\", \"name\":\"List\", \"fields\": ["
         + "{\"name\":\"next\", \"type\":\"List\"}]}";
-    Schema s1 = new Schema.Parser().parse(jsonSchema);
-    Schema s2 = new Schema.Parser().parse(jsonSchema);
+    Schema s1 = new SchemaParser().parse(jsonSchema);
+    Schema s2 = new SchemaParser().parse(jsonSchema);
     assertEquals(s1, s2);
     s1.hashCode(); // test no stackoverflow
   }
@@ -286,7 +286,7 @@ public class TestSchema {
       // check that equals and hashcode are correct and complete in a
       // reasonable amount of time
       for (Schema s1 : recs) {
-        Schema s2 = new Schema.Parser().parse(s1.toString());
+        Schema s2 = new SchemaParser().parse(s1.toString());
         assertEquals(s1.hashCode(), s2.hashCode());
         assertEquals(s1, s2);
       }
@@ -327,13 +327,13 @@ public class TestSchema {
     String record = "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}";
     String fixed = "{\"type\":\"fixed\",\"name\":\"Bar\",\"size\": 1}";
     String enu = "{\"type\":\"enum\",\"name\":\"Baz\",\"symbols\": [\"X\"]}";
-    Schema union = new Schema.Parser().parse("[\"null\",\"string\"," + record + "," + enu + "," + fixed + "]");
+    Schema union = new SchemaParser().parse("[\"null\",\"string\"," + record + "," + enu + "," + fixed + "]");
     checkJson(union, null, "null");
     checkJson(union, new Utf8("foo"), "{\"string\":\"foo\"}");
-    checkJson(union, new GenericData.Record(new Schema.Parser().parse(record)), "{\"Foo\":{}}");
-    checkJson(union, new GenericData.Fixed(new Schema.Parser().parse(fixed), new byte[] { (byte) 'a' }),
+    checkJson(union, new GenericData.Record(new SchemaParser().parse(record)), "{\"Foo\":{}}");
+    checkJson(union, new GenericData.Fixed(new SchemaParser().parse(fixed), new byte[] { (byte) 'a' }),
         "{\"Bar\":\"a\"}");
-    checkJson(union, new GenericData.EnumSymbol(new Schema.Parser().parse(enu), "X"), "{\"Baz\":\"X\"}");
+    checkJson(union, new GenericData.EnumSymbol(new SchemaParser().parse(enu), "X"), "{\"Baz\":\"X\"}");
   }
 
   @Test
@@ -371,16 +371,16 @@ public class TestSchema {
 
     // succeed with two branches of the same named type, if different names
     Schema u;
-    u = buildUnion(new Schema[] { new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"x.A\",\"fields\":[]}"),
-        new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"y.A\",\"fields\":[]}") });
+    u = buildUnion(new Schema[] { new SchemaParser().parse("{\"type\":\"record\",\"name\":\"x.A\",\"fields\":[]}"),
+        new SchemaParser().parse("{\"type\":\"record\",\"name\":\"y.A\",\"fields\":[]}") });
     check(new File(DIR, testInfo.getTestMethod().get().getName()), u.toString(), false);
 
-    u = buildUnion(new Schema[] { new Schema.Parser().parse("{\"type\":\"enum\",\"name\":\"x.A\",\"symbols\":[\"X\"]}"),
-        new Schema.Parser().parse("{\"type\":\"enum\",\"name\":\"y.A\",\"symbols\":[\"Y\"]}") });
+    u = buildUnion(new Schema[] { new SchemaParser().parse("{\"type\":\"enum\",\"name\":\"x.A\",\"symbols\":[\"X\"]}"),
+        new SchemaParser().parse("{\"type\":\"enum\",\"name\":\"y.A\",\"symbols\":[\"Y\"]}") });
     check(new File(DIR, testInfo.getTestMethod().get().getName()), u.toString(), false);
 
-    u = buildUnion(new Schema[] { new Schema.Parser().parse("{\"type\":\"fixed\",\"name\":\"x.A\",\"size\":4}"),
-        new Schema.Parser().parse("{\"type\":\"fixed\",\"name\":\"y.A\",\"size\":8}") });
+    u = buildUnion(new Schema[] { new SchemaParser().parse("{\"type\":\"fixed\",\"name\":\"x.A\",\"size\":4}"),
+        new SchemaParser().parse("{\"type\":\"fixed\",\"name\":\"y.A\",\"size\":8}") });
     check(new File(DIR, testInfo.getTestMethod().get().getName()), u.toString(), false);
 
     // fail with two branches of the same named type, but same names
@@ -399,21 +399,21 @@ public class TestSchema {
   @Test
   void complexProp() {
     String json = "{\"type\":\"null\", \"foo\": [0]}";
-    Schema s = new Schema.Parser().parse(json);
+    Schema s = new SchemaParser().parse(json);
     assertNull(s.getProp("foo"));
   }
 
   @Test
   void propOrdering() {
     String json = "{\"type\":\"int\",\"z\":\"c\",\"yy\":\"b\",\"x\":\"a\"}";
-    Schema s = new Schema.Parser().parse(json);
+    Schema s = new SchemaParser().parse(json);
     assertEquals(json, s.toString());
   }
 
   @Test
   void parseInputStream() throws IOException {
-    Schema s = new Schema.Parser().parse(new ByteArrayInputStream("\"boolean\"".getBytes(StandardCharsets.UTF_8)));
-    assertEquals(new Schema.Parser().parse("\"boolean\""), s);
+    Schema s = new SchemaParser().parse(new ByteArrayInputStream("\"boolean\"".getBytes(StandardCharsets.UTF_8)));
+    assertEquals(new SchemaParser().parse("\"boolean\""), s);
   }
 
   @Test
@@ -422,7 +422,7 @@ public class TestSchema {
     String y = "{\"type\":\"record\",\"name\":\"q.Y\",\"fields\":[" + "{\"name\":\"f\",\"type\":" + z + "}]}";
     String x = "{\"type\":\"record\",\"name\":\"p.X\",\"fields\":[" + "{\"name\":\"f\",\"type\":" + y + "},"
         + "{\"name\":\"g\",\"type\":" + z + "}" + "]}";
-    Schema xs = new Schema.Parser().parse(x);
+    Schema xs = new SchemaParser().parse(x);
     Schema ys = xs.getField("f").schema();
     assertEquals("p.Z", xs.getField("g").schema().getFullName());
     assertEquals("q.Z", ys.getField("f").schema().getFullName());
@@ -432,68 +432,68 @@ public class TestSchema {
   void namespaceNesting() {
     String y = "{\"type\":\"record\",\"name\":\"y.Y\",\"fields\":[" + "{\"name\":\"f\",\"type\":\"x.X\"}]}";
     String x = "{\"type\":\"record\",\"name\":\"x.X\",\"fields\":[" + "{\"name\":\"f\",\"type\":" + y + "}" + "]}";
-    Schema xs = new Schema.Parser().parse(x);
-    assertEquals(xs, new Schema.Parser().parse(xs.toString()));
+    Schema xs = new SchemaParser().parse(x);
+    assertEquals(xs, new SchemaParser().parse(xs.toString()));
   }
 
   @Test
   void nestedNullNamespace() {
-    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema inner = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
-    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+    assertEquals(outer, new SchemaParser().parse(outer.toString()));
   }
 
   @Test
   void deeplyNestedNullNamespace() {
-    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":["
+    Schema inner = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":["
         + "{\"name\":\"x\",\"type\":{\"type\":\"record\",\"name\":\"Deeper\",\"fields\":["
         + "{\"name\":\"y\",\"type\":\"int\"}]}}]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
-    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+    assertEquals(outer, new SchemaParser().parse(outer.toString()));
   }
 
   @Test
   void nestedNullNamespaceReferencing() {
-    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema inner = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Arrays.asList(new Field("f1", inner, null, null), new Field("f2", inner, null, null)));
-    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+    assertEquals(outer, new SchemaParser().parse(outer.toString()));
   }
 
   @Test
   void nestedNullNamespaceReferencingWithUnion() {
-    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema inner = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema innerUnion = Schema.createUnion(Arrays.asList(inner, Schema.create(Type.NULL)));
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Arrays.asList(new Field("f1", innerUnion, null, null), new Field("f2", innerUnion, null, null)));
-    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+    assertEquals(outer, new SchemaParser().parse(outer.toString()));
   }
 
   @Test
   void nestedNonNullNamespace1() {
     Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Collections.singletonList("x"));
-    Schema inner2 = new Schema.Parser()
+    Schema inner2 = new SchemaParser()
         .parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":" + "\"InnerRecord\",\"fields\":[]}");
     Schema nullOuter = Schema.createRecord("Outer", null, null, false);
     nullOuter.setFields(Arrays.asList(new Field("f1", inner1, null, null), new Field("f2", inner2, null, null)));
-    assertEquals(nullOuter, new Schema.Parser().parse(nullOuter.toString()));
+    assertEquals(nullOuter, new SchemaParser().parse(nullOuter.toString()));
   }
 
   @Test
   void nestedNonNullNamespace2() {
     Schema inner1 = Schema.createFixed("InnerFixed", null, "space", 1);
-    Schema inner2 = new Schema.Parser()
+    Schema inner2 = new SchemaParser()
         .parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":" + "\"InnerRecord\",\"fields\":[]}");
     Schema nullOuter = Schema.createRecord("Outer", null, null, false);
     nullOuter.setFields(Arrays.asList(new Field("f1", inner1, null, null), new Field("f2", inner2, null, null)));
-    assertEquals(nullOuter, new Schema.Parser().parse(nullOuter.toString()));
+    assertEquals(nullOuter, new SchemaParser().parse(nullOuter.toString()));
   }
 
   @Test
   void nullNamespaceAlias() {
-    Schema s = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}");
+    Schema s = new SchemaParser().parse("{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}");
     Schema t = new Schema.Parser()
         .parse("{\"type\":\"record\",\"name\":\"x.Y\",\"aliases\":[\".Z\"]," + "\"fields\":[]}");
     Schema u = Schema.applyAliases(s, t);
@@ -504,7 +504,7 @@ public class TestSchema {
   void nullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
         + "[{\"name\":\"x\", \"type\":\"string\"}]}";
-    Schema schema = new Schema.Parser().parse(recordJson);
+    Schema schema = new SchemaParser().parse(recordJson);
     GenericData.Record record = new GenericData.Record(schema);
     assertThrows(NullPointerException.class,
         () -> checkBinary(schema, record, new GenericDatumWriter<>(), new GenericDatumReader<>()));
@@ -512,7 +512,7 @@ public class TestSchema {
 
   private static void checkParseError(String json) {
     try {
-      new Schema.Parser().parse(json);
+      new SchemaParser().parse(json);
     } catch (SchemaParseException e) {
       return;
     }
@@ -539,7 +539,7 @@ public class TestSchema {
    */
   @Test
   void docs() {
-    Schema schema = new Schema.Parser().parse(SCHEMA_WITH_DOC_TAGS);
+    Schema schema = new SchemaParser().parse(SCHEMA_WITH_DOC_TAGS);
     assertEquals("This is not a world record.", schema.getDoc());
     assertEquals("Inner Fixed", schema.getField("inner_fixed").doc());
     assertEquals("Very Inner Fixed", schema.getField("inner_fixed").schema().getDoc());
@@ -555,11 +555,11 @@ public class TestSchema {
         + "{\"name\": \"f\", \"type\": \"int\", \"doc\": \"test\"}]}";
 
     // check field doc is parsed correctly
-    Schema schema = new Schema.Parser().parse(schemaStr);
+    Schema schema = new SchemaParser().parse(schemaStr);
     assertEquals("test", schema.getField("f").doc());
 
     // check print/read cycle preserves field doc
-    schema = new Schema.Parser().parse(schema.toString());
+    schema = new SchemaParser().parse(schema.toString());
     assertEquals("test", schema.getField("f").doc());
   }
 
@@ -569,8 +569,8 @@ public class TestSchema {
         + "{\"name\":\"h\",\"type\":\"int\"}]}";
     String t2 = "{\"type\":\"record\",\"name\":\"x.y\",\"aliases\":[\"a.b\"],"
         + "\"fields\":[{\"name\":\"g\",\"type\":\"long\",\"aliases\":[\"f\"]}," + "{\"name\":\"h\",\"type\":\"int\"}]}";
-    Schema s1 = new Schema.Parser().parse(t1);
-    Schema s2 = new Schema.Parser().parse(t2);
+    Schema s1 = new SchemaParser().parse(t1);
+    Schema s2 = new SchemaParser().parse(t2);
 
     assertEquals(s1.getAliases(), Collections.emptySet());
     assertEquals(s1.getField("f").aliases(), Collections.emptySet());
@@ -583,16 +583,16 @@ public class TestSchema {
 
     t1 = "{\"type\":\"enum\",\"name\":\"a.b\"," + "\"symbols\":[\"x\"]}";
     t2 = "{\"type\":\"enum\",\"name\":\"a.c\",\"aliases\":[\"b\"]," + "\"symbols\":[\"x\"]}";
-    s1 = new Schema.Parser().parse(t1);
-    s2 = new Schema.Parser().parse(t2);
+    s1 = new SchemaParser().parse(t1);
+    s2 = new SchemaParser().parse(t2);
     s3 = Schema.applyAliases(s1, s2);
     assertNotSame(s2, s3);
     assertEquals(s2, s3);
 
     t1 = "{\"type\":\"fixed\",\"name\":\"a\"," + "\"size\": 5}";
     t2 = "{\"type\":\"fixed\",\"name\":\"b\",\"aliases\":[\"a\"]," + "\"size\": 5}";
-    s1 = new Schema.Parser().parse(t1);
-    s2 = new Schema.Parser().parse(t2);
+    s1 = new SchemaParser().parse(t1);
+    s2 = new SchemaParser().parse(t2);
     s3 = Schema.applyAliases(s1, s2);
     assertNotSame(s2, s3);
     assertEquals(s2, s3);
@@ -602,8 +602,8 @@ public class TestSchema {
   void aliasesSelfReferential() {
     String t1 = "{\"type\":\"record\",\"name\":\"a\",\"fields\":[{\"name\":\"f\",\"type\":{\"type\":\"record\",\"name\":\"C\",\"fields\":[{\"name\":\"c\",\"type\":{\"type\":\"array\",\"items\":[\"null\",\"C\"]}}]}}]}";
     String t2 = "{\"type\":\"record\",\"name\":\"x\",\"fields\":[{\"name\":\"f\",\"type\":{\"type\":\"record\",\"name\":\"C\",\"fields\":[{\"name\":\"d\",\"type\":{\"type\":\"array\",\"items\":[\"null\",\"C\"]},\"aliases\":[\"c\"]}]}}],\"aliases\":[\"a\"]}";
-    Schema s1 = new Schema.Parser().parse(t1);
-    Schema s2 = new Schema.Parser().parse(t2);
+    Schema s1 = new SchemaParser().parse(t1);
+    Schema s2 = new SchemaParser().parse(t2);
 
     assertEquals(s1.getAliases(), Collections.emptySet());
     assertEquals(s2.getAliases(), Collections.singleton("a"));
@@ -624,7 +624,7 @@ public class TestSchema {
   }
 
   private static void check(File dst, String jsonSchema, boolean induce) throws Exception {
-    Schema schema = new Schema.Parser().parse(jsonSchema);
+    Schema schema = new SchemaParser().parse(jsonSchema);
     checkProp(schema);
     Object reuse = null;
     for (Object datum : new RandomData(schema, COUNT, true)) {
@@ -654,11 +654,11 @@ public class TestSchema {
     if (s0.getType().equals(Schema.Type.UNION))
       return; // unions have no props
     assertNull(s0.getProp("foo"));
-    Schema s1 = new Schema.Parser().parse(s0.toString());
+    Schema s1 = new SchemaParser().parse(s0.toString());
     s1.addProp("foo", "bar");
     assertEquals("bar", s1.getProp("foo"));
     assertNotEquals(s0, s1);
-    Schema s2 = new Schema.Parser().parse(s1.toString());
+    Schema s2 = new SchemaParser().parse(s1.toString());
     assertEquals("bar", s2.getProp("foo"));
     assertEquals(s1, s2);
     assertNotEquals(s0, s2);
@@ -775,22 +775,22 @@ public class TestSchema {
   }
 
   private static final Schema ACTUAL = // an empty record schema
-      new Schema.Parser().parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[]}");
+      new SchemaParser().parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[]}");
 
   private static void checkDefault(String schemaJson, String defaultJson, Object defaultValue) throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", " + "\"type\":"
         + schemaJson + ", " + "\"default\":" + defaultJson + "}]}";
-    Schema expected = new Schema.Parser().parse(recordJson);
+    Schema expected = new SchemaParser().parse(recordJson);
     DatumReader<Object> in = new GenericDatumReader<>(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record) in.read(null,
         DecoderFactory.get().binaryDecoder(new byte[0], null));
     assertEquals(defaultValue, record.get("f"), "Wrong default.");
-    assertEquals(expected, new Schema.Parser().parse(expected.toString()), "Wrong toString");
+    assertEquals(expected, new SchemaParser().parse(expected.toString()), "Wrong toString");
   }
 
   private static void checkValidateDefaults(String schemaJson, String defaultJson) {
     try {
-      Schema.Parser parser = new Schema.Parser();
+      SchemaParser parser = new SchemaParser();
       String recordJson = "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", " + "\"type\":"
           + schemaJson + ", " + "\"default\":" + defaultJson + "}]}";
       parser.parse(recordJson);
@@ -802,7 +802,7 @@ public class TestSchema {
   @Test
   void noDefaultField() throws Exception {
     assertThrows(AvroTypeException.class, () -> {
-      Schema expected = new Schema.Parser()
+      Schema expected = new SchemaParser()
           .parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":" + "[{\"name\":\"f\", \"type\": \"string\"}]}");
       DatumReader<Object> in = new GenericDatumReader<>(ACTUAL, expected);
       in.read(null, DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(new byte[0]), null));
@@ -811,8 +811,8 @@ public class TestSchema {
 
   @Test
   void enumMismatch() throws Exception {
-    Schema actual = new Schema.Parser().parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
-    Schema expected = new Schema.Parser().parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
+    Schema actual = new SchemaParser().parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"X\",\"Y\"]}");
+    Schema expected = new SchemaParser().parse("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     DatumWriter<Object> writer = new GenericDatumWriter<>(actual);
     Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
@@ -834,19 +834,19 @@ public class TestSchema {
   @Test
   void recordWithPrimitiveName() {
     assertThrows(AvroTypeException.class, () -> {
-      new Schema.Parser().parse("{\"type\":\"record\", \"name\":\"string\", \"fields\": []}");
+      new SchemaParser().parse("{\"type\":\"record\", \"name\":\"string\", \"fields\": []}");
     });
   }
 
   @Test
   void enumWithPrimitiveName() {
     assertThrows(AvroTypeException.class, () -> {
-      new Schema.Parser().parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
+      new SchemaParser().parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
     });
   }
 
   private static Schema enumSchema() {
-    return new Schema.Parser().parse("{ \"type\": \"enum\", \"name\": \"e\", " + "\"symbols\": [\"a\", \"b\"]}");
+    return new SchemaParser().parse("{ \"type\": \"enum\", \"name\": \"e\", " + "\"symbols\": [\"a\", \"b\"]}");
   }
 
   @Test

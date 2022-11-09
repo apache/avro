@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -73,7 +74,7 @@ public class ExtendedEnumTest {
 
     public TestStateEncode() {
       super();
-      this.schema = new Schema.Parser().parse(mkSchema(ENUM_SCHEMA));
+      this.schema = new SchemaParser().parse(mkSchema(ENUM_SCHEMA));
     }
 
     /**
@@ -113,7 +114,7 @@ public class ExtendedEnumTest {
 
     public TestStateDecode() {
       super();
-      this.schema = new Schema.Parser().parse(mkSchema(ENUM_SCHEMA));
+      this.schema = new SchemaParser().parse(mkSchema(ENUM_SCHEMA));
     }
 
     /**

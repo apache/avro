@@ -18,6 +18,8 @@
 #if ($schema.getNamespace())
 package $this.mangle($schema.getNamespace());
 #end
+
+import org.apache.avro.JsonSchemaParser;
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -28,7 +30,7 @@ package $this.mangle($schema.getNamespace());
 public enum ${this.mangleTypeIdentifier($schema.getName())} implements org.apache.avro.generic.GenericEnumSymbol<${this.mangleTypeIdentifier($schema.getName())}> {
   #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($foreach.hasNext), #end#end
   ;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal("${this.javaEscape($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   @Override

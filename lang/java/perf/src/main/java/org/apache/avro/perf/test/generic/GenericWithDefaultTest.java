@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -75,7 +76,7 @@ public class GenericWithDefaultTest {
 
     public TestStateEncode() {
       super();
-      this.schema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
+      this.schema = new SchemaParser().parse(RECORD_SCHEMA_WITH_DEFAULT);
     }
 
     /**
@@ -114,7 +115,7 @@ public class GenericWithDefaultTest {
 
     public TestStateDecode() {
       super();
-      this.schema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
+      this.schema = new SchemaParser().parse(RECORD_SCHEMA_WITH_DEFAULT);
     }
 
     /**

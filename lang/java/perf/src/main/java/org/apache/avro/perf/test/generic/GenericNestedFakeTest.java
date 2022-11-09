@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -77,7 +78,7 @@ public class GenericNestedFakeTest {
 
     public TestStateEncode() {
       super();
-      this.schema = new Schema.Parser().parse(NESTED_RECORD_SCHEMA);
+      this.schema = new SchemaParser().parse(NESTED_RECORD_SCHEMA);
     }
 
     /**
@@ -122,7 +123,7 @@ public class GenericNestedFakeTest {
 
     public TestStateDecode() {
       super();
-      this.schema = new Schema.Parser().parse(NESTED_RECORD_SCHEMA);
+      this.schema = new SchemaParser().parse(NESTED_RECORD_SCHEMA);
     }
 
     /**

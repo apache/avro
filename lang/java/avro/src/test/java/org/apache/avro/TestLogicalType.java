@@ -185,7 +185,7 @@ public class TestLogicalType {
   void fixedDecimalToFromJson() {
     Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
-    Schema parsed = new Schema.Parser().parse(schema.toString(true));
+    Schema parsed = new SchemaParser().parse(schema.toString(true));
     assertEquals(schema, parsed, "Constructed and parsed schemas should match");
   }
 
@@ -193,7 +193,7 @@ public class TestLogicalType {
   void bytesDecimalToFromJson() {
     Schema schema = Schema.create(Schema.Type.BYTES);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
-    Schema parsed = new Schema.Parser().parse(schema.toString(true));
+    Schema parsed = new SchemaParser().parse(schema.toString(true));
     assertEquals(schema, parsed, "Constructed and parsed schemas should match");
   }
 

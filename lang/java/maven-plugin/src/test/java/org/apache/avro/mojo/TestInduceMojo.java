@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.Arrays;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.entities.Person;
 import org.apache.avro.protocols.Remote;
 import org.apache.avro.reflect.ReflectData;
@@ -61,7 +61,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     assertTrue(outputDir.listFiles().length != 0);
     File personSchemaFile = Arrays.stream(outputDir.listFiles()).filter(file -> file.getName().endsWith("Person.avsc"))
         .findFirst().orElseThrow(AssertionError::new);
-    assertEquals(ReflectData.get().getSchema(Person.class), new Schema.Parser().parse(personSchemaFile));
+    assertEquals(ReflectData.get().getSchema(Person.class), new SchemaParser().parse(personSchemaFile));
   }
 
   @Test

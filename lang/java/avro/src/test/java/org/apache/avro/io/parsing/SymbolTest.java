@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,7 +43,7 @@ public class SymbolTest {
 
   @Test
   void someMethod() throws IOException {
-    Schema schema = new Schema.Parser().parse(SCHEMA);
+    Schema schema = new SchemaParser().parse(SCHEMA);
     Symbol root = new ResolvingGrammarGenerator().generate(schema, schema);
     validateNonNull(root, new HashSet<>());
   }

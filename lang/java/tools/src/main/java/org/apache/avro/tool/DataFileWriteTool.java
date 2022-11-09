@@ -26,8 +26,8 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -72,7 +72,7 @@ public class DataFileWriteTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
-    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new Schema.Parser().parse(schemastr);
+    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new SchemaParser().parse(schemastr);
 
     DatumReader<Object> reader = new GenericDatumReader<>(schema);
 

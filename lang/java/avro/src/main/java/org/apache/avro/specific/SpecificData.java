@@ -17,23 +17,6 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.util.MapUtil;
-import org.apache.avro.util.SchemaUtil;
-import org.apache.avro.util.internal.ClassValueCache;
-
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Constructor;
@@ -53,6 +36,24 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.ClassUtils;
+import org.apache.avro.util.MapUtil;
+import org.apache.avro.util.SchemaUtil;
+import org.apache.avro.util.internal.ClassValueCache;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -420,8 +421,8 @@ public class SpecificData extends GenericData {
 
           if (!fullName.equals(getClassName(schema)))
             // HACK: schema mismatches class. maven shade plugin? try replacing.
-            schema = new Schema.Parser()
-                .parse(schema.toString().replace(schema.getNamespace(), c.getPackage().getName()));
+            schema = JsonSchemaParser
+                .parseInternal(schema.toString().replace(schema.getNamespace(), c.getPackage().getName()));
         } catch (NoSuchFieldException e) {
           throw new AvroRuntimeException("Not a Specific class: " + c);
         } catch (IllegalAccessException e) {

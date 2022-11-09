@@ -17,8 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +36,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class TestDataFileConcat {
@@ -80,7 +80,7 @@ public class TestDataFileConcat {
 
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}" + "," + "{\"name\":\"longField\", \"type\":\"long\"}" + "]}";
-  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = new SchemaParser().parse(SCHEMA_JSON);
 
   private File makeFile(String name) {
     return new File(DIR.getRoot().getPath(), "test-" + name + ".avro");

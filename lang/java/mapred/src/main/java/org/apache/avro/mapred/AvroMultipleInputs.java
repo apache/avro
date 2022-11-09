@@ -17,8 +17,6 @@
  */
 package org.apache.avro.mapred;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,10 +24,13 @@ import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
+import org.apache.avro.SchemaParser;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This class supports Avro-MapReduce jobs that have multiple input paths with a
@@ -194,7 +195,7 @@ public class AvroMultipleInputs {
     }
     Map<Path, Schema> m = new HashMap<>();
     String[] schemaMappings = conf.get(SCHEMA_KEY).split(",");
-    Schema.Parser schemaParser = new Schema.Parser();
+    SchemaParser schemaParser = new SchemaParser();
     for (String schemaMapping : schemaMappings) {
       String[] split = schemaMapping.split(";");
       String schemaString = fromBase64(split[1]);

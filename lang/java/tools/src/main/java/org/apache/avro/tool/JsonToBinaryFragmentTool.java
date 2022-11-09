@@ -25,13 +25,13 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 
 /** Tool to convert JSON data into the binary form. */
@@ -57,7 +57,7 @@ public class JsonToBinaryFragmentTool implements Tool {
     Schema schema;
     String inputFile;
     if (schemaFile == null) {
-      schema = new Schema.Parser().parse(nargs.get(0));
+      schema = new SchemaParser().parse(nargs.get(0));
       inputFile = nargs.get(1);
     } else {
       schema = Util.parseSchemaFromFS(schemaFile);

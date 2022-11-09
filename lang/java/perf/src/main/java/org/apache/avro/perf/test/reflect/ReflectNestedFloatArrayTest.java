@@ -23,14 +23,15 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.perf.test.BasicArrayState;
+import org.apache.avro.perf.test.BasicState;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.perf.test.BasicArrayState;
-import org.apache.avro.perf.test.BasicState;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
@@ -73,7 +74,7 @@ public class ReflectNestedFloatArrayTest {
     public TestStateEncode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(NativeArrayWrapper.class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = new SchemaParser().parse(jsonText);
     }
 
     /**
@@ -106,7 +107,7 @@ public class ReflectNestedFloatArrayTest {
     public TestStateDecode() {
       super(ARRAY_SIZE);
       final String jsonText = ReflectData.get().getSchema(float[].class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = new SchemaParser().parse(jsonText);
     }
 
     /**

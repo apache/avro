@@ -47,6 +47,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.TestCircularReferences.ReferenceManager;
 import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.io.BinaryData;
@@ -502,16 +503,16 @@ public class TestGenericData {
 
   @Test
   void mapWithNonStringKeyToStringIsJson() throws Exception {
-    Schema intMapSchema = new Schema.Parser()
+    Schema intMapSchema = new SchemaParser()
         .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
     Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
-    Schema decMapSchema = new Schema.Parser()
+    Schema decMapSchema = new SchemaParser()
         .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
     Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
-    Schema boolMapSchema = new Schema.Parser()
+    Schema boolMapSchema = new SchemaParser()
         .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
     Field boolMapField = new Field("boolMap", Schema.createMap(boolMapSchema), null, null);
-    Schema fileMapSchema = new Schema.Parser()
+    Schema fileMapSchema = new SchemaParser()
         .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
     Field fileMapField = new Field("fileMap", Schema.createMap(fileMapSchema), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);

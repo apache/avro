@@ -21,27 +21,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import org.apache.avro.util.internal.JacksonUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.LongNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.avro.Schema;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Encoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.util.internal.JacksonUtils;
 
 /** Utilities for reading and writing arbitrary Json data in Avro format. */
 public class Json {
@@ -56,7 +56,7 @@ public class Json {
   static {
     try {
       try (InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc")) {
-        SCHEMA = new Schema.Parser().parse(in);
+        SCHEMA = new SchemaParser().parse(in);
       }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);

@@ -22,14 +22,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.perf.test.BasicState;
+import org.apache.avro.perf.test.BigRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.perf.test.BasicState;
-import org.apache.avro.perf.test.BigRecord;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.OperationsPerInvocation;
@@ -70,7 +71,7 @@ public class ReflectBigRecordTest {
     public TestStateEncode() {
       super();
       final String jsonText = ReflectData.get().getSchema(BigRecord.class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = new SchemaParser().parse(jsonText);
     }
 
     /**
@@ -101,7 +102,7 @@ public class ReflectBigRecordTest {
     public TestStateDecode() {
       super();
       final String jsonText = ReflectData.get().getSchema(BigRecord.class).toString();
-      this.schema = new Schema.Parser().parse(jsonText);
+      this.schema = new SchemaParser().parse(jsonText);
     }
 
     /**

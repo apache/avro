@@ -35,13 +35,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.JsonProperties;
+import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -123,21 +126,21 @@ public class TestReflect {
 
   @Test
   void unionWithCollection() {
-    Schema s = new Schema.Parser().parse("[\"null\", {\"type\":\"array\",\"items\":\"float\"}]");
+    Schema s = new SchemaParser().parse("[\"null\", {\"type\":\"array\",\"items\":\"float\"}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new ArrayList<Float>()));
   }
 
   @Test
   void unionWithMap() {
-    Schema s = new Schema.Parser().parse("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
+    Schema s = new SchemaParser().parse("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new HashMap<String, Float>()));
   }
 
   @Test
   void unionWithMapWithUtf8Keys() {
-    Schema s = new Schema.Parser().parse("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
+    Schema s = new SchemaParser().parse("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
     GenericData data = ReflectData.get();
     HashMap<Utf8, Float> map = new HashMap<>();
     map.put(new Utf8("foo"), 1.0f);
@@ -146,15 +149,15 @@ public class TestReflect {
 
   @Test
   void unionWithFixed() {
-    Schema s = new Schema.Parser().parse("[\"null\", {\"type\":\"fixed\",\"name\":\"f\",\"size\":1}]");
-    Schema f = new Schema.Parser().parse("{\"type\":\"fixed\",\"name\":\"f\",\"size\":1}");
+    Schema s = new SchemaParser().parse("[\"null\", {\"type\":\"fixed\",\"name\":\"f\",\"size\":1}]");
+    Schema f = new SchemaParser().parse("{\"type\":\"fixed\",\"name\":\"f\",\"size\":1}");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, new GenericData.Fixed(f)));
   }
 
   @Test
   void unionWithEnum() {
-    Schema s = new Schema.Parser().parse("[\"null\", {\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
+    Schema s = new SchemaParser().parse("[\"null\", {\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
         + "\"org.apache.avro.reflect.TestReflect\",\"symbols\":[\"A\",\"B\"]}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, E.A));
@@ -162,7 +165,7 @@ public class TestReflect {
 
   @Test
   void unionWithBytes() {
-    Schema s = new Schema.Parser().parse("[\"null\", \"bytes\"]");
+    Schema s = new SchemaParser().parse("[\"null\", \"bytes\"]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, ByteBuffer.wrap(new byte[] { 1 })));
   }
@@ -499,7 +502,7 @@ public class TestReflect {
   void r12() throws Exception {
     Schema s = ReflectData.get().getSchema(R12.class);
     assertEquals(Schema.Type.INT, s.getField("x").schema().getType());
-    assertEquals(new Schema.Parser().parse("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}"),
+    assertEquals(new SchemaParser().parse("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}"),
         s.getField("strings").schema());
   }
 
@@ -1089,7 +1092,7 @@ public class TestReflect {
   @Test
   void nullArray() throws Exception {
     String json = "[{\"type\":\"array\", \"items\": \"long\"}, \"null\"]";
-    Schema schema = new Schema.Parser().parse(json);
+    Schema schema = new SchemaParser().parse(json);
     checkBinary(schema, null);
   }
 
@@ -1231,7 +1234,7 @@ public class TestReflect {
   @Test
   void dollarTerminatedNamespaceCompatibility() {
     ReflectData data = ReflectData.get();
-    Schema s = new Schema.Parser().setValidate(false).parse(
+    Schema s = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
     assertEquals(data.getSchema(data.getClass(s)).toString(),
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
@@ -1241,7 +1244,7 @@ public class TestReflect {
   void dollarTerminatedNestedStaticClassNamespaceCompatibility() {
     ReflectData data = ReflectData.get();
     // Older versions of Avro generated this namespace on nested records.
-    Schema s = new Schema.Parser().setValidate(false).parse(
+    Schema s = JsonSchemaParser.parseInternal(
         "{\"type\":\"record\",\"name\":\"AnotherSampleRecord\",\"namespace\":\"org.apache.avro.reflect.TestReflect$SampleRecord\",\"fields\":[]}");
     assertThat(data.getSchema(data.getClass(s)).getFullName(),
         is("org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord"));

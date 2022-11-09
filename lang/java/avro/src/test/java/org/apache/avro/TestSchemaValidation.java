@@ -316,7 +316,7 @@ public class TestSchemaValidation {
     assertTrue(threw);
   }
 
-  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.Schema.Parser().parse(
+  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.SchemaParser().parse(
       "{\"type\":\"record\",\"name\":\"Node\",\"namespace\":\"avro\",\"fields\":[{\"name\":\"value\",\"type\":[\"null\",\"Node\"],\"default\":null}]}");
 
   /**

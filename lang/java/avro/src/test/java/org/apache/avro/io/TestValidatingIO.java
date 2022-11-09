@@ -17,10 +17,6 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,13 +28,19 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class TestValidatingIO {
@@ -65,7 +67,7 @@ public class TestValidatingIO {
   @Test
   public void testMain() throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(new Schema.Parser().parse(sJsSch), sCl, iSkipL, eEnc);
+      testOnce(new SchemaParser().parse(sJsSch), sCl, iSkipL, eEnc);
     }
   }
 

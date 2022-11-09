@@ -18,6 +18,9 @@
 #if ($schema.getNamespace())
 package $this.mangle($schema.getNamespace());
 #end
+
+import org.apache.avro.JsonSchemaParser;
+
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -28,7 +31,7 @@ package $this.mangle($schema.getNamespace());
 @org.apache.avro.specific.AvroGenerated
 public class ${this.mangleTypeIdentifier($schema.getName())} extends org.apache.avro.specific.SpecificFixed {
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
+  public static final org.apache.avro.Schema SCHEMA$ = JsonSchemaParser.parseInternal("${this.javaEscape($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
 

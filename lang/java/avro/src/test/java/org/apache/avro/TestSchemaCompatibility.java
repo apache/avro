@@ -503,7 +503,7 @@ public class TestSchemaCompatibility {
       final String result = new BufferedReader(new InputStreamReader(inputStream)).lines()
           .collect(Collectors.joining("\n"));
 
-      return new Schema.Parser().parse(result);
+      return new SchemaParser().parse(result);
     }
   }
 

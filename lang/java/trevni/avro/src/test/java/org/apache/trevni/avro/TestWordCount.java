@@ -38,6 +38,7 @@ import org.apache.avro.mapred.AvroReducer;
 import org.apache.avro.mapred.AvroCollector;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 
 import org.junit.jupiter.api.Test;
 
@@ -116,7 +117,7 @@ public class TestWordCount {
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
 
-    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
+    Schema subSchema = new SchemaParser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
         + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
     AvroJob.setInputSchema(job, subSchema);
     AvroJob.setMapperClass(job, Counter.class);

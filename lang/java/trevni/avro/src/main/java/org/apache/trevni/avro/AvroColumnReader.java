@@ -18,25 +18,25 @@
 
 package org.apache.trevni.avro;
 
-import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.trevni.ColumnMetaData;
+import org.apache.avro.JsonSchemaParser;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
 import org.apache.trevni.ColumnFileReader;
+import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnValues;
 import org.apache.trevni.Input;
 import org.apache.trevni.InputFile;
 import org.apache.trevni.TrevniRuntimeException;
-
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericData;
 
 import static org.apache.trevni.avro.AvroColumnator.isSimple;
 
@@ -91,7 +91,7 @@ public class AvroColumnReader<D> implements Iterator<D>, Iterable<D>, Closeable 
   public AvroColumnReader(Params params) throws IOException {
     this.reader = new ColumnFileReader(params.input);
     this.model = params.model;
-    this.fileSchema = new Schema.Parser().parse(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
+    this.fileSchema = JsonSchemaParser.parseInternal(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
     this.readSchema = params.schema == null ? fileSchema : params.schema;
     initialize();
   }

@@ -25,20 +25,20 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.tether.TetherJob;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
-
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
 
 @SuppressWarnings("deprecation")
 public class TetherTool implements Tool {
@@ -135,7 +135,7 @@ public class TetherTool implements Tool {
       job.set(AvroJob.OUTPUT_SCHEMA, Schema.parse(outschema).toString());
       if (line.hasOption("outschemamap")) {
         job.set(AvroJob.MAP_OUTPUT_SCHEMA,
-            new Schema.Parser().parse((File) line.getParsedOptionValue("outschemamap")).toString());
+            new SchemaParser().parse((File) line.getParsedOptionValue("outschemamap")).toString());
       }
       if (line.hasOption("reduces")) {
         job.setNumReduceTasks((Integer) line.getParsedOptionValue("reduces"));

@@ -37,6 +37,7 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.TestProtocolParsing;
 import org.apache.avro.TestSchema;
 import org.apache.avro.TestAnnotation;
@@ -82,12 +83,12 @@ public class TestSpecificCompiler {
 
   @Test
   void primitiveSchemaGeneratesNothing() {
-    assertEquals(0, new SpecificCompiler(new Schema.Parser().parse("\"double\"")).compile().size());
+    assertEquals(0, new SpecificCompiler(new SchemaParser().parse("\"double\"")).compile().size());
   }
 
   @Test
   void simpleEnumSchema(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.BASIC_ENUM_SCHEMA))
+    Collection<OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(TestSchema.BASIC_ENUM_SCHEMA))
         .compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
@@ -130,7 +131,7 @@ public class TestSpecificCompiler {
 
   @Test
   void manglingForRecords(TestInfo testInfo) throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(SCHEMA)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -145,7 +146,7 @@ public class TestSpecificCompiler {
   void manglingForEnums(TestInfo testInfo) throws IOException {
     String enumSchema = "" + "{ \"name\": \"instanceof\", \"type\": \"enum\","
         + "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(enumSchema)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(enumSchema)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -156,7 +157,7 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaSplit(TestInfo testInfo) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(new Schema.Parser().parse(SCHEMA));
+    SpecificCompiler compiler = new SpecificCompiler(new SchemaParser().parse(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
     assertCompilesWithJavaCompiler(new File(INPUT_DIR, testInfo.getTestMethod().get().getName()), files);
@@ -172,7 +173,7 @@ public class TestSpecificCompiler {
 
   @Test
   void schemaWithDocs() {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS))
+    Collection<OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS))
         .compile();
     assertEquals(3, outputs.size());
     int count = 0;
@@ -584,7 +585,7 @@ public class TestSpecificCompiler {
 
   @Test
   void aliases() throws IOException {
-    Schema s = new Schema.Parser().parse("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
+    Schema s = new SchemaParser().parse("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
         + "{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
     SpecificCompiler compiler = new SpecificCompiler(s);
     compiler.setStringType(StringType.valueOf("String"));
@@ -645,7 +646,7 @@ public class TestSpecificCompiler {
 
   @Test
   void generateExceptionCodeBlock() throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA1)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new SchemaParser().parse(SCHEMA1)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 

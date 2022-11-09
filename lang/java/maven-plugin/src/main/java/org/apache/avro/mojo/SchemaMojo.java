@@ -18,10 +18,11 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.Schema;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -36,7 +37,7 @@ public class SchemaMojo extends AbstractAvroMojo {
    * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
-  private Schema.Parser schemaParser = new Schema.Parser();
+  private SchemaParser schemaParser = new SchemaParser();
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
@@ -66,7 +67,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     // allow them to share a single schema so reuse and sharing of schema
     // is possible.
     if (imports == null) {
-      schema = new Schema.Parser().parse(src);
+      schema = new SchemaParser().parse(src);
     } else {
       schema = schemaParser.parse(src);
     }

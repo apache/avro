@@ -20,8 +20,6 @@
  */
 package org.apache.avro.tool;
 
-import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -34,7 +32,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.Deflater;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileReader;
@@ -46,9 +48,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import joptsimple.OptionSet;
-import joptsimple.OptionParser;
-import joptsimple.OptionSpec;
+import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 
 /** Static utility methods for tools. */
 class Util {
@@ -165,7 +165,7 @@ class Util {
   static Schema parseSchemaFromFS(String filename) throws IOException {
     InputStream stream = openFromFS(filename);
     try {
-      return new Schema.Parser().parse(stream);
+      return new SchemaParser().parse(stream);
     } finally {
       close(stream);
     }

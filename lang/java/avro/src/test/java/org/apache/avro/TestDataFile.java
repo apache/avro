@@ -17,11 +17,6 @@
  */
 package org.apache.avro;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -42,15 +37,18 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.util.RandomData;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataFile {
   private static final Logger LOG = LoggerFactory.getLogger(TestDataFile.class);
@@ -84,7 +82,7 @@ public class TestDataFile {
   private static final long SEED = System.currentTimeMillis();
   private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
       + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
-  private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
+  private static final Schema SCHEMA = new SchemaParser().parse(SCHEMA_JSON);
 
   private File makeFile(CodecFactory codec) {
     return new File(DIR, "test-" + codec + ".avro");
@@ -345,7 +343,7 @@ public class TestDataFile {
     File input = new File(args[0]);
     Schema projection = null;
     if (args.length > 1)
-      projection = new Schema.Parser().parse(new File(args[1]));
+      projection = new SchemaParser().parse(new File(args[1]));
     TestDataFile.readFile(input, new GenericDatumReader<>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)

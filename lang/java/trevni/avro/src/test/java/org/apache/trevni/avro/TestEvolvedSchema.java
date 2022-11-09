@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
@@ -54,9 +55,9 @@ public class TestEvolvedSchema {
   GenericData.Record evolvedRecord;
   GenericData.Record innerRecord;
 
-  private static final Schema writer = new Schema.Parser().parse(writerSchema);
-  private static final Schema evolved = new Schema.Parser().parse(evolvedSchema2);
-  private static final Schema inner = new Schema.Parser().parse(innerSchema);
+  private static final Schema writer = new SchemaParser().parse(writerSchema);
+  private static final Schema evolved = new SchemaParser().parse(evolvedSchema2);
+  private static final Schema inner = new SchemaParser().parse(innerSchema);
 
   @BeforeEach
   public void setUp() {

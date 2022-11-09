@@ -27,8 +27,7 @@ import java.util.List;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-
-import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 
@@ -64,7 +63,7 @@ public class ToTextTool implements Tool {
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileStream<Object> fileReader = new DataFileStream<>(inStream, reader);
 
-    if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
+    if (!fileReader.getSchema().equals(new SchemaParser().parse(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");
       p.printHelpOn(err);
       fileReader.close();

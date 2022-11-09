@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -71,8 +72,8 @@ public class GenericWithPromotionTest {
 
     public TestStateDecode() {
       super();
-      this.readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
-      this.writerSchema = new Schema.Parser().parse(RECORD_SCHEMA);
+      this.readerSchema = new SchemaParser().parse(RECORD_SCHEMA_WITH_PROMOTION);
+      this.writerSchema = new SchemaParser().parse(RECORD_SCHEMA);
     }
 
     /**

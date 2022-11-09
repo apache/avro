@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -73,7 +74,7 @@ public class RecordTest {
 
     public TestStateDecode() {
       super();
-      this.readerSchema = new Schema.Parser().parse(RECORD_SCHEMA);
+      this.readerSchema = new SchemaParser().parse(RECORD_SCHEMA);
     }
 
     /**

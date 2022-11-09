@@ -48,6 +48,7 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
@@ -478,7 +479,7 @@ public class SpecificCompiler {
    * Generates Java classes for a number of schema files.
    */
   public static void compileSchema(File[] srcFiles, File dest) throws IOException {
-    Schema.Parser parser = new Schema.Parser();
+    SchemaParser parser = new SchemaParser();
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.io.TestValidatingIO.Encoding;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -73,9 +74,9 @@ public class TestResolvingIO {
     Object[] values = TestValidatingIO.randomValues(writerCalls);
     Object[] expected = TestValidatingIO.randomValues(readerCalls);
 
-    Schema writerSchema = new Schema.Parser().parse(jsonWriterSchema);
+    Schema writerSchema = new SchemaParser().parse(jsonWriterSchema);
     byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls, values, encoding);
-    Schema readerSchema = new Schema.Parser().parse(jsonReaderSchema);
+    Schema readerSchema = new SchemaParser().parse(jsonReaderSchema);
     TestValidatingIO.print(encoding, skipLevel, writerSchema, readerSchema, values, expected);
     check(writerSchema, readerSchema, bytes, readerCalls, expected, encoding, skipLevel);
   }

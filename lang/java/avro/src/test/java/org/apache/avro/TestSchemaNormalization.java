@@ -45,7 +45,7 @@ public class TestSchemaNormalization {
     @ParameterizedTest
     @MethodSource("cases")
     void canonicalization(String input, String expectedOutput) {
-      assertEquals(SchemaNormalization.toParsingForm(new Schema.Parser().parse(input)), expectedOutput);
+      assertEquals(SchemaNormalization.toParsingForm(new SchemaParser().parse(input)), expectedOutput);
     }
   }
 
@@ -59,7 +59,7 @@ public class TestSchemaNormalization {
     @ParameterizedTest
     @MethodSource("cases")
     void canonicalization(String input, String expectedOutput) {
-      Schema s = new Schema.Parser().parse(input);
+      Schema s = new SchemaParser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
@@ -79,7 +79,7 @@ public class TestSchemaNormalization {
     void canonicalization(String input, String expectedOutput) {
       Locale originalDefaultLocale = Locale.getDefault();
       Locale.setDefault(Locale.forLanguageTag("tr"));
-      Schema s = new Schema.Parser().parse(input);
+      Schema s = new SchemaParser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));

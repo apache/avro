@@ -26,13 +26,13 @@ import java.util.List;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.file.DataFileStream;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 
@@ -72,7 +72,7 @@ public class DataFileReadTool implements Tool {
     if (readerSchemaFile != null) {
       readerSchema = Util.parseSchemaFromFS(readerSchemaFile);
     } else if (readerSchemaStr != null) {
-      readerSchema = new Schema.Parser().parse(readerSchemaStr);
+      readerSchema = new SchemaParser().parse(readerSchemaStr);
     }
 
     long headCount = getHeadCount(optionSet, headOption, nargs);

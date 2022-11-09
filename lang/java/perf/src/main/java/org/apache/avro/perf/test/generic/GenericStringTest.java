@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -75,7 +76,7 @@ public class GenericStringTest {
 
     public TestStateEncode() {
       super();
-      this.readerSchema = new Schema.Parser().parse(GENERIC_STRINGS);
+      this.readerSchema = new SchemaParser().parse(GENERIC_STRINGS);
     }
 
     /**
@@ -108,7 +109,7 @@ public class GenericStringTest {
 
     public TestStateDecode() {
       super();
-      this.readerSchema = new Schema.Parser().parse(GENERIC_STRINGS);
+      this.readerSchema = new SchemaParser().parse(GENERIC_STRINGS);
     }
 
     /**
