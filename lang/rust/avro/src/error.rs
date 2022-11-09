@@ -115,6 +115,12 @@ pub enum Error {
     #[error("expected UUID, got: {0:?}")]
     GetUuid(ValueKind),
 
+    #[error("expected Decimal, got: {0:?}")]
+    GetDecimal(ValueKind),
+
+    #[error("expected Duration, got: {0:?}")]
+    GetDuration(ValueKind),
+
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
 
