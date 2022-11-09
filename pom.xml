@@ -442,7 +442,6 @@
                 <exclude>**/README.md</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
-                <exclude>.travis.yml</exclude>
                 <exclude>BUILD.md</exclude>
                 <exclude>lang/c/src/avro-c.pc.in</exclude>
                 <exclude>lang/csharp/**/bin/Debug/**/Avro.xml</exclude>
