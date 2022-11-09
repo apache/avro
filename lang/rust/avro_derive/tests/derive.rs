@@ -15,26 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::{
-    from_value,
-    schema::{derive::AvroSchemaComponent, AvroSchema, AvroValue},
-    Reader, Schema, Writer,
-};
-use apache_avro_derive::*;
-use proptest::prelude::*;
-use serde::{de::DeserializeOwned, ser::Serialize};
-use std::collections::HashMap;
-
 #[macro_use]
 extern crate serde;
 
+use std::collections::HashMap;
+
+use proptest::prelude::*;
+use serde::{de::DeserializeOwned, ser::Serialize};
+
+use apache_avro::{
+    from_value,
+    schema::{derive::AvroSchemaComponent, AvroSchema},
+    Reader, Schema, Writer,
+};
+use apache_avro_derive::*;
+
 #[cfg(test)]
 mod test_derive {
-    use apache_avro::{schema::Alias, Decimal, Duration};
     use std::{
         borrow::{Borrow, Cow},
         sync::Mutex,
     };
+
+    use apache_avro::{schema::Alias, types::Value, AvroValue};
+    use std::convert::TryFrom;
 
     use super::*;
 
@@ -117,14 +121,27 @@ mod test_derive {
         serde_assert(test);
     }}
 
+    #[derive(AvroValue, Clone, Debug, PartialEq, Eq)]
+    struct TestValueBasic {
+        a: String,
+        b: HashMap<String, i32>,
+        c: Option<bool>,
+        d: Option<Vec<String>>,
+    }
+
     proptest! {
-    #[test]
-    fn test_value_smoke_test(a: i32, b: String) {
-        let test = TestBasic {
-            a,
-            b,
-        };
-    }}
+        #[test]
+        fn test_value_smoke_test(a: String, b: HashMap<String, i32>, c: Option<bool>, d: Option<Vec<String>>) {
+            let test = TestValueBasic {
+                a,
+                b,
+                c,
+                d,
+            };
+            let converted = TestValueBasic::try_from(Value::from(test.clone()))?;
+            assert_eq!(test, converted);
+        }
+    }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
@@ -590,7 +607,7 @@ mod test_derive {
         serde_assert(test_generic);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, AvroValue, Clone, PartialEq, Eq)]
     enum TestAllowedEnum {
         A,
         B,

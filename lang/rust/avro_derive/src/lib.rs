@@ -145,7 +145,7 @@ fn derive_avro_value_struct(
                 ])
             }
         }
-        impl #impl_generics TryFrom<apache_avro::types::Value> for #ident #ty_generics #where_clause {
+        impl #impl_generics std::convert::TryFrom<apache_avro::types::Value> for #ident #ty_generics #where_clause {
             type Error = apache_avro::Error;
 
             fn try_from(value: apache_avro::types::Value) -> Result<Self, Self::Error> {
@@ -181,7 +181,7 @@ fn derive_avro_value_enum(
                 }
             }
         }
-        impl #impl_generics TryFrom<apache_avro::types::Value> for #ident #ty_generics #where_clause {
+        impl #impl_generics std::convert::TryFrom<apache_avro::types::Value> for #ident #ty_generics #where_clause {
             type Error = apache_avro::Error;
 
             fn try_from(value: apache_avro::types::Value) -> Result<Self, Self::Error> {

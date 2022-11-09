@@ -1787,7 +1787,7 @@ pub trait AvroSchema {
 /// Trait for types that should be converted to or from an AvroValue. Derive implementation
 /// available through `derive` feature. To implement directly, use the `From<types::Value> for T`
 /// and `From<T> for types::Value` traits defined in std::convert::From
-pub trait AvroValue: From<types::Value> + Into<types::Value> {}
+pub trait AvroValue: TryFrom<types::Value> + Into<types::Value> {}
 
 #[cfg(feature = "derive")]
 pub mod derive {
