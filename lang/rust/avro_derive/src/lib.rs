@@ -92,7 +92,6 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
                 .or_else(|| extract_outer_doc(&input.attrs)),
             named_type_options.alias,
             e,
-            input.ident.span(),
         )?,
         _ => {
             return Err(vec![syn::Error::new(
@@ -501,36 +500,108 @@ fn data_struct_value_field_as_assigned(
     }
 }
 
+enum EnumFieldType {
+    Unit,
+    NonUnit,
+    Mixed,
+    Empty,
+}
+
 fn get_data_enum_schema_def(
     full_schema_name: &str,
     doc: Option<String>,
     aliases: Vec<String>,
     e: &syn::DataEnum,
-    error_span: Span,
 ) -> Result<TokenStream, Vec<syn::Error>> {
+    match enum_field_construction(e) {
+        EnumFieldType::Empty | EnumFieldType::Unit => Ok(get_data_enum_unit_schema_def(
+            full_schema_name,
+            doc,
+            aliases,
+            e,
+        )),
+        EnumFieldType::NonUnit => get_data_enum_non_unit_schema_def(e),
+        EnumFieldType::Mixed => Err(vec![syn::Error::new(
+            e.enum_token.span,
+            "Unit variant found in non-unit enum",
+        )]),
+    }
+}
+
+fn get_data_enum_non_unit_schema_def(e: &syn::DataEnum) -> Result<TokenStream, Vec<syn::Error>> {
+    let variant_schemas = e
+        .variants
+        .iter()
+        .flat_map(|variant| match &variant.fields {
+            syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+                let field = fields.unnamed.first().unwrap();
+                Ok(type_to_schema_expr(&field.ty))
+            }
+            syn::Fields::Unnamed(fields) if fields.unnamed.is_empty() => {
+                Err(vec![syn::Error::new(
+                    variant.span(),
+                    "AvroSchema derive supports only non-unit enum with at least one field",
+                )])
+            }
+            syn::Fields::Unnamed(_) => Err(vec![syn::Error::new(
+                variant.span(),
+                "AvroSchema derive supports only one unnamed field is allowed in an enum variant",
+            )]),
+            syn::Fields::Named(_) => Err(vec![syn::Error::new(
+                variant.span(),
+                "AvroSchema derive supports only unnamed fields in enum variants",
+            )]),
+            syn::Fields::Unit => Err(vec![syn::Error::new(
+                variant.span(),
+                "Unit variant found in non-unit enum",
+            )]),
+        })
+        .collect::<Result<Vec<_>, Vec<syn::Error>>>()?;
+    Ok(quote! {
+        apache_avro::schema::UnionSchema::new(vec![
+            #(#variant_schemas),*
+        ])
+    })
+}
+
+fn get_data_enum_unit_schema_def(
+    full_schema_name: &str,
+    doc: Option<String>,
+    aliases: Vec<String>,
+    e: &syn::DataEnum,
+) -> TokenStream {
     let doc = preserve_optional(doc);
     let enum_aliases = preserve_vec(aliases);
-    if e.variants.iter().all(|v| syn::Fields::Unit == v.fields) {
-        let symbols: Vec<String> = e
-            .variants
-            .iter()
-            .map(|variant| variant.ident.to_string())
-            .collect();
-        Ok(quote! {
-            apache_avro::schema::Schema::Enum {
-                name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
-                aliases: #enum_aliases,
-                doc: #doc,
-                symbols: vec![#(#symbols.to_owned()),*],
-                attributes: Default::default(),
+    let symbols: Vec<String> = e
+        .variants
+        .iter()
+        .map(|variant| variant.ident.to_string())
+        .collect();
+    quote! {
+        apache_avro::schema::Schema::Enum {
+            name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
+            aliases: #enum_aliases,
+            doc: #doc,
+            symbols: vec![#(#symbols.to_owned()),*],
+            attributes: Default::default(),
+        }
+    }
+}
+
+fn enum_field_construction(e: &syn::DataEnum) -> EnumFieldType {
+    e.variants
+        .iter()
+        .fold(EnumFieldType::Empty, |acc, variant| {
+            match (acc, &variant.fields) {
+                (EnumFieldType::Empty, syn::Fields::Unit) => EnumFieldType::Unit,
+                (EnumFieldType::Empty, syn::Fields::Named(_)) => EnumFieldType::NonUnit,
+                (EnumFieldType::Empty, syn::Fields::Unnamed(_)) => EnumFieldType::NonUnit,
+                (EnumFieldType::Unit, syn::Fields::Unit) => EnumFieldType::Unit,
+                (EnumFieldType::NonUnit, syn::Fields::Named(_)) => EnumFieldType::NonUnit,
+                (EnumFieldType::NonUnit, syn::Fields::Unnamed(_)) => EnumFieldType::NonUnit,
+                _ => EnumFieldType::Mixed,
             }
         })
-    } else {
-        Err(vec![syn::Error::new(
-            error_span,
-            "AvroSchema derive does not work for enums with non unit structs",
-        )])
-    }
 }
 
 fn get_data_enum_value_defs(
