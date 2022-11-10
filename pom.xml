@@ -489,7 +489,9 @@
                 <!-- License files -->
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.0.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.1.text</exclude>
-                <exclude>lang/java/tools/src/main/resources/META-INF/mpl-2.0.text</exclude>
+		<exclude>lang/java/tools/src/main/resources/META-INF/mpl-2.0.text</exclude>
+		<!-- Other -->
+		<exclude>lang/py/avro/py.typed</exclude> <!-- Included in package but contains no code (see PEP561)  -->
               </excludes>
             </configuration>
           </plugin>
