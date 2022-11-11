@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 public class CustomTypeLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
-
   @Override
   public LogicalType fromSchema(Schema schema) {
     return new LogicalType(getTypeName());
