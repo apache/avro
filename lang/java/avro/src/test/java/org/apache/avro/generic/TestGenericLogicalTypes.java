@@ -425,8 +425,8 @@ public class TestGenericLogicalTypes {
     CharSequence ct2String = conversion.toCharSequence(ct2, stringSchema, customType);
 
     File test = write(stringSchema, ct1String, ct2String);
-    Assert.assertEquals("Should convert string to CustomType", expected,
-        read(GENERIC.createDatumReader(customTypeSchema), test));
+    Assertions.assertEquals(expected, read(GENERIC.createDatumReader(customTypeSchema), test),
+        "Should convert string to CustomType");
   }
 
   @Test
@@ -452,7 +452,7 @@ public class TestGenericLogicalTypes {
     // schema, as all GenericData instances have the logical type and the
     // conversions loaded. That's why this final assert is slightly different.
 
-    Assert.assertEquals("Should read CustomType as strings", expected,
-        read(GenericData.get().createDatumReader(stringSchema), test));
+    Assertions.assertEquals(expected, read(GenericData.get().createDatumReader(stringSchema), test),
+        "Should read CustomType as strings");
   }
 }
