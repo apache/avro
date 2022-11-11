@@ -21,7 +21,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches:
     paths:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**

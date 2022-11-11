@@ -352,16 +352,14 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
     where
         T: Serialize + ?Sized,
     {
-        self.items.push(Value::Union(
-            self.index,
-            Box::new(value.serialize(&mut Serializer::default())?),
-        ));
+        self.items
+            .push(value.serialize(&mut Serializer::default())?);
         Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
         let value = if self.items.is_empty() {
-            Value::Union(self.index, Box::new(Value::Null))
+            Value::Null
         } else {
             Value::Array(self.items)
         };
@@ -370,7 +368,10 @@ impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
                 "type".to_owned(),
                 Value::Enum(self.index, self.variant.to_owned()),
             ),
-            ("value".to_owned(), value),
+            (
+                "value".to_owned(),
+                Value::Union(self.index, Box::new(value)),
+            ),
         ]))
     }
 }
@@ -975,11 +976,14 @@ mod tests {
                 ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
                 (
                     "value".to_owned(),
-                    Value::Array(vec![
-                        Value::Union(1, Box::new(Value::Float(1.0))),
-                        Value::Union(1, Box::new(Value::Float(2.0))),
-                        Value::Union(1, Box::new(Value::Float(3.0))),
-                    ]),
+                    Value::Union(
+                        1,
+                        Box::new(Value::Array(vec![
+                            Value::Float(1.0),
+                            Value::Float(2.0),
+                            Value::Float(3.0),
+                        ])),
+                    ),
                 ),
             ]),
         )]);
