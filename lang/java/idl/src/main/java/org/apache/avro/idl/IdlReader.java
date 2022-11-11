@@ -17,6 +17,33 @@
  */
 package org.apache.avro.idl;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
@@ -46,6 +73,7 @@ import org.apache.avro.idl.IdlParser.EnumSymbolContext;
 import org.apache.avro.idl.IdlParser.FieldDeclarationContext;
 import org.apache.avro.idl.IdlParser.FixedDeclarationContext;
 import org.apache.avro.idl.IdlParser.FormalParameterContext;
+import org.apache.avro.idl.IdlParser.FullTypeContext;
 import org.apache.avro.idl.IdlParser.IdentifierContext;
 import org.apache.avro.idl.IdlParser.IdlFileContext;
 import org.apache.avro.idl.IdlParser.ImportStatementContext;
@@ -64,38 +92,10 @@ import org.apache.avro.idl.IdlParser.RecordBodyContext;
 import org.apache.avro.idl.IdlParser.RecordDeclarationContext;
 import org.apache.avro.idl.IdlParser.ResultTypeContext;
 import org.apache.avro.idl.IdlParser.SchemaPropertyContext;
-import org.apache.avro.idl.IdlParser.FullTypeContext;
 import org.apache.avro.idl.IdlParser.UnionTypeContext;
 import org.apache.avro.idl.IdlParser.VariableDeclarationContext;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.commons.text.StringEscapeUtils;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableMap;
@@ -106,6 +106,7 @@ public class IdlReader {
    * easy access to the (reasonably readable) error message elsewhere.
    */
   private static final BaseErrorListener SIMPLE_AVRO_ERROR_LISTENER = new BaseErrorListener() {
+    @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
         String msg, RecognitionException e) {
       throw new SchemaParseException("line " + line + ":" + charPositionInLine + " " + msg);
@@ -492,7 +493,7 @@ public class IdlReader {
       String identifier = identifier(ctx.name);
       String name = name(identifier);
       String space = namespace(identifier, properties.namespace());
-      int size = Integer.parseInt(ctx.size.getText());
+      int size = Integer.decode(ctx.size.getText());
       Schema schema = Schema.createFixed(name, doc, space, size);
       properties.copyAliases(schema::addAlias);
       properties.copyProperties(schema);
@@ -810,8 +811,8 @@ public class IdlReader {
         typeStack.push(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)));
         break;
       default: // Only option left: decimal
-        int precision = Integer.parseInt(ctx.precision.getText());
-        int scale = ctx.scale == null ? 0 : Integer.parseInt(ctx.scale.getText());
+        int precision = Integer.decode(ctx.precision.getText());
+        int scale = ctx.scale == null ? 0 : Integer.decode(ctx.scale.getText());
         typeStack.push(LogicalTypes.decimal(precision, scale).addToSchema(Schema.create(Schema.Type.BYTES)));
         break;
       }
