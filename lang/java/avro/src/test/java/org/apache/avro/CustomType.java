@@ -18,6 +18,8 @@
 
 package org.apache.avro;
 
+import java.util.Objects;
+
 public final class CustomType {
   private final String name;
 
