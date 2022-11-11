@@ -68,7 +68,7 @@ protocol Simple {
   }
 
   /** An MD5 hash. */
-  fixed MD5(16);
+  fixed MD5(0x10);
 
   error TestError {
     string message;
