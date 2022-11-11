@@ -36,13 +36,8 @@ const SCHEMA_STR: &str = r#"
                                     "type": "enum",
                                     "name": "TestEnumType",
                                     "symbols": [
-                                        "NullVariant1",
-                                        "NullVariant2",
-                                        "NullTupleVariant",
-                                        "NullNewTypeVariant",
-                                        "NullStructVariant",
-                                        "IntVariant1",
-                                        "IntVariant2",
+                                        "NullVariant",
+                                        "IntVariant",
                                         "TupleVariant",
                                         "StructVariant",
                                         "NameStructVariant"
@@ -61,6 +56,16 @@ const SCHEMA_STR: &str = r#"
                                     {
                                         "type": "record",
                                         "name": "StructVariant",
+                                        "fields": [
+                                            {
+                                                "name": "b",
+                                                "type": "long"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "record",
+                                        "name": "NameStructVariant",
                                         "fields": [
                                             {
                                                 "name": "b",
@@ -89,13 +94,8 @@ struct TestStruct {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 enum TestEnum {
-    NullVariant1,
-    NullVariant2,
-    NullTupleVariant(),
-    NullNewTypeVariant(()),
-    NullStructVariant {},
-    IntVariant1(i64),
-    IntVariant2(i64),
+    NullVariant,
+    IntVariant(i64),
     TupleVariant(i64, i64),
     StructVariant { b: i64 },
     NameStructVariant(TestStruct),
@@ -108,96 +108,24 @@ fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
     let data = vec![
         (
             TestExternalEnum {
-                a: TestEnum::NullVariant1,
+                a: TestEnum::NullVariant,
             },
             Value::Record(vec![(
                 "a".to_owned(),
                 Value::Record(vec![
-                    ("type".to_owned(), Value::Enum(0, "NullVariant1".to_owned())),
+                    ("type".to_owned(), Value::Enum(0, "NullVariant".to_owned())),
                     ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
                 ]),
             )]),
         ),
         (
             TestExternalEnum {
-                a: TestEnum::NullVariant2,
+                a: TestEnum::IntVariant(1),
             },
             Value::Record(vec![(
                 "a".to_owned(),
                 Value::Record(vec![
-                    ("type".to_owned(), Value::Enum(1, "NullVariant2".to_owned())),
-                    ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-                ]),
-            )]),
-        ),
-        (
-            TestExternalEnum {
-                a: TestEnum::NullTupleVariant(),
-            },
-            Value::Record(vec![(
-                "a".to_owned(),
-                Value::Record(vec![
-                    (
-                        "type".to_owned(),
-                        Value::Enum(2, "NullTupleVariant".to_owned()),
-                    ),
-                    ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-                ]),
-            )]),
-        ),
-        (
-            TestExternalEnum {
-                a: TestEnum::NullNewTypeVariant(()),
-            },
-            Value::Record(vec![(
-                "a".to_owned(),
-                Value::Record(vec![
-                    (
-                        "type".to_owned(),
-                        Value::Enum(3, "NullNewTypeVariant".to_owned()),
-                    ),
-                    ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-                ]),
-            )]),
-        ),
-        (
-            TestExternalEnum {
-                a: TestEnum::NullStructVariant {},
-            },
-            Value::Record(vec![(
-                "a".to_owned(),
-                Value::Record(vec![
-                    (
-                        "type".to_owned(),
-                        Value::Enum(4, "NullStructVariant".to_owned()),
-                    ),
-                    ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-                ]),
-            )]),
-        ),
-        (
-            TestExternalEnum {
-                a: TestEnum::IntVariant1(1),
-            },
-            Value::Record(vec![(
-                "a".to_owned(),
-                Value::Record(vec![
-                    ("type".to_owned(), Value::Enum(5, "IntVariant1".to_owned())),
-                    (
-                        "value".to_owned(),
-                        Value::Union(1, Box::new(Value::Long(1))),
-                    ),
-                ]),
-            )]),
-        ),
-        (
-            TestExternalEnum {
-                a: TestEnum::IntVariant2(1),
-            },
-            Value::Record(vec![(
-                "a".to_owned(),
-                Value::Record(vec![
-                    ("type".to_owned(), Value::Enum(6, "IntVariant2".to_owned())),
+                    ("type".to_owned(), Value::Enum(1, "IntVariant".to_owned())),
                     (
                         "value".to_owned(),
                         Value::Union(1, Box::new(Value::Long(1))),
@@ -212,7 +140,7 @@ fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
             Value::Record(vec![(
                 "a".to_owned(),
                 Value::Record(vec![
-                    ("type".to_owned(), Value::Enum(7, "TupleVariant".to_owned())),
+                    ("type".to_owned(), Value::Enum(2, "TupleVariant".to_owned())),
                     (
                         "value".to_owned(),
                         Value::Union(
@@ -232,7 +160,7 @@ fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
                 Value::Record(vec![
                     (
                         "type".to_owned(),
-                        Value::Enum(8, "StructVariant".to_owned()),
+                        Value::Enum(3, "StructVariant".to_owned()),
                     ),
                     (
                         "value".to_owned(),
@@ -253,12 +181,12 @@ fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
                 Value::Record(vec![
                     (
                         "type".to_owned(),
-                        Value::Enum(9, "NameStructVariant".to_owned()),
+                        Value::Enum(4, "NameStructVariant".to_owned()),
                     ),
                     (
                         "value".to_owned(),
                         Value::Union(
-                            3,
+                            4,
                             Box::new(Value::Record(vec![("b".to_owned(), Value::Long(1))])),
                         ),
                     ),
