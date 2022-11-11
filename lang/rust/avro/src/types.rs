@@ -366,6 +366,7 @@ impl Value {
         schema: &Schema,
         names: &HashMap<Name, S>,
     ) -> Option<String> {
+        dbg!(&self, &schema);
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {

@@ -36,8 +36,8 @@ const SCHEMA_STR: &str = r#"
                                     "type": "enum",
                                     "name": "TestEnumType",
                                     "symbols": [
-                                        "Nullvariant1",
-                                        "Nullvariant2",
+                                        "NullVariant1",
+                                        "NullVariant2",
                                         "NullTupleVariant",
                                         "NullNewTypeVariant",
                                         "NullStructVariant",
@@ -102,7 +102,7 @@ enum TestEnum {
 }
 
 #[test]
-fn avro_3646_test_to_value_mixed_enum() {
+fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
     let schema = Schema::parse_str(SCHEMA_STR).unwrap();
 
     let data = vec![
