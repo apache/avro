@@ -65,6 +65,9 @@ do
       # add codegen binaries to the tarball
       mkdir -p build/codegen/
       cp -R src/apache/codegen/bin/Release/* build/codegen/
+      # add msbuild binaries to the tarball
+      mkdir -p build/msbuild/
+      cp -R src/apache/msbuild/bin/Release/* build/msbuild/
 
       # build the tarball
       mkdir -p ${ROOT}/dist/csharp

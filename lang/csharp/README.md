@@ -27,7 +27,7 @@ Install-Package Apache.Avro
 | Avro.codegen        | Apache.Avro.Tools          |  Exe        |                    |                   | ✔️            |✔️        |✔️        |
 | Avro.ipc            |                            | Library    | ✔️                 | ✔️               |               |           |           |
 | Avro.ipc.test       |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
-| Avro.msbuild        |                            | Library    | ✔️                 | ✔️               |               |           |           |
+| Avro.msbuild        |                            | Library    | ✔️                 |                   |               |           |           |
 | Avro.perf           |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
 | Avro.test           |                            | Unit Tests |                    |                   | ✔️            |✔️        |✔️        |
 | Avro.benchmark      |                            | Exe        |                    |                   | ✔️            |✔️        |✔️        |
@@ -38,6 +38,36 @@ Install-Package Apache.Avro
 
 2. By updating the versions in our libraries, we require users of the library to update to a version equal to or greater than the version we reference. For example, if a user were to reference an older version of Newtonsoft.Json, they would be forced to update to a newer version before they could use a new version of the Avro library.
 In short, we should only update the version of the dependencies in our libraries if we absolutely must for functionality that we require. We leave it up to the users of the library as to whether or not they want the latest and greatest of a particularly dependency. We're only going to require the bare minimum.
+
+## MSBuild Avro Generator Task
+
+MSBuild task `AvroGenTask` can be used to compile avro schema or protocol files from `.csproj`, without explicitly calling `avrogen` tool binary.
+
+Example:
+
+```
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SchemaFiles Include="schemas/**/*.avsc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Apache.Avro" Version="1.11.2 />
+    <PackageReference Include="Apache.Avro.MSBuild" Version="1.11.2" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="AvroGenerate" BeforeTargets="CoreCompile">
+    <AvroGenTask SchemaFiles="@(SchemaFiles)" OutDir="generated" />
+  </Target>
+
+</Project>
+```
 
 ## Notes
 

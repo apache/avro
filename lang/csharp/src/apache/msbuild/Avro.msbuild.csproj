@@ -19,10 +19,22 @@
   <Import Project="../../../common.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(DefaultLibraryTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssemblyName>Avro.msbuild</AssemblyName>
     <RootNamespace>Avro.msbuild</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet Package Settings -->
+    <PackageId>Apache.Avro.MSBuild</PackageId>
+    <Description>Run avrogen compiler as a MSBuild task</Description>
+    <!-- Suppresses the warnings about the package not having assemblies in lib/*/.dll.-->
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <!-- Do not put build output to anywhere. Since we have dependencies, $(AssemblyName).dll will be copied to
+    published nuget package when all items in $(OutputFolder) are copied. See PrePackage target below -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -35,10 +47,27 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <!-- Marks all packages as 'local only' -->
+    <PackageReference Update="@(PackageReference)" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Apache.Avro.MSBuild.props" PackagePath="build\" />
+  </ItemGroup>
+
+  <!-- Copy all dependencies to published nuget package -->
+  <Target Name="PrePackage" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFiles Include="$(OutputPath)\**">
+        <PackagePath>tasks\%(RecursiveDir)</PackagePath>
+        <Visible>false</Visible>
+        <BuildAction>Content</BuildAction>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 
 </Project>
