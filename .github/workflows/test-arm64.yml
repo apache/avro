@@ -264,7 +264,7 @@ jobs:
             apt-get install -q -y cargo rustc
           run: |
             set -x
-            cargo build --jobs 1
+            cargo build --package apache-avro
 #            cargo test --workspace --jobs 1
 #            ./build.sh clean test
 
