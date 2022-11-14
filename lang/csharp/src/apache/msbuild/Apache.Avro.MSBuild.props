@@ -14,11 +14,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<Project TreatAsLocalProperty="TaskTargetFramework;TaskAssembly">
-  <PropertyGroup>
-    <TaskTargetFramework>netstandard2.0</TaskTargetFramework>
-    <TaskAssembly>$(MSBuildThisFileDirectory)..\tasks\$(TaskTargetFramework)\Avro.msbuild.dll</TaskAssembly>
-  </PropertyGroup>
-
-  <UsingTask TaskName="Avro.msbuild.AvroGenTask" AssemblyFile="$(TaskAssembly)" />
+<Project>
+  <UsingTask TaskName="Avro.msbuild.AvroGenTask" AssemblyFile="$(MSBuildThisFileDirectory)..\tasks\netstandard2.0\Avro.msbuild.dll" />
 </Project>
