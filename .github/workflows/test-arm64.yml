@@ -17,6 +17,7 @@ name: CI on Linux ARM64
 
 on:
   push:
+    branches: [ master ]
   pull_request:
     branches:
       - master
