@@ -97,6 +97,33 @@ var avro = require('avro-js');
     .on('data', function (record) { /* Do something with the record. */ });
   ```
 
++ Implement recursive schemata (due to lack of duck-typing):
+
+  ```javascript
+    const recursiveRecordType =  avro.parse({
+      "type": "record",
+      "name": "LongList",
+      "fields" : [
+        {"name": "value", "type": "long"},             
+        {"name": "next", "type": ["null", "LongList"]} // optional next element via recursion
+      ]
+    });
+
+    const recursiveRecordDTO = {
+      value: 1,
+      next: {
+        // no duck-typing: from first nested level on the 
+        // recursive type has to be explicitely specified.
+        LongList: {
+          value: 2,
+          next: null
+        }
+      }
+    };
+
+    const serialized = recursiveRecordType.parse(recursiveRecordDTO);
+  ```
+
 
 [node.js]: https://nodejs.org/en/
 [readable-stream]: https://nodejs.org/api/stream.html#stream_class_stream_readable
