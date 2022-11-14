@@ -113,7 +113,7 @@ var avro = require('avro-js');
     const validRecursiveRecordDTO = {
       value: 1,
       next: {
-        // no duck-typing: from first nested level on the 
+        // no duck-typing support: from first nested level on the 
         // recursive type has to be explicitly specified.
         LongList: {
           value: 2,
