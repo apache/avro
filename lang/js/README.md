@@ -100,6 +100,7 @@ var avro = require('avro-js');
 + Implement recursive schemata (due to lack of duck-typing):
 
   ```javascript
+    // example type: linked list with one long-int as element value
     const recursiveRecordType =  avro.parse({
       "type": "record",
       "name": "LongList",
@@ -132,7 +133,7 @@ var avro = require('avro-js');
           next: null
       }
     };
-    const serialzedInvalid = recursiveRecordType.parse(invalidRecursiveRecordDTO);
+    const serializedInvalid = recursiveRecordType.parse(invalidRecursiveRecordDTO);
 
 
   ```
