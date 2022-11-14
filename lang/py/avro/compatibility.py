@@ -54,7 +54,6 @@ class SchemaType(str, Enum):
         return self.value
 
 
-
 class SchemaCompatibilityType(Enum):
     compatible = "compatible"
     incompatible = "incompatible"
