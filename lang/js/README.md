@@ -114,7 +114,7 @@ var avro = require('avro-js');
       value: 1,
       next: {
         // no duck-typing: from first nested level on the 
-        // recursive type has to be explicitely specified.
+        // recursive type has to be explicitly specified.
         LongList: {
           value: 2,
           next: null
