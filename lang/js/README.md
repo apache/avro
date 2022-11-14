@@ -109,7 +109,8 @@ var avro = require('avro-js');
       ]
     });
 
-    const recursiveRecordDTO = {
+    // will work
+    const validRecursiveRecordDTO = {
       value: 1,
       next: {
         // no duck-typing: from first nested level on the 
@@ -120,8 +121,20 @@ var avro = require('avro-js');
         }
       }
     };
+    const serializedValid = recursiveRecordType.parse(validRecursiveRecordDTO);
+    
 
-    const serialized = recursiveRecordType.parse(recursiveRecordDTO);
+    // will throw error
+    const invalidRecursiveRecordDTO = {
+      value: 1,
+      next: {
+          value: 2,
+          next: null
+      }
+    };
+    const serialzedInvalid = recursiveRecordType.parse(invalidRecursiveRecordDTO);
+
+
   ```
 
 
