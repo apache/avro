@@ -370,7 +370,7 @@ impl Value {
             (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
                 || {
                     Some(format!(
-                        "Unresolved schema reference: '{}'. Parsed names: {:?}",
+                        "Unresolved schema reference: '{:?}'. Parsed names: {:?}",
                         name,
                         names.keys()
                     ))
@@ -566,8 +566,10 @@ impl Value {
         match *schema {
             Schema::Ref { ref name } => {
                 if let Some(resolved) = names.get(name) {
+                    info!("Resolved {name:?}");
                     self.resolve_internal(resolved, names)
                 } else {
+                    info!("Failed to resolve schema {name:?}");
                     Err(Error::SchemaResolutionError(name.clone()))
                 }
             }
@@ -1081,7 +1083,7 @@ mod tests {
                     attributes: Default::default(),
                 },
                 false,
-                r#"Invalid value: Record([("field_name", Null)]) for schema: Record { name: Name { name: "record_name", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "field_name", doc: None, default: None, schema: Ref { name: Name { name: "missing", namespace: None } }, order: Ignore, position: 0, custom_attributes: {} }], lookup: {"field_name": 0}, attributes: {} }. Reason: Unresolved schema reference: 'missing'. Parsed names: []"#,
+                r#"Invalid value: Record([("field_name", Null)]) for schema: Record { name: Name { name: "record_name", namespace: None }, aliases: None, doc: None, fields: [RecordField { name: "field_name", doc: None, default: None, schema: Ref { name: Name { name: "missing", namespace: None } }, order: Ignore, position: 0, custom_attributes: {} }], lookup: {"field_name": 0}, attributes: {} }. Reason: Unresolved schema reference: 'Name { name: "missing", namespace: None }'. Parsed names: []"#,
             ),
         ];
 
@@ -2390,5 +2392,142 @@ Field with name '"b"' is not a member of the map items"#,
             !test_outer3.validate(&schema),
             "field b record is invalid against the schema"
         ); // this should pass, but doesn't
+    }
+
+    #[test]
+    fn test_resolve_namespace_resolution() {
+        use crate::ser::Serializer;
+        use serde::Serialize;
+
+        let schema = Schema::parse_str(
+            r#"{
+            "type": "record",
+            "name": "NamespacedMessage",
+            "namespace": "com.domain",
+            "fields": [
+                {
+                    "type": "record",
+                    "name": "field_a",
+                    "fields": [
+                        {
+                            "name": "enum_a",
+                            "type": {
+                                "type": "enum",
+                                "name": "EnumType",
+                                "symbols": [
+                                    "SYMBOL_1",
+                                    "SYMBOL_2"
+                                ],
+                                "default": "SYMBOL_1"
+                            }
+                        },
+                        {
+                            "name": "enum_b",
+                            "type": "EnumType"
+                        }
+                    ]
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        #[derive(Serialize)]
+        enum EnumType {
+            #[serde(rename = "SYMBOL_1")]
+            Symbol1,
+            #[serde(rename = "SYMBOL_2")]
+            Symbol2,
+        }
+
+        #[derive(Serialize)]
+        struct FieldA {
+            enum_a: EnumType,
+            enum_b: EnumType,
+        }
+
+        #[derive(Serialize)]
+        struct NamespacedMessage {
+            field_a: FieldA,
+        }
+
+        let msg = NamespacedMessage {
+            field_a: FieldA {
+                enum_a: EnumType::Symbol2,
+                enum_b: EnumType::Symbol1,
+            },
+        };
+
+        let mut ser = Serializer::default();
+        let test_value: Value = msg.serialize(&mut ser).unwrap();
+        assert!(test_value.validate(&schema), "test_value should validate");
+    }
+
+    #[test]
+    fn test_resolve_no_namespace_resolution() {
+        use crate::ser::Serializer;
+        use serde::Serialize;
+
+        let schema = Schema::parse_str(
+            r#"{
+            "type": "record",
+            "name": "NoNamespacedMessage",
+            "fields": [
+                {
+                    "type": "record",
+                    "name": "field_a",
+                    "fields": [
+                        {
+                            "name": "enum_a",
+                            "type": {
+                                "type": "enum",
+                                "name": "EnumType",
+                                "symbols": [
+                                    "SYMBOL_1",
+                                    "SYMBOL_2"
+                                ],
+                                "default": "SYMBOL_1"
+                            }
+                        },
+                        {
+                            "name": "enum_b",
+                            "type": "EnumType"
+                        }
+                    ]
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        #[derive(Serialize)]
+        enum EnumType {
+            #[serde(rename = "SYMBOL_1")]
+            Symbol1,
+            #[serde(rename = "SYMBOL_2")]
+            Symbol2,
+        }
+
+        #[derive(Serialize)]
+        struct FieldA {
+            enum_a: EnumType,
+            enum_b: EnumType,
+        }
+
+        #[derive(Serialize)]
+        struct NamespacedMessage {
+            field_a: FieldA,
+        }
+
+        let msg = NamespacedMessage {
+            field_a: FieldA {
+                enum_a: EnumType::Symbol2,
+                enum_b: EnumType::Symbol1,
+            },
+        };
+
+        let mut ser = Serializer::default();
+        let test_value: Value = msg.serialize(&mut ser).unwrap();
+        assert!(test_value.validate(&schema), "test_value should validate");
     }
 }
