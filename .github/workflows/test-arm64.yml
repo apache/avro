@@ -25,7 +25,7 @@ on:
 jobs:
   java:
     name: Java on Linux ARM64
-    runs-on: ubuntu-20.04-xl
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -157,7 +157,7 @@ jobs:
 
   python:
     name: Python on Linux ARM64
-    runs-on: ubuntu-20.04-xl
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -226,7 +226,7 @@ jobs:
 
   rust:
     name: Rust on Linux ARM64
-    runs-on: ubuntu-20.04-xl
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
