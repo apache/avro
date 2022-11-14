@@ -50,6 +50,10 @@ class SchemaType(str, Enum):
     STRING = "string"
     UNION = "union"
 
+    def __str__(self):
+        return self.value
+
+
 
 class SchemaCompatibilityType(Enum):
     compatible = "compatible"
