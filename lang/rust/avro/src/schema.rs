@@ -695,7 +695,9 @@ impl UnionSchema {
             self.schemas.iter().enumerate().find(|(_, schema)| {
                 let rs =
                     ResolvedSchema::try_from(*schema).expect("Schema didn't successfully parse");
-                value.validate_internal(schema, rs.get_names()).is_none()
+                value
+                    .validate_internal(schema, rs.get_names(), &None)
+                    .is_none()
             })
         }
     }

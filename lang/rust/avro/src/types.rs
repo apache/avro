@@ -20,8 +20,8 @@ use crate::{
     decimal::Decimal,
     duration::Duration,
     schema::{
-        Name, NamesRef, Precision, RecordField, ResolvedSchema, Scale, Schema, SchemaKind,
-        UnionSchema,
+        Name, NamesRef, Namespace, Precision, RecordField, ResolvedSchema, Scale, Schema,
+        SchemaKind, UnionSchema,
     },
     AvroResult, Error,
 };
@@ -340,7 +340,19 @@ impl Value {
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
         let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
-        match self.validate_internal(schema, rs.get_names()) {
+        let namespace = match schema {
+            Schema::Record {
+                name,
+                aliases: _,
+                doc: _,
+                fields: _,
+                lookup: _,
+                attributes: _,
+            } => &name.namespace,
+            _ => &None,
+        };
+
+        match self.validate_internal(schema, rs.get_names(), namespace) {
             Some(error_msg) => {
                 error!(
                     "Invalid value: {:?} for schema: {:?}. Reason: {}",
@@ -365,18 +377,29 @@ impl Value {
         &self,
         schema: &Schema,
         names: &HashMap<Name, S>,
+        namespace: &Namespace,
     ) -> Option<String> {
         match (self, schema) {
-            (_, &Schema::Ref { ref name }) => names.get(name).map_or_else(
-                || {
-                    Some(format!(
-                        "Unresolved schema reference: '{:?}'. Parsed names: {:?}",
-                        name,
-                        names.keys()
-                    ))
-                },
-                |s| self.validate_internal(s.borrow(), names),
-            ),
+            (_, &Schema::Ref { ref name }) => {
+                let name = match namespace {
+                    Some(namespace) => Name {
+                        name: name.name.to_owned(),
+                        namespace: Some(namespace.to_owned()),
+                    },
+                    None => name.to_owned(),
+                };
+
+                names.get(&name).map_or_else(
+                    || {
+                        Some(format!(
+                            "Unresolved schema reference: '{:?}'. Parsed names: {:?}",
+                            name,
+                            names.keys()
+                        ))
+                    },
+                    |s| self.validate_internal(s.borrow(), names, namespace),
+                )
+            }
             (&Value::Null, &Schema::Null) => None,
             (&Value::Boolean(_), &Schema::Boolean) => None,
             (&Value::Int(_), &Schema::Int) => None,
@@ -455,7 +478,7 @@ impl Value {
             (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
                 .variants()
                 .get(i as usize)
-                .map(|schema| value.validate_internal(schema, names))
+                .map(|schema| value.validate_internal(schema, names, namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{}'", i))),
             (v, &Schema::Union(ref inner)) => match inner.find_schema(v) {
                 Some(_) => None,
@@ -463,12 +486,12 @@ impl Value {
             },
             (&Value::Array(ref items), &Schema::Array(ref inner)) => {
                 items.iter().fold(None, |acc, item| {
-                    Value::accumulate(acc, item.validate_internal(inner, names))
+                    Value::accumulate(acc, item.validate_internal(inner, names, namespace))
                 })
             }
             (&Value::Map(ref items), &Schema::Map(ref inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
-                    Value::accumulate(acc, value.validate_internal(inner, names))
+                    Value::accumulate(acc, value.validate_internal(inner, names, namespace))
                 })
             }
             (
@@ -504,7 +527,7 @@ impl Value {
                                 let field = &fields[*idx];
                                 Value::accumulate(
                                     acc,
-                                    record_field.validate_internal(&field.schema, names),
+                                    record_field.validate_internal(&field.schema, names, namespace),
                                 )
                             }
                             None => Value::accumulate(
@@ -520,7 +543,7 @@ impl Value {
             (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
                 fields.iter().fold(None, |acc, field| {
                     if let Some(item) = items.get(&field.name) {
-                        let res = item.validate_internal(&field.schema, names);
+                        let res = item.validate_internal(&field.schema, names, namespace);
                         Value::accumulate(acc, res)
                     } else if !field.is_nullable() {
                         Value::accumulate(
@@ -1088,7 +1111,8 @@ mod tests {
         ];
 
         for (value, schema, valid, expected_err_message) in value_schema_valid.into_iter() {
-            let err_message = value.validate_internal::<Schema>(&schema, &HashMap::default());
+            let err_message =
+                value.validate_internal::<Schema>(&schema, &HashMap::default(), &None);
             assert_eq!(valid, err_message.is_none());
             if !valid {
                 let full_err_message = format!(
@@ -2395,7 +2419,7 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn test_resolve_namespace_resolution() {
+    fn test_avro_3674_validate_namespace_resolution() {
         use crate::ser::Serializer;
         use serde::Serialize;
 
@@ -2461,10 +2485,12 @@ Field with name '"b"' is not a member of the map items"#,
         let mut ser = Serializer::default();
         let test_value: Value = msg.serialize(&mut ser).unwrap();
         assert!(test_value.validate(&schema), "test_value should validate");
+        // TODO (rikheijdens): I believe this should also resolve?
+        //assert!(test_value.resolve(&schema).is_ok(), "test_value should resolve");
     }
 
     #[test]
-    fn test_resolve_no_namespace_resolution() {
+    fn test_avro_3674_validate_no_namespace_resolution() {
         use crate::ser::Serializer;
         use serde::Serialize;
 
@@ -2528,6 +2554,11 @@ Field with name '"b"' is not a member of the map items"#,
 
         let mut ser = Serializer::default();
         let test_value: Value = msg.serialize(&mut ser).unwrap();
-        assert!(test_value.validate(&schema), "test_value should validate");
+        let resolved = test_value.resolve(&schema);
+        assert!(resolved.is_ok(), "test_value should resolve");
+        assert!(
+            resolved.unwrap().validate(&schema),
+            "test_value should validate"
+        );
     }
 }

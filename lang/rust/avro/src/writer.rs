@@ -491,6 +491,7 @@ fn write_value_ref_resolved(
     if let Some(err) = value.validate_internal(
         resolved_schema.get_root_schema(),
         resolved_schema.get_names(),
+        &None,
     ) {
         return Err(Error::ValidationWithReason(err));
     }
@@ -512,6 +513,7 @@ fn write_value_ref_owned_resolved(
     if let Some(err) = value.validate_internal(
         resolved_schema.get_root_schema(),
         resolved_schema.get_names(),
+        &None,
     ) {
         return Err(Error::ValidationWithReason(err));
     }
