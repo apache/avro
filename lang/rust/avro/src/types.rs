@@ -341,14 +341,9 @@ impl Value {
     pub fn validate(&self, schema: &Schema) -> bool {
         let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
         let namespace = match schema {
-            Schema::Record {
-                name,
-                aliases: _,
-                doc: _,
-                fields: _,
-                lookup: _,
-                attributes: _,
-            } => &name.namespace,
+            Schema::Record { name, .. }
+            | Schema::Enum { name, .. }
+            | Schema::Fixed { name, .. } => &name.namespace,
             _ => &None,
         };
 
@@ -589,10 +584,10 @@ impl Value {
         match *schema {
             Schema::Ref { ref name } => {
                 if let Some(resolved) = names.get(name) {
-                    info!("Resolved {name:?}");
+                    info!("Resolved {:?}", name);
                     self.resolve_internal(resolved, names)
                 } else {
-                    info!("Failed to resolve schema {name:?}");
+                    error!("Failed to resolve schema {:?}", name);
                     Err(Error::SchemaResolutionError(name.clone()))
                 }
             }
