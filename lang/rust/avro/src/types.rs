@@ -564,7 +564,6 @@ impl Value {
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
         let enclosing_namespace = schema.namespace();
-        // FIXME transition to using resolved Schema
         let rs = ResolvedSchema::try_from(schema)?;
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
     }
@@ -2432,27 +2431,25 @@ Field with name '"b"' is not a member of the map items"#,
         assert!(
             !test_outer1.validate(&schema),
             "field b record is invalid against the schema"
-        ); // this should pass, but doesn't
+        );
         assert!(
             !test_outer2.validate(&schema),
             "field b record is invalid against the schema"
-        ); // this should pass, but doesn't
+        );
         assert!(
             !test_outer3.validate(&schema),
             "field b record is invalid against the schema"
-        ); // this should pass, but doesn't
+        );
     }
 
-    #[test]
-    fn test_avro_3674_validate_namespace_resolution() {
+    fn avro_3674_with_or_without_namespace(with_namespace: bool) {
         use crate::ser::Serializer;
         use serde::Serialize;
 
-        let schema = Schema::parse_str(
-            r#"{
+        let schema_str = r#"{
             "type": "record",
             "name": "NamespacedMessage",
-            "namespace": "com.domain",
+            [NAMESPACE]
             "fields": [
                 {
                     "type": "record",
@@ -2477,9 +2474,17 @@ Field with name '"b"' is not a member of the map items"#,
                     ]
                 }
             ]
-        }"#,
-        )
-        .unwrap();
+        }"#;
+        let schema_str = schema_str.replace(
+            "[NAMESPACE]",
+            if with_namespace {
+                r#""namespace": "com.domain","#
+            } else {
+                ""
+            },
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
 
         #[derive(Serialize)]
         enum EnumType {
@@ -2518,74 +2523,11 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn test_avro_3674_validate_no_namespace_resolution() {
-        use crate::ser::Serializer;
-        use serde::Serialize;
+        avro_3674_with_or_without_namespace(false);
+    }
 
-        let schema = Schema::parse_str(
-            r#"{
-            "type": "record",
-            "name": "NoNamespacedMessage",
-            "fields": [
-                {
-                    "type": "record",
-                    "name": "field_a",
-                    "fields": [
-                        {
-                            "name": "enum_a",
-                            "type": {
-                                "type": "enum",
-                                "name": "EnumType",
-                                "symbols": [
-                                    "SYMBOL_1",
-                                    "SYMBOL_2"
-                                ],
-                                "default": "SYMBOL_1"
-                            }
-                        },
-                        {
-                            "name": "enum_b",
-                            "type": "EnumType"
-                        }
-                    ]
-                }
-            ]
-        }"#,
-        )
-        .unwrap();
-
-        #[derive(Serialize)]
-        enum EnumType {
-            #[serde(rename = "SYMBOL_1")]
-            Symbol1,
-            #[serde(rename = "SYMBOL_2")]
-            Symbol2,
-        }
-
-        #[derive(Serialize)]
-        struct FieldA {
-            enum_a: EnumType,
-            enum_b: EnumType,
-        }
-
-        #[derive(Serialize)]
-        struct NamespacedMessage {
-            field_a: FieldA,
-        }
-
-        let msg = NamespacedMessage {
-            field_a: FieldA {
-                enum_a: EnumType::Symbol2,
-                enum_b: EnumType::Symbol1,
-            },
-        };
-
-        let mut ser = Serializer::default();
-        let test_value: Value = msg.serialize(&mut ser).unwrap();
-        let resolved = test_value.resolve(&schema);
-        assert!(resolved.is_ok(), "test_value should resolve");
-        assert!(
-            resolved.unwrap().validate(&schema),
-            "test_value should validate"
-        );
+    #[test]
+    fn test_avro_3674_validate_with_namespace_resolution() {
+        avro_3674_with_or_without_namespace(true);
     }
 }
