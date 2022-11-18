@@ -488,18 +488,19 @@ fn write_value_ref_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    let root_schema = resolved_schema.get_root_schema();
     if let Some(err) = value.validate_internal(
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
     ) {
         return Err(Error::ValidationWithReason(err));
     }
     encode_internal(
         value,
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
         buffer,
     )?;
     Ok(())
@@ -510,18 +511,19 @@ fn write_value_ref_owned_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    let root_schema = resolved_schema.get_root_schema();
     if let Some(err) = value.validate_internal(
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
     ) {
         return Err(Error::ValidationWithReason(err));
     }
     encode_internal(
         value,
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
         buffer,
     )?;
     Ok(())
