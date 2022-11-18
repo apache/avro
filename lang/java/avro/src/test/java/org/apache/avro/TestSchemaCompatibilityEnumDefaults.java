@@ -106,10 +106,10 @@ public class TestSchemaCompatibilityEnumDefaults {
   @Test
   public void testEnumDefaultAppliedWhenFieldDefaultDefinedReadingWithOldSchema() throws Exception {
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA)
-      .noDefault().endRecord();
+        .noDefault().endRecord();
 
     Schema readerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_AB_ENUM_DEFAULT_A_SCHEMA)
-      .withDefault("B").endRecord();
+        .withDefault("B").endRecord();
 
     GenericRecord datum = new GenericData.Record(writerSchema);
     datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
@@ -139,9 +139,9 @@ public class TestSchemaCompatibilityEnumDefaults {
     expectedException.expectMessage("Index: 2, Size: 2");
 
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_ABC_SCHEMA).noDefault()
-      .endRecord();
+        .endRecord();
     Schema readerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_AB_SCHEMA).withDefault("A")
-      .endRecord();
+        .endRecord();
 
     GenericRecord datum = new GenericData.Record(writerSchema);
     datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
@@ -164,7 +164,7 @@ public class TestSchemaCompatibilityEnumDefaults {
   }
 
   private GenericRecord serializeWithNewSchemaThenDeserializeWithOldSchema(Schema writerSchema, GenericRecord datum,
-                                                                           Schema readerSchema) throws Exception {
+      Schema readerSchema) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
     DatumWriter<Object> datumWriter = new GenericDatumWriter<>(writerSchema);
