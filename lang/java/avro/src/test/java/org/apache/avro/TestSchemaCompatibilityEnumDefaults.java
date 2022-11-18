@@ -133,6 +133,21 @@ public class TestSchemaCompatibilityEnumDefaults {
     serializeWithWriterThenDeserializeWithReader(writerSchema, datum, readerSchema);
   }
 
+  @Test
+  public void testFieldDefaultNotAppliedForUnknownSymbolReadingWithOldSchema() throws Exception {
+    expectedException.expect(IndexOutOfBoundsException.class);
+    expectedException.expectMessage("Index: 2, Size: 2");
+
+    Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_ABC_SCHEMA).noDefault()
+      .endRecord();
+    Schema readerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_AB_SCHEMA).withDefault("A")
+      .endRecord();
+
+    GenericRecord datum = new GenericData.Record(writerSchema);
+    datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
+    serializeWithNewSchemaThenDeserializeWithOldSchema(writerSchema, datum, readerSchema);
+  }
+
   private GenericRecord serializeWithWriterThenDeserializeWithReader(Schema writerSchema, GenericRecord datum,
       Schema readerSchema) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();

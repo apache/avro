@@ -268,7 +268,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
     List<String> enumSymbols = expected.getEnumSymbols();
     int ordinal = in.readEnum();
-    if(ordinal >= enumSymbols.size()){
+    if(ordinal >= enumSymbols.size() && expected.getEnumDefault() != null){
       return createEnum(expected.getEnumDefault(), expected);
     }
 
