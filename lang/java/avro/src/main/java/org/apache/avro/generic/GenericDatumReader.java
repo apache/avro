@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -265,7 +266,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations. By default, returns a GenericEnumSymbol.
    */
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
-    return createEnum(expected.getEnumSymbols().get(in.readEnum()), expected);
+    List<String> enumSymbols = expected.getEnumSymbols();
+    int ordinal = in.readEnum();
+    if(ordinal >= enumSymbols.size()){
+      return createEnum(expected.getEnumDefault(), expected);
+    }
+
+    return createEnum(enumSymbols.get(ordinal), expected);
   }
 
   /**

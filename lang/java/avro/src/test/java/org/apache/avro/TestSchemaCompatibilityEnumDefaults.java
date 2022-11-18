@@ -104,6 +104,21 @@ public class TestSchemaCompatibilityEnumDefaults {
   }
 
   @Test
+  public void testEnumDefaultAppliedWhenFieldDefaultDefinedReadingWithOldSchema() throws Exception {
+    Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA)
+      .noDefault().endRecord();
+
+    Schema readerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM_AB_ENUM_DEFAULT_A_SCHEMA)
+      .withDefault("B").endRecord();
+
+    GenericRecord datum = new GenericData.Record(writerSchema);
+    datum.put("field1", new GenericData.EnumSymbol(writerSchema, "C"));
+    GenericRecord decodedDatum = serializeWithNewSchemaThenDeserializeWithOldSchema(writerSchema, datum, readerSchema);
+    // The A is the Enum default, which is assigned since C is not in [A,B].
+    assertEquals("A", decodedDatum.get("field1").toString());
+  }
+
+  @Test
   public void testFieldDefaultNotAppliedForUnknownSymbol() throws Exception {
     expectedException.expect(AvroTypeException.class);
     expectedException.expectMessage("No match for C");
@@ -129,6 +144,20 @@ public class TestSchemaCompatibilityEnumDefaults {
     byte[] bytes = baos.toByteArray();
     Decoder decoder = DecoderFactory.get().resolvingDecoder(writerSchema, readerSchema,
         DecoderFactory.get().binaryDecoder(bytes, null));
+    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
+    return (GenericRecord) datumReader.read(null, decoder);
+  }
+
+  private GenericRecord serializeWithNewSchemaThenDeserializeWithOldSchema(Schema writerSchema, GenericRecord datum,
+                                                                           Schema readerSchema) throws Exception {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+    DatumWriter<Object> datumWriter = new GenericDatumWriter<>(writerSchema);
+    datumWriter.write(datum, encoder);
+    encoder.flush();
+
+    byte[] bytes = baos.toByteArray();
+    Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
     DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
     return (GenericRecord) datumReader.read(null, decoder);
   }
