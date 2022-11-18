@@ -33,6 +33,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -268,7 +269,11 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readEnum(Schema expected, Decoder in) throws IOException {
     List<String> enumSymbols = expected.getEnumSymbols();
     int ordinal = in.readEnum();
-    if (ordinal >= enumSymbols.size() && expected.getEnumDefault() != null) {
+    if (ordinal >= enumSymbols.size()) {
+      if (expected.getEnumDefault() == null) {
+        throw new AvroTypeException("Unknown Enum Ordinal " + ordinal);
+      }
+
       return createEnum(expected.getEnumDefault(), expected);
     }
 

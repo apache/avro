@@ -135,8 +135,8 @@ public class TestSchemaCompatibilityEnumDefaults {
 
   @Test
   public void testFieldDefaultNotAppliedForUnknownSymbolReadingWithOldSchema() throws Exception {
-    expectedException.expect(IndexOutOfBoundsException.class);
-    expectedException.expectMessage("Index: 2, Size: 2");
+    expectedException.expect(AvroTypeException.class);
+    expectedException.expectMessage("Unknown Enum Ordinal 2");
 
     Schema writerSchema = SchemaBuilder.record("Record1").fields().name("field1").type(ENUM1_ABC_SCHEMA).noDefault()
         .endRecord();

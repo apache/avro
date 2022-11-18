@@ -488,8 +488,18 @@ public class FastReaderBuilder {
 
   private FieldReader createEnumReader(EnumAdjust action) {
     return reusingReader((reuse, decoder) -> {
+      Object resultObject;
       int index = decoder.readEnum();
-      Object resultObject = action.values[index];
+      if (index >= action.values.length) {
+        if (action.readerDefault == null) {
+          throw new AvroTypeException("Unknown Enum Ordinal " + index);
+        }
+
+        resultObject = action.values[action.readerDefault];
+      } else {
+        resultObject = action.values[index];
+      }
+
       if (resultObject == null) {
         throw new AvroTypeException("No match for " + action.writer.getEnumSymbols().get(index));
       }

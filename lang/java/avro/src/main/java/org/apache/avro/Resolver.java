@@ -359,6 +359,7 @@ public class Resolver {
     public final int[] adjustments;
     public final Object[] values;
     public final boolean noAdjustmentsNeeded;
+    public final Integer readerDefault;
 
     private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj, Object[] values) {
       super(w, r, d, Action.Type.ENUM);
@@ -366,6 +367,7 @@ public class Resolver {
       boolean noAdj;
       int rsymCount = r.getEnumSymbols().size();
       int count = Math.min(rsymCount, adj.length);
+      this.readerDefault = r.getEnumDefault() != null ? r.getEnumOrdinal(r.getEnumDefault()) : null;
       noAdj = (adj.length <= rsymCount);
       for (int i = 0; noAdj && i < count; i++) {
         noAdj &= (i == adj[i]);
