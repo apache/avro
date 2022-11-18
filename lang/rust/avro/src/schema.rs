@@ -695,7 +695,9 @@ impl UnionSchema {
             self.schemas.iter().enumerate().find(|(_, schema)| {
                 let rs =
                     ResolvedSchema::try_from(*schema).expect("Schema didn't successfully parse");
-                value.validate_internal(schema, rs.get_names()).is_none()
+                value
+                    .validate_internal(schema, rs.get_names(), &schema.namespace())
+                    .is_none()
             })
         }
     }
@@ -820,6 +822,22 @@ impl Schema {
             | Schema::Fixed { attributes, .. } => Some(attributes),
             _ => None,
         }
+    }
+
+    /// Returns the name of the schema if it has one.
+    pub fn name(&self) -> Option<&Name> {
+        match self {
+            Schema::Ref { ref name, .. }
+            | Schema::Record { ref name, .. }
+            | Schema::Enum { ref name, .. }
+            | Schema::Fixed { ref name, .. } => Some(name),
+            _ => None,
+        }
+    }
+
+    /// Returns the namespace of the schema if it has one.
+    pub fn namespace(&self) -> Namespace {
+        self.name().and_then(|n| n.namespace.clone())
     }
 }
 
