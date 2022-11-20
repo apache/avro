@@ -678,9 +678,9 @@ impl UnionSchema {
         &self.schemas
     }
 
-    /// Returns true if the first variant of this `UnionSchema` is `Null`.
+    /// Returns true if the any of the variants of this `UnionSchema` is `Null`.
     pub fn is_nullable(&self) -> bool {
-        !self.schemas.is_empty() && self.schemas[0] == Schema::Null
+        !self.schemas.is_empty() && self.schemas.iter().any(|s| s == &Schema::Null)
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
@@ -695,7 +695,9 @@ impl UnionSchema {
             self.schemas.iter().enumerate().find(|(_, schema)| {
                 let rs =
                     ResolvedSchema::try_from(*schema).expect("Schema didn't successfully parse");
-                value.validate_internal(schema, rs.get_names()).is_none()
+                value
+                    .validate_internal(schema, rs.get_names(), &schema.namespace())
+                    .is_none()
             })
         }
     }
@@ -821,6 +823,22 @@ impl Schema {
             _ => None,
         }
     }
+
+    /// Returns the name of the schema if it has one.
+    pub fn name(&self) -> Option<&Name> {
+        match self {
+            Schema::Ref { ref name, .. }
+            | Schema::Record { ref name, .. }
+            | Schema::Enum { ref name, .. }
+            | Schema::Fixed { ref name, .. } => Some(name),
+            _ => None,
+        }
+    }
+
+    /// Returns the namespace of the schema if it has one.
+    pub fn namespace(&self) -> Namespace {
+        self.name().and_then(|n| n.namespace.clone())
+    }
 }
 
 impl Parser {
@@ -866,7 +884,7 @@ impl Parser {
         match *value {
             Value::String(ref t) => self.parse_known_schema(t.as_str(), enclosing_namespace),
             Value::Object(ref data) => self.parse_complex(data, enclosing_namespace),
-            Value::Array(ref data) => self.parse_union(data, enclosing_namespace),
+            Value::Array(ref data) => self.parse_union(data, enclosing_namespace, None),
             _ => Err(Error::ParseSchemaFromValidJson),
         }
     }
@@ -1148,7 +1166,10 @@ impl Parser {
                 other => self.parse_known_schema(other, enclosing_namespace),
             },
             Some(&Value::Object(ref data)) => self.parse_complex(data, enclosing_namespace),
-            Some(&Value::Array(ref variants)) => self.parse_union(variants, enclosing_namespace),
+            Some(&Value::Array(ref variants)) => {
+                let default = complex.get("default");
+                self.parse_union(variants, enclosing_namespace, default)
+            }
             Some(unknown) => Err(Error::GetComplexType(unknown.clone())),
             None => Err(Error::GetComplexTypeField),
         }
@@ -1373,11 +1394,32 @@ impl Parser {
         &mut self,
         items: &[Value],
         enclosing_namespace: &Namespace,
+        default: Option<&Value>,
     ) -> AvroResult<Schema> {
         items
             .iter()
             .map(|v| self.parse(v, enclosing_namespace))
             .collect::<Result<Vec<_>, _>>()
+            .and_then(|schemas| {
+                if let Some(default_value) = default.cloned() {
+                    let avro_value = types::Value::from(default_value);
+                    let first_schema = schemas.first();
+                    if let Some(schema) = first_schema {
+                        // Try to resolve the schema
+                        let resolved_value = avro_value.to_owned().resolve(schema);
+                        match resolved_value {
+                            Ok(_) => {}
+                            Err(_) => {
+                                return Err(Error::GetDefaultUnion(
+                                    SchemaKind::from(schema),
+                                    types::ValueKind::from(avro_value),
+                                ));
+                            }
+                        }
+                    }
+                }
+                Ok(schemas)
+            })
             .and_then(|schemas| Ok(Schema::Union(UnionSchema::new(schemas)?)))
     }
 
@@ -1683,7 +1725,7 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
                 _ => Cow::Borrowed(name),
             };
 
-            fields.push((k, format!("{}:{}", pcf_string(k), pcf_string(&*n))));
+            fields.push((k, format!("{}:{}", pcf_string(k), pcf_string(&n))));
             continue;
         }
 
@@ -1836,6 +1878,7 @@ pub mod derive {
         );
     );
 
+    impl_schema!(bool, Schema::Boolean);
     impl_schema!(i8, Schema::Int);
     impl_schema!(i16, Schema::Int);
     impl_schema!(i32, Schema::Int);
@@ -2182,7 +2225,7 @@ mod tests {
             "name": "OptionA",
             "type": "record",
             "fields": [
-                {"name": "field_one",  "type": ["null", "A"], "default": "null"}
+                {"name": "field_one",  "type": ["null", "A"], "default": null}
             ]
         }"#;
 
@@ -2199,7 +2242,7 @@ mod tests {
             fields: vec![RecordField {
                 name: "field_one".to_string(),
                 doc: None,
-                default: Some(Value::String("null".to_string())),
+                default: Some(Value::Null),
                 schema: Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Null,
@@ -4088,6 +4131,116 @@ mod tests {
                 let field = &fields[0];
                 assert_eq!(&field.name, "field_one");
                 assert_eq!(field.custom_attributes, expected_custom_attibutes());
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_first() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["null", "long"], "default": null}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(Value::Null));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert!(union.is_nullable());
+                        assert_eq!(union.variants()[0], Schema::Null);
+                        assert_eq!(union.variants()[1], Schema::Long);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_last() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["long","null"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert_eq!(union.variants()[0], Schema::Long);
+                        assert_eq!(union.variants()[1], Schema::Null);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3625_null_is_the_middle() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["long","null","int"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 3);
+                        assert_eq!(union.variants()[0], Schema::Long);
+                        assert_eq!(union.variants()[1], Schema::Null);
+                        assert_eq!(union.variants()[2], Schema::Int);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
             }
             _ => panic!("Expected Schema::Record"),
         }

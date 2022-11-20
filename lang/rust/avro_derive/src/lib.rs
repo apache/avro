@@ -21,20 +21,22 @@ use darling::FromAttributes;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
-use syn::{
-    parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Error, Type, TypePath,
-};
+use syn::{parse_macro_input, spanned::Spanned, AttrStyle, Attribute, DeriveInput, Type, TypePath};
 
-#[derive(FromAttributes)]
+#[derive(darling::FromAttributes)]
 #[darling(attributes(avro))]
 struct FieldOptions {
     #[darling(default)]
     doc: Option<String>,
     #[darling(default)]
     default: Option<String>,
+    #[darling(default)]
+    rename: Option<String>,
+    #[darling(default)]
+    skip: Option<bool>,
 }
 
-#[derive(FromAttributes)]
+#[derive(darling::FromAttributes)]
 #[darling(attributes(avro))]
 struct NamedTypeOptions {
     #[darling(default)]
@@ -82,13 +84,12 @@ fn derive_avro_schema(input: &mut DeriveInput) -> Result<TokenStream, Vec<syn::E
             input.ident.span(),
         )?,
         _ => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 input.ident.span(),
                 "AvroSchema derive only works for structs and simple enums ",
             )])
         }
     };
-
     let ident = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
@@ -117,16 +118,26 @@ fn get_data_struct_schema_def(
     let mut record_field_exprs = vec![];
     match s.fields {
         syn::Fields::Named(ref a) => {
-            for (position, field) in a.named.iter().enumerate() {
-                let name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
+            let mut index: usize = 0;
+            for field in a.named.iter() {
+                let mut name = field.ident.as_ref().unwrap().to_string(); // we know everything has a name
+                if let Some(raw_name) = name.strip_prefix("r#") {
+                    name = raw_name.to_string();
+                }
                 let field_attrs =
                     FieldOptions::from_attributes(&field.attrs[..]).map_err(darling_to_syn)?;
                 let doc = preserve_optional(field_attrs.doc);
+                if let Some(rename) = field_attrs.rename {
+                    name = rename
+                }
+                if let Some(true) = field_attrs.skip {
+                    continue;
+                }
                 let default_value = match field_attrs.default {
                     Some(default_value) => {
                         let _: serde_json::Value = serde_json::from_str(&default_value[..])
                             .map_err(|e| {
-                                vec![Error::new(
+                                vec![syn::Error::new(
                                     field.ident.span(),
                                     format!("Invalid avro default json: \n{}", e),
                                 )]
@@ -138,7 +149,7 @@ fn get_data_struct_schema_def(
                     None => quote! { None },
                 };
                 let schema_expr = type_to_schema_expr(&field.ty)?;
-                let position = position;
+                let position = index;
                 record_field_exprs.push(quote! {
                     apache_avro::schema::RecordField {
                             name: #name.to_string(),
@@ -150,16 +161,17 @@ fn get_data_struct_schema_def(
                             custom_attributes: Default::default(),
                         }
                 });
+                index += 1;
             }
         }
         syn::Fields::Unnamed(_) => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 error_span,
                 "AvroSchema derive does not work for tuple structs",
             )])
         }
         syn::Fields::Unit => {
-            return Err(vec![Error::new(
+            return Err(vec![syn::Error::new(
                 error_span,
                 "AvroSchema derive does not work for unit structs",
             )])
@@ -210,7 +222,7 @@ fn get_data_enum_schema_def(
             }
         })
     } else {
-        Err(vec![Error::new(
+        Err(vec![syn::Error::new(
             error_span,
             "AvroSchema derive does not work for enums with non unit structs",
         )])
@@ -225,7 +237,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
         let schema = match &type_string[..] {
             "bool" => quote! {apache_avro::schema::Schema::Boolean},
             "i8" | "i16" | "i32" | "u8" | "u16" => quote! {apache_avro::schema::Schema::Int},
-            "i64" => quote! {apache_avro::schema::Schema::Long},
+            "u32" | "i64" => quote! {apache_avro::schema::Schema::Long},
             "f32" => quote! {apache_avro::schema::Schema::Float},
             "f64" => quote! {apache_avro::schema::Schema::Double},
             "String" | "str" => quote! {apache_avro::schema::Schema::String},

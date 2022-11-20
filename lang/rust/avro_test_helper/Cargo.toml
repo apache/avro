@@ -17,7 +17,7 @@
 
 [package]
 name = "apache-avro-test-helper"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2018"
 description = "Apache Avro tests helper."
 authors = ["Apache Avro team <dev@avro.apache.org>"]
@@ -31,8 +31,8 @@ documentation = "https://docs.rs/apache-avro-test-helper"
 
 [dependencies]
 color-backtrace = { default-features = false, version = "0.5.1" }
-ctor = { default-features = false, version = "0.1.23" }
-env_logger = { default-features = false, version = "0.9.0" }
+ctor = { default-features = false, version = "0.1.26" }
+env_logger = { default-features = false, version = "0.9.3" }
 lazy_static = { default-features = false, version = "1.4.0" }
 log = { default-features = false, version = "0.4.17" }
 ref_thread_local = { default-features = false, version = "0.1.1" }

@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -1279,6 +1280,18 @@ public class TestReflect {
         .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
 
     check(ClassWithMultipleAliasesOnField.class, expectedSchema.toString());
+  }
+
+  private static class OptionalTest {
+    Optional<Integer> foo;
+  }
+
+  @Test
+  public void testOptional() {
+    check(OptionalTest.class,
+        "{\"type\":\"record\",\"name\":\"OptionalTest\","
+            + "\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+            + "{\"name\":\"foo\",\"type\":[\"null\",\"int\"],\"default\":null}]}");
   }
 
   private static class DefaultTest {

@@ -59,7 +59,7 @@ public class BinaryDecoder extends Decoder {
   static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
 
   private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
-  private final int maxBytesLength;
+  protected final int maxBytesLength;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a

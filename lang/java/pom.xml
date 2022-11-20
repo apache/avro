@@ -38,14 +38,13 @@
 
     <!-- version properties for dependencies -->
     <hadoop.version>3.3.4</hadoop.version>
-    <jackson-bom.version>2.12.7</jackson-bom.version>
+    <jackson-bom.version>2.14.0</jackson-bom.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.48.v20220622</jetty.version>
+    <jetty.version>9.4.49.v20220914</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit.version>4.13.2</junit.version>
-    <junit5.version>5.9.0</junit5.version>
-    <netty.version>4.1.79.Final</netty.version>
-    <protobuf.version>3.21.5</protobuf.version>
+    <junit5.version>5.9.1</junit5.version>
+    <netty.version>4.1.85.Final</netty.version>
+    <protobuf.version>3.21.9</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
     <reload4j.version>1.2.22</reload4j.version>
@@ -54,13 +53,13 @@
     <maven-core.version>3.3.9</maven-core.version>
     <ant.version>1.10.12</ant.version>
     <commons-cli.version>1.5.0</commons-cli.version>
-    <commons-compress.version>1.21</commons-compress.version>
-    <commons-text.version>1.9</commons-text.version>
+    <commons-compress.version>1.22</commons-compress.version>
+    <commons-text.version>1.10.0</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
-    <mockito.version>4.7.0</mockito.version>
+    <mockito.version>4.8.1</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.48.1</grpc.version>
-    <zstd-jni.version>1.5.2-3</zstd-jni.version>
+    <grpc.version>1.50.2</grpc.version>
+    <zstd-jni.version>1.5.2-5</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.8</bundle-plugin-version>
@@ -157,13 +156,14 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M7</version>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
               <include>**/Test**</include>
             </includes>
             <excludes>
-              <!-- A few innner classes are not to be tested -->
+              <!-- A few inner classes are not to be tested -->
               <exclude>**/*$*</exclude>
               <!-- exclude the generated classes under apache.avro.test, some of
                 these match **/Test** and are not JUnit tests -->
@@ -592,9 +592,9 @@
     will inherit these dependencies directly, and can opt out if necessary with <excludes> -->
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>${junit5.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

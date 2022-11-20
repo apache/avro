@@ -27,6 +27,7 @@
 */}}
 		<span class="navbar-logo"><img src="/docs/++version++/logo.svg" width="100" height="30" style="margin: 0 10px"></span><span class="text-uppercase font-weight-bold">{{ .Site.Title }}</span>
 	</a>
+	
 	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
 		<ul class="navbar-nav mt-2 mt-lg-0">
 			{{ $p := . }}
@@ -45,6 +46,9 @@
 			{{ end }}
 			<li class="nav-item dropdown mr-4 d-none d-lg-block">
 				{{ partial "navbar-docs-selector.html" . }}
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				{{ partial "navbar-asf-links.html" . }}
 			</li>
 			{{ if  (gt (len .Site.Home.Translations) 0) }}
 			<li class="nav-item dropdown mr-4 d-none d-lg-block">

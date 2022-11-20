@@ -47,8 +47,8 @@ pub struct Writer<'a, W> {
     serializer: Serializer,
     #[builder(default = 0, setter(skip))]
     num_values: usize,
-    #[builder(default = generate_sync_marker(), setter(skip))]
-    marker: Vec<u8>,
+    #[builder(default = generate_sync_marker())]
+    marker: [u8; 16],
     #[builder(default = false, setter(skip))]
     has_header: bool,
     #[builder(default)]
@@ -60,9 +60,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// to.
     /// No compression `Codec` will be used.
     pub fn new(schema: &'a Schema, writer: W) -> Self {
-        let mut w = Self::builder().schema(schema).writer(writer).build();
-        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
-        w
+        Writer::with_codec(schema, writer, Codec::Null)
     }
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
@@ -73,6 +71,32 @@ impl<'a, W: Write> Writer<'a, W> {
             .writer(writer)
             .codec(codec)
             .build();
+        w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    /// No compression `Codec` will be used.
+    pub fn append_to(schema: &'a Schema, writer: W, marker: [u8; 16]) -> Self {
+        Writer::append_to_with_codec(schema, writer, Codec::Null, marker)
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    pub fn append_to_with_codec(
+        schema: &'a Schema,
+        writer: W,
+        codec: Codec,
+        marker: [u8; 16],
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .marker(marker)
+            .build();
+        w.has_header = true;
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
         w
     }
@@ -464,17 +488,19 @@ fn write_value_ref_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    let root_schema = resolved_schema.get_root_schema();
     if let Some(err) = value.validate_internal(
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
+        &root_schema.namespace(),
     ) {
         return Err(Error::ValidationWithReason(err));
     }
     encode_internal(
         value,
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
         buffer,
     )?;
     Ok(())
@@ -485,17 +511,19 @@ fn write_value_ref_owned_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    let root_schema = resolved_schema.get_root_schema();
     if let Some(err) = value.validate_internal(
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
+        &root_schema.namespace(),
     ) {
         return Err(Error::ValidationWithReason(err));
     }
     encode_internal(
         value,
-        resolved_schema.get_root_schema(),
+        root_schema,
         resolved_schema.get_names(),
-        &None,
+        &root_schema.namespace(),
         buffer,
     )?;
     Ok(())
@@ -514,16 +542,24 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn generate_sync_marker() -> Vec<u8> {
-    std::iter::repeat_with(rand::random).take(16).collect()
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
+    std::iter::repeat_with(rand::random)
+        .take(16)
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
 }
 
 #[cfg(target_arch = "wasm32")]
-fn generate_sync_marker() -> Vec<u8> {
+fn generate_sync_marker() -> [u8; 16] {
+    let mut marker = [0_u8; 16];
     std::iter::repeat_with(quad_rand::rand)
         .take(4)
         .flat_map(|i| i.to_be_bytes())
-        .collect()
+        .enumerate()
+        .for_each(|(i, n)| marker[i] = n);
+    marker
 }
 
 #[cfg(test)]

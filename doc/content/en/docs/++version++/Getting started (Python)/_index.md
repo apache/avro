@@ -128,7 +128,7 @@ We create a DataFileWriter, which we'll use to write serialized items to a data 
 writer.append({"name": "Alyssa", "favorite_number": 256})
 writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
         
-We use DataFileWriter.append to add items to our data file. Avro records are represented as Python dicts. Since the field favorite_color has type ["int", "null"], we are not required to specify this field, as shown in the first append. Were we to omit the required name field, an exception would be raised. Any extra entries not corresponding to a field are present in the dict are ignored.
+We use DataFileWriter.append to add items to our data file. Avro records are represented as Python dicts. Since the field favorite_color has type ["string", "null"], we are not required to specify this field, as shown in the first append. Were we to omit the required name field, an exception would be raised. Any extra entries not corresponding to a field are present in the dict are ignored.
 
 ```python
 reader = DataFileReader(open("users.avro", "rb"), DatumReader())

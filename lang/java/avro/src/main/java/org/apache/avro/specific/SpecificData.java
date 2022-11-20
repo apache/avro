@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -149,16 +150,16 @@ public class SpecificData extends GenericData {
   }
 
   /**
-   * For RECORD type schemas, this method returns the SpecificData instance of the
-   * class associated with the schema, in order to get the right conversions for
-   * any logical types used.
+   * For RECORD and UNION type schemas, this method returns the SpecificData
+   * instance of the class associated with the schema, in order to get the right
+   * conversions for any logical types used.
    *
    * @param reader the reader schema
    * @return the SpecificData associated with the schema's class, or the default
    *         instance.
    */
   public static SpecificData getForSchema(Schema reader) {
-    if (reader != null && reader.getType() == Type.RECORD) {
+    if (reader != null && (reader.getType() == Type.RECORD || reader.getType() == Type.UNION)) {
       final Class<?> clazz = SpecificData.get().getClass(reader);
       if (clazz != null) {
         return getForClass(clazz);
@@ -384,6 +385,8 @@ public class SpecificData extends GenericData {
         if (!(key instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) key)))
           throw new AvroTypeException("Map key class not CharSequence: " + SchemaUtil.describe(key));
         return Schema.createMap(createSchema(value, names));
+      } else if (Optional.class.isAssignableFrom(raw)) {
+        return Schema.createUnion(Schema.create(Schema.Type.NULL), createSchema(params[0], names));
       } else {
         return createSchema(raw, names);
       }
