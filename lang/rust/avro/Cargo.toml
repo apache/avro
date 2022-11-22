@@ -65,7 +65,7 @@ num-bigint = { default-features = false, version = "0.4.3" }
 regex = { default-features = false, version = "1.7.0", features = ["std"] }
 serde = { default-features = false, version = "1.0.147", features = ["derive"] }
 serde_json = { default-features = false, version = "1.0.88", features = ["std"] }
-snap = { default-features = false, version = "1.0.5", optional = true }
+snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.24.1" }
 strum_macros = { default-features = false, version = "0.24.3" }
 thiserror = { default-features = false, version = "1.0.37" }
