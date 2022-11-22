@@ -25,6 +25,21 @@ indent_style = space
 indent_size = 2
 trim_trailing_whitespace=true
 
+ij_continuation_indent_size = 4
+ij_java_wrap_comments = true
+ij_any_indent_case_from_switch = false
+
+[*.{avsc,avpr,avdl}]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace=true
+
+ij_continuation_indent_size = 4
+ij_json_space_after_colon = true
+ij_json_space_before_colon = true
+ij_json_spaces_within_brackets = true
+ij_any_array_initializer_wrap = off
+
 [*.{ps1}]
 indent_style = space
 indent_size = 4
