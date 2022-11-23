@@ -490,7 +490,7 @@ public class FastReaderBuilder {
     return reusingReader((reuse, decoder) -> {
       Object resultObject;
       int index = decoder.readEnum();
-      if (index >= action.values.length) {
+      if (index < 0 || index >= action.values.length) {
         if (action.readerDefault == null) {
           throw new AvroTypeException("Unknown Enum Ordinal " + index);
         }
