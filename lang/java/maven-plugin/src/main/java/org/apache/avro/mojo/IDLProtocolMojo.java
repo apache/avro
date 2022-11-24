@@ -24,13 +24,15 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.compiler.idl.Idl;
-import org.apache.avro.compiler.idl.ParseException;
+import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
@@ -80,17 +82,21 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         }
       }
 
-      URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]),
-          Thread.currentThread().getContextClassLoader());
-      try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
-
-        Protocol p = parser.CompilationUnit();
-        for (String warning : parser.getWarningsAfterParsing()) {
+      final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+      URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]), contextClassLoader);
+      Thread.currentThread().setContextClassLoader(projPathLoader);
+      try {
+        IdlReader parser = new IdlReader();
+        IdlFile idlFile = parser.parse(sourceDirectory.toPath().resolve(filename));
+        for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
-        String json = p.toString(true);
-        Protocol protocol = Protocol.parse(json);
-        final SpecificCompiler compiler = new SpecificCompiler(protocol);
+        final SpecificCompiler compiler;
+        final Protocol protocol = idlFile.getProtocol();
+        getLog().info("Compiling protocol: " + protocol.getNamespace() + "." + protocol.getName());
+        getLog().info(
+            "Schema names: " + protocol.getTypes().stream().map(Schema::getFullName).collect(Collectors.joining(", ")));
+        compiler = new SpecificCompiler(protocol);
         compiler.setStringType(GenericData.StringType.valueOf(stringType));
         compiler.setTemplateDir(templateDirectory);
         compiler.setFieldVisibility(getFieldVisibility());
@@ -105,8 +111,10 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         }
         compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
         compiler.compileToDestination(null, outputDirectory);
+      } finally {
+        Thread.currentThread().setContextClassLoader(contextClassLoader);
       }
-    } catch (ParseException | ClassNotFoundException | DependencyResolutionRequiredException e) {
+    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
       throw new IOException(e);
     }
   }

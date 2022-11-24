@@ -18,14 +18,15 @@
 
 package org.apache.avro.tool;
 
-import org.apache.avro.Protocol;
-import org.apache.avro.compiler.idl.Idl;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+
+import org.apache.avro.Protocol;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
 
 /**
  * Tool implementation for generating Avro JSON schemata from idl format files.
@@ -47,22 +48,23 @@ public class IdlTool implements Tool {
       return -1;
     }
 
-    Idl parser;
+    IdlReader parser = new IdlReader();
+    IdlFile idlFile;
     if (args.size() >= 1 && !"-".equals(args.get(0))) {
-      parser = new Idl(new File(args.get(0)));
+      idlFile = parser.parse(new File(args.get(0)).toPath());
     } else {
-      parser = new Idl(in);
+      idlFile = parser.parse(in);
+    }
+    final List<String> warnings = idlFile.getWarnings();
+    for (String warning : warnings) {
+      err.println("Warning: " + warning);
     }
 
     if (args.size() == 2 && !"-".equals(args.get(1))) {
       parseOut = new PrintStream(new FileOutputStream(args.get(1)));
     }
 
-    Protocol p = parser.CompilationUnit();
-    final List<String> warnings = parser.getWarningsAfterParsing();
-    for (String warning : warnings) {
-      err.println("Warning: " + warning);
-    }
+    Protocol p = idlFile.getProtocol();
     try {
       parseOut.print(p.toString(true));
     } finally {

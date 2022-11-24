@@ -47,22 +47,8 @@ public class TestIdlToSchemataTool {
     assertEquals(4, files.length);
 
     String warnings = readPrintStreamBuffer(buffer);
-    assertEquals(
-        "Warning: Found documentation comment at line 19, column 1. Ignoring previous one at line 1, column 1: \""
-            + "Licensed to the Apache Software Foundation (ASF) under one\n"
-            + "or more contributor license agreements.  See the NOTICE file\n"
-            + "distributed with this work for additional information\n"
-            + "regarding copyright ownership.  The ASF licenses this file\n"
-            + "to you under the Apache License, Version 2.0 (the\n"
-            + "\"License\"); you may not use this file except in compliance\n"
-            + "with the License.  You may obtain a copy of the License at\n\n"
-            + "    https://www.apache.org/licenses/LICENSE-2.0\n\n"
-            + "Unless required by applicable law or agreed to in writing, software\n"
-            + "distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-            + "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-            + "See the License for the specific language governing permissions and\n" + "limitations under the License."
-            + "\"\nDid you mean to use a multiline comment ( /* ... */ ) instead?",
-        warnings);
+    assertEquals("Warning: Line 1, char 1: Ignoring out-of-place documentation comment."
+        + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?", warnings);
   }
 
   private String readPrintStreamBuffer(ByteArrayOutputStream buffer) {
