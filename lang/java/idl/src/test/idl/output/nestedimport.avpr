@@ -1,0 +1,73 @@
+{
+  "protocol" : "nestedimport",
+  "namespace" : "org.apache.avro.ipc.specific",
+  "doc" : "Licensed to the Apache Software Foundation (ASF) under one\nor more contributor license agreements.  See the NOTICE file\ndistributed with this work for additional information\nregarding copyright ownership.  The ASF licenses this file\nto you under the Apache License, Version 2.0 (the\n\"License\"); you may not use this file except in compliance\nwith the License.  You may obtain a copy of the License at\n\n    https://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.",
+  "version" : "1.0.5",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "Position",
+    "namespace" : "avro.examples.baseball",
+    "symbols" : [ "P", "C", "B1", "B2", "B3", "SS", "LF", "CF", "RF", "DH" ]
+  }, {
+    "type" : "record",
+    "name" : "Player",
+    "namespace" : "avro.examples.baseball",
+    "fields" : [ {
+      "name" : "number",
+      "type" : "int"
+    }, {
+      "name" : "first_name",
+      "type" : "string"
+    }, {
+      "name" : "last_name",
+      "type" : "string"
+    }, {
+      "name" : "position",
+      "type" : {
+        "type" : "array",
+        "items" : "Position"
+      }
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "ImportBar",
+    "fields" : [ {
+      "name" : "foo",
+      "type" : "avro.examples.baseball.Player"
+    } ]
+  } ],
+  "messages" : {
+    "error" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "void" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "idl" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "import" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "oneway" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "null" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "local_timestamp_ms" : {
+      "request" : [ ],
+      "response" : "null"
+    },
+    "bar" : {
+      "request" : [ ],
+      "response" : "null"
+    }
+  }
+}

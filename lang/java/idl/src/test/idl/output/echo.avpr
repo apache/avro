@@ -1,0 +1,37 @@
+{
+  "protocol" : "Echo",
+  "namespace" : "org.apache.avro.echo",
+  "types" : [ {
+    "type" : "record",
+    "name" : "Ping",
+    "fields" : [ {
+      "name" : "timestamp",
+      "type" : "long",
+      "default" : -1
+    }, {
+      "name" : "text",
+      "type" : "string",
+      "default" : ""
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "Pong",
+    "fields" : [ {
+      "name" : "timestamp",
+      "type" : "long",
+      "default" : -1
+    }, {
+      "name" : "ping",
+      "type" : "Ping"
+    } ]
+  } ],
+  "messages" : {
+    "ping" : {
+      "request" : [ {
+        "name" : "ping",
+        "type" : "Ping"
+      } ],
+      "response" : "Pong"
+    }
+  }
+}
