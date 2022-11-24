@@ -17,14 +17,14 @@
  */
 package org.apache.avro.mojo;
 
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import static java.util.Arrays.asList;
 
 /**
  * Test the IDL Protocol Mojo.
@@ -45,17 +45,18 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
-    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
+    final Set<String> generatedFiles = new HashSet<>(asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
         "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
     assertFilesExist(outputDir, generatedFiles);
 
     final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
 
-    assertEquals(Collections.singletonList(
-        "[WARN] Found documentation comment at line 23, column 5. Ignoring previous one at line 22, column 5: \"Ignored Doc Comment\""
-            + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?"),
-        log.getLogEntries());
+    assertEquals(asList("[INFO] Compiling protocol: test.IdlTest", "[INFO] Schema names: test.IdlPrivacy, test.IdlUser",
+        "[WARN] Line 22, char 5: Ignoring out-of-place documentation comment.\n"
+            + "Did you mean to use a multiline comment ( /* ... */ ) instead?",
+        "[INFO] Compiling protocol: test.IdlClasspathImportTest",
+        "[INFO] Schema names: test.IdlPrivacy, test.IdlUser, test.IdlUserWrapper"), log.getLogEntries());
   }
 
   @Test
@@ -68,7 +69,7 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
-    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
+    final Set<String> generatedFiles = new HashSet<>(asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
         "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
 
     assertFilesExist(outputDir, generatedFiles);

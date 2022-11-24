@@ -18,16 +18,16 @@
 
 package org.apache.avro.tool;
 
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.idl.Idl;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
+
+import org.apache.avro.Schema;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
 
 /**
  * Extract the Avro JSON schemata of the types of a protocol defined through an
@@ -38,24 +38,29 @@ public class IdlToSchemataTool implements Tool {
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.isEmpty() || args.size() > 2 || isRequestingHelp(args)) {
       err.println("Usage: idl2schemata [idl] [outdir]");
-      err.println("");
+      err.println();
       err.println("If an output directory is not specified, " + "outputs to current directory.");
       return -1;
     }
 
     boolean pretty = true;
-    Idl parser = new Idl(new File(args.get(0)));
-    File outputDirectory = getOutputDirectory(args);
-
-    final Protocol protocol = parser.CompilationUnit();
-    final List<String> warnings = parser.getWarningsAfterParsing();
+    IdlReader parser = new IdlReader();
+    IdlFile idlFile;
+    if (args.size() >= 1 && !"-".equals(args.get(0))) {
+      idlFile = parser.parse(new File(args.get(0)).toPath());
+    } else {
+      idlFile = parser.parse(in);
+    }
+    final List<String> warnings = idlFile.getWarnings();
     for (String warning : warnings) {
       err.println("Warning: " + warning);
     }
-    for (Schema schema : protocol.getTypes()) {
+
+    File outputDirectory = getOutputDirectory(args);
+
+    for (Schema schema : idlFile.getNamedSchemas().values()) {
       print(schema, outputDirectory, pretty);
     }
-    parser.close();
 
     return 0;
   }
