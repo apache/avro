@@ -403,6 +403,7 @@ impl Value {
             (&Value::Duration(_), &Schema::Duration) => None,
             (&Value::Uuid(_), &Schema::Uuid) => None,
             (&Value::Float(_), &Schema::Float) => None,
+            (&Value::Float(_), &Schema::Double) => None,
             (&Value::Double(_), &Schema::Double) => None,
             (&Value::Bytes(_), &Schema::Bytes) => None,
             (&Value::Bytes(_), &Schema::Decimal { .. }) => None,
