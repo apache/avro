@@ -45,6 +45,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -430,6 +432,13 @@ public class TestGenericData {
     assertEquals("\"1961-04-12\"", data.toString(LocalDate.parse("1961-04-12")));
     assertEquals("\"1961-04-12T06:07:10\"", data.toString(LocalDateTime.parse("1961-04-12T06:07:10")));
     assertEquals("\"10:10:10\"", data.toString(LocalTime.parse("10:10:10")));
+  }
+
+  @Test
+  public void testToStringConvertsUuidsAsStrings() throws Exception {
+    GenericData data = GenericData.get();
+    assertEquals("\"abf2f1e8-cece-4fdc-290a-babaca09ec74\"",
+        data.toString(UUID.fromString("abf2f1e8-cece-4fdc-290a-babaca09ec74")));
   }
 
   @Test

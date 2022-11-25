@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 import org.apache.avro.AvroMissingFieldException;
@@ -704,7 +705,7 @@ public class GenericData {
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"");
-    } else if (isNanOrInfinity(datum) || isTemporal(datum)) {
+    } else if (isNanOrInfinity(datum) || isTemporal(datum) || datum instanceof UUID) {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
