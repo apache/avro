@@ -1012,6 +1012,10 @@ mod tests {
     fn validate() {
         let value_schema_valid = vec![
             (Value::Int(42), Schema::Int, true, ""),
+            (Value::Int(43), Schema::Long, true, ""),
+            (Value::Float(43.2), Schema::Float, true, ""),
+            (Value::Float(45.9), Schema::Double, true, ""),
+
             (
                 Value::Int(42),
                 Schema::Boolean,
@@ -1564,6 +1568,12 @@ Field with name '"b"' is not a member of the map items"#,
         let value = Value::Uuid(Uuid::parse_str("1481531d-ccc9-46d9-a56f-5b67459c0537").unwrap());
         assert!(value.clone().resolve(&Schema::Uuid).is_ok());
         assert!(value.resolve(&Schema::TimestampMicros).is_err());
+    }
+
+    #[test]
+    fn resolve_float_to_double() {
+        let value = Value::Float(2345.1);
+        assert!(value.clone().resolve(&Schema::Double).is_ok());
     }
 
     #[test]
