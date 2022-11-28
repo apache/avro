@@ -1571,7 +1571,7 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn resolve_float_to_double() {
+    fn avro_3678_resolve_float_to_double() {
         let value = Value::Float(2345.1);
         assert!(value.clone().resolve(&Schema::Double).is_ok());
     }
