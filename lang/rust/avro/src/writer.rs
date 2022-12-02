@@ -1244,3 +1244,80 @@ mod tests {
         assert_eq!(buf1, buf3);
     }
 }
+
+// Test for using Schema's which use types from different files.  These can be multi levels deep.
+// Test types generated from rsgen-avro (which supports cross file references)
+#[derive(Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+pub struct MultiSchemaTestTypeA {
+    //  /   pub a: String,
+    pub b: Option<MultiSchemaTestTypeB>,
+    #[serde(default = "default_multischematesttypea_c")]
+    pub c: ::std::collections::HashMap<String, MultiSchemaTestTypeB>,
+}
+
+#[inline(always)]
+fn default_multischematesttypea_c() -> ::std::collections::HashMap<String, MultiSchemaTestTypeB> {
+    ::std::collections::HashMap::new()
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+pub struct MultiSchemaTestTypeB {
+    pub d: String,
+    pub e: i32,
+}
+
+#[test]
+fn test_multi_schema_writer() {
+    let schema_TypeA = r#"
+    {
+        "type": "record",
+        "namespace": "base.name.space",
+        "name": "MultiSchemaTestTypeA",
+        "fields":
+        [
+            { "name": "b", "type": ["null", "some.name.space.MultiSchemaTestTypeB"] },
+            {
+                "name": "c",
+                "type": { "type": "map", "values": "some.name.space.MultiSchemaTestTypeB" }, "default": {}
+            }
+        ]
+    }
+    "#;
+
+    let schema_TypeB = r#"
+    {
+        "type": "record",
+        "namespace": "some.name.space",
+        "name": "MultiSchemaTestTypeB",
+        "fields":
+        [
+            { "name": "d", "type": "string" },
+            { "name": "e", "type": "int" }
+        ]
+    }
+    "#;
+
+    let teststruct = MultiSchemaTestTypeA {
+        //    a: String::from("fred"),
+        b: Some(MultiSchemaTestTypeB {
+            d: String::from("tom"),
+            e: 451,
+        }),
+        c: default_multischematesttypea_c(),
+    };
+
+    let schema_list: [&str; 2] = [schema_TypeA, schema_TypeB];
+    let schemas = Schema::parse_list(&schema_list).expect("Should Resolve Schemas");
+
+    let schema = &schemas[0]; // Just the first one,  TypeA
+
+    let mut writer = Writer::new(&schema, Vec::new());
+    let result = writer
+        .append_ser(&teststruct)
+        .expect("Should validate / resolve schema");
+
+    let encoded = writer.into_inner().unwrap(); // Flush
+
+    assert!(encoded.len() > 10, "no bytes written");
+    // TODO: Add some Assert checks here thatthings actually wrote out correctly, once the main issue is fixed
+}
