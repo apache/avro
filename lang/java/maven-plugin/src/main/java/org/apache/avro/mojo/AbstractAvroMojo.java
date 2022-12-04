@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -202,6 +203,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException {
+    if (Files.isSymbolicLink(sourceDirectory.toPath())) {
+      try {
+        sourceDirectory = Files.readSymbolicLink(sourceDirectory.toPath()).toFile();
+      } catch (IOException e) {
+        throw new MojoExecutionException("Could not resolve symbolic link " + sourceDirectory.getPath());
+      }
+    }
     boolean hasSourceDir = null != sourceDirectory && sourceDirectory.isDirectory();
     boolean hasImports = null != imports;
     boolean hasTestDir = null != testSourceDirectory && testSourceDirectory.isDirectory();
