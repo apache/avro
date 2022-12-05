@@ -76,6 +76,7 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
     Path symbolicLinkPath = new File(getBasedir(), "target/test-harness/symbolic-link-directory").toPath();
     File outputDirectory = new File(getBasedir(), "target/test-harness/symbolic-link-schema-output/test");
     File symbolicLinkPom = new File(getBasedir(), "src/test/resources/unit/schema/symbolic-link-pom.xml");
+    Files.deleteIfExists(symbolicLinkPath);
     Files.createSymbolicLink(symbolicLinkPath, sourcePath);
     final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", symbolicLinkPom);
     assertNotNull(mojo);
