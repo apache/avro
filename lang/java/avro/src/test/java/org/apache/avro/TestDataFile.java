@@ -346,35 +346,38 @@ public class TestDataFile {
 
     // write COUNT objects to datafile
     try (DataFileWriter<Object> writer = new DataFileWriter<>(datumWriter)) {
-      RandomAccessFile raf = new RandomAccessFile(file, "rw");
+      try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
 
-      SyncableFileOutputStream fileOutputStream = new SyncableFileOutputStream(raf.getFD());
+        SyncableFileOutputStream fileOutputStream = new SyncableFileOutputStream(raf.getFD());
 
-      writer.create(SCHEMA, fileOutputStream);
-      for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
-        writer.append(datum);
-        writer.flush();
+        writer.create(SCHEMA, fileOutputStream);
+        for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
+          writer.append(datum);
+          writer.flush();
+        }
       }
     }
 
     // append to existing file
     try (DataFileWriter<Object> writer = new DataFileWriter<>(datumWriter)) {
-      RandomAccessFile raf = new RandomAccessFile(file, "rw");
-      RandomAccessFile rif = new RandomAccessFile(file, "r");
+      try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+        try (RandomAccessFile rif = new RandomAccessFile(file, "r")) {
 
-      SyncableFileOutputStream fileOutputStream = new SyncableFileOutputStream(raf.getFD());
+          SyncableFileOutputStream fileOutputStream = new SyncableFileOutputStream(raf.getFD());
 
-      // seek to end
-      fileOutputStream.getChannel().position(fileOutputStream.getChannel().size());
+          // seek to end
+          fileOutputStream.getChannel().position(fileOutputStream.getChannel().size());
 
-      // append to existing fileStream
-      try (SeekableFileInput in = new SeekableFileInput(rif.getFD())) {
-        writer.appendTo(in, fileOutputStream);
-      }
+          // append to existing fileStream
+          try (SeekableFileInput in = new SeekableFileInput(rif.getFD())) {
+            writer.appendTo(in, fileOutputStream);
+          }
 
-      for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
-        writer.append(datum);
-        writer.flush();
+          for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
+            writer.append(datum);
+            writer.flush();
+          }
+        }
       }
     }
 
