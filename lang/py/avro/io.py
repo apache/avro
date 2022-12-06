@@ -89,17 +89,7 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import (
-    IO,
-    Deque,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
 
 import avro.constants
 import avro.errors
@@ -158,9 +148,9 @@ def _iterate_node(node: ValidationNode) -> ValidationNodeGeneratorType:
         yield ValidationNode(*item)
 
 
-#############
-# Iteration #
-#############
+#
+# Iteration
+#
 
 
 def _default_iterator(_) -> ValidationNodeGeneratorType:
@@ -210,7 +200,7 @@ class BinaryDecoder:
 
     def __init__(self, reader: IO[bytes]) -> None:
         """
-        reader is a Python object on which we can call read, seek, and tell.
+        `reader` is a Python object on which we can call `read`, `seek`, and `tell`.
         """
         self._reader = reader
 
@@ -219,9 +209,7 @@ class BinaryDecoder:
         return self._reader
 
     def read(self, n: int) -> bytes:
-        """
-        Read n bytes.
-        """
+        """Read n bytes."""
         if n < 0:
             raise avro.errors.InvalidAvroBinaryEncoding(f"Requested {n} bytes to read, expected positive integer.")
         read_bytes = self.reader.read(n)
@@ -230,14 +218,12 @@ class BinaryDecoder:
         return read_bytes
 
     def read_null(self) -> None:
-        """
-        null is written as zero bytes
-        """
+        """Null is written as zero bytes"""
         return None
 
     def read_boolean(self) -> bool:
         """
-        a boolean is written as a single byte
+        A boolean is written as a single byte
         whose value is either 0 (false) or 1 (true).
         """
         return ord(self.read(1)) == 1
@@ -316,9 +302,7 @@ class BinaryDecoder:
         return scaled_datum
 
     def read_bytes(self) -> bytes:
-        """
-        Bytes are encoded as a long followed by that many bytes of data.
-        """
+        """Bytes are encoded as a long followed by that many bytes of data."""
         return self.read(self.read_long())
 
     def read_utf8(self) -> str:
@@ -343,7 +327,6 @@ class BinaryDecoder:
         value, seconds = divmod(value, 60)
         value, minutes = divmod(value, 60)
         hours = value
-
         return datetime.time(hour=hours, minute=minutes, second=seconds, microsecond=microseconds)
 
     def read_time_millis_from_int(self) -> datetime.time:
@@ -419,7 +402,7 @@ class BinaryEncoder:
 
     def __init__(self, writer: IO[bytes]) -> None:
         """
-        writer is a Python object on which we can call write.
+        `writer` is a Python object on which we can call `write`.
         """
         self._writer = writer
 
@@ -432,14 +415,12 @@ class BinaryEncoder:
         self.writer.write(datum)
 
     def write_null(self, datum: None) -> None:
-        """
-        null is written as zero bytes
-        """
+        """Null is written as zero bytes"""
         pass
 
     def write_boolean(self, datum: bool) -> None:
         """
-        a boolean is written as a single byte
+        A boolean is written as a single byte
         whose value is either 0 (false) or 1 (true).
         """
         self.write(bytearray([bool(datum)]))
@@ -504,9 +485,7 @@ class BinaryEncoder:
             self.write(bytearray([bits_to_write & 0xFF]))
 
     def write_decimal_fixed(self, datum: decimal.Decimal, scale: int, size: int) -> None:
-        """
-        Decimal in fixed are encoded as size of fixed bytes.
-        """
+        """Decimal in fixed are encoded as size of fixed bytes."""
         sign, digits, exp = datum.as_tuple()
         if (-1 * exp) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
@@ -545,9 +524,7 @@ class BinaryEncoder:
                 self.write(bytearray([bits_to_write & 0xFF]))
 
     def write_bytes(self, datum: bytes) -> None:
-        """
-        Bytes are encoded as a long followed by that many bytes of data.
-        """
+        """Bytes are encoded as a long followed by that many bytes of data."""
         self.write_long(len(datum))
         self.write(struct.pack(f"{len(datum)}s", datum))
 
@@ -872,7 +849,7 @@ class DatumReader:
         the zero-based position within the union of the schema of its value.
         The value is then encoded per the indicated schema within the union.
         """
-        # schema resolution
+        # Schema resolution
         index_of_schema = int(decoder.read_long())
         if index_of_schema >= len(writers_schema.schemas):
             raise avro.errors.SchemaResolutionException(
@@ -880,7 +857,7 @@ class DatumReader:
             )
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
-        # read data
+        # Read data
         return self.read_data(selected_writers_schema, readers_schema, decoder)
 
     def skip_union(self, writers_schema: avro.schema.UnionSchema, decoder: BinaryDecoder) -> None:
@@ -913,7 +890,7 @@ class DatumReader:
            writer's schema does not have a field with the same name, then the
            field's value is unset.
         """
-        # schema resolution
+        # Schema resolution
         readers_fields_dict = readers_schema.fields_dict
         read_record = {}
         for field in writers_schema.fields:
@@ -924,7 +901,7 @@ class DatumReader:
             else:
                 self.skip_data(field.type, decoder)
 
-        # fill in default values
+        # Fill in default values
         if len(readers_fields_dict) > len(read_record):
             writers_fields_dict = writers_schema.fields_dict
             for field_name, field in readers_fields_dict.items():
@@ -940,9 +917,7 @@ class DatumReader:
             self.skip_data(field.type, decoder)
 
     def _read_default_value(self, field_schema: avro.schema.Schema, default_value: object) -> object:
-        """
-        Basically a JSON Decoder?
-        """
+        """Basically a JSON Decoder?"""
         if field_schema.type == "null":
             if default_value is None:
                 return None
