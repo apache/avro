@@ -37,9 +37,7 @@
 
   <PropertyGroup Label="Target Frameworks">
     <!-- Exe -->
-    <!-- NOTE: .NET 7 is still in preview state, use it only if it is available to make sure the project is ready for it. When .NET 7 SDK is released preview, update this -->
-    <DefaultExeTargetFrameworks Condition="'$(NETCoreAppMaximumVersion)' != '7.0' or '$(_NETCoreSdkIsPreview)' == 'false'">netcoreapp3.1;net5.0;net6.0</DefaultExeTargetFrameworks>
-    <DefaultExeTargetFrameworks Condition="'$(NETCoreAppMaximumVersion)' == '7.0' and '$(_NETCoreSdkIsPreview)' == 'true'">net7.0</DefaultExeTargetFrameworks>
+    <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0</DefaultExeTargetFrameworks>
     <!-- Library -->
     <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
     <!-- Unit Tests -->
@@ -60,6 +58,12 @@
     <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" Visible="false" PackagePath=""/>
     <None Include="$(MSBuildThisFileDirectory)\..\..\doc\assets\icons\logo.png" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Disable warning for EOL target frameworks -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+  </PropertyGroup>
 
   <PropertyGroup>
     <IsTestProject Condition="'$(IsTestProject)' == ''">false</IsTestProject>
