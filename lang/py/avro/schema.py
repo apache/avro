@@ -47,7 +47,7 @@ import math
 import uuid
 import warnings
 from pathlib import Path
-from typing import Mapping, MutableMapping, Optional, Sequence, Union, cast
+from typing import List, Mapping, MutableMapping, Optional, Sequence, Union, cast
 
 import avro.constants
 import avro.errors
@@ -174,7 +174,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 
     _reserved_properties = SCHEMA_RESERVED_PROPS
 
-    def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None) -> None:
+    def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None, validate_names: bool = True) -> None:
         if not isinstance(type_, str):
             raise avro.errors.SchemaParseException("Schema type must be a string.")
         if type_ not in VALID_TYPES:
@@ -182,6 +182,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         self.set_prop("type", type_)
         self.type = type_
         self.props.update(other_props or {})
+        self.validate_names = validate_names
 
     @abc.abstractmethod
     def match(self, writer: "Schema") -> bool:
@@ -250,8 +251,9 @@ class NamedSchema(Schema):
         namespace: Optional[str] = None,
         names: Optional[Names] = None,
         other_props: Optional[Mapping[str, object]] = None,
+        validate_names: bool = True,
     ) -> None:
-        super().__init__(type_, other_props)
+        super().__init__(type_, other_props, validate_names=validate_names)
         if not name:
             raise avro.errors.SchemaParseException("Named Schemas must have a non-empty name.")
         if not isinstance(name, str):
@@ -259,7 +261,7 @@ class NamedSchema(Schema):
         if namespace is not None and not isinstance(namespace, str):
             raise avro.errors.SchemaParseException("The namespace property must be a string.")
         namespace = namespace or None  # Empty string -> None
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
         new_name = names.add_name(name, namespace, self)
 
         # Store name and namespace as they were read in origin schema
@@ -314,17 +316,7 @@ class DecimalLogicalSchema(LogicalSchema):
 class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
     _reserved_properties: Sequence[str] = FIELD_RESERVED_PROPS
 
-    def __init__(
-        self,
-        type_,
-        name,
-        has_default,
-        default=None,
-        order=None,
-        names=None,
-        doc=None,
-        other_props=None,
-    ):
+    def __init__(self, type_, name, has_default, default=None, order=None, names=None, doc=None, other_props=None, validate_names: bool = True):
         if not name:
             raise avro.errors.SchemaParseException("Fields must have a non-empty name.")
         if not isinstance(name, str):
@@ -338,13 +330,14 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
             type_schema = names.get_name(type_, None)
         else:
             try:
-                type_schema = make_avsc_object(type_, names)
+                type_schema = make_avsc_object(type_, names, validate_names=validate_names)
             except Exception as e:
                 raise avro.errors.SchemaParseException(f'Type property "{type_}" not a valid Avro schema: {e}')
         self.set_prop("type", type_schema)
         self.set_prop("name", name)
         self.type = type_schema
         self.name = name
+        self.validate_names = validate_names
         # TODO(hammer): check to ensure default is valid
         if has_default:
             self.set_prop("default", default)
@@ -363,7 +356,7 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
         return json.dumps(self.to_json())
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.props.copy()
         to_dump["type"] = self.type.to_json(names)
@@ -371,7 +364,7 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
         return to_dump
 
     def to_canonical_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.canonical_properties
         to_dump["type"] = self.type.to_canonical_json(names)
@@ -471,14 +464,14 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 # Complex Types (non-recursive)
 #
 class FixedSchema(EqualByPropsMixin, NamedSchema):
-    def __init__(self, name, namespace, size, names=None, other_props=None):
+    def __init__(self, name, namespace, size, names=None, other_props=None, validate_names: bool = True):
         # Ensure valid ctor args
         if not isinstance(size, int) or size < 0:
             fail_msg = "Fixed Schema requires a valid positive integer for size property."
             raise avro.errors.AvroException(fail_msg)
 
         # Call parent ctor
-        NamedSchema.__init__(self, "fixed", name, namespace, names, other_props)
+        NamedSchema.__init__(self, "fixed", name, namespace, names, other_props, validate_names=validate_names)
 
         # Add class members
         self.set_prop("size", size)
@@ -495,7 +488,7 @@ class FixedSchema(EqualByPropsMixin, NamedSchema):
         return self.type == writer.type and self.check_props(writer, ["fullname", "size"])
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         if self.fullname in names.names:
             return self.name_ref(names)
@@ -529,10 +522,11 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
         namespace=None,
         names=None,
         other_props=None,
+        validate_names: bool = True,
     ):
         max_precision = int(math.floor(math.log10(2) * (8 * size - 1)))
         DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
-        FixedSchema.__init__(self, name, namespace, size, names, other_props)
+        FixedSchema.__init__(self, name, namespace, size, names, other_props, validate_names=validate_names)
         self.set_prop("precision", precision)
         self.set_prop("scale", scale)
 
@@ -558,6 +552,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         doc: Optional[str] = None,
         other_props: Optional[Mapping[str, object]] = None,
         validate_enum_symbols: bool = True,
+        validate_names: bool = True,
     ) -> None:
         """
         @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
@@ -573,7 +568,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             raise avro.errors.AvroException(f"Duplicate symbol: {symbols}")
 
         # Call parent ctor
-        NamedSchema.__init__(self, "enum", name, namespace, names, other_props)
+        NamedSchema.__init__(self, "enum", name, namespace, names, other_props, validate_names)
 
         # Add class members
         self.set_prop("symbols", symbols)
@@ -603,7 +598,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         return self.type == writer.type and self.check_props(writer, ["fullname"])
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         if self.fullname in names.names:
             return self.name_ref(names)
@@ -633,16 +628,16 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
 
 
 class ArraySchema(EqualByJsonMixin, Schema):
-    def __init__(self, items, names=None, other_props=None):
+    def __init__(self, items, names=None, other_props=None, validate_names: bool = True):
         # Call parent ctor
-        Schema.__init__(self, "array", other_props)
+        Schema.__init__(self, "array", other_props, validate_names=validate_names)
         # Add class members
 
         if isinstance(items, str) and names.has_name(items, None):
             items_schema = names.get_name(items, None)
         else:
             try:
-                items_schema = make_avsc_object(items, names)
+                items_schema = make_avsc_object(items, names, validate_names=self.validate_names)
             except avro.errors.SchemaParseException as e:
                 fail_msg = f"Items schema ({items}) not a valid Avro schema: {e} (known names: {names.names.keys()})"
                 raise avro.errors.SchemaParseException(fail_msg)
@@ -661,7 +656,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
         return self.type == writer.type and self.items.check_props(writer.items, ["type"])
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.props.copy()
         item_schema = self.get_prop("items")
@@ -670,7 +665,7 @@ class ArraySchema(EqualByJsonMixin, Schema):
         return to_dump
 
     def to_canonical_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.canonical_properties
         item_schema = self.get_prop("items")
@@ -684,16 +679,16 @@ class ArraySchema(EqualByJsonMixin, Schema):
 
 
 class MapSchema(EqualByJsonMixin, Schema):
-    def __init__(self, values, names=None, other_props=None):
+    def __init__(self, values, names=None, other_props=None, validate_names: bool = True):
         # Call parent ctor
-        Schema.__init__(self, "map", other_props)
+        Schema.__init__(self, "map", other_props, validate_names=validate_names)
 
         # Add class members
         if isinstance(values, str) and names.has_name(values, None):
             values_schema = names.get_name(values, None)
         else:
             try:
-                values_schema = make_avsc_object(values, names)
+                values_schema = make_avsc_object(values, names, validate_names=self.validate_names)
             except avro.errors.SchemaParseException:
                 raise
             except Exception:
@@ -713,7 +708,7 @@ class MapSchema(EqualByJsonMixin, Schema):
         return writer.type == self.type and self.values.check_props(writer.values, ["type"])
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.props.copy()
         to_dump["values"] = self.get_prop("values").to_json(names)
@@ -721,7 +716,7 @@ class MapSchema(EqualByJsonMixin, Schema):
         return to_dump
 
     def to_canonical_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = self.canonical_properties
         to_dump["values"] = self.get_prop("values").to_canonical_json(names)
@@ -738,23 +733,23 @@ class UnionSchema(EqualByJsonMixin, Schema):
     names is a dictionary of schema objects
     """
 
-    def __init__(self, schemas, names=None):
+    def __init__(self, schemas, names=None, validate_names: bool = True):
         # Ensure valid ctor args
         if not isinstance(schemas, list):
             fail_msg = "Union schema requires a list of schemas."
             raise avro.errors.SchemaParseException(fail_msg)
 
         # Call parent ctor
-        Schema.__init__(self, "union")
+        Schema.__init__(self, "union", validate_names=validate_names)
 
         # Add class members
-        schema_objects = []
+        schema_objects: List[Schema] = []
         for schema in schemas:
             if isinstance(schema, str) and names.has_name(schema, None):
                 new_schema = names.get_name(schema, None)
             else:
                 try:
-                    new_schema = make_avsc_object(schema, names)
+                    new_schema = make_avsc_object(schema, names, validate_names=self.validate_names)
                 except Exception as e:
                     raise avro.errors.SchemaParseException(f"Union item must be a valid Avro schema: {e}")
             # check the new schema
@@ -782,7 +777,7 @@ class UnionSchema(EqualByJsonMixin, Schema):
         return writer.type in {"union", "error_union"} or any(s.match(writer) for s in self.schemas)
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = []
         for schema in self.schemas:
@@ -791,7 +786,7 @@ class UnionSchema(EqualByJsonMixin, Schema):
         return to_dump
 
     def to_canonical_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         return [schema.to_canonical_json(names) for schema in self.schemas]
 
@@ -803,12 +798,12 @@ class UnionSchema(EqualByJsonMixin, Schema):
 
 
 class ErrorUnionSchema(UnionSchema):
-    def __init__(self, schemas, names=None):
+    def __init__(self, schemas, names=None, validate_names: bool = True):
         # Prepend "string" to handle system errors
-        UnionSchema.__init__(self, ["string"] + schemas, names)
+        UnionSchema.__init__(self, ["string"] + schemas, names, validate_names)
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         to_dump = []
         for schema in self.schemas:
@@ -822,7 +817,7 @@ class ErrorUnionSchema(UnionSchema):
 
 class RecordSchema(EqualByJsonMixin, NamedSchema):
     @staticmethod
-    def make_field_objects(field_data: Sequence[Mapping[str, object]], names: avro.name.Names) -> Sequence[Field]:
+    def make_field_objects(field_data: Sequence[Mapping[str, object]], names: avro.name.Names, validate_names: bool = True) -> Sequence[Field]:
         """We're going to need to make message parameters too."""
         field_objects = []
         field_names = []
@@ -838,7 +833,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             order = field.get("order")
             doc = field.get("doc")
             other_props = get_other_props(field, FIELD_RESERVED_PROPS)
-            new_field = Field(type, name, has_default, default, order, names, doc, other_props)
+            new_field = Field(type, name, has_default, default, order, names, doc, other_props, validate_names=validate_names)
             # make sure field name has not been used yet
             if new_field.name in field_names:
                 fail_msg = f"Field name {new_field.name} already in use."
@@ -864,6 +859,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         schema_type="record",
         doc=None,
         other_props=None,
+        validate_names: bool = True,
     ):
         # Ensure valid ctor args
         if fields is None:
@@ -877,14 +873,15 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         if schema_type == "request":
             Schema.__init__(self, schema_type, other_props)
         else:
-            NamedSchema.__init__(self, schema_type, name, namespace, names, other_props)
+            NamedSchema.__init__(self, schema_type, name, namespace, names, other_props, validate_names=validate_names)
 
+        names = names or Names(validate_names=self.validate_names)
         if schema_type == "record":
             old_default = names.default_namespace
-            names.default_namespace = Name(name, namespace, names.default_namespace).space
+            names.default_namespace = Name(name, namespace, names.default_namespace, validate_name=validate_names).space
 
         # Add class members
-        field_objects = RecordSchema.make_field_objects(fields, names)
+        field_objects = RecordSchema.make_field_objects(fields, names, validate_names=validate_names)
         self.set_prop("fields", field_objects)
         if doc is not None:
             self.set_prop("doc", doc)
@@ -904,7 +901,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         return fields_dict
 
     def to_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         # Request records don't have names
         if self.type == "request":
@@ -921,7 +918,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         return to_dump
 
     def to_canonical_json(self, names=None):
-        names = names or Names()
+        names = names or Names(validate_names=self.validate_names)
 
         if self.type == "request":
             raise NotImplementedError("Canonical form (probably) does not make sense on type request")
@@ -1102,14 +1099,16 @@ def make_logical_schema(logical_type, type_, other_props):
     return None
 
 
-def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None, validate_enum_symbols: bool = True) -> Schema:
+def make_avsc_object(
+    json_data: object, names: Optional[avro.name.Names] = None, validate_enum_symbols: bool = True, validate_names: bool = True
+) -> Schema:
     """
     Build Avro Schema from data parsed out of JSON string.
 
     @arg names: A Names object (tracks seen names and default space)
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
     """
-    names = names or Names()
+    names = names or Names(validate_names=validate_names)
 
     # JSON object (non-union)
     if callable(getattr(json_data, "get", None)):
@@ -1134,10 +1133,10 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                     precision = json_data.get("precision")
                     scale = json_data.get("scale", 0)
                     try:
-                        return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
+                        return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props, validate_names)
                     except avro.errors.IgnoredLogicalType as warning:
                         warnings.warn(warning)
-                return FixedSchema(name, namespace, size, names, other_props)
+                return FixedSchema(name, namespace, size, names, other_props, validate_names=validate_names)
             elif type_ == "enum":
                 symbols = json_data.get("symbols")
                 if not isinstance(symbols, Sequence):
@@ -1146,19 +1145,11 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
                     if not isinstance(symbol, str):
                         raise avro.errors.SchemaParseException(f"Enum symbols must be a sequence of strings, but one symbol is a {type(symbol)}")
                 doc = json_data.get("doc")
-                return EnumSchema(
-                    name,
-                    namespace,
-                    symbols,
-                    names,
-                    doc,
-                    other_props,
-                    validate_enum_symbols,
-                )
+                return EnumSchema(name, namespace, symbols, names, doc, other_props, validate_enum_symbols, validate_names)
             if type_ in ["record", "error"]:
                 fields = json_data.get("fields")
                 doc = json_data.get("doc")
-                return RecordSchema(name, namespace, fields, names, type_, doc, other_props)
+                return RecordSchema(name, namespace, fields, names, type_, doc, other_props, validate_names)
             raise avro.errors.SchemaParseException(f"Unknown Named Type: {type_}")
 
         if type_ in PRIMITIVE_TYPES:
@@ -1167,13 +1158,13 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
         if type_ in VALID_TYPES:
             if type_ == "array":
                 items = json_data.get("items")
-                return ArraySchema(items, names, other_props)
+                return ArraySchema(items, names, other_props, validate_names)
             elif type_ == "map":
                 values = json_data.get("values")
-                return MapSchema(values, names, other_props)
+                return MapSchema(values, names, other_props, validate_names)
             elif type_ == "error_union":
                 declared_errors = json_data.get("declared_errors")
-                return ErrorUnionSchema(declared_errors, names)
+                return ErrorUnionSchema(declared_errors, names, validate_names)
             else:
                 raise avro.errors.SchemaParseException(f"Unknown Valid Type: {type_}")
         elif type_ is None:
@@ -1182,7 +1173,7 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
             raise avro.errors.SchemaParseException(f"Undefined type: {type_}")
     # JSON array (union)
     elif isinstance(json_data, list):
-        return UnionSchema(json_data, names)
+        return UnionSchema(json_data, names, validate_names=validate_names)
     # JSON string (primitive)
     elif json_data in PRIMITIVE_TYPES:
         return PrimitiveSchema(json_data)
@@ -1191,22 +1182,24 @@ def make_avsc_object(json_data: object, names: Optional[avro.name.Names] = None,
     raise avro.errors.SchemaParseException(fail_msg)
 
 
-def parse(json_string: str, validate_enum_symbols: bool = True) -> Schema:
+def parse(json_string: str, validate_enum_symbols: bool = True, validate_names: bool = True) -> Schema:
     """Constructs the Schema from the JSON text.
 
     @arg json_string: The json string of the schema to parse
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
+    @arg validate_names: If False, will allow names that are not valid Avro names. When disabling the validation
+                         test the non-compliant names for non-compliant behavior, also in interoperability cases.
     @return Schema
     """
     try:
         json_data = json.loads(json_string)
     except json.decoder.JSONDecodeError as e:
         raise avro.errors.SchemaParseException(f"Error parsing JSON: {json_string}, error = {e}") from e
-    return make_avsc_object(json_data, Names(), validate_enum_symbols)
+    return make_avsc_object(json_data, Names(validate_names=validate_names), validate_enum_symbols, validate_names)
 
 
-def from_path(path: Union[Path, str], validate_enum_symbols: bool = True) -> Schema:
+def from_path(path: Union[Path, str], validate_enum_symbols: bool = True, validate_names: bool = True) -> Schema:
     """
     Constructs the Schema from a path to an avsc (json) file.
     """
-    return parse(Path(path).read_text(), validate_enum_symbols)
+    return parse(Path(path).read_text(), validate_enum_symbols, validate_names)
