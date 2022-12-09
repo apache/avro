@@ -376,6 +376,19 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+fn write_avro_datum_schemata<T: Into<Value>>(
+    schemata: &[&Schema],
+    value: T,
+    buffer: &mut Vec<u8>,
+) -> Result<(), Error> {
+    let avro = value.into();
+    if !avro.validate(schemata) {
+        return Err(Error::Validation);
+    }
+    encode(&avro, schemata, buffer)?;
+    Ok(())
+}
+
 /// Writer that encodes messages according to the single object encoding v1 spec
 /// Uses an API similar to the current File Writer
 /// Writes all object bytes at once, and drains internal buffer
@@ -538,6 +551,12 @@ fn write_value_ref_owned_resolved(
 pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Vec<u8>> {
     let mut buffer = Vec::new();
     write_avro_datum(schema, value, &mut buffer)?;
+    Ok(buffer)
+}
+
+pub fn to_avro_datum_schemata<T: Into<Value>>(schemata: &[&Schema], value: T) -> AvroResult<Vec<u8>> {
+    let mut buffer = Vec::new();
+    write_avro_datum(schemata, value, &mut buffer)?;
     Ok(buffer)
 }
 
@@ -1242,5 +1261,31 @@ mod tests {
             .expect("Serialization expected");
         assert_eq!(buf1, buf2);
         assert_eq!(buf1, buf3);
+    }
+
+    #[test]
+    fn test_multiple_schemata_to_avro_datum() {
+        let schema_a_str = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_a", "type": "float"}
+        ]
+    }"#;
+        let schema_b_str = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_b", "type": "A"}
+        ]
+    }"#;
+
+        let schemata = Schema::parse_list(&[schema_a_str, schema_b_str]).unwrap();
+        let record = Value::Record(vec![(
+            "field_b".into(),
+            Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
+        )]);
+
+        assert_eq!(to_avro_datum(&schema, record).unwrap(), expected);
     }
 }

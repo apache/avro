@@ -37,6 +37,11 @@ pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) -> AvroResul
     encode_internal(value, schema, rs.get_names(), &None, buffer)
 }
 
+pub fn encode_schemata(value: &Value, schemata: &[&Schema], buffer: &mut Vec<u8>) -> AvroResult<()> {
+    let rs = ResolvedSchema::try_from(schemata)?;
+    encode_internal(value, schema, rs.get_names(), &None, buffer)
+}
+
 fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
     let bytes = s.as_ref();
     encode_long(bytes.len() as i64, buffer);
