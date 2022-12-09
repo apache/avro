@@ -125,9 +125,12 @@ We create a DataFileWriter, which we'll use to write serialized items to a data 
 * The file we'll serialize to
 * A DatumWriter, which is responsible for actually serializing the items to Avro's binary format (DatumWriters can be used separately from DataFileWriters, e.g., to perform IPC with Avro).
 * The schema we're using. The DataFileWriter needs the schema both to write the schema to the data file, and to verify that the items we write are valid items and write the appropriate fields.
+
+```python
 writer.append({"name": "Alyssa", "favorite_number": 256})
 writer.append({"name": "Ben", "favorite_number": 7, "favorite_color": "red"})
-        
+```
+     
 We use DataFileWriter.append to add items to our data file. Avro records are represented as Python dicts. Since the field favorite_color has type ["string", "null"], we are not required to specify this field, as shown in the first append. Were we to omit the required name field, an exception would be raised. Any extra entries not corresponding to a field are present in the dict are ignored.
 
 ```python
