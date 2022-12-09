@@ -58,8 +58,13 @@
     <BenchmarkDotNetVersion>0.13.2</BenchmarkDotNetVersion>
     <CoverletCollectorVersion>3.2.0</CoverletCollectorVersion>
     <CoverletMSBuildVersion>3.2.0</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>17.4.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.4.0</MicrosoftBuildUtilitiesCoreVersion>
+    <!-- 
+      Note: Keep Microsoft.Build.Framework Microsoft.Build.Utilities.Core versions at 17.1.0
+         17.2+ causes Could not load file or assembly 'Microsoft.Build.Framework, Version=15.1.0.0 error
+         https://github.com/dotnet/msbuild/issues/8184
+    -->
+    <MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisVersion>4.3.1</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisCSharpVersion>4.3.1</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.3.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
