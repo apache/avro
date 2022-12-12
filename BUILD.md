@@ -18,7 +18,6 @@ The following packages must be installed before Avro can be built:
    IO::String, Object::Tiny, Compress::ZLib, Error::Simple,
    Test::More, Test::Exception, Test::Pod
  - Apache Ant 1.7
- - Apache Forrest 0.9 (for documentation)
  - md5sum, sha1sum, used by top-level dist target
 
 ## Using docker
