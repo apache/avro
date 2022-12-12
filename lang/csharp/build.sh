@@ -42,7 +42,7 @@ do
 
     perf)
       pushd ./src/apache/perf/
-      dotnet run --configuration Release --framework net6.0
+      dotnet run --configuration Release --framework net7.0
       ;;
 
     dist)
@@ -77,7 +77,7 @@ do
       ;;
 
     interop-data-generate)
-      dotnet run --project src/apache/test/Avro.test.csproj --framework net6.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      dotnet run --project src/apache/test/Avro.test.csproj --framework net7.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
 
     interop-data-test)

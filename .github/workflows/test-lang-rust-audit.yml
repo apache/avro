@@ -49,7 +49,7 @@ jobs:
       # Install it manually
       - name: Dependency Review
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v2
+        uses: actions/dependency-review-action@v3
       - name: Install Cargo Audit
         run: cargo install cargo-audit
       - name: Audit

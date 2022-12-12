@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>27</version>
+    <version>28</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -47,20 +47,20 @@
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
 
     <!-- plugin versions -->
-    <apache-rat-plugin.version>0.14</apache-rat-plugin.version>
-    <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
+    <apache-rat-plugin.version>0.15</apache-rat-plugin.version>
+    <checkstyle-plugin.version>3.2.0</checkstyle-plugin.version>
     <checkstyle.version>9.3</checkstyle.version>
     <enforcer-plugin.version>3.1.0</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.6.1</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
-    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
+    <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-    <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.23.0</spotless-maven-plugin.version>
-    <surefire.version>3.0.0-M5</surefire.version>
+    <plugin-tools-javadoc.version>3.7.0</plugin-tools-javadoc.version>
+    <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>10</project.build.outputTimestamp>
@@ -359,11 +359,13 @@
                 <exclude>**/.gitattributes</exclude>
                 <exclude>**/.gitignore</exclude>
                 <exclude>**/.gitmodules</exclude>
-                <!-- Docsy -->
+                <!-- Hugo / Docsy -->
                 <exclude>doc/build/**</exclude>
                 <exclude>doc/themes/docsy/**</exclude>
                 <exclude>doc/examples/java-example/target/**</exclude>
                 <exclude>doc/examples/mr-example/target/**</exclude>
+                <exclude>doc/node_modules/**</exclude>
+                <exclude>**/.hugo_build.lock</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
                 <exclude>**/*.rej</exclude>
@@ -442,7 +444,6 @@
                 <exclude>**/README.md</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
-                <exclude>.travis.yml</exclude>
                 <exclude>BUILD.md</exclude>
                 <exclude>lang/c/src/avro-c.pc.in</exclude>
                 <exclude>lang/csharp/**/bin/Debug/**/Avro.xml</exclude>
@@ -491,6 +492,8 @@
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.0.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/cddl-1.1.text</exclude>
                 <exclude>lang/java/tools/src/main/resources/META-INF/mpl-2.0.text</exclude>
+                <!-- Other -->
+                <exclude>lang/py/avro/py.typed</exclude> <!-- Included in package but contains no code (see PEP561)  -->
               </excludes>
             </configuration>
           </plugin>

@@ -125,7 +125,7 @@ static string decorate(const std::string &name) {
     static const char *cppReservedWords[] = {
         "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break",
         "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept",
-        "const", "consteval", "constexpr", "const_cast", "continue", "co_await", "co_return",
+        "const", "consteval", "constexpr", "constinit", "const_cast", "continue", "co_await", "co_return",
         "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else",
         "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if",
         "import", "inline", "int", "long", "module", "mutable", "namespace", "new", "noexcept", "not",

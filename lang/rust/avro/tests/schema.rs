@@ -133,6 +133,35 @@ const UNION_EXAMPLES: &[(&str, bool)] = &[
             ]"#,
         false,
     ),
+    // Unions with default values
+    (
+        r#"{"name": "foo", "type": ["string", "long"], "default": "bar"}"#,
+        true,
+    ),
+    (
+        r#"{"name": "foo", "type": ["long", "string"], "default": 1}"#,
+        true,
+    ),
+    (
+        r#"{"name": "foo", "type": ["null", "string"], "default": null}"#,
+        true,
+    ),
+    (
+        r#"{"name": "foo", "type": ["string", "long"], "default": 1}"#,
+        false,
+    ),
+    (
+        r#"{"name": "foo", "type": ["string", "null"], "default": null}"#,
+        false,
+    ),
+    (
+        r#"{"name": "foo", "type": ["null", "string"], "default": "null"}"#,
+        false,
+    ),
+    (
+        r#"{"name": "foo", "type": ["long", "string"], "default": "str"}"#,
+        false,
+    ),
 ];
 
 const RECORD_EXAMPLES: &[(&str, bool)] = &[

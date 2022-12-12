@@ -83,7 +83,7 @@ mod test_derive {
         unreachable!()
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasic {
         a: i32,
         b: String,
@@ -117,7 +117,7 @@ mod test_derive {
         serde_assert(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     struct TestBasicNamespace {
         a: i32,
@@ -151,7 +151,7 @@ mod test_derive {
         }
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.complex.namespace")]
     struct TestComplexNamespace {
         a: TestBasicNamespace,
@@ -388,7 +388,7 @@ mod test_derive {
         serde_assert(inner_struct);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestOptional {
         a: Option<i32>,
     }
@@ -581,7 +581,7 @@ mod test_derive {
         serde_assert(test_generic);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     enum TestAllowedEnum {
         A,
         B,
@@ -589,7 +589,7 @@ mod test_derive {
         D,
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestAllowedEnumNested {
         a: TestAllowedEnum,
         b: String,
@@ -724,7 +724,7 @@ mod test_derive {
         serde_assert(list)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestSimpleArray {
         a: [i32; 4],
     }
@@ -805,7 +805,7 @@ mod test_derive {
         serde_assert(test)
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct Testu8 {
         a: Vec<u8>,
         b: [u8; 2],
@@ -913,7 +913,7 @@ mod test_derive {
         ser(test);
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace", doc = "A Documented Record")]
     struct TestBasicWithAttributes {
         #[avro(doc = "Milliseconds since Queen released Bohemian Rhapsody")]
@@ -953,7 +953,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     struct TestBasicWithOuterDocAttributes {
@@ -994,7 +994,7 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(namespace = "com.testing.namespace")]
     /// A Documented Record
     /// that spans
@@ -1040,7 +1040,45 @@ mod test_derive {
         assert_eq!(schema, TestBasicWithLargeDoc::get_schema());
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
+    struct TestBasicWithBool {
+        a: bool,
+        b: Option<bool>,
+    }
+
+    proptest! {
+    #[test]
+    fn avro_3634_test_basic_with_bool(a in any::<bool>(), b in any::<Option<bool>>()) {
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicWithBool",
+            "fields":[
+                {
+                    "name":"a",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":["null","boolean"]
+                }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicWithBool::get_schema();
+
+        if let Schema::Record { name, .. } = derived_schema {
+            assert_eq!("TestBasicWithBool", name.fullname(None))
+        } else {
+            panic!("TestBasicWithBool schema must be a record schema")
+        }
+        assert_eq!(schema, TestBasicWithBool::get_schema());
+
+        serde_assert(TestBasicWithBool { a, b });
+    }}
+
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     struct TestBasicWithU32 {
         a: u32,
     }
@@ -1071,7 +1109,7 @@ mod test_derive {
         serde_assert(TestBasicWithU32 { a });
     }}
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     struct TestBasicStructWithAliases {
         a: i32,
@@ -1111,7 +1149,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1153,7 +1191,7 @@ mod test_derive {
         serde_assert(TestBasicStructWithAliases2 { a: i32::MAX });
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "a", alias = "b", alias = "c")]
     enum TestBasicEnumWithAliases {
         A,
@@ -1192,7 +1230,7 @@ mod test_derive {
         serde_assert(TestBasicEnumWithAliases::A);
     }
 
-    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+    #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
     #[avro(alias = "d")]
     #[avro(alias = "e")]
     #[avro(alias = "f")]
@@ -1235,7 +1273,7 @@ mod test_derive {
 
     #[test]
     fn test_basic_struct_with_defaults() {
-        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq)]
+        #[derive(Debug, Deserialize, Serialize, AvroSchema, Clone, PartialEq, Eq)]
         enum MyEnum {
             Foo,
             Bar,
@@ -1361,5 +1399,166 @@ mod test_derive {
             array: vec![4, 5, 6],
             myenum: MyEnum::Bar,
         });
+    }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_skip_attribute() {
+        // Note: If using the skip attribute together with serialization,
+        // the serde's skip attribute needs also to be added
+
+        #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
+        struct TestBasicStructNoSchema {
+            field: bool,
+        }
+
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithSkipAttribute {
+            #[avro(skip)]
+            #[serde(skip)]
+            condition: bool,
+            #[avro(skip = false)]
+            a: f64,
+            #[avro(skip)]
+            #[serde(skip)]
+            map: HashMap<String, i32>,
+            array: Vec<i32>,
+            #[avro(skip = true)]
+            #[serde(skip)]
+            mystruct: TestBasicStructNoSchema,
+            b: i32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithSkipAttribute",
+            "fields": [
+                {
+                    "name":"a",
+                    "type":"double"
+                },
+                {
+                    "name":"array",
+                    "type":{
+                        "type":"array",
+                        "items":"int"
+                    }
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithSkipAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
+            assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "condition" => panic!("Unexpected field 'condition'"),
+                    "mystruct" => panic!("Unexpected field 'mystruct'"),
+                    "map" => panic!("Unexpected field 'map'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        // Note: If serde's `skip` attribute is used on a field, the field's type
+        // needs the trait 'Default' to be implemented, since it is skipping the serialization process.
+        // Copied or cloned objects within 'serde_assert()' doesn't "copy" (serialize/deserialze)
+        // these fields, so no values are initialized here for skipped fields.
+        serde_assert(TestBasicStructWithSkipAttribute {
+            condition: bool::default(), // <- skipped
+            a: 987.654,
+            map: HashMap::default(), // <- skipped
+            array: vec![4, 5, 6],
+            mystruct: TestBasicStructNoSchema::default(), // <- skipped
+            b: 321,
+        });
+    }
+
+    #[test]
+    fn avro_3633_test_basic_struct_with_rename_attribute() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestBasicStructWithRenameAttribute {
+            #[avro(rename = "a1")]
+            #[serde(rename = "a1")]
+            a: bool,
+            b: i32,
+            #[avro(rename = "c1")]
+            #[serde(rename = "c1")]
+            c: f32,
+        }
+
+        let schema = r#"
+        {
+            "type":"record",
+            "name":"TestBasicStructWithRenameAttribute",
+            "fields": [
+                {
+                    "name":"a1",
+                    "type":"boolean"
+                },
+                {
+                    "name":"b",
+                    "type":"int"
+                },
+                {
+                    "name":"c1",
+                    "type":"float"
+                }
+            ]
+        }
+        "#;
+
+        let schema = Schema::parse_str(schema).unwrap();
+        let derived_schema = TestBasicStructWithRenameAttribute::get_schema();
+        if let Schema::Record { name, fields, .. } = &derived_schema {
+            assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
+            for field in fields {
+                match field.name.as_str() {
+                    "a" => panic!("Unexpected field name 'a': must be 'a1'"),
+                    "c" => panic!("Unexpected field name 'c': must be 'c1'"),
+                    _ => {}
+                }
+            }
+        } else {
+            panic!(
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {:?}",
+                derived_schema
+            )
+        }
+        assert_eq!(schema, derived_schema);
+
+        serde_assert(TestBasicStructWithRenameAttribute {
+            a: true,
+            b: 321,
+            c: 987.654,
+        });
+    }
+
+    #[test]
+    fn test_avro_3663_raw_identifier_field_name() {
+        #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq)]
+        struct TestRawIdent {
+            r#type: bool,
+        }
+
+        let derived_schema = TestRawIdent::get_schema();
+        if let Schema::Record { fields, .. } = derived_schema {
+            let field = fields.get(0).expect("TestRawIdent must contain a field");
+            assert_eq!(field.name, "type");
+        } else {
+            panic!("Unexpected schema type for {:?}", derived_schema)
+        }
     }
 }

@@ -68,7 +68,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
 
     match value {
         Value::Null => (),
-        Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
+        Value::Boolean(b) => buffer.push(u8::from(*b)),
         // Pattern | Pattern here to signify that these _must_ have the same encoding.
         Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
         Value::Long(i)
@@ -107,7 +107,6 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
         }
         Value::Uuid(uuid) => encode_bytes(
             // we need the call .to_string() to properly convert ASCII to UTF-8
-            #[allow(unknown_lints)] // for Rust 1.54.0
             #[allow(clippy::unnecessary_to_owned)]
             &uuid.to_string(),
             buffer,

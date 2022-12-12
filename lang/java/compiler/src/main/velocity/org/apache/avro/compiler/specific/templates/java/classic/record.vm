@@ -229,7 +229,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())   * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
@@ -251,7 +251,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #if (${this.createOptionalGetters})
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
-#if ($field.doc())      * $field.doc()
+#if ($field.doc())   * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
