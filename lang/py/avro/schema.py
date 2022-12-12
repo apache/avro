@@ -49,7 +49,16 @@ import uuid
 import warnings
 from functools import reduce
 from pathlib import Path
-from typing import List, FrozenSet, Mapping, MutableMapping, Optional, Sequence, Union, cast
+from typing import (
+    FrozenSet,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 
 import avro.constants
 import avro.errors
