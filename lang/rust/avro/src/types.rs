@@ -372,7 +372,6 @@ impl Value {
         match (self, schema) {
             (_, &Schema::Ref { ref name }) => {
                 let name = name.fully_qualified_name(enclosing_namespace);
-
                 names.get(&name).map_or_else(
                     || {
                         Some(format!(
@@ -870,9 +869,29 @@ impl Value {
             v => v,
         };
 
-        // Find the first match in the reader schema.
-        // FIXME: this might be wrong when the union consists of multiple same records that have different names
-        let (i, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
+        // A union might contain references to another schema in the form of a Schema::Ref,
+        // resolve these prior to finding the schema.
+        let resolved_schemas: Vec<Schema> = schema
+            .schemas
+            .iter()
+            .cloned()
+            .map(|schema| match schema {
+                Schema::Ref { name } => {
+                    let name = name.fully_qualified_name(enclosing_namespace);
+                    names
+                        .get(&name)
+                        .map(|s| (**s).clone())
+                        .ok_or_else(|| Error::SchemaResolutionError(name.clone()))
+                }
+                schema => Ok(schema),
+            })
+            .collect::<Result<Vec<Schema>, Error>>()?;
+
+        let resolved_union_schema = UnionSchema::new(resolved_schemas).unwrap();
+        let (i, inner) = resolved_union_schema
+            .find_schema(&v)
+            .ok_or(Error::FindUnionVariant)?;
+
         Ok(Value::Union(
             i as u32,
             Box::new(v.resolve_internal(inner, names, enclosing_namespace)?),
@@ -2539,5 +2558,86 @@ Field with name '"b"' is not a member of the map items"#,
     #[test]
     fn test_avro_3674_validate_with_namespace_resolution() {
         avro_3674_with_or_without_namespace(true);
+    }
+
+    fn avro_3688_schema_resolution_panic(set_field_b: bool) {
+        use crate::ser::Serializer;
+        use serde::{Deserialize, Serialize};
+
+        let schema_str = r#"{
+            "type": "record",
+            "name": "Message",
+            "fields": [
+                {
+                    "name": "field_a",
+                    "type": [
+                        "null",
+                        {
+                            "name": "Inner",
+                            "type": "record",
+                            "fields": [
+                                {
+                                    "name": "inner_a",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    ],
+                    "default": null
+                },
+                {
+                    "name": "field_b",
+                    "type": [
+                        "null",
+                        "Inner"
+                    ],
+                    "default": null
+                }
+            ]
+        }"#;
+
+        #[derive(Serialize, Deserialize)]
+        struct Inner {
+            inner_a: String,
+        }
+
+        #[derive(Serialize, Deserialize)]
+        struct Message {
+            field_a: Option<Inner>,
+            field_b: Option<Inner>,
+        }
+
+        let schema = Schema::parse_str(schema_str).unwrap();
+
+        let msg = Message {
+            field_a: Some(Inner {
+                inner_a: "foo".to_string(),
+            }),
+            field_b: if set_field_b {
+                Some(Inner {
+                    inner_a: "bar".to_string(),
+                })
+            } else {
+                None
+            },
+        };
+
+        let mut ser = Serializer::default();
+        let test_value: Value = msg.serialize(&mut ser).unwrap();
+        assert!(test_value.validate(&schema), "test_value should validate");
+        assert!(
+            test_value.resolve(&schema).is_ok(),
+            "test_value should resolve"
+        );
+    }
+
+    #[test]
+    fn test_avro_3688_field_b_not_set() {
+        avro_3688_schema_resolution_panic(false);
+    }
+
+    #[test]
+    fn test_avro_3688_field_b_set() {
+        avro_3688_schema_resolution_panic(true);
     }
 }
