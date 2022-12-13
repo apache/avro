@@ -2607,7 +2607,7 @@ Field with name '"b"' is not a member of the map items"#,
             field_b: Option<Inner>,
         }
 
-        let schema = Schema::parse_str(&schema_str).unwrap();
+        let schema = Schema::parse_str(schema_str).unwrap();
 
         let msg = Message {
             field_a: Some(Inner {
