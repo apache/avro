@@ -401,10 +401,24 @@ impl Serialize for Alias {
 
 pub(crate) struct ResolvedSchema<'s> {
     names_ref: NamesRef<'s>,
-    schemata: &[&'s Schema],
+    schemata: &'s [&'s Schema],
 }
 
 impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
+    type Error = Error;
+
+    fn try_from(schema: &'s Schema) -> AvroResult<Self> {
+        let names = HashMap::new();
+        let mut rs = ResolvedSchema {
+            names_ref: names,
+            schemata: &[schema],
+        };
+        Self::from_internal(rs.schemata, &mut rs.names_ref, &None)?;
+        Ok(rs)
+    }
+}
+
+impl<'s> TryFrom<&'s [&'s Schema]> for ResolvedSchema<'s> {
     type Error = Error;
 
     fn try_from(schemata: &[&'s Schema]) -> AvroResult<Self> {
@@ -419,28 +433,27 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub(crate) fn get_root_schema(&self) -> &'s Schema {
-        self.root_schema
+    pub(crate) fn get_schemata(&self) -> &'s [&'s Schema] {
+        self.schemata
     }
     pub(crate) fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
     fn from_internal(
-        schemata: &[&'s Schema],
+        schemata: &'s [&'s Schema],
         names_ref: &mut NamesRef<'s>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<()> {
         for schema in schemata {
             match schema {
                 Schema::Array(schema) | Schema::Map(schema) => {
-                    Self::from_internal(schema, names_ref, enclosing_namespace)
+                    Self::from_internal(&[schema], names_ref, enclosing_namespace)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
-                        Self::from_internal(schema, names_ref, enclosing_namespace)?
+                        Self::from_internal(&[schema], names_ref, enclosing_namespace)?
                     }
-                    Ok(())
                 }
                 Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
@@ -448,9 +461,7 @@ impl<'s> ResolvedSchema<'s> {
                         .insert(fully_qualified_name.clone(), schema)
                         .is_some()
                     {
-                        Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
-                    } else {
-                        Ok(())
+                        return Err(Error::AmbiguousSchemaDefinition(fully_qualified_name));
                     }
                 }
                 Schema::Record { name, fields, .. } => {
@@ -459,13 +470,12 @@ impl<'s> ResolvedSchema<'s> {
                         .insert(fully_qualified_name.clone(), schema)
                         .is_some()
                     {
-                        Err(Error::AmbiguousSchemaDefinition(fully_qualified_name))
+                        return Err(Error::AmbiguousSchemaDefinition(fully_qualified_name));
                     } else {
                         let record_namespace = fully_qualified_name.namespace;
                         for field in fields {
-                            Self::from_internal(&field.schema, names_ref, &record_namespace)?
+                            Self::from_internal(&[&field.schema], names_ref, &record_namespace)?
                         }
-                        Ok(())
                     }
                 }
                 Schema::Ref { name } => {
@@ -473,11 +483,12 @@ impl<'s> ResolvedSchema<'s> {
                     names_ref
                         .get(&fully_qualified_name)
                         .map(|_| ())
-                        .ok_or(Error::SchemaResolutionError(fully_qualified_name))
+                        .ok_or_else(|| return Error::SchemaResolutionError(fully_qualified_name))
                 }
                 _ => Ok(()),
             }
         }
+        Ok(())
     }
 }
 

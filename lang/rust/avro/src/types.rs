@@ -339,19 +339,25 @@ impl Value {
     /// See the [Avro specification](https://avro.apache.org/docs/current/spec.html)
     /// for the full set of rules of schema validation.
     pub fn validate(&self, schema: &Schema) -> bool {
-        let rs = ResolvedSchema::try_from(schema).expect("Schema didn't successfully parse");
-        let enclosing_namespace = schema.namespace();
+        self.validate_schemata(&[schema])
+    }
 
-        match self.validate_internal(schema, rs.get_names(), &enclosing_namespace) {
-            Some(error_msg) => {
-                error!(
-                    "Invalid value: {:?} for schema: {:?}. Reason: {}",
-                    self, schema, error_msg
-                );
-                false
+    pub fn validate_schemata(&self, schemata: &[&Schema]) -> bool {
+        let rs = ResolvedSchema::try_from(schemata).expect("Schemata didn't successfully resolve");
+        schemata.iter().any(|schema| {
+            let enclosing_namespace = schema.namespace();
+
+            match self.validate_internal(schema, rs.get_names(), &enclosing_namespace) {
+                Some(error_msg) => {
+                    error!(
+                        "Invalid value: {:?} for schema: {:?}. Reason: {}",
+                        self, schema, error_msg
+                    );
+                    false
+                }
+                None => true,
             }
-            None => true,
-        }
+        })
     }
 
     fn accumulate(accumulator: Option<String>, other: Option<String>) -> Option<String> {

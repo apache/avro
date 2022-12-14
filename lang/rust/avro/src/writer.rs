@@ -16,6 +16,7 @@
 // under the License.
 
 //! Logic handling writing in Avro format at user level.
+use crate::encode::encode_schemata;
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
     rabin::Rabin,
@@ -382,10 +383,10 @@ fn write_avro_datum_schemata<T: Into<Value>>(
     buffer: &mut Vec<u8>,
 ) -> Result<(), Error> {
     let avro = value.into();
-    if !avro.validate(schemata) {
+    if !avro.validate_schemata(schemata) {
         return Err(Error::Validation);
     }
-    encode(&avro, schemata, buffer)?;
+    encode_schemata(&avro, schemata, buffer)?;
     Ok(())
 }
 
@@ -501,21 +502,22 @@ fn write_value_ref_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
-    let root_schema = resolved_schema.get_root_schema();
-    if let Some(err) = value.validate_internal(
-        root_schema,
-        resolved_schema.get_names(),
-        &root_schema.namespace(),
-    ) {
-        return Err(Error::ValidationWithReason(err));
+    let schemata = resolved_schema.get_schemata();
+    for schema in schemata {
+        if let Some(err) =
+            value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace())
+        {
+            return Err(Error::ValidationWithReason(err));
+        } else {
+            encode_internal(
+                value,
+                schema,
+                resolved_schema.get_names(),
+                &schema.namespace(),
+                buffer,
+            )?;
+        }
     }
-    encode_internal(
-        value,
-        root_schema,
-        resolved_schema.get_names(),
-        &root_schema.namespace(),
-        buffer,
-    )?;
     Ok(())
 }
 
@@ -554,9 +556,12 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
-pub fn to_avro_datum_schemata<T: Into<Value>>(schemata: &[&Schema], value: T) -> AvroResult<Vec<u8>> {
+pub fn to_avro_datum_schemata<T: Into<Value>>(
+    schemata: &[&Schema],
+    value: T,
+) -> AvroResult<Vec<u8>> {
     let mut buffer = Vec::new();
-    write_avro_datum(schemata, value, &mut buffer)?;
+    write_avro_datum_schemata(schemata, value, &mut buffer)?;
     Ok(buffer)
 }
 
@@ -1264,7 +1269,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_schemata_to_avro_datum() {
+    fn test_avro_3683_multiple_schemata_to_avro_datum() {
         let schema_a_str = r#"{
         "name": "A",
         "type": "record",
@@ -1286,6 +1291,10 @@ mod tests {
             Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
         )]);
 
-        assert_eq!(to_avro_datum(&schema, record).unwrap(), expected);
+        let expected: Vec<u8> = Vec::new();
+        assert_eq!(
+            to_avro_datum_schemata(&schemata[..], record).unwrap(),
+            expected
+        );
     }
 }
