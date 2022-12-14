@@ -401,7 +401,7 @@ impl Serialize for Alias {
 
 pub(crate) struct ResolvedSchema<'s> {
     names_ref: NamesRef<'s>,
-    schemata: &'s [&'s Schema],
+    schemata: Vec<&'s Schema>,
 }
 
 impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
@@ -411,9 +411,9 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
         let names = HashMap::new();
         let mut rs = ResolvedSchema {
             names_ref: names,
-            schemata: &[schema],
+            schemata: vec![schema],
         };
-        Self::from_internal(rs.schemata, &mut rs.names_ref, &None)?;
+        Self::from_internal(rs.get_schemata(), &mut rs.names_ref, &None)?;
         Ok(rs)
     }
 }
@@ -425,34 +425,35 @@ impl<'s> TryFrom<&'s [&'s Schema]> for ResolvedSchema<'s> {
         let names = HashMap::new();
         let mut rs = ResolvedSchema {
             names_ref: names,
-            schemata,
+            schemata: schemata.to_vec(),
         };
-        Self::from_internal(rs.schemata, &mut rs.names_ref, &None)?;
+        Self::from_internal(rs.get_schemata(), &mut rs.names_ref, &None)?;
         Ok(rs)
     }
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub(crate) fn get_schemata(&self) -> &'s [&'s Schema] {
-        self.schemata
+    pub(crate) fn get_schemata(&self) -> Vec<&'s Schema> {
+        self.schemata.clone()
     }
+
     pub(crate) fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
     fn from_internal(
-        schemata: &'s [&'s Schema],
+        schemata: Vec<&'s Schema>,
         names_ref: &mut NamesRef<'s>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<()> {
         for schema in schemata {
             match schema {
                 Schema::Array(schema) | Schema::Map(schema) => {
-                    Self::from_internal(&[schema], names_ref, enclosing_namespace)?
+                    Self::from_internal(vec![schema], names_ref, enclosing_namespace)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
-                        Self::from_internal(&[schema], names_ref, enclosing_namespace)?
+                        Self::from_internal(vec![schema], names_ref, enclosing_namespace)?
                     }
                 }
                 Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
@@ -474,18 +475,17 @@ impl<'s> ResolvedSchema<'s> {
                     } else {
                         let record_namespace = fully_qualified_name.namespace;
                         for field in fields {
-                            Self::from_internal(&[&field.schema], names_ref, &record_namespace)?
+                            Self::from_internal(vec![&field.schema], names_ref, &record_namespace)?
                         }
                     }
                 }
                 Schema::Ref { name } => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                    names_ref
-                        .get(&fully_qualified_name)
-                        .map(|_| ())
-                        .ok_or_else(|| return Error::SchemaResolutionError(fully_qualified_name))
+                    if let None = names_ref.get(&fully_qualified_name) {
+                        return Err(Error::SchemaResolutionError(fully_qualified_name));
+                    }
                 }
-                _ => Ok(()),
+                _ => (),
             }
         }
         Ok(())

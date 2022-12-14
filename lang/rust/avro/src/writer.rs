@@ -1285,7 +1285,8 @@ mod tests {
         ]
     }"#;
 
-        let schemata = Schema::parse_list(&[schema_a_str, schema_b_str]).unwrap();
+        let schemata: Vec<Schema> = Schema::parse_list(&[schema_a_str, schema_b_str]).unwrap();
+        let schemata: Vec<&Schema> = schemata.iter().collect();
         let record = Value::Record(vec![(
             "field_b".into(),
             Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
@@ -1293,7 +1294,7 @@ mod tests {
 
         let expected: Vec<u8> = Vec::new();
         assert_eq!(
-            to_avro_datum_schemata(&schemata[..], record).unwrap(),
+            to_avro_datum_schemata(&schemata.as_slice(), record).unwrap(),
             expected
         );
     }
