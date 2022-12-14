@@ -380,6 +380,7 @@ impl Value {
                 let name = name.fully_qualified_name(enclosing_namespace);
                 names.get(&name).map_or_else(
                     || {
+                        eprintln!("Schema not found: {:?}", &name);
                         Some(format!(
                             "Unresolved schema reference: '{:?}'. Parsed names: {:?}",
                             name,

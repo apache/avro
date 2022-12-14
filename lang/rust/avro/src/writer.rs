@@ -16,7 +16,6 @@
 // under the License.
 
 //! Logic handling writing in Avro format at user level.
-use crate::encode::encode_schemata;
 use crate::{
     encode::{encode, encode_internal, encode_to_vec},
     rabin::Rabin,
@@ -377,17 +376,24 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+// TODO: document and add tests
 fn write_avro_datum_schemata<T: Into<Value>>(
     schemata: &[&Schema],
     value: T,
     buffer: &mut Vec<u8>,
-) -> Result<(), Error> {
+) -> AvroResult<()> {
     let avro = value.into();
-    if !avro.validate_schemata(schemata) {
-        return Err(Error::Validation);
+    let rs = ResolvedSchema::try_from(schemata)?;
+    for schema in schemata {
+        if avro
+            .validate_internal(schema, rs.get_names(), &schema.namespace())
+            .is_none()
+        {
+            encode_internal(&avro, schema, rs.get_names(), &schema.namespace(), buffer)?;
+            return Ok(());
+        }
     }
-    encode_schemata(&avro, schemata, buffer)?;
-    Ok(())
+    return Err(Error::Validation);
 }
 
 /// Writer that encodes messages according to the single object encoding v1 spec
@@ -556,6 +562,7 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
+// TODO: document and add tests
 pub fn to_avro_datum_schemata<T: Into<Value>>(
     schemata: &[&Schema],
     value: T,
@@ -1292,7 +1299,7 @@ mod tests {
             Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
         )]);
 
-        let expected: Vec<u8> = Vec::new();
+        let expected: Vec<u8> = vec![0, 0, 128, 63];
         assert_eq!(
             to_avro_datum_schemata(&schemata.as_slice(), record).unwrap(),
             expected

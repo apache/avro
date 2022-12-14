@@ -399,6 +399,7 @@ impl Serialize for Alias {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct ResolvedSchema<'s> {
     names_ref: NamesRef<'s>,
     schemata: Vec<&'s Schema>,
