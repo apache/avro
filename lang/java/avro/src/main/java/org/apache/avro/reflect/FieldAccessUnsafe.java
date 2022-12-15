@@ -106,7 +106,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putInt(object, offset, (Integer) value);
+      UNSAFE.putInt(object, offset, value == null ? 0 : (Integer) value);
     }
 
     @Override
@@ -132,7 +132,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putFloat(object, offset, (Float) value);
+      UNSAFE.putFloat(object, offset, value == null ? 0.0f : (Float) value);
     }
 
     @Override
@@ -158,7 +158,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putShort(object, offset, (Short) value);
+      UNSAFE.putShort(object, offset, value == null ? (short)0 : (Short) value);
     }
 
     @Override
@@ -184,7 +184,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putByte(object, offset, (Byte) value);
+      UNSAFE.putByte(object, offset, value == null ? (byte)0 : (Byte) value);
     }
 
     @Override
@@ -210,7 +210,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putBoolean(object, offset, (Boolean) value);
+      UNSAFE.putBoolean(object, offset, value == null ? false : (Boolean) value);
     }
 
     @Override
@@ -236,7 +236,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putChar(object, offset, (Character) value);
+      UNSAFE.putChar(object, offset, value == null ? '\u0000' : (Character) value);
     }
 
     @Override
@@ -262,7 +262,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putLong(object, offset, (Long) value);
+      UNSAFE.putLong(object, offset, value == null ? 0L : (Long) value);
     }
 
     @Override
@@ -288,7 +288,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putDouble(object, offset, (Double) value);
+      UNSAFE.putDouble(object, offset, value == null ? 0.0d : (Double) value);
     }
 
     @Override
