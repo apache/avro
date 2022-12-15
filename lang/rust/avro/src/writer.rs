@@ -384,12 +384,14 @@ fn write_avro_datum_schemata<T: Into<Value>>(
 ) -> AvroResult<()> {
     let avro = value.into();
     let rs = ResolvedSchema::try_from(schemata)?;
+    let names = rs.get_names();
     for schema in schemata {
+        let enclosing_namespace = schema.namespace();
         if avro
-            .validate_internal(schema, rs.get_names(), &schema.namespace())
+            .validate_internal(schema, names, &enclosing_namespace)
             .is_none()
         {
-            encode_internal(&avro, schema, rs.get_names(), &schema.namespace(), buffer)?;
+            encode_internal(&avro, schema, names, &enclosing_namespace, buffer)?;
             return Ok(());
         }
     }
@@ -596,13 +598,7 @@ fn generate_sync_marker() -> [u8; 16] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        decimal::Decimal,
-        duration::{Days, Duration, Millis, Months},
-        schema::Name,
-        types::Record,
-        util::zig_i64,
-    };
+    use crate::{decimal::Decimal, duration::{Days, Duration, Millis, Months}, schema::Name, types::Record, util::zig_i64};
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 
@@ -1273,36 +1269,5 @@ mod tests {
             .expect("Serialization expected");
         assert_eq!(buf1, buf2);
         assert_eq!(buf1, buf3);
-    }
-
-    #[test]
-    fn test_avro_3683_multiple_schemata_to_avro_datum() {
-        let schema_a_str = r#"{
-        "name": "A",
-        "type": "record",
-        "fields": [
-            {"name": "field_a", "type": "float"}
-        ]
-    }"#;
-        let schema_b_str = r#"{
-        "name": "B",
-        "type": "record",
-        "fields": [
-            {"name": "field_b", "type": "A"}
-        ]
-    }"#;
-
-        let schemata: Vec<Schema> = Schema::parse_list(&[schema_a_str, schema_b_str]).unwrap();
-        let schemata: Vec<&Schema> = schemata.iter().collect();
-        let record = Value::Record(vec![(
-            "field_b".into(),
-            Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
-        )]);
-
-        let expected: Vec<u8> = vec![0, 0, 128, 63];
-        assert_eq!(
-            to_avro_datum_schemata(&schemata.as_slice(), record).unwrap(),
-            expected
-        );
     }
 }

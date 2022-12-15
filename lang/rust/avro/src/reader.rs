@@ -33,6 +33,8 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
+use crate::decode::decode_schemata;
+use crate::schema::ResolvedSchema;
 
 // Internal Block reader.
 #[derive(Debug, Clone)]
@@ -362,6 +364,19 @@ pub fn from_avro_datum<R: Read>(
     reader_schema: Option<&Schema>,
 ) -> AvroResult<Value> {
     let value = decode(writer_schema, reader)?;
+    match reader_schema {
+        Some(schema) => value.resolve(schema),
+        None => Ok(value),
+    }
+}
+
+pub fn from_avro_datum_schemata<R: Read>(
+    writer_schemata: &[&Schema],
+    reader: &mut R,
+    reader_schema: Option<&Schema>,
+) -> AvroResult<Value> {
+    let rs = ResolvedSchema::try_from(writer_schemata)?;
+    let value = decode_schemata(writer_schemata[0], rs.get_names(), reader)?;
     match reader_schema {
         Some(schema) => value.resolve(schema),
         None => Ok(value),

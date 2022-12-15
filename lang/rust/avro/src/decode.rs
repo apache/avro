@@ -31,6 +31,7 @@ use std::{
     str::FromStr,
 };
 use uuid::Uuid;
+use crate::schema::NamesRef;
 
 #[inline]
 fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
@@ -71,6 +72,10 @@ fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
 pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
     let rs = ResolvedSchema::try_from(schema)?;
     decode_internal(schema, rs.get_names(), &None, reader)
+}
+
+pub fn decode_schemata<R: Read>(schema: &Schema, names: &NamesRef, reader: &mut R) -> AvroResult<Value> {
+    decode_internal(schema, names, &None, reader)
 }
 
 pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
