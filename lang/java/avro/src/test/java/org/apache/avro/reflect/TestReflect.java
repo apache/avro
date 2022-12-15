@@ -632,10 +632,15 @@ public class TestReflect {
 
   @Test
   public void testAnnotationMultiAvroMeta() {
-    check(RAvroMultiMeta.class,
-        "{\"type\":\"record\",\"name\":\"RAvroMultiMeta\",\"namespace\":"
-            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]" + ",\"X\":\"Y\",\"A\":\"B\"}");
+    String schm = ReflectData.get().getSchema(RAvroMultiMeta.class).toString();
+    String expectedString = "{\"type\":\"record\",\"name\":\"RAvroMultiMeta\",\"namespace\":"
+        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+        + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]" + ",\"X\":\"Y\",\"A\":\"B\"}";
+    char[] schmArrays = schm.toCharArray();
+    char[] expectedArrays = expectedString.toCharArray();
+    Arrays.sort(schmArrays);
+    Arrays.sort(expectedArrays);
+    assertEquals(new String(schmArrays), new String(expectedArrays));
   }
 
   public static class RAvroDuplicateFieldMeta {
