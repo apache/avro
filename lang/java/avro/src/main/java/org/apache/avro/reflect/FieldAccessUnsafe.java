@@ -158,7 +158,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putShort(object, offset, value == null ? (short)0 : (Short) value);
+      UNSAFE.putShort(object, offset, value == null ? (short) 0 : (Short) value);
     }
 
     @Override
@@ -184,7 +184,7 @@ class FieldAccessUnsafe extends FieldAccess {
 
     @Override
     protected void set(Object object, Object value) {
-      UNSAFE.putByte(object, offset, value == null ? (byte)0 : (Byte) value);
+      UNSAFE.putByte(object, offset, value == null ? (byte) 0 : (Byte) value);
     }
 
     @Override
