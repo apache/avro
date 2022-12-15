@@ -58,6 +58,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
     enclosing_namespace: &Namespace,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
+    // dbg!("encode_internal", &value, &schema);
     if let Schema::Ref { ref name } = schema {
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let resolved = names

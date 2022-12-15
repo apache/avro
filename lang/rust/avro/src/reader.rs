@@ -375,12 +375,30 @@ pub fn from_avro_datum_schemata<R: Read>(
     reader: &mut R,
     reader_schema: Option<&Schema>,
 ) -> AvroResult<Value> {
+    dbg!(&writer_schemata);
     let rs = ResolvedSchema::try_from(writer_schemata)?;
-    let value = decode_schemata(writer_schemata[0], rs.get_names(), reader)?;
-    match reader_schema {
-        Some(schema) => value.resolve(schema),
-        None => Ok(value),
+    let mut error = None;
+    for writer_schema in rs.get_schemata() {
+        dbg!(&writer_schema);
+        let decode_result = decode_schemata(writer_schema, rs.get_names(), reader);
+        match decode_result {
+            Ok(value) => {
+                dbg!(&value);
+
+                if value.validate(writer_schema) {
+                    return match reader_schema {
+                        Some(schema) => value.resolve(schema),
+                        None => Ok(value),
+                    }
+                }
+            },
+            Err(err) => {
+                // dbg!(&err);
+                error = Some(err)
+            }, // accumulate ?!
+        }
     }
+    Err(error.unwrap())
 }
 
 pub struct GenericSingleObjectReader {

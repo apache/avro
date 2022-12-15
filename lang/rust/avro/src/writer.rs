@@ -391,6 +391,7 @@ fn write_avro_datum_schemata<T: Into<Value>>(
             .validate_internal(schema, names, &enclosing_namespace)
             .is_none()
         {
+            // dbg!(&schema);
             encode_internal(&avro, schema, names, &enclosing_namespace, buffer)?;
             return Ok(());
         }
