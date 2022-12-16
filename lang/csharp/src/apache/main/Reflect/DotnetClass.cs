@@ -83,7 +83,7 @@ namespace Avro.Reflect
         /// <param name="f"></param>
         /// <returns></returns>
         /// <exception cref="AvroException"></exception>
-        protected virtual PropertyInfo GetPropertyInfo(Field f)
+        protected PropertyInfo GetPropertyInfo(Field f)
         {
             var prop = _type.GetProperty(f.Name);
             if (prop != null)

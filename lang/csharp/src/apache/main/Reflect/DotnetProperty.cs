@@ -42,7 +42,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public virtual bool IsPropertyCompatible(Avro.Schema schema)
+        public bool IsPropertyCompatible(Avro.Schema schema)
         {
             Type propType;
             var schemaTag = schema.Tag;
