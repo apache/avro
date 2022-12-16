@@ -16,6 +16,8 @@
 // under the License.
 
 //! Logic handling reading from Avro format at user level.
+use crate::decode::decode_schemata;
+use crate::schema::ResolvedSchema;
 use crate::{
     decode::{decode, decode_internal},
     from_value,
@@ -33,8 +35,6 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
-use crate::decode::decode_schemata;
-use crate::schema::ResolvedSchema;
 
 // Internal Block reader.
 #[derive(Debug, Clone)]

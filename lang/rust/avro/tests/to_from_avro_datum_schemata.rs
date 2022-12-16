@@ -15,13 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::{
-    to_avro_datum_schemata, from_avro_datum_schemata,
-    types::Value,
-    Schema,
-};
+use apache_avro::{from_avro_datum_schemata, to_avro_datum_schemata, types::Value, Schema};
 use apache_avro_test_helper::init;
-
 
 #[test]
 fn test_avro_3683_multiple_schemata_to_avro_datum() {
@@ -53,14 +48,10 @@ fn test_avro_3683_multiple_schemata_to_avro_datum() {
     let schema_b = schemata[1];
     let expected: Vec<u8> = vec![0, 0, 128, 63];
     let actual = to_avro_datum_schemata(schema_b, &schemata.as_slice(), record.clone()).unwrap();
-    assert_eq!(
-        actual,
-        expected
-    );
+    assert_eq!(actual, expected);
 
-    let value = from_avro_datum_schemata(schema_b,&schemata.as_slice(), &mut actual.as_slice(), None).unwrap();
-    assert_eq!(
-        value,
-        record
-    );
+    let value =
+        from_avro_datum_schemata(schema_b, &schemata.as_slice(), &mut actual.as_slice(), None)
+            .unwrap();
+    assert_eq!(value, record);
 }

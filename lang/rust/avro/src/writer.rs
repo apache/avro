@@ -595,7 +595,13 @@ fn generate_sync_marker() -> [u8; 16] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{decimal::Decimal, duration::{Days, Duration, Millis, Months}, schema::Name, types::Record, util::zig_i64};
+    use crate::{
+        decimal::Decimal,
+        duration::{Days, Duration, Millis, Months},
+        schema::Name,
+        types::Record,
+        util::zig_i64,
+    };
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
 

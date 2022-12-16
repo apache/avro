@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::schema::NamesRef;
 use crate::{
     decimal::Decimal,
     duration::Duration,
@@ -31,7 +32,6 @@ use std::{
     str::FromStr,
 };
 use uuid::Uuid;
-use crate::schema::NamesRef;
 
 #[inline]
 fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
@@ -74,7 +74,11 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
     decode_internal(schema, rs.get_names(), &None, reader)
 }
 
-pub fn decode_schemata<R: Read>(schema: &Schema, names: &NamesRef, reader: &mut R) -> AvroResult<Value> {
+pub fn decode_schemata<R: Read>(
+    schema: &Schema,
+    names: &NamesRef,
+    reader: &mut R,
+) -> AvroResult<Value> {
     decode_internal(schema, names, &None, reader)
 }
 
