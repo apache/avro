@@ -31,7 +31,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Properties list
         /// </summary>
-        protected ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        protected readonly ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
         /// <summary>
         /// Type

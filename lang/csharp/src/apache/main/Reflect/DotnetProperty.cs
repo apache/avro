@@ -30,7 +30,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Property info
         /// </summary>
-        protected PropertyInfo _property;
+        protected readonly PropertyInfo _property;
 
         /// <summary>
         /// Converter

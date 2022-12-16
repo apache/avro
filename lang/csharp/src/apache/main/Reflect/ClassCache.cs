@@ -30,22 +30,22 @@ namespace Avro.Reflect
         /// <summary>
         /// Default converters cache
         /// </summary>
-        protected static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+        protected readonly static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
         /// <summary>
         /// Schema type cache
         /// </summary>
-        protected ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        protected readonly ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         /// <summary>
         /// Array cache
         /// </summary>
-        protected ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+        protected readonly ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
 
         /// <summary>
         /// Previous fields cache
         /// </summary>
-        protected ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
+        protected readonly ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         /// <summary>
         /// Create Dotnet class object for schema
