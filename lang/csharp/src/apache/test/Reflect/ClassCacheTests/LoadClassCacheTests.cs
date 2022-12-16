@@ -94,7 +94,7 @@ namespace Avro.test.Reflect.ClassCacheTests
         ]
 }
 ");
-        public static RecordSchema ComplexTypeSchema = (RecordSchema)((RecordSchema)RootSchema).Fields[0].Schema;
+        public static RecordSchema ComplexTypeSchema = (RecordSchema)RootSchema.Fields[0].Schema;
 
         public ComplexType1 ComplexType { get; set; }
     }
@@ -126,7 +126,7 @@ namespace Avro.test.Reflect.ClassCacheTests
         ]
 }
 ");
-        public static RecordSchema ComplexTypeSchema = (RecordSchema)((RecordSchema)RootSchema).Fields[0].Schema;
+        public static RecordSchema ComplexTypeSchema = (RecordSchema)RootSchema.Fields[0].Schema;
         public ComplexType2 ComplexType { get; set; }
     }
 
