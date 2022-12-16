@@ -96,7 +96,7 @@ namespace Avro.Reflect
         /// <param name="tag"></param>
         /// <param name="propType"></param>
         /// <returns>The first matching converter - null if there isn't one</returns>
-        public virtual IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
+        public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {
             Type avroType;
             switch (tag)
