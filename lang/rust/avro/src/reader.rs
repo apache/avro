@@ -16,13 +16,11 @@
 // under the License.
 
 //! Logic handling reading from Avro format at user level.
-use crate::decode::decode_schemata;
-use crate::schema::ResolvedSchema;
 use crate::{
-    decode::{decode, decode_internal},
+    decode::{decode, decode_internal, decode_schemata},
     from_value,
     rabin::Rabin,
-    schema::{AvroSchema, ResolvedOwnedSchema, Schema},
+    schema::{AvroSchema, ResolvedOwnedSchema, ResolvedSchema, Schema},
     types::Value,
     util, AvroResult, Codec, Error,
 };
@@ -35,10 +33,11 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
+use crate::schema::Name;
 
 // Internal Block reader.
 #[derive(Debug, Clone)]
-struct Block<R> {
+struct Block<'r, R> {
     reader: R,
     // Internal buffering to reduce allocation.
     buf: Vec<u8>,
@@ -48,15 +47,17 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    schemata: &'r [&'r Schema],
     user_metadata: HashMap<String, Vec<u8>>,
 }
 
-impl<R: Read> Block<R> {
-    fn new(reader: R) -> AvroResult<Block<R>> {
+impl<'r, R: Read> Block<'r, R> {
+    fn new(reader: R, schemata: &'r [&'r Schema]) -> AvroResult<Block<R>> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
             writer_schema: Schema::Null,
+            schemata,
             buf: vec![],
             buf_idx: 0,
             message_count: 0,
@@ -180,7 +181,7 @@ impl<R: Read> Block<R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let item = from_avro_datum(&self.writer_schema, &mut block_bytes, read_schema)?;
+        let item = from_avro_datum_schemata(&self.writer_schema, &self.schemata, &mut block_bytes, read_schema)?;
         if b_original == block_bytes.len() {
             // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
             return Err(Error::ReadBlock);
@@ -191,7 +192,7 @@ impl<R: Read> Block<R> {
     }
 
     fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
-        let json = metadata
+        let json: serde_json::Value = metadata
             .get("avro.schema")
             .and_then(|bytes| {
                 if let Value::Bytes(ref bytes) = *bytes {
@@ -201,7 +202,34 @@ impl<R: Read> Block<R> {
                 }
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
-        self.writer_schema = Schema::parse(&json)?;
+
+        if self.schemata.len() > 0 {
+            // find the writer schema in the schemata using the name from JSON
+            let name = match json {
+                serde_json::Value::Object(map) => {
+                    let (name, namespace_from_name)  = map
+                        .get("name")
+                        .and_then(|v| v.as_str())
+                        .map(|name| Name::get_name_and_namespace(name).unwrap())
+                        .ok_or(Error::GetNameField)?;
+
+                    Ok(Name {
+                        name: name.to_string(),
+                        namespace: namespace_from_name.or_else(|| map
+                            .get("namespace")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string())),
+                    })
+                }
+                _ => Err(Error::GetNameField),
+            }?;
+            let s = self.schemata.iter().find(|s| s.name().unwrap() == &name)
+                .map(|s| s.clone())
+                .expect(format!("Schema {} not found", name).as_str());
+            self.writer_schema = s.clone();
+        } else {
+            self.writer_schema = Schema::parse(&json)?;
+        }
         Ok(())
     }
 
@@ -263,7 +291,7 @@ fn read_codec(metadata: &HashMap<String, Value>) -> AvroResult<Codec> {
 /// }
 /// ```
 pub struct Reader<'a, R> {
-    block: Block<R>,
+    block: Block<'a, R>,
     reader_schema: Option<&'a Schema>,
     errored: bool,
     should_resolve_schema: bool,
@@ -275,7 +303,7 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn new(reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, &[])?;
         let reader = Reader {
             block,
             reader_schema: None,
@@ -290,7 +318,25 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn with_schema(schema: &'a Schema, reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, &[])?;
+        let mut reader = Reader {
+            block,
+            reader_schema: Some(schema),
+            errored: false,
+            should_resolve_schema: false,
+        };
+        // Check if the reader and writer schemas disagree.
+        reader.should_resolve_schema = reader.writer_schema() != schema;
+        Ok(reader)
+    }
+
+    /// Creates a `Reader` given a reader `Schema` and something implementing the `io::Read` trait
+    /// to read from.
+    ///
+    /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
+    pub fn with_schemata(schema: &'a Schema, schemata: &'a [&'a Schema], reader: R) -> AvroResult<Reader<'a, R>> {
+        let block = Block::new(reader, schemata)?;
+        println!("with_schemata 2");
         let mut reader = Reader {
             block,
             reader_schema: Some(schema),

@@ -15,11 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::schema::NamesRef;
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::{Name, Namespace, ResolvedSchema, Schema},
+    schema::{Name, NamesRef, Namespace, ResolvedSchema, Schema},
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,

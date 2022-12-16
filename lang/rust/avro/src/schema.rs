@@ -257,7 +257,7 @@ impl Name {
         Ok(Self { name, namespace })
     }
 
-    fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
+    pub(crate) fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
         let caps = SCHEMA_NAME_R
             .captures(name)
             .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), SCHEMA_NAME_R.as_str()))?;
@@ -482,7 +482,7 @@ impl<'s> ResolvedSchema<'s> {
                 }
                 Schema::Ref { name } => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                    if let None = names_ref.get(&fully_qualified_name) {
+                    if names_ref.get(&fully_qualified_name).is_none() {
                         return Err(Error::SchemaResolutionError(fully_qualified_name));
                     }
                 }

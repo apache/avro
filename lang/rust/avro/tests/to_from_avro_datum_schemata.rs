@@ -15,21 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::{from_avro_datum_schemata, to_avro_datum_schemata, types::Value, Schema};
+use apache_avro::{from_avro_datum_schemata, to_avro_datum_schemata, types::Value, Schema, Writer, Reader, Codec};
 use apache_avro_test_helper::init;
 
-#[test]
-fn test_avro_3683_multiple_schemata_to_avro_datum() {
-    init();
-
-    let schema_a_str = r#"{
+static SCHEMA_A_STR: &str = r#"{
         "name": "A",
         "type": "record",
         "fields": [
             {"name": "field_a", "type": "float"}
         ]
     }"#;
-    let schema_b_str = r#"{
+
+static SCHEMA_B_STR: &str = r#"{
         "name": "B",
         "type": "record",
         "fields": [
@@ -37,21 +34,51 @@ fn test_avro_3683_multiple_schemata_to_avro_datum() {
         ]
     }"#;
 
-    let schemata: Vec<Schema> = Schema::parse_list(&[schema_a_str, schema_b_str]).unwrap();
-    let schemata: Vec<&Schema> = schemata.iter().collect();
-    let record = Value::Record(vec![(
-        "field_b".into(),
-        Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
+#[test]
+fn test_avro_3683_multiple_schemata_to_from_avro_datum() {
+    init();
+
+    let record: Value = Value::Record(vec![(
+        String::from("field_b"),
+        Value::Record(vec![(String::from("field_a"), Value::Float(1.0))]),
     )]);
+
+    let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR]).unwrap();
+    let schemata: Vec<&Schema> = schemata.iter().collect();
 
     // this is the Schema we want to use for write/read
     let schema_b = schemata[1];
     let expected: Vec<u8> = vec![0, 0, 128, 63];
-    let actual = to_avro_datum_schemata(schema_b, &schemata.as_slice(), record.clone()).unwrap();
+    let actual = to_avro_datum_schemata(schema_b, schemata.as_slice(), record.clone()).unwrap();
     assert_eq!(actual, expected);
 
     let value =
-        from_avro_datum_schemata(schema_b, &schemata.as_slice(), &mut actual.as_slice(), None)
+        from_avro_datum_schemata(schema_b, schemata.as_slice(), &mut actual.as_slice(), None)
             .unwrap();
+    assert_eq!(value, record);
+}
+
+#[test]
+fn test_avro_3683_multiple_schemata_writer_reader() {
+    init();
+
+    let record: Value = Value::Record(vec![(
+        String::from("field_b"),
+        Value::Record(vec![(String::from("field_a"), Value::Float(1.0))]),
+    )]);
+
+    let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR]).unwrap();
+    let schemata: Vec<&Schema> = schemata.iter().collect();
+
+    // this is the Schema we want to use for write/read
+    let schema_b = schemata[1];
+    let mut output: Vec<u8> = Vec::new();
+
+    let mut writer = Writer::with_schemata(&schema_b, schemata.as_slice(), &mut output, Codec::Null);
+    writer.append(record.clone()).unwrap();
+    writer.flush().unwrap();
+
+    let reader = Reader::with_schemata(schema_b, schemata.as_slice(), output.as_slice()).unwrap();
+    let value = reader.into_iter().next().unwrap().unwrap();
     assert_eq!(value, record);
 }
