@@ -378,6 +378,7 @@ fn write_avro_datum<T: Into<Value>>(
 
 // TODO: document and add tests
 fn write_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
     schemata: &[&Schema],
     value: T,
     buffer: &mut Vec<u8>,
@@ -385,18 +386,12 @@ fn write_avro_datum_schemata<T: Into<Value>>(
     let avro = value.into();
     let rs = ResolvedSchema::try_from(schemata)?;
     let names = rs.get_names();
-    for schema in schemata {
-        let enclosing_namespace = schema.namespace();
-        if avro
-            .validate_internal(schema, names, &enclosing_namespace)
-            .is_none()
-        {
-            // dbg!(&schema);
-            encode_internal(&avro, schema, names, &enclosing_namespace, buffer)?;
-            return Ok(());
-        }
+    let enclosing_namespace = schema.namespace();
+    if let Some(_err) = avro.validate_internal(schema, names, &enclosing_namespace) {
+        return Err(Error::Validation);
     }
-    return Err(Error::Validation);
+    encode_internal(&avro, schema, names, &enclosing_namespace, buffer)?;
+    return Ok(());
 }
 
 /// Writer that encodes messages according to the single object encoding v1 spec
@@ -567,11 +562,12 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
 
 // TODO: document and add tests
 pub fn to_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
     schemata: &[&Schema],
     value: T,
 ) -> AvroResult<Vec<u8>> {
     let mut buffer = Vec::new();
-    write_avro_datum_schemata(schemata, value, &mut buffer)?;
+    write_avro_datum_schemata(schema, schemata, value, &mut buffer)?;
     Ok(buffer)
 }
 

@@ -49,15 +49,16 @@ fn test_avro_3683_multiple_schemata_to_avro_datum() {
         Value::Record(vec![("field_a".into(), Value::Float(1.0))]),
     )]);
 
+    // this is the Schema we want to use for write/read
+    let schema_b = schemata[1];
     let expected: Vec<u8> = vec![0, 0, 128, 63];
-    let actual = to_avro_datum_schemata(&schemata.as_slice(), record.clone()).unwrap();
+    let actual = to_avro_datum_schemata(schema_b, &schemata.as_slice(), record.clone()).unwrap();
     assert_eq!(
         actual,
         expected
     );
 
-    let mut bytes = actual.as_slice();
-    let value = from_avro_datum_schemata(&schemata.as_slice(), &mut bytes, None).unwrap();
+    let value = from_avro_datum_schemata(schema_b,&schemata.as_slice(), &mut actual.as_slice(), None).unwrap();
     assert_eq!(
         value,
         record
