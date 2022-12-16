@@ -456,7 +456,7 @@ impl<T> SpecificSingleObjectWriter<T>
 where
     T: AvroSchema + Into<Value>,
 {
-    /// Write the Into<Value> to the provided Write object. Returns a result with the number
+    /// Write the `Into<Value>` to the provided Write object. Returns a result with the number
     /// of bytes written including the header
     pub fn write_value<W: Write>(&mut self, data: T, writer: &mut W) -> AvroResult<usize> {
         let v: Value = data.into();
