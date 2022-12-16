@@ -32,7 +32,6 @@ namespace Avro.Reflect
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
-        private ConcurrentDictionary<string, Schema> _previousFields = new ConcurrentDictionary<string, Schema>();
 
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -215,12 +214,7 @@ namespace Avro.Reflect
                     var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        /*              
-                        //.StackOverflowException
-                        var t = c.GetPropertyType(f);
-                        LoadClassCache(t, f.Schema);
-                        */
-                        if (_previousFields.TryAdd(f.Name, f.Schema))
+                        if (IsLoadToCache(f.Schema) && !_nameClassMap.ContainsKey(f.Schema.Fullname))
                         {
                             var t = c.GetPropertyType(f);
                             LoadClassCache(t, f.Schema);
@@ -298,6 +292,26 @@ namespace Avro.Reflect
                     }
 
                     break;
+            }
+        }
+
+        /// <summary>
+        /// If schema have to be loaded to cache
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
+        protected virtual bool IsLoadToCache(Schema schema)
+        {
+            switch (schema)
+            {
+                case RecordSchema rs:
+                case ArraySchema ars:
+                case MapSchema ms:
+                case NamedSchema ns:
+                case UnionSchema us:
+                    return true;
+                default:
+                    return false;
             }
         }
     }

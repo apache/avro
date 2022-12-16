@@ -45,7 +45,7 @@ namespace Avro.test.Reflect.ClassCacheTests
             Assert.NotNull(type2);
             Assert.AreEqual(typeof(TestClass2), type2.GetClassType());
             Assert.NotNull(propertyType2);
-            Assert.AreEqual(typeof(ComplexType1), propertyType2.GetClassType());
+            Assert.AreEqual(typeof(ComplexType2), propertyType2.GetClassType());
         }
     }
 
@@ -86,7 +86,7 @@ namespace Avro.test.Reflect.ClassCacheTests
         public static RecordSchema RootSchema = (RecordSchema)Schema.Parse(@"
 {
     ""type"" : ""record"",
-    ""name"" : ""TestClass1"",
+    ""name"" : ""TestClass2"",
     ""namespace"" : ""Avro.test.Reflect.ClassCacheTests"",
     ""fields"" :
         [
@@ -100,7 +100,7 @@ namespace Avro.test.Reflect.ClassCacheTests
                             [
                                 {
                                     ""name"" : ""StringProperty"",
-                                    ""type"" :""string""
+                                    ""type"" : ""string""
                                 }
                             ]
                     }
@@ -109,7 +109,7 @@ namespace Avro.test.Reflect.ClassCacheTests
 }
 ");
         public static RecordSchema ComplexTypeSchema = (RecordSchema)((RecordSchema)RootSchema).Fields[0].Schema;
-        public ComplexType1 ComplexType { get; set; }
+        public ComplexType2 ComplexType { get; set; }
     }
 
     public class ComplexType1
