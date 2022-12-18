@@ -857,7 +857,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_struct_flatten() {
+    fn test_avro_3692_from_value_struct_flatten() {
         #[derive(Deserialize, PartialEq, Debug)]
         struct S1 {
             f1: String,
