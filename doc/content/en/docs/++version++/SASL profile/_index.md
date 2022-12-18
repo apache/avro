@@ -31,7 +31,7 @@ SASL ([RFC 2222](https://www.ietf.org/rfc/rfc2222.txt)) provides a framework for
 ## Overview
 SASL negotiation proceeds as a series of message interactions over a connection between a client and server using a selected SASL mechanism. The client starts this negotiation by sending its chosen mechanism name with an initial (possibly empty) message. Negotiation proceeds with the exchange of messages until either side indicates success or failure. The content of the messages is mechanism-specific. If the negotiation succeeds, then the session can proceed over the connection, otherwise it must be abandoned.
 
-Some mechanisms continue to process session data after negotiation (e.g., encrypting it), while some specify that further session data is transmitted unmodifed.
+Some mechanisms continue to process session data after negotiation (e.g., encrypting it), while some specify that further session data is transmitted unmodified.
 
 ## Negotiation
 
@@ -41,7 +41,7 @@ Avro SASL negotiation uses four one-byte commands.
 * 0: START Used in a client's initial message.
 * 1: CONTINUE Used while negotiation is ongoing.
 * 2: FAIL Terminates negotiation unsuccessfully.
-* 3: COMPLETE Terminates negotiation sucessfully.
+* 3: COMPLETE Terminates negotiation successfully.
 
 The format of a START message is:
 
