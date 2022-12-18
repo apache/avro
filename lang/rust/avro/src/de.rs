@@ -42,7 +42,7 @@ struct MapDeserializer<'de> {
     input_values: Values<'de, String, Value>,
 }
 
-struct StructDeserializer<'de> {
+struct RecordDeserializer<'de> {
     input: Iter<'de, (String, Value)>,
     value: Option<&'de Value>,
 }
@@ -72,17 +72,15 @@ impl<'de> SeqDeserializer<'de> {
 impl<'de> MapDeserializer<'de> {
     pub fn new(input: &'de HashMap<String, Value>) -> Self {
         MapDeserializer {
-            input_keys: input.keys(), // input.keys().map(|k| Value::String(k.clone())).collect::<Vec<_>>().iter(),
+            input_keys: input.keys(),
             input_values: input.values(),
-            // keys: input.keys().map(|s| Value::String(s.to_owned())).collect::<Vec<Value>>(),
-            // values: input.values().map(|s| s.to_owned()).collect::<Vec<Value>>(),
         }
     }
 }
 
-impl<'de> StructDeserializer<'de> {
+impl<'de> RecordDeserializer<'de> {
     pub fn new(input: &'de [(String, Value)]) -> Self {
-        StructDeserializer {
+        RecordDeserializer {
             input: input.iter(),
             value: None,
         }
@@ -260,7 +258,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 | Value::TimestampMicros(i) => visitor.visit_i64(i),
                 Value::Float(f) => visitor.visit_f32(f),
                 Value::Double(d) => visitor.visit_f64(d),
-                Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+                Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
                 Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
                 Value::String(ref s) => visitor.visit_borrowed_str(s),
                 Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
@@ -269,7 +267,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                     self.input
                 ))),
             },
-            Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
             Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
             Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
@@ -435,7 +433,11 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
-            _ => Err(de::Error::custom("not a map")),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
+            _ => Err(de::Error::custom(format_args!(
+                "Expected a record or a map. Got: {:?}",
+                &self.input
+            ))),
         }
     }
 
@@ -449,9 +451,9 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
             Value::Union(_i, ref inner) => match **inner {
-                Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+                Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
                 _ => Err(de::Error::custom("not a record")),
             },
             _ => Err(de::Error::custom("not a record")),
@@ -533,7 +535,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer<'de> {
     }
 }
 
-impl<'de> de::MapAccess<'de> for StructDeserializer<'de> {
+impl<'de> de::MapAccess<'de> for RecordDeserializer<'de> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
@@ -855,6 +857,33 @@ mod tests {
             final_value, expected,
             "error deserializing struct external enum(union)"
         );
+    }
+
+    #[test]
+    fn test_avro_3692_from_value_struct_flatten() {
+        #[derive(Deserialize, PartialEq, Debug)]
+        struct S1 {
+            f1: String,
+            #[serde(flatten)]
+            inner: S2,
+        }
+        #[derive(Deserialize, PartialEq, Debug)]
+        struct S2 {
+            f2: String,
+        }
+        let expected = S1 {
+            f1: "Hello".to_owned(),
+            inner: S2 {
+                f2: "World".to_owned(),
+            },
+        };
+
+        let test = Value::Record(vec![
+            ("f1".to_owned(), "Hello".into()),
+            ("f2".to_owned(), "World".into()),
+        ]);
+        let final_value: S1 = from_value(&test).unwrap();
+        assert_eq!(final_value, expected);
     }
 
     #[test]
