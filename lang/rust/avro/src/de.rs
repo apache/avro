@@ -434,7 +434,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
             Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
-            _ => Err(de::Error::custom("not a map")),
+            _ => Err(de::Error::custom(format_args!(
+                "Expected a record or a map. Got: {:?}",
+                &self.input
+            ))),
         }
     }
 
