@@ -48,3 +48,9 @@ notifications:
   # Send individual PR comments/reviews to issues@
   pullrequests_comment: issues@avro.apache.org
   jira_options: link label worklog
+
+staging:
+  whoami: site-staging
+
+publish:
+  whoami: site-production
