@@ -45,10 +45,12 @@ jobs:
             echo "Unsupported input: ${{ github.ref }} / ${{ github.ref_type }}"
             exit 1
           fi
+
       - name: Checkout docs sources
         uses: actions/checkout@v3
         with:
           submodules: recursive
+
       - name: Checkout docs target branch
         uses: actions/checkout@v3
         with:
@@ -56,17 +58,30 @@ jobs:
           ref: ${{ steps.target-branch.outputs.value }}
           path: docs-target
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install NPM dependencies
+        run: |
+          set -x
+          cd doc
+          npm install
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: 0.108.0
           extended: true
+
       - name: Build docs
         run: |
           set -x
           cd doc
-          hugo --minify --destination ../output
+          hugo --minify --destination ../website
+
       # TODO build the C/C++/C# docs
+
       - name: Copy & push the generated HTML
         run: |
           set -x
@@ -74,7 +89,7 @@ jobs:
           # delete anything but: 1) '.'; 2) '..'; 3) .git/
           find ./ | grep -vE "^./$|^../$|^./.git" | xargs rm -rf
           cp ../.asf.yaml .
-          cp -r ../docs/public/* .
+          cp -r ../website/* .
           # TODO copy the C/C++/C# docs
           if [ "$(git status --porcelain)" != "" ]; then
             git config user.name "github-actions[bot]"
