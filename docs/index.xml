@@ -1,0 +1,69 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Apache Avro – Documentation</title><link>/1.12.0-SNAPSHOT/docs/</link><description>Recent content in Documentation on Apache Avro</description><generator>Hugo -- gohugo.io</generator><atom:link href="/1.12.0-SNAPSHOT/docs/index.xml" rel="self" type="application/rss+xml"/><item><title>Docs: Java API</title><link>/1.12.0-SNAPSHOT/docs/++version++/api-java/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/docs/++version++/api-java/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The Javadocs can be found &lt;a href="/1.12.0-SNAPSHOT/docs/++version++/api/java/">here&lt;/a>.&lt;/p></description></item><item><title>Docs: C API</title><link>/1.12.0-SNAPSHOT/docs/++version++/api-c/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/docs/++version++/api-c/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The C API documentation can be found &lt;a href="/1.12.0-SNAPSHOT/docs/++version++/api/c/">here&lt;/a>.&lt;/p></description></item><item><title>Docs: C++ API</title><link>/1.12.0-SNAPSHOT/docs/++version++/api-c++/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/docs/++version++/api-c++/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The C++ API documentation can be found &lt;a href="/1.12.0-SNAPSHOT/docs/++version++/api/cpp/html/">here&lt;/a>.&lt;/p></description></item><item><title>Docs: C# API</title><link>/1.12.0-SNAPSHOT/docs/++version++/api-csharp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/docs/++version++/api-csharp/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The C# API documentation can be found &lt;a href="/1.12.0-SNAPSHOT/docs/++version++/api/csharp/html/">here&lt;/a>.&lt;/p></description></item></channel></rss>

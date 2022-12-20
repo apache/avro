@@ -1,0 +1,122 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Apache Avro – News About Apache Avro</title><link>/1.12.0-SNAPSHOT/blog/news/</link><description>Recent content in News About Apache Avro on Apache Avro</description><generator>Hugo -- gohugo.io</generator><atom:link href="/1.12.0-SNAPSHOT/blog/news/index.xml" rel="self" type="application/rss+xml"/><item><title>Blog: New PMC member: Martin Grigorov</title><link>/1.12.0-SNAPSHOT/blog/2022/09/13/new-pmc-member-martin-grigorov/</link><pubDate>Tue, 13 Sep 2022 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/blog/2022/09/13/new-pmc-member-martin-grigorov/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The Project Management Committee (PMC) for Apache Avro is pleased to announce that Martin Grigorov has accepted our invitation to become a PMC member. He has has been active, reliable and responsive to the community and a solid contributor to various SDKs, bringing well-thought out reviews and comments to both old and new PRs and JIRA. He definitely stepped up for the website refactoring and preparing for the 1.11.1 release!&lt;/p>
+&lt;p>Please join me in welcoming Martin to the Avro PMC!&lt;/p></description></item><item><title>Blog: New committer: Zoltan Csizmadia</title><link>/1.12.0-SNAPSHOT/blog/2022/03/29/new-committer-zoltan-csizmadia/</link><pubDate>Tue, 29 Mar 2022 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/blog/2022/03/29/new-committer-zoltan-csizmadia/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The Project Management Committee (PMC) for Apache Avro has invited
+Zoltan Csizmadia to become a committer and we are pleased to announce
+that he has accepted.&lt;/p>
+&lt;p>Zoltan has been present in the C# SDK for over two years and has
+really increased his activity in maintaining this language in the last
+few months. He knows the technology, but more importantly, he is
+patient and works well with those of us who rely on the expertise of
+others. Recently, he has been engaging with other contributors to
+increase the maintainability and quality of the dotnet code, and we
+have confidence in his decisions to balance stability of the
+established code and the expectations of modern C# developers.&lt;/p>
+&lt;p>Being a committer enables easier contribution to the project since
+there is no need to go via the patch submission process. This should
+enable better productivity.&lt;/p>
+&lt;p>Please join me in congratulating Zoltan on his recognition of great
+work thus far in our community.&lt;/p></description></item><item><title>Blog: New committer: Martin Grigorov</title><link>/1.12.0-SNAPSHOT/blog/2022/01/04/new-committer-martin-grigorov/</link><pubDate>Tue, 04 Jan 2022 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/blog/2022/01/04/new-committer-martin-grigorov/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The Project Management Committee (PMC) for Apache Avro
+has invited Martin Grigorov to become a committer and we are pleased
+to announce that he has accepted.&lt;/p>
+&lt;p>Over the last few months, he has been active, reliable and easy to
+work with on PRs and on the mailing list. His work is of high
+quality, and he has a breadth of experience in many of the SDK languages.
+I&amp;rsquo;m especially keen to point out the work he&amp;rsquo;s been doing on the website!&lt;/p>
+&lt;p>Being a committer enables easier contribution to the
+project since there is no need to go via the patch
+submission process. This should enable better productivity.&lt;/p>
+&lt;p>It&amp;rsquo;s great to have you as part of the team, Martin!&lt;/p></description></item><item><title>Blog: New committer: David Mollitor</title><link>/1.12.0-SNAPSHOT/blog/2021/10/05/new-committer-david-mollitor/</link><pubDate>Tue, 05 Oct 2021 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/blog/2021/10/05/new-committer-david-mollitor/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>The Project Management Committee (PMC) for Apache Avro
+has invited David Mollitor to become a committer and we are pleased
+to announce that he has accepted.&lt;/p>
+&lt;p>Since 2017, David has raised and fixed many issues in the
+Java SDK. Recently he&amp;rsquo;s been finding and providing fixes for subtle
+performance issues. His work is always high-quality and he is
+reactive and pleasant to talk with on code reviews and JIRA.&lt;/p>
+&lt;p>Being a committer enables easier contribution to the
+project since there is no need to go via the patch
+submission process. This should enable better productivity.&lt;/p>
+&lt;p>It&amp;rsquo;s great to have you as part of the team, David!&lt;/p></description></item><item><title>Blog: Avro joins Apache</title><link>/1.12.0-SNAPSHOT/blog/2009/04/10/avro-joins-apache/</link><pubDate>Fri, 10 Apr 2009 00:00:00 +0000</pubDate><guid>/1.12.0-SNAPSHOT/blog/2009/04/10/avro-joins-apache/</guid><description>
+&lt;!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+https://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+&lt;p>Avro has joined the Apache Software Foundation as a Hadoop subproject.&lt;/p></description></item></channel></rss>
