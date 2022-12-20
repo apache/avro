@@ -95,7 +95,7 @@ writer.close()
 
 reader = DataFileReader(open("users.avro", "rb"), DatumReader())
 for user in reader:
-    print user
+    print(user)
 reader.close()
 ```
 
@@ -141,7 +141,7 @@ We open the file again, this time for reading back from disk. We use a DataFileR
 
 ```python
 for user in reader:
-    print user
+    print(user)
 ```
 
 The DataFileReader is an iterator that returns dicts corresponding to the serialized items.
