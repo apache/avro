@@ -21,6 +21,7 @@ on:
   push:
     branches:
 #      - master
+      - branch-1.11.x
       - "avro-3686-asf.yaml-docs"
     tags-ignore:
       - "release-**-rc**"
@@ -33,13 +34,20 @@ jobs:
   build-docs:
     runs-on: ubuntu-20.04
     steps:
-      - name: Set target branch
+      - name: Checkout project
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Set variables
         id: variables
         run: |
           set -x
-          if test '${{ github.ref }}' = 'refs/heads/avro-3686-asf.yaml-docs'; then
-            echo "target-branch=site-staging" >> $GITHUB_OUTPUT
-            echo "baseUrl=/next" >> $GITHUB_OUTPUT
+          VERSION=$(cat share/VERSION.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if test '${{ github.ref_type }}' = 'branch'; then
+            echo "target-branch=site-$VERSION" >> $GITHUB_OUTPUT
+            echo "baseUrl=/$VERSION" >> $GITHUB_OUTPUT
           elif test '${{ github.ref_type }}' = 'tag'; then
             echo "target-branch=site-production" >> $GITHUB_OUTPUT
             echo "baseUrl=/" >> $GITHUB_OUTPUT
@@ -47,18 +55,6 @@ jobs:
             echo "Unsupported input: ${{ github.ref }} / ${{ github.ref_type }}"
             exit 1
           fi
-
-      - name: Checkout docs sources
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Checkout docs target branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ steps.variables.outputs.target-branch }}
-          path: docs-target
 
       - uses: actions/setup-node@v3
         with:
@@ -82,21 +78,25 @@ jobs:
           cd doc
           hugo --minify --destination ../website --baseURL=${{ steps.variables.outputs.baseUrl }}
 
-      # TODO build the C/C++/C# docs
-
       - name: Copy & push the generated HTML
         run: |
+          # TODO build the C/C++/C# docs for master/staging
           set -x
-          cd docs-target
-          # delete anything but: 1) '.'; 2) '..'; 3) .git/
-          find ./ | grep -vE "^./$|^../$|^./.git" | xargs rm -rf
-          cp ../.asf.yaml .
-          cp -r ../website/* .
-          # TODO copy the C/C++/C# docs
+          sed -i -e "s|TARGET_BRANCH|${{ steps.variables.outputs.target-branch }}|" .asf.yaml
+          sed -i -e "s|SUBDIR|${{ steps.variables.outputs.version }}|" .asf.yaml
+          cp .asf.yaml website/
+          git checkout -B ${{ steps.variables.outputs.target-branch }}
+          # delete anything but: 1) '.'; 2) '..'; 3) .git/; 4) website/
+          find ./ | grep -vE "^./$|^../$|^./.git|^./website" | xargs rm -rf
+          mv website/* .
+          mv website/.asf.yaml .
+          ls -la website/
+          rmdir website
+          # TODO copy the C/C++/C# docs for master/staging
           if [ "$(git status --porcelain)" != "" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add --all
             git commit -m 'Publish built docs triggered by ${{ github.sha }}'
-            git push || git push --force
+            git push --set-upstream origin ${{ steps.variables.outputs.target-branch }} --force
           fi

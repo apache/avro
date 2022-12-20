@@ -50,5 +50,5 @@ notifications:
   jira_options: link label worklog
 
 publish:
-  whoami: site-staging
-  subdir: next
+  whoami: TARGET_BRANCH
+  subdir: SUBDIR
