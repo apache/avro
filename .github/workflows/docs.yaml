@@ -34,13 +34,15 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Set target branch
-        id: target-branch
+        id: variables
         run: |
           set -x
           if test '${{ github.ref }}' = 'refs/heads/avro-3686-asf.yaml-docs'; then
-            echo "value=site-staging" >> $GITHUB_OUTPUT
+            echo "target-branch=site-staging" >> $GITHUB_OUTPUT
+            echo "baseUrl=/next" >> $GITHUB_OUTPUT
           elif test '${{ github.ref_type }}' = 'tag'; then
-            echo "value=site-production" >> $GITHUB_OUTPUT
+            echo "target-branch=site-production" >> $GITHUB_OUTPUT
+            echo "baseUrl=/" >> $GITHUB_OUTPUT
           else
             echo "Unsupported input: ${{ github.ref }} / ${{ github.ref_type }}"
             exit 1
@@ -55,7 +57,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: ${{ steps.target-branch.outputs.value }}
+          ref: ${{ steps.variables.outputs.target-branch }}
           path: docs-target
 
       - uses: actions/setup-node@v3
@@ -78,7 +80,7 @@ jobs:
         run: |
           set -x
           cd doc
-          hugo --minify --destination ../website
+          hugo --minify --destination ../website --baseURL=${{ steps.variables.outputs.baseUrl }}
 
       # TODO build the C/C++/C# docs
 
