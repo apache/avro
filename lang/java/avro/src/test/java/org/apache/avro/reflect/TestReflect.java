@@ -646,10 +646,16 @@ public class TestReflect {
 
   @Test
   public void testAnnotationMultiAvroMeta() {
-    check(RAvroMultiMeta.class,
-        "{\"type\":\"record\",\"name\":\"RAvroMultiMeta\",\"namespace\":"
-            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-            + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]" + ",\"X\":\"Y\",\"A\":\"B\"}");
+    Field field = new Field("a", Schema.create(Schema.Type.INT));
+    field.addProp("L", "W");
+    field.addProp("K", "V");
+    Schema avroMultiMeta = Schema.createRecord("RAvroMultiMeta", null, "org.apache.avro.reflect.TestReflect", false,
+        Arrays.asList(field));
+    avroMultiMeta.addProp("X", "Y");
+    avroMultiMeta.addProp("A", "B");
+
+    Schema schema = ReflectData.get().getSchema(RAvroMultiMeta.class);
+    assertEquals(avroMultiMeta, schema);
   }
 
   public static class RAvroDuplicateFieldMeta {
