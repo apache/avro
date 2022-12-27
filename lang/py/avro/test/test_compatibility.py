@@ -19,10 +19,13 @@
 
 import json
 import unittest
+from typing import cast
 
 from avro.compatibility import (
     ReaderWriterCompatibilityChecker,
     SchemaCompatibilityType,
+    SchemaIncompatibility,
+    SchemaIncompatibilityType,
     SchemaType,
 )
 from avro.schema import (
@@ -30,6 +33,7 @@ from avro.schema import (
     MapSchema,
     Names,
     PrimitiveSchema,
+    RecordSchema,
     Schema,
     UnionSchema,
     parse,
@@ -128,6 +132,40 @@ ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD = parse(
                         "default": "B",
                     },
                     "default": "A",
+                }
+            ],
+        }
+    )
+)
+INT_LIST_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "Record",
+            "fields": [
+                {
+                    "name": "Field",
+                    "type": {
+                        "type": SchemaType.ARRAY,
+                        "items": SchemaType.INT,
+                    },
+                }
+            ],
+        }
+    )
+)
+LONG_LIST_RECORD = parse(
+    json.dumps(
+        {
+            "type": SchemaType.RECORD,
+            "name": "Record",
+            "fields": [
+                {
+                    "name": "Field",
+                    "type": {
+                        "type": SchemaType.ARRAY,
+                        "items": SchemaType.LONG,
+                    },
                 }
             ],
         }
@@ -485,9 +523,9 @@ class TestCompatibility(unittest.TestCase):
         )
         # alias testing
         res = ReaderWriterCompatibilityChecker().get_compatibility(field_alias_reader, writer)
-        self.assertIs(res.compatibility, SchemaCompatibilityType.compatible, res.locations)
+        self.assertIs(res.compatibility, SchemaCompatibilityType.compatible, res.incompatibilities)
         res = ReaderWriterCompatibilityChecker().get_compatibility(record_alias_reader, writer)
-        self.assertIs(res.compatibility, SchemaCompatibilityType.compatible, res.locations)
+        self.assertIs(res.compatibility, SchemaCompatibilityType.compatible, res.incompatibilities)
 
     def test_schema_compatibility(self):
         # testValidateSchemaPairMissingField
@@ -597,6 +635,7 @@ class TestCompatibility(unittest.TestCase):
                 }
             )
         )
+        writer = cast(RecordSchema, writer)
         reader = parse(
             json.dumps(
                 {
@@ -606,6 +645,7 @@ class TestCompatibility(unittest.TestCase):
                 }
             )
         )
+        reader = cast(RecordSchema, reader)
         reader = reader.fields[0].type
         writer = writer.fields[0].type
         self.assertIsInstance(reader, UnionSchema)
@@ -696,378 +736,360 @@ class TestCompatibility(unittest.TestCase):
 
     def test_schema_compatibility_fixed_size_mismatch(self):
         incompatible_fixed_pairs = [
-            (FIXED_4_BYTES, FIXED_8_BYTES, "expected: 8, found: 4", "/size"),
-            (FIXED_8_BYTES, FIXED_4_BYTES, "expected: 4, found: 8", "/size"),
+            (
+                FIXED_4_BYTES,
+                FIXED_8_BYTES,
+                SchemaIncompatibility(SchemaIncompatibilityType.fixed_size_mismatch, "expected: 8, found: 4", "/size"),
+            ),
+            (
+                FIXED_8_BYTES,
+                FIXED_4_BYTES,
+                SchemaIncompatibility(SchemaIncompatibilityType.fixed_size_mismatch, "expected: 4, found: 8", "/size"),
+            ),
             (
                 A_DINT_B_DFIXED_8_BYTES_RECORD1,
                 A_DINT_B_DFIXED_4_BYTES_RECORD1,
-                "expected: 4, found: 8",
-                "/fields/1/type/size",
+                SchemaIncompatibility(SchemaIncompatibilityType.fixed_size_mismatch, "expected: 4, found: 8", "/fields/1/type/size"),
             ),
             (
                 A_DINT_B_DFIXED_4_BYTES_RECORD1,
                 A_DINT_B_DFIXED_8_BYTES_RECORD1,
-                "expected: 8, found: 4",
-                "/fields/1/type/size",
+                SchemaIncompatibility(SchemaIncompatibilityType.fixed_size_mismatch, "expected: 8, found: 4", "/fields/1/type/size"),
             ),
         ]
-        for reader, writer, message, location in incompatible_fixed_pairs:
+        for reader, writer, incompatibility in incompatible_fixed_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertIn(
-                location,
-                result.locations,
-                f"expected {location}, found {result}",
-            )
-            self.assertIn(
-                message,
-                result.messages,
-                f"expected {location}, found {result}",
-            )
+            self.assertIn(incompatibility, result.incompatibilities)
 
     def test_schema_compatibility_missing_enum_symbols(self):
         incompatible_pairs = [
             # str(set) representation
-            (ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "{'C'}", "/symbols"),
-            (ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "{'A'}", "/symbols"),
+            (
+                ENUM1_AB_SCHEMA,
+                ENUM1_ABC_SCHEMA,
+                SchemaIncompatibility(SchemaIncompatibilityType.missing_enum_symbols, "{'C'}", "/symbols"),
+            ),
+            (
+                ENUM1_BC_SCHEMA,
+                ENUM1_ABC_SCHEMA,
+                SchemaIncompatibility(SchemaIncompatibilityType.missing_enum_symbols, "{'A'}", "/symbols"),
+            ),
             (
                 RECORD1_WITH_ENUM_AB,
                 RECORD1_WITH_ENUM_ABC,
-                "{'C'}",
-                "/fields/0/type/symbols",
+                SchemaIncompatibility(SchemaIncompatibilityType.missing_enum_symbols, "{'C'}", "/fields/0/type/symbols"),
             ),
         ]
-        for reader, writer, message, location in incompatible_pairs:
+        for reader, writer, incompatibility in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertIn(message, result.messages)
-            self.assertIn(location, result.locations)
+            self.assertIn(incompatibility, result.incompatibilities)
 
     def test_schema_compatibility_missing_union_branch(self):
         incompatible_pairs = [
             (
                 INT_UNION_SCHEMA,
                 INT_STRING_UNION_SCHEMA,
-                {"reader union lacking writer type: STRING"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: STRING", "/1")],
             ),
             (
                 STRING_UNION_SCHEMA,
                 INT_STRING_UNION_SCHEMA,
-                {"reader union lacking writer type: INT"},
-                {"/0"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: INT", "/0")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_RECORD1,
-                {"reader union lacking writer type: RECORD"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: RECORD", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_RECORD2,
-                {"reader union lacking writer type: RECORD"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: RECORD", "/1")],
             ),
             (
                 UNION_INT_RECORD1,
                 UNION_INT_RECORD2,
-                {"reader union lacking writer type: RECORD"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: RECORD", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_ENUM1_AB,
-                {"reader union lacking writer type: ENUM"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: ENUM", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_FIXED_4_BYTES,
-                {"reader union lacking writer type: FIXED"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: FIXED", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_BOOLEAN,
-                {"reader union lacking writer type: BOOLEAN"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: BOOLEAN", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 LONG_UNION_SCHEMA,
-                {"reader union lacking writer type: LONG"},
-                {"/0"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: LONG", "/0")],
             ),
             (
                 INT_UNION_SCHEMA,
                 FLOAT_UNION_SCHEMA,
-                {"reader union lacking writer type: FLOAT"},
-                {"/0"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: FLOAT", "/0")],
             ),
             (
                 INT_UNION_SCHEMA,
                 DOUBLE_UNION_SCHEMA,
-                {"reader union lacking writer type: DOUBLE"},
-                {"/0"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: DOUBLE", "/0")],
             ),
             (
                 INT_UNION_SCHEMA,
                 BYTES_UNION_SCHEMA,
-                {"reader union lacking writer type: BYTES"},
-                {"/0"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: BYTES", "/0")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_ARRAY_INT,
-                {"reader union lacking writer type: ARRAY"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: ARRAY", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_MAP_INT,
-                {"reader union lacking writer type: MAP"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: MAP", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 UNION_INT_NULL,
-                {"reader union lacking writer type: NULL"},
-                {"/1"},
+                [SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: NULL", "/1")],
             ),
             (
                 INT_UNION_SCHEMA,
                 INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
-                {
-                    "reader union lacking writer type: LONG",
-                    "reader union lacking writer type: FLOAT",
-                    "reader union lacking writer type: DOUBLE",
-                },
-                {"/1", "/2", "/3"},
+                [
+                    SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: LONG", "/1"),
+                    SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: FLOAT", "/2"),
+                    SchemaIncompatibility(SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: DOUBLE", "/3"),
+                ],
             ),
             (
                 A_DINT_B_DINT_UNION_RECORD1,
                 A_DINT_B_DINT_STRING_UNION_RECORD1,
-                {"reader union lacking writer type: STRING"},
-                {"/fields/1/type/1"},
+                [
+                    SchemaIncompatibility(
+                        SchemaIncompatibilityType.missing_union_branch, "reader union lacking writer type: STRING", "/fields/1/type/1"
+                    )
+                ],
             ),
         ]
 
-        for reader, writer, message, location in incompatible_pairs:
+        for reader, writer, incompatibilities in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertEqual(result.messages, message)
-            self.assertEqual(result.locations, location)
+            self.assertEqual(incompatibilities, result.incompatibilities)
 
     def test_schema_compatibility_name_mismatch(self):
         incompatible_pairs = [
-            (ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA, "expected: Enum2", "/name"),
-            (EMPTY_RECORD2, EMPTY_RECORD1, "expected: Record1", "/name"),
-            (FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name"),
+            (
+                ENUM1_AB_SCHEMA,
+                ENUM2_AB_SCHEMA,
+                SchemaIncompatibility(SchemaIncompatibilityType.name_mismatch, "expected: Enum2", "/name"),
+            ),
+            (
+                EMPTY_RECORD2,
+                EMPTY_RECORD1,
+                SchemaIncompatibility(SchemaIncompatibilityType.name_mismatch, "expected: Record1", "/name"),
+            ),
+            (
+                FIXED_4_BYTES,
+                FIXED_4_ANOTHER_NAME,
+                SchemaIncompatibility(SchemaIncompatibilityType.name_mismatch, "expected: AnotherName", "/name"),
+            ),
             (
                 A_DINT_B_DENUM_1_RECORD1,
                 A_DINT_B_DENUM_2_RECORD1,
-                "expected: Enum2",
-                "/fields/1/type/name",
+                SchemaIncompatibility(SchemaIncompatibilityType.name_mismatch, "expected: Enum2", "/fields/1/type/name"),
             ),
         ]
 
-        for reader, writer, message, location in incompatible_pairs:
+        for reader, writer, incompatibility in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertIn(message, result.messages)
-            self.assertIn(location, result.locations)
+            self.assertIn(incompatibility, result.incompatibilities)
 
     def test_schema_compatibility_reader_field_missing_default_value(self):
         incompatible_pairs = [
-            (A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"),
-            (A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0"),
+            (
+                A_INT_RECORD1,
+                EMPTY_RECORD1,
+                SchemaIncompatibility(SchemaIncompatibilityType.reader_field_missing_default_value, "a", "/fields/0"),
+            ),
+            (
+                A_INT_B_DINT_RECORD1,
+                EMPTY_RECORD1,
+                SchemaIncompatibility(SchemaIncompatibilityType.reader_field_missing_default_value, "a", "/fields/0"),
+            ),
         ]
-        for reader, writer, message, location in incompatible_pairs:
+        for reader, writer, incompatibility in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertEqual(len(result.messages), 1)
-            self.assertEqual(len(result.locations), 1)
-            self.assertEqual(message, "".join(result.messages))
-            self.assertEqual(location, "".join(result.locations))
+            self.assertEqual(len(result.incompatibilities), 1)
+            self.assertIn(incompatibility, result.incompatibilities)
 
     def test_schema_compatibility_type_mismatch(self):
         incompatible_pairs = [
             (
                 NULL_SCHEMA,
                 INT_SCHEMA,
-                "reader type: null not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: null not compatible with writer type: int", "/"),
             ),
             (
                 NULL_SCHEMA,
                 LONG_SCHEMA,
-                "reader type: null not compatible with writer type: long",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: null not compatible with writer type: long", "/"),
             ),
             (
                 BOOLEAN_SCHEMA,
                 INT_SCHEMA,
-                "reader type: boolean not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: boolean not compatible with writer type: int", "/"),
             ),
             (
                 INT_SCHEMA,
                 NULL_SCHEMA,
-                "reader type: int not compatible with writer type: null",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: null", "/"),
             ),
             (
                 INT_SCHEMA,
                 BOOLEAN_SCHEMA,
-                "reader type: int not compatible with writer type: boolean",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: boolean", "/"),
             ),
             (
                 INT_SCHEMA,
                 LONG_SCHEMA,
-                "reader type: int not compatible with writer type: long",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: long", "/"),
             ),
             (
                 INT_SCHEMA,
                 FLOAT_SCHEMA,
-                "reader type: int not compatible with writer type: float",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: float", "/"),
             ),
             (
                 INT_SCHEMA,
                 DOUBLE_SCHEMA,
-                "reader type: int not compatible with writer type: double",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: double", "/"),
             ),
             (
                 LONG_SCHEMA,
                 FLOAT_SCHEMA,
-                "reader type: long not compatible with writer type: float",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: long not compatible with writer type: float", "/"),
             ),
             (
                 LONG_SCHEMA,
                 DOUBLE_SCHEMA,
-                "reader type: long not compatible with writer type: double",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: long not compatible with writer type: double", "/"),
             ),
             (
                 FLOAT_SCHEMA,
                 DOUBLE_SCHEMA,
-                "reader type: float not compatible with writer type: double",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: float not compatible with writer type: double", "/"),
             ),
             (
                 DOUBLE_SCHEMA,
                 STRING_SCHEMA,
-                "reader type: double not compatible with writer type: string",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: double not compatible with writer type: string", "/"),
             ),
             (
                 FIXED_4_BYTES,
                 STRING_SCHEMA,
-                "reader type: fixed not compatible with writer type: string",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: fixed not compatible with writer type: string", "/"),
             ),
             (
                 STRING_SCHEMA,
                 BOOLEAN_SCHEMA,
-                "reader type: string not compatible with writer type: boolean",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: string not compatible with writer type: boolean", "/"),
             ),
             (
                 STRING_SCHEMA,
                 INT_SCHEMA,
-                "reader type: string not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: string not compatible with writer type: int", "/"),
             ),
             (
                 BYTES_SCHEMA,
                 NULL_SCHEMA,
-                "reader type: bytes not compatible with writer type: null",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: bytes not compatible with writer type: null", "/"),
             ),
             (
                 BYTES_SCHEMA,
                 INT_SCHEMA,
-                "reader type: bytes not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: bytes not compatible with writer type: int", "/"),
             ),
             (
                 A_INT_RECORD1,
                 INT_SCHEMA,
-                "reader type: record not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: record not compatible with writer type: int", "/"),
             ),
             (
                 INT_ARRAY_SCHEMA,
                 LONG_ARRAY_SCHEMA,
-                "reader type: int not compatible with writer type: long",
-                "/items",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: long", "/items"),
             ),
             (
                 INT_MAP_SCHEMA,
                 INT_ARRAY_SCHEMA,
-                "reader type: map not compatible with writer type: array",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: map not compatible with writer type: array", "/"),
             ),
             (
                 INT_ARRAY_SCHEMA,
                 INT_MAP_SCHEMA,
-                "reader type: array not compatible with writer type: map",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: array not compatible with writer type: map", "/"),
             ),
             (
                 INT_MAP_SCHEMA,
                 LONG_MAP_SCHEMA,
-                "reader type: int not compatible with writer type: long",
-                "/values",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: long", "/values"),
             ),
             (
                 INT_SCHEMA,
                 ENUM2_AB_SCHEMA,
-                "reader type: int not compatible with writer type: enum",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: enum", "/"),
             ),
             (
                 ENUM2_AB_SCHEMA,
                 INT_SCHEMA,
-                "reader type: enum not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: enum not compatible with writer type: int", "/"),
             ),
             (
                 FLOAT_SCHEMA,
                 INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
-                "reader type: float not compatible with writer type: double",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: float not compatible with writer type: double", "/"),
             ),
             (
                 LONG_SCHEMA,
                 INT_FLOAT_UNION_SCHEMA,
-                "reader type: long not compatible with writer type: float",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: long not compatible with writer type: float", "/"),
             ),
             (
                 INT_SCHEMA,
                 INT_FLOAT_UNION_SCHEMA,
-                "reader type: int not compatible with writer type: float",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: float", "/"),
             ),
-            # (INT_LIST_RECORD, LONG_LIST_RECORD, "reader type: int not compatible with writer type: long", "/fields/0/type"),
+            (
+                INT_LIST_RECORD,
+                LONG_LIST_RECORD,
+                SchemaIncompatibility(
+                    SchemaIncompatibilityType.type_mismatch, "reader type: int not compatible with writer type: long", "/fields/0/type/items"
+                ),
+            ),
             (
                 NULL_SCHEMA,
                 INT_SCHEMA,
-                "reader type: null not compatible with writer type: int",
-                "/",
+                SchemaIncompatibility(SchemaIncompatibilityType.type_mismatch, "reader type: null not compatible with writer type: int", "/"),
             ),
         ]
-        for reader, writer, message, location in incompatible_pairs:
+        for reader, writer, incompatibility in incompatible_pairs:
             result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
             self.assertIs(result.compatibility, SchemaCompatibilityType.incompatible)
-            self.assertIn(message, result.messages)
-            self.assertIn(location, result.locations)
+            self.assertIn(incompatibility, result.incompatibilities)
 
     def are_compatible(self, reader: Schema, writer: Schema) -> bool:
         return ReaderWriterCompatibilityChecker().get_compatibility(reader, writer).compatibility is SchemaCompatibilityType.compatible

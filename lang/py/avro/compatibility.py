@@ -18,7 +18,7 @@
 # limitations under the License.
 from copy import copy
 from enum import Enum
-from typing import Container, Iterable, List, Optional, Set, cast
+from typing import ClassVar, Container, Dict, Iterable, List, NamedTuple, Optional, cast
 
 from avro.errors import AvroRuntimeException
 from avro.schema import (
@@ -69,6 +69,12 @@ class SchemaIncompatibilityType(Enum):
     missing_union_branch = "missing_union_branch"
 
 
+class SchemaIncompatibility(NamedTuple):
+    type: SchemaIncompatibilityType
+    message: str
+    location: str
+
+
 PRIMITIVE_TYPES = {
     SchemaType.NULL,
     SchemaType.BOOLEAN,
@@ -85,12 +91,8 @@ class SchemaCompatibilityResult:
     def __init__(
         self,
         compatibility: SchemaCompatibilityType = SchemaCompatibilityType.recursion_in_progress,
-        incompatibilities: Optional[List[SchemaIncompatibilityType]] = None,
-        messages: Optional[Set[str]] = None,
-        locations: Optional[Set[str]] = None,
+        incompatibilities: Optional[List[SchemaIncompatibility]] = None,
     ):
-        self.locations = locations or {"/"}
-        self.messages = messages or set()
         self.compatibility = compatibility
         self.incompatibilities = incompatibilities or []
 
@@ -103,22 +105,12 @@ def merge(this: SchemaCompatibilityResult, that: SchemaCompatibilityResult) -> S
     :param that: SchemaCompatibilityResult
     :return: SchemaCompatibilityResult
     """
-    that = cast(SchemaCompatibilityResult, that)
     merged = [*copy(this.incompatibilities), *copy(that.incompatibilities)]
     if this.compatibility is SchemaCompatibilityType.compatible:
         compat = that.compatibility
-        messages = that.messages
-        locations = that.locations
     else:
         compat = this.compatibility
-        messages = this.messages.union(that.messages)
-        locations = this.locations.union(that.locations)
-    return SchemaCompatibilityResult(
-        compatibility=compat,
-        incompatibilities=merged,
-        messages=messages,
-        locations=locations,
-    )
+    return SchemaCompatibilityResult(compatibility=compat, incompatibilities=merged)
 
 
 CompatibleResult = SchemaCompatibilityResult(SchemaCompatibilityType.compatible)
@@ -138,7 +130,8 @@ class ReaderWriter:
 
 
 class ReaderWriterCompatibilityChecker:
-    ROOT_REFERENCE_TOKEN = "/"
+    ROOT_REFERENCE_TOKEN: ClassVar[str] = "/"
+    memoize_map: Dict[ReaderWriter, SchemaCompatibilityResult]
 
     def __init__(self):
         self.memoize_map = {}
@@ -154,7 +147,7 @@ class ReaderWriterCompatibilityChecker:
             location = []
         pair = ReaderWriter(reader, writer)
         if pair in self.memoize_map:
-            result = cast(SchemaCompatibilityResult, self.memoize_map[pair])
+            result = self.memoize_map[pair]
             if result.compatibility is SchemaCompatibilityType.recursion_in_progress:
                 result = CompatibleResult
         else:
@@ -364,15 +357,11 @@ def check_reader_enum_contains_writer_enum(reader: EnumSchema, writer: EnumSchem
 
 
 def incompatible(incompat_type: SchemaIncompatibilityType, message: str, location: List[str]) -> SchemaCompatibilityResult:
-    locations = "/".join(location)
+    incompat_location = "/".join(location)
     if len(location) > 1:
-        locations = locations[1:]
-    ret = SchemaCompatibilityResult(
-        compatibility=SchemaCompatibilityType.incompatible,
-        incompatibilities=[incompat_type],
-        locations={locations},
-        messages={message},
-    )
+        incompat_location = incompat_location[1:]
+    ret = SchemaCompatibilityResult(compatibility=SchemaCompatibilityType.incompatible)
+    ret.incompatibilities.append(SchemaIncompatibility(incompat_type, message, incompat_location))
     return ret
 
 
