@@ -927,6 +927,32 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testCamelize() {
+    assertEquals("snakeCase", SpecificCompiler.camelize("snake_case", false));
+    assertEquals("constantCase", SpecificCompiler.camelize("CONSTANT_CASE", false));
+    assertEquals("mixedSnake", SpecificCompiler.camelize("Mixed_Snake", false));
+    assertEquals("snakeUuid", SpecificCompiler.camelize("snake_UUID", false));
+    assertEquals("lower", SpecificCompiler.camelize("lower", false));
+    assertEquals("capitalized", SpecificCompiler.camelize("Capitalized", false));
+    assertEquals("caps", SpecificCompiler.camelize("CAPS", false));
+    assertEquals("camelCased", SpecificCompiler.camelize("camelCased", false));
+    assertEquals("camelCased", SpecificCompiler.camelize("CamelCased", false));
+    assertEquals("someUUID", SpecificCompiler.camelize("someUUID", false));
+    assertEquals("uuidFirst", SpecificCompiler.camelize("UUIDFirst", false));
+
+    assertEquals("SnakeCase", SpecificCompiler.camelize("snake_case", true));
+    assertEquals("ConstantCase", SpecificCompiler.camelize("CONSTANT_CASE", true));
+    assertEquals("MixedSnake", SpecificCompiler.camelize("Mixed_Snake", true));
+    assertEquals("SnakeUuid", SpecificCompiler.camelize("snake_UUID", true));
+    assertEquals("Lower", SpecificCompiler.camelize("lower", true));
+    assertEquals("Capitalized", SpecificCompiler.camelize("Capitalized", true));
+    assertEquals("CAPS", SpecificCompiler.camelize("CAPS", true));
+    assertEquals("CamelCased", SpecificCompiler.camelize("camelCased", true));
+    assertEquals("CamelCased", SpecificCompiler.camelize("CamelCased", true));
+    assertEquals("SomeUUID", SpecificCompiler.camelize("someUUID", true));
+    assertEquals("UUIDFirst", SpecificCompiler.camelize("UUIDFirst", true));
+  }
+
   public void testPojoWithUUID() throws IOException {
     SpecificCompiler compiler = createCompiler();
     compiler.setOptionalGettersForNullableFieldsOnly(true);
