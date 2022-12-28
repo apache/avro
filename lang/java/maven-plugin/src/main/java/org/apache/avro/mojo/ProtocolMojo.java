@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.mojo.model.MavenNamespaceToPackageMapping;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
@@ -61,6 +62,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     final Protocol protocol = Protocol.parse(src);
     final SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setTemplateDir(templateDirectory);
+    compiler.setNamespaceMappings(MavenNamespaceToPackageMapping.toCompilerType(namespaceMappings));
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateOptionalGetters(createOptionalGetters);

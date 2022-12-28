@@ -16,7 +16,7 @@
 ## limitations under the License.
 ##
 #if ($schema.getNamespace())
-package $this.mangle($schema.getNamespace());
+package $this.mapNamespace($schema.getNamespace());
 #end
 
 import org.apache.avro.generic.GenericArray;
@@ -277,8 +277,8 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
    * Creates a new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder.
    * @return A new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder() {
-    return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
+  public static #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder() {
+    return new #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
   }
 
   /**
@@ -286,11 +286,11 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
    * @param other The existing builder to copy.
    * @return A new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder other) {
+  public static #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder other) {
     if (other == null) {
-      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
+      return new #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
     } else {
-      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder(other);
+      return new #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder(other);
     }
   }
 
@@ -299,11 +299,11 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
    * @param other The existing instance to copy.
    * @return A new ${this.mangleTypeIdentifier($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())} other) {
+  public static #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())} other) {
     if (other == null) {
-      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
+      return new #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder();
     } else {
-      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder(other);
+      return new #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder(other);
     }
   }
 
@@ -334,7 +334,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder other) {
+    private Builder(#if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder other) {
       super(other);
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
@@ -353,7 +353,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
      * Creates a Builder by copying an existing $this.mangleTypeIdentifier($schema.getName()) instance
      * @param other The existing instance to copy.
      */
-    private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())} other) {
+    private Builder(#if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())} other) {
 #if ($schema.isError())      super(other)#else
       super(SCHEMA$, MODEL$)#end;
 #foreach ($field in $schema.getFields())
@@ -369,25 +369,25 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #if ($schema.isError())
 
     @Override
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder setValue(Object value) {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder setValue(Object value) {
       super.setValue(value);
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder clearValue() {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder clearValue() {
       super.clearValue();
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder setCause(Throwable cause) {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder setCause(Throwable cause) {
       super.setCause(cause);
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder clearCause() {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder clearCause() {
       super.clearCause();
       return this;
     }
@@ -423,7 +423,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
@@ -469,7 +469,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
      * @return This builder.
      */
 
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)}.Builder value) {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)}.Builder value) {
       ${this.generateClearMethod($schema, $field)}();
       ${this.mangle($field.name(), $schema.isError())}Builder = value;
       return this;
@@ -492,7 +492,7 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #end
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
+    public #if ($schema.getNamespace())$this.mapNamespace($schema.getNamespace()).#end${this.mangleTypeIdentifier($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
       ${this.mangle($field.name(), $schema.isError())} = null;
 #end

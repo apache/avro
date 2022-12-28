@@ -48,6 +48,7 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.SchemaNormalization;
+import org.apache.avro.compiler.specific.model.NamespaceToPackageMapping;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
@@ -117,6 +118,7 @@ public class SpecificCompiler {
   private VelocityEngine velocityEngine;
   private String templateDir;
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
+  private List<NamespaceToPackageMapping> namespaceMappings = Collections.emptyList();
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
   private boolean optionalGettersForNullableFieldsOnly = false;
@@ -232,6 +234,43 @@ public class SpecificCompiler {
    */
   public void setFieldVisibility(FieldVisibility fieldVisibility) {
     this.fieldVisibility = fieldVisibility;
+  }
+
+  /**
+   * Define how an AVRO namespace gets converted to a Java packagename.
+   * <p>
+   * The default behaviour is to map namespace to packagename directly, ie the
+   * namespace becomes the packagename. However the parameters to this method can
+   * override this, causing specific namespace prefixes to be mapped to specific
+   * packages.
+   * </p>
+   */
+  public void setNamespaceMappings(List<NamespaceToPackageMapping> mappings) {
+    this.namespaceMappings = mappings;
+  }
+
+  /**
+   * Transform an AVRO namespace to a Java package-name, and then encode any
+   * special words which are not valid in Java package names ("mangling").
+   */
+  public String mapNamespace(String namespace) {
+    return mangle(mapNamespaceToPackage(namespace));
+  }
+
+  /**
+   * Transform an AVRO namespace to a Java package-name, using mappings registered
+   * via method setNamespaceMappings.
+   */
+  public String mapNamespaceToPackage(String namespace) {
+    if (namespace != null) {
+      for (NamespaceToPackageMapping mapping : namespaceMappings) {
+        if (mapping.matches(namespace)) {
+          return mapping.map(namespace);
+        }
+      }
+    }
+
+    return namespace; // no custom mapping found, so use namespace as packagename
   }
 
   public boolean isCreateSetters() {
@@ -568,7 +607,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String mangledName = mangleTypeIdentifier(protocol.getName());
-    outputFile.path = makePath(mangledName, mangle(protocol.getNamespace()));
+    outputFile.path = makePath(mangledName, mapNamespace(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -640,7 +679,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String name = mangleTypeIdentifier(schema.getName());
-    outputFile.path = makePath(name, mangle(schema.getNamespace()));
+    outputFile.path = makePath(name, mapNamespace(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;

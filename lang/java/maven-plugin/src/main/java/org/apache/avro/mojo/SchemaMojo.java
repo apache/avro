@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.mojo.model.MavenNamespaceToPackageMapping;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
@@ -78,6 +79,7 @@ public class SchemaMojo extends AbstractAvroMojo {
 
     final SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
+    compiler.setNamespaceMappings(MavenNamespaceToPackageMapping.toCompilerType(namespaceMappings));
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateOptionalGetters(createOptionalGetters);

@@ -1,0 +1,9 @@
+{
+  "type": "record", 
+  "name": "SimpleRecordWithNamespace",
+  "namespace": "org.apache.avro.specific.test",
+  "fields" : [
+    {"name": "value", "type": "int"},
+    {"name": "nullableValue", "type": ["null","int"], "doc" : "doc"}
+  ]
+}
