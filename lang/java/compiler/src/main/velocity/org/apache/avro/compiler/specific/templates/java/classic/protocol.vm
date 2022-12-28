@@ -16,7 +16,7 @@
 ## limitations under the License.
 ##
 #if ($protocol.getNamespace())
-package $this.mangle($protocol.getNamespace());
+package $this.mapNamespace($protocol.getNamespace());
 #end
 
 #if ($protocol.getDoc())
@@ -66,7 +66,7 @@ ${this.mangle($error.getFullName())}##
 #end
   @org.apache.avro.specific.AvroGenerated
   public interface Callback extends $this.mangleTypeIdentifier($protocol.getName()) {
-    public static final org.apache.avro.Protocol PROTOCOL = #if ($this.mangle($protocol.getNamespace()))$this.mangle($protocol.getNamespace()).#end${this.mangleTypeIdentifier($protocol.getName())}.PROTOCOL;
+    public static final org.apache.avro.Protocol PROTOCOL = #if ($this.mapNamespace($protocol.getNamespace()))$this.mapNamespace($protocol.getNamespace()).#end${this.mangleTypeIdentifier($protocol.getName())}.PROTOCOL;
 #foreach ($e in $protocol.getMessages().entrySet())
 #set ($name = $e.getKey())
 #set ($message = $e.getValue())

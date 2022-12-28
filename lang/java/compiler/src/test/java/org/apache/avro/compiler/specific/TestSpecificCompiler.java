@@ -272,6 +272,53 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testMapNamespaceToPackage() {
+    SpecificCompiler compiler = new SpecificCompiler();
+    assertEquals(null, compiler.mapNamespaceToPackage(null));
+    assertEquals("com.example", compiler.mapNamespaceToPackage("com.example"));
+
+    compiler.setNamespaceMappings("org.apache.widgets->com.example.widgets", "org.apache->org.other",
+        "com.example->net.example");
+    assertEquals(null, compiler.mapNamespaceToPackage(null));
+    assertEquals("org.some.example", compiler.mapNamespaceToPackage("org.some.example"));
+    assertEquals("com.example.widgets", compiler.mapNamespaceToPackage("org.apache.widgets"));
+    assertEquals("com.example.widgets.foo", compiler.mapNamespaceToPackage("org.apache.widgets.foo"));
+    assertEquals("org.other.data.analysis", compiler.mapNamespaceToPackage("org.apache.data.analysis"));
+    assertEquals("net.example", compiler.mapNamespaceToPackage("com.example"));
+  }
+
+  @Test
+  public void testNamespaceMapping() throws Exception {
+    File src = new File("src/test/resources/simple_record_with_namespace.avsc");
+
+    Schema.Parser parser = new Schema.Parser();
+    Schema schema = parser.parse(src);
+    SpecificCompiler compiler = new SpecificCompiler(schema);
+    String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
+    compiler.setTemplateDir(velocityTemplateDir);
+    compiler.setStringType(StringType.CharSequence);
+
+    compiler.setNamespaceMappings("com.example.nosuchnamespace->irrelevant",
+        "org.apache.avro.specific->org.example.data");
+
+    compiler.compileToDestination(src, this.OUTPUT_DIR.getRoot());
+    File outputFile = new File(this.OUTPUT_DIR.getRoot(), "org/example/data/test/SimpleRecordWithNamespace.java");
+    assertTrue(outputFile.exists());
+    String packageFound = null;
+    try (BufferedReader reader = new BufferedReader(new FileReader(outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.startsWith("package ")) {
+          packageFound = line;
+          break;
+        }
+      }
+    }
+    assertEquals("package org.example.data.test;", packageFound);
+  }
+
+  @Test
   public void testSettersCreatedByDefault() throws IOException {
     SpecificCompiler compiler = createCompiler();
     assertTrue(compiler.isCreateSetters());
