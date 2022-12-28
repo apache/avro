@@ -29,6 +29,9 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.specific.SpecificData;
+
 public class TestLogicalType {
 
   @Test
@@ -73,6 +76,39 @@ public class TestLogicalType {
             return null;
           });
     }
+  }
+
+  @Test
+  public void testInvalidLogicalTypeIncompatibleProps() {
+    String[] INCOMPATIBLE_PROPS = new String[] { GenericData.STRING_PROP, SpecificData.CLASS_PROP,
+        SpecificData.KEY_CLASS_PROP, SpecificData.ELEMENT_PROP };
+
+    for (final String incompatible_prop : INCOMPATIBLE_PROPS) {
+      final Schema schema = Schema.create(Schema.Type.BYTES);
+      schema.addProp("logicalType", "decimal");
+      schema.addProp(incompatible_prop, incompatible_prop);
+
+      assertThrows("Should reject LogicalType with incompatible properties: " + schema.getType(),
+          IllegalArgumentException.class, LogicalType.LOGICAL_TYPE_PROP + " cannot be used with " + incompatible_prop,
+          () -> {
+            LogicalTypes.decimal(9).addToSchema(schema);
+            return null;
+          });
+    }
+  }
+
+  @Test
+  public void testStrictLogicalTypesParsing() {
+    String schema = "{\"namespace\":\"org.apache.avro.invalid\",\"type\":\"record\",\"name\":\"InvalidRecord\","
+        + "\"fields\":[{\"name\":\"f0\",\"type\":{\"type\":\"string\",\"java-class\":\"java.math.BigDecimal\","
+        + "\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}";
+    Schema.Parser parser = new Schema.Parser().setStrictLogicalTypes(true);
+
+    assertThrows("Should reject invalid schema: " + schema, IllegalArgumentException.class,
+        "logicalType cannot be used with java-class", () -> {
+          parser.parse(schema);
+          return null;
+        });
   }
 
   @Test
