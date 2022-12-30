@@ -1,4 +1,4 @@
-use apache_avro::{to_avro_datum, to_value, Schema};
+use apache_avro::{to_avro_datum, to_value, types::Value, Schema};
 
 #[test]
 fn test_multivalue_union_tovalue() {
@@ -26,6 +26,19 @@ fn test_multivalue_union_tovalue() {
 
     let schema = Schema::parse_str(nuschema).unwrap();
 
+    // WORKING
+    // Record([("item", Union(1, Long(34)))])
+    let nu_value = Value::Record(vec![(
+        "item".to_owned(),
+        Value::Union(1, Box::new(Value::Long(34))),
+    )]);
+
+    println!("{:?}", nu_value);
+    let nu_encoded = to_avro_datum(&schema, nu_value);
+    println!("{:?}", nu_encoded);
+
+    // FAILING
+    // Record([("item", Union(1, Record([("type", Enum(0, "Long")), ("value", Union(0, Long(34)))])))])
     let nu_value = to_value(nullunion).unwrap();
     let nu_encoded = to_avro_datum(&schema, nu_value).unwrap();
 
