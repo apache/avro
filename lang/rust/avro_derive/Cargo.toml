@@ -41,4 +41,4 @@ syn = { default-features = false, version = "1.0.107", features = ["full", "fold
 [dev-dependencies]
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
 proptest = { default-features = false, version = "1.0.0", features = ["std"] }
-serde = { default-features = false, version = "1.0.151", features = ["derive"] }
+serde = { default-features = false, version = "1.0.152", features = ["derive"] }
