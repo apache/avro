@@ -17,13 +17,18 @@
  */
 package org.apache.avro.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Conversions;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
@@ -46,6 +51,7 @@ import org.apache.avro.util.Utf8;
 public class ResolvingDecoder extends ValidatingDecoder {
 
   private Decoder backup;
+  private GenericData data;
 
   ResolvingDecoder(Schema writer, Schema reader, Decoder in) throws IOException {
     this(resolve(writer, reader), in);
@@ -62,6 +68,17 @@ public class ResolvingDecoder extends ValidatingDecoder {
    */
   private ResolvingDecoder(Object resolver, Decoder in) throws IOException {
     super((Symbol) resolver, in);
+  }
+
+  /**
+   * Configure decoder with GenericData in case we need to resolve conversion
+   * based on logical types
+   *
+   * @param data
+   */
+  public void configure(GenericData data) {
+    this.parser.reset();
+    this.data = data;
   }
 
   /**
@@ -293,6 +310,10 @@ public class ResolvingDecoder extends ValidatingDecoder {
     }
     if (top instanceof Symbol.ResolvingAction) {
       Symbol.ResolvingAction t = (Symbol.ResolvingAction) top;
+      if (t.writerSchema.getLogicalType() != null || t.readerSchema.getLogicalType() != null) {
+        resolveLogicalType(t);
+        return null;
+      }
       if (t.reader != input) {
         throw new AvroTypeException("Found " + t.reader + " while looking for " + input);
       } else {
@@ -316,6 +337,31 @@ public class ResolvingDecoder extends ValidatingDecoder {
       throw new AvroTypeException("Unknown action: " + top);
     }
     return null;
+  }
+
+  private void resolveLogicalType(Symbol.ResolvingAction t) throws IOException {
+    Object result = new GenericDatumReader<>(t.writerSchema, t.writerSchema, data).read(null, in);
+    if (result == null) {
+      throw new IllegalStateException("Writer schema has a weird type: " + t.writerSchema);
+    }
+    if (t.writerSchema.getLogicalType() != null) {
+      result = Conversions.convertToRawType(result, t.readerSchema, t.writerSchema.getLogicalType(),
+          data.getConversionFor(t.writerSchema.getLogicalType()));
+    } else if (t.readerSchema.getLogicalType() != null) {
+      result = Conversions.convertToLogicalType(result, t.writerSchema, t.readerSchema.getLogicalType(),
+          data.getConversionFor(t.readerSchema.getLogicalType()));
+      result = Conversions.convertToRawType(result, t.readerSchema, t.readerSchema.getLogicalType(),
+          data.getConversionFor(t.readerSchema.getLogicalType()));
+    }
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    GenericDatumWriter<Object> datumWriter = new GenericDatumWriter<>(t.readerSchema);
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+    datumWriter.write(result, encoder);
+    encoder.flush();
+
+    parser.pushSymbol(Symbol.DEFAULT_END_ACTION);
+    parser.pushSymbol(t.reader);
+    parser.pushSymbol(Symbol.defaultStartAction(outputStream.toByteArray()));
   }
 
   @Override

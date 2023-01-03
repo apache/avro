@@ -298,7 +298,8 @@ public class LogicalTypes {
     public void validate(Schema schema) {
       super.validate(schema);
       // validate the type
-      if (schema.getType() != Schema.Type.FIXED && schema.getType() != Schema.Type.BYTES) {
+      if (schema.getType() != Schema.Type.FIXED && schema.getType() != Schema.Type.BYTES
+          && schema.getType() != Schema.Type.STRING) {
         throw new IllegalArgumentException("Logical type decimal must be backed by fixed or bytes");
       }
       if (precision <= 0) {
@@ -316,7 +317,7 @@ public class LogicalTypes {
     }
 
     private long maxPrecision(Schema schema) {
-      if (schema.getType() == Schema.Type.BYTES) {
+      if (schema.getType() == Schema.Type.BYTES || schema.getType() == Schema.Type.STRING) {
         // not bounded
         return Integer.MAX_VALUE;
       } else if (schema.getType() == Schema.Type.FIXED) {

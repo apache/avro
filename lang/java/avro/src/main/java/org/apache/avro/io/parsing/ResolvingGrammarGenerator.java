@@ -89,7 +89,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.skipAction(simpleGen(action.writer, seen));
 
     } else if (action instanceof Resolver.Promote) {
-      return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
+      return Symbol.resolve(action.writer, action.reader, simpleGen(action.writer, seen),
+          simpleGen(action.reader, seen));
 
     } else if (action instanceof Resolver.ReaderUnion) {
       Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;

@@ -94,7 +94,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a sequence.
-   * 
+   *
    * @param production The constituent symbols of the sequence.
    */
   static Symbol seq(Symbol... production) {
@@ -103,7 +103,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a repeater.
-   * 
+   *
    * @param symsToRepeat The symbols to repeat in the repeater.
    */
   static Symbol repeat(Symbol endSymbol, Symbol... symsToRepeat) {
@@ -119,7 +119,7 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct an ErrorAction.
-   * 
+   *
    * @param e
    */
   static Symbol error(String e) {
@@ -128,12 +128,14 @@ public abstract class Symbol {
 
   /**
    * A convenience method to construct a ResolvingAction.
-   * 
-   * @param w The writer symbol
-   * @param r The reader symbol
+   *
+   * @param writer schema of the writer's field
+   * @param reader schema of the reader's field
+   * @param w      The writer symbol
+   * @param r      The reader symbol
    */
-  static Symbol resolve(Symbol w, Symbol r) {
-    return new ResolvingAction(w, r);
+  static Symbol resolve(Schema writer, Schema reader, Symbol w, Symbol r) {
+    return new ResolvingAction(writer, reader, w, r);
   }
 
   private static class Fixup {
@@ -238,7 +240,7 @@ public abstract class Symbol {
   /**
    * Returns the amount of space required to flatten the given sub-array of
    * symbols.
-   * 
+   *
    * @param symbols The array of input symbols.
    * @param start   The index where the subarray starts.
    * @return The number of symbols that will be produced if one expands the given
@@ -544,17 +546,21 @@ public abstract class Symbol {
   }
 
   public static class ResolvingAction extends ImplicitAction {
+    public final Schema writerSchema;
+    public final Schema readerSchema;
     public final Symbol writer;
     public final Symbol reader;
 
-    private ResolvingAction(Symbol writer, Symbol reader) {
+    private ResolvingAction(Schema writerSchema, Schema readerSchema, Symbol writer, Symbol reader) {
+      this.writerSchema = writerSchema;
+      this.readerSchema = readerSchema;
       this.writer = writer;
       this.reader = reader;
     }
 
     @Override
     public ResolvingAction flatten(Map<Sequence, Sequence> map, Map<Sequence, List<Fixup>> map2) {
-      return new ResolvingAction(writer.flatten(map, map2), reader.flatten(map, map2));
+      return new ResolvingAction(writerSchema, readerSchema, writer.flatten(map, map2), reader.flatten(map, map2));
     }
 
   }
