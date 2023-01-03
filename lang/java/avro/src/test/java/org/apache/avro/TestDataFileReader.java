@@ -65,8 +65,7 @@ public class TestDataFileReader {
         return;
 
       // Sometimes the number of file descriptors is off due to other processes or
-      // garbage
-      // collection. We note each inconsistency and retry.
+      // garbage collection. We note each inconsistency and retry.
       sb.append(openFilesBeforeOperation).append("!=").append(openFilesAfterOperation).append(",");
     }
     fail("File descriptor leaked from new DataFileReader() over " + maxTries + " tries: ("
