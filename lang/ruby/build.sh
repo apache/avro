@@ -22,7 +22,7 @@ cd "$(dirname "$0")"
 
 # maintain our gems here
 export GEM_HOME="$PWD/.gem/"
-export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
+export PATH="$GEM_HOME/bin:$PATH"
 
 bundle install
 
