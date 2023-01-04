@@ -20,8 +20,8 @@ name: Deploy ASF site
 on:
   push:
     branches:
-#      - master
-      - branch-1.11.x
+      - master
+      - branch-1.**
       - "avro-3686-asf.yaml-docs"
     tags-ignore:
       - "release-**-rc**"
@@ -45,16 +45,8 @@ jobs:
           set -x
           VERSION=$(cat share/VERSION.txt)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if test '${{ github.ref_type }}' = 'branch'; then
-            echo "target-branch=site-$VERSION" >> $GITHUB_OUTPUT
-            echo "baseUrl=/$VERSION" >> $GITHUB_OUTPUT
-          elif test '${{ github.ref_type }}' = 'tag'; then
-            echo "target-branch=site-production" >> $GITHUB_OUTPUT
-            echo "baseUrl=/" >> $GITHUB_OUTPUT
-          else
-            echo "Unsupported input: ${{ github.ref }} / ${{ github.ref_type }}"
-            exit 1
-          fi
+          echo "target-branch=site-$VERSION" >> $GITHUB_OUTPUT
+          echo "baseUrl=docs-new/$VERSION" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-node@v3
         with:
@@ -76,14 +68,14 @@ jobs:
         run: |
           set -x
           cd doc
-          hugo --minify --destination ../website --baseURL=${{ steps.variables.outputs.baseUrl }}
+          hugo --minify --destination ../website --baseURL=/${{ steps.variables.outputs.baseUrl }}
 
       - name: Copy & push the generated HTML
         run: |
           # TODO build the C/C++/C# docs for master/staging
           set -x
           sed -i -e "s|TARGET_BRANCH|${{ steps.variables.outputs.target-branch }}|" .asf.yaml
-          sed -i -e "s|SUBDIR|${{ steps.variables.outputs.version }}|" .asf.yaml
+          sed -i -e "s|SUBDIR|${{ steps.variables.outputs.baseUrl }}|" .asf.yaml
           cp .asf.yaml website/
           git checkout -B ${{ steps.variables.outputs.target-branch }}
           # delete anything but: 1) '.'; 2) '..'; 3) .git/; 4) website/
