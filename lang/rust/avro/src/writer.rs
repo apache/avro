@@ -77,7 +77,12 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
     /// `io::Write` trait to write to.
-    pub fn with_schemata(schema: &'a Schema, schemata: &'a [&'a Schema], writer: W, codec: Codec) -> Self {
+    pub fn with_schemata(
+        schema: &'a Schema,
+        schemata: &'a [&'a Schema],
+        writer: W,
+        codec: Codec,
+    ) -> Self {
         let mut w = Self::builder()
             .schema(schema)
             .writer(writer)
@@ -546,7 +551,7 @@ fn write_value_ref_resolved(
             resolved_schema.get_names(),
             &schema.namespace(),
             buffer,
-        )
+        ),
     }
 }
 

@@ -15,7 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use apache_avro::{from_avro_datum_schemata, to_avro_datum_schemata, types::Value, Schema, Writer, Reader, Codec};
+use apache_avro::{
+    from_avro_datum_schemata, to_avro_datum_schemata, types::Value, Codec, Reader, Schema, Writer,
+};
 use apache_avro_test_helper::init;
 
 static SCHEMA_A_STR: &str = r#"{
@@ -74,7 +76,8 @@ fn test_avro_3683_multiple_schemata_writer_reader() {
     let schema_b = schemata[1];
     let mut output: Vec<u8> = Vec::new();
 
-    let mut writer = Writer::with_schemata(&schema_b, schemata.as_slice(), &mut output, Codec::Null);
+    let mut writer =
+        Writer::with_schemata(&schema_b, schemata.as_slice(), &mut output, Codec::Null);
     writer.append(record.clone()).unwrap();
     writer.flush().unwrap();
 
