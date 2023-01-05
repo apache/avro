@@ -17,8 +17,9 @@
 
 use apache_avro::{types::Value, Codec, Reader, Schema, Writer};
 use std::{
+    fmt,
     fs::{DirEntry, File, ReadDir},
-    io::{BufReader, Error},
+    io::BufReader,
     path::Path,
     slice::Iter,
 };
@@ -28,19 +29,63 @@ const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 #[test]
 fn test_schema() {
     let directory: ReadDir = scan_shared_folder();
-    directory.for_each(|f: Result<DirEntry, Error>| {
-        let e: DirEntry = match f {
-            Err(error) => panic!("Can't get file {:?}", error),
+    let mut result: Result<(), ErrorsDesc> = Ok(());
+    for f in directory {
+        let entry: DirEntry = match f {
             Ok(entry) => entry,
+            Err(e) => core::panic!("Can't get file {}", e),
         };
-        log::warn!("{:?}", e.file_name());
-        let sub_folder = ROOT_DIRECTORY.to_owned() + "/" + e.file_name().to_str().unwrap();
+        log::debug!("{:?}", entry.file_name());
+        let sub_folder = ROOT_DIRECTORY.to_owned() + "/" + entry.file_name().to_str().unwrap();
 
-        test_folder(sub_folder.as_str());
-    });
+        let dir_result = test_folder(sub_folder.as_str());
+        if let Result::Err(ed) = dir_result {
+            result = match result {
+                Ok(()) => Err(ed),
+                Err(e) => Err(e.merge(&ed)),
+            }
+        }
+    }
+    match result {
+        Err(e) => core::panic!("{}", e),
+        _ => (),
+    }
 }
 
-fn test_folder(folder: &str) {
+#[derive(Debug)]
+struct ErrorsDesc {
+    details: Vec<String>,
+}
+
+impl ErrorsDesc {
+    fn new(msg: &str) -> ErrorsDesc {
+        ErrorsDesc {
+            details: vec![msg.to_string()],
+        }
+    }
+
+    fn add(&self, msg: &str) -> Self {
+        let mut new_vec = self.details.clone();
+        new_vec.push(msg.to_string());
+        return Self { details: new_vec };
+    }
+
+    fn merge(&self, err: &ErrorsDesc) -> Self {
+        let mut new_vec = self.details.clone();
+        err.details
+            .iter()
+            .for_each(|d: &String| new_vec.push(d.clone()));
+        return Self { details: new_vec };
+    }
+}
+
+impl fmt::Display for ErrorsDesc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        return write!(f, "{}", self.details.join("\n").as_str());
+    }
+}
+
+fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
     let file_name = folder.to_owned() + "/schema.json";
     let content = std::fs::read_to_string(file_name).expect("Unable to find schema.jon file");
 
@@ -49,7 +94,10 @@ fn test_folder(folder: &str) {
     let data_file_name = folder.to_owned() + "/data.avro";
     let data_path: &Path = Path::new(data_file_name.as_str());
     if !data_path.exists() {
-        log::warn!("data file does not exist");
+        log::error!("{}", format!("folder {} does not exist", folder));
+        return Result::Err(ErrorsDesc::new(
+            format!("folder {} does not exist", folder).as_str(),
+        ));
     } else {
         let file: File = File::open(data_path).expect("Can't open data.avro");
         let reader =
@@ -71,11 +119,22 @@ fn test_folder(folder: &str) {
             Reader::with_schema(&schema, &bytes[..]).expect("Can't read flushed vector");
 
         let mut records_iter: Iter<Value> = records.iter();
+        let mut result = Result::Ok(());
         for r2 in reader_bis {
             let record: Value = r2.expect("Error on reading");
             let original = records_iter.next().expect("Error, no next");
-            assert_eq!(*original, record);
+            if original != &record {
+                result = match result {
+                    Ok(_) => Result::Err(ErrorsDesc::new(
+                        format!("Records are not equals for folder : {}", folder).as_str(),
+                    )),
+                    Err(e) => Err(
+                        e.add(format!("Records are not equals for folder : {}", folder).as_str())
+                    ),
+                }
+            }
         }
+        return result;
     }
 }
 
