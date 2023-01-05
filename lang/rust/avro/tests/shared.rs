@@ -46,9 +46,8 @@ fn test_schema() {
             }
         }
     }
-    match result {
-        Err(e) => core::panic!("{}", e),
-        _ => (),
+    if let Err(e) = result {
+        core::panic!("{}", e)
     }
 }
 
@@ -67,7 +66,7 @@ impl ErrorsDesc {
     fn add(&self, msg: &str) -> Self {
         let mut new_vec = self.details.clone();
         new_vec.push(msg.to_string());
-        return Self { details: new_vec };
+        Self { details: new_vec }
     }
 
     fn merge(&self, err: &ErrorsDesc) -> Self {
@@ -75,13 +74,13 @@ impl ErrorsDesc {
         err.details
             .iter()
             .for_each(|d: &String| new_vec.push(d.clone()));
-        return Self { details: new_vec };
+        Self { details: new_vec }
     }
 }
 
 impl fmt::Display for ErrorsDesc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        return write!(f, "{}", self.details.join("\n").as_str());
+        write!(f, "{}", self.details.join("\n").as_str())
     }
 }
 
@@ -93,6 +92,7 @@ fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
 
     let data_file_name = folder.to_owned() + "/data.avro";
     let data_path: &Path = Path::new(data_file_name.as_str());
+    let mut result = Result::Ok(());
     if !data_path.exists() {
         log::error!("{}", format!("folder {} does not exist", folder));
         return Result::Err(ErrorsDesc::new(
@@ -119,7 +119,6 @@ fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
             Reader::with_schema(&schema, &bytes[..]).expect("Can't read flushed vector");
 
         let mut records_iter: Iter<Value> = records.iter();
-        let mut result = Result::Ok(());
         for r2 in reader_bis {
             let record: Value = r2.expect("Error on reading");
             let original = records_iter.next().expect("Error, no next");
@@ -134,8 +133,8 @@ fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
                 }
             }
         }
-        return result;
     }
+    result
 }
 
 fn scan_shared_folder() -> ReadDir {
