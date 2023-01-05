@@ -45,19 +45,15 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.Schema;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class TestGenericDatumReader {
 
   private static final Random r = new Random(System.currentTimeMillis());
-
-  @Parameterized.Parameter
-  public String fastReaderProp;
-
-  @Parameterized.Parameters(name = "{index}: fast reader - {0}")
-  public static Object[] data() {
-    return new Object[] { "true", "false" };
-  }
 
   @Test
   void readerCache() {
@@ -85,7 +81,6 @@ public class TestGenericDatumReader {
     assertEquals(StringBuilder.class, object.getClass());
     StringBuilder builder = (StringBuilder) object;
     assertEquals("Hello", builder.toString());
-
   }
 
   static class WithSchema {
@@ -144,11 +139,12 @@ public class TestGenericDatumReader {
     }
   }
 
-  @Test
-  public void testSimple() throws IOException {
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  public void simple(String fastReaderProp) throws IOException {
     final String current = System.getProperty(GenericData.FAST_READER_PROP);
     try {
-      System.setProperty(GenericData.FAST_READER_PROP, this.fastReaderProp);
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
       Schema schema = Schema.createRecord("Person", "doc", "foo", false,
           Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "Bond")));
 
@@ -156,7 +152,7 @@ public class TestGenericDatumReader {
       byte[] toAvro = this.convertJsonToAvro(data.getBytes(), schema);
 
       final IndexedRecord record = this.readOneRecord(schema, toAvro);
-      Assert.assertEquals("Bond", record.get(schema.getField("lastname").pos()).toString());
+      Assertions.assertEquals("Bond", record.get(schema.getField("lastname").pos()).toString());
     } finally {
       if (current == null) {
         System.clearProperty(GenericData.FAST_READER_PROP);
@@ -166,16 +162,19 @@ public class TestGenericDatumReader {
     }
   }
 
-  @Test(expected = AvroTypeException.class)
-  public void testWrong() {
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  void wrong(String fastReaderProp) {
     final String current = System.getProperty(GenericData.FAST_READER_PROP);
     try {
-      System.setProperty(GenericData.FAST_READER_PROP, this.fastReaderProp);
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
       Schema schema = Schema.createRecord("Person", "doc", "foo", false,
           Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "last")));
 
       String data = "{ \"lastname\": 123 }";
-      this.convertJsonToAvro(data.getBytes(), schema);
+      AvroTypeException exception = Assertions.assertThrows(AvroTypeException.class,
+          () -> this.convertJsonToAvro(data.getBytes(), schema));
+
     } finally {
       if (current == null) {
         System.clearProperty(GenericData.FAST_READER_PROP);
@@ -185,11 +184,12 @@ public class TestGenericDatumReader {
     }
   }
 
-  @Test
-  public void testMultiField() throws IOException {
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  public void multiField(String fastReaderProp) throws IOException {
     final String current = System.getProperty(GenericData.FAST_READER_PROP);
     try {
-      System.setProperty(GenericData.FAST_READER_PROP, this.fastReaderProp);
+      System.setProperty(GenericData.FAST_READER_PROP, fastReaderProp);
       Schema schema = Schema.createRecord("Person", "doc", "foo", false,
           Arrays.asList(new Schema.Field("lastname", Schema.create(Schema.Type.STRING), "doc", "Bond"),
               new Schema.Field("firstname", Schema.create(Schema.Type.STRING), "doc", "James")));
@@ -198,8 +198,8 @@ public class TestGenericDatumReader {
       byte[] toAvro = this.convertJsonToAvro(data.getBytes(), schema);
 
       final IndexedRecord record = this.readOneRecord(schema, toAvro);
-      Assert.assertEquals("James", record.get(schema.getField("firstname").pos()).toString());
-      Assert.assertEquals("Doe", record.get(schema.getField("lastname").pos()).toString());
+      assertEquals("James", record.get(schema.getField("firstname").pos()).toString());
+      assertEquals("Doe", record.get(schema.getField("lastname").pos()).toString());
     } finally {
       if (current == null) {
         System.clearProperty(GenericData.FAST_READER_PROP);
@@ -217,8 +217,8 @@ public class TestGenericDatumReader {
     Decoder decoder = DecoderFactory.get().binaryDecoder(din, null);
 
     final Object record = reader.read(null, decoder);
-    Assert.assertNotNull(record);
-    Assert.assertTrue(record instanceof IndexedRecord);
+    Assertions.assertNotNull(record);
+    Assertions.assertTrue(record instanceof IndexedRecord);
     return (IndexedRecord) record;
   }
 
