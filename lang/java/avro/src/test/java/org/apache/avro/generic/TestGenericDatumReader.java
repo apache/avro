@@ -107,7 +107,6 @@ public class TestGenericDatumReader {
           Arrays.asList(new Schema.Field("field" + schemaNum, Schema.create(Schema.Type.STRING))));
       list.add(schema);
     }
-
     return list.get(schemaNum);
   }
 
