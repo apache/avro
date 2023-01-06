@@ -178,4 +178,11 @@ public class TestSpecificData {
       // Expected error
     }
   }
+
+  @Test
+  void classNameContainingReservedWords() {
+    final Schema schema = Schema.createRecord("AnyName", null, "db.public.table", false);
+
+    assertEquals("db.public$.table.AnyName", SpecificData.getClassName(schema));
+  }
 }
