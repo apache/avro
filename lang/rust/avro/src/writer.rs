@@ -77,6 +77,8 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
     /// `io::Write` trait to write to.
+    /// If the `schema` is incomplete, i.e. contains `Schema::Ref`s then all dependencies must
+    /// be provided in `schemata`.
     pub fn with_schemata(
         schema: &'a Schema,
         schemata: Vec<&'a Schema>,
@@ -413,7 +415,6 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
-// TODO: document and add tests
 fn write_avro_datum_schemata<T: Into<Value>>(
     schema: &Schema,
     schemata: Vec<&Schema>,
@@ -590,7 +591,10 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
     Ok(buffer)
 }
 
-// TODO: document and add tests
+/// Encode a compatible value (implementing the `ToAvro` trait) into Avro format, also
+/// performing schema validation.
+/// If the provided `schema` is incomplete then its dependencies must be
+/// provided in `schemata`
 pub fn to_avro_datum_schemata<T: Into<Value>>(
     schema: &Schema,
     schemata: Vec<&Schema>,

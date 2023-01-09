@@ -328,7 +328,6 @@ impl<'a, R: Read> Reader<'a, R> {
         reader: R,
     ) -> AvroResult<Reader<'a, R>> {
         let block = Block::new(reader, schemata)?;
-        println!("with_schemata 2");
         let mut reader = Reader {
             block,
             reader_schema: Some(schema),
@@ -408,6 +407,12 @@ pub fn from_avro_datum<R: Read>(
     }
 }
 
+/// Decode a `Value` encoded in Avro format given the provided `Schema` and anything implementing `io::Read`
+/// to read from.
+/// If the writer schema is incomplete, i.e. contains `Schema::Ref`s then it will use the provided
+/// schemata to resolve any dependencies.
+///
+/// In case a reader `Schema` is provided, schema resolution will also be performed.
 pub fn from_avro_datum_schemata<R: Read>(
     writer_schema: &Schema,
     schemata: Vec<&Schema>,
