@@ -419,14 +419,14 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
     }
 }
 
-impl<'s> TryFrom<&'s [&'s Schema]> for ResolvedSchema<'s> {
+impl<'s> TryFrom<Vec<&'s Schema>> for ResolvedSchema<'s> {
     type Error = Error;
 
-    fn try_from(schemata: &[&'s Schema]) -> AvroResult<Self> {
+    fn try_from(schemata: Vec<&'s Schema>) -> AvroResult<Self> {
         let names = HashMap::new();
         let mut rs = ResolvedSchema {
             names_ref: names,
-            schemata: schemata.to_vec(),
+            schemata,
         };
         Self::from_internal(rs.get_schemata(), &mut rs.names_ref, &None)?;
         Ok(rs)
@@ -961,7 +961,9 @@ impl Parser {
             .input_schemas
             .remove(&fully_qualified_name)
             // TODO make a better descriptive error message here that conveys that a named schema cannot be found
-            .ok_or_else(|| Error::ParsePrimitive(fully_qualified_name.fullname(None)))?;
+            .ok_or_else(|| {
+                Error::ParsePrimitive(fully_qualified_name.fullname(None))
+            })?;
 
         // parsing a full schema from inside another schema. Other full schema will not inherit namespace
         let parsed = self.parse(&value, &None)?;

@@ -79,7 +79,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// `io::Write` trait to write to.
     pub fn with_schemata(
         schema: &'a Schema,
-        schemata: &'a [&'a Schema],
+        schemata: Vec<&'a Schema>,
         writer: W,
         codec: Codec,
     ) -> Self {
@@ -122,7 +122,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// `std::io::Write` using the provided `marker`
     pub fn append_to_with_codec_schemata(
         schema: &'a Schema,
-        schemata: &'a [&'a Schema],
+        schemata: Vec<&'a Schema>,
         writer: W,
         codec: Codec,
         marker: [u8; 16],
@@ -416,7 +416,7 @@ fn write_avro_datum<T: Into<Value>>(
 // TODO: document and add tests
 fn write_avro_datum_schemata<T: Into<Value>>(
     schema: &Schema,
-    schemata: &[&Schema],
+    schemata: Vec<&Schema>,
     value: T,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
@@ -593,7 +593,7 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
 // TODO: document and add tests
 pub fn to_avro_datum_schemata<T: Into<Value>>(
     schema: &Schema,
-    schemata: &[&Schema],
+    schemata: Vec<&Schema>,
     value: T,
 ) -> AvroResult<Vec<u8>> {
     let mut buffer = Vec::new();

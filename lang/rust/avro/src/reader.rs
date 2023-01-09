@@ -46,12 +46,12 @@ struct Block<'r, R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
-    schemata: &'r [&'r Schema],
+    schemata: Vec<&'r Schema>,
     user_metadata: HashMap<String, Vec<u8>>,
 }
 
 impl<'r, R: Read> Block<'r, R> {
-    fn new(reader: R, schemata: &'r [&'r Schema]) -> AvroResult<Block<R>> {
+    fn new(reader: R, schemata: Vec<&'r Schema>) -> AvroResult<Block<R>> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
@@ -180,12 +180,13 @@ impl<'r, R: Read> Block<'r, R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let item = from_avro_datum_schemata(
-            &self.writer_schema,
-            &self.schemata,
-            &mut block_bytes,
-            read_schema,
-        )?;
+        let schemata = if self.schemata.is_empty() {
+            vec![&self.writer_schema]
+        } else {
+            self.schemata.clone()
+        };
+        let item =
+            from_avro_datum_schemata(&self.writer_schema, schemata, &mut block_bytes, read_schema)?;
         if b_original == block_bytes.len() {
             // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
             return Err(Error::ReadBlock);
@@ -207,7 +208,7 @@ impl<'r, R: Read> Block<'r, R> {
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
 
-        if self.schemata.len() > 0 {
+        if !self.schemata.is_empty() {
             // find the writer schema in the schemata using the name from JSON
             let name = match json {
                 serde_json::Value::Object(map) => {
@@ -218,7 +219,7 @@ impl<'r, R: Read> Block<'r, R> {
                         .ok_or(Error::GetNameField)?;
 
                     Ok(Name {
-                        name: name.to_string(),
+                        name,
                         namespace: namespace_from_name.or_else(|| {
                             map.get("namespace")
                                 .and_then(|v| v.as_str())
@@ -232,8 +233,8 @@ impl<'r, R: Read> Block<'r, R> {
                 .schemata
                 .iter()
                 .find(|s| s.name().unwrap() == &name)
-                .map(|s| s.clone())
-                .expect(format!("Schema {} not found", name).as_str());
+                .cloned()
+                .unwrap_or_else(|| panic!("Schema {} not found", name));
             self.writer_schema = s.clone();
         } else {
             self.writer_schema = Schema::parse(&json)?;
@@ -311,7 +312,7 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn new(reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader, &[])?;
+        let block = Block::new(reader, vec![])?;
         let reader = Reader {
             block,
             reader_schema: None,
@@ -326,7 +327,7 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn with_schema(schema: &'a Schema, reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader, &[])?;
+        let block = Block::new(reader, vec![schema])?;
         let mut reader = Reader {
             block,
             reader_schema: Some(schema),
@@ -344,7 +345,7 @@ impl<'a, R: Read> Reader<'a, R> {
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn with_schemata(
         schema: &'a Schema,
-        schemata: &'a [&'a Schema],
+        schemata: Vec<&'a Schema>,
         reader: R,
     ) -> AvroResult<Reader<'a, R>> {
         let block = Block::new(reader, schemata)?;
@@ -430,7 +431,7 @@ pub fn from_avro_datum<R: Read>(
 
 pub fn from_avro_datum_schemata<R: Read>(
     writer_schema: &Schema,
-    schemata: &[&Schema],
+    schemata: Vec<&Schema>,
     reader: &mut R,
     reader_schema: Option<&Schema>,
 ) -> AvroResult<Value> {

@@ -51,12 +51,10 @@ fn test_avro_3683_multiple_schemata_to_from_avro_datum() {
     // this is the Schema we want to use for write/read
     let schema_b = schemata[1];
     let expected: Vec<u8> = vec![0, 0, 128, 63];
-    let actual = to_avro_datum_schemata(schema_b, schemata.as_slice(), record.clone()).unwrap();
+    let actual = to_avro_datum_schemata(schema_b, schemata.clone(), record.clone()).unwrap();
     assert_eq!(actual, expected);
 
-    let value =
-        from_avro_datum_schemata(schema_b, schemata.as_slice(), &mut actual.as_slice(), None)
-            .unwrap();
+    let value = from_avro_datum_schemata(schema_b, schemata, &mut actual.as_slice(), None).unwrap();
     assert_eq!(value, record);
 }
 
@@ -76,12 +74,11 @@ fn test_avro_3683_multiple_schemata_writer_reader() {
     let schema_b = schemata[1];
     let mut output: Vec<u8> = Vec::new();
 
-    let mut writer =
-        Writer::with_schemata(&schema_b, schemata.as_slice(), &mut output, Codec::Null);
+    let mut writer = Writer::with_schemata(schema_b, schemata.clone(), &mut output, Codec::Null);
     writer.append(record.clone()).unwrap();
     writer.flush().unwrap();
 
-    let reader = Reader::with_schemata(schema_b, schemata.as_slice(), output.as_slice()).unwrap();
+    let reader = Reader::with_schemata(schema_b, schemata, output.as_slice()).unwrap();
     let value = reader.into_iter().next().unwrap().unwrap();
     assert_eq!(value, record);
 }
