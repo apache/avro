@@ -20,7 +20,7 @@ use crate::{
     decode::{decode, decode_internal},
     from_value,
     rabin::Rabin,
-    schema::{AvroSchema, Name, ResolvedOwnedSchema, ResolvedSchema, Schema},
+    schema::{AvroSchema, Names, ResolvedOwnedSchema, ResolvedSchema, Schema},
     types::Value,
     util, AvroResult, Codec, Error,
 };
@@ -207,35 +207,14 @@ impl<'r, R: Read> Block<'r, R> {
                 }
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
-
         if !self.schemata.is_empty() {
-            // find the writer schema in the schemata using the name from JSON
-            let name = match json {
-                serde_json::Value::Object(map) => {
-                    let (name, namespace_from_name) = map
-                        .get("name")
-                        .and_then(|v| v.as_str())
-                        .map(|name| Name::get_name_and_namespace(name).unwrap())
-                        .ok_or(Error::GetNameField)?;
-
-                    Ok(Name {
-                        name,
-                        namespace: namespace_from_name.or_else(|| {
-                            map.get("namespace")
-                                .and_then(|v| v.as_str())
-                                .map(|s| s.to_string())
-                        }),
-                    })
-                }
-                _ => Err(Error::GetNameField),
-            }?;
-            let s = self
-                .schemata
+            let rs = ResolvedSchema::try_from(self.schemata.clone())?;
+            let names: Names = rs
+                .get_names()
                 .iter()
-                .find(|s| s.name().unwrap() == &name)
-                .cloned()
-                .unwrap_or_else(|| panic!("Schema {} not found", name));
-            self.writer_schema = s.clone();
+                .map(|(name, schema)| (name.clone(), (*schema).clone()))
+                .collect();
+            self.writer_schema = Schema::parse_with_names(&json, names)?;
         } else {
             self.writer_schema = Schema::parse(&json)?;
         }

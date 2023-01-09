@@ -828,6 +828,18 @@ impl Schema {
         parser.parse(value, &None)
     }
 
+    /// Parses an Avro schema from JSON.
+    /// Any `Schema::Ref`s must be known in the `names` map.
+    pub(crate) fn parse_with_names(value: &Value, names: Names) -> AvroResult<Schema> {
+        let mut parser = Parser {
+            input_schemas: HashMap::with_capacity(1),
+            resolving_schemas: Names::default(),
+            input_order: Vec::with_capacity(1),
+            parsed_schemas: names,
+        };
+        parser.parse(value, &None)
+    }
+
     /// Returns the custom attributes (metadata) if the schema supports them.
     pub fn custom_attributes(&self) -> Option<&BTreeMap<String, Value>> {
         match self {
@@ -961,9 +973,7 @@ impl Parser {
             .input_schemas
             .remove(&fully_qualified_name)
             // TODO make a better descriptive error message here that conveys that a named schema cannot be found
-            .ok_or_else(|| {
-                Error::ParsePrimitive(fully_qualified_name.fullname(None))
-            })?;
+            .ok_or_else(|| Error::ParsePrimitive(fully_qualified_name.fullname(None)))?;
 
         // parsing a full schema from inside another schema. Other full schema will not inherit namespace
         let parsed = self.parse(&value, &None)?;
