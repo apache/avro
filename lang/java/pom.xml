@@ -67,7 +67,7 @@
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.12</javacc.version>
-    <cyclonedx-maven-plugin.version>2.7.3</cyclonedx-maven-plugin.version>
+    <cyclonedx-maven-plugin.version>2.7.4</cyclonedx-maven-plugin.version>
   </properties>
 
   <modules>
