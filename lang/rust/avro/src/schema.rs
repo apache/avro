@@ -1403,19 +1403,19 @@ impl Parser {
             .and_then(|schemas| {
                 if let Some(default_value) = default.cloned() {
                     let avro_value = types::Value::from(default_value);
-                    let first_schema = schemas.first();
-                    if let Some(schema) = first_schema {
-                        // Try to resolve the schema
-                        let resolved_value = avro_value.to_owned().resolve(schema);
-                        match resolved_value {
-                            Ok(_) => {}
-                            Err(_) => {
-                                return Err(Error::GetDefaultUnion(
-                                    SchemaKind::from(schema),
-                                    types::ValueKind::from(avro_value),
-                                ));
-                            }
-                        }
+                    let resolved = schemas
+                        .iter()
+                        .any(|schema| avro_value.to_owned().resolve(schema).is_ok());
+
+                    if !resolved {
+                        let schema: Option<&Schema> = schemas.get(0);
+                        return match schema {
+                            Some(first_schema) => Err(Error::GetDefaultUnion(
+                                SchemaKind::from(first_schema),
+                                types::ValueKind::from(avro_value),
+                            )),
+                            None => Err(Error::EmptyUnion),
+                        };
                     }
                 }
                 Ok(schemas)
@@ -4238,6 +4238,42 @@ mod tests {
                         assert_eq!(union.variants()[0], Schema::Long);
                         assert_eq!(union.variants()[1], Schema::Null);
                         assert_eq!(union.variants()[2], Schema::Int);
+                    }
+                    _ => panic!("Expected Schema::Union"),
+                }
+            }
+            _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3649_default_notintfirst() {
+        let schema_str = String::from(
+            r#"
+            {
+                "type": "record",
+                "name": "union_schema_test",
+                "fields": [
+                    {"name": "a", "type": ["string", "int"], "default": 123}
+                ]
+            }
+        "#,
+        );
+
+        let schema = Schema::parse_str(&schema_str).unwrap();
+
+        match schema {
+            Schema::Record { name, fields, .. } => {
+                assert_eq!(name, Name::new("union_schema_test").unwrap());
+                assert_eq!(fields.len(), 1);
+                let field = &fields[0];
+                assert_eq!(&field.name, "a");
+                assert_eq!(&field.default, &Some(json!(123)));
+                match &field.schema {
+                    Schema::Union(union) => {
+                        assert_eq!(union.variants().len(), 2);
+                        assert_eq!(union.variants()[0], Schema::String);
+                        assert_eq!(union.variants()[1], Schema::Int);
                     }
                     _ => panic!("Expected Schema::Union"),
                 }

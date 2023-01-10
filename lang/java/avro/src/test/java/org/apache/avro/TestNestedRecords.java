@@ -22,8 +22,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -37,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TestNestedRecords {
 
   @Test
-  public void testSingleSubRecord() throws IOException {
+  void singleSubRecord() throws IOException {
 
     final Schema child = SchemaBuilder.record("Child").namespace("org.apache.avro.nested").fields()
         .requiredString("childField").endRecord();
@@ -64,7 +63,7 @@ public class TestNestedRecords {
   }
 
   @Test
-  public void testSingleSubRecordExtraField() throws IOException {
+  void singleSubRecordExtraField() throws IOException {
 
     final Schema child = SchemaBuilder.record("Child").namespace("org.apache.avro.nested").fields()
         .requiredString("childField").endRecord();

@@ -22,13 +22,14 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
 import org.apache.avro.test.namespace.TestNamespace;
-import org.junit.Before;
 
 import java.net.InetSocketAddress;
 
+import org.junit.jupiter.api.BeforeEach;
+
 public class TestNamespaceReflect extends TestNamespaceSpecific {
 
-  @Before
+  @BeforeEach
   @Override
   public void testStartServer() throws Exception {
     if (server != null)

@@ -17,11 +17,12 @@
  */
 package org.apache.avro.reflect;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Arrays;
 
 import org.apache.avro.Schema;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestReflectAllowNulls {
 
@@ -66,56 +67,56 @@ public class TestReflectAllowNulls {
   }
 
   @Test
-  public void testPrimitives() {
+  void primitives() {
     // AllowNull only makes fields nullable, so testing must use a base record
     Schema primitives = ReflectData.AllowNull.get().getSchema(Primitives.class);
-    Assert.assertEquals(requiredSchema(boolean.class), primitives.getField("aBoolean").schema());
-    Assert.assertEquals(requiredSchema(byte.class), primitives.getField("aByte").schema());
-    Assert.assertEquals(requiredSchema(short.class), primitives.getField("aShort").schema());
-    Assert.assertEquals(requiredSchema(int.class), primitives.getField("anInt").schema());
-    Assert.assertEquals(requiredSchema(long.class), primitives.getField("aLong").schema());
-    Assert.assertEquals(requiredSchema(float.class), primitives.getField("aFloat").schema());
-    Assert.assertEquals(requiredSchema(double.class), primitives.getField("aDouble").schema());
+    assertEquals(requiredSchema(boolean.class), primitives.getField("aBoolean").schema());
+    assertEquals(requiredSchema(byte.class), primitives.getField("aByte").schema());
+    assertEquals(requiredSchema(short.class), primitives.getField("aShort").schema());
+    assertEquals(requiredSchema(int.class), primitives.getField("anInt").schema());
+    assertEquals(requiredSchema(long.class), primitives.getField("aLong").schema());
+    assertEquals(requiredSchema(float.class), primitives.getField("aFloat").schema());
+    assertEquals(requiredSchema(double.class), primitives.getField("aDouble").schema());
   }
 
   @Test
-  public void testWrappers() {
+  void wrappers() {
     // AllowNull only makes fields nullable, so testing must use a base record
     Schema wrappers = ReflectData.AllowNull.get().getSchema(Wrappers.class);
-    Assert.assertEquals(nullableSchema(boolean.class), wrappers.getField("aBoolean").schema());
-    Assert.assertEquals(nullableSchema(byte.class), wrappers.getField("aByte").schema());
-    Assert.assertEquals(nullableSchema(short.class), wrappers.getField("aShort").schema());
-    Assert.assertEquals(nullableSchema(int.class), wrappers.getField("anInt").schema());
-    Assert.assertEquals(nullableSchema(long.class), wrappers.getField("aLong").schema());
-    Assert.assertEquals(nullableSchema(float.class), wrappers.getField("aFloat").schema());
-    Assert.assertEquals(nullableSchema(double.class), wrappers.getField("aDouble").schema());
-    Assert.assertEquals(nullableSchema(Primitives.class), wrappers.getField("anObject").schema());
+    assertEquals(nullableSchema(boolean.class), wrappers.getField("aBoolean").schema());
+    assertEquals(nullableSchema(byte.class), wrappers.getField("aByte").schema());
+    assertEquals(nullableSchema(short.class), wrappers.getField("aShort").schema());
+    assertEquals(nullableSchema(int.class), wrappers.getField("anInt").schema());
+    assertEquals(nullableSchema(long.class), wrappers.getField("aLong").schema());
+    assertEquals(nullableSchema(float.class), wrappers.getField("aFloat").schema());
+    assertEquals(nullableSchema(double.class), wrappers.getField("aDouble").schema());
+    assertEquals(nullableSchema(Primitives.class), wrappers.getField("anObject").schema());
   }
 
   @Test
-  public void testAllowNullWithNullableAnnotation() {
+  void allowNullWithNullableAnnotation() {
     Schema withNullable = ReflectData.AllowNull.get().getSchema(AllowNullWithNullable.class);
 
-    Assert.assertEquals("Should produce a nullable double", nullableSchema(double.class),
-        withNullable.getField("aDouble").schema());
+    assertEquals(nullableSchema(double.class), withNullable.getField("aDouble").schema(),
+        "Should produce a nullable double");
 
     Schema nullableDoubleOrLong = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
         Schema.create(Schema.Type.DOUBLE), Schema.create(Schema.Type.LONG)));
 
-    Assert.assertEquals("Should add null to a non-null union", nullableDoubleOrLong,
-        withNullable.getField("doubleOrLong").schema());
+    assertEquals(nullableDoubleOrLong, withNullable.getField("doubleOrLong").schema(),
+        "Should add null to a non-null union");
 
-    Assert.assertEquals("Should add null to a non-null union", nullableDoubleOrLong,
-        withNullable.getField("doubleOrLongOrNull1").schema());
+    assertEquals(nullableDoubleOrLong, withNullable.getField("doubleOrLongOrNull1").schema(),
+        "Should add null to a non-null union");
 
     Schema doubleOrLongOrNull = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.DOUBLE),
         Schema.create(Schema.Type.LONG), Schema.create(Schema.Type.NULL)));
 
-    Assert.assertEquals("Should add null to a non-null union", doubleOrLongOrNull,
-        withNullable.getField("doubleOrLongOrNull2").schema());
+    assertEquals(doubleOrLongOrNull, withNullable.getField("doubleOrLongOrNull2").schema(),
+        "Should add null to a non-null union");
 
-    Assert.assertEquals("Should add null to a non-null union", doubleOrLongOrNull,
-        withNullable.getField("doubleOrLongOrNull3").schema());
+    assertEquals(doubleOrLongOrNull, withNullable.getField("doubleOrLongOrNull3").schema(),
+        "Should add null to a non-null union");
   }
 
   private Schema requiredSchema(Class<?> type) {

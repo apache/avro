@@ -58,13 +58,15 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestSpecificData {
 
   @Test
-  public void testSeparateThreadContextClassLoader() throws Exception {
+  void separateThreadContextClassLoader() throws Exception {
     Schema schema = new Schema.Parser().parse(new File("src/test/resources/foo.Bar.avsc"));
     SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setStringType(GenericData.StringType.String);
@@ -94,7 +96,7 @@ public class TestSpecificData {
     for (Element el : analyze) {
       if (el.getKind() == ElementKind.CLASS) {
         List<String> accept = el.accept(ctrl, 0);
-        Assert.assertTrue(accept.stream().collect(Collectors.joining("\n\t")), accept.isEmpty());
+        assertTrue(accept.isEmpty(), accept.stream().collect(Collectors.joining("\n\t")));
       }
     }
 
@@ -123,7 +125,7 @@ public class TestSpecificData {
     Exception ex = ref.get();
     if (ex != null) {
       ex.printStackTrace();
-      Assert.fail(ex.getMessage());
+      fail(ex.getMessage());
     }
   }
 

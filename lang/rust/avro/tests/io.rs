@@ -132,7 +132,7 @@ fn test_binary_int_encoding() {
 #[test]
 fn test_binary_long_encoding() {
     for (number, hex_encoding) in BINARY_ENCODINGS.iter() {
-        let encoded = to_avro_datum(&Schema::Long, Value::Long(*number as i64)).unwrap();
+        let encoded = to_avro_datum(&Schema::Long, Value::Long(*number)).unwrap();
         assert_eq!(&encoded, hex_encoding);
     }
 }

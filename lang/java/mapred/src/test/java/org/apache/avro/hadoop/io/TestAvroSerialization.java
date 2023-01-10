@@ -18,7 +18,7 @@
 
 package org.apache.avro.hadoop.io;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,12 +38,11 @@ import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.junit.Test;
-import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroSerialization {
   @Test
-  public void testAccept() {
+  void accept() {
     AvroSerialization<CharSequence> serialization = new AvroSerialization<>();
 
     assertTrue(serialization.accept(AvroKey.class));
@@ -53,7 +52,7 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testGetSerializerForKey() throws IOException {
+  void getSerializerForKey() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Job job = Job.getInstance();
@@ -71,7 +70,7 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testGetSerializerForValue() throws IOException {
+  void getSerializerForValue() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Job job = Job.getInstance();
@@ -89,7 +88,7 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testGetDeserializerForKey() throws IOException {
+  void getDeserializerForKey() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
     Job job = Job.getInstance();
@@ -107,7 +106,7 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testGetDeserializerForValue() throws IOException {
+  void getDeserializerForValue() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
     Job job = Job.getInstance();
@@ -125,14 +124,14 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testClassPath() throws Exception {
+  void classPath() throws Exception {
     Configuration conf = new Configuration();
     ClassLoader loader = conf.getClass().getClassLoader();
     AvroSerialization serialization = new AvroSerialization();
     serialization.setConf(conf);
     AvroDeserializer des = (AvroDeserializer) serialization.getDeserializer(AvroKey.class);
     ReflectData data = (ReflectData) ((ReflectDatumReader) des.mAvroDatumReader).getData();
-    Assert.assertEquals(loader, data.getClassLoader());
+    assertEquals(loader, data.getClassLoader());
   }
 
   private <T, O> O roundTrip(Schema schema, T data, Class<? extends GenericData> modelClass) throws IOException {
@@ -159,7 +158,7 @@ public class TestAvroSerialization {
   }
 
   @Test
-  public void testRoundTrip() throws Exception {
+  void roundTrip() throws Exception {
     Schema schema = Schema.create(Schema.Type.STRING);
     assertTrue(roundTrip(schema, "record", null) instanceof String);
     assertTrue(roundTrip(schema, "record", GenericData.class) instanceof Utf8);

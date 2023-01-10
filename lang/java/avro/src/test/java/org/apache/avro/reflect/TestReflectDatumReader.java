@@ -49,7 +49,7 @@ public class TestReflectDatumReader {
   }
 
   @Test
-  public void testRead_PojoWithList() throws IOException {
+  void read_PojoWithList() throws IOException {
     PojoWithList pojoWithList = new PojoWithList();
     pojoWithList.setId(42);
     pojoWithList.setRelatedIds(Arrays.asList(1, 2, 3));
@@ -67,7 +67,7 @@ public class TestReflectDatumReader {
   }
 
   @Test
-  public void testRead_PojoWithArray() throws IOException {
+  void read_PojoWithArray() throws IOException {
     PojoWithArray pojoWithArray = new PojoWithArray();
     pojoWithArray.setId(42);
     pojoWithArray.setRelatedIds(new int[] { 1, 2, 3 });

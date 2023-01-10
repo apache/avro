@@ -18,7 +18,7 @@
 
 package org.apache.avro.specific;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,8 +34,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import test.StringablesRecord;
 
 public class TestSpecificDatumReader {
@@ -59,7 +58,7 @@ public class TestSpecificDatumReader {
   }
 
   @Test
-  public void testRead() throws IOException {
+  void read() throws IOException {
     Builder newBuilder = FooBarSpecificRecord.newBuilder();
     newBuilder.setId(42);
     newBuilder.setName("foo");
@@ -79,7 +78,7 @@ public class TestSpecificDatumReader {
   }
 
   @Test
-  public void testStringables() throws IOException {
+  void stringables() throws IOException {
     StringablesRecord.Builder newBuilder = StringablesRecord.newBuilder();
     newBuilder.setValue(new BigDecimal("42.11"));
     HashMap<String, BigDecimal> mapWithBigDecimalElements = new HashMap<>();

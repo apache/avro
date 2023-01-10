@@ -19,9 +19,7 @@
 package org.apache.avro.reflect;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,15 +39,14 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.io.DatumWriter;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestByteBuffer {
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   static class X {
     String name = "";
@@ -58,9 +55,9 @@ public class TestByteBuffer {
 
   File content;
 
-  @Before
+  @BeforeEach
   public void before() throws IOException {
-    content = new File(DIR.getRoot().getPath(), "test-content");
+    content = new File(DIR.getPath(), "test-content");
     try (FileOutputStream out = new FileOutputStream(content)) {
       for (int i = 0; i < 100000; i++) {
         out.write("hello world\n".getBytes(UTF_8));
@@ -69,7 +66,7 @@ public class TestByteBuffer {
   }
 
   @Test
-  public void test() throws Exception {
+  void test() throws Exception {
     Schema schema = ReflectData.get().getSchema(X.class);
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     writeOneXAsAvro(schema, bout);
@@ -77,7 +74,7 @@ public class TestByteBuffer {
 
     String expected = getmd5(content);
     String actual = getmd5(record.content);
-    assertEquals("md5 for result differed from input", expected, actual);
+    assertEquals(expected, actual, "md5 for result differed from input");
   }
 
   private X readOneXFromAvro(Schema schema, ByteArrayOutputStream bout) throws IOException {
@@ -85,9 +82,9 @@ public class TestByteBuffer {
     ReflectDatumReader<X> datumReader = new ReflectDatumReader<>(schema);
     FileReader<X> reader = DataFileReader.openReader(input, datumReader);
     Iterator<X> it = reader.iterator();
-    assertTrue("missing first record", it.hasNext());
+    assertTrue(it.hasNext(), "missing first record");
     X record = it.next();
-    assertFalse("should be no more records - only wrote one out", it.hasNext());
+    assertFalse(it.hasNext(), "should be no more records - only wrote one out");
     return record;
   }
 

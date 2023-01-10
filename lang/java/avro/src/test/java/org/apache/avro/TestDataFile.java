@@ -262,7 +262,7 @@ public class TestDataFile {
   }
 
   @Test
-  public void testSyncInHeader() throws IOException {
+  public void syncInHeader() throws IOException {
     try (DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
         new GenericDatumReader<>())) {
       reader.sync(0);
@@ -277,7 +277,7 @@ public class TestDataFile {
   }
 
   @Test
-  public void testFlushCount() throws IOException {
+  public void flushCount() throws IOException {
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setFlushOnEveryBlock(false);
     TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();

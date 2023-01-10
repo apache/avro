@@ -19,22 +19,23 @@
 package org.apache.avro.file;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.file.codec.CustomCodec;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestCustomCodec {
 
   @Test
-  public void testCustomCodec() {
+  void customCodec() {
     CustomCodec customCodec = new CustomCodec();
     Codec snappyCodec = new SnappyCodec.Option().createInstance();
-    assertTrue(customCodec.equals(new CustomCodec()));
-    assertFalse(customCodec.equals(snappyCodec));
+    assertEquals(customCodec, new CustomCodec());
+    assertNotEquals(customCodec, snappyCodec);
 
     String testString = "Testing 123";
     ByteBuffer original = ByteBuffer.allocate(testString.getBytes(UTF_8).length);

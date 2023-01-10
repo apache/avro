@@ -35,11 +35,10 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileReader;
 import static org.apache.avro.file.DataFileConstants.SNAPPY_CODEC;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.After;
-import org.junit.Test;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import test.Weather;
 
 /** Tests mapred API with a specific record. */
@@ -50,7 +49,7 @@ public class TestWeather {
   private static final AtomicInteger reducerCloseCalls = new AtomicInteger();
   private static final AtomicInteger reducerConfigureCalls = new AtomicInteger();
 
-  @After
+  @AfterEach
   public void tearDown() {
     mapCloseCalls.set(0);
     mapConfigureCalls.set(0);
@@ -61,7 +60,7 @@ public class TestWeather {
   /** Uses default mapper with no reduces for a map-only identity job. */
   @Test
   @SuppressWarnings("deprecation")
-  public void testMapOnly() throws Exception {
+  void mapOnly() throws Exception {
     JobConf job = new JobConf();
     String inDir = System.getProperty("share.dir", "../../../share") + "/test/data";
     Path input = new Path(inDir + "/weather.avro");
@@ -133,7 +132,7 @@ public class TestWeather {
 
   @Test
   @SuppressWarnings("deprecation")
-  public void testSort() throws Exception {
+  void sort() throws Exception {
     JobConf job = new JobConf();
     String inDir = "../../../share/test/data";
     Path input = new Path(inDir + "/weather.avro");

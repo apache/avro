@@ -18,8 +18,8 @@
 
 package org.apache.avro.mapred;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -35,17 +35,16 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroTextOutputFormat {
-  @Rule
-  public TemporaryFolder tmpFolder = new TemporaryFolder();
+  @TempDir
+  public File tmpFolder;
 
   @Test
-  public void testAvroTextRecordWriter() throws Exception {
-    File file = new File(tmpFolder.getRoot().getPath(), "writer");
+  void avroTextRecordWriter() throws Exception {
+    File file = new File(tmpFolder.getPath(), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
     DatumWriter<ByteBuffer> datumWriter = new GenericDatumWriter<>(schema);
     DataFileWriter<ByteBuffer> fileWriter = new DataFileWriter<>(datumWriter);
@@ -77,7 +76,7 @@ public class TestAvroTextOutputFormat {
     assertEquals("v2", asString(fileReader.next()));
     assertEquals("k3\tv3", asString(fileReader.next()));
     assertEquals("k4\tv4", asString(fileReader.next()));
-    assertFalse("End", fileReader.hasNext());
+    assertFalse(fileReader.hasNext(), "End");
     fileReader.close();
   }
 

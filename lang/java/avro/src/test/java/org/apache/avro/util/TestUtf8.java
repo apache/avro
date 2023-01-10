@@ -19,9 +19,7 @@ package org.apache.avro.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,11 +28,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestUtf8 {
   @Test
-  public void testByteConstructor() throws Exception {
+  void byteConstructor() throws Exception {
     byte[] bs = "Foo".getBytes(StandardCharsets.UTF_8);
     Utf8 u = new Utf8(bs);
     assertEquals(bs.length, u.getByteLength());
@@ -44,7 +42,7 @@ public class TestUtf8 {
   }
 
   @Test
-  public void testArrayReusedWhenLargerThanRequestedSize() {
+  void arrayReusedWhenLargerThanRequestedSize() {
     byte[] bs = "55555".getBytes(StandardCharsets.UTF_8);
     Utf8 u = new Utf8(bs);
     assertEquals(5, u.getByteLength());
@@ -58,7 +56,7 @@ public class TestUtf8 {
   }
 
   @Test
-  public void testHashCodeReused() {
+  void hashCodeReused() {
     assertEquals(97, new Utf8("a").hashCode());
     assertEquals(3904, new Utf8("zz").hashCode());
     assertEquals(122, new Utf8("z").hashCode());
@@ -99,7 +97,7 @@ public class TestUtf8 {
   }
 
   @Test
-  public void testSerialization() throws IOException, ClassNotFoundException {
+  void serialization() throws IOException, ClassNotFoundException {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos)) {
 

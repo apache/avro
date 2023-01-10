@@ -17,8 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -30,7 +29,6 @@ import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -40,14 +38,14 @@ public class TestDataFileMeta {
   public File DIR;
 
   @Test
-  public void testUseReservedMeta() throws IOException {
+  public void useReservedMeta() throws IOException {
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
-      Assertions.assertThrows(AvroRuntimeException.class, () -> w.setMeta("avro.foo", "bar"));
+      assertThrows(AvroRuntimeException.class, () -> w.setMeta("avro.foo", "bar"));
     }
   }
 
   @Test
-  public void testUseMeta() throws IOException {
+  public void useMeta() throws IOException {
     File f = new File(DIR, "testDataFileMeta.avro");
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.setMeta("hello", "bar");
@@ -63,16 +61,16 @@ public class TestDataFileMeta {
   }
 
   @Test
-  public void testUseMetaAfterCreate() throws IOException {
+  public void useMetaAfterCreate() throws IOException {
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(Schema.create(Type.NULL), new ByteArrayOutputStream());
-      Assertions.assertThrows(AvroRuntimeException.class, () -> w.setMeta("foo", "bar"));
+      assertThrows(AvroRuntimeException.class, () -> w.setMeta("foo", "bar"));
     }
 
   }
 
   @Test
-  public void testBlockSizeSetInvalid() {
+  public void blockSizeSetInvalid() {
     int exceptions = 0;
     for (int i = -1; i < 33; i++) {
       // 33 invalid, one valid

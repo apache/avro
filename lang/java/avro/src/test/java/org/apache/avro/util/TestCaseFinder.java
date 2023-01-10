@@ -17,35 +17,24 @@
  */
 package org.apache.avro.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
-@RunWith(Enclosed.class)
 public class TestCaseFinder {
 
-  @RunWith(Parameterized.class)
+  @Nested
   public static class SimpleCases {
-    String input, label;
-    List<Object[]> expectedOutput;
 
-    public SimpleCases(String input, String label, Object[][] ex) {
-      this.input = input;
-      this.label = label;
-      this.expectedOutput = Arrays.asList(ex);
-    }
-
-    @Parameters
     public static List<Object[]> cases() {
       List<Object[]> result = new ArrayList<>();
       result.add(new Object[] { "", "foo", new Object[][] {} });
@@ -70,37 +59,49 @@ public class TestCaseFinder {
       return result;
     }
 
-    @Test
-    public void testOutput() throws Exception {
+    @ParameterizedTest
+    @MethodSource("cases")
+    void output(String input, String label, Object[][] ex) throws Exception {
       List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk(input), label, result);
-      assertTrue(pr(result), eq(result, expectedOutput));
+      List<Object[]> expectedOutput = Arrays.asList(ex);
+      assertTrue(eq(result, expectedOutput), pr(result));
     }
   }
 
-  public static class NonParameterized {
-    @Test(expected = java.lang.IllegalArgumentException.class)
-    public void testBadDocLabel1() throws Exception {
-      List<Object[]> result = new ArrayList<>();
-      CaseFinder.find(mk("<<INPUT blah"), "", result);
+  @Nested
+  public class NonParameterized {
+
+    @Test
+    void badDocLabel1() throws Exception {
+      assertThrows(java.lang.IllegalArgumentException.class, () -> {
+        List<Object[]> result = new ArrayList<>();
+        CaseFinder.find(mk("<<INPUT blah"), "", result);
+      });
     }
 
-    @Test(expected = java.lang.IllegalArgumentException.class)
-    public void testBadDocLabel2() throws Exception {
-      List<Object[]> result = new ArrayList<>();
-      CaseFinder.find(mk("<<INPUT blah"), "kill-er", result);
+    @Test
+    void badDocLabel2() throws Exception {
+      assertThrows(java.lang.IllegalArgumentException.class, () -> {
+        List<Object[]> result = new ArrayList<>();
+        CaseFinder.find(mk("<<INPUT blah"), "kill-er", result);
+      });
     }
 
-    @Test(expected = java.io.IOException.class)
-    public void testBadSingleLineHeredoc() throws Exception {
-      List<Object[]> result = new ArrayList<>();
-      CaseFinder.find(mk("<<INPUTblah"), "foo", result);
+    @Test
+    void badSingleLineHeredoc() throws Exception {
+      assertThrows(java.io.IOException.class, () -> {
+        List<Object[]> result = new ArrayList<>();
+        CaseFinder.find(mk("<<INPUTblah"), "foo", result);
+      });
     }
 
-    @Test(expected = java.io.IOException.class)
-    public void testUnterminatedHeredoc() throws Exception {
-      List<Object[]> result = new ArrayList<>();
-      CaseFinder.find(mk("<<INPUT"), "foo", result);
+    @Test
+    void unterminatedHeredoc() throws Exception {
+      assertThrows(java.io.IOException.class, () -> {
+        List<Object[]> result = new ArrayList<>();
+        CaseFinder.find(mk("<<INPUT"), "foo", result);
+      });
     }
   }
 

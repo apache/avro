@@ -1093,39 +1093,62 @@ public class GenericData {
    * {@link #compare(Object,Object,Schema)}.
    */
   public int hashCode(Object o, Schema s) {
-    if (o == null)
-      return 0; // incomplete datum
-    int hashCode = 1;
-    switch (s.getType()) {
-    case RECORD:
-      for (Field f : s.getFields()) {
-        if (f.order() == Field.Order.IGNORE)
-          continue;
-        hashCode = hashCodeAdd(hashCode, getField(o, f.name(), f.pos()), f.schema());
-      }
-      return hashCode;
-    case ARRAY:
-      Collection<?> a = (Collection<?>) o;
-      Schema elementType = s.getElementType();
-      for (Object e : a)
-        hashCode = hashCodeAdd(hashCode, e, elementType);
-      return hashCode;
-    case UNION:
-      return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
-    case ENUM:
-      return s.getEnumOrdinal(o.toString());
-    case NULL:
-      return 0;
-    case STRING:
-      return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
-    default:
-      return o.hashCode();
-    }
+    HashCodeCalculator calculator = new HashCodeCalculator();
+    return calculator.hashCode(o, s);
   }
 
-  /** Add the hash code for an object into an accumulated hash code. */
-  protected int hashCodeAdd(int hashCode, Object o, Schema s) {
-    return 31 * hashCode + hashCode(o, s);
+  class HashCodeCalculator {
+    private int counter = 10;
+
+    private int currentHashCode = 1;
+
+    public int hashCode(Object o, Schema s) {
+      if (o == null)
+        return 0; // incomplete datum
+
+      switch (s.getType()) {
+      case RECORD:
+        for (Field f : s.getFields()) {
+          if (this.shouldStop()) {
+            return this.currentHashCode;
+          }
+          if (f.order() == Field.Order.IGNORE)
+            continue;
+          Object fieldValue = ((IndexedRecord) o).get(f.pos());
+          this.currentHashCode = this.hashCodeAdd(fieldValue, f.schema());
+        }
+        return currentHashCode;
+      case ARRAY:
+        Collection<?> a = (Collection<?>) o;
+        Schema elementType = s.getElementType();
+        for (Object e : a) {
+          if (this.shouldStop()) {
+            return currentHashCode;
+          }
+          currentHashCode = this.hashCodeAdd(e, elementType);
+        }
+        return currentHashCode;
+      case UNION:
+        return hashCode(o, s.getTypes().get(GenericData.this.resolveUnion(s, o)));
+      case ENUM:
+        return s.getEnumOrdinal(o.toString());
+      case NULL:
+        return 0;
+      case STRING:
+        return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
+      default:
+        return o.hashCode();
+      }
+    }
+
+    /** Add the hash code for an object into an accumulated hash code. */
+    protected int hashCodeAdd(Object o, Schema s) {
+      return 31 * this.currentHashCode + hashCode(o, s);
+    }
+
+    private boolean shouldStop() {
+      return --counter <= 0;
+    }
   }
 
   /**

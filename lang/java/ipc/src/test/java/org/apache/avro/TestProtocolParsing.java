@@ -17,14 +17,12 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.apache.avro.Protocol.Message;
 
@@ -35,7 +33,7 @@ public class TestProtocolParsing {
   }
 
   @Test
-  public void testParsing() throws IOException {
+  void parsing() throws IOException {
     Protocol protocol = getSimpleProtocol();
 
     assertEquals(protocol.getDoc(), "Protocol used for testing.");
@@ -49,7 +47,7 @@ public class TestProtocolParsing {
   }
 
   @Test
-  public void oneWay() throws Exception {
+  void oneWay() throws Exception {
     Message m;
     // permit one-way messages w/ null response
     m = parseMessage("\"ack\": {" + "\"request\": []," + "\"response\": \"null\"," + "\"one-way\": true}");
@@ -59,20 +57,24 @@ public class TestProtocolParsing {
     assertTrue(m.isOneWay());
   }
 
-  @Test(expected = SchemaParseException.class)
-  public void oneWayResponse() throws Exception {
-    // prohibit one-way messages with a non-null response type
-    parseMessage("\"ack\": {" + "\"request\": [\"string\"]," + "\"response\": \"string\"," + "\"one-way\": true}");
-  }
-
-  @Test(expected = SchemaParseException.class)
-  public void oneWayError() throws Exception {
-    // prohibit one-way messages with errors
-    parseMessage("\"ack\": {" + "\"request\": [\"string\"]," + "\"errors\": []," + "\"one-way\": true}");
+  @Test
+  void oneWayResponse() throws Exception {
+    assertThrows(SchemaParseException.class, () -> {
+      // prohibit one-way messages with a non-null response type
+      parseMessage("\"ack\": {" + "\"request\": [\"string\"]," + "\"response\": \"string\"," + "\"one-way\": true}");
+    });
   }
 
   @Test
-  public void testMessageFieldAliases() throws IOException {
+  void oneWayError() throws Exception {
+    assertThrows(SchemaParseException.class, () -> {
+      // prohibit one-way messages with errors
+      parseMessage("\"ack\": {" + "\"request\": [\"string\"]," + "\"errors\": []," + "\"one-way\": true}");
+    });
+  }
+
+  @Test
+  void messageFieldAliases() throws IOException {
     Protocol protocol = getSimpleProtocol();
     final Message msg = protocol.getMessages().get("hello");
     assertNotNull(msg);
@@ -82,7 +84,7 @@ public class TestProtocolParsing {
   }
 
   @Test
-  public void testMessageCustomProperties() throws IOException {
+  void messageCustomProperties() throws IOException {
     Protocol protocol = getSimpleProtocol();
     final Message msg = protocol.getMessages().get("hello");
     assertNotNull(msg);
