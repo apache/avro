@@ -1277,7 +1277,7 @@ public class TestReflect {
     Field field = new Field("primitiveField", Schema.create(Schema.Type.INT));
     field.addAlias("alias1");
     field.addAlias("alias2");
-    Schema avroMultiMeta = Schema.createRecord("ClassWithAliasOnField", null, "org.apache.avro.reflect.TestReflect",
+    Schema avroMultiMeta = Schema.createRecord("ClassWithMultipleAliasesOnField", null, "org.apache.avro.reflect.TestReflect",
         false, Arrays.asList(field));
 
     Schema schema = ReflectData.get().getSchema(ClassWithAliasOnField.class);
