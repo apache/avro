@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
+import static org.apache.avro.specific.SpecificData.RESERVED_WORD_ESCAPE_CHAR;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -1126,7 +1127,7 @@ public class SpecificCompiler {
     }
     if (reservedWords.contains(word) || (isMethod && reservedWords
         .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
-      return word + "$";
+      return word + RESERVED_WORD_ESCAPE_CHAR;
     }
     return word;
   }
