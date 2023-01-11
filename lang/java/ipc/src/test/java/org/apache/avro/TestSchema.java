@@ -205,9 +205,9 @@ public class TestSchema {
 
   @Test
   void invalidNameTolerance() {
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}");
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}");
-    new Schema.Parser().setValidate(false).parse("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}");
+    new Schema.Parser(Schema.NameValidator.NO_VALIDATION).parse("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}");
+    new Schema.Parser(Schema.NameValidator.NO_VALIDATION).parse("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}");
+    new Schema.Parser(Schema.NameValidator.NO_VALIDATION).parse("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}");
   }
 
   @Test
