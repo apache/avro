@@ -51,7 +51,7 @@
     <snappy.version>1.1.8.4</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
-    <ant.version>1.10.12</ant.version>
+    <ant.version>1.10.13</ant.version>
     <commons-cli.version>1.5.0</commons-cli.version>
     <commons-compress.version>1.22</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
