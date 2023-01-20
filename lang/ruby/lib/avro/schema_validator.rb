@@ -198,9 +198,14 @@ module Avro
         compatible_type = first_compatible_type(datum, expected_schema, path, failures, options)
         return unless compatible_type.nil?
 
-        complex_type_failed = failures.detect { |r| COMPLEX_TYPES.include?(r[:type]) }
-        if complex_type_failed
-          complex_type_failed[:result].errors.each { |error| result << error }
+        complex_type_failed = failures.select { |r| COMPLEX_TYPES.include?(r[:type]) }
+        if complex_type_failed.any?
+          complex_type_failed.each do |type_failures|
+            type_failures[:result].errors.each do |error|
+              error_msg = type_failures[:schema] ? "#{type_failures[:schema]} #{error}" : error
+              result << error_msg
+            end
+          end
         else
           types = expected_schema.schemas.map { |s| "'#{s.type_sym}'" }.join(', ')
           result.add_error(path, "expected union of [#{types}], got #{actual_value_message(datum)}")
@@ -210,11 +215,16 @@ module Avro
       def first_compatible_type(datum, expected_schema, path, failures, options = {})
         expected_schema.schemas.find do |schema|
           # Avoid expensive validation if we're just validating a nil
-          next datum.nil? if schema.type_sym == :null
+          if schema.type_sym == :null
+            next datum.nil?
+          end
 
           result = Result.new
           validate_recursive(schema, datum, path, result, options)
-          failures << { type: schema.type_sym, result: result } if result.failure?
+
+          failure = { type: schema.type_sym, result: result }
+          failure[:schema] = schema.name if schema.is_a?(Avro::Schema::RecordSchema)
+          failures << failure if result.failure?
           !result.failure?
         end
       end
