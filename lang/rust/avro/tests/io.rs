@@ -104,9 +104,7 @@ fn test_validate() {
         let schema = Schema::parse_str(raw_schema).unwrap();
         assert!(
             value.validate(&schema),
-            "value {:?} does not validate schema: {}",
-            value,
-            raw_schema
+            "value {value:?} does not validate schema: {raw_schema}"
         );
     }
 }
@@ -160,10 +158,7 @@ fn test_schema_promotion() {
                 Some(&reader_schema),
             )
             .unwrap_or_else(|_| {
-                panic!(
-                    "failed to decode {:?} with schema: {:?}",
-                    original_value, reader_raw_schema,
-                )
+                panic!("failed to decode {original_value:?} with schema: {reader_raw_schema:?}",)
             });
             assert_eq!(decoded, promotable_values[j]);
         }
@@ -196,10 +191,9 @@ fn test_default_value() {
                 "type": "record",
                 "name": "Test",
                 "fields": [
-                    {{"name": "H", "type": {}, "default": {}}}
+                    {{"name": "H", "type": {field_type}, "default": {default_json}}}
                 ]
-            }}"#,
-            field_type, default_json
+            }}"#
         ))
         .unwrap();
         let datum_to_read = Value::Record(vec![("H".to_string(), default_datum.clone())]);
@@ -320,6 +314,6 @@ fn test_type_exception() -> Result<(), String> {
     match encoded {
         Ok(_) => Err(String::from("Expected ValidationError, got Ok")),
         Err(Error::Validation) => Ok(()),
-        Err(ref e) => Err(format!("Expected ValidationError, got {:?}", e)),
+        Err(ref e) => Err(format!("Expected ValidationError, got {e:?}")),
     }
 }

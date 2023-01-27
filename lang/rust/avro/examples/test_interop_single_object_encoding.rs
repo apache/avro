@@ -23,7 +23,7 @@ struct InteropMessage;
 
 impl AvroSchema for InteropMessage {
     fn get_schema() -> apache_avro::Schema {
-        let schema = std::fs::read_to_string(format!("{}/test_schema.avsc", RESOURCES_FOLDER))
+        let schema = std::fs::read_to_string(format!("{RESOURCES_FOLDER}/test_schema.avsc"))
             .expect("File should exist with schema inside");
         apache_avro::Schema::parse_str(schema.as_str())
             .expect("File should exist with schema inside")
@@ -49,7 +49,7 @@ impl From<InteropMessage> for Value {
 }
 
 fn main() {
-    let single_object = std::fs::read(format!("{}/test_message.bin", RESOURCES_FOLDER))
+    let single_object = std::fs::read(format!("{RESOURCES_FOLDER}/test_message.bin"))
         .expect("File with single object not found or error occurred while reading it.");
     test_write(&single_object);
     test_read(single_object);

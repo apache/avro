@@ -582,10 +582,9 @@ mod tests {
         let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
         let parsed_record: TestRecord3240 = match &avro_datum {
             Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
-            unexpected => panic!(
-                "could not map avro data to struct, found unexpected: {:?}",
-                unexpected
-            ),
+            unexpected => {
+                panic!("could not map avro data to struct, found unexpected: {unexpected:?}")
+            }
         };
 
         assert_eq!(parsed_record, expected_record);
@@ -747,7 +746,7 @@ mod tests {
                                 }
                             }
                         }
-                        (key, value) => panic!("Unexpected pair: {:?} -> {:?}", key, value),
+                        (key, value) => panic!("Unexpected pair: {key:?} -> {value:?}"),
                     }
                 }
                 TestSingleObjectReader {
@@ -756,7 +755,7 @@ mod tests {
                     c,
                 }
             } else {
-                panic!("Expected a Value::Record but was {:?}", obj)
+                panic!("Expected a Value::Record but was {obj:?}")
             }
         }
     }

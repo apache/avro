@@ -359,7 +359,7 @@ impl Value {
             (None, None) => None,
             (None, s @ Some(_)) => s,
             (s @ Some(_), None) => s,
-            (Some(reason1), Some(reason2)) => Some(format!("{}\n{}", reason1, reason2)),
+            (Some(reason1), Some(reason2)) => Some(format!("{reason1}\n{reason2}")),
         }
     }
 
@@ -370,7 +370,7 @@ impl Value {
         enclosing_namespace: &Namespace,
     ) -> Option<String> {
         match (self, schema) {
-            (_, &Schema::Ref { ref name }) => {
+            (_, Schema::Ref { name }) => {
                 let name = name.fully_qualified_name(enclosing_namespace);
                 names.get(&name).map_or_else(
                     || {
@@ -411,14 +411,13 @@ impl Value {
             (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => {
                 if n != size {
                     Some(format!(
-                        "The value's size ({}) is different than the schema's size ({})",
-                        n, size
+                        "The value's size ({n}) is different than the schema's size ({size})"
                     ))
                 } else {
                     None
                 }
             }
-            (&Value::Bytes(ref b), &Schema::Fixed { size, .. }) => {
+            (Value::Bytes(b), &Schema::Fixed { size, .. }) => {
                 if b.len() != size {
                     Some(format!(
                         "The bytes' length ({}) is different than the schema's size ({})",
@@ -432,8 +431,7 @@ impl Value {
             (&Value::Fixed(n, _), &Schema::Duration) => {
                 if n != 12 {
                     Some(format!(
-                        "The value's size ('{}') must be exactly 12 to be a Duration",
-                        n
+                        "The value's size ('{n}') must be exactly 12 to be a Duration"
                     ))
                 } else {
                     None
@@ -441,42 +439,40 @@ impl Value {
             }
             // TODO: check precision against n
             (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => None,
-            (&Value::String(ref s), &Schema::Enum { ref symbols, .. }) => {
+            (Value::String(s), Schema::Enum { symbols, .. }) => {
                 if !symbols.contains(s) {
-                    Some(format!("'{}' is not a member of the possible symbols", s))
+                    Some(format!("'{s}' is not a member of the possible symbols"))
                 } else {
                     None
                 }
             }
-            (&Value::Enum(i, ref s), &Schema::Enum { ref symbols, .. }) => symbols
+            (&Value::Enum(i, ref s), Schema::Enum { symbols, .. }) => symbols
                 .get(i as usize)
                 .map(|ref symbol| {
                     if symbol != &s {
-                        Some(format!("Symbol '{}' is not at position '{}'", s, i))
+                        Some(format!("Symbol '{s}' is not at position '{i}'"))
                     } else {
                         None
                     }
                 })
-                .unwrap_or_else(|| Some(format!("No symbol at position '{}'", i))),
+                .unwrap_or_else(|| Some(format!("No symbol at position '{i}'"))),
             // (&Value::Union(None), &Schema::Union(_)) => None,
-            (&Value::Union(i, ref value), &Schema::Union(ref inner)) => inner
+            (&Value::Union(i, ref value), Schema::Union(inner)) => inner
                 .variants()
                 .get(i as usize)
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
-                .unwrap_or_else(|| Some(format!("No schema in the union at position '{}'", i))),
-            (v, &Schema::Union(ref inner)) => match inner.find_schema(v) {
+                .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
+            (v, Schema::Union(inner)) => match inner.find_schema(v) {
                 Some(_) => None,
                 None => Some("Could not find matching type in union".to_string()),
             },
-            (&Value::Array(ref items), &Schema::Array(ref inner)) => {
-                items.iter().fold(None, |acc, item| {
-                    Value::accumulate(
-                        acc,
-                        item.validate_internal(inner, names, enclosing_namespace),
-                    )
-                })
-            }
-            (&Value::Map(ref items), &Schema::Map(ref inner)) => {
+            (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
+                Value::accumulate(
+                    acc,
+                    item.validate_internal(inner, names, enclosing_namespace),
+                )
+            }),
+            (Value::Map(items), Schema::Map(inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
                     Value::accumulate(
                         acc,
@@ -484,14 +480,7 @@ impl Value {
                     )
                 })
             }
-            (
-                &Value::Record(ref record_fields),
-                &Schema::Record {
-                    ref fields,
-                    ref lookup,
-                    ..
-                },
-            ) => {
+            (Value::Record(record_fields), Schema::Record { fields, lookup, .. }) => {
                 let non_nullable_fields_count =
                     fields.iter().filter(|&rf| !rf.is_nullable()).count();
 
@@ -526,15 +515,12 @@ impl Value {
                             }
                             None => Value::accumulate(
                                 acc,
-                                Some(format!(
-                                    "There is no schema field for field '{}'",
-                                    field_name
-                                )),
+                                Some(format!("There is no schema field for field '{field_name}'")),
                             ),
                         }
                     })
             }
-            (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
+            (Value::Map(items), Schema::Record { fields, .. }) => {
                 fields.iter().fold(None, |acc, field| {
                     if let Some(item) = items.get(&field.name) {
                         let res = item.validate_internal(&field.schema, names, enclosing_namespace);

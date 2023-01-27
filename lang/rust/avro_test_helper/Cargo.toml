@@ -18,7 +18,8 @@
 [package]
 name = "apache-avro-test-helper"
 version = "0.15.0"
-edition = "2018"
+edition = "2021"
+rust-version = "1.60.0"
 description = "Apache Avro tests helper."
 authors = ["Apache Avro team <dev@avro.apache.org>"]
 license = "Apache-2.0"
