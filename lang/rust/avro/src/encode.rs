@@ -202,7 +202,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             } = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for &(ref name, ref value) in fields.iter() {
+                for (name, value) in fields.iter() {
                     match lookup.get(name) {
                         Some(idx) => {
                             encode_internal(
@@ -216,7 +216,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                         None => {
                             return Err(Error::NoEntryInLookupTable(
                                 name.clone(),
-                                format!("{:?}", lookup),
+                                format!("{lookup:?}"),
                             ));
                         }
                     }

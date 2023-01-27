@@ -653,10 +653,10 @@ fn test_correct_recursive_extraction() {
                 assert_eq!("X", recursive_type.name.as_str());
             }
         } else {
-            panic!("inner schema {:?} should have been a record", inner_schema)
+            panic!("inner schema {inner_schema:?} should have been a record")
         }
     } else {
-        panic!("outer schema {:?} should have been a record", outer_schema)
+        panic!("outer schema {outer_schema:?} should have been a record")
     }
 }
 
@@ -668,15 +668,12 @@ fn test_parse() {
         if *valid {
             assert!(
                 schema.is_ok(),
-                "schema {} was supposed to be valid; error: {:?}",
-                raw_schema,
-                schema,
+                "schema {raw_schema} was supposed to be valid; error: {schema:?}",
             )
         } else {
             assert!(
                 schema.is_err(),
-                "schema {} was supposed to be invalid",
-                raw_schema
+                "schema {raw_schema} was supposed to be invalid"
             )
         }
     }
@@ -1268,10 +1265,7 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
         );
         Ok(())
     } else {
-        Err(format!(
-            "Expected serde_json::error::Error, got {:?}",
-            error
-        ))
+        Err(format!("Expected serde_json::error::Error, got {error:?}"))
     }
 }
 
@@ -1329,7 +1323,7 @@ fn test_record_schema_with_cyclic_references() {
 
     let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Null);
     if let Err(err) = writer.append(datum) {
-        panic!("An error occurred while writing datum: {:?}", err)
+        panic!("An error occurred while writing datum: {err:?}")
     }
     let bytes = writer.into_inner().unwrap();
     assert_eq!(316, bytes.len());
@@ -1339,7 +1333,7 @@ fn test_record_schema_with_cyclic_references() {
             Some(value) => log::debug!("{:?}", value.unwrap()),
             None => panic!("No value was read!"),
         },
-        Err(err) => panic!("An error occurred while reading datum: {:?}", err),
+        Err(err) => panic!("An error occurred while reading datum: {err:?}"),
     }
 }
 
