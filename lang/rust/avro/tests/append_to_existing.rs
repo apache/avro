@@ -79,8 +79,8 @@ fn check(value: AvroResult<Value>, expected: i32) {
                 (_, Value::Int(actual)) => assert_eq!(&expected, actual),
                 _ => panic!("The field value type must be an Int: {:?}!", &fields[0]),
             },
-            _ => panic!("The value type must be a Record: {:?}!", value),
+            _ => panic!("The value type must be a Record: {value:?}!"),
         },
-        Err(e) => panic!("Error while reading the data: {:?}", e),
+        Err(e) => panic!("Error while reading the data: {e:?}"),
     }
 }

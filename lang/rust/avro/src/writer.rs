@@ -1077,10 +1077,7 @@ mod tests {
             Err(e @ Error::FileHeaderAlreadyWritten) => {
                 assert_eq!(e.to_string(), "The file metadata is already flushed.")
             }
-            Err(e) => panic!(
-                "Unexpected error occurred while writing user metadata: {:?}",
-                e
-            ),
+            Err(e) => panic!("Unexpected error occurred while writing user metadata: {e:?}"),
             Ok(_) => panic!("Expected an error that metadata cannot be added after adding data"),
         }
     }
@@ -1093,11 +1090,10 @@ mod tests {
         let key = "avro.stringKey".to_string();
         match writer.add_user_metadata(key.clone(), "value") {
             Err(ref e @ Error::InvalidMetadataKey(_)) => {
-                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {}.", key))
+                assert_eq!(e.to_string(), format!("Metadata keys starting with 'avro.' are reserved for internal usage: {key}."))
             }
             Err(e) => panic!(
-                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {:?}",
-                e
+                "Unexpected error occurred while writing user metadata with reserved prefix ('avro.'): {e:?}"
             ),
             Ok(_) => panic!("Expected an error that the metadata key cannot be prefixed with 'avro.'"),
         }

@@ -139,7 +139,7 @@ fn get_data_struct_schema_def(
                             .map_err(|e| {
                                 vec![syn::Error::new(
                                     field.ident.span(),
-                                    format!("Invalid avro default json: \n{}", e),
+                                    format!("Invalid avro default json: \n{e}"),
                                 )]
                             })?;
                         quote! {
@@ -268,7 +268,7 @@ fn type_to_schema_expr(ty: &Type) -> Result<TokenStream, Vec<syn::Error>> {
     } else {
         Err(vec![syn::Error::new_spanned(
             ty,
-            format!("Unable to generate schema for type: {:?}", ty),
+            format!("Unable to generate schema for type: {ty:?}"),
         )])
     }
 }
@@ -327,7 +327,7 @@ fn preserve_vec(op: Vec<impl quote::ToTokens>) -> TokenStream {
 }
 
 fn darling_to_syn(e: darling::Error) -> Vec<syn::Error> {
-    let msg = format!("{}", e);
+    let msg = format!("{e}");
     let token_errors = e.write_errors();
     vec![syn::Error::new(token_errors.span(), msg)]
 }
@@ -349,8 +349,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -366,8 +365,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -383,8 +381,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -401,8 +398,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -422,8 +418,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -443,8 +438,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_err())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -468,8 +462,7 @@ mod tests {
                     .contains("namespace.testing"))
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }
@@ -488,8 +481,7 @@ mod tests {
                 assert!(derive_avro_schema(&mut input).is_ok())
             }
             Err(error) => panic!(
-                "Failed to parse as derive input when it should be able to. Error: {:?}",
-                error
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
             ),
         };
     }

@@ -167,8 +167,7 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
                     self,
                 )),
                 (field, Value::String(_)) => Err(de::Error::custom(format!(
-                    "Expected first field named 'type': got '{}' instead",
-                    field
+                    "Expected first field named 'type': got '{field}' instead"
                 ))),
                 (_, _) => Err(de::Error::custom(
                     "Expected first field of type String or Enum for the type name".to_string(),

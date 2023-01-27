@@ -57,7 +57,7 @@ impl fmt::Display for SchemaFingerprint {
             "{}",
             self.bytes
                 .iter()
-                .map(|byte| format!("{:02x}", byte))
+                .map(|byte| format!("{byte:02x}"))
                 .collect::<Vec<String>>()
                 .join("")
         )
@@ -348,10 +348,7 @@ impl<'de> Deserialize<'de> for Name {
             if let Value::Object(json) = value {
                 Name::parse(&json).map_err(Error::custom)
             } else {
-                Err(Error::custom(format!(
-                    "Expected a JSON object: {:?}",
-                    value
-                )))
+                Err(Error::custom(format!("Expected a JSON object: {value:?}")))
             }
         })
     }
@@ -752,7 +749,7 @@ impl Schema {
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     pub fn canonical_form(&self) -> String {
         let json = serde_json::to_value(self)
-            .unwrap_or_else(|e| panic!("Cannot parse Schema from JSON: {0}", e));
+            .unwrap_or_else(|e| panic!("Cannot parse Schema from JSON: {e}"));
         parsing_canonical_form(&json)
     }
 
@@ -965,7 +962,7 @@ impl Parser {
             key: &'static str,
         ) -> Result<DecimalMetadata, Error> {
             match complex.get(key) {
-                Some(&Value::Number(ref value)) => parse_json_integer_for_decimal(value),
+                Some(Value::Number(value)) => parse_json_integer_for_decimal(value),
                 None => {
                     if key == "scale" {
                         Ok(0)
@@ -1071,7 +1068,7 @@ impl Parser {
         }
 
         match complex.get("logicalType") {
-            Some(&Value::String(ref t)) => match t.as_str() {
+            Some(Value::String(t)) => match t.as_str() {
                 "decimal" => {
                     let inner = Box::new(logical_verify_type(
                         complex,
@@ -1157,7 +1154,7 @@ impl Parser {
             _ => {}
         }
         match complex.get("type") {
-            Some(&Value::String(ref t)) => match t.as_str() {
+            Some(Value::String(t)) => match t.as_str() {
                 "record" => self.parse_record(complex, enclosing_namespace),
                 "enum" => self.parse_enum(complex, enclosing_namespace),
                 "array" => self.parse_array(complex, enclosing_namespace),
@@ -1165,8 +1162,8 @@ impl Parser {
                 "fixed" => self.parse_fixed(complex, enclosing_namespace),
                 other => self.parse_known_schema(other, enclosing_namespace),
             },
-            Some(&Value::Object(ref data)) => self.parse_complex(data, enclosing_namespace),
-            Some(&Value::Array(ref variants)) => {
+            Some(Value::Object(data)) => self.parse_complex(data, enclosing_namespace),
+            Some(Value::Array(variants)) => {
                 let default = complex.get("default");
                 self.parse_union(variants, enclosing_namespace, default)
             }
@@ -1476,7 +1473,7 @@ fn fix_aliases_namespace(aliases: Option<Vec<String>>, namespace: &Namespace) ->
             .map(|alias| {
                 if alias.find('.').is_none() {
                     match namespace {
-                        Some(ref ns) => format!("{}.{}", ns, alias),
+                        Some(ref ns) => format!("{ns}.{alias}"),
                         None => alias.clone(),
                     }
                 } else {
@@ -1689,10 +1686,7 @@ fn parsing_canonical_form(schema: &Value) -> String {
         Value::Object(map) => pcf_map(map),
         Value::String(s) => pcf_string(s),
         Value::Array(v) => pcf_array(v),
-        json => panic!(
-            "got invalid JSON value for canonical form of schema: {0}",
-            json
-        ),
+        json => panic!("got invalid JSON value for canonical form of schema: {json}"),
     }
 }
 
@@ -1719,9 +1713,7 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
             // Invariant: Only valid schemas. Must be a string.
             let name = v.as_str().unwrap();
             let n = match ns {
-                Some(namespace) if !name.contains('.') => {
-                    Cow::Owned(format!("{}.{}", namespace, name))
-                }
+                Some(namespace) if !name.contains('.') => Cow::Owned(format!("{namespace}.{name}")),
                 _ => Cow::Borrowed(name),
             };
 
@@ -1753,7 +1745,7 @@ fn pcf_map(schema: &Map<String, Value>) -> String {
         .map(|(_, v)| v)
         .collect::<Vec<_>>()
         .join(",");
-    format!("{{{}}}", inter)
+    format!("{{{inter}}}")
 }
 
 fn pcf_array(arr: &[Value]) -> String {
@@ -1762,11 +1754,11 @@ fn pcf_array(arr: &[Value]) -> String {
         .map(parsing_canonical_form)
         .collect::<Vec<String>>()
         .join(",");
-    format!("[{}]", inter)
+    format!("[{inter}]")
 }
 
 fn pcf_string(s: &str) -> String {
-    format!("\"{}\"", s)
+    format!("\"{s}\"")
 }
 
 const RESERVED_FIELDS: &[&str] = &[
@@ -3817,7 +3809,7 @@ mod tests {
         if let Schema::Record { ref aliases, .. } = schema {
             assert_avro_3512_aliases(aliases);
         } else {
-            panic!("The Schema should be a record: {:?}", schema);
+            panic!("The Schema should be a record: {schema:?}");
         }
     }
 
@@ -3841,7 +3833,7 @@ mod tests {
         if let Schema::Enum { ref aliases, .. } = schema {
             assert_avro_3512_aliases(aliases);
         } else {
-            panic!("The Schema should be an enum: {:?}", schema);
+            panic!("The Schema should be an enum: {schema:?}");
         }
     }
 
@@ -3863,7 +3855,7 @@ mod tests {
         if let Schema::Fixed { ref aliases, .. } = schema {
             assert_avro_3512_aliases(aliases);
         } else {
-            panic!("The Schema should be a fixed: {:?}", schema);
+            panic!("The Schema should be a fixed: {schema:?}");
         }
     }
 
