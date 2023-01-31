@@ -22,7 +22,7 @@ All enhancements should be accompanied by test coverage.
 Our tests are based on [Spock](https://github.com/spockframework/spock).
 Generally, it's best to extend our `FunctionalSpec` class, which provides useful functions for running the plugin within Gradle.
 
-Note that the "build" task only tests the plugin against the a single version of Gradle/Avro.
+Note that the "build" task only tests the plugin against a single version of Gradle/Avro.
 If you want to test compatibility with a larger range, consider using the `testRecentVersionCompatibility` task or `testVersionCompatibility` task.
 
 For information on how to use GitHub to submit a pull request, see [Collaborating on projects using issues and pull requests](https://help.github.com/categories/collaborating-on-projects-using-issues-and-pull-requests/).

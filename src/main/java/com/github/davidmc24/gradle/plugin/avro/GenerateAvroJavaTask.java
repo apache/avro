@@ -22,7 +22,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
@@ -42,8 +46,11 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.NotSpec;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
@@ -52,7 +59,6 @@ import org.gradle.api.tasks.Optional;
 @SuppressWarnings("WeakerAccess")
 @CacheableTask
 public class GenerateAvroJavaTask extends OutputDirTask {
-    private FileCollection classpath;
     private static Set<String> SUPPORTED_EXTENSIONS =
         new SetBuilder<String>().add(Constants.PROTOCOL_EXTENSION).add(Constants.SCHEMA_EXTENSION).build();
 
@@ -66,6 +72,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<Boolean> optionalGettersForNullableFieldsOnly;
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
+    private FileCollection classpath;
     private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
     private final ListProperty<Class<? extends Conversion<?>>> customConversions;
 
@@ -78,7 +85,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     @Inject
     public GenerateAvroJavaTask(ObjectFactory objects) {
         super();
-        this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
         this.outputCharacterEncoding = objects.property(String.class);
         this.stringType = objects.property(String.class).convention(Constants.DEFAULT_STRING_TYPE);
         this.fieldVisibility = objects.property(String.class).convention(Constants.DEFAULT_FIELD_VISIBILITY);
@@ -91,14 +97,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             .convention(Constants.DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY);
         this.createSetters = objects.property(Boolean.class).convention(Constants.DEFAULT_CREATE_SETTERS);
         this.enableDecimalLogicalType = objects.property(Boolean.class).convention(Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
-        this.stringTypeProvider = getStringType()
-            .map(input -> Enums.parseCaseInsensitive(Constants.OPTION_STRING_TYPE, StringType.values(), input));
-        this.fieldVisibilityProvider = getFieldVisibility()
-            .map(input -> Enums.parseCaseInsensitive(Constants.OPTION_FIELD_VISIBILITY, FieldVisibility.values(), input));
+        this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(Constants.DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions =
             objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(Constants.DEFAULT_CUSTOM_CONVERSIONS);
+        this.stringTypeProvider = getStringType()
+            .map(input -> Enums.parseCaseInsensitive(Constants.OPTION_STRING_TYPE, StringType.values(), input));
+        this.fieldVisibilityProvider = getFieldVisibility()
+            .map(input -> Enums.parseCaseInsensitive(Constants.OPTION_FIELD_VISIBILITY, FieldVisibility.values(), input));
         this.projectLayout = getProject().getLayout();
         this.resolver = new SchemaResolver(projectLayout, getLogger());
     }
