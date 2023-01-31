@@ -18,11 +18,11 @@ package com.github.davidmc24.gradle.plugin.avro;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
@@ -42,10 +42,8 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.NotSpec;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
@@ -54,6 +52,7 @@ import org.gradle.api.tasks.TaskAction;
 @SuppressWarnings("WeakerAccess")
 @CacheableTask
 public class GenerateAvroJavaTask extends OutputDirTask {
+    private FileCollection classpath;
     private static Set<String> SUPPORTED_EXTENSIONS =
         new SetBuilder<String>().add(Constants.PROTOCOL_EXTENSION).add(Constants.SCHEMA_EXTENSION).build();
 
@@ -79,6 +78,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     @Inject
     public GenerateAvroJavaTask(ObjectFactory objects) {
         super();
+        this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
         this.outputCharacterEncoding = objects.property(String.class);
         this.stringType = objects.property(String.class).convention(Constants.DEFAULT_STRING_TYPE);
         this.fieldVisibility = objects.property(String.class).convention(Constants.DEFAULT_FIELD_VISIBILITY);
@@ -101,6 +101,19 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(Constants.DEFAULT_CUSTOM_CONVERSIONS);
         this.projectLayout = getProject().getLayout();
         this.resolver = new SchemaResolver(projectLayout, getLogger());
+    }
+
+    public void setClasspath(FileCollection classpath) {
+        this.classpath = classpath;
+    }
+
+    public void classpath(Object... paths) {
+        this.classpath.plus(getProject().files(paths));
+    }
+
+    @Classpath
+    public FileCollection getClasspath() {
+        return this.classpath;
     }
 
     @Optional
@@ -340,10 +353,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             compiler.setTemplateDir(getTemplateDirectory().get());
         }
         if (getAdditionalVelocityToolClasses().isPresent()) {
+            ClassLoader loader = assembleClassLoader();
             List<Object> tools = getAdditionalVelocityToolClasses().get().stream()
                     .map(s -> {
                         try {
-                            return Class.forName(s);
+                            return Class.forName(s, true, loader);
                         } catch (ClassNotFoundException e) {
                             throw new RuntimeException("unable to load velocity tool class " + s, e);
                         }
@@ -393,5 +407,18 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     private void registerCustomConversions(SpecificCompiler compiler) {
         customConversions.get().forEach(compiler::addCustomConversion);
+    }
+
+    private ClassLoader assembleClassLoader() {
+        getLogger().debug("Using additional classpath: {}", classpath.getFiles());
+        List<URL> urls = new LinkedList<>();
+        for (File file : classpath) {
+            try {
+                urls.add(file.toURI().toURL());
+            } catch (MalformedURLException e) {
+                getLogger().debug(e.getMessage());
+            }
+        }
+        return new URLClassLoader(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
     }
 }
