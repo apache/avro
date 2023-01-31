@@ -15,6 +15,9 @@
  */
 package com.github.davidmc24.gradle.plugin.avro
 
+import com.github.davidmc24.gradle.plugin.avro.test.custom.CommentGenerator
+import com.github.davidmc24.gradle.plugin.avro.test.custom.TimestampGenerator
+
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class AvroBasePluginFunctionalSpec extends FunctionalSpec {
@@ -124,5 +127,51 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         projectFile("build/generated-main-avro-avsc/org/apache/avro/MD5.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Node.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Interop.avsc").file
+    }
+
+    def "supports classpath property for instantiating of velocity tools"() {
+        given:
+        copyAvroTools("src/main/java")
+        def templatesDir = projectFolder("templates")
+        copyResource("user.avsc", avroDir)
+        copyResource("record-tools.vm", templatesDir, "record.vm")
+        applyPlugin("java")
+        buildFile << """
+        |avro {
+        |    templateDirectory = "${templatesDir.toString()}/"
+        |    additionalVelocityToolClasses = ['com.github.davidmc24.gradle.plugin.avro.test.custom.TimestampGenerator',
+        |                                     'com.github.davidmc24.gradle.plugin.avro.test.custom.CommentGenerator']
+        |}
+        |tasks.register("compileTools", JavaCompile) {
+        |   source = sourceSets.main.java
+        |   classpath = sourceSets.main.compileClasspath
+        |   destinationDir = file("build/classes/java/main")
+        |}
+        |tasks.register("generateAvro", com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask) {
+        |    dependsOn compileTools
+        |    classpath = files("build/classes/java/main")
+        |    source file("src/main/avro")
+        |    include("**/*.avsc")
+        |    outputDir = file("build/generated-main-avro-java")
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvro")
+
+        then: "the task succeeds"
+        result.task(":generateAvro").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the velocity tools have been applied"
+        content.contains(CommentGenerator.CUSTOM_COMMENT)
+        content.contains(TimestampGenerator.MESSAGE_PREFIX)
+    }
+
+    private void copyAvroTools(String destDir) {
+        copyFile("src/test/java", destDir,
+            "com/github/davidmc24/gradle/plugin/avro/test/custom/CommentGenerator.java")
+        copyFile("src/test/java", destDir,
+            "com/github/davidmc24/gradle/plugin/avro/test/custom/TimestampGenerator.java")
     }
 }
