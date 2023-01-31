@@ -53,12 +53,6 @@ using boost::lexical_cast;
 using avro::compileJsonSchema;
 using avro::ValidSchema;
 
-#if __cplusplus >= 201703L
-#define ANY_NS "std"
-#else
-#define ANY_NS "boost"
-#endif
-
 struct PendingSetterGetter {
     string structName;
     string type;
@@ -84,6 +78,8 @@ class CodeGen {
     const std::string headerFile_;
     const std::string includePrefix_;
     const bool noUnion_;
+    const bool useCpp17_;
+    std::string anyNs;
     const std::string guardString_;
     boost::mt19937 random_;
 
@@ -114,11 +110,19 @@ public:
     CodeGen(std::ostream &os, std::string ns,
             std::string schemaFile, std::string headerFile,
             std::string guardString,
-            std::string includePrefix, bool noUnion) : unionNumber_(0), os_(os), inNamespace_(false), ns_(std::move(ns)),
+            std::string includePrefix, bool noUnion, bool useCpp17) : unionNumber_(0), os_(os), inNamespace_(false), ns_(std::move(ns)),
                                                        schemaFile_(std::move(schemaFile)), headerFile_(std::move(headerFile)),
-                                                       includePrefix_(std::move(includePrefix)), noUnion_(noUnion),
+                                                       includePrefix_(std::move(includePrefix)), noUnion_(noUnion), useCpp17_(useCpp17),
                                                        guardString_(std::move(guardString)),
-                                                       random_(static_cast<uint32_t>(::time(nullptr))) {}
+                                                       random_(static_cast<uint32_t>(::time(nullptr)))
+    {
+#if __cplusplus >= 201703L
+        anyNs = "std";
+#else
+        anyNs = (useCpp17) ? "std" : "boost";
+#endif
+    }
+
     void generate(const ValidSchema &schema);
 };
 
@@ -319,7 +323,7 @@ string CodeGen::unionName() {
 
 static void generateGetterAndSetter(ostream &os,
                                     const string &structName, const string &type, const string &name,
-                                    size_t idx) {
+                                    size_t idx, const std::string& anyNs) {
     string sn = " " + structName + "::";
 
     os << "inline\n";
@@ -329,7 +333,7 @@ static void generateGetterAndSetter(ostream &os,
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return " << ANY_NS << "::any_cast<" << type << " >(value_);\n"
+       << "    return " << anyNs << "::any_cast<" << type << " >(value_);\n"
        << "}\n\n";
 
     os << "inline\n"
@@ -386,7 +390,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     os_ << "struct " << result << " {\n"
         << "private:\n"
         << "    size_t idx_;\n"
-        << "    " << ANY_NS << "::any value_;\n"
+        << "    " << anyNs << "::any value_;\n"
         << "public:\n"
         << "    size_t idx() const { return idx_; }\n";
 
@@ -398,7 +402,7 @@ string CodeGen::generateUnionType(const NodePtr &n) {
                 << "    }\n"
                 << "    void set_null() {\n"
                 << "        idx_ = " << i << ";\n"
-                << "        value_ = " << ANY_NS << "::any();\n"
+                << "        value_ = " << anyNs << "::any();\n"
                 << "    }\n";
         } else {
             const string &type = types[i];
@@ -725,13 +729,16 @@ void CodeGen::generate(const ValidSchema &schema) {
     os_ << "#ifndef " << h << "\n";
     os_ << "#define " << h << "\n\n\n";
 
-    os_ << "#include <sstream>\n"
+    os_ << "#include <sstream>\n";
 #if __cplusplus >= 201703L
-        << "#include <any>\n"
+    os_ << "#include <any>\n";
 #else
-        << "#include \"boost/any.hpp\"\n"
+    if (useCpp17_)
+        os_ << "#include <any>\n";
+    else
+        os_ << "#include \"boost/any.hpp\"\n";
 #endif
-        << "#include \"" << includePrefix_ << "Specific.hh\"\n"
+    os_ << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
         << "\n";
@@ -754,7 +761,7 @@ void CodeGen::generate(const ValidSchema &schema) {
              pendingGettersAndSetters.begin();
          it != pendingGettersAndSetters.end(); ++it) {
         generateGetterAndSetter(os_, it->structName, it->type, it->name,
-                                it->idx);
+                                it->idx, anyNs);
     }
 
     for (vector<PendingConstructor>::const_iterator it =
@@ -816,8 +823,14 @@ int main(int argc, char **argv) {
     const string NO_UNION_TYPEDEF("no-union-typedef");
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")("version,V", "produce version information")("include-prefix,p", po::value<string>()->default_value("avro"),
-                                                         "prefix for include headers, - for none, default: avro")("no-union-typedef,U", "do not generate typedefs for unions in records")("namespace,n", po::value<string>(), "set namespace for generated code")("input,i", po::value<string>(), "input file")("output,o", po::value<string>(), "output file to generate");
+    desc.add_options()("help,h", "produce help message")
+        ("version,V", "produce version information")
+        ("include-prefix,p", po::value<string>()->default_value("avro"), "prefix for include headers, - for none, default: avro")
+        ("no-union-typedef,U", "do not generate typedefs for unions in records")
+        ("namespace,n", po::value<string>(), "set namespace for generated code")
+        ("cpp17", "use c++17 instead of boost")
+        ("input,i", po::value<string>(), "input file")
+        ("output,o", po::value<string>(), "output file to generate");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -843,6 +856,8 @@ int main(int argc, char **argv) {
     string inf = vm.count(IN_FILE) > 0 ? vm[IN_FILE].as<string>() : string();
     string incPrefix = vm[INCLUDE_PREFIX].as<string>();
     bool noUnion = vm.count(NO_UNION_TYPEDEF) != 0;
+    bool useCpp17 = vm.count("cpp17") != 0;
+
     if (incPrefix == "-") {
         incPrefix.clear();
     } else if (*incPrefix.rbegin() != '/') {
@@ -862,9 +877,9 @@ int main(int argc, char **argv) {
         if (!outf.empty()) {
             string g = readGuard(outf);
             ofstream out(outf.c_str());
-            CodeGen(out, ns, inf, outf, g, incPrefix, noUnion).generate(schema);
+            CodeGen(out, ns, inf, outf, g, incPrefix, noUnion, useCpp17).generate(schema);
         } else {
-            CodeGen(std::cout, ns, inf, outf, "", incPrefix, noUnion).generate(schema);
+            CodeGen(std::cout, ns, inf, outf, "", incPrefix, noUnion, useCpp17).generate(schema);
         }
         return 0;
     } catch (std::exception &e) {
