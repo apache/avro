@@ -138,7 +138,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         applyPlugin("java")
         buildFile << """
         |avro {
-        |    templateDirectory = "${templatesDir.toString()}/"
+        |    templateDirectory = "${templatesDir.toString().replace('\\', '\\\\')}/"
         |    additionalVelocityToolClasses = ['com.github.davidmc24.gradle.plugin.avro.test.custom.TimestampGenerator',
         |                                     'com.github.davidmc24.gradle.plugin.avro.test.custom.CommentGenerator']
         |}
