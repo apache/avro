@@ -42,6 +42,12 @@ enum GradleFeatures {
         boolean isSupportedBy(GradleVersion version) {
             return version.compareTo(GradleVersions.v6_0) >= 0;
         }
+    },
+    ideaModuleTestSources() {
+        @Override
+        boolean isSupportedBy(GradleVersion version) {
+            return version.compareTo(GradleVersions.v7_4) >= 0;
+        }
     };
 
     abstract boolean isSupportedBy(GradleVersion version);

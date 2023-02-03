@@ -16,13 +16,18 @@
 
 package com.github.davidmc24.gradle.plugin.avro;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.plugins.ide.idea.model.IdeaModule;
 
 class GradleCompatibility {
+    private static final Class<?>[] NO_PARAMETERS = {};
+    private static final Object[] NO_ARGUMENTS = {};
+
     static <T> T createExtensionWithObjectFactory(Project project, String extensionName, Class<T> extensionType) {
         if (GradleFeatures.extensionInjection.isSupported()) {
             return project.getExtensions().create(extensionName, extensionType);
@@ -47,6 +52,23 @@ class GradleCompatibility {
             return sourceSet.getSourcesJarTaskName();
         } else {
             return sourceSet.getTaskName(null, "sourcesJar");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    static void addTestSources(IdeaModule module, File... files) {
+        if (GradleFeatures.ideaModuleTestSources.isSupported()) {
+            // Can't use these methods directly as they didn't exist until 7.4
+            Object testSources = invokeMethod(module, "getTestSources", NO_PARAMETERS, NO_ARGUMENTS);
+            Class<?>[] parameterTypes = {Object[].class};
+            Object[] args = {files};
+            invokeMethod(testSources, "from", parameterTypes, args);
+        } else {
+            // Deprecated in 7.6
+            module.setTestSourceDirs(new SetBuilder<File>()
+                .addAll(module.getTestSourceDirs())
+                .addAll(files)
+                .build());
         }
     }
 
