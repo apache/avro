@@ -62,11 +62,9 @@ public class AvroPlugin implements Plugin<Project> {
                 .add(getAvroSourceDir(project, mainSourceSet))
                 .add(getGeneratedOutputDir(project, mainSourceSet, Constants.JAVA_EXTENSION).map(Directory::getAsFile).get())
                 .build());
-            module.setTestSourceDirs(new SetBuilder<File>()
-                .addAll(module.getTestSourceDirs())
-                .add(getAvroSourceDir(project, testSourceSet))
-                .add(getGeneratedOutputDir(project, testSourceSet, Constants.JAVA_EXTENSION).map(Directory::getAsFile).get())
-                .build());
+            module.getTestSources()
+                .from(getAvroSourceDir(project, testSourceSet))
+                .from(getGeneratedOutputDir(project, testSourceSet, Constants.JAVA_EXTENSION).map(Directory::getAsFile).get());
             // IntelliJ doesn't allow source directories beneath an excluded directory.
             // Thus, we remove the build directory exclude and add all non-generated sub-directories as excludes.
             SetBuilder<File> excludeDirs = new SetBuilder<>();

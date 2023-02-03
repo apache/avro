@@ -2,6 +2,9 @@
 
 ## Unreleased
 * Drop compatibility testing for old versions of Java (9, 10, 12, 13, 14, 15, 16)
+* Built using Gradle 7.6
+* Updated compatibility testing through Gradle 7.6
+* Updated compatibility testing through Java 19
 
 ## 1.5.0
 * Added support for `additionalVelocityTool` thanks to a contribution from [dcracauer](https://github.com/dcracauer); see https://github.com/davidmc24/gradle-avro-plugin/pull/211
