@@ -14,7 +14,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 **NOTE**: Pre-1.0 versions used a different publishing process/namespace.  It is strongly recommended to upgrade to a newer version.  Further details can be found in the [change log](CHANGES.md).
 
-* Currently tested against Java 8-18
+* Currently tested against Java 8, 11, and 17-18
     * Though not supported yet, tests are also run against Java 19 to provide early notification of potential incompatibilities.
     * Java 18 support requires Gradle 7.5 or higher (as per Gradle's release notes)
     * Java 17 support requires Gradle 7.3 or higher (as per Gradle's release notes)
