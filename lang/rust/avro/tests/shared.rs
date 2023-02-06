@@ -16,7 +16,13 @@
 // under the License.
 
 use apache_avro::{types::Value, Codec, Reader, Schema, Writer};
-use std::{fmt, fs::{DirEntry, File, ReadDir}, io::BufReader, path::Path, slice::Iter};
+use std::{
+    fmt,
+    fs::{DirEntry, File, ReadDir},
+    io::BufReader,
+    path::Path,
+    slice::Iter,
+};
 
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 
@@ -32,7 +38,8 @@ fn test_schema() {
         log::debug!("{:?}", entry.file_name());
         if let Ok(ft) = entry.file_type() {
             if ft.is_dir() {
-                let sub_folder = ROOT_DIRECTORY.to_owned() + "/" + entry.file_name().to_str().unwrap();
+                let sub_folder =
+                    ROOT_DIRECTORY.to_owned() + "/" + entry.file_name().to_str().unwrap();
 
                 let dir_result = test_folder(sub_folder.as_str());
                 if let Result::Err(ed) = dir_result {
@@ -125,9 +132,9 @@ fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
                     Ok(_) => Result::Err(ErrorsDesc::new(
                         format!("Records are not equals for folder : {folder}").as_str(),
                     )),
-                    Err(e) => Err(
-                        e.add(format!("Records are not equals for folder : {folder}").as_str())
-                    ),
+                    Err(e) => {
+                        Err(e.add(format!("Records are not equals for folder : {folder}").as_str()))
+                    }
                 }
             }
         }
