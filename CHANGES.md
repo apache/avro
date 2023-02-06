@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 1.6.0
 * Add support for configuring classpath for `GenerateAvroJavaTask` (thanks to [crtlib](https://github.com/crtlib)); see https://github.com/davidmc24/gradle-avro-plugin/pull/222
 * Drop compatibility testing for old versions of Java (9, 10, 12, 13, 14, 15, 16)
 * Built using Gradle 7.6
