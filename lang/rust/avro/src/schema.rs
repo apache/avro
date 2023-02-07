@@ -563,6 +563,9 @@ pub struct RecordField {
     pub name: String,
     /// Documentation of the field.
     pub doc: Documentation,
+
+    /// Aliases of the field.
+    pub aliases: Aliases,
     /// Default value of the field.
     /// This value will be used when reading Avro datum if schema resolution
     /// is enabled.
@@ -603,6 +606,16 @@ impl RecordField {
 
         let default = field.get("default").cloned();
 
+        let aliases = field.get("aliases").and_then(|aliases| {
+            aliases.as_array().map(|aliases| {
+                aliases
+                    .iter()
+                    .flat_map(|alias| alias.as_str())
+                    .map(|alias| Alias::new(alias).expect("Alias is not valid"))
+                    .collect::<Vec<Alias>>()
+            })
+        });
+
         let order = field
             .get("order")
             .and_then(|order| order.as_str())
@@ -613,6 +626,7 @@ impl RecordField {
             name,
             doc: field.doc(),
             default,
+            aliases,
             schema,
             order,
             position,
@@ -1268,6 +1282,13 @@ impl Parser {
 
         for field in &fields {
             lookup.insert(field.name.clone(), field.position);
+
+            if let Some(ref field_aliases) = field.aliases {
+                for alias in field_aliases {
+                    let alias = alias.fullname(enclosing_namespace.clone());
+                    lookup.insert(alias, field.position);
+                }
+            }
         }
 
         let schema = Schema::Record {
@@ -2067,6 +2088,7 @@ mod tests {
             name: "next".to_string(),
             doc: None,
             default: None,
+            aliases: None,
             schema: Schema::Union(
                 UnionSchema::new(vec![
                     Schema::Null,
@@ -2090,6 +2112,7 @@ mod tests {
             name: "next".to_string(),
             doc: None,
             default: Some(json!(2)),
+            aliases: None,
             schema: Schema::Long,
             order: RecordFieldOrder::Ascending,
             position: 1,
@@ -2144,6 +2167,7 @@ mod tests {
                 name: "field_one".to_string(),
                 doc: None,
                 default: None,
+                aliases: None,
                 schema: Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Ref {
@@ -2235,6 +2259,7 @@ mod tests {
                 name: "field_one".to_string(),
                 doc: None,
                 default: Some(Value::Null),
+                aliases: None,
                 schema: Schema::Union(
                     UnionSchema::new(vec![
                         Schema::Null,
@@ -2284,6 +2309,7 @@ mod tests {
                     name: "a".to_string(),
                     doc: None,
                     default: Some(Value::Number(42i64.into())),
+                    aliases: None,
                     schema: Schema::Long,
                     order: RecordFieldOrder::Ascending,
                     position: 0,
@@ -2293,6 +2319,7 @@ mod tests {
                     name: "b".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::String,
                     order: RecordFieldOrder::Ascending,
                     position: 1,
@@ -2345,6 +2372,7 @@ mod tests {
                 name: "recordField".to_string(),
                 doc: None,
                 default: None,
+                aliases: None,
                 schema: Schema::Record {
                     name: Name::new("Node").unwrap(),
                     aliases: None,
@@ -2354,6 +2382,7 @@ mod tests {
                             name: "label".to_string(),
                             doc: None,
                             default: None,
+                            aliases: None,
                             schema: Schema::String,
                             order: RecordFieldOrder::Ascending,
                             position: 0,
@@ -2363,6 +2392,7 @@ mod tests {
                             name: "children".to_string(),
                             doc: None,
                             default: None,
+                            aliases: None,
                             schema: Schema::Array(Box::new(Schema::Ref {
                                 name: Name::new("Node").unwrap(),
                             })),
@@ -2522,6 +2552,7 @@ mod tests {
                     name: "value".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Long,
                     order: RecordFieldOrder::Ascending,
                     position: 0,
@@ -2531,6 +2562,7 @@ mod tests {
                     name: "next".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Union(
                         UnionSchema::new(vec![
                             Schema::Null,
@@ -2591,6 +2623,7 @@ mod tests {
                     name: "value".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Long,
                     order: RecordFieldOrder::Ascending,
                     position: 0,
@@ -2600,6 +2633,7 @@ mod tests {
                     name: "next".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Ref {
                         name: Name {
                             name: "record".to_owned(),
@@ -2658,6 +2692,7 @@ mod tests {
                     name: "enum".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Enum {
                         name: Name {
                             name: "enum".to_owned(),
@@ -2676,6 +2711,7 @@ mod tests {
                     name: "next".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Enum {
                         name: Name {
                             name: "enum".to_owned(),
@@ -2738,6 +2774,7 @@ mod tests {
                     name: "fixed".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Fixed {
                         name: Name {
                             name: "fixed".to_owned(),
@@ -2756,6 +2793,7 @@ mod tests {
                     name: "next".to_string(),
                     doc: None,
                     default: None,
+                    aliases: None,
                     schema: Schema::Fixed {
                         name: Name {
                             name: "fixed".to_owned(),

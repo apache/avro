@@ -30,6 +30,8 @@ struct FieldOptions {
     doc: Option<String>,
     #[darling(default)]
     default: Option<String>,
+    // #[darling(default)]
+    // aliases: Option<Vec<String>>,
     #[darling(default)]
     rename: Option<String>,
     #[darling(default)]
@@ -148,6 +150,7 @@ fn get_data_struct_schema_def(
                     }
                     None => quote! { None },
                 };
+                let aliases = quote! { None };
                 let schema_expr = type_to_schema_expr(&field.ty)?;
                 let position = index;
                 record_field_exprs.push(quote! {
@@ -155,6 +158,7 @@ fn get_data_struct_schema_def(
                             name: #name.to_string(),
                             doc: #doc,
                             default: #default_value,
+                            aliases: #aliases,
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
