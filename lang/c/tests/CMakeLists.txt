@@ -64,6 +64,7 @@ add_avro_executable(test_interop_data)
 
 add_avro_test_checkmem(test_data_structures)
 add_avro_test_checkmem(test_avro_schema)
+add_avro_test_checkmem(test_avro_commons_schema)
 add_avro_test_checkmem(test_avro_schema_names)
 add_avro_test_checkmem(test_avro_values)
 add_avro_test_checkmem(test_avro_766)
