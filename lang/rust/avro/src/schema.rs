@@ -1696,6 +1696,10 @@ impl Serialize for RecordField {
             map.serialize_entry("default", default)?;
         }
 
+        if let Some(ref aliases) = self.aliases {
+            map.serialize_entry("aliases", aliases)?;
+        }
+
         map.end()
     }
 }
@@ -3907,7 +3911,13 @@ mod tests {
               "namespace": "space",
               "aliases": ["b", "x.y", ".c"],
               "fields" : [
-                {"name": "time", "type": "long"}
+                {
+                    "name": "time",
+                    "type": "long",
+                    "doc": "The documentation is not serialized",
+                    "default": 123,
+                    "aliases": ["time1", "ns.time2"]
+                }
               ]
             }
         "#,
@@ -3917,7 +3927,7 @@ mod tests {
         let value = serde_json::to_value(&schema).unwrap();
         let serialized = serde_json::to_string(&value).unwrap();
         assert_eq!(
-            r#"{"aliases":["space.b","x.y","c"],"fields":[{"name":"time","type":"long"}],"name":"a","namespace":"space","type":"record"}"#,
+            r#"{"aliases":["space.b","x.y","c"],"fields":[{"aliases":["time1","ns.time2"],"default":123,"name":"time","type":"long"}],"name":"a","namespace":"space","type":"record"}"#,
             &serialized
         );
         assert_eq!(schema, Schema::parse_str(&serialized).unwrap());
@@ -4309,6 +4319,36 @@ mod tests {
                 }
             }
             _ => panic!("Expected Schema::Record"),
+        }
+    }
+
+    #[test]
+    fn avro_3709_parsing_of_record_field_aliases() {
+        let schema = r#"
+        {
+          "name": "rec",
+          "type": "record",
+          "fields": [
+            {
+              "name": "num",
+              "type": "int",
+              "aliases": ["num1", "num2"]
+            }
+          ]
+        }
+        "#;
+
+        fn alias(name: &str) -> Alias {
+            Alias::new(name).unwrap()
+        }
+
+        let schema = Schema::parse_str(schema).unwrap();
+        if let Schema::Record { fields, .. } = schema {
+            let num_field = &fields[0];
+            assert_eq!(num_field.name, "num");
+            assert_eq!(num_field.aliases, Some(vec!(alias("num1"), alias("num2"))));
+        } else {
+            panic!("Expected a record schema!");
         }
     }
 }
