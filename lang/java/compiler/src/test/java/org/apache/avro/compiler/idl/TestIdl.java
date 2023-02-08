@@ -82,6 +82,13 @@ public class TestIdl {
       File outF = new File(TEST_OUTPUT_DIR, inF.getName().replaceFirst("\\.avdl$", ".avpr"));
       tests.add(new GenTest(inF, outF));
     }
+
+    // AVRO-3706 : test folder with space in name.
+    File inputWorkSpace = new File(TEST_DIR, "work space");
+    File root = new File(inputWorkSpace, "root.avdl");
+    File rootResult = new File(inputWorkSpace, "root.avpr");
+    tests.add(new GenTest(root, rootResult));
+
   }
 
   @Test
