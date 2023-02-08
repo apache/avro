@@ -563,7 +563,6 @@ pub struct RecordField {
     pub name: String,
     /// Documentation of the field.
     pub doc: Documentation,
-
     /// Aliases of the field's name. They have no namespace.
     pub aliases: Option<Vec<String>>,
     /// Default value of the field.
