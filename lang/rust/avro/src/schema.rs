@@ -564,8 +564,8 @@ pub struct RecordField {
     /// Documentation of the field.
     pub doc: Documentation,
 
-    /// Aliases of the field.
-    pub aliases: Aliases,
+    /// Aliases of the field's name. They have no namespace.
+    pub aliases: Option<Vec<String>>,
     /// Default value of the field.
     /// This value will be used when reading Avro datum if schema resolution
     /// is enabled.
@@ -611,8 +611,8 @@ impl RecordField {
                 aliases
                     .iter()
                     .flat_map(|alias| alias.as_str())
-                    .map(|alias| Alias::new(alias).expect("Alias is not valid"))
-                    .collect::<Vec<Alias>>()
+                    .map(|alias| alias.to_string())
+                    .collect::<Vec<String>>()
             })
         });
 
@@ -1285,8 +1285,7 @@ impl Parser {
 
             if let Some(ref field_aliases) = field.aliases {
                 for alias in field_aliases {
-                    let alias = alias.fullname(enclosing_namespace.clone());
-                    lookup.insert(alias, field.position);
+                    lookup.insert(alias.clone(), field.position);
                 }
             }
         }
@@ -4338,15 +4337,11 @@ mod tests {
         }
         "#;
 
-        fn alias(name: &str) -> Alias {
-            Alias::new(name).unwrap()
-        }
-
         let schema = Schema::parse_str(schema).unwrap();
         if let Schema::Record { fields, .. } = schema {
             let num_field = &fields[0];
             assert_eq!(num_field.name, "num");
-            assert_eq!(num_field.aliases, Some(vec!(alias("num1"), alias("num2"))));
+            assert_eq!(num_field.aliases, Some(vec!("num1".into(), "num2".into())));
         } else {
             panic!("Expected a record schema!");
         }
