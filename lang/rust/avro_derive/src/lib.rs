@@ -30,6 +30,8 @@ struct FieldOptions {
     doc: Option<String>,
     #[darling(default)]
     default: Option<String>,
+    #[darling(multiple)]
+    alias: Vec<String>,
     #[darling(default)]
     rename: Option<String>,
     #[darling(default)]
@@ -148,6 +150,7 @@ fn get_data_struct_schema_def(
                     }
                     None => quote! { None },
                 };
+                let aliases = preserve_vec(field_attrs.alias);
                 let schema_expr = type_to_schema_expr(&field.ty)?;
                 let position = index;
                 record_field_exprs.push(quote! {
@@ -155,6 +158,7 @@ fn get_data_struct_schema_def(
                             name: #name.to_string(),
                             doc: #doc,
                             default: #default_value,
+                            aliases: #aliases,
                             schema: #schema_expr,
                             order: apache_avro::schema::RecordFieldOrder::Ascending,
                             position: #position,
@@ -455,8 +459,9 @@ mod tests {
 
         match syn::parse2::<DeriveInput>(test_struct) {
             Ok(mut input) => {
-                assert!(derive_avro_schema(&mut input).is_ok());
-                assert!(derive_avro_schema(&mut input)
+                let schema_token_stream = derive_avro_schema(&mut input);
+                assert!(&schema_token_stream.is_ok());
+                assert!(schema_token_stream
                     .unwrap()
                     .to_string()
                     .contains("namespace.testing"))
@@ -491,5 +496,27 @@ mod tests {
         assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{i32}).unwrap()).to_string(), quote!{<i32 as apache_avro::schema::derive::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
         assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{Vec<T>}).unwrap()).to_string(), quote!{<Vec<T> as apache_avro::schema::derive::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
         assert_eq!(type_path_schema_expr(&syn::parse2::<TypePath>(quote!{AnyType}).unwrap()).to_string(), quote!{<AnyType as apache_avro::schema::derive::AvroSchemaComponent>::get_schema_in_ctxt(named_schemas, enclosing_namespace)}.to_string());
+    }
+
+    #[test]
+    fn test_avro_3709_record_field_attributes() {
+        let test_struct = quote! {
+            struct A {
+                #[avro(alias = "a1", alias = "a2", doc = "a doc", default = "123", rename = "a3")]
+                a: i32
+            }
+        };
+
+        match syn::parse2::<DeriveInput>(test_struct) {
+            Ok(mut input) => {
+                let schema_res = derive_avro_schema(&mut input);
+                let expected_token_stream = r#"let schema_fields = vec ! [apache_avro :: schema :: RecordField { name : "a3" . to_string () , doc : Some ("a doc" . into ()) , default : Some (serde_json :: from_str ("123") . expect (format ! ("Invalid JSON: {:?}" , "123") . as_str ())) , aliases : Some (vec ! ["a1" . into () , "a2" . into ()]) , schema : apache_avro :: schema :: Schema :: Int , order : apache_avro :: schema :: RecordFieldOrder :: Ascending , position : 0usize , custom_attributes : Default :: default () , }] ;"#;
+                let schema_token_stream = schema_res.unwrap().to_string();
+                assert!(schema_token_stream.contains(expected_token_stream));
+            }
+            Err(error) => panic!(
+                "Failed to parse as derive input when it should be able to. Error: {error:?}"
+            ),
+        };
     }
 }
