@@ -363,8 +363,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                             Ok(*i as u8)
                         }
                         _ => Err(de::Error::custom(format!(
-                            "Byte array can be created only from Value::Int values which could be casted to u8: {:?}",
-                            v
+                            "Byte array can be created only from Value::Int values which could be casted to u8: {v:?}"
                         ))),
                     })
                     .collect();
