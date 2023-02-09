@@ -191,7 +191,7 @@ fn avro_3646_test_to_value_mixed_enum_with_duplicates() {
         let actual = to_value(test).unwrap();
         assert_eq!(actual, *expected, "Cannot serialize");
         if !actual.validate(&schema) {
-            panic!("Cannot validate value: {:?}", actual);
+            panic!("Cannot validate value: {actual:?}");
         }
         let deserialized: TestExternalEnum = from_value(&actual).unwrap();
         assert_eq!(deserialized, *test, "Cannot deserialize");

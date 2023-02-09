@@ -99,7 +99,7 @@ mod enums {
             let actual = to_value(test).unwrap();
             assert_eq!(actual, *expected,);
             if !actual.validate(&schema) {
-                panic!("Cannot validate value: {:?}", actual);
+                panic!("Cannot validate value: {actual:?}");
             }
             let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
             assert_eq!(deserialized, *test);
@@ -152,7 +152,7 @@ mod enums {
             let actual = to_value(test).unwrap();
             assert_eq!(actual, *expected,);
             if !actual.validate(&schema) {
-                panic!("Cannot validate value: {:?}", actual);
+                panic!("Cannot validate value: {actual:?}");
             }
             let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
             assert_eq!(deserialized, *test);
@@ -205,7 +205,7 @@ mod enums {
             let actual = to_value(test).unwrap();
             assert_eq!(actual, *expected,);
             if !actual.validate(&schema) {
-                panic!("Cannot validate value: {:?}", actual);
+                panic!("Cannot validate value: {actual:?}");
             }
             let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
             assert_eq!(deserialized, *test);
@@ -258,7 +258,7 @@ mod enums {
             let actual = to_value(test).unwrap();
             assert_eq!(actual, *expected,);
             if !actual.validate(&schema) {
-                panic!("Cannot validate value: {:?}", actual);
+                panic!("Cannot validate value: {actual:?}");
             }
             let deserialized: TestNullExternalEnum = from_value(&actual).unwrap();
             assert_eq!(deserialized, *test);

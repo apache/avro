@@ -407,8 +407,7 @@ impl ser::SerializeMap for MapSerializer {
             Ok(())
         } else {
             Err(ser::Error::custom(format!(
-                "Expected Map's key to be a String, but got {:?}",
-                key
+                "Expected Map's key to be a String, but got {key:?}"
             )))
         }
     }
