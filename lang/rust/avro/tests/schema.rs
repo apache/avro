@@ -896,6 +896,7 @@ fn test_parse_reused_record_schema_by_fullname() {
                 ref name,
                 doc: _,
                 default: _,
+                aliases: _,
                 ref schema,
                 order: _,
                 position: _,
