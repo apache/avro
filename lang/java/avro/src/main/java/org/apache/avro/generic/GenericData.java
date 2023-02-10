@@ -26,7 +26,6 @@ import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -34,7 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
@@ -59,6 +58,9 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
+
+import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
 /**
  * Utilities for generic Java data. See {@link GenericRecordBuilder} for a
@@ -1213,7 +1215,7 @@ public class GenericData {
     }
   }
 
-  private final Map<Field, Object> defaultValueCache = Collections.synchronizedMap(new WeakHashMap<>());
+  private final ConcurrentMap<Field, Object> defaultValueCache = new ConcurrentReferenceHashMap<>(128, WEAK);
 
   /**
    * Gets the default value of the given field, if any.
@@ -1233,28 +1235,20 @@ public class GenericData {
     }
 
     // Check the cache
-    Object defaultValue = defaultValueCache.get(field);
-
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
-    if (defaultValue == null)
+    return defaultValueCache.computeIfAbsent(field, fieldToGetValueFor -> {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        Accessor.encode(encoder, field.schema(), json);
+        Accessor.encode(encoder, fieldToGetValueFor.schema(), json);
         encoder.flush();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-        defaultValue = createDatumReader(field.schema()).read(null, decoder);
-
-        // this MAY result in two threads creating the same defaultValue
-        // and calling put. The last thread will win. However,
-        // that's not an issue.
-        defaultValueCache.put(field, defaultValue);
+        return createDatumReader(fieldToGetValueFor.schema()).read(null, decoder);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
       }
-
-    return defaultValue;
+    });
   }
 
   private static final Schema STRINGS = Schema.create(Type.STRING);
