@@ -460,7 +460,7 @@ A file header is thus described by the following schema:
  "fields" : [
    {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
-   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}},
+   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}}
   ]
 }
 ```
