@@ -17,6 +17,8 @@
  */
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -27,6 +29,8 @@ namespace Avro.msbuild
     {
         public override bool Execute()
         {
+            generatedFiles.Clear();
+
             try
             {
                 Dictionary<string, string> namespaceMapping = new Dictionary<string, string>();
@@ -75,6 +79,14 @@ namespace Avro.msbuild
                     for (var j = types.Count - 1; j >= 0; j--)
                     {
                         Log.LogMessage(messageImportance, "Generating {0}.{1}", namespaces[i].Name, types[j].Name);
+                        if (SkipDirectories) 
+                        { 
+                            generatedFiles.Add(new TaskItem(Path.Combine(OutDir.ItemSpec, types[j].Name + ".cs")));
+                        } 
+                        else 
+                        {
+                            generatedFiles.Add(new TaskItem(Path.Combine(Path.Combine(OutDir.ItemSpec, namespaces[i].Name.Replace('.', Path.DirectorySeparatorChar)), types[j].Name + ".cs")));
+                        }
                     }
                 }
 
@@ -87,6 +99,8 @@ namespace Avro.msbuild
 
             return !Log.HasLoggedErrors;
         }
+        
+        HashSet<ITaskItem> generatedFiles = new HashSet<ITaskItem>();
 
         public ITaskItem[] SchemaFiles { get; set; }
         public ITaskItem[] ProtocolFiles { get; set; }
@@ -95,6 +109,12 @@ namespace Avro.msbuild
         public bool SkipDirectories { get; set; }
 
         public string MessageLevel { get; set; }
+
+        /// <summary>
+        /// Returns the list of generated files - useful to chain with other build tasks.
+        /// </summary>
+        [Output]
+        public ITaskItem[] GeneratedFiles { get { return generatedFiles.ToArray(); } }
 
         [Required]
         public ITaskItem OutDir { get; set; }

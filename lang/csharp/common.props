@@ -39,7 +39,7 @@
     <!-- Exe -->
     <DefaultExeTargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0</DefaultExeTargetFrameworks>
     <!-- Library -->
-    <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1</DefaultLibraryTargetFrameworks>
+    <DefaultLibraryTargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</DefaultLibraryTargetFrameworks>
     <!-- Unit Tests -->
     <DefaultUnitTestTargetFrameworks>$(DefaultExeTargetFrameworks)</DefaultUnitTestTargetFrameworks>
   </PropertyGroup>
