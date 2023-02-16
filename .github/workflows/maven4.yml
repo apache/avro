@@ -57,7 +57,7 @@ jobs:
           java-version: '11'
 
       - name: Setup Maven 4
-        uses: stCarolas/setup-maven@v4
+        uses: stCarolas/setup-maven@v4.5
         with:
           maven-version: 4.0.0-alpha-4
 
