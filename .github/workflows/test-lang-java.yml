@@ -152,4 +152,4 @@ jobs:
 
       - name: Test Reproducible Build
         working-directory: .
-        run: mvn clean verify -DskipTests artifact:compare
+        run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare
