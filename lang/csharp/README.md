@@ -63,7 +63,12 @@ Example:
   </ItemGroup>
 
   <Target Name="AvroGenerate" BeforeTargets="CoreCompile">
-    <AvroGenTask SchemaFiles="@(SchemaFiles)" OutDir="generated" />
+    <AvroGenTask SchemaFiles="@(SchemaFiles)" OutDir="generated" >
+      <!-- bind generated files task output -->
+      <Output ItemName="GeneratedCodeFiles" TaskParameter="GeneratedFiles" />
+	  </AvroBuildTask>
+    <!-- displays generated files in build logs -->
+    <Message Text="Generated: %(GeneratedCodeFiles.Identity)" Importance="normal" />
   </Target>
 
 </Project>
