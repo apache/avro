@@ -57,9 +57,9 @@ jobs:
           java-version: '11'
 
       - name: Setup Maven 4
-        uses: stCarolas/setup-maven@v4.5
+        uses: stCarolas/setup-maven@v4
         with:
-          maven-version: 4.0.0-alpha-3
+          maven-version: 4.0.0-alpha-4
 
       - name: Test
         run: mvn clean package
