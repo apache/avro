@@ -43,7 +43,6 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '18'
         - '19'
     steps:
       - uses: actions/checkout@v2
