@@ -60,7 +60,7 @@ mod test_derive {
         let schema = T::get_schema();
         let mut writer = Writer::new(&schema, Vec::new());
         if let Err(e) = writer.append_ser(obj) {
-            panic!("{:?}", e);
+            panic!("{e:?}");
         }
         writer.into_inner().unwrap()
     }
@@ -77,7 +77,7 @@ mod test_derive {
                 Ok(value) => {
                     return from_value::<T>(&value).unwrap();
                 }
-                Err(e) => panic!("{:?}", e),
+                Err(e) => panic!("{e:?}"),
             }
         }
         unreachable!()
@@ -1466,8 +1466,7 @@ mod test_derive {
             }
         } else {
             panic!(
-                "TestBasicStructWithSkipAttribute schema must be a record schema: {:?}",
-                derived_schema
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {derived_schema:?}"
             )
         }
         assert_eq!(schema, derived_schema);
@@ -1533,8 +1532,7 @@ mod test_derive {
             }
         } else {
             panic!(
-                "TestBasicStructWithRenameAttribute schema must be a record schema: {:?}",
-                derived_schema
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {derived_schema:?}"
             )
         }
         assert_eq!(schema, derived_schema);
@@ -1558,7 +1556,7 @@ mod test_derive {
             let field = fields.get(0).expect("TestRawIdent must contain a field");
             assert_eq!(field.name, "type");
         } else {
-            panic!("Unexpected schema type for {:?}", derived_schema)
+            panic!("Unexpected schema type for {derived_schema:?}")
         }
     }
 }

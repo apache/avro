@@ -555,7 +555,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         validate_names: bool = True,
     ) -> None:
         """
-        @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
+        @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names and default, which is not an enumerated symbol.
         """
         if validate_enum_symbols:
             for symbol in symbols:
@@ -575,7 +575,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         if doc is not None:
             self.set_prop("doc", doc)
 
-        if other_props and "default" in other_props:
+        if validate_enum_symbols and other_props and "default" in other_props:
             default = other_props["default"]
             if default not in symbols:
                 raise avro.errors.InvalidDefault(f"Enum default '{default}' is not a valid member of symbols '{symbols}'")

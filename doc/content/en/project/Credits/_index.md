@@ -54,6 +54,7 @@ Apache Avro's active committers are:
 |  sekikn      | Kengo Seki          | NTT Data                | perl, interoperability |   +9 |
 |  sharadag    | Sharad Agarwal      | InMobi                  | python                 | +5.5 |
 |  thiru       | Thiruvalluvan M. G. | VertiCloud              | java                   | +5.5 |
+|  tjwp        | Tim Perkins         | Shopify                 | ruby                   |   -5 |
 |  tomwhite    | Tom White           | Cloudera                | java                   |    0 |
 -------------
 

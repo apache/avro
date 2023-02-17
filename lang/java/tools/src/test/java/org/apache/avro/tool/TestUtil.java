@@ -17,6 +17,8 @@
  */
 package org.apache.avro.tool;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.lang.reflect.Method;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -24,9 +26,8 @@ import joptsimple.OptionSpec;
 import org.apache.avro.file.Codec;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.ZstandardCodec;
-import org.junit.Assert;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TestName;
 
 public class TestUtil {
@@ -44,11 +45,11 @@ public class TestUtil {
     Method createInstance = CodecFactory.class.getDeclaredMethod("createInstance");
     createInstance.setAccessible(true);
     Codec codec = (ZstandardCodec) createInstance.invoke(codecFactory);
-    Assert.assertEquals(String.format("zstandard[%d]", level), codec.toString());
+    assertEquals(String.format("zstandard[%d]", level), codec.toString());
   }
 
   @Test
-  public void testCodecFactoryZstandardCompressionLevel() throws Exception {
+  void codecFactoryZstandardCompressionLevel() throws Exception {
     zstandardCompressionLevel(1);
     zstandardCompressionLevel(CodecFactory.DEFAULT_ZSTANDARD_LEVEL);
   }

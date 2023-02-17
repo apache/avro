@@ -296,7 +296,6 @@ do
       DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-"avro-build-$USER_NAME:latest"}
       {
         cat share/docker/Dockerfile
-        grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"

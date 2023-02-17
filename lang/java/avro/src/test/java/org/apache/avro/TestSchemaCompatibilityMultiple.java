@@ -23,12 +23,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestSchemaCompatibilityMultiple {
 
   @Test
-  public void testMultipleIncompatibilities() throws Exception {
+  void multipleIncompatibilities() throws Exception {
     Schema reader = SchemaBuilder.record("base").fields()
         // 0
         .name("check_enum_symbols_field").type().enumeration("check_enum_symbols_type").symbols("A", "C").noDefault()

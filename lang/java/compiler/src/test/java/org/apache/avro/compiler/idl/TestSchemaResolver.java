@@ -22,13 +22,15 @@ import java.net.MalformedURLException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestSchemaResolver {
 
   @Test
-  public void testResolving() throws ParseException, MalformedURLException, IOException {
+  void resolving() throws ParseException, MalformedURLException, IOException {
     File file = new File(".");
     String currentWorkPath = file.getAbsolutePath();
     String testIdl = currentWorkPath + File.separator + "src" + File.separator + "test" + File.separator + "idl"
@@ -36,34 +38,43 @@ public class TestSchemaResolver {
     Idl compiler = new Idl(new File(testIdl));
     Protocol protocol = compiler.CompilationUnit();
     System.out.println(protocol);
-    Assert.assertEquals(5, protocol.getTypes().size());
+    assertEquals(5, protocol.getTypes().size());
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testIsUnresolvedSchemaError1() {
-    // No "org.apache.avro.compiler.idl.unresolved.name" property
-    Schema s = SchemaBuilder.record("R").fields().endRecord();
-    SchemaResolver.getUnresolvedSchemaName(s);
+  @Test
+  void isUnresolvedSchemaError1() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      // No "org.apache.avro.compiler.idl.unresolved.name" property
+      Schema s = SchemaBuilder.record("R").fields().endRecord();
+      SchemaResolver.getUnresolvedSchemaName(s);
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testIsUnresolvedSchemaError2() {
-    // No "UnresolvedSchema" property
-    Schema s = SchemaBuilder.record("R").prop("org.apache.avro.compiler.idl.unresolved.name", "x").fields().endRecord();
-    SchemaResolver.getUnresolvedSchemaName(s);
+  @Test
+  void isUnresolvedSchemaError2() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      // No "UnresolvedSchema" property
+      Schema s = SchemaBuilder.record("R").prop("org.apache.avro.compiler.idl.unresolved.name", "x").fields()
+          .endRecord();
+      SchemaResolver.getUnresolvedSchemaName(s);
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testIsUnresolvedSchemaError3() {
-    // Namespace not "org.apache.avro.compiler".
-    Schema s = SchemaBuilder.record("UnresolvedSchema").prop("org.apache.avro.compiler.idl.unresolved.name", "x")
-        .fields().endRecord();
-    SchemaResolver.getUnresolvedSchemaName(s);
+  @Test
+  void isUnresolvedSchemaError3() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      // Namespace not "org.apache.avro.compiler".
+      Schema s = SchemaBuilder.record("UnresolvedSchema").prop("org.apache.avro.compiler.idl.unresolved.name", "x")
+          .fields().endRecord();
+      SchemaResolver.getUnresolvedSchemaName(s);
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetUnresolvedSchemaNameError() {
-    Schema s = SchemaBuilder.fixed("a").size(10);
-    SchemaResolver.getUnresolvedSchemaName(s);
+  @Test
+  void getUnresolvedSchemaNameError() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      Schema s = SchemaBuilder.fixed("a").size(10);
+      SchemaResolver.getUnresolvedSchemaName(s);
+    });
   }
 }

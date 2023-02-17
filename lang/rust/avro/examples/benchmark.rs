@@ -96,10 +96,7 @@ fn benchmark(
     let (total_write_secs, total_read_secs) =
         (seconds(total_duration_write), seconds(total_duration_read));
 
-    println!(
-        "{}\t\t{}\t\t{}\t\t{}\t\t{}",
-        count, runs, big_or_small, total_write_secs, total_read_secs
-    );
+    println!("{count}\t\t{runs}\t\t{big_or_small}\t\t{total_write_secs}\t\t{total_read_secs}");
     Ok(())
 }
 
@@ -115,8 +112,8 @@ fn main() -> anyhow::Result<()> {
     let small_schema = Schema::parse_str(raw_small_schema)?;
     let big_schema = Schema::parse_str(raw_big_schema)?;
 
-    println!("{:?}", small_schema);
-    println!("{:?}", big_schema);
+    println!("{small_schema:?}");
+    println!("{big_schema:?}");
 
     let mut small_record = Record::new(&small_schema).unwrap();
     small_record.put("field", "foo");

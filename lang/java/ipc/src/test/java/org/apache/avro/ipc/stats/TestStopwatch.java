@@ -17,14 +17,13 @@
  */
 package org.apache.avro.ipc.stats;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestStopwatch {
   @Test
-  public void testNormal() {
+  void normal() {
     FakeTicks f = new FakeTicks();
     Stopwatch s = new Stopwatch(f);
     f.passTime(10);
@@ -37,39 +36,47 @@ public class TestStopwatch {
     assertEquals(60, s.elapsedNanos());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testNotStarted1() {
-    FakeTicks f = new FakeTicks();
-    Stopwatch s = new Stopwatch(f);
-    s.elapsedNanos();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testNotStarted2() {
-    FakeTicks f = new FakeTicks();
-    Stopwatch s = new Stopwatch(f);
-    s.stop();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testTwiceStarted() {
-    FakeTicks f = new FakeTicks();
-    Stopwatch s = new Stopwatch(f);
-    s.start();
-    s.start();
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testTwiceStopped() {
-    FakeTicks f = new FakeTicks();
-    Stopwatch s = new Stopwatch(f);
-    s.start();
-    s.stop();
-    s.stop();
+  @Test
+  void notStarted1() {
+    assertThrows(IllegalStateException.class, () -> {
+      FakeTicks f = new FakeTicks();
+      Stopwatch s = new Stopwatch(f);
+      s.elapsedNanos();
+    });
   }
 
   @Test
-  public void testSystemStopwatch() {
+  void notStarted2() {
+    assertThrows(IllegalStateException.class, () -> {
+      FakeTicks f = new FakeTicks();
+      Stopwatch s = new Stopwatch(f);
+      s.stop();
+    });
+  }
+
+  @Test
+  void twiceStarted() {
+    assertThrows(IllegalStateException.class, () -> {
+      FakeTicks f = new FakeTicks();
+      Stopwatch s = new Stopwatch(f);
+      s.start();
+      s.start();
+    });
+  }
+
+  @Test
+  void twiceStopped() {
+    assertThrows(IllegalStateException.class, () -> {
+      FakeTicks f = new FakeTicks();
+      Stopwatch s = new Stopwatch(f);
+      s.start();
+      s.stop();
+      s.stop();
+    });
+  }
+
+  @Test
+  void systemStopwatch() {
     Stopwatch s = new Stopwatch(Stopwatch.SYSTEM_TICKS);
     s.start();
     s.stop();

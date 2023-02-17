@@ -18,13 +18,13 @@
 
 package org.apache.avro.mapred;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroWrapper {
   @Test
-  public void testToString() {
+  void testToString() {
     String datum = "my string";
     AvroWrapper<CharSequence> wrapper = new AvroWrapper<>(datum);
     assertEquals(datum, wrapper.toString());

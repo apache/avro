@@ -174,6 +174,7 @@ Some of the logical types supported by Avro's JSON format are also supported by 
 * _date_ (logical type [date]({{< relref "specification#date" >}}))
 * _time_ms_ (logical type [time-millis]({{< relref "specification#time-millisecond-precision" >}}))
 * _timestamp_ms_ (logical type [timestamp-millis]({{< relref "specification#timestamp-millisecond-precision" >}}))
+* _uuid_ (logical type [uuid]({{< relref "specification#uuid" >}}))
 
 For example:
 ```java
@@ -183,6 +184,7 @@ record Job {
   time_ms submitTime;
   timestamp_ms finishTime;
   decimal(9,2) finishRatio;
+  uuid pk = "a1a2a3a4-b1b2-c1c2-d1d2-d3d4d5d6d7d8";
 }
 ```
 
@@ -203,7 +205,7 @@ record Card {
   Suit suit; // refers to the enum Card defined above
   int number;
 }
-``` 
+```
 
 ### Default Values
 Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the [spec]({{< relref "specification#schema-record" >}}).
@@ -270,7 +272,7 @@ Comments that begin with _/**_ are used as the documentation string for the type
 Occasionally, one will need to use a reserved language keyword as an identifier. In order to do so, backticks (`) may be used to escape the identifier. For example, to define a message with the literal name error, you may write:
 ```java
 void `error`();
-``` 
+```
 This syntax is allowed anywhere an identifier is expected.
 
 ### Annotations for Ordering and Namespaces
@@ -283,13 +285,13 @@ record MyRecord {
   string @order("descending")  myDescendingField;
   string @order("ignore") myIgnoredField;
 }
-``` 
+```
 A field's type (with the exception of type references) may also be preceded by annotations, e.g.:
 ```java
 record MyRecord {
   @java-class("java.util.ArrayList") array<string> myStrings;
 }
-``` 
+```
 This can be used to support java classes that can be serialized/deserialized via their `toString`/`String constructor`, e.g.:
 ```java
 record MyRecord {

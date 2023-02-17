@@ -18,8 +18,7 @@
 package org.apache.avro;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,7 +31,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestDataFileCustomSync {
   private byte[] createDataFile(byte[] sync) throws IOException {
@@ -63,15 +62,17 @@ public class TestDataFileCustomSync {
     }
   }
 
-  @Test(expected = IOException.class)
-  public void testInvalidSync() throws IOException {
-    // Invalid size (must be 16):
-    byte[] sync = new byte[8];
-    createDataFile(sync);
+  @Test
+  void invalidSync() throws IOException {
+    assertThrows(IOException.class, () -> {
+      // Invalid size (must be 16):
+      byte[] sync = new byte[8];
+      createDataFile(sync);
+    });
   }
 
   @Test
-  public void testRandomSync() throws IOException {
+  void randomSync() throws IOException {
     byte[] sync = generateSync();
     byte[] randSyncFile = createDataFile(null);
     byte[] customSyncFile = createDataFile(sync);
@@ -79,10 +80,10 @@ public class TestDataFileCustomSync {
   }
 
   @Test
-  public void testCustomSync() throws IOException {
+  void customSync() throws IOException {
     byte[] sync = generateSync();
     byte[] customSyncFile = createDataFile(sync);
     byte[] sameCustomSyncFile = createDataFile(sync);
-    assertTrue(Arrays.equals(customSyncFile, sameCustomSyncFile));
+    assertArrayEquals(customSyncFile, sameCustomSyncFile);
   }
 }

@@ -18,6 +18,10 @@
 
 package org.apache.avro.ipc.netty;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -27,15 +31,16 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.junit.BeforeClass;
-
 import io.netty.handler.ssl.SslHandler;
 
-public class TestNettyServerWithSSL extends TestNettyServer {
-  public static final String TEST_CERTIFICATE = "servercert.p12";
-  public static final String TEST_CERTIFICATE_PASSWORD = "s3cret";
+import org.junit.jupiter.api.BeforeAll;
 
-  @BeforeClass
+public class TestNettyServerWithSSL extends TestNettyServer {
+  private static final String TEST_CERTIFICATE = "servercert.p12";
+
+  private static final String TEST_CERTIFICATE_FILEPASS = "serverpass.txt";
+
+  @BeforeAll
   public static void initializeConnections() throws Exception {
     initializeConnections(ch -> {
       SSLEngine sslEngine = createServerSSLContext().createSSLEngine();
@@ -80,18 +85,27 @@ public class TestNettyServerWithSSL extends TestNettyServer {
   private static SSLContext createServerSSLContext() {
     try {
       KeyStore ks = KeyStore.getInstance("PKCS12");
-      ks.load(TestNettyServer.class.getResource(TEST_CERTIFICATE).openStream(),
-          TEST_CERTIFICATE_PASSWORD.toCharArray());
+      ks.load(TestNettyServer.class.getResource(TEST_CERTIFICATE).openStream(), getPass());
 
       // Set up key manager factory to use our key store
       KeyManagerFactory kmf = KeyManagerFactory.getInstance(getAlgorithm());
-      kmf.init(ks, TEST_CERTIFICATE_PASSWORD.toCharArray());
+      kmf.init(ks, getPass());
 
       SSLContext serverContext = SSLContext.getInstance("TLS");
       serverContext.init(kmf.getKeyManagers(), null, null);
       return serverContext;
     } catch (Exception e) {
       throw new Error("Failed to initialize the server-side SSLContext", e);
+    }
+  }
+
+  private static char[] getPass() {
+    final File passFile = new File(TestNettyServer.class.getResource(TEST_CERTIFICATE_FILEPASS).getPath());
+    try {
+      final String pass = Files.readAllLines(passFile.toPath()).get(0);
+      return pass.toCharArray();
+    } catch (IOException e) {
+      throw new Error("Failed to open pass file", e);
     }
   }
 
