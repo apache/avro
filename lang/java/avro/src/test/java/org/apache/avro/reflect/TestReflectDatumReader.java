@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -158,6 +159,25 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(deserialized, decoder);
 
     assertEquals(pojoWithOptional, deserialized);
+  }
+
+  @Test
+  public void testRead_PojoWithNullableAnnotation() throws IOException {
+    PojoWithBasicTypeNullableAnnotationV1 v1Pojo = new PojoWithBasicTypeNullableAnnotationV1();
+    byte[] serializedBytes = serializeWithReflectDatumWriter(v1Pojo, PojoWithBasicTypeNullableAnnotationV1.class);
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+
+    ReflectData reflectData = ReflectData.get();
+    Schema schemaV1 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV1.class);
+    Schema schemaV2 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV2.class);
+
+    ReflectDatumReader<PojoWithBasicTypeNullableAnnotationV2> reflectDatumReader = new ReflectDatumReader<>(schemaV1, schemaV2);
+
+    PojoWithBasicTypeNullableAnnotationV2 v2Pojo = new PojoWithBasicTypeNullableAnnotationV2();
+    reflectDatumReader.read(v2Pojo, decoder);
+
+    assertEquals(v1Pojo.id, v2Pojo.id);
+    assertEquals(v2Pojo.relatedId, 0);
   }
 
   public static class PojoWithList {
@@ -390,6 +410,86 @@ public class TestReflectDatumReader {
         return other.relatedId == null;
       } else
         return relatedId.equals(other.relatedId);
+    }
+  }
+
+  public static class PojoWithBasicTypeNullableAnnotationV1 {
+
+    private int id;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + id;
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PojoWithBasicTypeNullableAnnotationV1 other = (PojoWithBasicTypeNullableAnnotationV1) obj;
+      return id == other.id;
+    }
+  }
+
+  public static class PojoWithBasicTypeNullableAnnotationV2 {
+
+    private int id;
+
+    @Nullable
+    private int relatedId;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public int getRelatedId() {
+      return relatedId;
+    }
+
+    public void setRelatedId(int relatedId) {
+      this.relatedId = relatedId;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + id;
+      result = prime * result + relatedId;
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PojoWithBasicTypeNullableAnnotationV2 other = (PojoWithBasicTypeNullableAnnotationV2) obj;
+      if (id != other.id)
+        return false;
+      return relatedId == other.relatedId;
     }
   }
 }
