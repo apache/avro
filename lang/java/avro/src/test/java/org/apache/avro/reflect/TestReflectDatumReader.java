@@ -171,7 +171,8 @@ public class TestReflectDatumReader {
     Schema schemaV1 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV1.class);
     Schema schemaV2 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV2.class);
 
-    ReflectDatumReader<PojoWithBasicTypeNullableAnnotationV2> reflectDatumReader = new ReflectDatumReader<>(schemaV1, schemaV2);
+    ReflectDatumReader<PojoWithBasicTypeNullableAnnotationV2> reflectDatumReader = new ReflectDatumReader<>(schemaV1,
+        schemaV2);
 
     PojoWithBasicTypeNullableAnnotationV2 v2Pojo = new PojoWithBasicTypeNullableAnnotationV2();
     reflectDatumReader.read(v2Pojo, decoder);
