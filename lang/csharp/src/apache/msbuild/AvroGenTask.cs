@@ -17,6 +17,8 @@
  */
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -79,6 +81,10 @@ namespace Avro.msbuild
                 }
 
                 codegen.WriteTypes(OutDir.ItemSpec, SkipDirectories);
+                // collect generated files
+                GeneratedFiles = codegen.GeneratedFiles
+                    .Select(file => new TaskItem(file))
+                    .ToArray();
             }
             catch(Exception ex)
             {
@@ -90,11 +96,17 @@ namespace Avro.msbuild
 
         public ITaskItem[] SchemaFiles { get; set; }
         public ITaskItem[] ProtocolFiles { get; set; }
-        
+
         public string NamespaceMapping { get; set; }
         public bool SkipDirectories { get; set; }
 
         public string MessageLevel { get; set; }
+
+        /// <summary>
+        /// Returns the list of generated files - useful to chain with other build tasks.
+        /// </summary>
+        [Output]
+        public ITaskItem[] GeneratedFiles { get; private set; }
 
         [Required]
         public ITaskItem OutDir { get; set; }

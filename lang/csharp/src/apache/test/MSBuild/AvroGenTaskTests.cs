@@ -104,11 +104,15 @@ namespace Avro.Test.MSBuild
                 };
 
                 bool taskResult = avroGenTask.Execute();
-
+                var generatedTaskItems = avroGenTask.GeneratedFiles;
+                Assert.AreEqual(generatedTaskItems.Count(), expectedGeneratedFiles.Count());
                 // Check generated files
                 foreach(var generatedFile in expectedGeneratedFiles)
                 {
-                    Assert.That(new FileInfo(Path.Combine(outputDir, generatedFile)), Does.Exist);
+                    var generatedFileInfo = new FileInfo(Path.Combine(outputDir, generatedFile));
+                    Assert.That(generatedFileInfo, Does.Exist);
+                    // Check task output vs. expected
+                    Assert.That(generatedTaskItems.Any(item => item.ItemSpec == generatedFileInfo.FullName));
                 }
 
                 return taskResult;
