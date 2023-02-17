@@ -450,7 +450,6 @@ class DefaultValueTestCase(unittest.TestCase):
 
 class TestIncompatibleSchemaReading(unittest.TestCase):
     def test_deserialization_fails(self) -> None:
-
         reader_schema = avro.schema.parse(
             json.dumps(
                 {
