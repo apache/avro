@@ -300,7 +300,6 @@ class TetherTask(abc.ABC):
                 self._red_fkeys = [f.name for f in self.midschema.fields if not (f.order == "ignore")]
 
         except Exception as e:
-
             estr = traceback.format_exc()
             self.fail(estr)
 
@@ -335,7 +334,6 @@ class TetherTask(abc.ABC):
                     self.map(inRecord, self.midCollector)
 
                 elif self.taskType == TaskType.REDUCE:
-
                     # store the previous record
                     prev = self.midRecord
 
