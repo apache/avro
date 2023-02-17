@@ -662,7 +662,7 @@ class SchemaParseTestCase(unittest.TestCase):
         try:
             warnings.filterwarnings(action="error", category=avro.errors.IgnoredLogicalType)
             self.test_schema.parse()
-        except (avro.errors.IgnoredLogicalType) as e:
+        except avro.errors.IgnoredLogicalType as e:
             self.assertIn(type(e), (type(w) for w in test_warnings))
             self.assertIn(str(e), (str(w) for w in test_warnings))
         except (avro.errors.AvroException, avro.errors.SchemaParseException):  # pragma: no coverage
