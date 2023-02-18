@@ -164,6 +164,7 @@ public class TestReflectDatumReader {
   @Test
   public void testRead_PojoWithNullableAnnotation() throws IOException {
     PojoWithBasicTypeNullableAnnotationV1 v1Pojo = new PojoWithBasicTypeNullableAnnotationV1();
+    v1Pojo.id = 1;
     byte[] serializedBytes = serializeWithReflectDatumWriter(v1Pojo, PojoWithBasicTypeNullableAnnotationV1.class);
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
 
@@ -178,7 +179,15 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(v2Pojo, decoder);
 
     assertEquals(v1Pojo.id, v2Pojo.id);
-    assertEquals(v2Pojo.relatedId, 0);
+    assertEquals(v2Pojo.id, 1);
+    assertEquals(v2Pojo.intId, FieldAccess.INT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.floatId, FieldAccess.FLOAT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.shortId, FieldAccess.SHORT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.byteId, FieldAccess.BYTE_DEFAULT_VALUE);
+    assertEquals(v2Pojo.booleanId, FieldAccess.BOOLEAN_DEFAULT_VALUE);
+    assertEquals(v2Pojo.charId, FieldAccess.CHAR_DEFAULT_VALUE);
+    assertEquals(v2Pojo.longId, FieldAccess.LONG_DEFAULT_VALUE);
+    assertEquals(v2Pojo.doubleId, FieldAccess.DOUBLE_DEFAULT_VALUE);
   }
 
   public static class PojoWithList {
@@ -452,45 +461,82 @@ public class TestReflectDatumReader {
     private int id;
 
     @Nullable
-    private int relatedId;
+    private int intId;
 
-    public int getId() {
-      return id;
-    }
+    @Nullable
+    private float floatId;
 
-    public void setId(int id) {
-      this.id = id;
-    }
+    @Nullable
+    private short shortId;
 
-    public int getRelatedId() {
-      return relatedId;
-    }
+    @Nullable
+    private byte byteId;
 
-    public void setRelatedId(int relatedId) {
-      this.relatedId = relatedId;
-    }
+    @Nullable
+    private boolean booleanId;
+
+    @Nullable
+    private char charId;
+
+    @Nullable
+    private long longId;
+
+    @Nullable
+    private double doubleId;
 
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + id;
-      result = prime * result + relatedId;
+      int result;
+      long temp;
+      result = id;
+      result = 31 * result + intId;
+      result = 31 * result + (floatId != +0.0f ? Float.floatToIntBits(floatId) : 0);
+      result = 31 * result + (int) shortId;
+      result = 31 * result + (int) byteId;
+      result = 31 * result + (booleanId ? 1 : 0);
+      result = 31 * result + (int) charId;
+      result = 31 * result + (int) (longId ^ (longId >>> 32));
+      temp = Double.doubleToLongBits(doubleId);
+      result = 31 * result + (int) (temp ^ (temp >>> 32));
       return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
+    public boolean equals(Object o) {
+      if (this == o) {
         return true;
-      if (obj == null)
+      }
+      if (o == null || getClass() != o.getClass()) {
         return false;
-      if (getClass() != obj.getClass())
+      }
+
+      PojoWithBasicTypeNullableAnnotationV2 that = (PojoWithBasicTypeNullableAnnotationV2) o;
+
+      if (id != that.id) {
         return false;
-      PojoWithBasicTypeNullableAnnotationV2 other = (PojoWithBasicTypeNullableAnnotationV2) obj;
-      if (id != other.id)
+      }
+      if (intId != that.intId) {
         return false;
-      return relatedId == other.relatedId;
+      }
+      if (Float.compare(that.floatId, floatId) != 0) {
+        return false;
+      }
+      if (shortId != that.shortId) {
+        return false;
+      }
+      if (byteId != that.byteId) {
+        return false;
+      }
+      if (booleanId != that.booleanId) {
+        return false;
+      }
+      if (charId != that.charId) {
+        return false;
+      }
+      if (longId != that.longId) {
+        return false;
+      }
+      return Double.compare(that.doubleId, doubleId) == 0;
     }
   }
 }
