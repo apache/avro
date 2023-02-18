@@ -164,7 +164,8 @@ public class TestReflectDatumReader {
   @Test
   public void testRead_PojoWithNullableAnnotation() throws IOException {
     PojoWithBasicTypeNullableAnnotationV1 v1Pojo = new PojoWithBasicTypeNullableAnnotationV1();
-    v1Pojo.id = 1;
+    int idValue = 1;
+    v1Pojo.id = idValue;
     byte[] serializedBytes = serializeWithReflectDatumWriter(v1Pojo, PojoWithBasicTypeNullableAnnotationV1.class);
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
 
@@ -179,7 +180,7 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(v2Pojo, decoder);
 
     assertEquals(v1Pojo.id, v2Pojo.id);
-    assertEquals(v2Pojo.id, 1);
+    assertEquals(v2Pojo.id, idValue);
     assertEquals(v2Pojo.intId, FieldAccess.INT_DEFAULT_VALUE);
     assertEquals(v2Pojo.floatId, FieldAccess.FLOAT_DEFAULT_VALUE);
     assertEquals(v2Pojo.shortId, FieldAccess.SHORT_DEFAULT_VALUE);
