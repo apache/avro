@@ -165,7 +165,7 @@ public class TestReflectDatumReader {
   public void testRead_PojoWithNullableAnnotation() throws IOException {
     PojoWithBasicTypeNullableAnnotationV1 v1Pojo = new PojoWithBasicTypeNullableAnnotationV1();
     int idValue = 1;
-    v1Pojo.id = idValue;
+    v1Pojo.setId(idValue);
     byte[] serializedBytes = serializeWithReflectDatumWriter(v1Pojo, PojoWithBasicTypeNullableAnnotationV1.class);
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
 
@@ -485,18 +485,91 @@ public class TestReflectDatumReader {
     @Nullable
     private double doubleId;
 
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public int getIntId() {
+      return intId;
+    }
+
+    public void setIntId(int intId) {
+      this.intId = intId;
+    }
+
+    public float getFloatId() {
+      return floatId;
+    }
+
+    public void setFloatId(float floatId) {
+      this.floatId = floatId;
+    }
+
+    public short getShortId() {
+      return shortId;
+    }
+
+    public void setShortId(short shortId) {
+      this.shortId = shortId;
+    }
+
+    public byte getByteId() {
+      return byteId;
+    }
+
+    public void setByteId(byte byteId) {
+      this.byteId = byteId;
+    }
+
+    public boolean isBooleanId() {
+      return booleanId;
+    }
+
+    public void setBooleanId(boolean booleanId) {
+      this.booleanId = booleanId;
+    }
+
+    public char getCharId() {
+      return charId;
+    }
+
+    public void setCharId(char charId) {
+      this.charId = charId;
+    }
+
+    public long getLongId() {
+      return longId;
+    }
+
+    public void setLongId(long longId) {
+      this.longId = longId;
+    }
+
+    public double getDoubleId() {
+      return doubleId;
+    }
+
+    public void setDoubleId(double doubleId) {
+      this.doubleId = doubleId;
+    }
+
     @Override
     public int hashCode() {
-      int result;
+      final int prime = 31;
       long temp;
-      result = id;
-      result = 31 * result + intId;
-      result = 31 * result + (floatId != +0.0f ? Float.floatToIntBits(floatId) : 0);
-      result = 31 * result + (int) shortId;
-      result = 31 * result + (int) byteId;
-      result = 31 * result + (booleanId ? 1 : 0);
-      result = 31 * result + (int) charId;
-      result = 31 * result + (int) (longId ^ (longId >>> 32));
+      int result = 1;
+      result = prime * result + id;
+      result = prime * result + intId;
+      result = prime * result + (floatId != 0.0f ? Float.floatToIntBits(floatId) : 0);
+      result = prime * result + (int) shortId;
+      result = prime * result + (int) byteId;
+      result = prime * result + (booleanId ? 1 : 0);
+      result = prime * result + (int) charId;
+      result = prime * result + (int) (longId ^ (longId >>> 32));
       temp = Double.doubleToLongBits(doubleId);
       result = 31 * result + (int) (temp ^ (temp >>> 32));
       return result;
@@ -504,39 +577,27 @@ public class TestReflectDatumReader {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
+      if (this == o)
         return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
+      if (o == null || getClass() != o.getClass())
         return false;
-      }
-
       PojoWithBasicTypeNullableAnnotationV2 that = (PojoWithBasicTypeNullableAnnotationV2) o;
-
-      if (id != that.id) {
+      if (id != that.id)
         return false;
-      }
-      if (intId != that.intId) {
+      if (intId != that.intId)
         return false;
-      }
-      if (Float.compare(that.floatId, floatId) != 0) {
+      if (Float.compare(that.floatId, floatId) != 0)
         return false;
-      }
-      if (shortId != that.shortId) {
+      if (shortId != that.shortId)
         return false;
-      }
-      if (byteId != that.byteId) {
+      if (byteId != that.byteId)
         return false;
-      }
-      if (booleanId != that.booleanId) {
+      if (booleanId != that.booleanId)
         return false;
-      }
-      if (charId != that.charId) {
+      if (charId != that.charId)
         return false;
-      }
-      if (longId != that.longId) {
+      if (longId != that.longId)
         return false;
-      }
       return Double.compare(that.doubleId, doubleId) == 0;
     }
   }
