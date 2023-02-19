@@ -35,6 +35,8 @@
     <!-- Do not put build output to anywhere. Since we have dependencies, $(AssemblyName).dll will be copied to
     published nuget package when all items in $(OutputFolder) are copied. See PrePackage target below -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- NuGet package dependencies are copied to the output directory -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
