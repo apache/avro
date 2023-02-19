@@ -1288,7 +1288,7 @@ public class TestReflect {
     Schema avroMultiMeta = Schema.createRecord("ClassWithMultipleAliasesOnField", null,
         "org.apache.avro.reflect.TestReflect", false, Arrays.asList(field));
 
-    Schema schema = ReflectData.get().getSchema(ClassWithAliasOnField.class);
+    Schema schema = ReflectData.get().getSchema(ClassWithMultipleAliasesOnField.class);
     assertEquals(avroMultiMeta, schema);
   }
 
