@@ -54,7 +54,7 @@
     <extra-enforcer-rules.version>1.6.1</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
     <maven-plugin-plugin.version>3.7.1</maven-plugin-plugin.version>
     <maven-remote-resources-plugin.version>3.0.0</maven-remote-resources-plugin.version>
     <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
