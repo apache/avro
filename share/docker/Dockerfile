@@ -86,7 +86,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
 
 # Install a maven release  -------------------------------------------
 # Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
-ENV MAVEN_VERSION 3.8.6
+ENV MAVEN_VERSION 3.9.0
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \
   # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
@@ -183,7 +183,7 @@ RUN apt-get -qqy install ruby-full \
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.60.0
 
-# Note: This "ubertool" container has two JDK versions:
+# Note: This "ubertool" container has three JDK versions:
 # - OpenJDK 8
 # - OpenJDK 11
 # - OpenJDK 17
@@ -201,7 +201,7 @@ RUN cd /opt ; \
     
 ENV PATH $PATH:/opt/dotnet
 
-# Since we want the JDK8 as a default, we have to re-prepend it to the PATH.
-RUN update-java-alternatives  -s "java-1.8.0*"
+# Since we want the JDK17 as a default, we have to re-prepend it to the PATH.
+RUN update-java-alternatives  -s "java-1.17.*"
 
 CMD ["/bin/bash", "-i"]

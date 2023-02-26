@@ -106,8 +106,9 @@ public class ThriftData extends GenericData {
     TFieldIdEnum[] fields = fieldCache.get(s);
     if (fields == null) { // cache miss
       fields = new TFieldIdEnum[s.getFields().size()];
-      Class c = r.getClass();
-      for (TFieldIdEnum f : FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).keySet())
+      Map<? extends TFieldIdEnum, FieldMetaData> structMetaDataMap = FieldMetaData
+          .getStructMetaDataMap((Class<? extends TBase>) r.getClass());
+      for (TFieldIdEnum f : structMetaDataMap.keySet())
         fields[s.getField(f.getFieldName()).pos()] = f;
       fieldCache.put(s, fields); // update cache
     }
@@ -157,9 +158,7 @@ public class ThriftData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
-      if (c == null)
-        return super.newRecord(old, schema); // punt to generic
+      Class<?> c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c.isInstance(old))
         return old; // reuse instance
       return c.newInstance(); // create new instance
@@ -190,7 +189,8 @@ public class ThriftData extends GenericData {
         } else if (TBase.class.isAssignableFrom(c)) { // struct
           schema = Schema.createRecord(c.getName(), null, null, Throwable.class.isAssignableFrom(c));
           List<Field> fields = new ArrayList<>();
-          for (FieldMetaData f : FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).values()) {
+          Map<? extends TBase, ? extends FieldMetaData> structMetaDataMap = FieldMetaData.getStructMetaDataMap(c);
+          for (FieldMetaData f : structMetaDataMap.values()) {
             Schema s = getSchema(f.valueMetaData);
             if (f.requirementType == TFieldRequirementType.OPTIONAL && (s.getType() != Schema.Type.UNION))
               s = nullable(s);

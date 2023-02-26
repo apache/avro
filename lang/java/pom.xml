@@ -56,7 +56,7 @@
     <commons-compress.version>1.22</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
-    <mockito.version>4.11.0</mockito.version>
+    <mockito.version>5.1.1</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.54.1</grpc.version>
     <zstd-jni.version>1.5.5-2</zstd-jni.version>
@@ -99,6 +99,11 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
           <version>3.3.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>${maven-toolchains-plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -304,7 +309,7 @@
               <!-- Avro uses Sun's java code style conventions with 2 spaces, this is a modified version of
                    the eclipse formatter -->
               <file>${main.basedir}/lang/java/eclipse-java-formatter.xml</file>
-              <version>4.19.0</version>
+              <version>4.19</version>
             </eclipse>
             <!-- Temporarily disabled for JDK 16+ builds -->
             <!--<removeUnusedImports/>-->
@@ -552,11 +557,13 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
         <version>${hamcrest.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
