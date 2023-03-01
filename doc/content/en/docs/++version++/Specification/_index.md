@@ -472,7 +472,18 @@ A file data block consists of:
 * The serialized objects. If a codec is specified, this is compressed by that codec.
 * The file's 16-byte sync marker.
 
-Thus, each block's binary data can be efficiently extracted or skipped without deserializing the contents. The combination of block size, object counts, and sync markers enable detection of corrupt blocks and help ensure data integrity.
+A file data block is thus described by the following schema:
+```json
+{"type": "record", "name": "org.apache.avro.file.DataBlock",
+ "fields" : [
+   {"name": "count", "type": "long"},
+   {"name": "data", "type": "bytes"},
+   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}}
+  ]
+}
+```
+
+Each block's binary data can be efficiently extracted or skipped without deserializing the contents. The combination of block size, object counts, and sync markers enable detection of corrupt blocks and help ensure data integrity.
 
 ### Required Codecs
 
