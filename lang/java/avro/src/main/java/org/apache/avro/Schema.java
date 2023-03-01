@@ -1760,6 +1760,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return name;
   }
 
+  public static void setNameValidator(final Schema.NameValidator validator) {
+    Schema.validateNames.set(validator);
+  }
+
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema, JsonNode defaultValue) {
