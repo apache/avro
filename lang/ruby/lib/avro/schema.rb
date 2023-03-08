@@ -126,6 +126,7 @@ module Avro
     def initialize(type, logical_type=nil)
       @type_sym = type.is_a?(Symbol) ? type : type.to_sym
       @logical_type = logical_type
+      @type_adapter = nil
     end
 
     attr_reader :type_sym
@@ -571,6 +572,7 @@ module Avro
         @order = order
         @doc = doc
         @aliases = aliases
+        @type_adapter = nil
         validate_aliases! if aliases
         validate_default! if default? && !Avro.disable_field_default_validation
       end
