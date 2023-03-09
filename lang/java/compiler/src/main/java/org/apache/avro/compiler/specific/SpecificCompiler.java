@@ -664,9 +664,7 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema, Schema> types = new LinkedHashMap<>();
 
-    for (Map.Entry<String, Object> a : p.getObjectProps().entrySet()) {
-      newP.addProp(a.getKey(), a.getValue());
-    }
+    p.forEachProperty(newP::addProp);
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<>();

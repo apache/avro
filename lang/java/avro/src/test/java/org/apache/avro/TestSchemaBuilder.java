@@ -149,6 +149,9 @@ public class TestSchemaBuilder {
     assertEquals("ABC", f.getObjectProp("byteProp"));
     assertTrue(f.getObjectProp("stringProp") instanceof String);
     assertEquals("abc", f.getObjectProp("stringProp"));
+
+    assertEquals("abc", f.getObjectProp("stringProp", "default"));
+    assertEquals("default", f.getObjectProp("unknwon", "default"));
   }
 
   @Test
