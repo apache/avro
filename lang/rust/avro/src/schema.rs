@@ -244,7 +244,7 @@ pub type Aliases = Option<Vec<Alias>>;
 /// Represents Schema lookup within a schema env
 pub(crate) type Names = HashMap<Name, Schema>;
 /// Represents Schema lookup within a schema
-pub(crate) type NamesRef<'a> = HashMap<Name, &'a Schema>;
+pub type NamesRef<'a> = HashMap<Name, &'a Schema>;
 /// Represents the namespace for Named Schema
 pub type Namespace = Option<String>;
 
@@ -396,7 +396,7 @@ impl Serialize for Alias {
     }
 }
 
-pub(crate) struct ResolvedSchema<'s> {
+pub struct ResolvedSchema<'s> {
     names_ref: NamesRef<'s>,
     root_schema: &'s Schema,
 }
@@ -416,10 +416,10 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
 }
 
 impl<'s> ResolvedSchema<'s> {
-    pub(crate) fn get_root_schema(&self) -> &'s Schema {
+    pub fn get_root_schema(&self) -> &'s Schema {
         self.root_schema
     }
-    pub(crate) fn get_names(&self) -> &NamesRef<'s> {
+    pub fn get_names(&self) -> &NamesRef<'s> {
         &self.names_ref
     }
 
