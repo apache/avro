@@ -482,7 +482,7 @@ class BinaryEncoder:
         signed long is 8, 8 bytes are written.
         """
         sign, digits, exp = datum.as_tuple()
-        if (-1 * exp) > scale:
+        if (-1 * int(exp)) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
 
         unscaled_datum = 0
@@ -508,7 +508,7 @@ class BinaryEncoder:
         Decimal in fixed are encoded as size of fixed bytes.
         """
         sign, digits, exp = datum.as_tuple()
-        if (-1 * exp) > scale:
+        if (-1 * int(exp)) > scale:
             raise avro.errors.AvroOutOfScaleException(scale, datum, exp)
 
         unscaled_datum = 0

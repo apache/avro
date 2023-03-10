@@ -43,7 +43,6 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '18'
         - '19'
     steps:
       - uses: actions/checkout@v3
@@ -153,4 +152,4 @@ jobs:
 
       - name: Test Reproducible Build
         working-directory: .
-        run: mvn clean verify -DskipTests artifact:compare
+        run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare

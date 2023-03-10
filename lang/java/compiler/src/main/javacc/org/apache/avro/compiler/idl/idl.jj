@@ -174,7 +174,7 @@ public class Idl implements Closeable {
     File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
     if (file != null && file.exists())
-      result = file.toURI().toURL();
+      result = new URL("file:" + file.getPath());
     else if (this.resourceLoader != null)
       if ("classpath".equals(uri.getScheme()))
         result = this.resourceLoader.getResource(uri.getPath().substring(1));

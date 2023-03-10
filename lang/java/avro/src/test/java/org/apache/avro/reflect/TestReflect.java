@@ -1281,13 +1281,15 @@ public class TestReflect {
   }
 
   @Test
-  void multipleFieldAliases() {
+  public void testMultipleFieldAliases() {
+    Field field = new Field("primitiveField", Schema.create(Schema.Type.INT));
+    field.addAlias("alias1");
+    field.addAlias("alias2");
+    Schema avroMultiMeta = Schema.createRecord("ClassWithMultipleAliasesOnField", null,
+        "org.apache.avro.reflect.TestReflect", false, Arrays.asList(field));
 
-    Schema expectedSchema = SchemaBuilder.record(ClassWithMultipleAliasesOnField.class.getSimpleName())
-        .namespace("org.apache.avro.reflect.TestReflect").fields().name("primitiveField").aliases("alias1", "alias2")
-        .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
-
-    check(ClassWithMultipleAliasesOnField.class, expectedSchema.toString());
+    Schema schema = ReflectData.get().getSchema(ClassWithMultipleAliasesOnField.class);
+    assertEquals(avroMultiMeta, schema);
   }
 
   private static class OptionalTest {

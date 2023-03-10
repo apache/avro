@@ -1,0 +1,3 @@
+protocol Level1 {
+    import idl "level2.avdl";
+} 

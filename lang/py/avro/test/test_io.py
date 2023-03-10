@@ -450,7 +450,6 @@ class DefaultValueTestCase(unittest.TestCase):
 
 class TestIncompatibleSchemaReading(unittest.TestCase):
     def test_deserialization_fails(self) -> None:
-
         reader_schema = avro.schema.parse(
             json.dumps(
                 {
@@ -505,7 +504,7 @@ class TestMisc(unittest.TestCase):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
-        scale = -1 * exp - 1
+        scale = -1 * int(exp) - 1
         schema = avro.schema.parse(
             json.dumps(
                 {
@@ -522,7 +521,7 @@ class TestMisc(unittest.TestCase):
         """Avro should raise an AvroTypeException when attempting to write a decimal with a larger exponent than the schema's scale."""
         datum = decimal.Decimal("3.1415")
         _, _, exp = datum.as_tuple()
-        scale = -1 * exp - 1
+        scale = -1 * int(exp) - 1
         schema = avro.schema.parse(
             json.dumps(
                 {

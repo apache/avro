@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -158,6 +159,36 @@ public class TestReflectDatumReader {
     reflectDatumReader.read(deserialized, decoder);
 
     assertEquals(pojoWithOptional, deserialized);
+  }
+
+  @Test
+  public void testRead_PojoWithNullableAnnotation() throws IOException {
+    PojoWithBasicTypeNullableAnnotationV1 v1Pojo = new PojoWithBasicTypeNullableAnnotationV1();
+    int idValue = 1;
+    v1Pojo.setId(idValue);
+    byte[] serializedBytes = serializeWithReflectDatumWriter(v1Pojo, PojoWithBasicTypeNullableAnnotationV1.class);
+    Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
+
+    ReflectData reflectData = ReflectData.get();
+    Schema schemaV1 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV1.class);
+    Schema schemaV2 = reflectData.getSchema(PojoWithBasicTypeNullableAnnotationV2.class);
+
+    ReflectDatumReader<PojoWithBasicTypeNullableAnnotationV2> reflectDatumReader = new ReflectDatumReader<>(schemaV1,
+        schemaV2);
+
+    PojoWithBasicTypeNullableAnnotationV2 v2Pojo = new PojoWithBasicTypeNullableAnnotationV2();
+    reflectDatumReader.read(v2Pojo, decoder);
+
+    assertEquals(v1Pojo.id, v2Pojo.id);
+    assertEquals(v2Pojo.id, idValue);
+    assertEquals(v2Pojo.intId, FieldAccess.INT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.floatId, FieldAccess.FLOAT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.shortId, FieldAccess.SHORT_DEFAULT_VALUE);
+    assertEquals(v2Pojo.byteId, FieldAccess.BYTE_DEFAULT_VALUE);
+    assertEquals(v2Pojo.booleanId, FieldAccess.BOOLEAN_DEFAULT_VALUE);
+    assertEquals(v2Pojo.charId, FieldAccess.CHAR_DEFAULT_VALUE);
+    assertEquals(v2Pojo.longId, FieldAccess.LONG_DEFAULT_VALUE);
+    assertEquals(v2Pojo.doubleId, FieldAccess.DOUBLE_DEFAULT_VALUE);
   }
 
   public static class PojoWithList {
@@ -390,6 +421,184 @@ public class TestReflectDatumReader {
         return other.relatedId == null;
       } else
         return relatedId.equals(other.relatedId);
+    }
+  }
+
+  public static class PojoWithBasicTypeNullableAnnotationV1 {
+
+    private int id;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + id;
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      PojoWithBasicTypeNullableAnnotationV1 other = (PojoWithBasicTypeNullableAnnotationV1) obj;
+      return id == other.id;
+    }
+  }
+
+  public static class PojoWithBasicTypeNullableAnnotationV2 {
+
+    private int id;
+
+    @Nullable
+    private int intId;
+
+    @Nullable
+    private float floatId;
+
+    @Nullable
+    private short shortId;
+
+    @Nullable
+    private byte byteId;
+
+    @Nullable
+    private boolean booleanId;
+
+    @Nullable
+    private char charId;
+
+    @Nullable
+    private long longId;
+
+    @Nullable
+    private double doubleId;
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public int getIntId() {
+      return intId;
+    }
+
+    public void setIntId(int intId) {
+      this.intId = intId;
+    }
+
+    public float getFloatId() {
+      return floatId;
+    }
+
+    public void setFloatId(float floatId) {
+      this.floatId = floatId;
+    }
+
+    public short getShortId() {
+      return shortId;
+    }
+
+    public void setShortId(short shortId) {
+      this.shortId = shortId;
+    }
+
+    public byte getByteId() {
+      return byteId;
+    }
+
+    public void setByteId(byte byteId) {
+      this.byteId = byteId;
+    }
+
+    public boolean isBooleanId() {
+      return booleanId;
+    }
+
+    public void setBooleanId(boolean booleanId) {
+      this.booleanId = booleanId;
+    }
+
+    public char getCharId() {
+      return charId;
+    }
+
+    public void setCharId(char charId) {
+      this.charId = charId;
+    }
+
+    public long getLongId() {
+      return longId;
+    }
+
+    public void setLongId(long longId) {
+      this.longId = longId;
+    }
+
+    public double getDoubleId() {
+      return doubleId;
+    }
+
+    public void setDoubleId(double doubleId) {
+      this.doubleId = doubleId;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      long temp;
+      int result = 1;
+      result = prime * result + id;
+      result = prime * result + intId;
+      result = prime * result + (floatId != 0.0f ? Float.floatToIntBits(floatId) : 0);
+      result = prime * result + (int) shortId;
+      result = prime * result + (int) byteId;
+      result = prime * result + (booleanId ? 1 : 0);
+      result = prime * result + (int) charId;
+      result = prime * result + (int) (longId ^ (longId >>> 32));
+      temp = Double.doubleToLongBits(doubleId);
+      result = 31 * result + (int) (temp ^ (temp >>> 32));
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      PojoWithBasicTypeNullableAnnotationV2 that = (PojoWithBasicTypeNullableAnnotationV2) o;
+      if (id != that.id)
+        return false;
+      if (intId != that.intId)
+        return false;
+      if (Float.compare(that.floatId, floatId) != 0)
+        return false;
+      if (shortId != that.shortId)
+        return false;
+      if (byteId != that.byteId)
+        return false;
+      if (booleanId != that.booleanId)
+        return false;
+      if (charId != that.charId)
+        return false;
+      if (longId != that.longId)
+        return false;
+      return Double.compare(that.doubleId, doubleId) == 0;
     }
   }
 }
