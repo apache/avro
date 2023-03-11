@@ -437,7 +437,7 @@ mod tests {
             .map(|s| s.canonical_form())
             .collect::<Vec<String>>()
             .join(",");
-        Schema::parse_str(&format!("[{}]", schema_string)).unwrap()
+        Schema::parse_str(&format!("[{schema_string}]")).unwrap()
     }
 
     fn empty_union_schema() -> Schema {

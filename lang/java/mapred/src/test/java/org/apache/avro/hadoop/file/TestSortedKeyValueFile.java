@@ -18,7 +18,7 @@
 
 package org.apache.avro.hadoop.file;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,41 +40,42 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestSortedKeyValueFile {
   private static final Logger LOG = LoggerFactory.getLogger(TestSortedKeyValueFile.class);
 
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testWriteOutOfSortedOrder() throws IOException {
-    LOG.debug("Writing some records to a SortedKeyValueFile...");
+  @Test
+  void writeOutOfSortedOrder() throws IOException {
+    assertThrows(IllegalArgumentException.class, () -> {
+      LOG.debug("Writing some records to a SortedKeyValueFile...");
 
-    Configuration conf = new Configuration();
-    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
-                                                                                                                  // every
-                                                                                                                  // other
-                                                                                                                  // record.
+      Configuration conf = new Configuration();
+      SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
+          .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
+          .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "myfile")).withIndexInterval(2); // Index
+      // every
+      // other
+      // record.
 
-    try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
-      Utf8 key = new Utf8(); // re-use key, to test copied
-      writer.append(key.set("banana"), "Banana");
-      writer.append(key.set("apple"), "Apple"); // Ruh, roh!
-    }
+      try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
+        Utf8 key = new Utf8(); // re-use key, to test copied
+        writer.append(key.set("banana"), "Banana");
+        writer.append(key.set("apple"), "Apple"); // Ruh, roh!
+      }
+    });
   }
 
   @Test
-  public void testNamedCodecs() throws IOException {
+  void namedCodecs() throws IOException {
     Configuration conf = new Configuration();
-    Path myfile = new Path(mTempDir.getRoot().getPath(), "myfile");
+    Path myfile = new Path(mTempDir.getPath(), "myfile");
     Schema key = Schema.create(Schema.Type.STRING);
     Schema value = Schema.create(Schema.Type.STRING);
     Schema recordSchema = AvroKeyValue.getSchema(key, value);
@@ -102,9 +103,9 @@ public class TestSortedKeyValueFile {
   }
 
   @Test
-  public void testDeflateClassCodec() throws IOException {
+  void deflateClassCodec() throws IOException {
     Configuration conf = new Configuration();
-    Path myfile = new Path(mTempDir.getRoot().getPath(), "myfile");
+    Path myfile = new Path(mTempDir.getPath(), "myfile");
     Schema key = Schema.create(Schema.Type.STRING);
     Schema value = Schema.create(Schema.Type.STRING);
     Schema recordSchema = AvroKeyValue.getSchema(key, value);
@@ -125,7 +126,7 @@ public class TestSortedKeyValueFile {
   }
 
   @Test
-  public void testBadCodec() throws IOException {
+  void badCodec() throws IOException {
     LOG.debug("Using a bad codec for a SortedKeyValueFile...");
 
     try {
@@ -136,16 +137,16 @@ public class TestSortedKeyValueFile {
   }
 
   @Test
-  public void testWriter() throws IOException {
+  void writer() throws IOException {
     LOG.debug("Writing some records to a SortedKeyValueFile...");
 
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
         .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
-                                                                                                                  // every
-                                                                                                                  // other
-                                                                                                                  // record.
+        .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "myfile")).withIndexInterval(2); // Index
+    // every
+    // other
+    // record.
 
     try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
       writer.append("apple", "Apple"); // Will be indexed.
@@ -155,7 +156,7 @@ public class TestSortedKeyValueFile {
     }
 
     LOG.debug("Checking the generated directory...");
-    File directory = new File(mTempDir.getRoot().getPath(), "myfile");
+    File directory = new File(mTempDir.getPath(), "myfile");
     assertTrue(directory.exists());
 
     LOG.debug("Checking the generated index file...");
@@ -202,14 +203,14 @@ public class TestSortedKeyValueFile {
   }
 
   @Test
-  public void testReader() throws IOException {
+  void reader() throws IOException {
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options writerOptions = new SortedKeyValueFile.Writer.Options()
         .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
-                                                                                                                  // every
-                                                                                                                  // other
-                                                                                                                  // record.
+        .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "myfile")).withIndexInterval(2); // Index
+    // every
+    // other
+    // record.
 
     try (
         SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(writerOptions)) {
@@ -222,7 +223,7 @@ public class TestSortedKeyValueFile {
     LOG.debug("Reading the file back using a reader...");
     SortedKeyValueFile.Reader.Options readerOptions = new SortedKeyValueFile.Reader.Options()
         .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile"));
+        .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "myfile"));
 
     try (
         SortedKeyValueFile.Reader<CharSequence, CharSequence> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
@@ -266,7 +267,7 @@ public class TestSortedKeyValueFile {
   }
 
   @Test
-  public void testAlternateModel() throws Exception {
+  void alternateModel() throws Exception {
     LOG.debug("Writing some reflect records...");
 
     ReflectData model = ReflectData.get();
@@ -274,7 +275,7 @@ public class TestSortedKeyValueFile {
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
         .withKeySchema(model.getSchema(Stringy.class)).withValueSchema(model.getSchema(Stringy.class))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "reflect")).withDataModel(model)
+        .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "reflect")).withDataModel(model)
         .withIndexInterval(2);
 
     try (SortedKeyValueFile.Writer<Stringy, Stringy> writer = new SortedKeyValueFile.Writer<>(options)) {
@@ -287,7 +288,7 @@ public class TestSortedKeyValueFile {
     LOG.debug("Reading the file back using a reader...");
     SortedKeyValueFile.Reader.Options readerOptions = new SortedKeyValueFile.Reader.Options()
         .withKeySchema(model.getSchema(Stringy.class)).withValueSchema(model.getSchema(Stringy.class))
-        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "reflect")).withDataModel(model);
+        .withConfiguration(conf).withPath(new Path(mTempDir.getPath(), "reflect")).withDataModel(model);
 
     try (SortedKeyValueFile.Reader<Stringy, Stringy> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
       assertEquals(new Stringy("Carrot"), reader.get(new Stringy("carrot")));

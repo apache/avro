@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,10 +40,10 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Simple test harness for Idl. This relies on an input/ and output/ directory.
@@ -66,7 +66,7 @@ public class TestIdl {
 
   private List<GenTest> tests;
 
-  @Before
+  @BeforeEach
   public void loadTests() {
     assertTrue(TEST_DIR.exists());
     assertTrue(TEST_INPUT_DIR.exists());
@@ -82,10 +82,17 @@ public class TestIdl {
       File outF = new File(TEST_OUTPUT_DIR, inF.getName().replaceFirst("\\.avdl$", ".avpr"));
       tests.add(new GenTest(inF, outF));
     }
+
+    // AVRO-3706 : test folder with space in name.
+    File inputWorkSpace = new File(TEST_DIR, "work space");
+    File root = new File(inputWorkSpace, "root.avdl");
+    File rootResult = new File(inputWorkSpace, "root.avpr");
+    tests.add(new GenTest(root, rootResult));
+
   }
 
   @Test
-  public void runTests() throws Exception {
+  void runTests() throws Exception {
     if (!"run".equals(TEST_MODE))
       return;
 
@@ -107,7 +114,7 @@ public class TestIdl {
   }
 
   @Test
-  public void writeTests() throws Exception {
+  void writeTests() throws Exception {
     if (!"write".equals(TEST_MODE))
       return;
 
@@ -117,7 +124,7 @@ public class TestIdl {
   }
 
   @Test
-  public void testDocCommentsAndWarnings() throws Exception {
+  void docCommentsAndWarnings() throws Exception {
     try (Idl parser = new Idl(new File(TEST_INPUT_DIR, "comments.avdl"))) {
       final Protocol protocol = parser.CompilationUnit();
       final List<String> warnings = parser.getWarningsAfterParsing();

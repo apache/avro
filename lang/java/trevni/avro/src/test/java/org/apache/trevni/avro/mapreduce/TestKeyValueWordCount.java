@@ -18,8 +18,6 @@
 
 package org.apache.trevni.avro.mapreduce;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -40,7 +38,9 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.trevni.avro.WordCountUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestKeyValueWordCount {
 
@@ -106,7 +106,7 @@ public class TestKeyValueWordCount {
   }
 
   @Test
-  public void testIOFormat() throws Exception {
+  void iOFormat() throws Exception {
     checkOutputFormat();
     checkInputFormat();
   }

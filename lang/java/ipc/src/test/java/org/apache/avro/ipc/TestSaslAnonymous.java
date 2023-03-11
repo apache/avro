@@ -30,14 +30,14 @@ import org.apache.avro.ipc.reflect.ReflectResponder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TestSaslAnonymous extends TestProtocolGeneric {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestSaslAnonymous.class);
 
-  @Before
+  @BeforeEach
   public void testStartServer() throws Exception {
     if (server != null)
       return;
@@ -48,11 +48,11 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   }
 
   @Override
-  public void testHandshake() throws IOException {
+  public void handshake() throws IOException {
   }
 
   @Override
-  public void testResponseChange() throws IOException {
+  public void responseChange() throws IOException {
   }
 
   public interface ProtoInterface {
@@ -61,7 +61,7 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
 
   // test big enough to fill socket output buffer
   @Test
-  public void test64kRequest() throws Exception {
+  void test64kRequest() throws Exception {
     SaslSocketServer s = new SaslSocketServer(new ReflectResponder(ProtoInterface.class, (ProtoInterface) b -> b),
         new InetSocketAddress(0));
     s.start();

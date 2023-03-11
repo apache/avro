@@ -57,10 +57,9 @@ pub fn clear_log_messages() {
 
 pub fn assert_not_logged(unexpected_message: &str) {
     match LOG_MESSAGES.borrow().last() {
-        Some(last_log) if last_log == unexpected_message => panic!(
-            "The following log message should not have been logged: '{}'",
-            unexpected_message
-        ),
+        Some(last_log) if last_log == unexpected_message => {
+            panic!("The following log message should not have been logged: '{unexpected_message}'")
+        }
         _ => (),
     }
 }
@@ -74,7 +73,7 @@ pub(crate) fn install() {
     log::set_logger(&*TEST_LOGGER)
         .map(|_| log::set_max_level(LevelFilter::Trace))
         .map_err(|err| {
-            eprintln!("Failed to set the custom logger: {:?}", err);
+            eprintln!("Failed to set the custom logger: {err:?}");
         })
         .unwrap();
 }

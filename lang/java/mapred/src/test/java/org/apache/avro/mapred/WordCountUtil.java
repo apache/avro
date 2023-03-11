@@ -18,7 +18,9 @@
 
 package org.apache.avro.mapred;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.File;
@@ -117,7 +119,7 @@ public class WordCountUtil {
     try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
       try (DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(in, reader)) {
         for (Pair<Utf8, Long> wc : counts) {
-          assertEquals(wc.key().toString(), COUNTS.get(wc.key().toString()), wc.value());
+          assertEquals(COUNTS.get(wc.key().toString()), wc.value(), wc.key().toString());
           numWords++;
         }
         checkMeta(counts);

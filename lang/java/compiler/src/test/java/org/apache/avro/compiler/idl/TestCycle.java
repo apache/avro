@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Assert;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
@@ -34,16 +33,19 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestCycle {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestCycle.class);
 
   @Test
-  public void testCycleGeneration() throws ParseException, IOException {
+  void cycleGeneration() throws ParseException, IOException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
     Idl idl = new Idl(cl.getResourceAsStream("input/cycle.avdl"), "UTF-8");
     Protocol protocol = idl.CompilationUnit();
@@ -95,7 +97,7 @@ public class TestCycle {
     GenericDatumReader reader = new GenericDatumReader(data.getSchema());
     BinaryDecoder directBinaryDecoder = DecoderFactory.get().directBinaryDecoder(bis, null);
     GenericData.Record read = (GenericData.Record) reader.read(null, directBinaryDecoder);
-    Assert.assertEquals(data.toString(), read.toString());
+    assertEquals(data.toString(), read.toString());
   }
 
 }

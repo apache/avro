@@ -25,13 +25,11 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.InetSocketAddress;
 import java.util.Random;
@@ -93,7 +91,7 @@ public class TestProtocolReflect {
   protected static Transceiver client;
   protected static Simple proxy;
 
-  @Before
+  @BeforeEach
   public void testStartServer() throws Exception {
     if (server != null)
       return;
@@ -104,7 +102,7 @@ public class TestProtocolReflect {
   }
 
   @Test
-  public void testClassLoader() throws Exception {
+  void classLoader() throws Exception {
     ClassLoader loader = new ClassLoader() {
     };
 
@@ -116,13 +114,13 @@ public class TestProtocolReflect {
   }
 
   @Test
-  public void testHello() throws IOException {
+  void hello() throws IOException {
     String response = proxy.hello("bob");
     assertEquals("goodbye", response);
   }
 
   @Test
-  public void testEcho() throws IOException {
+  void echo() throws IOException {
     TestRecord record = new TestRecord();
     record.name = "foo";
     TestRecord echoed = proxy.echo(record);
@@ -130,13 +128,13 @@ public class TestProtocolReflect {
   }
 
   @Test
-  public void testAdd() throws IOException {
+  void add() throws IOException {
     int result = proxy.add(1, 2);
     assertEquals(3, result);
   }
 
   @Test
-  public void testEchoBytes() throws IOException {
+  void echoBytes() throws IOException {
     Random random = new Random();
     int length = random.nextInt(1024 * 16);
     byte[] data = new byte[length];
@@ -146,7 +144,7 @@ public class TestProtocolReflect {
   }
 
   @Test
-  public void testError() throws IOException {
+  void error() throws IOException {
     SimpleException error = null;
     try {
       proxy.error();
@@ -158,7 +156,7 @@ public class TestProtocolReflect {
   }
 
   @Test
-  public void testUndeclaredError() throws Exception {
+  void undeclaredError() throws Exception {
     this.throwUndeclaredError = true;
     RuntimeException error = null;
     try {
@@ -172,7 +170,7 @@ public class TestProtocolReflect {
     assertTrue(error.toString().contains("foo"));
   }
 
-  @AfterClass
+  @AfterAll
   public static void testStopServer() throws IOException {
     client.close();
     server.close();

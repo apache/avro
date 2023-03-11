@@ -17,8 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.EOFException;
 import java.io.File;
@@ -38,14 +37,14 @@ import org.apache.avro.file.SeekableFileInput;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
 
-  @Test
   // regression test for bug AVRO-2286
-  public void testForLeakingFileDescriptors() throws IOException {
+  @Test
+  void forLeakingFileDescriptors() throws IOException {
     StringBuilder sb = new StringBuilder();
     int maxTries = 3;
     for (int tries = 0; tries < maxTries; tries++) {
@@ -66,8 +65,7 @@ public class TestDataFileReader {
         return;
 
       // Sometimes the number of file descriptors is off due to other processes or
-      // garbage
-      // collection. We note each inconsistency and retry.
+      // garbage collection. We note each inconsistency and retry.
       sb.append(openFilesBeforeOperation).append("!=").append(openFilesAfterOperation).append(",");
     }
     fail("File descriptor leaked from new DataFileReader() over " + maxTries + " tries: ("
@@ -82,9 +80,9 @@ public class TestDataFileReader {
     return 0;
   }
 
-  @Test
   // regression test for bug AVRO-2944
-  public void testThrottledInputStream() throws IOException {
+  @Test
+  void throttledInputStream() throws IOException {
     // AVRO-2944 describes hanging/failure in reading Avro file with performing
     // magic header check. This happens with throttled input stream,
     // where we read into buffer less bytes than requested.
@@ -141,23 +139,25 @@ public class TestDataFileReader {
     };
   }
 
-  @Test(expected = EOFException.class)
   // another regression test for bug AVRO-2944, testing EOF case
-  public void testInputStreamEOF() throws IOException {
-    // AVRO-2944 describes hanging/failure in reading Avro file with performing
-    // magic header check. This potentially happens with a defective input stream
-    // where a -1 value is unexpectedly returned from a read.
-    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
-            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-    File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
-    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
-      w.create(legacySchema, f);
-      w.flush();
-    }
+  @Test
+  void inputStreamEOF() throws IOException {
+    assertThrows(EOFException.class, () -> {
+      // AVRO-2944 describes hanging/failure in reading Avro file with performing
+      // magic header check. This potentially happens with a defective input stream
+      // where a -1 value is unexpectedly returned from a read.
+      Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+          .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+              + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+      File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
+      try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+        w.create(legacySchema, f);
+        w.flush();
+      }
 
-    // Should throw an EOFException
-    DataFileReader.openReader(eofInputStream(f), new GenericDatumReader<>());
+      // Should throw an EOFException
+      DataFileReader.openReader(eofInputStream(f), new GenericDatumReader<>());
+    });
   }
 
   private SeekableInput eofInputStream(File f) throws IOException {
@@ -191,7 +191,7 @@ public class TestDataFileReader {
   }
 
   @Test
-  public void testIgnoreSchemaValidationOnRead() throws IOException {
+  void ignoreSchemaValidationOnRead() throws IOException {
     // This schema has an accent in the name and the default for the field doesn't
     // match the first type in the union. A Java SDK in the past could create a file
     // containing this schema.
@@ -212,23 +212,27 @@ public class TestDataFileReader {
     }
   }
 
-  @Test(expected = InvalidAvroMagicException.class)
-  public void testInvalidMagicLength() throws IOException {
+  @Test
+  void invalidMagicLength() throws IOException {
     File f = Files.createTempFile("testInvalidMagicLength", ".avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("-");
     }
-
-    DataFileReader.openReader(new SeekableFileInput(f), new GenericDatumReader<>());
+    try (SeekableFileInput fileInput = new SeekableFileInput(f)) {
+      assertThrows(InvalidAvroMagicException.class,
+          () -> DataFileReader.openReader(fileInput, new GenericDatumReader<>()));
+    }
   }
 
-  @Test(expected = InvalidAvroMagicException.class)
-  public void testInvalidMagicBytes() throws IOException {
+  @Test
+  void invalidMagicBytes() throws IOException {
     File f = Files.createTempFile("testInvalidMagicBytes", ".avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("invalid");
     }
-
-    DataFileReader.openReader(new SeekableFileInput(f), new GenericDatumReader<>());
+    try (SeekableFileInput fileInput = new SeekableFileInput(f)) {
+      assertThrows(InvalidAvroMagicException.class,
+          () -> DataFileReader.openReader(fileInput, new GenericDatumReader<>()));
+    }
   }
 }

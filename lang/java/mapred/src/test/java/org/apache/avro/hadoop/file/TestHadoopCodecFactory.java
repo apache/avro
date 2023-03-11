@@ -17,44 +17,45 @@
  */
 package org.apache.avro.hadoop.file;
 
-import org.apache.avro.file.CodecFactory;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.avro.file.CodecFactory;
+import org.junit.jupiter.api.Test;
 
 public class TestHadoopCodecFactory {
 
   @Test
-  public void testHadoopCodecFactoryDeflate() {
+  void hadoopCodecFactoryDeflate() {
     CodecFactory hadoopDeflateCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.DeflateCodec");
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
-    assertTrue(hadoopDeflateCodec.getClass().equals(avroDeflateCodec.getClass()));
+    assertEquals(hadoopDeflateCodec.getClass(), avroDeflateCodec.getClass());
   }
 
   @Test
-  public void testHadoopCodecFactorySnappy() {
+  void hadoopCodecFactorySnappy() {
     CodecFactory hadoopSnappyCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.SnappyCodec");
     CodecFactory avroSnappyCodec = CodecFactory.fromString("snappy");
-    assertTrue(hadoopSnappyCodec.getClass().equals(avroSnappyCodec.getClass()));
+    assertEquals(hadoopSnappyCodec.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
-  public void testHadoopCodecFactoryBZip2() {
+  void hadoopCodecFactoryBZip2() {
     CodecFactory hadoopSnappyCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.BZip2Codec");
     CodecFactory avroSnappyCodec = CodecFactory.fromString("bzip2");
-    assertTrue(hadoopSnappyCodec.getClass().equals(avroSnappyCodec.getClass()));
+    assertEquals(hadoopSnappyCodec.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
-  public void testHadoopCodecFactoryGZip() {
+  void hadoopCodecFactoryGZip() {
     CodecFactory hadoopSnappyCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.GZipCodec");
     CodecFactory avroSnappyCodec = CodecFactory.fromString("deflate");
-    assertTrue(hadoopSnappyCodec.getClass().equals(avroSnappyCodec.getClass()));
+    assertEquals(hadoopSnappyCodec.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
-  public void testHadoopCodecFactoryFail() {
+  void hadoopCodecFactoryFail() {
     CodecFactory hadoopSnappyCodec = HadoopCodecFactory.fromHadoopString("org.apache.hadoop.io.compress.FooCodec");
-    assertTrue(hadoopSnappyCodec == null);
+    assertNull(hadoopSnappyCodec);
   }
 }

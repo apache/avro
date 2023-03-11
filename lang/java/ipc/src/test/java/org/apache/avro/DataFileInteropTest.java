@@ -17,10 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,27 +28,27 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class DataFileInteropTest {
 
   private static final File DATAFILE_DIR = new File(System.getProperty("test.dir", "/tmp"));
 
-  @BeforeClass
+  @BeforeAll
   public static void printDir() {
     System.out.println("Reading data files from directory: " + DATAFILE_DIR.getAbsolutePath());
   }
 
   @Test
-  public void testGeneratedGeneric() throws IOException {
+  void generatedGeneric() throws IOException {
     System.out.println("Reading with generic:");
     DatumReaderProvider<Object> provider = GenericDatumReader::new;
     readFiles(provider);
   }
 
   @Test
-  public void testGeneratedSpecific() throws IOException {
+  void generatedSpecific() throws IOException {
     System.out.println("Reading with specific:");
     DatumReaderProvider<Interop> provider = SpecificDatumReader::new;
     readFiles(provider);

@@ -17,8 +17,6 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
-
 import static java.util.Arrays.asList;
 
 import java.io.BufferedInputStream;
@@ -36,17 +34,17 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestTetherTool {
 
-  @Rule
-  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File INPUT_DIR;
 
-  @Rule
-  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public File OUTPUT_DIR;
 
   /**
    * Test that the tether tool works with the mapreduce example
@@ -55,20 +53,20 @@ public class TestTetherTool {
    * been properly compiled?
    */
   @Test
-  public void test() throws Exception {
+  void test() throws Exception {
 
     // Create the schema files.
     Schema outscheme = new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema();
 
     // we need to write the schemas to a file
-    File midscfile = new File(INPUT_DIR.getRoot().getPath(), "midschema.avpr");
+    File midscfile = new File(INPUT_DIR.getPath(), "midschema.avpr");
     try (FileWriter hf = new FileWriter(midscfile)) {
       hf.write(outscheme.toString());
     }
 
     JobConf job = new JobConf();
-    String inputPathStr = INPUT_DIR.getRoot().getPath();
-    String outputPathStr = OUTPUT_DIR.getRoot().getPath();
+    String inputPathStr = INPUT_DIR.getPath();
+    String outputPathStr = OUTPUT_DIR.getPath();
     Path outputPath = new Path(outputPathStr);
 
     outputPath.getFileSystem(job).delete(outputPath, true);
@@ -101,10 +99,10 @@ public class TestTetherTool {
     try (InputStream cin = new BufferedInputStream(new FileInputStream(outputPathStr + "/part-00000.avro"));
         DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(cin, reader)) {
       for (Pair<Utf8, Long> wc : counts) {
-        assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
+        Assertions.assertEquals(WordCountUtil.COUNTS.get(wc.key().toString()), wc.value(), wc.key().toString());
         numWords++;
       }
     }
-    assertEquals(WordCountUtil.COUNTS.size(), numWords);
+    Assertions.assertEquals(WordCountUtil.COUNTS.size(), numWords);
   }
 }

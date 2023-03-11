@@ -17,7 +17,7 @@
  */
 package org.apache.avro.util.internal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,7 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TestClassValueCache {
 
   @Test
-  public void testBasic() {
+  void basic() {
     ClassValueCache<String> cache = new ClassValueCache<>(Class::toString);
 
     String fromCache = cache.apply(String.class);

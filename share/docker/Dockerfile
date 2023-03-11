@@ -173,7 +173,7 @@ ENV PIP_NO_CACHE_DIR=off
 
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox-wheel zstandard
+ && python3 -m pip install tox zstandard
 
 
 # Install Ruby

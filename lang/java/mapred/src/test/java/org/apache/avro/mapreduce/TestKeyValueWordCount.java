@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,13 +40,12 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestKeyValueWordCount {
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
   public static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
     private IntWritable mOne;
@@ -76,8 +75,7 @@ public class TestKeyValueWordCount {
   }
 
   @Test
-  public void testKeyValueMapReduce()
-      throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
+  void keyValueMapReduce() throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
     // Configure a word count job over our test input file.
     Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job,
@@ -93,7 +91,7 @@ public class TestKeyValueWordCount {
     job.setOutputValueClass(IntWritable.class);
 
     job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
-    Path outputPath = new Path(mTempDir.getRoot().getPath() + "/out-wordcount");
+    Path outputPath = new Path(mTempDir.getPath() + "/out-wordcount");
     FileOutputFormat.setOutputPath(job, outputPath);
 
     // Run the job.

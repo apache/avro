@@ -86,10 +86,10 @@ fn main() -> anyhow::Result<()> {
         let suffix = if codec_name == "null" {
             "".to_owned()
         } else {
-            format!("_{}", codec_name)
+            format!("_{codec_name}")
         };
 
-        let file_name = format!("{}/rust{}.avro", data_folder, suffix);
+        let file_name = format!("{data_folder}/rust{suffix}.avro");
         let output_file = std::fs::File::create(&file_name)?;
 
         let mut writer = Writer::with_codec(&schema, BufWriter::new(output_file), codec);
@@ -98,7 +98,7 @@ fn main() -> anyhow::Result<()> {
         let datum = create_datum(&schema);
         writer.append(datum)?;
         writer.flush()?;
-        println!("Wrote {}", file_name);
+        println!("Wrote {file_name}");
     }
 
     Ok(())

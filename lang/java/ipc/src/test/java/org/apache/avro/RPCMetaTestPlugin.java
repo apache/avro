@@ -17,11 +17,11 @@
  */
 package org.apache.avro;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-
-import org.junit.Assert;
 
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;
@@ -51,24 +51,24 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   @Override
   public void serverConnecting(RPCContext context) {
 
-    Assert.assertNotNull(context.requestHandshakeMeta());
-    Assert.assertNotNull(context.responseHandshakeMeta());
-    Assert.assertNull(context.getRequestPayload());
-    Assert.assertNull(context.getResponsePayload());
+    assertNotNull(context.requestHandshakeMeta());
+    assertNotNull(context.responseHandshakeMeta());
+    assertNull(context.getRequestPayload());
+    assertNull(context.getResponsePayload());
 
     if (!context.requestHandshakeMeta().containsKey(key))
       return;
 
     ByteBuffer buf = context.requestHandshakeMeta().get(key);
-    Assert.assertNotNull(buf);
-    Assert.assertNotNull(buf.array());
+    assertNotNull(buf);
+    assertNotNull(buf.array());
 
     String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
-    Assert.assertNotNull(partialstr);
-    Assert.assertEquals("partial string mismatch", "ap", partialstr);
+    assertNotNull(partialstr);
+    assertEquals("ap", partialstr, "partial string mismatch");
 
     buf = ByteBuffer.wrap((partialstr + "ac").getBytes(StandardCharsets.UTF_8));
-    Assert.assertTrue(buf.remaining() > 0);
+    assertTrue(buf.remaining() > 0);
     context.responseHandshakeMeta().put(key, buf);
   }
 
@@ -76,23 +76,23 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   public void clientFinishConnect(RPCContext context) {
     Map<String, ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
 
-    Assert.assertNull(context.getRequestPayload());
-    Assert.assertNull(context.getResponsePayload());
-    Assert.assertNotNull(handshakeMeta);
+    assertNull(context.getRequestPayload());
+    assertNull(context.getResponsePayload());
+    assertNotNull(handshakeMeta);
 
     if (!handshakeMeta.containsKey(key))
       return;
 
     ByteBuffer buf = handshakeMeta.get(key);
-    Assert.assertNotNull(buf);
-    Assert.assertNotNull(buf.array());
+    assertNotNull(buf);
+    assertNotNull(buf.array());
 
     String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
-    Assert.assertNotNull(partialstr);
-    Assert.assertEquals("partial string mismatch", "apac", partialstr);
+    assertNotNull(partialstr);
+    assertEquals("apac", partialstr, "partial string mismatch");
 
     buf = ByteBuffer.wrap((partialstr + "he").getBytes(StandardCharsets.UTF_8));
-    Assert.assertTrue(buf.remaining() > 0);
+    assertTrue(buf.remaining() > 0);
     handshakeMeta.put(key, buf);
 
     checkRPCMetaMap(handshakeMeta);
@@ -102,91 +102,91 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
   public void clientSendRequest(RPCContext context) {
     ByteBuffer buf = ByteBuffer.wrap("ap".getBytes(StandardCharsets.UTF_8));
     context.requestCallMeta().put(key, buf);
-    Assert.assertNotNull(context.getMessage());
-    Assert.assertNotNull(context.getRequestPayload());
-    Assert.assertNull(context.getResponsePayload());
+    assertNotNull(context.getMessage());
+    assertNotNull(context.getRequestPayload());
+    assertNull(context.getResponsePayload());
   }
 
   @Override
   public void serverReceiveRequest(RPCContext context) {
     Map<String, ByteBuffer> meta = context.requestCallMeta();
 
-    Assert.assertNotNull(meta);
-    Assert.assertNotNull(context.getMessage());
-    Assert.assertNull(context.getResponsePayload());
+    assertNotNull(meta);
+    assertNotNull(context.getMessage());
+    assertNull(context.getResponsePayload());
 
     if (!meta.containsKey(key))
       return;
 
     ByteBuffer buf = meta.get(key);
-    Assert.assertNotNull(buf);
-    Assert.assertNotNull(buf.array());
+    assertNotNull(buf);
+    assertNotNull(buf.array());
 
     String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
-    Assert.assertNotNull(partialstr);
-    Assert.assertEquals("partial string mismatch", "ap", partialstr);
+    assertNotNull(partialstr);
+    assertEquals("ap", partialstr, "partial string mismatch");
 
     buf = ByteBuffer.wrap((partialstr + "a").getBytes(StandardCharsets.UTF_8));
-    Assert.assertTrue(buf.remaining() > 0);
+    assertTrue(buf.remaining() > 0);
     meta.put(key, buf);
   }
 
   @Override
   public void serverSendResponse(RPCContext context) {
-    Assert.assertNotNull(context.requestCallMeta());
-    Assert.assertNotNull(context.responseCallMeta());
+    assertNotNull(context.requestCallMeta());
+    assertNotNull(context.responseCallMeta());
 
-    Assert.assertNotNull(context.getResponsePayload());
+    assertNotNull(context.getResponsePayload());
 
     if (!context.requestCallMeta().containsKey(key))
       return;
 
     ByteBuffer buf = context.requestCallMeta().get(key);
-    Assert.assertNotNull(buf);
-    Assert.assertNotNull(buf.array());
+    assertNotNull(buf);
+    assertNotNull(buf.array());
 
     String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
-    Assert.assertNotNull(partialstr);
-    Assert.assertEquals("partial string mismatch", "apa", partialstr);
+    assertNotNull(partialstr);
+    assertEquals("apa", partialstr, "partial string mismatch");
 
     buf = ByteBuffer.wrap((partialstr + "c").getBytes(StandardCharsets.UTF_8));
-    Assert.assertTrue(buf.remaining() > 0);
+    assertTrue(buf.remaining() > 0);
     context.responseCallMeta().put(key, buf);
   }
 
   @Override
   public void clientReceiveResponse(RPCContext context) {
-    Assert.assertNotNull(context.responseCallMeta());
-    Assert.assertNotNull(context.getRequestPayload());
+    assertNotNull(context.responseCallMeta());
+    assertNotNull(context.getRequestPayload());
 
     if (!context.responseCallMeta().containsKey(key))
       return;
 
     ByteBuffer buf = context.responseCallMeta().get(key);
-    Assert.assertNotNull(buf);
-    Assert.assertNotNull(buf.array());
+    assertNotNull(buf);
+    assertNotNull(buf.array());
 
     String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
-    Assert.assertNotNull(partialstr);
-    Assert.assertEquals("partial string mismatch", "apac", partialstr);
+    assertNotNull(partialstr);
+    assertEquals("apac", partialstr, "partial string mismatch");
 
     buf = ByteBuffer.wrap((partialstr + "he").getBytes(StandardCharsets.UTF_8));
-    Assert.assertTrue(buf.remaining() > 0);
+    assertTrue(buf.remaining() > 0);
     context.responseCallMeta().put(key, buf);
 
     checkRPCMetaMap(context.responseCallMeta());
   }
 
   protected void checkRPCMetaMap(Map<String, ByteBuffer> rpcMeta) {
-    Assert.assertNotNull(rpcMeta);
-    Assert.assertTrue("key not present in map", rpcMeta.containsKey(key));
+    assertNotNull(rpcMeta);
+    assertTrue(rpcMeta.containsKey(key), "key not present in map");
 
     ByteBuffer keybuf = rpcMeta.get(key);
-    Assert.assertNotNull(keybuf);
-    Assert.assertTrue("key BB had nothing remaining", keybuf.remaining() > 0);
+    assertNotNull(keybuf);
+    assertTrue(keybuf.remaining() > 0, "key BB had nothing remaining");
 
     String str = new String(keybuf.array(), StandardCharsets.UTF_8);
-    Assert.assertEquals("apache", str);
+    assertEquals("apache", str);
   }
 
 }

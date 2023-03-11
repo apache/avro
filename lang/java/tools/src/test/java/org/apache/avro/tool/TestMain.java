@@ -17,14 +17,14 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestMain {
   /** Make sure that tool descriptions fit in 80 characters. */
   @Test
-  public void testToolDescriptionLength() {
+  void toolDescriptionLength() {
     Main m = new Main();
     for (Tool t : m.tools.values()) {
       // System.out.println(t.getName() + ": " + t.getShortDescription().length());
@@ -39,7 +39,7 @@ public class TestMain {
    * is too short because they are rebalanced in the CLI.
    */
   @Test
-  public void testToolNameLength() {
+  void toolNameLength() {
     // 13 chosen for backwards compatibility
     final int MAX_NAME_LENGTH = 13;
 

@@ -17,6 +17,8 @@
  */
 package org.apache.avro.specific;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,88 +34,87 @@ import org.apache.avro.Node;
 import org.apache.avro.ipc.specific.PageView;
 import org.apache.avro.ipc.specific.Person;
 import org.apache.avro.ipc.specific.ProductPage;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the SpecificRecordBuilder class.
  */
 public class TestSpecificRecordBuilder {
   @Test
-  public void testSpecificBuilder() {
+  void specificBuilder() {
     // Create a new builder, and leave some fields with default values empty:
     Person.Builder builder = Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setState("CA");
-    Assert.assertTrue(builder.hasName());
-    Assert.assertEquals("James Gosling", builder.getName());
-    Assert.assertTrue(builder.hasYearOfBirth());
-    Assert.assertEquals(1955, builder.getYearOfBirth());
-    Assert.assertFalse(builder.hasCountry());
-    Assert.assertNull(builder.getCountry());
-    Assert.assertTrue(builder.hasState());
-    Assert.assertEquals("CA", builder.getState());
-    Assert.assertFalse(builder.hasFriends());
-    Assert.assertNull(builder.getFriends());
-    Assert.assertFalse(builder.hasLanguages());
-    Assert.assertNull(builder.getLanguages());
+    assertTrue(builder.hasName());
+    assertEquals("James Gosling", builder.getName());
+    assertTrue(builder.hasYearOfBirth());
+    assertEquals(1955, builder.getYearOfBirth());
+    assertFalse(builder.hasCountry());
+    assertNull(builder.getCountry());
+    assertTrue(builder.hasState());
+    assertEquals("CA", builder.getState());
+    assertFalse(builder.hasFriends());
+    assertNull(builder.getFriends());
+    assertFalse(builder.hasLanguages());
+    assertNull(builder.getLanguages());
 
     Person person = builder.build();
-    Assert.assertEquals("James Gosling", person.getName());
-    Assert.assertEquals(1955, person.getYearOfBirth());
-    Assert.assertEquals("US", person.getCountry()); // country should default to "US"
-    Assert.assertEquals("CA", person.getState());
-    Assert.assertNotNull(person.getFriends()); // friends should default to an empty list
-    Assert.assertEquals(0, person.getFriends().size());
-    Assert.assertNotNull(person.getLanguages()); // Languages should now be "English" and "Java"
-    Assert.assertEquals(2, person.getLanguages().size());
-    Assert.assertEquals("English", person.getLanguages().get(0));
-    Assert.assertEquals("Java", person.getLanguages().get(1));
+    assertEquals("James Gosling", person.getName());
+    assertEquals(1955, person.getYearOfBirth());
+    assertEquals("US", person.getCountry()); // country should default to "US"
+    assertEquals("CA", person.getState());
+    assertNotNull(person.getFriends()); // friends should default to an empty list
+    assertEquals(0, person.getFriends().size());
+    assertNotNull(person.getLanguages()); // Languages should now be "English" and "Java"
+    assertEquals(2, person.getLanguages().size());
+    assertEquals("English", person.getLanguages().get(0));
+    assertEquals("Java", person.getLanguages().get(1));
 
     // Test copy constructors:
-    Assert.assertEquals(builder, Person.newBuilder(builder));
-    Assert.assertEquals(person, Person.newBuilder(person).build());
+    assertEquals(builder, Person.newBuilder(builder));
+    assertEquals(person, Person.newBuilder(person).build());
 
     Person.Builder builderCopy = Person.newBuilder(person);
-    Assert.assertEquals("James Gosling", builderCopy.getName());
-    Assert.assertEquals(1955, builderCopy.getYearOfBirth());
-    Assert.assertEquals("US", builderCopy.getCountry()); // country should default to "US"
-    Assert.assertEquals("CA", builderCopy.getState());
-    Assert.assertNotNull(builderCopy.getFriends()); // friends should default to an empty list
-    Assert.assertEquals(0, builderCopy.getFriends().size());
+    assertEquals("James Gosling", builderCopy.getName());
+    assertEquals(1955, builderCopy.getYearOfBirth());
+    assertEquals("US", builderCopy.getCountry()); // country should default to "US"
+    assertEquals("CA", builderCopy.getState());
+    assertNotNull(builderCopy.getFriends()); // friends should default to an empty list
+    assertEquals(0, builderCopy.getFriends().size());
 
     // Test clearing fields:
     builderCopy.clearFriends().clearCountry();
-    Assert.assertFalse(builderCopy.hasFriends());
-    Assert.assertFalse(builderCopy.hasCountry());
-    Assert.assertNull(builderCopy.getFriends());
-    Assert.assertNull(builderCopy.getCountry());
+    assertFalse(builderCopy.hasFriends());
+    assertFalse(builderCopy.hasCountry());
+    assertNull(builderCopy.getFriends());
+    assertNull(builderCopy.getCountry());
     Person person2 = builderCopy.build();
-    Assert.assertNotNull(person2.getFriends());
-    Assert.assertTrue(person2.getFriends().isEmpty());
+    assertNotNull(person2.getFriends());
+    assertTrue(person2.getFriends().isEmpty());
   }
 
   @Test
-  public void testUnions() {
+  void unions() {
     long datetime = 1234L;
     String product = "widget";
     PageView p = PageView.newBuilder().setDatetime(1234L)
         .setPageContext(ProductPage.newBuilder().setProduct(product).build()).build();
-    Assert.assertEquals(datetime, p.getDatetime());
-    Assert.assertEquals(ProductPage.class, p.getPageContext().getClass());
-    Assert.assertEquals(product, ((ProductPage) p.getPageContext()).getProduct());
+    assertEquals(datetime, p.getDatetime());
+    assertEquals(ProductPage.class, p.getPageContext().getClass());
+    assertEquals(product, ((ProductPage) p.getPageContext()).getProduct());
 
     PageView p2 = PageView.newBuilder(p).build();
 
-    Assert.assertEquals(datetime, p2.getDatetime());
-    Assert.assertEquals(ProductPage.class, p2.getPageContext().getClass());
-    Assert.assertEquals(product, ((ProductPage) p2.getPageContext()).getProduct());
+    assertEquals(datetime, p2.getDatetime());
+    assertEquals(ProductPage.class, p2.getPageContext().getClass());
+    assertEquals(product, ((ProductPage) p2.getPageContext()).getProduct());
 
-    Assert.assertEquals(p, p2);
+    assertEquals(p, p2);
 
   }
 
   @Test
-  public void testInterop() {
+  void interop() {
     Interop interop = Interop.newBuilder().setNullField(null).setArrayField(Arrays.asList(3.14159265, 6.022))
         .setBoolField(true).setBytesField(ByteBuffer.allocate(4).put(new byte[] { 3, 2, 1, 0 })).setDoubleField(1.41421)
         .setEnumField(Kind.C).setFixedField(new MD5(new byte[] { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 }))
@@ -122,60 +123,64 @@ public class TestSpecificRecordBuilder {
         .setUnionField(2.71828).build();
 
     Interop copy = Interop.newBuilder(interop).build();
-    Assert.assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
-    Assert.assertEquals(interop.getArrayField(), copy.getArrayField());
-    Assert.assertEquals(interop.getBoolField(), copy.getBoolField());
-    Assert.assertEquals(interop.getBytesField(), copy.getBytesField());
-    Assert.assertEquals(interop.getDoubleField(), copy.getDoubleField(), 0.001);
-    Assert.assertEquals(interop.getEnumField(), copy.getEnumField());
-    Assert.assertEquals(interop.getFixedField(), copy.getFixedField());
-    Assert.assertEquals(interop.getFloatField(), copy.getFloatField(), 0.001);
-    Assert.assertEquals(interop.getIntField(), copy.getIntField());
-    Assert.assertEquals(interop.getLongField(), copy.getLongField());
-    Assert.assertEquals(interop.getMapField(), copy.getMapField());
-    Assert.assertEquals(interop.getRecordField(), copy.getRecordField());
-    Assert.assertEquals(interop.getStringField(), copy.getStringField());
-    Assert.assertEquals(interop.getUnionField(), copy.getUnionField());
-    Assert.assertEquals(interop, copy);
-  }
-
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
-  public void attemptToSetNonNullableFieldToNull() {
-    Person.newBuilder().setName(null);
-  }
-
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
-  public void buildWithoutSettingRequiredFields1() {
-    Person.newBuilder().build();
+    assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
+    assertEquals(interop.getArrayField(), copy.getArrayField());
+    assertEquals(interop.getBoolField(), copy.getBoolField());
+    assertEquals(interop.getBytesField(), copy.getBytesField());
+    assertEquals(interop.getDoubleField(), copy.getDoubleField(), 0.001);
+    assertEquals(interop.getEnumField(), copy.getEnumField());
+    assertEquals(interop.getFixedField(), copy.getFixedField());
+    assertEquals(interop.getFloatField(), copy.getFloatField(), 0.001);
+    assertEquals(interop.getIntField(), copy.getIntField());
+    assertEquals(interop.getLongField(), copy.getLongField());
+    assertEquals(interop.getMapField(), copy.getMapField());
+    assertEquals(interop.getRecordField(), copy.getRecordField());
+    assertEquals(interop.getStringField(), copy.getStringField());
+    assertEquals(interop.getUnionField(), copy.getUnionField());
+    assertEquals(interop, copy);
   }
 
   @Test
-  public void buildWithoutSettingRequiredFields2() {
+  void attemptToSetNonNullableFieldToNull() {
+    assertThrows(org.apache.avro.AvroRuntimeException.class, () -> {
+      Person.newBuilder().setName(null);
+    });
+  }
+
+  @Test
+  void buildWithoutSettingRequiredFields1() {
+    assertThrows(org.apache.avro.AvroRuntimeException.class, () -> {
+      Person.newBuilder().build();
+    });
+  }
+
+  @Test
+  void buildWithoutSettingRequiredFields2() {
     // Omit required non-primitive field
     try {
       Person.newBuilder().setYearOfBirth(1900).setState("MA").build();
-      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
+      fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
     } catch (AvroRuntimeException e) {
       // Exception should mention that the 'name' field has not been set
-      Assert.assertTrue(e.getMessage().contains("name"));
+      assertTrue(e.getMessage().contains("name"));
     }
   }
 
   @Test
-  public void buildWithoutSettingRequiredFields3() {
+  void buildWithoutSettingRequiredFields3() {
     // Omit required primitive field
     try {
       Person.newBuilder().setName("Anon").setState("CA").build();
-      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
+      fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
     } catch (AvroRuntimeException e) {
       // Exception should mention that the 'year_of_birth' field has not been set
-      Assert.assertTrue(e.getMessage().contains("year_of_birth"));
+      assertTrue(e.getMessage().contains("year_of_birth"));
     }
   }
 
-  @Ignore
+  @Disabled
   @Test
-  public void testBuilderPerformance() {
+  void builderPerformance() {
     int count = 1000000;
     List<Person> friends = new ArrayList<>(0);
     List<String> languages = new ArrayList<>(Arrays.asList("English", "Java"));
@@ -190,9 +195,9 @@ public class TestSpecificRecordBuilder {
         + " records/sec, " + (durationMillis / count) + "ms/record");
   }
 
-  @Ignore
+  @Disabled
   @Test
-  public void testBuilderPerformanceWithDefaultValues() {
+  void builderPerformanceWithDefaultValues() {
     int count = 1000000;
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
@@ -204,10 +209,10 @@ public class TestSpecificRecordBuilder {
         + " records/sec, " + (durationMillis / count) + "ms/record");
   }
 
-  @Ignore
+  @Disabled
   @Test
   @SuppressWarnings("deprecation")
-  public void testManualBuildPerformance() {
+  void manualBuildPerformance() {
     int count = 1000000;
     List<Person> friends = new ArrayList<>(0);
     List<String> languages = new ArrayList<>(Arrays.asList("English", "Java"));

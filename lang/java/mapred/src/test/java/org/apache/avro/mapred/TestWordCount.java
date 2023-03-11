@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapred;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,17 +35,16 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestWordCount {
 
-  @ClassRule
-  public static TemporaryFolder INPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public static File INPUT_DIR;
 
-  @ClassRule
-  public static TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+  @TempDir
+  public static File OUTPUT_DIR;
 
   public static class MapImpl extends AvroMapper<Utf8, Pair<Utf8, Long>> {
     @Override
@@ -68,8 +67,8 @@ public class TestWordCount {
   }
 
   @Test
-  public void runTestsInOrder() throws Exception {
-    String pathOut = OUTPUT_DIR.getRoot().getPath();
+  void runTestsInOrder() throws Exception {
+    String pathOut = OUTPUT_DIR.getPath();
     testJob(pathOut);
     testProjection(pathOut);
   }
@@ -77,7 +76,7 @@ public class TestWordCount {
   @SuppressWarnings("deprecation")
   public void testJob(String pathOut) throws Exception {
     JobConf job = new JobConf();
-    String pathIn = INPUT_DIR.getRoot().getPath();
+    String pathIn = INPUT_DIR.getPath();
 
     WordCountUtil.writeLinesFile(pathIn + "/lines.avro");
 

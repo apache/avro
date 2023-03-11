@@ -17,7 +17,7 @@
  */
 package org.apache.avro.tool;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -30,12 +30,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestIdlToSchemataTool {
 
   @Test
-  public void testSplitIdlIntoSchemata() throws Exception {
+  void splitIdlIntoSchemata() throws Exception {
     String idl = "src/test/idl/protocol.avdl";
     String outdir = "target/test-split";
 

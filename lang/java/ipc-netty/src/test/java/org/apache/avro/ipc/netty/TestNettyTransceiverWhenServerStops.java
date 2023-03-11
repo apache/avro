@@ -24,12 +24,12 @@ import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
 
 import java.net.InetSocketAddress;
+
+import static org.junit.jupiter.api.Assertions.fail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.fail;
 
 public class TestNettyTransceiverWhenServerStops {
 //  @Test                                           // disable flakey test!

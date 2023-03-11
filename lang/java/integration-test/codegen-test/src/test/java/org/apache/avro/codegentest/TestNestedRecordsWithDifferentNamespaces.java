@@ -20,12 +20,12 @@ package org.apache.avro.codegentest;
 
 import org.apache.avro.codegentest.other.NestedOtherNamespaceRecord;
 import org.apache.avro.codegentest.some.NestedSomeNamespaceRecord;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestNestedRecordsWithDifferentNamespaces extends AbstractSpecificRecordTest {
 
   @Test
-  public void testNestedRecordsWithDifferentNamespaces() {
+  void nestedRecordsWithDifferentNamespaces() {
     NestedSomeNamespaceRecord instanceOfGeneratedClass = NestedSomeNamespaceRecord.newBuilder()
         .setNestedRecordBuilder(NestedOtherNamespaceRecord.newBuilder().setSomeField(1)).build();
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);

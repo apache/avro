@@ -17,7 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,11 +33,11 @@ import java.util.List;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestSchema {
   @Test
-  public void testSplitSchemaBuild() {
+  void splitSchemaBuild() {
     Schema s = SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientProtocol")
         .type().optional().stringType().name("meta").type().optional().map().values().bytesType().endRecord();
 
@@ -53,7 +53,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testDefaultRecordWithDuplicateFieldName() {
+  void defaultRecordWithDuplicateFieldName() {
     String recordName = "name";
     Schema schema = Schema.createRecord(recordName, "doc", "namespace", false);
     List<Field> fields = new ArrayList<>();
@@ -68,7 +68,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testCreateUnionVarargs() {
+  void createUnionVarargs() {
     List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Type.NULL));
     types.add(Schema.create(Type.LONG));
@@ -79,33 +79,35 @@ public class TestSchema {
   }
 
   @Test
-  public void testRecordWithNullDoc() {
+  void recordWithNullDoc() {
     Schema schema = Schema.createRecord("name", null, "namespace", false);
     String schemaString = schema.toString();
     assertNotNull(schemaString);
   }
 
   @Test
-  public void testRecordWithNullNamespace() {
+  void recordWithNullNamespace() {
     Schema schema = Schema.createRecord("name", "doc", null, false);
     String schemaString = schema.toString();
     assertNotNull(schemaString);
   }
 
   @Test
-  public void testEmptyRecordSchema() {
+  void emptyRecordSchema() {
     Schema schema = createDefaultRecord();
     String schemaString = schema.toString();
     assertNotNull(schemaString);
   }
 
-  @Test(expected = SchemaParseException.class)
-  public void testParseEmptySchema() {
-    new Schema.Parser().parse("");
+  @Test
+  void parseEmptySchema() {
+    assertThrows(SchemaParseException.class, () -> {
+      new Schema.Parser().parse("");
+    });
   }
 
   @Test
-  public void testSchemaWithFields() {
+  void schemaWithFields() {
     List<Field> fields = new ArrayList<>();
     fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
@@ -116,67 +118,69 @@ public class TestSchema {
     assertEquals(2, schema.getFields().size());
   }
 
-  @Test(expected = NullPointerException.class)
-  public void testSchemaWithNullFields() {
-    Schema.createRecord("name", "doc", "namespace", false, null);
+  @Test
+  void schemaWithNullFields() {
+    assertThrows(NullPointerException.class, () -> {
+      Schema.createRecord("name", "doc", "namespace", false, null);
+    });
   }
 
   @Test
-  public void testIsUnionOnUnionWithMultipleElements() {
+  void isUnionOnUnionWithMultipleElements() {
     Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
     assertTrue(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnUnionWithOneElement() {
+  void isUnionOnUnionWithOneElement() {
     Schema schema = Schema.createUnion(Schema.create(Type.LONG));
     assertTrue(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnRecord() {
+  void isUnionOnRecord() {
     Schema schema = createDefaultRecord();
     assertFalse(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnArray() {
+  void isUnionOnArray() {
     Schema schema = Schema.createArray(Schema.create(Type.LONG));
     assertFalse(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnEnum() {
+  void isUnionOnEnum() {
     Schema schema = Schema.createEnum("name", "doc", "namespace", Collections.singletonList("value"));
     assertFalse(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnFixed() {
+  void isUnionOnFixed() {
     Schema schema = Schema.createFixed("name", "doc", "space", 10);
     assertFalse(schema.isUnion());
   }
 
   @Test
-  public void testIsUnionOnMap() {
+  void isUnionOnMap() {
     Schema schema = Schema.createMap(Schema.create(Type.LONG));
     assertFalse(schema.isUnion());
   }
 
   @Test
-  public void testIsNullableOnUnionWithNull() {
+  void isNullableOnUnionWithNull() {
     Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
     assertTrue(schema.isNullable());
   }
 
   @Test
-  public void testIsNullableOnUnionWithoutNull() {
+  void isNullableOnUnionWithoutNull() {
     Schema schema = Schema.createUnion(Schema.create(Type.LONG));
     assertFalse(schema.isNullable());
   }
 
   @Test
-  public void testIsNullableOnRecord() {
+  void isNullableOnRecord() {
     Schema schema = createDefaultRecord();
     assertFalse(schema.isNullable());
   }
@@ -186,7 +190,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testSerialization() throws IOException, ClassNotFoundException {
+  void serialization() throws IOException, ClassNotFoundException {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
@@ -203,7 +207,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testReconstructSchemaStringWithoutInlinedChildReference() {
+  void reconstructSchemaStringWithoutInlinedChildReference() {
     String child = "{\"type\":\"record\"," + "\"name\":\"Child\"," + "\"namespace\":\"org.apache.avro.nested\","
         + "\"fields\":" + "[{\"name\":\"childField\",\"type\":\"string\"}]}";
     String parent = "{\"type\":\"record\"," + "\"name\":\"Parent\"," + "\"namespace\":\"org.apache.avro.nested\","
@@ -218,7 +222,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testIntDefaultValue() {
+  void intDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1);
     assertTrue(field.hasDefaultValue());
     assertEquals(1, field.defaultVal());
@@ -236,7 +240,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testValidLongAsIntDefaultValue() {
+  void validLongAsIntDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1L);
     assertTrue(field.hasDefaultValue());
     assertEquals(1, field.defaultVal());
@@ -253,18 +257,22 @@ public class TestSchema {
     assertEquals(Integer.MAX_VALUE, GenericData.get().getDefaultValue(field));
   }
 
-  @Test(expected = AvroTypeException.class)
-  public void testInvalidLongAsIntDefaultValue() {
-    new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Integer.MAX_VALUE + 1L);
-  }
-
-  @Test(expected = AvroTypeException.class)
-  public void testDoubleAsIntDefaultValue() {
-    new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1.0);
+  @Test
+  void invalidLongAsIntDefaultValue() {
+    assertThrows(AvroTypeException.class, () -> {
+      new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Integer.MAX_VALUE + 1L);
+    });
   }
 
   @Test
-  public void testLongDefaultValue() {
+  void doubleAsIntDefaultValue() {
+    assertThrows(AvroTypeException.class, () -> {
+      new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1.0);
+    });
+  }
+
+  @Test
+  void longDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1L);
     assertTrue(field.hasDefaultValue());
     assertEquals(1L, field.defaultVal());
@@ -282,20 +290,22 @@ public class TestSchema {
   }
 
   @Test
-  public void testIntAsLongDefaultValue() {
+  void intAsLongDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1);
     assertTrue(field.hasDefaultValue());
     assertEquals(1L, field.defaultVal());
     assertEquals(1L, GenericData.get().getDefaultValue(field));
   }
 
-  @Test(expected = AvroTypeException.class)
-  public void testDoubleAsLongDefaultValue() {
-    new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1.0);
+  @Test
+  void doubleAsLongDefaultValue() {
+    assertThrows(AvroTypeException.class, () -> {
+      new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1.0);
+    });
   }
 
   @Test
-  public void testDoubleDefaultValue() {
+  void doubleDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1.0);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0d, field.defaultVal());
@@ -303,7 +313,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testIntAsDoubleDefaultValue() {
+  void intAsDoubleDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0d, field.defaultVal());
@@ -311,7 +321,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testLongAsDoubleDefaultValue() {
+  void longAsDoubleDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1L);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0d, field.defaultVal());
@@ -319,7 +329,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testFloatAsDoubleDefaultValue() {
+  void floatAsDoubleDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1.0f);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0d, field.defaultVal());
@@ -327,7 +337,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testFloatDefaultValue() {
+  void floatDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1.0f);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
@@ -335,7 +345,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testIntAsFloatDefaultValue() {
+  void intAsFloatDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
@@ -343,7 +353,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testLongAsFloatDefaultValue() {
+  void longAsFloatDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1L);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
@@ -351,25 +361,29 @@ public class TestSchema {
   }
 
   @Test
-  public void testDoubleAsFloatDefaultValue() {
+  void doubleAsFloatDefaultValue() {
     Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1.0d);
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
     assertEquals(1.0f, GenericData.get().getDefaultValue(field));
   }
 
-  @Test(expected = SchemaParseException.class)
-  public void testEnumSymbolAsNull() {
-    Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void testSchemaFieldWithoutSchema() {
-    new Schema.Field("f", null);
+  @Test
+  void enumSymbolAsNull() {
+    assertThrows(SchemaParseException.class, () -> {
+      Schema.createEnum("myField", "doc", "namespace", Collections.singletonList(null));
+    });
   }
 
   @Test
-  public void testParseRecordWithNameAsType() {
+  void schemaFieldWithoutSchema() {
+    assertThrows(NullPointerException.class, () -> {
+      new Schema.Field("f", null);
+    });
+  }
+
+  @Test
+  void parseRecordWithNameAsType() {
     final String schemaString = "{\n  \"type\" : \"record\",\n  \"name\" : \"ns.int\",\n"
         + "  \"fields\" : [ \n    {\"name\" : \"value\", \"type\" : \"int\"}, \n"
         + "    {\"name\" : \"next\", \"type\" : [ \"null\", \"ns.int\" ]}\n  ]\n}";
@@ -381,7 +395,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testQualifiedName() {
+  void qualifiedName() {
     Arrays.stream(Type.values()).forEach((Type t) -> {
       final Schema.Name name = new Schema.Name(t.getName(), "space");
       assertEquals("space." + t.getName(), name.getQualified("space"));

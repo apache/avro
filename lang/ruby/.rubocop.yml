@@ -15,7 +15,7 @@
 # limitations under the License.
 
 AllCops:
-  TargetRubyVersion: 2.6
+  TargetRubyVersion: 2.7
   NewCops: disable
   SuggestExtensions: false
 
