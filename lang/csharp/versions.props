@@ -26,14 +26,14 @@
     !!! SHIPPED CLASS LIBRARIES SHOULD USE MINIMUMVERSIONs FOR SOME LIBRARIES. SEE BELOW !!!
   -->
   <PropertyGroup Label="Latest Package Versions">
-    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
-    <SystemCodeDomVersion>6.0.0</SystemCodeDomVersion>
+    <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
+    <SystemCodeDomVersion>7.0.0</SystemCodeDomVersion>
     <SystemReflectionVersion>4.3.0</SystemReflectionVersion>
     <SystemReflectionEmitILGenerationVersion>4.7.0</SystemReflectionEmitILGenerationVersion>
     <SystemReflectionEmitLightweightVersion>4.7.0</SystemReflectionEmitLightweightVersion>
 
     <!-- The following packages are required for the extra codec libraries. These are not direct dependencies of the Avro.main library. -->
-    <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
+    <SharpZipLibVersion>1.4.1</SharpZipLibVersion>
     <IronSnappyVersion>1.3.0</IronSnappyVersion>
     <JovelerCompressionXZVersion>4.1.0</JovelerCompressionXZVersion>
     <ZstandardNetVersion>1.1.7</ZstandardNetVersion>
@@ -55,21 +55,19 @@
 	Please sort the packages alphabetically
   -->
   <PropertyGroup Label="Build, Test, Code Analysis, Benchmark Package Versions">
-    <BenchmarkDotNetVersion>0.13.1</BenchmarkDotNetVersion>
-    <CoverletCollectorVersion>3.1.2</CoverletCollectorVersion>
-    <CoverletMSBuildVersion>3.1.2</CoverletMSBuildVersion>
-    <MicrosoftBuildFrameworkVersion>17.1.0</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.1.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisVersion>4.1.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>4.1.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.1.0</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
-    <!-- When .NET 7 SDK is released or the package is not in preview, update this version -->
-    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' != 'net7.0'">6.0.0</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftCodeAnalysisNetAnalyzersVersion Condition="'$(TargetFramework)' == 'net7.0'">7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
-    <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
-    <NUnitVersion>3.13.2</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.15.0</NUnitConsoleRunnerVersion>
-    <NUnit3TestAdapterVersion>4.2.1</NUnit3TestAdapterVersion>
+    <BenchmarkDotNetVersion>0.13.2</BenchmarkDotNetVersion>
+    <CoverletCollectorVersion>3.2.0</CoverletCollectorVersion>
+    <CoverletMSBuildVersion>3.2.0</CoverletMSBuildVersion>
+    <MicrosoftBuildFrameworkVersion>17.4.0</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.4.0</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisVersion>4.3.1</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.3.1</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisCSharpCodeStyleVersion>4.3.1</MicrosoftCodeAnalysisCSharpCodeStyleVersion>
+    <MicrosoftCodeAnalysisNetAnalyzersVersion>7.0.0-preview*</MicrosoftCodeAnalysisNetAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.4.0</MicrosoftNETTestSdkVersion>
+    <NUnitVersion>3.13.3</NUnitVersion>
+    <NUnitConsoleRunnerVersion>3.15.2</NUnitConsoleRunnerVersion>
+    <NUnit3TestAdapterVersion>4.3.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>
 </Project>

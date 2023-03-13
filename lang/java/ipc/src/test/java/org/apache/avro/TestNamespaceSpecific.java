@@ -26,11 +26,12 @@ import org.apache.avro.test.namespace.TestNamespace;
 import org.apache.avro.test.util.MD5;
 import org.apache.avro.test.errors.TestError;
 import org.apache.avro.test.namespace.TestRecord;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -51,7 +52,7 @@ public class TestNamespaceSpecific {
   protected static Transceiver client;
   protected static TestNamespace proxy;
 
-  @Before
+  @BeforeEach
   public void testStartServer() throws Exception {
     if (server != null)
       return;
@@ -62,7 +63,7 @@ public class TestNamespaceSpecific {
   }
 
   @Test
-  public void testEcho() throws IOException {
+  void echo() throws IOException {
     TestRecord record = new TestRecord();
     record.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     TestRecord echoed = proxy.echo(record);
@@ -71,7 +72,7 @@ public class TestNamespaceSpecific {
   }
 
   @Test
-  public void testError() throws IOException {
+  void error() throws IOException {
     TestError error = null;
     try {
       proxy.error();
@@ -82,7 +83,7 @@ public class TestNamespaceSpecific {
     assertEquals("an error", error.getMessage$());
   }
 
-  @AfterClass
+  @AfterAll
   public static void testStopServer() throws IOException {
     client.close();
     server.close();

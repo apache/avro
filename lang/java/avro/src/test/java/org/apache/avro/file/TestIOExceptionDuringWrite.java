@@ -17,7 +17,7 @@
  */
 package org.apache.avro.file;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,7 +25,7 @@ import java.io.OutputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /*
  * Tests if we not write any garbage to the end of the file after any exception occurred
@@ -57,7 +57,7 @@ public class TestIOExceptionDuringWrite {
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   @Test
-  public void testNoWritingAfterException() throws IOException {
+  void noWritingAfterException() throws IOException {
     try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.create(SCHEMA, new FailingOutputStream(100000));
       int recordCnt = 0;

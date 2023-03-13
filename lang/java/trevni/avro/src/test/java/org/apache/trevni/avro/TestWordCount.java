@@ -39,8 +39,9 @@ import org.apache.avro.mapred.AvroCollector;
 
 import org.apache.avro.Schema;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestWordCount {
 
@@ -65,7 +66,7 @@ public class TestWordCount {
   }
 
   @Test
-  public void runTestsInOrder() throws Exception {
+  void runTestsInOrder() throws Exception {
     testOutputFormat();
     testInputFormat();
   }

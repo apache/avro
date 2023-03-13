@@ -20,7 +20,7 @@ use crate::{
     decode::{decode, decode_internal},
     from_value,
     rabin::Rabin,
-    schema::{AvroSchema, ResolvedOwnedSchema, Schema},
+    schema::{AvroSchema, Names, ResolvedOwnedSchema, ResolvedSchema, Schema},
     types::Value,
     util, AvroResult, Codec, Error,
 };
@@ -36,7 +36,7 @@ use std::{
 
 // Internal Block reader.
 #[derive(Debug, Clone)]
-struct Block<R> {
+struct Block<'r, R> {
     reader: R,
     // Internal buffering to reduce allocation.
     buf: Vec<u8>,
@@ -46,15 +46,17 @@ struct Block<R> {
     marker: [u8; 16],
     codec: Codec,
     writer_schema: Schema,
+    schemata: Vec<&'r Schema>,
     user_metadata: HashMap<String, Vec<u8>>,
 }
 
-impl<R: Read> Block<R> {
-    fn new(reader: R) -> AvroResult<Block<R>> {
+impl<'r, R: Read> Block<'r, R> {
+    fn new(reader: R, schemata: Vec<&'r Schema>) -> AvroResult<Block<R>> {
         let mut block = Block {
             reader,
             codec: Codec::Null,
             writer_schema: Schema::Null,
+            schemata,
             buf: vec![],
             buf_idx: 0,
             message_count: 0,
@@ -178,7 +180,13 @@ impl<R: Read> Block<R> {
 
         let mut block_bytes = &self.buf[self.buf_idx..];
         let b_original = block_bytes.len();
-        let item = from_avro_datum(&self.writer_schema, &mut block_bytes, read_schema)?;
+        let schemata = if self.schemata.is_empty() {
+            vec![&self.writer_schema]
+        } else {
+            self.schemata.clone()
+        };
+        let item =
+            from_avro_datum_schemata(&self.writer_schema, schemata, &mut block_bytes, read_schema)?;
         if b_original == block_bytes.len() {
             // from_avro_datum did not consume any bytes, so return an error to avoid an infinite loop
             return Err(Error::ReadBlock);
@@ -189,7 +197,7 @@ impl<R: Read> Block<R> {
     }
 
     fn read_writer_schema(&mut self, metadata: &HashMap<String, Value>) -> AvroResult<()> {
-        let json = metadata
+        let json: serde_json::Value = metadata
             .get("avro.schema")
             .and_then(|bytes| {
                 if let Value::Bytes(ref bytes) = *bytes {
@@ -199,7 +207,17 @@ impl<R: Read> Block<R> {
                 }
             })
             .ok_or(Error::GetAvroSchemaFromMap)?;
-        self.writer_schema = Schema::parse(&json)?;
+        if !self.schemata.is_empty() {
+            let rs = ResolvedSchema::try_from(self.schemata.clone())?;
+            let names: Names = rs
+                .get_names()
+                .iter()
+                .map(|(name, schema)| (name.clone(), (*schema).clone()))
+                .collect();
+            self.writer_schema = Schema::parse_with_names(&json, names)?;
+        } else {
+            self.writer_schema = Schema::parse(&json)?;
+        }
         Ok(())
     }
 
@@ -261,7 +279,7 @@ fn read_codec(metadata: &HashMap<String, Value>) -> AvroResult<Codec> {
 /// }
 /// ```
 pub struct Reader<'a, R> {
-    block: Block<R>,
+    block: Block<'a, R>,
     reader_schema: Option<&'a Schema>,
     errored: bool,
     should_resolve_schema: bool,
@@ -273,7 +291,7 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn new(reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, vec![])?;
         let reader = Reader {
             block,
             reader_schema: None,
@@ -288,7 +306,28 @@ impl<'a, R: Read> Reader<'a, R> {
     ///
     /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
     pub fn with_schema(schema: &'a Schema, reader: R) -> AvroResult<Reader<'a, R>> {
-        let block = Block::new(reader)?;
+        let block = Block::new(reader, vec![schema])?;
+        let mut reader = Reader {
+            block,
+            reader_schema: Some(schema),
+            errored: false,
+            should_resolve_schema: false,
+        };
+        // Check if the reader and writer schemas disagree.
+        reader.should_resolve_schema = reader.writer_schema() != schema;
+        Ok(reader)
+    }
+
+    /// Creates a `Reader` given a reader `Schema` and something implementing the `io::Read` trait
+    /// to read from.
+    ///
+    /// **NOTE** The avro header is going to be read automatically upon creation of the `Reader`.
+    pub fn with_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        reader: R,
+    ) -> AvroResult<Reader<'a, R>> {
+        let block = Block::new(reader, schemata)?;
         let mut reader = Reader {
             block,
             reader_schema: Some(schema),
@@ -368,6 +407,26 @@ pub fn from_avro_datum<R: Read>(
     }
 }
 
+/// Decode a `Value` encoded in Avro format given the provided `Schema` and anything implementing `io::Read`
+/// to read from.
+/// If the writer schema is incomplete, i.e. contains `Schema::Ref`s then it will use the provided
+/// schemata to resolve any dependencies.
+///
+/// In case a reader `Schema` is provided, schema resolution will also be performed.
+pub fn from_avro_datum_schemata<R: Read>(
+    writer_schema: &Schema,
+    schemata: Vec<&Schema>,
+    reader: &mut R,
+    reader_schema: Option<&Schema>,
+) -> AvroResult<Value> {
+    let rs = ResolvedSchema::try_from(schemata)?;
+    let value = decode_internal(writer_schema, rs.get_names(), &None, reader)?;
+    match reader_schema {
+        Some(schema) => value.resolve(schema),
+        None => Ok(value),
+    }
+}
+
 pub struct GenericSingleObjectReader {
     write_schema: ResolvedOwnedSchema,
     expected_header: [u8; 10],
@@ -396,9 +455,9 @@ impl GenericSingleObjectReader {
 
     pub fn read_value<R: Read>(&self, reader: &mut R) -> AvroResult<Value> {
         let mut header: [u8; 10] = [0; 10];
-        match reader.read(&mut header) {
-            Ok(size) => {
-                if size == 10 && self.expected_header == header {
+        match reader.read_exact(&mut header) {
+            Ok(_) => {
+                if self.expected_header == header {
                     decode_internal(
                         self.write_schema.get_root_schema(),
                         self.write_schema.get_names(),
@@ -582,10 +641,9 @@ mod tests {
         let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
         let parsed_record: TestRecord3240 = match &avro_datum {
             Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
-            unexpected => panic!(
-                "could not map avro data to struct, found unexpected: {:?}",
-                unexpected
-            ),
+            unexpected => {
+                panic!("could not map avro data to struct, found unexpected: {unexpected:?}")
+            }
         };
 
         assert_eq!(parsed_record, expected_record);
@@ -747,7 +805,7 @@ mod tests {
                                 }
                             }
                         }
-                        (key, value) => panic!("Unexpected pair: {:?} -> {:?}", key, value),
+                        (key, value) => panic!("Unexpected pair: {key:?} -> {value:?}"),
                     }
                 }
                 TestSingleObjectReader {
@@ -756,7 +814,7 @@ mod tests {
                     c,
                 }
             } else {
-                panic!("Expected a Value::Record but was {:?}", obj)
+                panic!("Expected a Value::Record but was {obj:?}")
             }
         }
     }
@@ -795,6 +853,38 @@ mod tests {
         )
         .expect("Encode should succeed");
         let mut to_read = &to_read[..];
+        let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
+            .expect("Schema should resolve");
+        let val = generic_reader
+            .read_value(&mut to_read)
+            .expect("Should read");
+        let expected_value: Value = obj.into();
+        assert_eq!(expected_value, val);
+    }
+
+    #[test]
+    fn avro_3642_test_single_object_reader_incomplete_reads() {
+        let obj = TestSingleObjectReader {
+            a: 42,
+            b: 3.33,
+            c: vec!["cat".into(), "dog".into()],
+        };
+        // The two-byte marker, to show that the message uses this single-record format
+        let to_read_1 = vec![0xC3, 0x01];
+        let mut to_read_2 = Vec::<u8>::new();
+        to_read_2.extend_from_slice(
+            &TestSingleObjectReader::get_schema()
+                .fingerprint::<Rabin>()
+                .bytes[..],
+        );
+        let mut to_read_3 = Vec::<u8>::new();
+        encode(
+            &obj.clone().into(),
+            &TestSingleObjectReader::get_schema(),
+            &mut to_read_3,
+        )
+        .expect("Encode should succeed");
+        let mut to_read = (&to_read_1[..]).chain(&to_read_2[..]).chain(&to_read_3[..]);
         let generic_reader = GenericSingleObjectReader::new(TestSingleObjectReader::get_schema())
             .expect("Schema should resolve");
         let val = generic_reader

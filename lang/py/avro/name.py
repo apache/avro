@@ -53,7 +53,9 @@ class Name:
     _full: Optional[str] = None
     _name: Optional[str] = None
 
-    def __init__(self, name_attr: Optional[str] = None, space_attr: Optional[str] = None, default_space: Optional[str] = None) -> None:
+    def __init__(
+        self, name_attr: Optional[str] = None, space_attr: Optional[str] = None, default_space: Optional[str] = None, validate_name: bool = True
+    ) -> None:
         """The fullname is determined in one of the following ways:
 
         - A name and namespace are both specified. For example, one might use "name": "X",
@@ -87,7 +89,8 @@ class Name:
             if "." in name_attr or space_attr == "" or not (space_attr or default_space)
             else f"{space_attr or default_space!s}.{name_attr!s}"
         )
-        _validate_fullname(self._full)
+        if validate_name:
+            _validate_fullname(self._full)
 
     def __eq__(self, other: object) -> bool:
         """Equality of names is defined on the fullname and is case-sensitive."""
@@ -117,16 +120,17 @@ class Names:
 
     names: Dict[str, "NamedSchema"]
 
-    def __init__(self, default_namespace: Optional[str] = None) -> None:
+    def __init__(self, default_namespace: Optional[str] = None, validate_names: bool = True) -> None:
         self.names = {}
         self.default_namespace = default_namespace
+        self.validate_names = validate_names
 
     def has_name(self, name_attr: str, space_attr: Optional[str] = None) -> bool:
-        test = Name(name_attr, space_attr, self.default_namespace).fullname
+        test = Name(name_attr, space_attr, self.default_namespace, validate_name=self.validate_names).fullname
         return test in self.names
 
     def get_name(self, name_attr: str, space_attr: Optional[str] = None) -> Optional["NamedSchema"]:
-        test = Name(name_attr, space_attr, self.default_namespace).fullname
+        test = Name(name_attr, space_attr, self.default_namespace, validate_name=self.validate_names).fullname
         return None if test is None else self.names.get(test)
 
     def prune_namespace(self, properties: Dict[str, object]) -> Dict[str, object]:
@@ -158,7 +162,7 @@ class Names:
 
         @return: the Name that was just added.
         """
-        to_add = Name(name_attr, space_attr, self.default_namespace)
+        to_add = Name(name_attr, space_attr, self.default_namespace, validate_name=self.validate_names)
 
         if to_add.fullname in PRIMITIVE_TYPES:
             raise avro.errors.SchemaParseException(f"{to_add.fullname} is a reserved type name.")

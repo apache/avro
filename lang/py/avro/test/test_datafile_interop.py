@@ -42,7 +42,6 @@ class TestDataFileInterop(unittest.TestCase):
                 continue
             i = None
             with self.subTest(filename=filename), avro.datafile.DataFileReader(filename.open("rb"), avro.io.DatumReader()) as dfr:
-
                 user_metadata = dfr.get_meta("user_metadata")
                 if user_metadata is not None:
                     self.assertEqual(user_metadata, b"someByteArray")

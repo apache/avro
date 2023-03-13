@@ -21,8 +21,10 @@ import java.util.Random;
 
 import java.nio.ByteBuffer;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class TestUtil {
 
@@ -82,7 +84,7 @@ public class TestUtil {
   }
 
   @Test
-  public void testRandomLength() {
+  void randomLength() {
     long total = 0;
     int count = 1024 * 1024;
     int min = Short.MAX_VALUE;
@@ -96,12 +98,12 @@ public class TestUtil {
         max = length;
       total += length;
     }
-    Assert.assertEquals(0, min);
-    Assert.assertTrue(max > 1024 * 32);
+    assertEquals(0, min);
+    assertTrue(max > 1024 * 32);
 
     float average = total / (float) count;
-    Assert.assertTrue(average > 16.0f);
-    Assert.assertTrue(average < 64.0f);
+    assertTrue(average > 16.0f);
+    assertTrue(average < 64.0f);
 
   }
 

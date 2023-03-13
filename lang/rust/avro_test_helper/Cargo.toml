@@ -18,7 +18,8 @@
 [package]
 name = "apache-avro-test-helper"
 version = "0.15.0"
-edition = "2018"
+edition = "2021"
+rust-version = "1.60.0"
 description = "Apache Avro tests helper."
 authors = ["Apache Avro team <dev@avro.apache.org>"]
 license = "Apache-2.0"
@@ -31,8 +32,8 @@ documentation = "https://docs.rs/apache-avro-test-helper"
 
 [dependencies]
 color-backtrace = { default-features = false, version = "0.5.1" }
-ctor = { default-features = false, version = "0.1.23" }
-env_logger = { default-features = false, version = "0.9.1" }
+ctor = { default-features = false, version = "0.1.26" }
+env_logger = { default-features = false, version = "0.10.0" }
 lazy_static = { default-features = false, version = "1.4.0" }
 log = { default-features = false, version = "0.4.17" }
 ref_thread_local = { default-features = false, version = "0.1.1" }

@@ -38,14 +38,13 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestRecordWithUnion;
 import org.apache.avro.test.TestRecord;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSpecificDatumWriter {
   @Test
-  public void testResolveUnion() throws IOException {
+  void resolveUnion() throws IOException {
     final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<>();
     Schema schema = TestRecordWithUnion.SCHEMA$;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -65,7 +64,7 @@ public class TestSpecificDatumWriter {
   }
 
   @Test
-  public void testIncompleteRecord() throws IOException {
+  void incompleteRecord() throws IOException {
     final SpecificDatumWriter<TestRecord> writer = new SpecificDatumWriter<>();
     Schema schema = TestRecord.SCHEMA$;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -88,83 +87,89 @@ public class TestSpecificDatumWriter {
   }
 
   @Test
-  public void testNestedNPEErrorClarity() throws Exception {
+  void nestedNPEErrorClarity() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setStrField(null);
     try {
       writeObject(topLevelRecord, false);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (NullPointerException expected) {
-      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"));
+      assertTrue(
+          expected.getMessage()
+              .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].strField"),
+          "unexpected message " + expected.getMessage());
     }
   }
 
   @Test
-  public void testNestedNPEErrorClarityWithCustomCoders() throws Exception {
+  void nestedNPEErrorClarityWithCustomCoders() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null);
     try {
       writeObject(topLevelRecord, true);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (NullPointerException expected) {
-      Assert.assertTrue("unexpected message " + expected.getMessage(),
-          expected.getMessage().contains("custom coders were used"));
+      assertTrue(expected.getMessage().contains("custom coders were used"),
+          "unexpected message " + expected.getMessage());
     }
   }
 
   @Test
-  public void testNPEForMapKeyErrorClarity() throws Exception {
+  void nPEForMapKeyErrorClarity() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     Map<String, MapRecord> map = topLevelRecord.getUnionField().getArrayField().get(0).getMapField();
     map.put(null, map.get("a")); // value is valid, but key is null
     try {
       writeObject(topLevelRecord, false);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (NullPointerException expected) {
-      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("null key in map at RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField"));
+      assertTrue(
+          expected.getMessage()
+              .contains("null key in map at RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField"),
+          "unexpected message " + expected.getMessage());
     }
   }
 
   @Test
-  public void testNPEForMapKeyErrorClarityWithCustomCoders() throws Exception {
+  void nPEForMapKeyErrorClarityWithCustomCoders() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     Map<String, MapRecord> map = topLevelRecord.getUnionField().getArrayField().get(0).getMapField();
     map.put(null, map.get("a")); // value is valid, but key is null
     try {
       writeObject(topLevelRecord, true);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (NullPointerException expected) {
-      Assert.assertTrue("unexpected message " + expected.getMessage(),
-          expected.getMessage().contains("custom coders were used"));
+      assertTrue(expected.getMessage().contains("custom coders were used"),
+          "unexpected message " + expected.getMessage());
     }
   }
 
   @Test
-  public void testNestedATEErrorClarity() throws Exception {
+  void nestedATEErrorClarity() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null); // not an enum
     try {
       writeObject(topLevelRecord, false);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (AvroTypeException expected) {
-      Assert.assertTrue("unexpected message " + expected.getMessage(), expected.getMessage()
-          .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].enumField"));
+      assertTrue(
+          expected.getMessage()
+              .contains("RecordWithRequiredFields.unionField[UnionRecord].arrayField[0].mapField[\"a\"].enumField"),
+          "unexpected message " + expected.getMessage());
     }
   }
 
   @Test
-  public void testNestedATEErrorClarityWithCustomCoders() throws Exception {
+  void nestedATEErrorClarityWithCustomCoders() throws Exception {
     RecordWithRequiredFields topLevelRecord = buildComplexRecord();
     topLevelRecord.getUnionField().getArrayField().get(0).getMapField().get("a").setEnumField(null); // not an enum
     try {
       writeObject(topLevelRecord, true);
-      Assert.fail("expected to throw");
+      fail("expected to throw");
     } catch (NullPointerException expected) {
       // with custom coders this gets us an NPE ...
-      Assert.assertTrue("unexpected message " + expected.getMessage(),
-          expected.getMessage().contains("custom coders were used"));
+      assertTrue(expected.getMessage().contains("custom coders were used"),
+          "unexpected message " + expected.getMessage());
     }
   }
 

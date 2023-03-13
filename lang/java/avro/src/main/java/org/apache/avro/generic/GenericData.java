@@ -26,14 +26,14 @@ import java.time.temporal.Temporal;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
@@ -58,6 +58,9 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
+
+import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
 /**
  * Utilities for generic Java data. See {@link GenericRecordBuilder} for a
@@ -704,7 +707,7 @@ public class GenericData {
       ByteBuffer bytes = ((ByteBuffer) datum).duplicate();
       writeEscapedString(StandardCharsets.ISO_8859_1.decode(bytes), buffer);
       buffer.append("\"");
-    } else if (isNanOrInfinity(datum) || isTemporal(datum)) {
+    } else if (isNanOrInfinity(datum) || isTemporal(datum) || datum instanceof UUID) {
       buffer.append("\"");
       buffer.append(datum);
       buffer.append("\"");
@@ -1092,39 +1095,62 @@ public class GenericData {
    * {@link #compare(Object,Object,Schema)}.
    */
   public int hashCode(Object o, Schema s) {
-    if (o == null)
-      return 0; // incomplete datum
-    int hashCode = 1;
-    switch (s.getType()) {
-    case RECORD:
-      for (Field f : s.getFields()) {
-        if (f.order() == Field.Order.IGNORE)
-          continue;
-        hashCode = hashCodeAdd(hashCode, getField(o, f.name(), f.pos()), f.schema());
-      }
-      return hashCode;
-    case ARRAY:
-      Collection<?> a = (Collection<?>) o;
-      Schema elementType = s.getElementType();
-      for (Object e : a)
-        hashCode = hashCodeAdd(hashCode, e, elementType);
-      return hashCode;
-    case UNION:
-      return hashCode(o, s.getTypes().get(resolveUnion(s, o)));
-    case ENUM:
-      return s.getEnumOrdinal(o.toString());
-    case NULL:
-      return 0;
-    case STRING:
-      return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
-    default:
-      return o.hashCode();
-    }
+    HashCodeCalculator calculator = new HashCodeCalculator();
+    return calculator.hashCode(o, s);
   }
 
-  /** Add the hash code for an object into an accumulated hash code. */
-  protected int hashCodeAdd(int hashCode, Object o, Schema s) {
-    return 31 * hashCode + hashCode(o, s);
+  class HashCodeCalculator {
+    private int counter = 10;
+
+    private int currentHashCode = 1;
+
+    public int hashCode(Object o, Schema s) {
+      if (o == null)
+        return 0; // incomplete datum
+
+      switch (s.getType()) {
+      case RECORD:
+        for (Field f : s.getFields()) {
+          if (this.shouldStop()) {
+            return this.currentHashCode;
+          }
+          if (f.order() == Field.Order.IGNORE)
+            continue;
+          Object fieldValue = ((IndexedRecord) o).get(f.pos());
+          this.currentHashCode = this.hashCodeAdd(fieldValue, f.schema());
+        }
+        return currentHashCode;
+      case ARRAY:
+        Collection<?> a = (Collection<?>) o;
+        Schema elementType = s.getElementType();
+        for (Object e : a) {
+          if (this.shouldStop()) {
+            return currentHashCode;
+          }
+          currentHashCode = this.hashCodeAdd(e, elementType);
+        }
+        return currentHashCode;
+      case UNION:
+        return hashCode(o, s.getTypes().get(GenericData.this.resolveUnion(s, o)));
+      case ENUM:
+        return s.getEnumOrdinal(o.toString());
+      case NULL:
+        return 0;
+      case STRING:
+        return (o instanceof Utf8 ? o : new Utf8(o.toString())).hashCode();
+      default:
+        return o.hashCode();
+      }
+    }
+
+    /** Add the hash code for an object into an accumulated hash code. */
+    protected int hashCodeAdd(Object o, Schema s) {
+      return 31 * this.currentHashCode + hashCode(o, s);
+    }
+
+    private boolean shouldStop() {
+      return --counter <= 0;
+    }
   }
 
   /**
@@ -1134,6 +1160,69 @@ public class GenericData {
    */
   public int compare(Object o1, Object o2, Schema s) {
     return compare(o1, o2, s, false);
+  }
+
+  protected int compareMaps(final Map<?, ?> m1, final Map<?, ?> m2) {
+    if (m1 == m2) {
+      return 0;
+    }
+
+    if (m2.size() != m2.size()) {
+      return 1;
+    }
+
+    /**
+     * Peek at keys, assuming they're all the same type within a Map
+     */
+    final Object key1 = m1.keySet().iterator().next();
+    final Object key2 = m2.keySet().iterator().next();
+    boolean utf8ToString = false;
+    boolean stringToUtf8 = false;
+
+    if (key1 instanceof Utf8 && key2 instanceof String) {
+      utf8ToString = true;
+    } else if (key1 instanceof String && key2 instanceof Utf8) {
+      stringToUtf8 = true;
+    }
+
+    try {
+      for (Map.Entry e : m1.entrySet()) {
+        final Object key = e.getKey();
+        Object lookupKey = key;
+        if (utf8ToString) {
+          lookupKey = key.toString();
+        } else if (stringToUtf8) {
+          lookupKey = new Utf8((String) lookupKey);
+        }
+        final Object value = e.getValue();
+        if (value == null) {
+          if (!(m2.get(lookupKey) == null && m2.containsKey(lookupKey))) {
+            return 1;
+          }
+        } else {
+          final Object value2 = m2.get(lookupKey);
+          if (value instanceof Utf8 && value2 instanceof String) {
+            if (!value.toString().equals(value2)) {
+              return 1;
+            }
+          } else if (value instanceof String && value2 instanceof Utf8) {
+            if (!new Utf8((String) value).equals(value2)) {
+              return 1;
+            }
+          } else {
+            if (!value.equals(value2)) {
+              return 1;
+            }
+          }
+        }
+      }
+    } catch (ClassCastException unused) {
+      return 1;
+    } catch (NullPointerException unused) {
+      return 1;
+    }
+
+    return 0;
   }
 
   /**
@@ -1172,7 +1261,7 @@ public class GenericData {
       return e1.hasNext() ? 1 : (e2.hasNext() ? -1 : 0);
     case MAP:
       if (equals)
-        return o1.equals(o2) ? 0 : 1;
+        return compareMaps((Map) o1, (Map) o2);
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION:
       int i1 = resolveUnion(s, o1);
@@ -1189,7 +1278,7 @@ public class GenericData {
     }
   }
 
-  private final Map<Field, Object> defaultValueCache = Collections.synchronizedMap(new WeakHashMap<>());
+  private final ConcurrentMap<Field, Object> defaultValueCache = new ConcurrentReferenceHashMap<>(128, WEAK);
 
   /**
    * Gets the default value of the given field, if any.
@@ -1209,28 +1298,20 @@ public class GenericData {
     }
 
     // Check the cache
-    Object defaultValue = defaultValueCache.get(field);
-
     // If not cached, get the default Java value by encoding the default JSON
     // value and then decoding it:
-    if (defaultValue == null)
+    return defaultValueCache.computeIfAbsent(field, fieldToGetValueFor -> {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        Accessor.encode(encoder, field.schema(), json);
+        Accessor.encode(encoder, fieldToGetValueFor.schema(), json);
         encoder.flush();
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
-        defaultValue = createDatumReader(field.schema()).read(null, decoder);
-
-        // this MAY result in two threads creating the same defaultValue
-        // and calling put. The last thread will win. However,
-        // that's not an issue.
-        defaultValueCache.put(field, defaultValue);
+        return createDatumReader(fieldToGetValueFor.schema()).read(null, decoder);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
       }
-
-    return defaultValue;
+    });
   }
 
   private static final Schema STRINGS = Schema.create(Type.STRING);

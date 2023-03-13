@@ -21,42 +21,42 @@ package org.apache.avro;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsMapContaining;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestLogicalType {
 
   @Test
-  public void testDecimalFromSchema() {
+  void decimalFromSchema() {
     Schema schema = Schema.createFixed("aFixed", null, null, 4);
     schema.addProp("logicalType", "decimal");
     schema.addProp("precision", 9);
     schema.addProp("scale", 2);
     LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(schema);
 
-    Assert.assertTrue("Should be a Decimal", logicalType instanceof LogicalTypes.Decimal);
+    assertTrue(logicalType instanceof LogicalTypes.Decimal, "Should be a Decimal");
     LogicalTypes.Decimal decimal = (LogicalTypes.Decimal) logicalType;
-    Assert.assertEquals("Should have correct precision", 9, decimal.getPrecision());
-    Assert.assertEquals("Should have correct scale", 2, decimal.getScale());
+    assertEquals(9, decimal.getPrecision(), "Should have correct precision");
+    assertEquals(2, decimal.getScale(), "Should have correct scale");
   }
 
   @Test
-  public void testInvalidLogicalTypeIgnored() {
+  void invalidLogicalTypeIgnored() {
     final Schema schema = Schema.createFixed("aFixed", null, null, 2);
     schema.addProp("logicalType", "decimal");
     schema.addProp("precision", 9);
     schema.addProp("scale", 2);
 
-    Assert.assertNull("Should ignore invalid logical type", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Should ignore invalid logical type");
   }
 
   @Test
-  public void testDecimalWithNonByteArrayTypes() {
+  void decimalWithNonByteArrayTypes() {
     final LogicalType decimal = LogicalTypes.decimal(5, 2);
     // test simple types
     Schema[] nonBytes = new Schema[] { Schema.createRecord("Record", null, null, false),
@@ -76,25 +76,26 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testUnknownFromJsonNode() {
+  void unknownFromJsonNode() {
     Schema schema = Schema.create(Schema.Type.STRING);
     schema.addProp("logicalType", "unknown");
     schema.addProp("someProperty", 34);
     LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(schema);
-    Assert.assertNull("Should not return a LogicalType instance", logicalType);
+    assertNull(logicalType, "Should not return a LogicalType instance");
   }
 
   @Test
-  public void testDecimalBytesHasNoPrecisionLimit() {
+  void decimalBytesHasNoPrecisionLimit() {
     Schema schema = Schema.create(Schema.Type.BYTES);
     // precision is not limited for bytes
     LogicalTypes.decimal(Integer.MAX_VALUE).addToSchema(schema);
-    Assert.assertEquals("Precision should be an Integer.MAX_VALUE", Integer.MAX_VALUE,
-        ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getPrecision());
+    assertEquals(Integer.MAX_VALUE,
+        ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getPrecision(),
+        "Precision should be an Integer.MAX_VALUE");
   }
 
   @Test
-  public void testDecimalFixedPrecisionLimit() {
+  void decimalFixedPrecisionLimit() {
     // 4 bytes can hold up to 9 digits of precision
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class, "fixed(4) cannot store 10 digits (max 9)",
@@ -102,7 +103,7 @@ public class TestLogicalType {
           LogicalTypes.decimal(10).addToSchema(schema);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Invalid logical type should not be set on schema");
 
     // 129 bytes can hold up to 310 digits of precision
     final Schema schema129 = Schema.createFixed("aDecimal", null, null, 129);
@@ -111,56 +112,55 @@ public class TestLogicalType {
           LogicalTypes.decimal(311).addToSchema(schema129);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema",
-        LogicalTypes.fromSchemaIgnoreInvalid(schema129));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema129), "Invalid logical type should not be set on schema");
   }
 
   @Test
-  public void testDecimalFailsWithZeroPrecision() {
+  void decimalFailsWithZeroPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
         "Invalid decimal precision: 0 (must be positive)", () -> {
           LogicalTypes.decimal(0).addToSchema(schema);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Invalid logical type should not be set on schema");
   }
 
   @Test
-  public void testDecimalFailsWithNegativePrecision() {
+  void decimalFailsWithNegativePrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
         "Invalid decimal precision: -9 (must be positive)", () -> {
           LogicalTypes.decimal(-9).addToSchema(schema);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Invalid logical type should not be set on schema");
   }
 
   @Test
-  public void testDecimalScaleBoundedByPrecision() {
+  void decimalScaleBoundedByPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
         "Invalid decimal scale: 10 (greater than precision: 9)", () -> {
           LogicalTypes.decimal(9, 10).addToSchema(schema);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Invalid logical type should not be set on schema");
   }
 
   @Test
-  public void testDecimalFailsWithNegativeScale() {
+  void decimalFailsWithNegativeScale() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
         "Invalid decimal scale: -2 (must be positive)", () -> {
           LogicalTypes.decimal(9, -2).addToSchema(schema);
           return null;
         });
-    Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertNull(LogicalTypes.fromSchemaIgnoreInvalid(schema), "Invalid logical type should not be set on schema");
   }
 
   @Test
-  public void testSchemaRejectsSecondLogicalType() {
+  void schemaRejectsSecondLogicalType() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     LogicalTypes.decimal(9).addToSchema(schema);
     assertThrows("Should reject second logical type", AvroRuntimeException.class, "Can't overwrite property: scale",
@@ -168,37 +168,37 @@ public class TestLogicalType {
           LogicalTypes.decimal(9, 2).addToSchema(schema);
           return null;
         });
-    Assert.assertEquals("First logical type should still be set on schema", LogicalTypes.decimal(9),
-        LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    assertEquals(LogicalTypes.decimal(9), LogicalTypes.fromSchemaIgnoreInvalid(schema),
+        "First logical type should still be set on schema");
   }
 
   @Test
-  public void testDecimalDefaultScale() {
+  void decimalDefaultScale() {
     Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     // 4 bytes can hold up to 9 digits of precision
     LogicalTypes.decimal(9).addToSchema(schema);
-    Assert.assertEquals("Scale should be a 0", 0,
-        ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getScale());
+    assertEquals(0, ((LogicalTypes.Decimal) LogicalTypes.fromSchemaIgnoreInvalid(schema)).getScale(),
+        "Scale should be a 0");
   }
 
   @Test
-  public void testFixedDecimalToFromJson() {
+  void fixedDecimalToFromJson() {
     Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
     Schema parsed = new Schema.Parser().parse(schema.toString(true));
-    Assert.assertEquals("Constructed and parsed schemas should match", schema, parsed);
+    assertEquals(schema, parsed, "Constructed and parsed schemas should match");
   }
 
   @Test
-  public void testBytesDecimalToFromJson() {
+  void bytesDecimalToFromJson() {
     Schema schema = Schema.create(Schema.Type.BYTES);
     LogicalTypes.decimal(9, 2).addToSchema(schema);
     Schema parsed = new Schema.Parser().parse(schema.toString(true));
-    Assert.assertEquals("Constructed and parsed schemas should match", schema, parsed);
+    assertEquals(schema, parsed, "Constructed and parsed schemas should match");
   }
 
   @Test
-  public void testLogicalTypeEquals() {
+  void logicalTypeEquals() {
     LogicalTypes.Decimal decimal90 = LogicalTypes.decimal(9);
     LogicalTypes.Decimal decimal80 = LogicalTypes.decimal(8);
     LogicalTypes.Decimal decimal92 = LogicalTypes.decimal(9, 2);
@@ -212,12 +212,12 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testLogicalTypeInSchemaEquals() {
+  void logicalTypeInSchemaEquals() {
     Schema schema1 = Schema.createFixed("aDecimal", null, null, 4);
     Schema schema2 = Schema.createFixed("aDecimal", null, null, 4);
     Schema schema3 = Schema.createFixed("aDecimal", null, null, 4);
-    Assert.assertNotSame(schema1, schema2);
-    Assert.assertNotSame(schema1, schema3);
+    assertNotSame(schema1, schema2);
+    assertNotSame(schema1, schema3);
     assertEqualsTrue("No logical types", schema1, schema2);
     assertEqualsTrue("No logical types", schema1, schema3);
 
@@ -232,7 +232,7 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testRegisterLogicalTypeThrowsIfTypeNameNotProvided() {
+  void registerLogicalTypeThrowsIfTypeNameNotProvided() {
     assertThrows("Should error if type name was not provided", UnsupportedOperationException.class,
         "LogicalTypeFactory TypeName has not been provided", () -> {
           LogicalTypes.register(schema -> LogicalTypes.date());
@@ -241,7 +241,7 @@ public class TestLogicalType {
   }
 
   @Test
-  public void testRegisterLogicalTypeWithName() {
+  void registerLogicalTypeWithName() {
     final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
       @Override
       public LogicalType fromSchema(Schema schema) {
@@ -256,11 +256,11 @@ public class TestLogicalType {
 
     LogicalTypes.register("registered", factory);
 
-    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("registered", factory));
+    assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("registered", factory));
   }
 
   @Test
-  public void testRegisterLogicalTypeWithFactoryName() {
+  void registerLogicalTypeWithFactoryName() {
     final LogicalTypes.LogicalTypeFactory factory = new LogicalTypes.LogicalTypeFactory() {
       @Override
       public LogicalType fromSchema(Schema schema) {
@@ -275,33 +275,32 @@ public class TestLogicalType {
 
     LogicalTypes.register(factory);
 
-    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("factory", factory));
+    assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("factory", factory));
   }
 
   @Test
-  public void testRegisterLogicalTypeWithFactoryNameNotProvided() {
+  void registerLogicalTypeWithFactoryNameNotProvided() {
     final LogicalTypes.LogicalTypeFactory factory = schema -> LogicalTypes.date();
 
     LogicalTypes.register("logicalTypeName", factory);
 
-    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
-        IsMapContaining.hasEntry("logicalTypeName", factory));
+    assertThat(LogicalTypes.getCustomRegisteredTypes(), IsMapContaining.hasEntry("logicalTypeName", factory));
   }
 
   @Test
-  public void testRegisterLogicalTypeFactoryByServiceLoader() {
-    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
+  void registerLogicalTypeFactoryByServiceLoader() {
+    assertThat(LogicalTypes.getCustomRegisteredTypes(),
         IsMapContaining.hasEntry(equalTo("service-example"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
   }
 
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
-    Assert.assertEquals("Should be equal (forward): " + message, o1, o2);
-    Assert.assertEquals("Should be equal (reverse): " + message, o2, o1);
+    assertEquals(o1, o2, "Should be equal (forward): " + message);
+    assertEquals(o2, o1, "Should be equal (reverse): " + message);
   }
 
   public static void assertEqualsFalse(String message, Object o1, Object o2) {
-    Assert.assertNotEquals("Should be equal (forward): " + message, o1, o2);
-    Assert.assertNotEquals("Should be equal (reverse): " + message, o2, o1);
+    assertNotEquals(o1, o2, "Should be equal (forward): " + message);
+    assertNotEquals(o2, o1, "Should be equal (reverse): " + message);
   }
 
   /**
@@ -317,11 +316,11 @@ public class TestLogicalType {
       Callable<?> callable) {
     try {
       callable.call();
-      Assert.fail("No exception was thrown (" + message + "), expected: " + expected.getName());
+      fail("No exception was thrown (" + message + "), expected: " + expected.getName());
     } catch (Exception actual) {
-      Assert.assertEquals(message, expected, actual.getClass());
-      Assert.assertTrue("Expected exception message (" + containedInMessage + ") missing: " + actual.getMessage(),
-          actual.getMessage().contains(containedInMessage));
+      assertEquals(expected, actual.getClass(), message);
+      assertTrue(actual.getMessage().contains(containedInMessage),
+          "Expected exception message (" + containedInMessage + ") missing: " + actual.getMessage());
     }
   }
 }

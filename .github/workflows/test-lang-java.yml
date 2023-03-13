@@ -43,7 +43,6 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '18'
         - '19'
     steps:
       - uses: actions/checkout@v3
@@ -115,7 +114,7 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install --upgrade pip setuptools tox
           python3 -m pip install python-snappy zstandard
 
       - name: Setup C# for Generating Interop Data
@@ -125,6 +124,7 @@ jobs:
             3.1.x
             5.0.x
             6.0.x
+            7.0.x
 
       - name: Install Java Avro for Interop Test
         working-directory: .
@@ -152,4 +152,4 @@ jobs:
 
       - name: Test Reproducible Build
         working-directory: .
-        run: mvn clean verify -DskipTests artifact:compare
+        run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare

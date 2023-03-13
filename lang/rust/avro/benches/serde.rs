@@ -231,23 +231,17 @@ fn bench_from_file(c: &mut Criterion, file_path: &str, name: &str) -> anyhow::Re
 }
 
 fn bench_small_schema_write_1_record(c: &mut Criterion) {
-    bench_write(c, &make_small_record, 1, "small schema, write 1 record").unwrap();
+    bench_write(c, make_small_record, 1, "small schema, write 1 record").unwrap();
 }
 
 fn bench_small_schema_write_100_record(c: &mut Criterion) {
-    bench_write(
-        c,
-        &make_small_record,
-        100,
-        "small schema, write 100 records",
-    )
-    .unwrap();
+    bench_write(c, make_small_record, 100, "small schema, write 100 records").unwrap();
 }
 
 fn bench_small_schema_write_10_000_record(c: &mut Criterion) {
     bench_write(
         c,
-        &make_small_record,
+        make_small_record,
         10_000,
         "small schema, write 10k records",
     )
@@ -255,17 +249,17 @@ fn bench_small_schema_write_10_000_record(c: &mut Criterion) {
 }
 
 fn bench_small_schema_read_1_record(c: &mut Criterion) {
-    bench_read(c, &make_small_record, 1, "small schema, read 1 record").unwrap();
+    bench_read(c, make_small_record, 1, "small schema, read 1 record").unwrap();
 }
 
 fn bench_small_schema_read_100_record(c: &mut Criterion) {
-    bench_read(c, &make_small_record, 100, "small schema, read 100 records").unwrap();
+    bench_read(c, make_small_record, 100, "small schema, read 100 records").unwrap();
 }
 
 fn bench_small_schema_read_10_000_record(c: &mut Criterion) {
     bench_read(
         c,
-        &make_small_record,
+        make_small_record,
         10_000,
         "small schema, read 10k records",
     )
@@ -273,37 +267,31 @@ fn bench_small_schema_read_10_000_record(c: &mut Criterion) {
 }
 
 fn bench_big_schema_write_1_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 1, "big schema, write 1 record").unwrap();
+    bench_write(c, make_big_record, 1, "big schema, write 1 record").unwrap();
 }
 
 fn bench_big_schema_write_100_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 100, "big schema, write 100 records").unwrap();
+    bench_write(c, make_big_record, 100, "big schema, write 100 records").unwrap();
 }
 
 fn bench_big_schema_write_10_000_record(c: &mut Criterion) {
-    bench_write(c, &make_big_record, 10_000, "big schema, write 10k records").unwrap();
+    bench_write(c, make_big_record, 10_000, "big schema, write 10k records").unwrap();
 }
 
 fn bench_big_schema_read_1_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 1, "big schema, read 1 record").unwrap();
+    bench_read(c, make_big_record, 1, "big schema, read 1 record").unwrap();
 }
 
 fn bench_big_schema_read_100_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 100, "big schema, read 100 records").unwrap();
+    bench_read(c, make_big_record, 100, "big schema, read 100 records").unwrap();
 }
 
 fn bench_big_schema_read_10_000_record(c: &mut Criterion) {
-    bench_read(c, &make_big_record, 10_000, "big schema, read 10k records").unwrap();
+    bench_read(c, make_big_record, 10_000, "big schema, read 10k records").unwrap();
 }
 
 fn bench_big_schema_read_100_000_record(c: &mut Criterion) {
-    bench_read(
-        c,
-        &make_big_record,
-        100_000,
-        "big schema, read 100k records",
-    )
-    .unwrap();
+    bench_read(c, make_big_record, 100_000, "big schema, read 100k records").unwrap();
 }
 
 // This benchmark reads from the `benches/quickstop-null.avro` file, which was pulled from

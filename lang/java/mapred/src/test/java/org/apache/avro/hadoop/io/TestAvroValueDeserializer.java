@@ -18,7 +18,7 @@
 
 package org.apache.avro.hadoop.io;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,11 +30,11 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.mapred.AvroWrapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroValueDeserializer {
   @Test
-  public void testDeserialize() throws IOException {
+  void deserialize() throws IOException {
     // Create a deserializer.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Schema readerSchema = Schema.create(Schema.Type.STRING);

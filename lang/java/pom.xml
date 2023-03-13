@@ -38,28 +38,28 @@
 
     <!-- version properties for dependencies -->
     <hadoop.version>3.3.4</hadoop.version>
-    <jackson-bom.version>2.12.7.20221012</jackson-bom.version>
+    <jackson-bom.version>2.14.2</jackson-bom.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.49.v20220914</jetty.version>
+    <jetty.version>9.4.51.v20230217</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit5.version>5.9.1</junit5.version>
-    <netty.version>4.1.84.Final</netty.version>
-    <protobuf.version>3.21.7</protobuf.version>
+    <junit5.version>5.9.2</junit5.version>
+    <netty.version>4.1.89.Final</netty.version>
+    <protobuf.version>3.22.0</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <reload4j.version>1.2.22</reload4j.version>
-    <snappy.version>1.1.8.4</snappy.version>
+    <reload4j.version>1.2.24</reload4j.version>
+    <snappy.version>1.1.9.1</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
-    <ant.version>1.10.12</ant.version>
+    <ant.version>1.10.13</ant.version>
     <commons-cli.version>1.5.0</commons-cli.version>
-    <commons-compress.version>1.21</commons-compress.version>
+    <commons-compress.version>1.22</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
     <tukaani.version>1.9</tukaani.version>
-    <mockito.version>4.8.0</mockito.version>
+    <mockito.version>4.11.0</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.50.0</grpc.version>
-    <zstd-jni.version>1.5.2-4</zstd-jni.version>
+    <grpc.version>1.53.0</grpc.version>
+    <zstd-jni.version>1.5.4-2</zstd-jni.version>
     <jetbrains-annotations.version>23.0.0</jetbrains-annotations.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
@@ -68,6 +68,7 @@
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.12</javacc.version>
+    <cyclonedx-maven-plugin.version>2.7.5</cyclonedx-maven-plugin.version>
   </properties>
 
   <modules>
@@ -157,7 +158,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M7</version>
+          <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
@@ -233,6 +234,11 @@
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
           <version>${spotless-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.cyclonedx</groupId>
+          <artifactId>cyclonedx-maven-plugin</artifactId>
+          <version>${cyclonedx-maven-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -321,6 +327,18 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>makeBom</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -331,7 +349,9 @@
     <profile>
       <id>m2e</id>
       <activation>
-        <property><name>m2e.version</name></property>
+        <property>
+          <name>m2e.version</name>
+        </property>
       </activation>
       <build>
         <pluginManagement>
@@ -365,7 +385,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -378,7 +398,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -391,7 +411,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -406,7 +426,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <ignore />
+                        <ignore/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
@@ -446,7 +466,7 @@
       <id>mac</id>
       <activation>
         <os>
-        <family>mac</family>
+          <family>mac</family>
         </os>
       </activation>
       <build>
@@ -498,9 +518,9 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-servlet</artifactId>
-          <version>${jetty.version}</version>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
@@ -508,9 +528,9 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-          <version>${servlet-api.version}</version>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>${servlet-api.version}</version>
       </dependency>
       <dependency>
         <groupId>net.sf.jopt-simple</groupId>
@@ -603,6 +623,7 @@
       <version>${junit5.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

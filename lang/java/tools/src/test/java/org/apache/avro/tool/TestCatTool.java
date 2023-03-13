@@ -18,8 +18,9 @@
 package org.apache.avro.tool;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,8 +44,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TestName;
 
 public class TestCatTool {
@@ -52,8 +53,8 @@ public class TestCatTool {
   @Rule
   public TestName name = new TestName();
 
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   private static final int ROWS_IN_INPUT_FILES = 100000;
   private static final int OFFSET = 1000;
@@ -86,7 +87,7 @@ public class TestCatTool {
   }
 
   private File generateData(String file, Type type, Map<String, String> metadata, CodecFactory codec) throws Exception {
-    File inputFile = new File(DIR.getRoot(), file);
+    File inputFile = new File(DIR, file);
     inputFile.deleteOnExit();
 
     Schema schema = null;
@@ -135,7 +136,7 @@ public class TestCatTool {
   }
 
   @Test
-  public void testCat() throws Exception {
+  void cat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
@@ -143,7 +144,7 @@ public class TestCatTool {
     File input2 = generateData("input2.avro", Type.INT, metadata, SNAPPY);
     File input3 = generateData("input3.avro", Type.INT, metadata, DEFLATE);
 
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
 //    file input
@@ -171,12 +172,12 @@ public class TestCatTool {
   }
 
   @Test
-  public void testLimitOutOfBounds() throws Exception {
+  void limitOutOfBounds() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(input1.getAbsolutePath(), "--offset=" + String.valueOf(OFFSET),
@@ -187,12 +188,12 @@ public class TestCatTool {
   }
 
   @Test
-  public void testSamplerateAccuracy() throws Exception {
+  void samplerateAccuracy() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(input1.getAbsolutePath(), output.getAbsolutePath(), "--offset", String.valueOf(OFFSET),
@@ -200,18 +201,18 @@ public class TestCatTool {
     int returnCode = new CatTool().run(System.in, System.out, System.err, args);
     assertEquals(0, returnCode);
 
-    assertTrue("Outputsize is not roughly (Inputsize - Offset) * samplerate",
-        (ROWS_IN_INPUT_FILES - OFFSET) * SAMPLERATE - numRowsInFile(output) < 2);
-    assertTrue("", (ROWS_IN_INPUT_FILES - OFFSET) * SAMPLERATE - numRowsInFile(output) > -2);
+    assertTrue((ROWS_IN_INPUT_FILES - OFFSET) * SAMPLERATE - numRowsInFile(output) < 2,
+        "Outputsize is not roughly (Inputsize - Offset) * samplerate");
+    assertTrue((ROWS_IN_INPUT_FILES - OFFSET) * SAMPLERATE - numRowsInFile(output) > -2, "");
   }
 
   @Test
-  public void testOffSetAccuracy() throws Exception {
+  void offSetAccuracy() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(input1.getAbsolutePath(), "--offset", String.valueOf(OFFSET), "--limit",
@@ -219,32 +220,32 @@ public class TestCatTool {
         output.getAbsolutePath());
     int returnCode = new CatTool().run(System.in, System.out, System.err, args);
     assertEquals(0, returnCode);
-    assertEquals("output does not start at offset", OFFSET, getFirstIntDatum(output));
+    assertEquals(OFFSET, getFirstIntDatum(output), "output does not start at offset");
   }
 
   @Test
-  public void testOffsetBiggerThanInput() throws Exception {
+  void offsetBiggerThanInput() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(input1.getAbsolutePath(), "--offset", String.valueOf(ROWS_IN_INPUT_FILES + 1),
         output.getAbsolutePath());
     int returnCode = new CatTool().run(System.in, System.out, System.err, args);
     assertEquals(0, returnCode);
-    assertEquals("output is not empty", 0, numRowsInFile(output));
+    assertEquals(0, numRowsInFile(output), "output is not empty");
   }
 
   @Test
-  public void testSamplerateSmallerThanInput() throws Exception {
+  void samplerateSmallerThanInput() throws Exception {
     Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
+    File output = new File(DIR, name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(input1.getAbsolutePath(), output.getAbsolutePath(),
@@ -252,26 +253,28 @@ public class TestCatTool {
     int returnCode = new CatTool().run(System.in, System.out, System.err, args);
     assertEquals(0, returnCode);
 
-    assertEquals("output should only contain the record at offset", OFFSET, getFirstIntDatum(output));
-  }
-
-  @Test(expected = IOException.class)
-  public void testDifferentSchemasFail() throws Exception {
-    Map<String, String> metadata = new HashMap<>();
-    metadata.put("myMetaKey", "myMetaValue");
-
-    File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
-    File input2 = generateData("input2.avro", Type.INT, metadata, DEFLATE);
-
-    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
-    output.deleteOnExit();
-
-    List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
-    new CatTool().run(System.in, System.out, System.err, args);
+    assertEquals(OFFSET, getFirstIntDatum(output), "output should only contain the record at offset");
   }
 
   @Test
-  public void testHelpfulMessageWhenNoArgsGiven() throws Exception {
+  void differentSchemasFail() throws Exception {
+    assertThrows(IOException.class, () -> {
+      Map<String, String> metadata = new HashMap<>();
+      metadata.put("myMetaKey", "myMetaValue");
+
+      File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
+      File input2 = generateData("input2.avro", Type.INT, metadata, DEFLATE);
+
+      File output = new File(DIR, name.getMethodName() + ".avro");
+      output.deleteOnExit();
+
+      List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
+      new CatTool().run(System.in, System.out, System.err, args);
+    });
+  }
+
+  @Test
+  void helpfulMessageWhenNoArgsGiven() throws Exception {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024);
     int returnCode;
     try (PrintStream out = new PrintStream(buffer)) {
@@ -279,6 +282,6 @@ public class TestCatTool {
     }
 
     assertEquals(0, returnCode);
-    assertTrue("should have lots of help", buffer.toString().trim().length() > 200);
+    assertTrue(buffer.toString().trim().length() > 200, "should have lots of help");
   }
 }

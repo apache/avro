@@ -11,14 +11,13 @@ The following packages must be installed before Avro can be built:
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
  - C#: .NET Core 2.2 SDK
  - JavaScript: Node 12.x+, nodejs, npm
- - Ruby: Ruby 2.6 or greater, ruby-dev, gem, bundler, snappy
+ - Ruby: Ruby 2.7 or greater, ruby-dev, gem, bundler, snappy
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
    Module::Install::ReadmeFromPod, Module::Install::Repository,
    Math::BigInt, JSON::XS, Try::Tiny, Regexp::Common, Encode,
    IO::String, Object::Tiny, Compress::ZLib, Error::Simple,
    Test::More, Test::Exception, Test::Pod
  - Apache Ant 1.7
- - Apache Forrest 0.9 (for documentation)
  - md5sum, sha1sum, used by top-level dist target
 
 ## Using docker
