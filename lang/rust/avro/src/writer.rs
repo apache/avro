@@ -75,6 +75,25 @@ impl<'a, W: Write> Writer<'a, W> {
         w
     }
 
+    /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
+    /// `io::Write` trait to write to.
+    /// If the `schema` is incomplete, i.e. contains `Schema::Ref`s then all dependencies must
+    /// be provided in `schemata`.
+    pub fn with_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        writer: W,
+        codec: Codec,
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .build();
+        w.resolved_schema = ResolvedSchema::try_from(schemata).ok();
+        w
+    }
+
     /// Creates a `Writer` that will append values to already populated
     /// `std::io::Write` using the provided `marker`
     /// No compression `Codec` will be used.
@@ -98,6 +117,26 @@ impl<'a, W: Write> Writer<'a, W> {
             .build();
         w.has_header = true;
         w.resolved_schema = ResolvedSchema::try_from(schema).ok();
+        w
+    }
+
+    /// Creates a `Writer` that will append values to already populated
+    /// `std::io::Write` using the provided `marker`
+    pub fn append_to_with_codec_schemata(
+        schema: &'a Schema,
+        schemata: Vec<&'a Schema>,
+        writer: W,
+        codec: Codec,
+        marker: [u8; 16],
+    ) -> Self {
+        let mut w = Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .marker(marker)
+            .build();
+        w.has_header = true;
+        w.resolved_schema = ResolvedSchema::try_from(schemata).ok();
         w
     }
 
@@ -134,7 +173,7 @@ impl<'a, W: Write> Writer<'a, W> {
         // Lazy init for users using the builder pattern with error throwing
         match self.resolved_schema {
             Some(ref rs) => {
-                write_value_ref_resolved(rs, value, &mut self.buffer)?;
+                write_value_ref_resolved(self.schema, rs, value, &mut self.buffer)?;
                 self.num_values += 1;
 
                 if self.buffer.len() >= self.block_size {
@@ -376,6 +415,22 @@ fn write_avro_datum<T: Into<Value>>(
     Ok(())
 }
 
+fn write_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
+    schemata: Vec<&Schema>,
+    value: T,
+    buffer: &mut Vec<u8>,
+) -> AvroResult<()> {
+    let avro = value.into();
+    let rs = ResolvedSchema::try_from(schemata)?;
+    let names = rs.get_names();
+    let enclosing_namespace = schema.namespace();
+    if let Some(_err) = avro.validate_internal(schema, names, &enclosing_namespace) {
+        return Err(Error::Validation);
+    }
+    encode_internal(&avro, schema, names, &enclosing_namespace, buffer)
+}
+
 /// Writer that encodes messages according to the single object encoding v1 spec
 /// Uses an API similar to the current File Writer
 /// Writes all object bytes at once, and drains internal buffer
@@ -484,26 +539,21 @@ where
 }
 
 fn write_value_ref_resolved(
+    schema: &Schema,
     resolved_schema: &ResolvedSchema,
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
-    let root_schema = resolved_schema.get_root_schema();
-    if let Some(err) = value.validate_internal(
-        root_schema,
-        resolved_schema.get_names(),
-        &root_schema.namespace(),
-    ) {
-        return Err(Error::ValidationWithReason(err));
+    match value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace()) {
+        Some(err) => Err(Error::ValidationWithReason(err)),
+        None => encode_internal(
+            value,
+            schema,
+            resolved_schema.get_names(),
+            &schema.namespace(),
+            buffer,
+        ),
     }
-    encode_internal(
-        value,
-        root_schema,
-        resolved_schema.get_names(),
-        &root_schema.namespace(),
-        buffer,
-    )?;
-    Ok(())
 }
 
 fn write_value_ref_owned_resolved(
@@ -538,6 +588,20 @@ fn write_value_ref_owned_resolved(
 pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Vec<u8>> {
     let mut buffer = Vec::new();
     write_avro_datum(schema, value, &mut buffer)?;
+    Ok(buffer)
+}
+
+/// Encode a compatible value (implementing the `ToAvro` trait) into Avro format, also
+/// performing schema validation.
+/// If the provided `schema` is incomplete then its dependencies must be
+/// provided in `schemata`
+pub fn to_avro_datum_schemata<T: Into<Value>>(
+    schema: &Schema,
+    schemata: Vec<&Schema>,
+    value: T,
+) -> AvroResult<Vec<u8>> {
+    let mut buffer = Vec::new();
+    write_avro_datum_schemata(schema, schemata, value, &mut buffer)?;
     Ok(buffer)
 }
 
