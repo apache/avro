@@ -30,20 +30,12 @@ categories.workspace = true
 documentation.workspace = true
 
 [features]
-<<<<<<< HEAD
 bzip = ["dep:bzip2"]
 derive = ["dep:apache-avro-derive"]
 snappy = ["dep:crc32fast", "dep:snap"]
 xz = ["dep:xz2"]
 zstandard = ["dep:zstd"]
-=======
-bzip = ["bzip2"]
-derive = ["apache-avro-derive"]
-snappy = ["crc32fast", "snap"]
-xz = ["xz2"]
-zstandard = ["zstd"]
-bytes = ["serde-byte-array"]
->>>>>>> 16129448b (AVRO-3531: Code formatting)
+bytes = ["serde-bytes"]
 
 [lib]
 # disable benchmarks to allow passing criterion arguments to `cargo bench`
@@ -73,7 +65,7 @@ log = { workspace = true }
 num-bigint = { default-features = false, version = "0.4.6", features = ["std", "serde"] }
 regex-lite = { default-features = false, version = "0.1.6", features = ["std", "string"] }
 serde = { workspace = true }
-serde_bytes = { default-features = false, version = "0.11" }
+serde_bytes = { default-features = false, version = "0.11", optional = true }
 serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.26.3" }
