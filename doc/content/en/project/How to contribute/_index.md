@@ -277,7 +277,7 @@ Contributors should join the Avro mailing lists. In particular, the commit list 
 
 ## Workflow
 
-Building and running the site locally requires a recent extended version of Hugo. Install Hugo for your environment. Once you've made your working copy of the site repo, from the repo root folder, run:
+Building and running the site locally requires a recent extended version of Hugo. Install [Hugo](https://gohugo.io/installation/) for your environment. Once you've made your working copy of the site repo, from the repo root folder, run:
 
 ```shell
 hugo server --navigateToChanged

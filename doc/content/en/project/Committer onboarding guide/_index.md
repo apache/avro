@@ -29,8 +29,8 @@ For you, the new committer:
 
 1. File your ICLA and send it to secretary@apache.org
 2. Log in to https://whimsy.apache.org; that will confirm a working ASF account
-3. you can edit email routing for the account, and add other emails that you own
-4. you can directly edit mailing list subscriptions (for example, you might switch them to your ASF account - you can still post from any of your registered emails)
+3. You can edit email routing for the account, and add other emails that you own
+4. You can directly edit mailing list subscriptions (for example, you might switch them to your ASF account - you can still post from any of your registered emails)
 5. Link your GitHub account with your ASF account at https://gitbox.apache.org/ once you see the big green "Merge" button on pull requests, this is working
 7. Read the ASF new committer guide: https://www.apache.org/dev/new-committers-guide.html
 
