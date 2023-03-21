@@ -34,14 +34,14 @@ use std::{
     str::FromStr,
 };
 
-// Internal Block reader.
+/// Internal Block reader.
 #[derive(Debug, Clone)]
 struct Block<'r, R> {
     reader: R,
-    // Internal buffering to reduce allocation.
+    /// Internal buffering to reduce allocation.
     buf: Vec<u8>,
     buf_idx: usize,
-    // Number of elements expected to exist within this block.
+    /// Number of elements expected to exist within this block.
     message_count: usize,
     marker: [u8; 16],
     codec: Codec,
