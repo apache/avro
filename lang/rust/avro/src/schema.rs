@@ -152,10 +152,8 @@ pub enum Schema {
     TimestampMicros,
     /// An amount of time defined by a number of months, days and milliseconds.
     Duration,
-    // A reference to another schema.
-    Ref {
-        name: Name,
-    },
+    /// A reference to another schema.
+    Ref { name: Name },
 }
 
 impl PartialEq for Schema {
@@ -759,13 +757,13 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
 #[derive(Default)]
 struct Parser {
     input_schemas: HashMap<Name, Value>,
-    // A map of name -> Schema::Ref
-    // Used to resolve cyclic references, i.e. when a
-    // field's type is a reference to its record's type
+    /// A map of name -> Schema::Ref
+    /// Used to resolve cyclic references, i.e. when a
+    /// field's type is a reference to its record's type
     resolving_schemas: Names,
     input_order: Vec<Name>,
-    // A map of name -> fully parsed Schema
-    // Used to avoid parsing the same schema twice
+    /// A map of name -> fully parsed Schema
+    /// Used to avoid parsing the same schema twice
     parsed_schemas: Names,
 }
 
