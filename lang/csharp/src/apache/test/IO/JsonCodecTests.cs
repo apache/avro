@@ -303,9 +303,11 @@ namespace Avro.Test
 
             List<MemoryStream> listStreams = bbos.GetBufferList();
 
-            StreamReader reader = new StreamReader(listStreams[0]);
-            String output = reader.ReadToEnd();
-            Assert.AreEqual("{\"myarray\":[{\"id\":123456}]}", output);
+            using (StreamReader reader = new StreamReader(listStreams[0]))
+            {
+                String output = reader.ReadToEnd();
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}]}", output);
+            }
         }
 
         private byte[] fromJsonToAvro(string json, Schema schema)
