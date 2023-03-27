@@ -49,6 +49,14 @@
     </Description>
   </PropertyGroup>
 
+  <!--
+    Roll-forward to the next available higher major version, and lowest minor version, if requested major version is missing. If the requested major version is present, then the Minor policy is used.
+    https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#rollforward
+  -->
+  <PropertyGroup>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
