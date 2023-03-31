@@ -1,0 +1,1651 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apache Avro – Blog</title>
+    <link>/blog/</link>
+    <description>Recent content in Blog on Apache Avro</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Blog: New PMC member: Martin Grigorov</title>
+      <link>/blog/2022/09/13/new-pmc-member-martin-grigorov/</link>
+      <pubDate>Tue, 13 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2022/09/13/new-pmc-member-martin-grigorov/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Project Management Committee (PMC) for Apache Avro is pleased to announce that Martin Grigorov has accepted our invitation to become a PMC member.  He has has been active, reliable and responsive to the community and a solid contributor to various SDKs, bringing well-thought out reviews and comments to both old and new PRs and JIRA.  He definitely stepped up for the website refactoring and preparing for the 1.11.1 release!&lt;/p&gt;
+&lt;p&gt;Please join me in welcoming Martin to the Avro PMC!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.11.1</title>
+      <link>/blog/2022/07/31/avro-1.11.1/</link>
+      <pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2022/07/31/avro-1.11.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Apache Avro community is pleased to announce the release of Avro 1.11.1!&lt;/p&gt;
+&lt;p&gt;All signed release artifacts, signatures and verification instructions can
+be found &lt;a href=&#34;/project/download/&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;most-interesting&#34;&gt;Most interesting&lt;/h2&gt;
+&lt;p&gt;This release includes 256 Jira issues, including some interesting features:&lt;/p&gt;
+&lt;p&gt;Avro specification&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3436&#34;&gt;AVRO-3436&lt;/a&gt; Clarify which names are allowed to be qualified with namespaces&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3370&#34;&gt;AVRO-3370&lt;/a&gt; Inconsistent behaviour on types as invalid names&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3275&#34;&gt;AVRO-3275&lt;/a&gt; Clarify how fullnames are created, with example&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3257&#34;&gt;AVRO-3257&lt;/a&gt; IDL: add syntax to create optional fields&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-2019&#34;&gt;AVRO-2019&lt;/a&gt; Improve docs for logical type annotation&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;C++&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-2722&#34;&gt;AVRO-2722&lt;/a&gt; Use of boost::mt19937 is not thread safe&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;C#&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3383&#34;&gt;AVRO-3383&lt;/a&gt; Many completed subtasks for modernizing C# coding style&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3481&#34;&gt;AVRO-3481&lt;/a&gt; Input and output variable type mismatch&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3475&#34;&gt;AVRO-3475&lt;/a&gt; Enforce time-millis and time-micros specification&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3469&#34;&gt;AVRO-3469&lt;/a&gt; Build and test using .NET SDK 7.0&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3468&#34;&gt;AVRO-3468&lt;/a&gt; Default values for logical types not supported&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3467&#34;&gt;AVRO-3467&lt;/a&gt; Use oracle-actions to test with Early Access JDKs&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3453&#34;&gt;AVRO-3453&lt;/a&gt; Avrogen Add Generated Code Attribute&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3432&#34;&gt;AVRO-3432&lt;/a&gt; Add command line option to skip creation of directories&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3411&#34;&gt;AVRO-3411&lt;/a&gt; Add Visual Studio Code Devcontainer support&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3388&#34;&gt;AVRO-3388&lt;/a&gt; Implement extra codecs for C# as seperate nuget packages&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3265&#34;&gt;AVRO-3265&lt;/a&gt; avrogen generates uncompilable code when namespace ends
+with &amp;ldquo;.Avro&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3219&#34;&gt;AVRO-3219&lt;/a&gt; Support nullable enum type fields&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Java&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3531&#34;&gt;AVRO-3531&lt;/a&gt; GenericDatumReader in multithread lead to infinite loop&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3482&#34;&gt;AVRO-3482&lt;/a&gt; Reuse MAGIC in DataFileReader&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3586&#34;&gt;AVRO-3586&lt;/a&gt; Make Avro Build Reproducible&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3441&#34;&gt;AVRO-3441&lt;/a&gt; Automatically register LogicalTypeFactory classes&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3375&#34;&gt;AVRO-3375&lt;/a&gt; Add union branch, array index and map key &amp;ldquo;path&amp;rdquo;
+information to serialization errors&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3374&#34;&gt;AVRO-3374&lt;/a&gt; Fully qualified type reference &amp;ldquo;ns.int&amp;rdquo; loses namespace&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3294&#34;&gt;AVRO-3294&lt;/a&gt; IDL parsing allows doc comments in strange places&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3273&#34;&gt;AVRO-3273&lt;/a&gt; avro-maven-plugin breaks on old versions of Maven&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3266&#34;&gt;AVRO-3266&lt;/a&gt; Output stream incompatible with MagicS3GuardCommitter&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3243&#34;&gt;AVRO-3243&lt;/a&gt; Lock conflicts when using computeIfAbsent&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3120&#34;&gt;AVRO-3120&lt;/a&gt; Support Next Java LTS (Java 17)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-2498&#34;&gt;AVRO-2498&lt;/a&gt; UUID generation is not working&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Javascript&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3489&#34;&gt;AVRO-3489&lt;/a&gt; Replace istanbul with nyc for code coverage&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3322&#34;&gt;AVRO-3322&lt;/a&gt; Buffer is not defined in browser environment&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3084&#34;&gt;AVRO-3084&lt;/a&gt; Fix JavaScript interop test to work with other languages on CI&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Perl&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3263&#34;&gt;AVRO-3263&lt;/a&gt; Schema validation warning on invalid schema with a long field&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Python&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3542&#34;&gt;AVRO-3542&lt;/a&gt; Scale assignment optimization&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3521&#34;&gt;AVRO-3521&lt;/a&gt; &amp;ldquo;Scale&amp;rdquo; property from decimal object&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3380&#34;&gt;AVRO-3380&lt;/a&gt; Byte reading in avro.io does not assert bytes read&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3229&#34;&gt;AVRO-3229&lt;/a&gt; validate the default value of an enum field&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3218&#34;&gt;AVRO-3218&lt;/a&gt; Pass LogicalType to BytesDecimalSchema&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Ruby&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3277&#34;&gt;AVRO-3277&lt;/a&gt; Test against Ruby 3.1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Rust&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3558&#34;&gt;AVRO-3558&lt;/a&gt; Add a demo crate that shows usage as WebAssembly&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3526&#34;&gt;AVRO-3526&lt;/a&gt; Improve resolving Bytes and Fixed from string&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3506&#34;&gt;AVRO-3506&lt;/a&gt; Implement Single Object Writer&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3507&#34;&gt;AVRO-3507&lt;/a&gt; Implement Single Object Reader&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3405&#34;&gt;AVRO-3405&lt;/a&gt; Add API for user-provided metadata to file&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3339&#34;&gt;AVRO-3339&lt;/a&gt; Rename crate from avro-rs to apache-avro&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3479&#34;&gt;AVRO-3479&lt;/a&gt; Derive Avro Schema macro&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Website&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-2175&#34;&gt;AVRO-2175&lt;/a&gt; Website refactor&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://issues.apache.org/jira/browse/AVRO-3450&#34;&gt;AVRO-3450&lt;/a&gt; Document IDL support in IDEs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;rust&#34;&gt;Rust&lt;/h2&gt;
+&lt;p&gt;This is the first release that provides the &lt;code&gt;apache-avro&lt;/code&gt; crate at &lt;a href=&#34;https://crates.io/crates/apache-avro&#34;&gt;crates.io&lt;/a&gt;!&lt;/p&gt;
+&lt;h2 id=&#34;jira&#34;&gt;JIRA&lt;/h2&gt;
+&lt;p&gt;A list of all JIRA tickets fixed in 1.11.1 could be found &lt;a href=&#34;https://issues.apache.org/jira/issues/?jql=project%3DAVRO%20AND%20fixVersion%3D1.11.1&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;language-repositories&#34;&gt;Language repositories&lt;/h2&gt;
+&lt;p&gt;In addition, language-specific release artifacts are available:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;C#: &lt;a href=&#34;https://www.nuget.org/packages/Apache.Avro/1.11.1&#34;&gt;https://www.nuget.org/packages/Apache.Avro/1.11.1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Java: &lt;a href=&#34;https://repo1.maven.org/maven2/org/apache/avro/avro/1.11.1/&#34;&gt;https://repo1.maven.org/maven2/org/apache/avro/avro/1.11.1/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Javascript: &lt;a href=&#34;https://www.npmjs.com/package/avro-js/v/1.11.1&#34;&gt;https://www.npmjs.com/package/avro-js/v/1.11.1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Perl: &lt;a href=&#34;https://metacpan.org/release/Avro&#34;&gt;https://metacpan.org/release/Avro&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Python 3: &lt;a href=&#34;https://pypi.org/project/avro/1.11.1&#34;&gt;https://pypi.org/project/avro/1.11.1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Ruby: &lt;a href=&#34;https://rubygems.org/gems/avro/versions/1.11.1&#34;&gt;https://rubygems.org/gems/avro/versions/1.11.1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Rust: &lt;a href=&#34;https://crates.io/crates/apache-avro/0.14.0&#34;&gt;https://crates.io/crates/apache-avro/0.14.0&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Thanks to everyone for contributing!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: New committer: Zoltan Csizmadia</title>
+      <link>/blog/2022/03/29/new-committer-zoltan-csizmadia/</link>
+      <pubDate>Tue, 29 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2022/03/29/new-committer-zoltan-csizmadia/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Project Management Committee (PMC) for Apache Avro has invited
+Zoltan Csizmadia to become a committer and we are pleased to announce
+that he has accepted.&lt;/p&gt;
+&lt;p&gt;Zoltan has been present in the C# SDK for over two years and has
+really increased his activity in maintaining this language in the last
+few months.  He knows the technology, but more importantly, he is
+patient and works well with those of us who rely on the expertise of
+others.  Recently, he has been engaging with other contributors to
+increase the maintainability and quality of the dotnet code, and we
+have confidence in his decisions to balance stability of the
+established code and the expectations of modern C# developers.&lt;/p&gt;
+&lt;p&gt;Being a committer enables easier contribution to the project since
+there is no need to go via the patch submission process. This should
+enable better productivity.&lt;/p&gt;
+&lt;p&gt;Please join me in congratulating Zoltan on his recognition of great
+work thus far in our community.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: New committer: Martin Grigorov</title>
+      <link>/blog/2022/01/04/new-committer-martin-grigorov/</link>
+      <pubDate>Tue, 04 Jan 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2022/01/04/new-committer-martin-grigorov/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Project Management Committee (PMC) for Apache Avro
+has invited Martin Grigorov to become a committer and we are pleased
+to announce that he has accepted.&lt;/p&gt;
+&lt;p&gt;Over the last few months, he has been active, reliable and easy to
+work with on PRs and on the mailing list.  His work is of high
+quality, and he has a breadth of experience in many of the SDK languages.
+I&amp;rsquo;m especially keen to point out the work he&amp;rsquo;s been doing on the website!&lt;/p&gt;
+&lt;p&gt;Being a committer enables easier contribution to the
+project since there is no need to go via the patch
+submission process. This should enable better productivity.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s great to have you as part of the team, Martin!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.11.0</title>
+      <link>/blog/2021/10/31/avro-1.11.0/</link>
+      <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2021/10/31/avro-1.11.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Apache Avro community is pleased to announce the release of Avro 1.11.0!&lt;/p&gt;
+&lt;p&gt;All signed release artifacts, signatures and verification instructions can
+be found &lt;a href=&#34;/project/download/&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;This release includes 120 Jira issues, including some interesting features:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Specification: AVRO-3212 Support documentation tags for FIXED types&lt;/li&gt;
+&lt;li&gt;C#: AVRO-2961 Support dotnet framework 5.0&lt;/li&gt;
+&lt;li&gt;C#: AVRO-3225 Prevent memory errors when deserializing untrusted data&lt;/li&gt;
+&lt;li&gt;C++: AVRO-2923 Logical type corrections&lt;/li&gt;
+&lt;li&gt;Java: AVRO-2863 Support Avro core on android&lt;/li&gt;
+&lt;li&gt;Javascript: AVRO-3131 Drop support for node.js 10&lt;/li&gt;
+&lt;li&gt;Perl: AVRO-3190 Fix error when reading from EOF&lt;/li&gt;
+&lt;li&gt;Python: AVRO-2906 Improved performance validating deep record data&lt;/li&gt;
+&lt;li&gt;Python: AVRO-2914 Drop Python 2 support&lt;/li&gt;
+&lt;li&gt;Python: AVRO-3004 Drop Python 3.5 support&lt;/li&gt;
+&lt;li&gt;Ruby: AVRO-3108 Drop Ruby 2.5 support&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For the first time, the 1.11.0 release includes experimental support for
+&lt;strong&gt;Rust&lt;/strong&gt;. Work is continuing on this donated SDK, but we have not versioned and
+published official artifacts for this release.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Python&lt;/strong&gt;: The avro package fully supports Python 3. We will no longer publish a
+separate avro-python3 package&lt;/p&gt;
+&lt;p&gt;And of course upgraded dependencies to latest versions, CVE fixes and more:
+&lt;a href=&#34;https://issues.apache.org/jira/issues/?jql=project%3DAVRO%20AND%20fixVersion%3D1.11.0&#34;&gt;https://issues.apache.org/jira/issues/?jql=project%3DAVRO%20AND%20fixVersion%3D1.11.0&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;The link to all fixed JIRA issues and a brief summary can be found at:
+&lt;a href=&#34;https://github.com/apache/avro/releases/tag/release-1.11.0&#34;&gt;https://github.com/apache/avro/releases/tag/release-1.11.0&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;In addition, language-specific release artifacts are available:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;C#: &lt;a href=&#34;https://www.nuget.org/packages/Apache.Avro/1.11.0&#34;&gt;https://www.nuget.org/packages/Apache.Avro/1.11.0&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Java: from Maven Central,&lt;/li&gt;
+&lt;li&gt;Javascript: &lt;a href=&#34;https://www.npmjs.com/package/avro-js/v/1.11.0&#34;&gt;https://www.npmjs.com/package/avro-js/v/1.11.0&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Perl: &lt;a href=&#34;https://metacpan.org/release/Avro&#34;&gt;https://metacpan.org/release/Avro&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Python 3: &lt;a href=&#34;https://pypi.org/project/avro/1.11.0&#34;&gt;https://pypi.org/project/avro/1.11.0&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Ruby: &lt;a href=&#34;https://rubygems.org/gems/avro/versions/1.11.0&#34;&gt;https://rubygems.org/gems/avro/versions/1.11.0&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Thanks to everyone for contributing!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: New committer: David Mollitor</title>
+      <link>/blog/2021/10/05/new-committer-david-mollitor/</link>
+      <pubDate>Tue, 05 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2021/10/05/new-committer-david-mollitor/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The Project Management Committee (PMC) for Apache Avro
+has invited David Mollitor to become a committer and we are pleased
+to announce that he has accepted.&lt;/p&gt;
+&lt;p&gt;Since 2017, David has raised and fixed many issues in the
+Java SDK.  Recently he&amp;rsquo;s been finding and providing fixes for subtle
+performance issues.  His work is always high-quality and he is
+reactive and pleasant to talk with on code reviews and JIRA.&lt;/p&gt;
+&lt;p&gt;Being a committer enables easier contribution to the
+project since there is no need to go via the patch
+submission process. This should enable better productivity.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s great to have you as part of the team, David!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.10.2</title>
+      <link>/blog/2021/03/15/avro-1.10.2/</link>
+      <pubDate>Mon, 15 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2021/03/15/avro-1.10.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.10.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.10.1</title>
+      <link>/blog/2020/12/03/avro-1.10.1/</link>
+      <pubDate>Thu, 03 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2020/12/03/avro-1.10.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.10.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.10.0</title>
+      <link>/blog/2020/06/29/avro-1.10.0/</link>
+      <pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2020/06/29/avro-1.10.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.10.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.9.2</title>
+      <link>/blog/2020/02/19/avro-1.9.2/</link>
+      <pubDate>Wed, 19 Feb 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2020/02/19/avro-1.9.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.9.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.9.1</title>
+      <link>/blog/2019/09/02/avro-1.9.1/</link>
+      <pubDate>Mon, 02 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2019/09/02/avro-1.9.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.9.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.9.0</title>
+      <link>/blog/2019/05/14/avro-1.9.0/</link>
+      <pubDate>Tue, 14 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2019/05/14/avro-1.9.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.9.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.8.2</title>
+      <link>/blog/2017/05/20/avro-1.8.2/</link>
+      <pubDate>Sat, 20 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2017/05/20/avro-1.8.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.8.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.8.1</title>
+      <link>/blog/2016/05/19/avro-1.8.1/</link>
+      <pubDate>Thu, 19 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2016/05/19/avro-1.8.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.8.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.8.0</title>
+      <link>/blog/2016/01/29/avro-1.8.0/</link>
+      <pubDate>Fri, 29 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2016/01/29/avro-1.8.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.8.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.7</title>
+      <link>/blog/2014/07/23/avro-1.7.7/</link>
+      <pubDate>Wed, 23 Jul 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2014/07/23/avro-1.7.7/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.7 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.6</title>
+      <link>/blog/2014/01/22/avro-1.7.6/</link>
+      <pubDate>Wed, 22 Jan 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2014/01/22/avro-1.7.6/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.6 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.5</title>
+      <link>/blog/2013/08/19/avro-1.7.5/</link>
+      <pubDate>Mon, 19 Aug 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2013/08/19/avro-1.7.5/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.5 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.4</title>
+      <link>/blog/2013/02/26/avro-1.7.4/</link>
+      <pubDate>Tue, 26 Feb 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2013/02/26/avro-1.7.4/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.4 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.3</title>
+      <link>/blog/2012/12/07/avro-1.7.3/</link>
+      <pubDate>Fri, 07 Dec 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/12/07/avro-1.7.3/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.3 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.2</title>
+      <link>/blog/2012/09/25/avro-1.7.2/</link>
+      <pubDate>Tue, 25 Sep 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/09/25/avro-1.7.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.1</title>
+      <link>/blog/2012/07/18/avro-1.7.1/</link>
+      <pubDate>Wed, 18 Jul 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/07/18/avro-1.7.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.7.0</title>
+      <link>/blog/2012/06/11/avro-1.7.0/</link>
+      <pubDate>Mon, 11 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/06/11/avro-1.7.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.7.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.6.3</title>
+      <link>/blog/2012/03/19/avro-1.6.3/</link>
+      <pubDate>Mon, 19 Mar 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/03/19/avro-1.6.3/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.6.3 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.6.2</title>
+      <link>/blog/2012/02/14/avro-1.6.2/</link>
+      <pubDate>Tue, 14 Feb 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2012/02/14/avro-1.6.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.6.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.6.1</title>
+      <link>/blog/2011/11/14/avro-1.6.1/</link>
+      <pubDate>Mon, 14 Nov 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/11/14/avro-1.6.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.6.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.6.0</title>
+      <link>/blog/2011/11/02/avro-1.6.0/</link>
+      <pubDate>Wed, 02 Nov 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/11/02/avro-1.6.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.6.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.5.4</title>
+      <link>/blog/2011/09/12/avro-1.5.4/</link>
+      <pubDate>Mon, 12 Sep 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/09/12/avro-1.5.4/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.5.4 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.5.3</title>
+      <link>/blog/2011/08/29/avro-1.5.3/</link>
+      <pubDate>Mon, 29 Aug 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/08/29/avro-1.5.3/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.5.3 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.5.2</title>
+      <link>/blog/2011/08/12/avro-1.5.2/</link>
+      <pubDate>Fri, 12 Aug 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/08/12/avro-1.5.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.5.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.5.1</title>
+      <link>/blog/2011/05/06/avro-1.5.1/</link>
+      <pubDate>Fri, 06 May 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/05/06/avro-1.5.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.5.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.5.0</title>
+      <link>/blog/2011/03/11/avro-1.5.0/</link>
+      <pubDate>Fri, 11 Mar 2011 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2011/03/11/avro-1.5.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.5.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.4.1</title>
+      <link>/blog/2010/10/13/avro-1.4.1/</link>
+      <pubDate>Wed, 13 Oct 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/10/13/avro-1.4.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.4.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.4.0</title>
+      <link>/blog/2010/09/08/avro-1.4.0/</link>
+      <pubDate>Wed, 08 Sep 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/09/08/avro-1.4.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.4.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.0.0</title>
+      <link>/blog/2010/07/15/avro-1.0.0/</link>
+      <pubDate>Thu, 15 Jul 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/07/15/avro-1.0.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;The first release of Avro is now available. To download, it, use the &amp;ldquo;Download&amp;rdquo; link below.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.3.3</title>
+      <link>/blog/2010/07/07/avro-1.3.3/</link>
+      <pubDate>Wed, 07 Jul 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/07/07/avro-1.3.3/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.3.3 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.3.2</title>
+      <link>/blog/2010/03/31/avro-1.3.2/</link>
+      <pubDate>Wed, 31 Mar 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/03/31/avro-1.3.2/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.3.2 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.3.1</title>
+      <link>/blog/2010/03/19/avro-1.3.1/</link>
+      <pubDate>Fri, 19 Mar 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/03/19/avro-1.3.1/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.3.1 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.3.0</title>
+      <link>/blog/2010/02/26/avro-1.3.0/</link>
+      <pubDate>Fri, 26 Feb 2010 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2010/02/26/avro-1.3.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.3.0 has been released!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.2.0</title>
+      <link>/blog/2009/10/15/avro-1.2.0/</link>
+      <pubDate>Thu, 15 Oct 2009 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2009/10/15/avro-1.2.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.2.0 is now available!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro 1.1.0</title>
+      <link>/blog/2009/09/15/avro-1.1.0/</link>
+      <pubDate>Tue, 15 Sep 2009 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2009/09/15/avro-1.1.0/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Apache Avro 1.1.0 is now available!&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro joins Apache</title>
+      <link>/blog/2009/04/10/avro-joins-apache/</link>
+      <pubDate>Fri, 10 Apr 2009 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2009/04/10/avro-joins-apache/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Avro has joined the Apache Software Foundation as a Hadoop subproject.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Blog: Avro joins Apache</title>
+      <link>/blog/2009/04/10/avro-joins-apache/</link>
+      <pubDate>Fri, 10 Apr 2009 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/2009/04/10/avro-joins-apache/</guid>
+      <description>
+        
+        
+        &lt;!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ &#34;License&#34;); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ &#34;AS IS&#34; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+--&gt;
+&lt;p&gt;Avro has joined the Apache Software Foundation as a Hadoop subproject.&lt;/p&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

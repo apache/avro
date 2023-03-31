@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.111.2">
+<link rel="canonical" type="text/html" href="/docs/1.8.2/trevni/">
+<link rel="alternate" type="application/rss&#43;xml" href="/docs/1.8.2/trevni/index.xml">
+<meta name="robots" content="noindex, nofollow">
+
+
+<link rel="apple-touch-icon" sizes="57x57" href="https://apache.org/favicons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="https://apache.org/favicons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="https://apache.org/favicons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="https://apache.org/favicons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="https://apache.org/favicons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://apache.org/favicons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="https://apache.org/favicons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://apache.org/favicons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://apache.org/favicons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-194x194.png" sizes="194x194">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/android-chrome-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="https://apache.org/favicons/manifest.json">
+<link rel="shortcut icon" href="https://apache.org/favicons/favicon.ico">
+
+<title>Trevni | Apache Avro</title>
+<meta name="description" content="">
+<meta property="og:title" content="Trevni" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/1.8.2/trevni/" /><meta property="og:site_name" content="Apache Avro" />
+<meta itemprop="name" content="Trevni">
+<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Trevni"/>
+<meta name="twitter:description" content=""/>
+
+
+
+
+<link rel="preload" href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" as="style">
+<link href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/prism.css"/>
+
+  </head>
+  <body class="td-section">
+    <header>
+      
+
+
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/">
+
+		<span class="navbar-logo"><img src="/docs/1.11.1/logo.svg" width="100" height="30" style="margin: 0 10px"></span><span class="text-uppercase font-weight-bold">Apache Avro</span>
+	</a>
+
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Project
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/project/download/">Download</a>
+	
+	<a class="dropdown-item" href="/project/credits/">Credits</a>
+	
+	<a class="dropdown-item" href="/project/how-to-contribute/">How to Contribute</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/licenses/">License</a>
+	
+	<a class="dropdown-item" href="https://hadoop.apache.org/privacy_policy.html">Privacy Policy</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/security/">Security</a>
+	
+	<a class="dropdown-item" href="/project/events/">Events</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/sponsorship.html">Donate</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/thanks.html">Thanks</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Blog
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/blog/news/">News</a>
+	
+	<a class="dropdown-item" href="/blog/releases/">Releases</a>
+	
+</div>
+
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+					
+					
+					
+					
+					
+					
+					
+					
+					<a class="nav-link" href="/community/" ><span>Community</span></a>
+				
+			</li>
+
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Documentation
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/docs/1.11.1/">1.11.1 (Current)</a>
+	
+	<a class="dropdown-item" href="/docs/1.11.0/">1.11.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.2/">1.10.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.1/">1.10.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.0/">1.10.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.2/">1.9.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.1/">1.9.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.0/">1.9.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.2/">1.8.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.1/">1.8.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.0/">1.8.0</a>
+	
+	<a class="dropdown-item" href="docs/1.7.7/">1.7.7</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.6/">1.7.6</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.5/">1.7.5</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.4/">1.7.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.3/">1.7.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.2/">1.7.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.1/">1.7.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.0/">1.7.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.3/">1.6.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.2/">1.6.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.1/">1.6.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.0/">1.6.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.4/">1.5.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.3/">1.5.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.2/">1.5.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.1/">1.5.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.0/">1.5.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.1/">1.4.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.0/">1.4.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.3/">1.3.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.2/">1.3.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.1/">1.3.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.0/">1.3.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.2.0/">1.2.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.1.0/">1.1.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.0.0/">1.0.0</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	ASF links
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="http://www.apache.org/" target="_blank">ASF Web Site</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/licenses/" target="_blank">License</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Donate</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/security/" target="_blank">Security</a>
+	
+</div>
+
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block"></div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+
+
+
+
+<div class="td-content">
+<div class="pageinfo pageinfo-primary d-print-none">
+<p>
+This is the multi-page printable view of this section.
+<a href="#" onclick="print();return false;">Click here to print</a>.
+</p><p>
+<a href="/docs/1.8.2/trevni/">Return to the regular view of this page</a>.
+</p>
+</div>
+
+
+
+<h1 class="title">Trevni</h1>
+
+
+
+
+
+    <ul>
+    
+  
+  
+  
+  
+
+  
+
+    </ul>
+
+
+<div class="content">
+      <!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+<h2 id="trevni-a-column-file-format">Trevni: A Column File Format</h2>
+<p>Version 0.1</p>
+<p>DRAFT</p>
+<p>This document is the authoritative specification of a file format. Its intent is to permit compatible, independent implementations that read and/or write files in this format.</p>
+<h2 id="introduction">Introduction</h2>
+<p>Data sets are often described as a table composed of rows and columns. Each record in the dataset is considered a row, with each field of the record occupying a different column. Writing records to a file one-by-one as they are created results in a row-major format, like Hadoop’s SequenceFile or Avro data files.</p>
+<p>In many cases higher query performance may be achieved if the data is instead organized in a column-major format, where multiple values of a given column are stored adjacently. This document defines such a column-major file format for datasets.</p>
+<p>To permit scalable, distributed query evaluation, datasets are partitioned into row groups, containing distinct collections of rows. Each row group is organized in column-major order, while row groups form a row-major partitioning of the entire dataset.</p>
+<h2 id="rationale">Rationale</h2>
+<h3 id="goals">Goals</h3>
+<p>The format is meant satisfy the following goals:</p>
+<p>Maximize the size of row groups. Disc drives are used most efficiently when sequentially accessing data. Consider a drive that takes 10ms to seek and transfers at 100MB/second. If a 10-column dataset whose values are all the same size is split into 10MB row groups, then accessing a single column will require a sequence of seek+1MB reads, for a cost of 20ms/MB processed. If the same dataset is split into 100MB row groups then this drops to 11ms/MB processed. This effect is exaggerated for datasets with larger numbers of columns and with columns whose values are smaller than average. So we’d prefer row groups that are 100MB or greater.</p>
+<p>Permit random access within a row group. Some queries will first examine one column, and, only when certain relatively rare criteria are met, examine other columns. Rather than iterating through selected columns of the row-group in parallel, one might iterate through one column and randomly access another. This is called support for WHERE clauses, after the SQL operator of that name.</p>
+<p>Minimize the number of files per dataset. HDFS is a primary intended deployment platform for these files. The HDFS Namenode requires memory for each file in the filesystem, thus for a format to be HDFS-friendly it should strive to require the minimum number of distinct files.</p>
+<p>Support co-location of columns within row-groups. Row groups are the unit of parallel operation on a column dataset. For efficient file i/o, the entirety of a row-group should ideally reside on the host that is evaluating the query in order to avoid network latencies and bottlenecks.</p>
+<p>Data integrity. The format should permit applications to detect data corruption. Many file systems may prevent corruption, but files may be moved between filesystems and be subject to corruption at points in that process. It is best if the data in a file can be validated independently.</p>
+<p>Extensibility. The format should permit applications to store additional annotations about a datasets in the files, such as type information, origin, etc. Some environments may have metadata stores for such information, but not all do, and files might be moved among systems with different metadata systems. The ability to keep such information within the file simplifies the coordination of such information.</p>
+<p>Minimal overhead. The column format should not make datasets appreciably larger. Storage is a primary cost and a choice to use this format should not require additional storage.</p>
+<p>Primary format. The column format should be usable as a primary format for datasets, not as an auxiliary, accelerated format. Applications that process a dataset in row-major order should be able to easily consume column files and applications that produce datasets in row-major order should be able to easily generate column files.</p>
+<h3 id="design">Design</h3>
+<p>To meet these goals we propose the following design.</p>
+<p>Each row group is a separate file. All values of a column in a file are written contiguously. This maximizes the row group size, optimizing performance when querying few and small columns.</p>
+<p>Each file occupies a single HDFS block. A larger than normal block size may be specified, e.g., ~1GB instead of the typical ~100MB. This guarantees co-location and eliminates network use when query processing can be co-located with the file. This also moderates the memory impact on the HDFS Namenode since no small files are written.
+Each column in a file is written as a sequence of ~64kB compressed blocks. The sequence is prefixed by a table describing all of the blocks in the column to permit random access within the column.</p>
+<p>Application-specific metadata may be added at the file, column, and block levels.
+Checksums are included with each block, providing data integrity.</p>
+<h3 id="discussion">Discussion</h3>
+<p>The use of a single block per file achieves the same effect as the custom block placement policy described in the CIF paper, but while still permitting HDFS rebalancing and not increasing the number of files in the namespace.</p>
+<h2 id="format-specification">Format Specification</h2>
+<p>This section formally describes the proposed column file format.</p>
+<h3 id="data-model">Data Model</h3>
+<p>We assume a simple data model, where a record is a set of named fields, and the value of each field is a sequence of untyped bytes. A type system may be layered on top of this, as specified in the Type Mapping section below.</p>
+<h3 id="primitive-values">Primitive Values</h3>
+<p>We define the following primitive value types:</p>
+<ul>
+<li>Signed 64-bit long values are written using a variable-length zig-zag coding, where the high-order bit in each byte determines whether subsequent bytes are present. For example:
+decimal value	hex bytes</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>decimal value</th>
+<th>hex bytes</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>00</td>
+<td></td>
+</tr>
+<tr>
+<td>-1</td>
+<td>01</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>02</td>
+<td></td>
+</tr>
+<tr>
+<td>&hellip;</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>-64</td>
+<td>7f</td>
+<td></td>
+</tr>
+<tr>
+<td>64</td>
+<td>80 01</td>
+<td></td>
+</tr>
+<tr>
+<td>&hellip;</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>bytes are encoded as a long followed by that many bytes of data.</li>
+<li>a string is encoded as a long followed by that many bytes of UTF-8 encoded character data.</li>
+</ul>
+<p>For example, the three-character string &ldquo;foo&rdquo; would be encoded as the long value 3 (encoded as hex 06) followed by the UTF-8 encoding of &lsquo;f&rsquo;, &lsquo;o&rsquo;, and &lsquo;o&rsquo; (the hex bytes 66 6f 6f): 06 66 6f 6f</p>
+<h2 id="type-names">Type Names</h2>
+<p>The following type names are used to describe column values:</p>
+<ul>
+<li>null, requires zero bytes. Sometimes used in array columns.</li>
+<li>boolean, one bit, packed into bytes, little-endian;</li>
+<li>int, like long, but restricted to 32-bit signed values</li>
+<li>long 64-bit signed values, represented as above</li>
+<li>fixed32 32-bit values stored as four bytes, little-endian.</li>
+<li>fixed64 64-bit values stored as eight bytes, little-endian.</li>
+<li>float 32-bit IEEE floating point value, little-endian</li>
+<li>double 64-bit IEEE floating point value, little-endian</li>
+<li>string as above</li>
+<li>bytes as above, may be used to encapsulate more complex objects</li>
+</ul>
+<p>Type names are represented as strings (UTF-8 encoded, length-prefixed).</p>
+<h2 id="metadata">Metadata</h2>
+<p><strong>Metadata</strong> consists of:</p>
+<ul>
+<li>A long indicating the number of metadata key/value pairs.</li>
+<li>For each pair, a string key and bytes value.</li>
+</ul>
+<p>All metadata properties that start with &ldquo;trevni.&rdquo; are reserved.</p>
+<h3 id="file-metadata">File Metadata</h3>
+<p>The following file metadata properties are defined:</p>
+<ul>
+<li><strong>trevni.codec</strong> the name of the default compression codec used to compress blocks, as a string. Implementations are required to support the &ldquo;null&rdquo; codec. Optional. If absent, it is assumed to be &ldquo;null&rdquo;. Codecs are described in more detail below.</li>
+<li><strong>trevni.checksum</strong> the name of the checksum algorithm used in this file, as a string. Implementations are required to support the &ldquo;crc-32” checksum. Optional. If absent, it is assumed to be &ldquo;null&rdquo;. Checksums are described in more detail below.</li>
+</ul>
+<h3 id="column-metadata">Column Metadata</h3>
+<p>The following column metadata properties are defined:</p>
+<ul>
+<li>trevni.codec the name of the compression codec used to compress the blocks of this column, as a string. Implementations are required to support the &ldquo;null&rdquo; codec. Optional. If absent, it is assumed to be &ldquo;null&rdquo;. Codecs are described in more detail below.</li>
+<li>trevni.name the name of the column, as a string. Required.</li>
+<li>trevni.type the type of data in the column. One of the type names above. Required.</li>
+<li>trevni.values if present, indicates that the initial value of each block in this column will be stored in the block’s descriptor. Not permitted for array columns or columns that specify a parent.</li>
+<li>trevni.array if present, indicates that each row in this column contains a sequence of values of the named type rather than just a single value. An integer length precedes each sequence of values indicating the count of values in the sequence. If the length is negative then it indicates a sequence of zero or one lengths, where -1 indicates two zeros, -2 two ones, -3 three zeros, -4 three ones, etc.</li>
+<li>trevni.parent if present, the name of an array column whose lengths are also used by this column. Thus values of this column are sequences but no lengths are stored in this column.</li>
+</ul>
+<p>For example, consider the following row, as JSON, where all values are primitive types, but one has multiple values.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">{</span><span style="color:#204a87;font-weight:bold">&#34;id&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">566</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">23423234234</span>
+</span></span><span style="display:flex;"><span> <span style="color:#4e9a06">&#34;from&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;foo@bar.com&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;to&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;bar@baz.com&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;bang@foo.com&#34;</span><span style="color:#000;font-weight:bold">],</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;content&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;Hi!&#34;</span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The columns for this might be specified as:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#a40000">name=id</span>       <span style="color:#a40000">type=int</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=date</span>     <span style="color:#a40000">type=long</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=from</span>     <span style="color:#a40000">type=string</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=to</span>       <span style="color:#a40000">type=string</span>  <span style="color:#a40000">array=</span><span style="color:#204a87;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=content</span>  <span style="color:#a40000">type=string</span> 
+</span></span></code></pre></div><p>If a row contains an array of records, e.g. &ldquo;received&rdquo; in the following:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">{</span><span style="color:#204a87;font-weight:bold">&#34;id&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">566</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">23423234234</span>
+</span></span><span style="display:flex;"><span> <span style="color:#4e9a06">&#34;from&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;foo@bar.com&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;to&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;bar@baz.com&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;bang@foo.com&#34;</span><span style="color:#000;font-weight:bold">],</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;content&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;Hi!&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#4e9a06">&#34;received&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[{</span><span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">234234234234</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;host&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;192.168.0.0.1&#34;</span><span style="color:#000;font-weight:bold">},</span>
+</span></span><span style="display:flex;"><span>             <span style="color:#000;font-weight:bold">{</span><span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">234234545645</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;host&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;192.168.0.0.2&#34;</span><span style="color:#000;font-weight:bold">}]</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Then one can define a parent column followed by a column for each field in the record, adding the following columns:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#a40000">name=received</span>  <span style="color:#a40000">type=</span><span style="color:#204a87;font-weight:bold">null</span>    <span style="color:#a40000">array=</span><span style="color:#204a87;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=date</span>      <span style="color:#a40000">type=long</span>    <span style="color:#a40000">parent=received</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=host</span>      <span style="color:#a40000">type=string</span>  <span style="color:#a40000">parent=received</span>
+</span></span></code></pre></div><p>If an array value itself contains an array, e.g. the &ldquo;sigs&rdquo; below:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">{</span><span style="color:#204a87;font-weight:bold">&#34;id&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">566</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">23423234234</span>
+</span></span><span style="display:flex;"><span> <span style="color:#4e9a06">&#34;from&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;foo@bar.com&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;to&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;bar@baz.com&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;bang@foo.com&#34;</span><span style="color:#000;font-weight:bold">],</span>
+</span></span><span style="display:flex;"><span> <span style="color:#204a87;font-weight:bold">&#34;content&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;Hi!&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#4e9a06">&#34;received&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[{</span><span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">234234234234</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;host&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;192.168.0.0.1&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#204a87;font-weight:bold">&#34;sigs&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[{</span><span style="color:#204a87;font-weight:bold">&#34;algo&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;weak&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;value&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;0af345de&#34;</span><span style="color:#000;font-weight:bold">}]},</span>
+</span></span><span style="display:flex;"><span>             <span style="color:#000;font-weight:bold">{</span><span style="color:#204a87;font-weight:bold">&#34;date&#34;</span><span style="color:#a40000">=</span><span style="color:#0000cf;font-weight:bold">234234545645</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">&#34;host&#34;</span><span style="color:#a40000">=</span><span style="color:#4e9a06">&#34;192.168.0.0.2&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#204a87;font-weight:bold">&#34;sigs&#34;</span><span style="color:#a40000">=</span><span style="color:#000;font-weight:bold">[]}]</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Then a parent column may be defined that itself has a parent column.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#a40000">name=sigs</span>   <span style="color:#a40000">type=</span><span style="color:#204a87;font-weight:bold">null</span>    <span style="color:#a40000">array=</span><span style="color:#204a87;font-weight:bold">true</span>  <span style="color:#a40000">parent=received</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=algo</span>   <span style="color:#a40000">type=string</span>              <span style="color:#a40000">parent=sigs</span>
+</span></span><span style="display:flex;"><span><span style="color:#a40000">name=value</span>  <span style="color:#a40000">type=string</span>              <span style="color:#a40000">parent=sigs</span>
+</span></span></code></pre></div><h3 id="block-metadata">Block Metadata</h3>
+<p>No block metadata properties are currently defined.</p>
+<h2 id="file-format">File Format</h2>
+<p>A <strong>file</strong> consists of:</p>
+<ul>
+<li>A file header, followed by</li>
+<li>one or more columns.</li>
+</ul>
+<p>A <strong>file header</strong> consists of:</p>
+<ul>
+<li>Four bytes, ASCII &lsquo;T&rsquo;, &lsquo;r&rsquo;, &lsquo;v&rsquo;, followed by 0x02.</li>
+<li>a fixed64 indicating the number of rows in the file</li>
+<li>a fixed32 indicating the number of columns in the file</li>
+<li>file metadata.</li>
+<li>for each column, its column metadata</li>
+<li>for each column, its starting position in the file as a fixed64.</li>
+</ul>
+<p>A <strong>column</strong> consists of:</p>
+<ul>
+<li>A fixed32 indicating the number of blocks in this column.</li>
+<li>For each block, a block descriptor</li>
+<li>One or more blocks.</li>
+</ul>
+<p>A <strong>block descriptor</strong> consists of:</p>
+<ul>
+<li>A fixed32 indicating the number of rows in the block</li>
+<li>A fixed32 indicating the size in bytes of the block before the codec is applied (excluding checksum).</li>
+<li>A fixed32 indicating the size in bytes of the block after the codec is applied (excluding checksum).</li>
+<li>If this column’s metadata declares it to include values, the first value in the column, serialized according to this column&rsquo;s type.</li>
+</ul>
+<p>A <strong>block</strong> consists of:</p>
+<ul>
+<li>The serialized column values. If a column is an array column then value sequences are preceded by their length, as an int. If a codec is specified, the values and lengths are compressed by that codec.</li>
+<li>The checksum, as determined by the file metadata.</li>
+</ul>
+<h2 id="codecs">Codecs</h2>
+<h3 id="null">null</h3>
+<p>The &ldquo;null&rdquo; codec simply passes data through uncompressed.</p>
+<h3 id="deflate">deflate</h3>
+<p>The &ldquo;deflate&rdquo; codec writes the data block using the deflate algorithm as specified in RFC 1951.</p>
+<h3 id="snappy">snappy</h3>
+<p>The &ldquo;snappy&rdquo; codec uses Google&rsquo;s Snappy compression library.</p>
+<h2 id="checksum-algorithms">Checksum algorithms</h2>
+<h3 id="null-1">null</h3>
+<p>The &ldquo;null&rdquo; checksum contains zero bytes.</p>
+<h3 id="crc-32">crc-32</h3>
+<p>Each &ldquo;crc-32&rdquo; checksum contains the four bytes of an ISO 3309 CRC-32 checksum of the uncompressed block data as a fixed32.</p>
+<h2 id="type-mappings">Type Mappings</h2>
+<p>We define a standard mapping for how types defined in various serialization systems are represented in a column file. Records from these systems are shredded into columns. When records are nested, a depth-first recursive walk can assign a separate column for each primitive value.</p>
+<p><strong>Avro</strong></p>
+<p><strong>Protocol Buffers</strong></p>
+<p><strong>Thrift</strong></p>
+<h2 id="implementation-notes">Implementation Notes</h2>
+<p>Some possible techniques for writing column files include:</p>
+<ol>
+<li>Use a standard ~100MB block, buffer in memory up to the block size, then flush the file directly to HDFS. A single reduce task might create multiple output files. The namenode requires memory proportional to the number of names and blocks*replication. This would increase the number of names but not blocks, so this should still be much better than a file per column.</li>
+<li>Spill each column to a separate local, temporary file then, when the file is closed, append these files, writing a single file to HDFS whose block size is set to be that of the entire file. This would be a bit slower than and may have trouble when the local disk is full, but it would better use HDFS namespace and further reduce seeks when processing columns whose values are small.</li>
+<li>Use a separate mapreduce job to convert row-major files to column-major. The map output would output a by (row#, column#, value) tuple, partitioned by row# but sorted by column# then row#. The reducer could directly write the column file. But the column file format would need to be changed to write counts, descriptors, etc. at the end of files rather than at the front.</li>
+</ol>
+<p>(1) is the simplest to implement and most implementations should start with it.</p>
+<h2 id="references">References</h2>
+<p>CIF <a href="https://arxiv.org/pdf/1105.4252.pdf">Column-Oriented Storage Techniques for MapReduce</a>, Floratou, Patel, Shekita, &amp; Tata, VLDB 2011.</p>
+<p>DREMEL Dremel: <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36632.pdf">Interactive Analysis of Web-Scale Datasets</a>, Melnik, Gubarev, Long, Romer, Shivakumar, &amp; Tolton, VLDB 2010.</p>
+
+</div>
+</div>
+
+
+  
+  
+  
+  
+
+  
+  
+
+  
+
+
+
+          </main>
+        </div>
+      </div>
+      
+
+
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid2 mx-sm-5">
+    <div class="row">
+      <div class="col-4 col-sm-3 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:user@avro.apache.org" aria-label="User mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter" aria-label="Twitter">
+    <a class="text-white" target="_blank" rel="noopener" href="https://twitter.com/ApacheAvro" aria-label="Twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow" aria-label="Stack Overflow">
+    <a class="text-white" target="_blank" rel="noopener" href="https://stackoverflow.com/questions/tagged/avro" aria-label="Stack Overflow">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-4 col-sm-3 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" rel="noopener" href="https://github.com/apache/avro" aria-label="GitHub">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Issues" aria-label="Issues">
+    <a class="text-white" target="_blank" rel="noopener" href="https://issues.apache.org/jira/projects/AVRO/issues" aria-label="Issues">
+      <i class="fab fa-jira"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Chat with other project developers at Slack" aria-label="Chat with other project developers at Slack">
+    <a class="text-white" target="_blank" rel="noopener" href="https://the-asf.slack.com/" aria-label="Chat with other project developers at Slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Developer mailing list" aria-label="Developer mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:dev@avro.apache.org" aria-label="Developer mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-10 col-sm-3 text-center py-2 order-sm-2">
+        <a href="https://www.apache.org/"><small class="text-white">&copy; 2023 The Apache Software Foundation </small></a><small class="text-white">All Rights Reserved</small>
+	
+      <p><small class="text-white">Apache Avro, Avro&trade;, Apache&reg;, and the Apache feather logo are either registered trademarks or trademarks of The Apache Software Foundation.</small></p>
+      </div>
+      <div class="col-5 col-sm-3 order-sm-2">
+          <a href="https://www.apache.org/events/current-event.html"><img src="https://www.apache.org/events/current-event-234x60.png"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+    integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js"
+    integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
+    crossorigin="anonymous"></script>
+
+
+
+
+
+<script src='/js/tabpane-persist.js'></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/main.min.aa9f4c5dae6a98b2c46277f4c56f1673a2b000d1756ce4ffae93784cab25e6d5.js" integrity="sha256-qp9MXa5qmLLEYnf0xW8Wc6KwANF1bOT/rpN4TKsl5tU=" crossorigin="anonymous"></script>
+
+
+
+<script src='/js/prism.js'></script>
+
+
+
+  </body>
+</html>

@@ -1,0 +1,17 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apache Avro – MapReduce guide</title>
+    <link>/docs/1.11.0/mapreduce-guide/</link>
+    <description>Recent content in MapReduce guide on Apache Avro</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="/docs/1.11.0/mapreduce-guide/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+  </channel>
+</rss>

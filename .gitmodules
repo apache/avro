@@ -1,3 +1,6 @@
 [submodule "doc/themes/docsy"]
 	path = doc/themes/docsy
-	url = https://github.com/google/docsy
+	url = https://github.com/nishchaldv/docsy
+[submodule "doc/themes/--force"]
+	path = doc/themes/--force
+	url = https://github.com/nishchaldv/docsy

@@ -1,0 +1,17 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apache Avro – C&#43;&#43; API</title>
+    <link>/docs/1.5.0/api/cpp/html/</link>
+    <description>Recent content in C&#43;&#43; API on Apache Avro</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="/docs/1.5.0/api/cpp/html/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+  </channel>
+</rss>
