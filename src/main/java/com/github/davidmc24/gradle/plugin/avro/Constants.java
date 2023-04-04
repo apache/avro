@@ -41,7 +41,9 @@ class Constants {
     static final boolean DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY = false;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
     static final Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> DEFAULT_LOGICAL_TYPE_FACTORIES = Collections.emptyMap();
+    static final Map<String, String> DEFAULT_LOGICAL_TYPE_FACTORY_CLASS_NAMES = Collections.emptyMap();
     static final List<Class<? extends Conversion<?>>> DEFAULT_CUSTOM_CONVERSIONS = Collections.emptyList();
+    static final List<String> DEFAULT_CUSTOM_CONVERSION_CLASS_NAMES = Collections.emptyList();
 
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";

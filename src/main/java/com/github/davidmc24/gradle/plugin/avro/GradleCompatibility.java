@@ -32,7 +32,7 @@ class GradleCompatibility {
         if (GradleFeatures.extensionInjection.isSupported()) {
             return project.getExtensions().create(extensionName, extensionType);
         } else {
-            return project.getExtensions().create(extensionName, extensionType, project.getObjects());
+            return project.getExtensions().create(extensionName, extensionType, project, project.getObjects());
         }
     }
 

@@ -17,6 +17,7 @@ package com.github.davidmc24.gradle.plugin.avro;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -33,8 +34,13 @@ public interface AvroExtension {
     Property<Boolean> isGettersReturnOptional();
     Property<Boolean> isOptionalGettersForNullableFieldsOnly();
     Property<Boolean> isEnableDecimalLogicalType();
+    ConfigurableFileCollection getConversionsAndTypeFactoriesClasspath();
     MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories();
+    MapProperty<String, String> getLogicalTypeFactoryClassNames();
     ListProperty<Class<? extends Conversion<?>>> getCustomConversions();
+    ListProperty<String> getCustomConversionClassNames();
     AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass);
+    AvroExtension logicalTypeFactory(String typeName, String typeFactoryClassName);
     AvroExtension customConversion(Class<? extends Conversion<?>> conversionClass);
+    AvroExtension customConversion(String conversionClassName);
 }

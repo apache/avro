@@ -38,8 +38,11 @@ public class AvroBasePlugin implements Plugin<Project> {
             task.isGettersReturnOptional().convention(avroExtension.isGettersReturnOptional());
             task.isOptionalGettersForNullableFieldsOnly().convention(avroExtension.isOptionalGettersForNullableFieldsOnly());
             task.isEnableDecimalLogicalType().convention(avroExtension.isEnableDecimalLogicalType());
+            task.getConversionsAndTypeFactoriesClasspath().from(avroExtension.getConversionsAndTypeFactoriesClasspath());
             task.getLogicalTypeFactories().convention(avroExtension.getLogicalTypeFactories());
+            task.getLogicalTypeFactoryClassNames().convention(avroExtension.getLogicalTypeFactoryClassNames());
             task.getCustomConversions().convention(avroExtension.getCustomConversions());
+            task.getCustomConversionClassNames().convention(avroExtension.getCustomConversionClassNames());
         });
     }
 }
