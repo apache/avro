@@ -19,10 +19,9 @@ package com.github.davidmc24.gradle.plugin.avro;
 import org.gradle.util.GradleVersion;
 
 enum GradleFeatures {
-    extensionInjection() {
-        @Override
+    projectIntoExtensionInjection() {
         boolean isSupportedBy(GradleVersion version) {
-            return version.compareTo(GradleVersions.v5_2) >= 0;
+            return version.compareTo(GradleVersions.v7_1) >= 0;
         }
     },
     objectFactoryFileCollection() {

@@ -29,7 +29,7 @@ class GradleCompatibility {
     private static final Object[] NO_ARGUMENTS = {};
 
     static <T> T createExtensionWithObjectFactory(Project project, String extensionName, Class<T> extensionType) {
-        if (GradleFeatures.extensionInjection.isSupported()) {
+        if (GradleFeatures.projectIntoExtensionInjection.isSupported()) {
             return project.getExtensions().create(extensionName, extensionType);
         } else {
             return project.getExtensions().create(extensionName, extensionType, project, project.getObjects());
