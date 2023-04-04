@@ -266,17 +266,29 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         return conversionsAndTypeFactoriesClasspath;
     }
 
+    /**
+     * @deprecated use {@link #getLogicalTypeFactoryClassNames()} ()} instead
+     */
+    @Deprecated
     @Optional
     @Input
     public MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
         this.logicalTypeFactories.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Map)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
         this.logicalTypeFactories.set(logicalTypeFactories);
@@ -298,16 +310,28 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.logicalTypeFactoryClassNames.set(logicalTypeFactoryClassNames);
     }
 
+    /**
+     * @deprecated use {@link #getCustomConversions()} ()} instead
+     */
+    @Deprecated
     @Optional
     @Input
     public ListProperty<Class<? extends Conversion<?>>> getCustomConversions() {
         return customConversions;
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setCustomConversions(Provider<Iterable<Class<? extends Conversion<?>>>> provider) {
         this.customConversions.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Iterable)} ()} instead
+     */
+    @Deprecated
     public void setCustomConversions(Iterable<Class<? extends Conversion<?>>> customConversions) {
         this.customConversions.set(customConversions);
     }

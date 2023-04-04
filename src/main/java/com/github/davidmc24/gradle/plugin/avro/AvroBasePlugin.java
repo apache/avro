@@ -24,6 +24,7 @@ public class AvroBasePlugin implements Plugin<Project> {
         configureExtension(project);
     }
 
+    @SuppressWarnings("deprecation")
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension =
             GradleCompatibility.createExtensionWithObjectFactory(project, Constants.AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
