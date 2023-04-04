@@ -83,18 +83,21 @@ Actually, it will attempt to process an "avro" directory in every `SourceSet` (m
 
 There are a number of configuration options supported in the `avro` block.
 
-| option                               | default               | description                                                    |
-|--------------------------------------| --------------------- |----------------------------------------------------------------|
-| createSetters                        | `true`                | `createSetters` passed to Avro compiler                        |
-| createOptionalGetters                | `false`               | `createOptionalGetters` passed to Avro compiler                |
-| gettersReturnOptional                | `false`               | `gettersReturnOptional` passed to Avro compiler                |
-| optionalGettersForNullableFieldsOnly | `false`               | `optionalGettersForNullableFieldsOnly` passed to Avro compiler |
-| fieldVisibility                      | `"PRIVATE"`           | `fieldVisibility` passed to Avro compiler                      |
-| outputCharacterEncoding              | see below             | `outputCharacterEncoding` passed to Avro compiler              |
-| stringType                           | `"String"`            | `stringType` passed to Avro compiler                           |
-| templateDirectory                    | see below             | `templateDir` passed to Avro compiler                          |
-| additionalVelocityToolClasses        | see below             | `additionalVelocityTools` passed to Avro compiler              |
-| enableDecimalLogicalType             | `true`                | `enableDecimalLogicalType` passed to Avro compiler             |
+| option                               | default                            | description                                                                                                       |
+|--------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| createSetters                        | `true`                             | `createSetters` passed to Avro compiler                                                                           |
+| createOptionalGetters                | `false`                            | `createOptionalGetters` passed to Avro compiler                                                                   |
+| gettersReturnOptional                | `false`                            | `gettersReturnOptional` passed to Avro compiler                                                                   |
+| optionalGettersForNullableFieldsOnly | `false`                            | `optionalGettersForNullableFieldsOnly` passed to Avro compiler                                                    |
+| fieldVisibility                      | `"PRIVATE"`                        | `fieldVisibility` passed to Avro compiler                                                                         |
+| outputCharacterEncoding              | see below                          | `outputCharacterEncoding` passed to Avro compiler                                                                 |
+| stringType                           | `"String"`                         | `stringType` passed to Avro compiler                                                                              |
+| templateDirectory                    | see below                          | `templateDir` passed to Avro compiler                                                                             |
+| additionalVelocityToolClasses        | see below                          | `additionalVelocityTools` passed to Avro compiler                                                                 |
+| enableDecimalLogicalType             | `true`                             | `enableDecimalLogicalType` passed to Avro compiler                                                                |
+| conversionsAndTypeFactoriesClasspath | empty `ConfigurableFileCollection` | used for loading custom conversions and logical type factories                                                    |
+| logicalTypeFactoryClassNames         | empty `Map`                        | map from names to class names of logical types factories to be loaded from `conversionsAndTypeFactoriesClasspath` |
+| customConversionClassNames           | empty `List`                       | class names of custom conversions to be loaded from `conversionsAndTypeFactoriesClasspath`                        |
 
 Additionally, the `avro` extension exposes the following methods:
 
@@ -254,6 +257,28 @@ Example:
 ```groovy
 avro {
     enableDecimalLogicalType = false
+}
+```
+
+## conversionsAndTypeFactoriesClasspath, logicalTypeFactoryClassNames and customConversionClassNames
+
+Properties that can be used for loading [Conversion](https://avro.apache.org/docs/current/api/java/org/apache/avro/Conversion.html) and [LogicalTypeFactory](https://avro.apache.org/docs/current/api/java/org/apache/avro/LogicalTypes.LogicalTypeFactory.html) classes from outside of the build classpath.
+
+Example:
+
+```groovy
+configurations {
+    customConversions
+}
+
+dependencies {
+    customConversions(project(":custom-conversions"))
+}
+
+avro {
+    conversionsAndTypeFactoriesClasspath.from(configurations.customConversions)
+    logicalTypeFactoryClassNames.put("timezone", "com.github.davidmc24.gradle.plugin.avro.test.custom.TimeZoneLogicalTypeFactory")
+    customConversionClassNames.add("com.github.davidmc24.gradle.plugin.avro.test.custom.TimeZoneConversion")
 }
 ```
 
