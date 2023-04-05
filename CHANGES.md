@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Support for using conversions and type factories located outside of build classpath (contribution from [erdi](https://github.com/erdi)); see  https://github.com/davidmc24/gradle-avro-plugin/pull/228
 
 ## 1.6.0
 * Add support for configuring classpath for `GenerateAvroJavaTask` (thanks to [crtlib](https://github.com/crtlib)); see https://github.com/davidmc24/gradle-avro-plugin/pull/222

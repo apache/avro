@@ -24,6 +24,8 @@ import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -44,11 +46,14 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> optionalGettersForNullableFieldsOnly;
     private final Property<Boolean> enableDecimalLogicalType;
+    private final ConfigurableFileCollection conversionsAndTypeFactoriesClasspath;
     private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
+    private final MapProperty<String, String> logicalTypeFactoryClassNames;
     private final ListProperty<Class<? extends Conversion<?>>> customConversions;
+    private final ListProperty<String> customConversionClassNames;
 
     @Inject
-    public DefaultAvroExtension(ObjectFactory objects) {
+    public DefaultAvroExtension(Project project, ObjectFactory objects) {
         this.outputCharacterEncoding = objects.property(String.class);
         this.stringType = objects.property(String.class).convention(Constants.DEFAULT_STRING_TYPE);
         this.fieldVisibility = objects.property(String.class).convention(Constants.DEFAULT_FIELD_VISIBILITY);
@@ -61,10 +66,15 @@ public class DefaultAvroExtension implements AvroExtension {
         this.optionalGettersForNullableFieldsOnly = objects.property(Boolean.class)
             .convention(Constants.DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY);
         this.enableDecimalLogicalType = objects.property(Boolean.class).convention(Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
+        this.conversionsAndTypeFactoriesClasspath = GradleCompatibility.createConfigurableFileCollection(project);
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(Constants.DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.logicalTypeFactoryClassNames = objects.mapProperty(String.class, String.class)
+            .convention(Constants.DEFAULT_LOGICAL_TYPE_FACTORY_CLASS_NAMES);
         this.customConversions =
             objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(Constants.DEFAULT_CUSTOM_CONVERSIONS);
+        this.customConversionClassNames =
+            objects.listProperty(String.class).convention(Constants.DEFAULT_CUSTOM_CONVERSION_CLASS_NAMES);
     }
 
     @Override
@@ -191,33 +201,93 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
+    public ConfigurableFileCollection getConversionsAndTypeFactoriesClasspath() {
+        return conversionsAndTypeFactoriesClasspath;
+    }
+
+    /**
+     * @deprecated use {@link #getLogicalTypeFactoryClassNames()} instead
+     */
+    @Deprecated
+    @Override
     public MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
         this.logicalTypeFactories.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Map)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
         this.logicalTypeFactories.set(logicalTypeFactories);
     }
 
     @Override
+    public MapProperty<String, String> getLogicalTypeFactoryClassNames() {
+        return logicalTypeFactoryClassNames;
+    }
+
+    public void setLogicalTypeFactoryClassNames(Provider<? extends Map<? extends String,
+        ? extends String>> provider) {
+        this.logicalTypeFactoryClassNames.set(provider);
+    }
+
+    public void setLogicalTypeFactoryClassNames(Map<? extends String,
+        ? extends String> logicalTypeFactoryClassNames) {
+        this.logicalTypeFactoryClassNames.set(logicalTypeFactoryClassNames);
+    }
+
+    /**
+     * @deprecated use {@link #getCustomConversionClassNames()} instead
+     */
+    @Deprecated
+    @Override
     public ListProperty<Class<? extends Conversion<?>>> getCustomConversions() {
         return customConversions;
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setCustomConversions(Provider<Iterable<Class<? extends Conversion<?>>>> provider) {
         this.customConversions.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Iterable)} instead
+     */
+    @Deprecated
     public void setCustomConversions(Iterable<Class<? extends Conversion<?>>> customConversions) {
         this.customConversions.set(customConversions);
     }
 
+    public ListProperty<String> getCustomConversionClassNames() {
+        return customConversionClassNames;
+    }
+
+    public void setCustomConversionClassNames(Provider<Iterable<String>> provider) {
+        this.customConversionClassNames.set(provider);
+    }
+
+    public void setCustomConversionClassNames(Iterable<String> customConversionClassNames) {
+        this.customConversionClassNames.set(customConversionClassNames);
+    }
+
+    /**
+     * @deprecated use {@link #logicalTypeFactory(String, String)} ()} instead
+     */
+    @Deprecated
     @Override
     public AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass) {
         logicalTypeFactories.put(typeName, typeFactoryClass);
@@ -225,8 +295,24 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
+    public AvroExtension logicalTypeFactory(String typeName, String typeFactoryClassName) {
+        logicalTypeFactoryClassNames.put(typeName, typeFactoryClassName);
+        return this;
+    }
+
+    /**
+     * @deprecated use {@link #customConversion(String)} ()} instead
+     */
+    @Deprecated
+    @Override
     public AvroExtension customConversion(Class<? extends Conversion<?>> conversionClass) {
         customConversions.add(conversionClass);
+        return this;
+    }
+
+    @Override
+    public AvroExtension customConversion(String conversionClassName) {
+        customConversionClassNames.add(conversionClassName);
         return this;
     }
 }

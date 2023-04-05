@@ -166,6 +166,55 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         javaSource.contains("java.util.TimeZone timezone;")
     }
 
+    def "can use a custom conversion from outside of the build classpath when generating java from a protocol"() {
+        given:
+        copyResource("customConversion.avpr", avroDir)
+        applyAvroPlugin()
+        buildFile << """
+        |configurations {
+        |    customConversions
+        |    implementation.extendsFrom(customConversions)
+        |}
+        |dependencies {
+        |    customConversions(project(":custom-conversions"))
+        |}
+        |avro {
+        |    stringType = "CharSequence"
+        |    conversionsAndTypeFactoriesClasspath.from(configurations.customConversions)
+        |    logicalTypeFactory("timezone", "com.github.davidmc24.gradle.plugin.avro.test.custom.TimeZoneLogicalTypeFactory")
+        |    customConversion("com.github.davidmc24.gradle.plugin.avro.test.custom.TimeZoneConversion")
+        |}
+        |""".stripMargin()
+        addDefaultRepository()
+        addAvroDependency()
+        projectFile("custom-conversions/build.gradle") << """
+        |plugins {
+        |   id "java-library"
+        |}
+        |repositories {
+        |    mavenCentral()
+        |}
+        |dependencies {
+        |    implementation "org.apache.avro:avro:${avroVersion}"
+        |}
+        |""".stripMargin()
+        projectFile("settings.gradle") << """
+        |include("custom-conversions")
+        |""".stripMargin()
+        copyCustomConversion("custom-conversions/src/main/java")
+
+        when:
+        def result = run()
+
+        then:
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
+        projectFile(buildOutputClassPath("test/Event.class")).file
+        def javaSource = projectFile("build/generated-main-avro-java/test/Event.java").text
+        javaSource.contains("java.time.Instant start;")
+        javaSource.contains("java.util.TimeZone timezone;")
+    }
+
     def "can use a custom logical type while generating a schema from a protocol"() {
         given:
         copyResource("customConversion.avpr", avroDir)

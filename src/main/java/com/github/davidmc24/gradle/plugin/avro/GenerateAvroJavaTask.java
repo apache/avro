@@ -23,14 +23,17 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
+import org.apache.avro.LogicalTypes.LogicalTypeFactory;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
@@ -38,6 +41,7 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
@@ -73,8 +77,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
     private FileCollection classpath;
+    private final ConfigurableFileCollection conversionsAndTypeFactoriesClasspath;
     private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
+    private final MapProperty<String, String> logicalTypeFactoryClassNames;
     private final ListProperty<Class<? extends Conversion<?>>> customConversions;
+    private final ListProperty<String> customConversionClassNames;
 
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
@@ -98,10 +105,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.createSetters = objects.property(Boolean.class).convention(Constants.DEFAULT_CREATE_SETTERS);
         this.enableDecimalLogicalType = objects.property(Boolean.class).convention(Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
         this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
+        this.conversionsAndTypeFactoriesClasspath = GradleCompatibility.createConfigurableFileCollection(getProject());
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(Constants.DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.logicalTypeFactoryClassNames = objects.mapProperty(String.class, String.class)
+            .convention(Constants.DEFAULT_LOGICAL_TYPE_FACTORY_CLASS_NAMES);
         this.customConversions =
             objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(Constants.DEFAULT_CUSTOM_CONVERSIONS);
+        this.customConversionClassNames =
+            objects.listProperty(String.class).convention(Constants.DEFAULT_CUSTOM_CONVERSION_CLASS_NAMES);
         this.stringTypeProvider = getStringType()
             .map(input -> Enums.parseCaseInsensitive(Constants.OPTION_STRING_TYPE, StringType.values(), input));
         this.fieldVisibilityProvider = getFieldVisibility()
@@ -249,33 +261,93 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Optional
+    @Classpath
+    public ConfigurableFileCollection getConversionsAndTypeFactoriesClasspath() {
+        return conversionsAndTypeFactoriesClasspath;
+    }
+
+    /**
+     * @deprecated use {@link #getLogicalTypeFactoryClassNames()} ()} instead
+     */
+    @Deprecated
+    @Optional
     @Input
     public MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
         this.logicalTypeFactories.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setLogicalTypeFactoryClassNames(Map)} ()} instead
+     */
+    @Deprecated
     public void setLogicalTypeFactories(Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
         this.logicalTypeFactories.set(logicalTypeFactories);
     }
 
+    @Input
+    @Optional
+    public MapProperty<String, String> getLogicalTypeFactoryClassNames() {
+        return logicalTypeFactoryClassNames;
+    }
+
+    public void setLogicalTypeFactoryClassNames(Provider<? extends Map<? extends String,
+        ? extends String>> provider) {
+        this.logicalTypeFactoryClassNames.set(provider);
+    }
+
+    public void setLogicalTypeFactoryClassNames(Map<? extends String,
+        ? extends String> logicalTypeFactoryClassNames) {
+        this.logicalTypeFactoryClassNames.set(logicalTypeFactoryClassNames);
+    }
+
+    /**
+     * @deprecated use {@link #getCustomConversions()} ()} instead
+     */
+    @Deprecated
     @Optional
     @Input
     public ListProperty<Class<? extends Conversion<?>>> getCustomConversions() {
         return customConversions;
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Provider)} ()} instead
+     */
+    @Deprecated
     public void setCustomConversions(Provider<Iterable<Class<? extends Conversion<?>>>> provider) {
         this.customConversions.set(provider);
     }
 
+    /**
+     * @deprecated use {@link #setCustomConversionClassNames(Iterable)} ()} instead
+     */
+    @Deprecated
     public void setCustomConversions(Iterable<Class<? extends Conversion<?>>> customConversions) {
         this.customConversions.set(customConversions);
+    }
+
+    @Optional
+    @Input
+    public ListProperty<String> getCustomConversionClassNames() {
+        return customConversionClassNames;
+    }
+
+    public void setCustomConversionClassNames(Provider<Iterable<String>> provider) {
+        this.customConversionClassNames.set(provider);
+    }
+
+    public void setCustomConversionClassNames(Iterable<String> customConversionClassNames) {
+        this.customConversionClassNames.set(customConversionClassNames);
     }
 
     @TaskAction
@@ -397,7 +469,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
      * Since {@link LogicalTypes} is a static registry, this may result in side-effects.
      */
     private void registerLogicalTypes() {
-        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactoryMap = logicalTypeFactories.get();
+        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactoryMap = resolveLocalTypeFactories();
         Set<Map.Entry<String, Class<? extends LogicalTypes.LogicalTypeFactory>>> logicalTypeFactoryEntries =
             logicalTypeFactoryMap.entrySet();
         for (Map.Entry<String, Class<? extends LogicalTypes.LogicalTypeFactory>> entry : logicalTypeFactoryEntries) {
@@ -412,8 +484,59 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> resolveLocalTypeFactories() {
+        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> result = new HashMap<>();
+        if (logicalTypeFactoryClassNames.isPresent()) {
+            ClassLoader typeFactoriesClassLoader = createConversionsAndTypeFactoriesClassLoader();
+            for (Entry<String, String> entry : logicalTypeFactoryClassNames.get().entrySet()) {
+                String logicalTypeFactoryClassName = entry.getValue();
+                try {
+                    Class<?> aClass = Class.forName(logicalTypeFactoryClassName, true, typeFactoriesClassLoader);
+                    result.put(entry.getKey(), (Class<? extends LogicalTypeFactory>) aClass);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException("Unable to load logical type factory class " + logicalTypeFactoryClassName, e);
+                }
+            }
+        }
+        result.putAll(logicalTypeFactories.get());
+        return result;
+    }
+
     private void registerCustomConversions(SpecificCompiler compiler) {
+        loadCustomConversionClasses().forEach(compiler::addCustomConversion);
         customConversions.get().forEach(compiler::addCustomConversion);
+    }
+
+    private List<Class<?>> loadCustomConversionClasses() {
+        if (customConversionClassNames.isPresent()) {
+            ClassLoader customConversionsClassLoader = createConversionsAndTypeFactoriesClassLoader();
+            return customConversionClassNames.get().stream()
+                .map(conversionClassName -> {
+                    try {
+                        return Class.forName(conversionClassName, true, customConversionsClassLoader);
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("Unable to load custom conversion class " + conversionClassName, e);
+                    }
+                }).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private ClassLoader createConversionsAndTypeFactoriesClassLoader() {
+        URL[] urls = conversionsAndTypeFactoriesClasspath.getFiles().stream()
+            .map(File::toURI)
+            .map(uri -> {
+                try {
+                    return uri.toURL();
+                } catch (MalformedURLException e) {
+                    throw new RuntimeException("Unable to resolve URL in conversions and type factories classpath", e);
+                }
+            })
+            .toArray(URL[]::new);
+
+        return new URLClassLoader(urls, getClass().getClassLoader());
     }
 
     private ClassLoader assembleClassLoader() {
