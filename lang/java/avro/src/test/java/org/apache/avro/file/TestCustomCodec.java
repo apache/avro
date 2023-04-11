@@ -33,10 +33,13 @@ public class TestCustomCodec {
   @Test
   void customCodec() {
     CustomCodec customCodec = new CustomCodec();
-    Codec snappyCodec = new SnappyCodec.Option().createInstance();
-    assertEquals(customCodec, new CustomCodec());
-    assertNotEquals(customCodec, snappyCodec);
-
+    try {
+      Codec snappyCodec = new SnappyCodec.Option().createInstance();
+      assertEquals(customCodec, new CustomCodec());
+      assertNotEquals(customCodec, snappyCodec);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
     String testString = "Testing 123";
     ByteBuffer original = ByteBuffer.allocate(testString.getBytes(UTF_8).length);
     original.put(testString.getBytes(UTF_8));
