@@ -185,9 +185,6 @@ jobs:
             python3 -m pip install --upgrade pip setuptools tox
           run: |
             set -x
-            echo $BENCH_MAX_WRITE_SECONDS
-            echo $BENCH_MAX_READ_SECONDS
-            export TOX_OVERRIDE="testenv.passenv=BENCH_MAX_WRITE_SECONDS, BENCH_MAX_READ_SECONDS"
             git config --global --add safe.directory /avro
             ./build.sh clean test
 
