@@ -4369,4 +4369,68 @@ mod tests {
             panic!("Expected a record schema!");
         }
     }
+
+    #[test]
+    fn avro_3735_parse_enum_namespace() {
+        let schema = r#"
+        {
+            "type": "record",
+            "name": "Foo",
+            "namespace": "name.space",
+            "fields":
+            [
+                {
+                    "name": "barInit",
+                    "type":
+                    {
+                        "type": "enum",
+                        "name": "Bar",
+                        "symbols":
+                        [
+                            "bar0",
+                            "bar1"
+                        ]
+                    }
+                },
+                {
+                    "name": "barUse",
+                    "type": "Bar"
+                }
+            ]
+        } 
+        "#;
+
+        #[derive(
+            Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, serde::Deserialize, serde::Serialize,
+        )]
+        pub enum Bar {
+            #[serde(rename = "bar0")]
+            Bar0,
+            #[serde(rename = "bar1")]
+            Bar1,
+        }
+
+        #[derive(Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+        pub struct Foo {
+            #[serde(rename = "barInit")]
+            pub bar_init: Bar,
+            #[serde(rename = "barUse")]
+            pub bar_use: Bar,
+        }
+
+        let schema = Schema::parse_str(schema).unwrap();
+
+        let foo = Foo {
+            bar_init: Bar::Bar0,
+            bar_use: Bar::Bar1,
+        };
+
+        let avro_value = crate::to_value(foo).unwrap();
+        assert!(avro_value.validate(&schema));
+
+        let mut writer = crate::Writer::new(&schema, Vec::new());
+
+        // schema validation happens here
+        writer.append(avro_value).unwrap();
+    }
 }
