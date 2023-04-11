@@ -223,7 +223,6 @@ jobs:
           run: |
             set -x
             ./build.sh clean test
-  
 
   rust:
     name: Rust on Linux ARM64
