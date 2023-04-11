@@ -220,7 +220,7 @@ jobs:
             --volume "${PWD}:/avro" --workdir /avro/lang/ruby
           install: |
             apt-get update -q
-            apt-get install -q -y ruby-dev bundler libsnappy-dev
+            apt-get install -q -y ruby-dev bundler libsnappy-dev libyaml-dev
           run: |
             set -x
             ./build.sh clean test
