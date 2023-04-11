@@ -54,7 +54,7 @@ jobs:
             apt-get install -q -y openjdk-8-jdk wget tar
           run: |
             set -x
-            export MAVEN_VERSION="3.8.5"
+            export MAVEN_VERSION="3.9.1"
             wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
             tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
             export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
