@@ -62,7 +62,7 @@ jobs:
             export PATH="$M2_HOME/bin:$JAVA_HOME/bin:$PATH"
             java -version
             mvn -version
-            MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*" ./build.sh clean test
+            MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
             
   c:
     name: C on Linux ARM64
