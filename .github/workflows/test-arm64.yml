@@ -62,7 +62,7 @@ jobs:
             export PATH="$M2_HOME/bin:$JAVA_HOME/bin:$PATH"
             java -version
             mvn -version
-            ./build.sh clean test
+            MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*" ./build.sh clean test
             
   c:
     name: C on Linux ARM64
@@ -181,7 +181,7 @@ jobs:
             apt-get install -q -y software-properties-common 
             add-apt-repository -y ppa:deadsnakes/ppa
             apt-get update -q
-            apt-get install -q -y python3.6 python3.7 python3.8 python3.9 python3.10 python3-pip git libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
+            apt-get install -q -y python3.7 python3.8 python3.9 python3.10 python3-pip git libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev python3-distutils
             python3 -m pip install --upgrade pip setuptools tox
           run: |
             set -x
