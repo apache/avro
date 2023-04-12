@@ -45,7 +45,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "${HOME}/.m2:/root/.m2" --workdir /avro/lang/java
@@ -78,7 +78,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --workdir /avro/lang/c
@@ -103,7 +103,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro"  --workdir /avro/lang/c++
@@ -138,7 +138,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "$HOME/.nuget/packages:/root/.nuget/packages"  --workdir /avro/lang/csharp
@@ -172,7 +172,7 @@ jobs:
             BENCH_MAX_WRITE_SECONDS: 300 
             BENCH_MAX_READ_SECONDS: 300
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --workdir /avro/lang/py
@@ -211,7 +211,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --workdir /avro/lang/ruby
@@ -251,7 +251,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "$HOME/.cargo:/root/.cargo" --volume "$HOME/target:/root/avro/target" --workdir /avro/lang/rust
@@ -277,7 +277,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --workdir /avro/lang/perl
@@ -308,7 +308,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --workdir /avro/lang/php
@@ -351,7 +351,7 @@ jobs:
           env: |
             GITHUB_WORKFLOW: ${{ github.workflow }}-${{ github.job }}
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/avro" --volume "$HOME/.npm:/root/.npm" --workdir /avro/lang/js
