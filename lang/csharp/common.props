@@ -19,7 +19,7 @@
 
   <PropertyGroup Label="Common Versions">
     <!-- Read version from shared VERSION.txt file -->
-    <AvroVersionFilePath>$(MSBuildThisFileDirectory)/../../share/VERSION.txt</AvroVersionFilePath>
+    <AvroVersionFilePath>$(MSBuildThisFileDirectory)../../share/VERSION.txt</AvroVersionFilePath>
     <AvroVersion>$([System.IO.File]::ReadAllText($(AvroVersionFilePath)).Trim())</AvroVersion>
 
     <!-- Parse out parts of the version -->
