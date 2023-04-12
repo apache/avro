@@ -1,0 +1,238 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# For most projects, this workflow file will not need changing; you simply need
+# to commit it to your repository.
+
+name: Deploy Avro site
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/docs.yaml
+      - doc/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-website:
+    name: Build website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout docs sources
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install NPM dependencies
+        run: |
+          set -x
+          cd doc
+          npm install
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 0.111.3
+          extended: true
+
+      - name: Build docs
+        run: |
+          set -x
+          cd doc
+          hugo --minify --destination ../website --baseURL=/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: website
+          path: website
+
+  build-api-c:
+    name: Build C API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build C docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config asciidoc source-highlight libsource-highlight-dev
+          cd lang/c
+          ./build.sh clean docs
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: api-c
+          path: build/c/docs
+
+  build-api-cpp:
+    name: Build C++ API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build C++ docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y gcc g++ libboost-all-dev cmake doxygen
+          cd lang/c++
+          ./build.sh clean doc
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: api-c++
+          path: lang/c++/doc/html
+
+  build-api-csharp:
+    name: Build C# API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build C# docs
+        run: |
+          set -x
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget libzstd-dev libicu-dev doxygen
+          sudo wget https://dot.net/v1/dotnet-install.sh
+          bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet"
+          cd lang/csharp
+          mkdir -p build/doc
+          doxygen Avro.dox
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: api-csharp
+          path: lang/csharp/build/doc/html
+
+  build-api-java:
+    name: Build Java API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 8
+
+      - name: Build Java docs
+        run: |
+          set -x
+          cd lang/java
+          mvn javadoc::aggregate
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: api-java
+          path: lang/java/target/site/apidocs
+
+  push-website:
+    name: Push website
+    needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout asf-site branch
+        uses: actions/checkout@v3
+        with:
+          ref: asf-site
+          path: asf-site
+
+      - name: Download website
+        uses: actions/download-artifact@v3
+        with:
+          name: website
+          path: website
+
+      - name: Download api-c
+        uses: actions/download-artifact@v3
+        with:
+          name: api-c
+          path: api-c
+
+      - name: Download api-c++
+        uses: actions/download-artifact@v3
+        with:
+          name: api-c++
+          path: api-c++
+
+      - name: Download api-csharp
+        uses: actions/download-artifact@v3
+        with:
+          name: api-csharp
+          path: api-csharp
+
+      - name: Download api-java
+        uses: actions/download-artifact@v3
+        with:
+          name: api-java
+          path: api-java
+
+      - name: Copy & push the generated HTML
+        run: |
+          set -x
+
+          mkdir -p website/docs/++version++/api/c
+          mkdir -p website/docs/++version++/api/cpp/html
+          mkdir -p website/docs/++version++/api/csharp/html
+          mkdir -p website/docs/++version++/api/java
+
+          mv api-c/* website/docs/++version++/api/c/
+          mv api-c++/* website/docs/++version++/api/cpp/html/
+          mv api-csharp/* website/docs/++version++/api/csharp/html/
+          mv api-java/* website/docs/++version++/api/java/
+          rmdir api-c api-c++ api-csharp api-java
+
+          cd asf-site
+          rsync \
+            -a \
+            --delete \
+            --exclude '/.git/' \
+            ../website/ \
+            ./
+          echo "publish:
+                  whoami: asf-site
+                  " > .asf.yaml
+          touch .nojekyll
+          git status --porcelain
+          if [ "$(git status --porcelain)" != "" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add --all
+            git commit -m 'Publish built docs triggered by ${{ github.sha }}'
+            git push || git push --force
+          fi
