@@ -76,6 +76,14 @@ namespace Avro
         protected Dictionary<string, CodeNamespace> NamespaceLookup { get; private set; }
 
         /// <summary>
+        /// Get list of files produced by code generation
+        /// </summary>
+        /// <value>
+        /// List of generated files
+        /// </value>
+        public IList<string> GeneratedFiles { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CodeGen"/> class.
         /// </summary>
         public CodeGen()
@@ -83,6 +91,7 @@ namespace Avro
             Schemas = new List<Schema>();
             Protocols = new List<Protocol>();
             NamespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+            GeneratedFiles = new List<string>();
         }
 
         /// <summary>
@@ -1150,6 +1159,8 @@ namespace Avro
             opts.IndentString = "\t";
             opts.BlankLinesBetweenMembers = false;
 
+            GeneratedFiles.Clear();
+
             CodeNamespaceCollection nsc = CompileUnit.Namespaces;
             for (int i = 0; i < nsc.Count; i++)
             {
@@ -1183,6 +1194,8 @@ namespace Avro
                         cscp.GenerateCodeFromNamespace(new_ns, writer, opts);
                         new_ns.Types.Remove(ctd);
                     }
+                    // collect generated file name
+                    GeneratedFiles.Add(file);
                 }
             }
         }
