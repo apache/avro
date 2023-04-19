@@ -300,8 +300,9 @@ do
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
       } > Dockerfile
+      # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- lang/ruby/Gemfile Dockerfile | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
@@ -336,7 +337,7 @@ do
       ;;
 
     docker-test)
-      tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
+      tar -cf- share/docker/Dockerfile lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest |
         docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;

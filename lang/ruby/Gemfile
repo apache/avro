@@ -16,8 +16,14 @@
 
 source 'https://rubygems.org'
 
-VERSION = File.open('../../share/VERSION.txt').read.sub('-SNAPSHOT', '.pre1').chomp
-File.write("lib/avro/VERSION.txt", VERSION)
+# Add the VERSION.txt if it exists, or use a fake one for preinstalling gems
+version_path = '../../share/VERSION.txt'
+if File.exist?(version_path)
+  VERSION = File.open(version_path).read.sub('-SNAPSHOT', '.pre1').chomp
+  File.write("lib/avro/VERSION.txt", VERSION)
+else
+  File.write("/tmp/lib/avro/VERSION.txt", "0.0.1-fake")
+end
 
 gemspec
 
