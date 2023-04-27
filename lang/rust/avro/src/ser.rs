@@ -283,6 +283,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
         Ok(StructVariantSerializer::new(index, variant, len))
     }
+
+    fn is_human_readable(&self) -> bool {
+        false
+    }
 }
 
 impl ser::SerializeSeq for SeqSerializer {
