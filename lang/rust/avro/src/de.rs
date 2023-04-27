@@ -537,6 +537,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         self.deserialize_any(visitor)
     }
+
+    fn is_human_readable(&self) -> bool {
+        false
+    }
 }
 
 impl<'de> de::SeqAccess<'de> for SeqDeserializer<'de> {
