@@ -1002,4 +1002,14 @@ mod tests {
             "error serializing tuple untagged enum"
         );
     }
+
+    #[test]
+    fn test_human_readable() {
+        // AVRO-3747: set is_human_readable to false
+        use serde::ser::Serializer as SerdeSerializer;
+
+        let mut ser = Serializer {};
+
+        assert_eq!((&mut ser).is_human_readable(), false);
+    }
 }

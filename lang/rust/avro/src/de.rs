@@ -1224,4 +1224,16 @@ mod tests {
         assert_eq!(deserialized, reference);
         Ok(())
     }
+
+    #[test]
+    fn test_human_readable() -> TestResult<()> {
+        // AVRO-3747: set is_human_readable to false
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        let deser = Deserializer::new(&Value::Null);
+
+        assert_eq!((&deser).is_human_readable(), false);
+
+        Ok(())
+    }
 }
