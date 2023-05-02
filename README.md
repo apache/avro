@@ -1,3 +1,5 @@
+this repo is Work in Progress...
+
 # Apache Avro™
 
 Apache Avro™ is a data serialization system.
@@ -45,6 +47,12 @@ The project Avro.sampleMultiSchema contains 2 schema files that are used to test
 
 `
 Avro.sampleMultiSchema>.\tool\avrogenms -ms .\avroFiles\schema01.avsc;.\avroFiles\schema02.avsc .\generated
+`
+
+or load from a folder:
+
+`
+Avro.sampleMultiSchema>.\tool\avrogenms -ms .\avroFiles .\generated
 `
 
 If you build the project, the build should pass including the 2 generated C# classes from schema files.
