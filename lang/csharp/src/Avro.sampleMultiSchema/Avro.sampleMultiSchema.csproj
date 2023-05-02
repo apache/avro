@@ -1,15 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="$(ProjectDir)tool\avrogenms -ms $(ProjectDir)avroFiles\schema01.avsc;$(ProjectDir)avroFiles\schema02.avsc $(ProjectDir)generated" />
+    <!-- <Exec Command="$(ProjectDir)tool\avrogenms -ms $(ProjectDir)avroFiles\schema01.avsc;$(ProjectDir)avroFiles\schema02.avsc $(ProjectDir)generated" /> -->
+    <!--<Exec Command="dotnet $(ProjectDir)..\apache\codegen\$(OutputDir)avrogen.dll -ms $(ProjectDir)avroFiles $(ProjectDir)generated" />-->
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="apache.avro" Version="1.9.1" />
+    <PackageReference Include="apache.avro" Version="1.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\apache\codegen\Avro.codegen.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="generated\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="avroFiles\01_car.avsc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="avroFiles\02_ownerInfo.avsc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="avroFiles\00_carModelAndPerson.avsc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

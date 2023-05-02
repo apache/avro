@@ -10,7 +10,7 @@
 		},
 		{ 
 			"name" : "owner", 
-			"type" : "string"
+			"type" : "com.persons.Owner"
 		}
 ]
 }]

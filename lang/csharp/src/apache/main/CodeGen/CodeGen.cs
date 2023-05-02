@@ -21,6 +21,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.CSharp;
@@ -879,6 +880,48 @@ namespace Avro
             opts.BlankLinesBetweenMembers = false;
 
             CodeNamespaceCollection nsc = CompileUnit.Namespaces;
+            for (int i = 0; i < nsc.Count; i++)
+            {
+                var ns = nsc[i];
+
+                string dir = outputdir;
+                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                {
+                    dir = Path.Combine(dir, name);
+                }
+                Directory.CreateDirectory(dir);
+
+                var new_ns = new CodeNamespace(ns.Name);
+                new_ns.Comments.Add(CodeGenUtil.Instance.FileComment);
+                foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
+                    new_ns.Imports.Add(nci);
+
+                var types = ns.Types;
+                for (int j = 0; j < types.Count; j++)
+                {
+                    var ctd = types[j];
+                    string file = Path.Combine(dir, Path.ChangeExtension(CodeGenUtil.Instance.UnMangle(ctd.Name), "cs"));
+                    using (var writer = new StreamWriter(file, false))
+                    {
+                        new_ns.Types.Add(ctd);
+                        cscp.GenerateCodeFromNamespace(new_ns, writer, opts);
+                        new_ns.Types.Remove(ctd);
+                    }
+                }
+            }
+        }
+
+        public virtual void WriteTypes(string outputdir, List<string> targetNamespaces)
+        {
+            var cscp = new CSharpCodeProvider();
+
+            var opts = new CodeGeneratorOptions();
+            opts.BracingStyle = "C";
+            opts.IndentString = "\t";
+            opts.BlankLinesBetweenMembers = false;
+
+            CodeNamespaceCollection nsc = new CodeNamespaceCollection();
+            nsc.AddRange(CompileUnit.Namespaces.Cast<CodeNamespace>().Where(n => targetNamespaces.Contains(n.Name)).ToArray());
             for (int i = 0; i < nsc.Count; i++)
             {
                 var ns = nsc[i];
