@@ -1,6 +1,7 @@
 - Refactor CodeGen.WriteTypes() methods: for code clarity, we have now two methods.
 - Currently, avcs files needs to be loaded in order of their dependency. 
-A smart load could be done catchin exception when schema issue, puting the file in retry list, continue loading next files and try again later to see if dependencies were already loaded.
+    A smart load could be done catching exception when schema issue, puting the file in retry list, 
+    continue loading next files and try again later to see if dependencies were already loaded.
 - Test if Namespace mapping is still working with -ms option.
 - Update Readme: Mention than we can load avro files with folder path only.
 - Improve test project to build the generated code and validate it.
