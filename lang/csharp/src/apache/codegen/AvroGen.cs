@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -212,7 +213,7 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception occurred. " + ex.Message);
+                Console.Error.WriteLine("Exception occurred. " + ex.Message);
                 return 1;
             }
 
