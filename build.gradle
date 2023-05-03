@@ -21,7 +21,7 @@ plugins {
 // support.
 
 group = "com.github.davidmc24.gradle.plugin"
-version = "1.7.1-SNAPSHOT"
+version = "1.7.1"
 
 def isCI = System.getenv("CI") == "true"
 
@@ -52,6 +52,14 @@ task createClasspathManifest {
 dependencies {
     implementation localGroovy()
     implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
+    constraints {
+        implementation ('com.fasterxml.jackson.core:jackson-databind:2.12.7.1') {
+            because 'previous versions have vulnerabilities: CVE-2022-42004, CVE-2022-42003'
+        }
+        implementation ('org.apache.commons:commons-text:1.10.0') {
+            because 'previous versions have vulnerability: CVE-2022-42889'
+        }
+    }
     testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
     testImplementation gradleTestKit()
     testImplementation "uk.co.datumedge:hamcrest-json:0.2"
