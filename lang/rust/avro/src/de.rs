@@ -539,7 +539,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     }
 
     fn is_human_readable(&self) -> bool {
-        false
+        crate::util::is_human_readable()
     }
 }
 
@@ -1229,6 +1229,8 @@ mod tests {
     fn test_human_readable() -> TestResult<()> {
         // AVRO-3747: set is_human_readable to false
         use serde::de::Deserializer as SerdeDeserializer;
+
+        crate::util::set_human_readable(false);
 
         let deser = Deserializer::new(&Value::Null);
 

@@ -285,7 +285,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn is_human_readable(&self) -> bool {
-        false
+        crate::util::is_human_readable()
     }
 }
 
@@ -1004,9 +1004,13 @@ mod tests {
     }
 
     #[test]
+    // the serde `Serializer` trait is only implemented for `&mut Serializer`
+    #[allow(clippy::unnecessary_mut_passed)]
     fn test_human_readable() {
         // AVRO-3747: set is_human_readable to false
         use serde::ser::Serializer as SerdeSerializer;
+
+        crate::util::set_human_readable(false);
 
         let mut ser = Serializer {};
 

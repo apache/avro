@@ -27,6 +27,13 @@ pub const DEFAULT_MAX_ALLOCATION_BYTES: usize = 512 * 1024 * 1024;
 static mut MAX_ALLOCATION_BYTES: usize = DEFAULT_MAX_ALLOCATION_BYTES;
 static MAX_ALLOCATION_BYTES_ONCE: Once = Once::new();
 
+/// Whether to set serialization & deserialization traits
+/// as `human_readable` or not.
+/// See set_human_readable to change this value.
+pub const DEFAULT_HUMAN_READABLE: bool = true;
+static mut HUMAN_READABLE: bool = DEFAULT_HUMAN_READABLE;
+static HUMAN_READABLE_ONCE: Once = Once::new();
+
 pub trait MapHelper {
     fn string(&self, key: &str) -> Option<String>;
 
@@ -151,6 +158,27 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
             maximum: max_bytes,
         })
     }
+}
+
+/// Set whether serializing/deserializing is marked as human readable in serde traits.
+/// This will adjust the return value of `is_human_readable()` for both.
+/// Once called, the value cannot be changed.
+///
+/// **NOTE** This function must be called before serializing/deserializing **any** data. The
+/// library leverages [`std::sync::Once`](https://doc.rust-lang.org/std/sync/struct.Once.html)
+/// to set the limit either when calling this method, or when decoding for
+/// the first time.
+pub fn set_human_readable(human_readable: bool) -> bool {
+    unsafe {
+        HUMAN_READABLE_ONCE.call_once(|| {
+            HUMAN_READABLE = human_readable;
+        });
+        HUMAN_READABLE
+    }
+}
+
+pub fn is_human_readable() -> bool {
+    set_human_readable(DEFAULT_HUMAN_READABLE)
 }
 
 #[cfg(test)]
