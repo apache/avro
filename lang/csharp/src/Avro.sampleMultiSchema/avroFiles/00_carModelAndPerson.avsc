@@ -1,0 +1,34 @@
+[
+{
+"type" : "record",
+"name" : "CarModel",
+"namespace" : "com.cars",
+"fields" :
+	[ 	
+		{ 
+			"name" : "brand",
+			 "type" : "string" 
+		},
+		{ 
+			"name" : "model", 
+			"type" : "string"
+		}
+	]
+},
+{
+"type" : "record",
+"name" : "Owner",
+"namespace" : "com.persons",
+"fields" :
+	[ 	
+		{ 
+			"name" : "firstName",
+			 "type" : "string" 
+		},
+		{ 
+			"name" : "lastName", 
+			"type" : "string"
+		}
+	]
+}
+]

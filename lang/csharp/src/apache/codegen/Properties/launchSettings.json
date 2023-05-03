@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Avro.codegen": {
+      "commandName": "Project",
+      "commandLineArgs": "-ms C:\\workspace\\apache.avro\\lang\\csharp\\src\\Avro.sampleMultiSchema\\avroFiles\\schema01.avsc;C:\\workspace\\apache.avro\\lang\\csharp\\src\\Avro.sampleMultiSchema\\avroFiles\\schema02.avsc C:\\workspace\\apache.avro\\lang\\csharp\\src\\Avro.sampleMultiSchema\\generated"
+    }
+  }
+}

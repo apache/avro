@@ -53,6 +53,8 @@ namespace Avro
             bool? isProtocol = null;
             string inputFile = null;
             string outputDir = null;
+            List<string> msFiles = new List<string>();
+
             bool skipDirectoriesCreation = false;
             var namespaceMapping = new Dictionary<string, string>();
             for (int i = 0; i < args.Length; ++i)
@@ -104,9 +106,19 @@ namespace Avro
                 {
                     skipDirectoriesCreation = true;
                 }
+                else if (args[i] == "-ms")
+                {
+                    msFiles.AddRange(args[++i].Split(new string[] { ",", ";" }, StringSplitOptions.RemoveEmptyEntries));
+                    Console.WriteLine("Schema files to parse:");
+                    foreach (var item in msFiles)
+                    {
+                        Console.WriteLine(item);
+                    }
+                }
                 else if (outputDir == null)
                 {
                     outputDir = args[i];
+                    Console.WriteLine($"Files will generated at: {outputDir}");
                 }
                 else
                 {
@@ -114,6 +126,10 @@ namespace Avro
                     Usage();
                 }
             }
+
+            if (msFiles.Any())
+                return GenSchema(msFiles, outputDir, namespaceMapping);
+
 
             // Ensure we got all the command line arguments we need
             bool isValid = true;
@@ -149,6 +165,7 @@ namespace Avro
                 "Usage:\n" +
                 "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
+                "  avrogen -ms <schemafiles> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
                 "  -h --help        Show this screen.\n" +
                 "  -V --version     Show version.\n" +
@@ -195,11 +212,106 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Exception occurred. " + ex.Message);
+                Console.WriteLine("Exception occurred. " + ex.Message);
                 return 1;
             }
 
             return 0;
+        }
+
+        static int GenSchema(List<string> infiles, string outdir, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            try
+            {
+                var sn = new SchemaNames();
+                CodeGen codegen = new CodeGen();
+                var targetNs = new List<string>();
+
+                if (infiles.Count == 1)
+                {
+                    FileAttributes attr = System.IO.File.GetAttributes(infiles.First());
+                    if (attr.HasFlag(FileAttributes.Directory))
+                    {
+                        var dirInfo = new DirectoryInfo(infiles.First());
+                        infiles = dirInfo.GetFiles("*.avsc", SearchOption.TopDirectoryOnly)
+                                         .OrderBy(f => f.Name)
+                                         .Select(f => f.FullName)
+                                         .ToList();
+                    }
+                }
+
+                var toRetry = new List<string>();
+                foreach (var infile in infiles)
+                {
+                    FileAttributes attr = System.IO.File.GetAttributes(infile);
+                    if (attr.HasFlag(FileAttributes.Directory))
+                        continue;
+
+                    Console.WriteLine($"Loading Schema from: [{infile}]");
+                    string text = System.IO.File.ReadAllText(infile);
+
+                    //try
+                    {
+                        Schema schema = Schema.Parse(text, sn);
+                        var namespaces = GetNamespacesFromSchema(schema);
+
+                        foreach (var n in namespaces)
+                        {
+                            if (!targetNs.Contains(n))
+                            {
+                                targetNs.Add(n);
+                            }
+                        }
+
+                        codegen.AddSchema(schema);
+                    }
+                    //catch(Avro.SchemaParseException e)
+                    //{
+                    //    if (toRetry.Contains(infile))
+                    //        toRetry.Remove(infile);
+                    //    else
+                    //        toRetry.Add(infile);
+                    //}
+                }
+
+                foreach (var entry in namespaceMapping)
+                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+
+                Console.WriteLine("Generating code ...");
+
+                codegen.GenerateCode();
+                codegen.WriteTypes(outdir, targetNs);
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception occurred. " + ex.Message);
+                return 1;
+            }
+        }
+
+        private static List<string> GetNamespacesFromSchema(Schema schema)
+        {
+            var result = new List<string>();
+
+            if (schema is NamedSchema namedSchema && !result.Contains(namedSchema.Namespace))
+            {
+                result.Add(namedSchema.Namespace);
+            }
+
+            if (schema is UnionSchema unionSchema)
+            {
+                foreach (var s in unionSchema.Schemas)
+                {
+                    if (s is RecordSchema recordSchema && !result.Contains(recordSchema.Namespace))
+                    {
+                        result.Add(recordSchema.Namespace);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

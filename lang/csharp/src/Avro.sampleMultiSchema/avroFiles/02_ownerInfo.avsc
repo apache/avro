@@ -1,0 +1,16 @@
+[{
+"type" : "record",
+"name" : "OwnerInformation",
+"namespace" : "com.persons",
+"fields" :
+	[ 	
+		{ 
+			"name" : "owner", 
+			"type" : "com.persons.Owner"
+		},
+		{ 
+			"name" : "address", 
+			"type" : "string"
+		}
+	]
+}]

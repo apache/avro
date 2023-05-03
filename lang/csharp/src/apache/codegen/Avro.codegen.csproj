@@ -13,6 +13,9 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+   
+   
+  
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -47,6 +50,7 @@
       Remote procedure call (RPC).
       Simple integration with dynamic languages. Code generation is not required to read or write data files nor to use or implement RPC protocols. Code generation as an optional optimization, only worth implementing for statically typed languages.
     </Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <!--
