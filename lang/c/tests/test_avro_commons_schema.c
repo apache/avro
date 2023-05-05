@@ -104,6 +104,8 @@ static void read_data(const char *dirpath, avro_schema_t schema) {
     fprintf(stdout, "\nExit run test OK => %d records", records_read);
     remove("./copy.avro");
     fflush(stdout);
+    avro_file_reader_close(reader);
+    avro_file_writer_close(writer);
 }
 
 static void run_tests(const char *dirpath)
@@ -111,6 +113,7 @@ static void run_tests(const char *dirpath)
     fprintf(stdout, "\nRun test for path '%s'", dirpath);
     avro_schema_t schema = read_common_schema_test(dirpath);
     read_data(dirpath, schema);
+    avro_schema_decref(schema);
 }
 
 
