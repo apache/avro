@@ -1,0 +1,18 @@
+{
+  "name": "SolarSystem",
+  "namespace": "Space.Bodies",
+  "type": "record",
+  "fields": [
+    {
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "name": "Planets",
+      "type": {
+        "type": "array",
+        "items": "Space.Models.PlanetEnum"
+      }
+    }
+  ]
+}

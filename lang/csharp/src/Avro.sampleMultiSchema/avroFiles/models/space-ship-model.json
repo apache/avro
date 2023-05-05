@@ -1,0 +1,15 @@
+{
+  "name": "SpaceShip",
+  "namespace": "Space.Travel",
+  "type": "record",
+  "fields": [
+    {
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "name": "HomePlanet",
+      "type": "Space.Models.PlanetEnum"
+    }
+  ]
+}

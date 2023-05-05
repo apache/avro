@@ -234,7 +234,7 @@ namespace Avro
                     if (attr.HasFlag(FileAttributes.Directory))
                     {
                         var dirInfo = new DirectoryInfo(infiles.First());
-                        infiles = dirInfo.GetFiles("*.avsc", SearchOption.TopDirectoryOnly)
+                        infiles = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly)
                                          .OrderBy(f => f.Name)
                                          .Select(f => f.FullName)
                                          .ToList();

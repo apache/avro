@@ -1,0 +1,13 @@
+{
+  "name": "PlanetEnum",
+  "namespace": "Space.Models",
+  "type": "enum",
+  "symbols": [
+    "Earth",
+    "Mars",
+    "Jupiter",
+    "Saturn",
+    "Uranus",
+    "Neptune"
+  ]
+}

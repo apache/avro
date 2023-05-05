@@ -6,7 +6,8 @@ namespace Avro.sampleMultiSchema
     {
         public static int Main(string[] args)
         {
-            return Avro.AvroGen.Main(new string[] { "-ms", "avroFiles", "generated" });
+            //return Avro.AvroGenTool.Main(new string[] { "-ms", "avroFiles/models", "generated" });
+            return 0;
         }
     }
 }
