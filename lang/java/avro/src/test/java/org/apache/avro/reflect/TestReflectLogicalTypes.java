@@ -768,6 +768,6 @@ class RecordWithTimestamps {
       return false;
     }
     RecordWithTimestamps that = (RecordWithTimestamps) obj;
-    return Objects.equals(that.localDateTime, that.localDateTime);
+    return Objects.equals(localDateTime, that.localDateTime);
   }
 }
