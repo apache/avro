@@ -2638,4 +2638,38 @@ Field with name '"b"' is not a member of the map items"#,
     fn test_avro_3688_field_b_set() {
         avro_3688_schema_resolution_panic(true);
     }
+
+    #[test]
+    fn avro_3752_logging_test() -> anyhow::Result<()> {
+        // we'll match string against this schema, as you can see it's the last variant.
+        let raw_schema = r#"{
+            "type": "record",
+            "name": "root",
+            "fields": [
+                {
+                    "name": "union",
+                    "type": [
+                        "null",
+                        "int",
+                        "boolean",
+                        {
+                            "type": "enum",
+                            "symbols": ["A"],
+                            "name": "enum"
+                        }
+                    ]
+                }
+            ]
+        }"#;
+        let schema = Schema::parse_str(raw_schema)?;
+        // dbg!(&schema);
+        let avro_value = Value::Record(vec![(
+            "union".to_string(),
+            Value::Union(3, Box::new(Value::Enum(0, "A".to_string()))),
+        )]);
+        // dbg!(&avro_value);
+        let resolved = avro_value.resolve(&schema)?;
+        dbg!(resolved);
+        Ok(())
+    }
 }
