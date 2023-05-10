@@ -585,3 +585,13 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
