@@ -698,7 +698,7 @@ mod tests {
         assert_eq!(to_avro_datum(&schema, union).unwrap(), expected);
     }
 
-    type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
+    type TestResult<T> = anyhow::Result<T, Box<dyn std::error::Error>>;
 
     fn logical_type_test<T: Into<Value> + Clone>(
         schema_str: &'static str,
