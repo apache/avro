@@ -104,6 +104,11 @@ namespace Avro.Test.AvroGen
         public void CommandLineMsArgs(params string[] args)
         {
             AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(args);
+
+            Assert.IsTrue(System.IO.File.Exists("generated/org/vehicule/Cars.cs"));
+            Assert.IsTrue(System.IO.File.Exists("generated/com/cars/CarModel.cs"));
+            Assert.IsTrue(System.IO.File.Exists("generated/com/person/Owner.cs"));
+            Assert.IsTrue(System.IO.File.Exists("generated/com/person/OwnerInformation.cs"));
         }
     }
 }
