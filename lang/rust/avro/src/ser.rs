@@ -1004,16 +1004,36 @@ mod tests {
     }
 
     #[test]
-    // the serde `Serializer` trait is only implemented for `&mut Serializer`
-    #[allow(clippy::unnecessary_mut_passed)]
-    fn test_human_readable() {
-        // AVRO-3747: set is_human_readable to false
+    fn avro_3747_human_readable_false() {
         use serde::ser::Serializer as SerdeSerializer;
 
-        crate::util::set_human_readable(false);
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = false;
+        }
 
         let mut ser = Serializer {};
 
-        assert_eq!((&mut ser).is_human_readable(), false);
+        // the serde `Serializer` trait is only implemented for `&mut Serializer`
+        #[allow(clippy::unnecessary_mut_passed)]
+        {
+            assert_eq!((&mut ser).is_human_readable(), false);
+        }
+    }
+
+    #[test]
+    fn avro_3747_human_readable_true() {
+        use serde::ser::Serializer as SerdeSerializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = true;
+        }
+
+        let mut ser = Serializer {};
+
+        // the serde `Serializer` trait is only implemented for `&mut Serializer`
+        #[allow(clippy::unnecessary_mut_passed)]
+        {
+            assert!((&mut ser).is_human_readable());
+        }
     }
 }

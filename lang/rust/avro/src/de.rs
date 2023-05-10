@@ -1226,15 +1226,33 @@ mod tests {
     }
 
     #[test]
-    fn test_human_readable() -> TestResult<()> {
+    fn avro_3747_human_readable_false() -> TestResult<()> {
         // AVRO-3747: set is_human_readable to false
         use serde::de::Deserializer as SerdeDeserializer;
 
-        crate::util::set_human_readable(false);
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = false;
+        }
 
         let deser = Deserializer::new(&Value::Null);
 
         assert_eq!((&deser).is_human_readable(), false);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3747_human_readable_true() -> TestResult<()> {
+        // AVRO-3747: set is_human_readable to false
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = true;
+        }
+
+        let deser = Deserializer::new(&Value::Null);
+
+        assert!((&deser).is_human_readable());
 
         Ok(())
     }
