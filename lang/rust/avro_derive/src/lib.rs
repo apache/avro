@@ -295,20 +295,15 @@ fn extract_outer_doc(attributes: &[Attribute]) -> Option<String> {
         .iter()
         .filter(|attr| attr.style == AttrStyle::Outer && attr.path().is_ident("doc"))
         .filter_map(|attr| {
-            let meta_list = attr.meta.require_list();
-            match meta_list {
-                Ok(list) => {
-                    let mut tokens = list.tokens.clone().into_iter();
-                    tokens.next(); // skip the Punct
-                    let to_trim: &[char] = &['"', ' '];
-                    let result = tokens
-                        .next() // use the Literal
-                        .unwrap()
-                        .to_string()
-                        .trim_matches(to_trim)
-                        .to_string();
-                    Some(result)
-                }
+            let name_value = attr.meta.require_name_value();
+            match name_value {
+                Ok(name_value) => match &name_value.value {
+                    syn::Expr::Lit(expr_lit) => match expr_lit.lit {
+                        syn::Lit::Str(ref lit_str) => Some(lit_str.value().trim().to_string()),
+                        _ => None,
+                    },
+                    _ => None,
+                },
                 Err(_) => None,
             }
         })
