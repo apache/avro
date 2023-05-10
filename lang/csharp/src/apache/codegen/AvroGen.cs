@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -226,7 +227,6 @@ namespace Avro
             {
                 var sn = new SchemaNames();
                 CodeGen codegen = new CodeGen();
-                var targetNs = new List<string>();
 
                 if (msfiles.Count == 1)
                 {
@@ -246,9 +246,11 @@ namespace Avro
                 codegen.AddSchema(mergedSchema, sn, namespaceMapping);
 
                 Console.WriteLine("Generating code ...");
-
                 codegen.GenerateCode();
-                codegen.WriteTypes(outdir, targetNs);
+
+                Console.WriteLine($"Output code to [{Path.GetFullPath(outdir)}]");
+
+                codegen.WriteTypes(outdir, skipDirectories);
 
                 return 0;
             }
@@ -271,8 +273,8 @@ namespace Avro
                 Console.WriteLine($"Loading schema from: [{inFile}]");
                 var schema = System.IO.File.ReadAllText(inFile).Trim();
 
-                schema.TrimStart(schemaBegin.ToCharArray());
-                schema.TrimEnd(schemaEnd.ToCharArray());
+                schema = schema.TrimStart(schemaBegin.ToCharArray());
+                schema = schema.TrimEnd(schemaEnd.ToCharArray());
 
                 schemas.Add(schema);
             }

@@ -7,7 +7,7 @@
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <!-- <Exec Command="$(ProjectDir)tool\avrogenms -ms $(ProjectDir)avroFiles\schema01.avsc;$(ProjectDir)avroFiles\schema02.avsc $(ProjectDir)generated" /> -->
-    <Exec Command="dotnet $(ProjectDir)..\apache\codegen\$(OutDir)avrogen.dll -ms $(ProjectDir)avroFiles/models $(ProjectDir)generated" />
+    <!--<Exec Command="dotnet $(ProjectDir)..\apache\codegen\$(OutDir)avrogen.dll -ms $(ProjectDir)avroFiles/models $(ProjectDir)generated" /> -->
   </Target>
 
   <ItemGroup>
@@ -33,16 +33,16 @@
     <None Update="avroFiles\00_carModelAndPerson.avsc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="avroFiles\models\01_planet-enum.json">
+    <None Update="avroFiles\models\03_planet-enum.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="avroFiles\models\planet-enum.json">
+    <None Update="avroFiles\models\03_planet-enum.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="avroFiles\models\solar-system-model.json">
+    <None Update="avroFiles\models\01_solar-system-model.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="avroFiles\models\space-ship-model.json">
+    <None Update="avroFiles\models\02_space-ship-model.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

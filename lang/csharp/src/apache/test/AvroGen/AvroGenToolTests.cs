@@ -99,5 +99,11 @@ namespace Avro.Test.AvroGen
             Assert.That(result.ExitCode, Is.EqualTo(0));
             Assert.IsTrue(result.StdOut.Any(s => s.Contains("--skip-directories")));
         }
+
+        [TestCase("-ms", "data/", "generated/")]
+        public void CommandLineMsArgs(params string[] args)
+        {
+            AvroGenToolResult result = AvroGenHelper.RunAvroGenTool(args);
+        }
     }
 }
