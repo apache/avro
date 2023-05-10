@@ -10,9 +10,15 @@ Learn more about Avro, please visit our website at:
 
 # About this version 
 - support multiple schemas files
-- allow reference to types on external schema file
 
-## To test it:
+## Pending to add
+- allow reference to types on external assembly. (schema in DLL is used only as reference, no C# class will be generated for it)
+
+### To test it:
+There is a unit test for it
+
+### Requirement
+Files should be renamed appropiate to ensure correct dependecy order.
 
 ### Build project Avro.codegen. 
 This project generate the dotnet tool, it was renaming as *avrogenms* (instead of avrogen) to avoid conflict wth original Apache tool.
