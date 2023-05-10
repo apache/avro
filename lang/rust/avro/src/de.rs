@@ -1227,7 +1227,7 @@ mod tests {
 
     #[test]
     fn avro_3747_human_readable_false() -> TestResult<()> {
-        // AVRO-3747: set is_human_readable to false
+        // AVRO-3747: set serde's is_human_readable to false
         use serde::de::Deserializer as SerdeDeserializer;
 
         unsafe {
@@ -1243,7 +1243,7 @@ mod tests {
 
     #[test]
     fn avro_3747_human_readable_true() -> TestResult<()> {
-        // AVRO-3747: set is_human_readable to false
+        // AVRO-3747: set serde's is_human_readable to true
         use serde::de::Deserializer as SerdeDeserializer;
 
         unsafe {
