@@ -1011,13 +1011,9 @@ mod tests {
             crate::util::SERDE_HUMAN_READABLE = false;
         }
 
-        let mut ser = Serializer {};
+        let ser = &mut Serializer {};
 
-        // the serde `Serializer` trait is only implemented for `&mut Serializer`
-        #[allow(clippy::unnecessary_mut_passed)]
-        {
-            assert_eq!((&mut ser).is_human_readable(), false);
-        }
+        assert_eq!(ser.is_human_readable(), false);
     }
 
     #[test]
@@ -1028,12 +1024,8 @@ mod tests {
             crate::util::SERDE_HUMAN_READABLE = true;
         }
 
-        let mut ser = Serializer {};
+        let ser = &mut Serializer {};
 
-        // the serde `Serializer` trait is only implemented for `&mut Serializer`
-        #[allow(clippy::unnecessary_mut_passed)]
-        {
-            assert!((&mut ser).is_human_readable());
-        }
+        assert!(ser.is_human_readable());
     }
 }
