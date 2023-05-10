@@ -1006,7 +1006,7 @@ mod tests {
         );
     }
 
-    type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
+    type TestResult<T> = anyhow::Result<T, Box<dyn std::error::Error>>;
 
     #[test]
     fn test_date() -> TestResult<()> {

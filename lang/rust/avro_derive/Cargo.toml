@@ -33,11 +33,11 @@ documentation = "https://docs.rs/apache-avro-derive"
 proc-macro = true
 
 [dependencies]
-darling = { default-features = false, version = "0.14.4" }
+darling = { default-features = false, version = "0.20.1" }
 proc-macro2 = { default-features = false, version = "1.0.56" }
 quote = { default-features = false, version = "1.0.27" }
 serde_json = { default-features = false, version = "1.0.96", features = ["std"] }
-syn = { default-features = false, version = "1.0.109", features = ["full", "fold"] }
+syn = { default-features = false, version = "2.0.15", features = ["full", "fold"] }
 
 [dev-dependencies]
 apache-avro = { default-features = false, path = "../avro", features = ["derive"] }
