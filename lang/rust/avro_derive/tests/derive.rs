@@ -985,13 +985,14 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithOuterDocAttributes::get_schema() {
+        let derived_schema = TestBasicWithOuterDocAttributes::get_schema();
+        assert_eq!(&schema, &derived_schema);
+        if let Schema::Record { name, doc, .. } = derived_schema {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
             panic!("TestBasicWithOuterDocAttributes schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
