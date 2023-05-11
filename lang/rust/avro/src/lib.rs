@@ -748,7 +748,7 @@ pub use reader::{
 };
 pub use schema::{AvroSchema, Schema};
 pub use ser::to_value;
-pub use util::max_allocation_bytes;
+pub use util::{max_allocation_bytes, set_serde_human_readable};
 pub use writer::{
     to_avro_datum, to_avro_datum_schemata, GenericSingleObjectWriter, SpecificSingleObjectWriter,
     Writer,
