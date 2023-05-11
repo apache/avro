@@ -18,6 +18,7 @@
 use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
 use std::{convert::TryFrom, i64, io::Read, sync::Once};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed
@@ -30,9 +31,8 @@ static MAX_ALLOCATION_BYTES_ONCE: Once = Once::new();
 /// Whether to set serialization & deserialization traits
 /// as `human_readable` or not.
 /// See [set_serde_human_readable] to change this value.
-pub const DEFAULT_SERDE_HUMAN_READABLE: bool = true;
-// crate visible for testing
-pub(crate) static mut SERDE_HUMAN_READABLE: bool = DEFAULT_SERDE_HUMAN_READABLE;
+// crate-visible for testing
+pub(crate) static SERDE_HUMAN_READABLE: AtomicBool = AtomicBool::new(true);
 static SERDE_HUMAN_READABLE_ONCE: Once = Once::new();
 
 pub trait MapHelper {
@@ -169,17 +169,14 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
 /// library leverages [`std::sync::Once`](https://doc.rust-lang.org/std/sync/struct.Once.html)
 /// to set the limit either when calling this method, or when decoding for
 /// the first time.
-pub fn set_serde_human_readable(human_readable: bool) -> bool {
-    unsafe {
-        SERDE_HUMAN_READABLE_ONCE.call_once(|| {
-            SERDE_HUMAN_READABLE = human_readable;
-        });
-        SERDE_HUMAN_READABLE
-    }
+pub fn set_serde_human_readable(human_readable: bool) {
+    SERDE_HUMAN_READABLE_ONCE.call_once(|| {
+        SERDE_HUMAN_READABLE.store(human_readable, Ordering::Release);
+    });
 }
 
 pub(crate) fn is_human_readable() -> bool {
-    unsafe { SERDE_HUMAN_READABLE }
+    SERDE_HUMAN_READABLE.load(Ordering::Acquire)
 }
 
 #[cfg(test)]
