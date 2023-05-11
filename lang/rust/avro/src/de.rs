@@ -653,6 +653,8 @@ mod tests {
     use serde::Serialize;
     use uuid::Uuid;
 
+    use crate::set_serde_human_readable;
+
     use super::*;
 
     #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
@@ -1230,9 +1232,7 @@ mod tests {
         // AVRO-3747: set serde's is_human_readable to false
         use serde::de::Deserializer as SerdeDeserializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = false;
-        }
+        set_serde_human_readable(false);
 
         let deser = Deserializer::new(&Value::Null);
 
@@ -1246,9 +1246,7 @@ mod tests {
         // AVRO-3747: set serde's is_human_readable to true
         use serde::de::Deserializer as SerdeDeserializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = true;
-        }
+        set_serde_human_readable(true);
 
         let deser = Deserializer::new(&Value::Null);
 

@@ -488,6 +488,8 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 
 #[cfg(test)]
 mod tests {
+    use crate::set_serde_human_readable;
+
     use super::*;
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
@@ -1007,9 +1009,7 @@ mod tests {
     fn avro_3747_human_readable_false() {
         use serde::ser::Serializer as SerdeSerializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = false;
-        }
+        set_serde_human_readable(false);
 
         let ser = &mut Serializer {};
 
@@ -1020,9 +1020,7 @@ mod tests {
     fn avro_3747_human_readable_true() {
         use serde::ser::Serializer as SerdeSerializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = true;
-        }
+        set_serde_human_readable(true);
 
         let ser = &mut Serializer {};
 
