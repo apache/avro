@@ -283,6 +283,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
         Ok(StructVariantSerializer::new(index, variant, len))
     }
+
+    fn is_human_readable(&self) -> bool {
+        crate::util::is_human_readable()
+    }
 }
 
 impl ser::SerializeSeq for SeqSerializer {
@@ -997,5 +1001,31 @@ mod tests {
             expected,
             "error serializing tuple untagged enum"
         );
+    }
+
+    #[test]
+    fn avro_3747_human_readable_false() {
+        use serde::ser::Serializer as SerdeSerializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = false;
+        }
+
+        let ser = &mut Serializer {};
+
+        assert_eq!(ser.is_human_readable(), false);
+    }
+
+    #[test]
+    fn avro_3747_human_readable_true() {
+        use serde::ser::Serializer as SerdeSerializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = true;
+        }
+
+        let ser = &mut Serializer {};
+
+        assert!(ser.is_human_readable());
     }
 }

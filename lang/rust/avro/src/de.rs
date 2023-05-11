@@ -537,6 +537,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         self.deserialize_any(visitor)
     }
+
+    fn is_human_readable(&self) -> bool {
+        crate::util::is_human_readable()
+    }
 }
 
 impl<'de> de::SeqAccess<'de> for SeqDeserializer<'de> {
@@ -1218,6 +1222,38 @@ mod tests {
             a_union_map: Some(raw_map),
         };
         assert_eq!(deserialized, reference);
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3747_human_readable_false() -> TestResult<()> {
+        // AVRO-3747: set serde's is_human_readable to false
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = false;
+        }
+
+        let deser = Deserializer::new(&Value::Null);
+
+        assert_eq!((&deser).is_human_readable(), false);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3747_human_readable_true() -> TestResult<()> {
+        // AVRO-3747: set serde's is_human_readable to true
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        unsafe {
+            crate::util::SERDE_HUMAN_READABLE = true;
+        }
+
+        let deser = Deserializer::new(&Value::Null);
+
+        assert!((&deser).is_human_readable());
+
         Ok(())
     }
 }
