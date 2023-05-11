@@ -649,9 +649,9 @@ pub fn from_value<'de, D: Deserialize<'de>>(value: &'de Value) -> Result<D, Erro
 
 #[cfg(test)]
 mod tests {
-    use std::sync::atomic::Ordering;
     use pretty_assertions::assert_eq;
     use serde::Serialize;
+    use std::sync::atomic::Ordering;
     use uuid::Uuid;
 
     use super::*;

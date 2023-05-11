@@ -17,15 +17,22 @@
 
 use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
-use std::{convert::TryFrom, i64, io::Read, sync::Once};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    convert::TryFrom,
+    i64,
+    io::Read,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Once,
+    },
+};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed
 /// data, whose length field might be interpreted as enormous.
 /// See max_allocation_bytes to change this limit.
 pub const DEFAULT_MAX_ALLOCATION_BYTES: usize = 512 * 1024 * 1024;
-static mut MAX_ALLOCATION_BYTES: usize = DEFAULT_MAX_ALLOCATION_BYTES;
+static MAX_ALLOCATION_BYTES: AtomicUsize = AtomicUsize::new(DEFAULT_MAX_ALLOCATION_BYTES);
 static MAX_ALLOCATION_BYTES_ONCE: Once = Once::new();
 
 /// Whether to set serialization & deserialization traits
@@ -140,12 +147,10 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
 /// to set the limit either when calling this method, or when decoding for
 /// the first time.
 pub fn max_allocation_bytes(num_bytes: usize) -> usize {
-    unsafe {
-        MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
-            MAX_ALLOCATION_BYTES = num_bytes;
-        });
-        MAX_ALLOCATION_BYTES
-    }
+    MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
+        MAX_ALLOCATION_BYTES.store(num_bytes, Ordering::Release);
+    });
+    MAX_ALLOCATION_BYTES.load(Ordering::Acquire)
 }
 
 pub fn safe_len(len: usize) -> AvroResult<usize> {

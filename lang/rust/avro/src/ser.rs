@@ -488,10 +488,10 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::atomic::Ordering;
     use super::*;
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
+    use std::sync::atomic::Ordering;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {
