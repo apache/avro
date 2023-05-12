@@ -651,6 +651,7 @@ pub fn from_value<'de, D: Deserialize<'de>>(value: &'de Value) -> Result<D, Erro
 mod tests {
     use pretty_assertions::assert_eq;
     use serde::Serialize;
+    use std::sync::atomic::Ordering;
     use uuid::Uuid;
 
     use super::*;
@@ -1227,32 +1228,27 @@ mod tests {
 
     #[test]
     fn avro_3747_human_readable_false() -> TestResult<()> {
-        // AVRO-3747: set serde's is_human_readable to false
         use serde::de::Deserializer as SerdeDeserializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = false;
-        }
+        let is_human_readable = false;
+        crate::util::SERDE_HUMAN_READABLE.store(is_human_readable, Ordering::Release);
 
-        let deser = Deserializer::new(&Value::Null);
+        let deser = &Deserializer::new(&Value::Null);
 
-        assert_eq!((&deser).is_human_readable(), false);
+        assert_eq!(deser.is_human_readable(), is_human_readable);
 
         Ok(())
     }
 
     #[test]
     fn avro_3747_human_readable_true() -> TestResult<()> {
-        // AVRO-3747: set serde's is_human_readable to true
         use serde::de::Deserializer as SerdeDeserializer;
 
-        unsafe {
-            crate::util::SERDE_HUMAN_READABLE = true;
-        }
+        crate::util::SERDE_HUMAN_READABLE.store(true, Ordering::Release);
 
-        let deser = Deserializer::new(&Value::Null);
+        let deser = &Deserializer::new(&Value::Null);
 
-        assert!((&deser).is_human_readable());
+        assert!(deser.is_human_readable());
 
         Ok(())
     }

@@ -17,22 +17,29 @@
 
 use crate::{schema::Documentation, AvroResult, Error};
 use serde_json::{Map, Value};
-use std::{convert::TryFrom, i64, io::Read, sync::Once};
+use std::{
+    convert::TryFrom,
+    i64,
+    io::Read,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+        Once,
+    },
+};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed
 /// data, whose length field might be interpreted as enormous.
 /// See max_allocation_bytes to change this limit.
 pub const DEFAULT_MAX_ALLOCATION_BYTES: usize = 512 * 1024 * 1024;
-static mut MAX_ALLOCATION_BYTES: usize = DEFAULT_MAX_ALLOCATION_BYTES;
+static MAX_ALLOCATION_BYTES: AtomicUsize = AtomicUsize::new(DEFAULT_MAX_ALLOCATION_BYTES);
 static MAX_ALLOCATION_BYTES_ONCE: Once = Once::new();
 
 /// Whether to set serialization & deserialization traits
 /// as `human_readable` or not.
 /// See [set_serde_human_readable] to change this value.
-pub const DEFAULT_SERDE_HUMAN_READABLE: bool = true;
-// crate visible for testing
-pub(crate) static mut SERDE_HUMAN_READABLE: bool = DEFAULT_SERDE_HUMAN_READABLE;
+// crate-visible for testing
+pub(crate) static SERDE_HUMAN_READABLE: AtomicBool = AtomicBool::new(true);
 static SERDE_HUMAN_READABLE_ONCE: Once = Once::new();
 
 pub trait MapHelper {
@@ -140,12 +147,10 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
 /// to set the limit either when calling this method, or when decoding for
 /// the first time.
 pub fn max_allocation_bytes(num_bytes: usize) -> usize {
-    unsafe {
-        MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
-            MAX_ALLOCATION_BYTES = num_bytes;
-        });
-        MAX_ALLOCATION_BYTES
-    }
+    MAX_ALLOCATION_BYTES_ONCE.call_once(|| {
+        MAX_ALLOCATION_BYTES.store(num_bytes, Ordering::Release);
+    });
+    MAX_ALLOCATION_BYTES.load(Ordering::Acquire)
 }
 
 pub fn safe_len(len: usize) -> AvroResult<usize> {
@@ -169,17 +174,14 @@ pub fn safe_len(len: usize) -> AvroResult<usize> {
 /// library leverages [`std::sync::Once`](https://doc.rust-lang.org/std/sync/struct.Once.html)
 /// to set the limit either when calling this method, or when decoding for
 /// the first time.
-pub fn set_serde_human_readable(human_readable: bool) -> bool {
-    unsafe {
-        SERDE_HUMAN_READABLE_ONCE.call_once(|| {
-            SERDE_HUMAN_READABLE = human_readable;
-        });
-        SERDE_HUMAN_READABLE
-    }
+pub fn set_serde_human_readable(human_readable: bool) {
+    SERDE_HUMAN_READABLE_ONCE.call_once(|| {
+        SERDE_HUMAN_READABLE.store(human_readable, Ordering::Release);
+    });
 }
 
 pub(crate) fn is_human_readable() -> bool {
-    unsafe { SERDE_HUMAN_READABLE }
+    SERDE_HUMAN_READABLE.load(Ordering::Acquire)
 }
 
 #[cfg(test)]
