@@ -414,7 +414,7 @@ avro {
     isCreateSetters.set(true)
     isCreateOptionalGetters.set(false)
     isGettersReturnOptional.set(false)
-    isOptionalGettersForNullableFieldsOnly(false)
+    isOptionalGettersForNullableFieldsOnly.set(false)
     fieldVisibility.set("PUBLIC_DEPRECATED")
     outputCharacterEncoding.set("UTF-8")
     stringType.set("String")
