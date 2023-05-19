@@ -64,6 +64,25 @@ impl fmt::Display for SchemaFingerprint {
     }
 }
 
+// Just an example of how it may look like
+struct RecordSchema {
+    name: Name,
+    aliases: Aliases,
+    doc: Documentation,
+    fields: Vec<RecordField>,
+    lookup: BTreeMap<String, usize>,
+    attributes: BTreeMap<String, Value>,
+}
+
+// Just an example of how it may look like
+struct EnumSchema {
+    name: Name,
+    aliases: Aliases,
+    doc: Documentation,
+    symbols: Vec<String>,
+    attributes: BTreeMap<String, Value>,
+}
+
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
@@ -101,22 +120,9 @@ pub enum Schema {
     ///
     /// The `lookup` table maps field names to their position in the `Vec`
     /// of `fields`.
-    Record {
-        name: Name,
-        aliases: Aliases,
-        doc: Documentation,
-        fields: Vec<RecordField>,
-        lookup: BTreeMap<String, usize>,
-        attributes: BTreeMap<String, Value>,
-    },
+    Record(RecordSchema),
     /// An `enum` Avro schema.
-    Enum {
-        name: Name,
-        aliases: Aliases,
-        doc: Documentation,
-        symbols: Vec<String>,
-        attributes: BTreeMap<String, Value>,
-    },
+    Enum(EnumSchema),
     /// A `fixed` Avro schema.
     Fixed {
         name: Name,
