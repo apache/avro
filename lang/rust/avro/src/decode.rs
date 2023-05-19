@@ -18,7 +18,10 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::{Name, Namespace, ResolvedSchema, Schema},
+    schema::{
+        DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
+        Schema,
+    },
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
@@ -98,7 +101,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 }
             }
         }
-        Schema::Decimal { ref inner, .. } => match &**inner {
+        Schema::Decimal(DecimalSchema { ref inner, .. }) => match &**inner {
             Schema::Fixed { .. } => {
                 match decode_internal(inner, names, enclosing_namespace, reader)? {
                     Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
@@ -164,7 +167,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 }
             }
         }
-        Schema::Fixed { size, .. } => {
+        Schema::Fixed(FixedSchema { size, .. }) => {
             let mut buf = vec![0u8; size];
             reader
                 .read_exact(&mut buf)
@@ -232,11 +235,11 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             }
             Err(io_err) => Err(io_err),
         },
-        Schema::Record {
+        Schema::Record(RecordSchema {
             ref name,
             ref fields,
             ..
-        } => {
+        }) => {
             let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
             // Benchmarks indicate ~10% improvement using this method.
             let mut items = Vec::with_capacity(fields.len());
@@ -254,7 +257,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             }
             Ok(Value::Record(items))
         }
-        Schema::Enum { ref symbols, .. } => {
+        Schema::Enum(EnumSchema { ref symbols, .. }) => {
             Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                 let index = usize::try_from(raw_index)
                     .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
@@ -293,7 +296,7 @@ mod tests {
     use crate::{
         decode::decode,
         encode::{encode, tests::success},
-        schema::Schema,
+        schema::{DecimalSchema, FixedSchema, Schema},
         types::{
             Value,
             Value::{Array, Int, Map},
@@ -339,18 +342,18 @@ mod tests {
     fn test_negative_decimal_value() {
         use crate::{encode::encode, schema::Name};
         use num_bigint::ToBigInt;
-        let inner = Box::new(Schema::Fixed {
+        let inner = Box::new(Schema::Fixed(FixedSchema {
             size: 2,
             doc: None,
             name: Name::new("decimal").unwrap(),
             aliases: None,
             attributes: Default::default(),
-        });
-        let schema = Schema::Decimal {
+        }));
+        let schema = Schema::Decimal(DecimalSchema {
             inner,
             precision: 4,
             scale: 2,
-        };
+        });
         let bigint = (-423).to_bigint().unwrap();
         let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
 
@@ -366,18 +369,18 @@ mod tests {
     fn test_decode_decimal_with_bigger_than_necessary_size() {
         use crate::{encode::encode, schema::Name};
         use num_bigint::ToBigInt;
-        let inner = Box::new(Schema::Fixed {
+        let inner = Box::new(Schema::Fixed(FixedSchema {
             size: 13,
             name: Name::new("decimal").unwrap(),
             aliases: None,
             doc: None,
             attributes: Default::default(),
-        });
-        let schema = Schema::Decimal {
+        }));
+        let schema = Schema::Decimal(DecimalSchema {
             inner,
             precision: 4,
             scale: 2,
-        };
+        });
         let value = Value::Decimal(Decimal::from(
             ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
         ));

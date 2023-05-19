@@ -16,7 +16,7 @@
 // under the License.
 
 use apache_avro::{
-    schema::{Name, RecordField},
+    schema::{EnumSchema, FixedSchema, Name, RecordField, RecordSchema},
     to_avro_datum, to_value,
     types::{Record, Value},
     Codec, Error, Reader, Schema, Writer,
@@ -634,21 +634,21 @@ fn test_correct_recursive_extraction() {
         ]
     }"#;
     let outer_schema = Schema::parse_str(raw_outer_schema).unwrap();
-    if let Schema::Record {
+    if let Schema::Record(RecordSchema {
         fields: outer_fields,
         ..
-    } = outer_schema
+    }) = outer_schema
     {
         let inner_schema = &outer_fields[0].schema;
-        if let Schema::Record {
+        if let Schema::Record(RecordSchema {
             fields: inner_fields,
             ..
-        } = inner_schema
+        }) = inner_schema
         {
-            if let Schema::Record {
+            if let Schema::Record(RecordSchema {
                 name: recursive_type,
                 ..
-            } = &inner_fields[0].schema
+            }) = &inner_fields[0].schema
             {
                 assert_eq!("X", recursive_type.name.as_str());
             }
@@ -880,14 +880,14 @@ fn test_parse_reused_record_schema_by_fullname() {
     let schema = Schema::parse_str(schema_str);
     assert!(schema.is_ok());
     match schema.unwrap() {
-        Schema::Record {
+        Schema::Record(RecordSchema {
             ref name,
             aliases: _,
             doc: _,
             ref fields,
             lookup: _,
             attributes: _,
-        } => {
+        }) => {
             assert_eq!(name.fullname(None), "test.Weather", "Name does not match!");
 
             assert_eq!(fields.len(), 3, "The number of the fields is not correct!");
@@ -1199,9 +1199,9 @@ fn test_doc_attributes() {
     init();
     fn assert_doc(schema: &Schema) {
         match schema {
-            Schema::Enum { doc, .. } => assert!(doc.is_some()),
-            Schema::Record { doc, .. } => assert!(doc.is_some()),
-            Schema::Fixed { doc, .. } => assert!(doc.is_some()),
+            Schema::Enum(EnumSchema { doc, .. }) => assert!(doc.is_some()),
+            Schema::Record(RecordSchema { doc, .. }) => assert!(doc.is_some()),
+            Schema::Fixed(FixedSchema { doc, .. }) => assert!(doc.is_some()),
             Schema::String => (),
             _ => unreachable!("Unexpected schema type: {:?}", schema),
         }
@@ -1210,7 +1210,7 @@ fn test_doc_attributes() {
     for (raw_schema, _) in DOC_EXAMPLES.iter() {
         let original_schema = Schema::parse_str(raw_schema).unwrap();
         assert_doc(&original_schema);
-        if let Schema::Record { fields, .. } = original_schema {
+        if let Schema::Record(RecordSchema { fields, .. }) = original_schema {
             for f in fields {
                 assert_doc(&f.schema)
             }
