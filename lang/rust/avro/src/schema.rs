@@ -637,47 +637,72 @@ impl RecordField {
     }
 }
 
-/// The `lookup` table maps field names to their position in the `Vec`
-/// of `fields`.
+/// A description of an Enum schema.
 #[derive(Debug, Clone)]
 pub struct RecordSchema {
+    /// The name of the schema
     pub name: Name,
+    /// The aliases of the schema
     pub aliases: Aliases,
+    /// The documentation of the schema
     pub doc: Documentation,
+    /// The set of fields of the schema
     pub fields: Vec<RecordField>,
+    /// The `lookup` table maps field names to their position in the `Vec`
+    /// of `fields`.
     pub lookup: BTreeMap<String, usize>,
+    /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
 }
 
+/// A description of an Enum schema.
 #[derive(Debug, Clone)]
 pub struct EnumSchema {
+    /// The name of the schema
     pub name: Name,
+    /// The aliases of the schema
     pub aliases: Aliases,
+    /// The documentation of the schema
     pub doc: Documentation,
+    /// The set of symbols of the schema
     pub symbols: Vec<String>,
+    /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
 }
 
+/// A description of a Union schema.
 #[derive(Debug, Clone)]
 pub struct FixedSchema {
+    /// The name of the schema
     pub name: Name,
+    /// The aliases of the schema
     pub aliases: Aliases,
+    /// The documentation of the schema
     pub doc: Documentation,
+    /// The size of the fixed schema
     pub size: usize,
+    /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
 }
 
+/// A description of a Union schema.
+///
 /// `scale` defaults to 0 and is an integer greater than or equal to 0 and `precision` is an
 /// integer greater than 0.
 #[derive(Debug, Clone)]
 pub struct DecimalSchema {
+    /// The number of digits in the unscaled value
     pub precision: DecimalMetadata,
+    /// The number of digits to the right of the decimal point
     pub scale: DecimalMetadata,
+    /// The inner schema of the decimal (fixed or bytes)
     pub inner: Box<Schema>,
 }
 
+/// A description of a Union schema
 #[derive(Debug, Clone)]
 pub struct UnionSchema {
+    /// The schemas that make up this union
     pub(crate) schemas: Vec<Schema>,
     // Used to ensure uniqueness of schema inputs, and provide constant time finding of the
     // schema index given a value.
