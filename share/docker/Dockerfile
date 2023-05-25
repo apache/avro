@@ -185,6 +185,12 @@ RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-p
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
+RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
+COPY lang/ruby/* /tmp/lang/ruby/
+COPY share/VERSION.txt /tmp/share/
+RUN gem install bundler --no-document && \
+    apt-get install -qqy libyaml-dev && \
+    cd /tmp/lang/ruby && bundle install
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.60.0
