@@ -179,11 +179,12 @@ RUN python3 -m pip install --upgrade pip setuptools wheel \
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
-COPY lang/ruby/* /tmp/
-RUN gem install bundler -v 1.17.3 --no-document && \
+RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
+COPY lang/ruby/* /tmp/lang/ruby/
+COPY share/VERSION.txt /tmp/share/
+RUN gem install bundler --no-document && \
     apt-get install -qqy libyaml-dev && \
-    mkdir -p /tmp/lib/avro/ && \
-    bundle install --gemfile=/tmp/Gemfile
+    cd /tmp/lang/ruby && bundle install
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.60.0
