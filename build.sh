@@ -56,6 +56,9 @@ DOCKER_BUILD_XTRA_ARGS=${DOCKER_BUILD_XTRA_ARGS-}
 # Override the docker image name used.
 DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME-}
 
+# When building a docker container, these are the files that will sent and available.
+DOCKER_EXTRA_CONTEXT="lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest share/VERSION.txt"
+
 usage() {
   echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
@@ -302,7 +305,7 @@ do
       } > Dockerfile
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- Dockerfile lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
@@ -337,7 +340,7 @@ do
       ;;
 
     docker-test)
-      tar -cf- share/docker/Dockerfile lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest |
+      tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
         docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
