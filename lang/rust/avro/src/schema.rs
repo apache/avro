@@ -98,43 +98,14 @@ pub enum Schema {
     /// A `union` Avro schema.
     Union(UnionSchema),
     /// A `record` Avro schema.
-    ///
-    /// The `lookup` table maps field names to their position in the `Vec`
-    /// of `fields`.
-    Record {
-        name: Name,
-        aliases: Aliases,
-        doc: Documentation,
-        fields: Vec<RecordField>,
-        lookup: BTreeMap<String, usize>,
-        attributes: BTreeMap<String, Value>,
-    },
+    Record(RecordSchema),
     /// An `enum` Avro schema.
-    Enum {
-        name: Name,
-        aliases: Aliases,
-        doc: Documentation,
-        symbols: Vec<String>,
-        attributes: BTreeMap<String, Value>,
-    },
+    Enum(EnumSchema),
     /// A `fixed` Avro schema.
-    Fixed {
-        name: Name,
-        aliases: Aliases,
-        doc: Documentation,
-        size: usize,
-        attributes: BTreeMap<String, Value>,
-    },
+    Fixed(FixedSchema),
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
-    ///
-    /// `scale` defaults to 0 and is an integer greater than or equal to 0 and `precision` is an
-    /// integer greater than 0.
-    Decimal {
-        precision: DecimalMetadata,
-        scale: DecimalMetadata,
-        inner: Box<Schema>,
-    },
+    Decimal(DecimalSchema),
     /// A universally unique identifier, annotating a string.
     Uuid,
     /// Logical type which represents the number of days since the unix epoch.
@@ -452,7 +423,7 @@ impl<'s> ResolvedSchema<'s> {
                         Self::from_internal(vec![schema], names_ref, enclosing_namespace)?
                     }
                 }
-                Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
+                Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                     if names_ref
                         .insert(fully_qualified_name.clone(), schema)
@@ -461,7 +432,7 @@ impl<'s> ResolvedSchema<'s> {
                         return Err(Error::AmbiguousSchemaDefinition(fully_qualified_name));
                     }
                 }
-                Schema::Record { name, fields, .. } => {
+                Schema::Record(RecordSchema { name, fields, .. }) => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                     if names_ref
                         .insert(fully_qualified_name.clone(), schema)
@@ -530,7 +501,7 @@ impl ResolvedOwnedSchema {
                 }
                 Ok(())
             }
-            Schema::Enum { name, .. } | Schema::Fixed { name, .. } => {
+            Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
                 let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                 if names
                     .insert(fully_qualified_name.clone(), schema.clone())
@@ -541,7 +512,7 @@ impl ResolvedOwnedSchema {
                     Ok(())
                 }
             }
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
                 if names
                     .insert(fully_qualified_name.clone(), schema.clone())
@@ -666,8 +637,72 @@ impl RecordField {
     }
 }
 
+/// A description of an Enum schema.
+#[derive(Debug, Clone)]
+pub struct RecordSchema {
+    /// The name of the schema
+    pub name: Name,
+    /// The aliases of the schema
+    pub aliases: Aliases,
+    /// The documentation of the schema
+    pub doc: Documentation,
+    /// The set of fields of the schema
+    pub fields: Vec<RecordField>,
+    /// The `lookup` table maps field names to their position in the `Vec`
+    /// of `fields`.
+    pub lookup: BTreeMap<String, usize>,
+    /// The custom attributes of the schema
+    pub attributes: BTreeMap<String, Value>,
+}
+
+/// A description of an Enum schema.
+#[derive(Debug, Clone)]
+pub struct EnumSchema {
+    /// The name of the schema
+    pub name: Name,
+    /// The aliases of the schema
+    pub aliases: Aliases,
+    /// The documentation of the schema
+    pub doc: Documentation,
+    /// The set of symbols of the schema
+    pub symbols: Vec<String>,
+    /// The custom attributes of the schema
+    pub attributes: BTreeMap<String, Value>,
+}
+
+/// A description of a Union schema.
+#[derive(Debug, Clone)]
+pub struct FixedSchema {
+    /// The name of the schema
+    pub name: Name,
+    /// The aliases of the schema
+    pub aliases: Aliases,
+    /// The documentation of the schema
+    pub doc: Documentation,
+    /// The size of the fixed schema
+    pub size: usize,
+    /// The custom attributes of the schema
+    pub attributes: BTreeMap<String, Value>,
+}
+
+/// A description of a Union schema.
+///
+/// `scale` defaults to 0 and is an integer greater than or equal to 0 and `precision` is an
+/// integer greater than 0.
+#[derive(Debug, Clone)]
+pub struct DecimalSchema {
+    /// The number of digits in the unscaled value
+    pub precision: DecimalMetadata,
+    /// The number of digits to the right of the decimal point
+    pub scale: DecimalMetadata,
+    /// The inner schema of the decimal (fixed or bytes)
+    pub inner: Box<Schema>,
+}
+
+/// A description of a Union schema
 #[derive(Debug, Clone)]
 pub struct UnionSchema {
+    /// The schemas that make up this union
     pub(crate) schemas: Vec<Schema>,
     // Used to ensure uniqueness of schema inputs, and provide constant time finding of the
     // schema index given a value.
@@ -851,9 +886,9 @@ impl Schema {
     /// Returns the custom attributes (metadata) if the schema supports them.
     pub fn custom_attributes(&self) -> Option<&BTreeMap<String, Value>> {
         match self {
-            Schema::Record { attributes, .. }
-            | Schema::Enum { attributes, .. }
-            | Schema::Fixed { attributes, .. } => Some(attributes),
+            Schema::Record(RecordSchema { attributes, .. })
+            | Schema::Enum(EnumSchema { attributes, .. })
+            | Schema::Fixed(FixedSchema { attributes, .. }) => Some(attributes),
             _ => None,
         }
     }
@@ -862,9 +897,9 @@ impl Schema {
     pub fn name(&self) -> Option<&Name> {
         match self {
             Schema::Ref { ref name, .. }
-            | Schema::Record { ref name, .. }
-            | Schema::Enum { ref name, .. }
-            | Schema::Fixed { ref name, .. } => Some(name),
+            | Schema::Record(RecordSchema { ref name, .. })
+            | Schema::Enum(EnumSchema { ref name, .. })
+            | Schema::Fixed(FixedSchema { ref name, .. }) => Some(name),
             _ => None,
         }
     }
@@ -960,9 +995,9 @@ impl Parser {
     ) -> AvroResult<Schema> {
         fn get_schema_ref(parsed: &Schema) -> Schema {
             match &parsed {
-                Schema::Record { ref name, .. }
-                | Schema::Enum { ref name, .. }
-                | Schema::Fixed { ref name, .. } => Schema::Ref { name: name.clone() },
+                Schema::Record(RecordSchema { ref name, .. })
+                | Schema::Enum(EnumSchema { ref name, .. })
+                | Schema::Fixed(FixedSchema { ref name, .. }) => Schema::Ref { name: name.clone() },
                 _ => parsed.clone(),
             }
         }
@@ -1116,11 +1151,11 @@ impl Parser {
 
                     let (precision, scale) = Self::parse_precision_and_scale(complex)?;
 
-                    return Ok(Schema::Decimal {
+                    return Ok(Schema::Decimal(DecimalSchema {
                         precision,
                         scale,
                         inner,
-                    });
+                    }));
                 }
                 "uuid" => {
                     logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
@@ -1313,14 +1348,14 @@ impl Parser {
             }
         }
 
-        let schema = Schema::Record {
+        let schema = Schema::Record(RecordSchema {
             name,
             aliases: aliases.clone(),
             doc: complex.doc(),
             fields,
             lookup,
             attributes: self.get_custom_attributes(complex, vec!["fields"]),
-        };
+        });
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
         Ok(schema)
@@ -1387,13 +1422,13 @@ impl Parser {
             existing_symbols.insert(symbol);
         }
 
-        let schema = Schema::Enum {
+        let schema = Schema::Enum(EnumSchema {
             name,
             aliases: aliases.clone(),
             doc: complex.doc(),
             symbols,
             attributes: self.get_custom_attributes(complex, vec!["symbols"]),
-        };
+        });
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
 
@@ -1490,13 +1525,13 @@ impl Parser {
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
         let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
-        let schema = Schema::Fixed {
+        let schema = Schema::Fixed(FixedSchema {
             name,
             aliases: aliases.clone(),
             doc,
             size: size as usize,
             attributes: self.get_custom_attributes(complex, vec!["size"]),
-        };
+        });
 
         self.register_parsed_schema(&fully_qualified_name, &schema, &aliases);
 
@@ -1573,13 +1608,13 @@ impl Serialize for Schema {
                 }
                 seq.end()
             }
-            Schema::Record {
+            Schema::Record(RecordSchema {
                 ref name,
                 ref aliases,
                 ref doc,
                 ref fields,
                 ..
-            } => {
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "record")?;
                 if let Some(ref n) = name.namespace {
@@ -1595,12 +1630,12 @@ impl Serialize for Schema {
                 map.serialize_entry("fields", fields)?;
                 map.end()
             }
-            Schema::Enum {
+            Schema::Enum(EnumSchema {
                 ref name,
                 ref symbols,
                 ref aliases,
                 ..
-            } => {
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "enum")?;
                 if let Some(ref n) = name.namespace {
@@ -1614,13 +1649,13 @@ impl Serialize for Schema {
                 }
                 map.end()
             }
-            Schema::Fixed {
+            Schema::Fixed(FixedSchema {
                 ref name,
                 ref doc,
                 ref size,
                 ref aliases,
                 ..
-            } => {
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
                 if let Some(ref n) = name.namespace {
@@ -1637,11 +1672,11 @@ impl Serialize for Schema {
                 }
                 map.end()
             }
-            Schema::Decimal {
+            Schema::Decimal(DecimalSchema {
                 ref scale,
                 ref precision,
                 ref inner,
-            } => {
+            }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", &*inner.clone())?;
                 map.serialize_entry("logicalType", "decimal")?;
@@ -1690,13 +1725,13 @@ impl Serialize for Schema {
 
                 // the Avro doesn't indicate what the name of the underlying fixed type of a
                 // duration should be or typically is.
-                let inner = Schema::Fixed {
+                let inner = Schema::Fixed(FixedSchema {
                     name: Name::new("duration").unwrap(),
                     aliases: None,
                     doc: None,
                     size: 12,
                     attributes: Default::default(),
-                };
+                });
                 map.serialize_entry("type", &inner)?;
                 map.serialize_entry("logicalType", "duration")?;
                 map.end()
@@ -2185,7 +2220,7 @@ mod tests {
             .unwrap()
             .clone();
 
-        let schema_c_expected = Schema::Record {
+        let schema_c_expected = Schema::Record(RecordSchema {
             name: Name::new("C").unwrap(),
             aliases: None,
             doc: None,
@@ -2211,7 +2246,7 @@ mod tests {
             }],
             lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(schema_c, schema_c_expected);
     }
@@ -2237,7 +2272,7 @@ mod tests {
         let schema_a = list.first().unwrap().clone();
 
         match schema_a {
-            Schema::Record { fields, .. } => {
+            Schema::Record(RecordSchema { fields, .. }) => {
                 let f1 = fields.get(0);
 
                 let ref_schema = Schema::Ref {
@@ -2277,7 +2312,7 @@ mod tests {
             .unwrap()
             .clone();
 
-        let schema_option_a_expected = Schema::Record {
+        let schema_option_a_expected = Schema::Record(RecordSchema {
             name: Name::new("OptionA").unwrap(),
             aliases: None,
             doc: None,
@@ -2301,7 +2336,7 @@ mod tests {
             }],
             lookup: BTreeMap::from_iter(vec![("field_one".to_string(), 0)]),
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(schema_option_a, schema_option_a_expected);
     }
@@ -2326,7 +2361,7 @@ mod tests {
         lookup.insert("a".to_owned(), 0);
         lookup.insert("b".to_owned(), 1);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name::new("test").unwrap(),
             aliases: None,
             doc: None,
@@ -2354,7 +2389,7 @@ mod tests {
             ],
             lookup,
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(parsed, expected);
     }
@@ -2390,7 +2425,7 @@ mod tests {
         node_lookup.insert("children".to_owned(), 1);
         node_lookup.insert("label".to_owned(), 0);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name::new("test").unwrap(),
             aliases: None,
             doc: None,
@@ -2399,7 +2434,7 @@ mod tests {
                 doc: None,
                 default: None,
                 aliases: None,
-                schema: Schema::Record {
+                schema: Schema::Record(RecordSchema {
                     name: Name::new("Node").unwrap(),
                     aliases: None,
                     doc: None,
@@ -2429,14 +2464,14 @@ mod tests {
                     ],
                     lookup: node_lookup,
                     attributes: Default::default(),
-                },
+                }),
                 order: RecordFieldOrder::Ascending,
                 position: 0,
                 custom_attributes: Default::default(),
             }],
             lookup,
             attributes: Default::default(),
-        };
+        });
         assert_eq!(schema, expected);
 
         let canonical_form = &schema.canonical_form();
@@ -2566,7 +2601,7 @@ mod tests {
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name {
                 name: "LongList".to_owned(),
                 namespace: None,
@@ -2608,7 +2643,7 @@ mod tests {
             ],
             lookup,
             attributes: Default::default(),
-        };
+        });
         assert_eq!(schema, expected);
 
         let canonical_form = &schema.canonical_form();
@@ -2637,7 +2672,7 @@ mod tests {
         lookup.insert("value".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name {
                 name: "record".to_owned(),
                 namespace: None,
@@ -2673,7 +2708,7 @@ mod tests {
             ],
             lookup,
             attributes: Default::default(),
-        };
+        });
         assert_eq!(schema, expected);
 
         let canonical_form = &schema.canonical_form();
@@ -2706,7 +2741,7 @@ mod tests {
         lookup.insert("enum".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name {
                 name: "record".to_owned(),
                 namespace: None,
@@ -2719,7 +2754,7 @@ mod tests {
                     doc: None,
                     default: None,
                     aliases: None,
-                    schema: Schema::Enum {
+                    schema: Schema::Enum(EnumSchema {
                         name: Name {
                             name: "enum".to_owned(),
                             namespace: None,
@@ -2728,7 +2763,7 @@ mod tests {
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
                         attributes: Default::default(),
-                    },
+                    }),
                     order: RecordFieldOrder::Ascending,
                     position: 0,
                     custom_attributes: Default::default(),
@@ -2738,7 +2773,7 @@ mod tests {
                     doc: None,
                     default: None,
                     aliases: None,
-                    schema: Schema::Enum {
+                    schema: Schema::Enum(EnumSchema {
                         name: Name {
                             name: "enum".to_owned(),
                             namespace: None,
@@ -2747,7 +2782,7 @@ mod tests {
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
                         attributes: Default::default(),
-                    },
+                    }),
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                     custom_attributes: Default::default(),
@@ -2755,7 +2790,7 @@ mod tests {
             ],
             lookup,
             attributes: Default::default(),
-        };
+        });
         assert_eq!(schema, expected);
 
         let canonical_form = &schema.canonical_form();
@@ -2788,7 +2823,7 @@ mod tests {
         lookup.insert("fixed".to_owned(), 0);
         lookup.insert("next".to_owned(), 1);
 
-        let expected = Schema::Record {
+        let expected = Schema::Record(RecordSchema {
             name: Name {
                 name: "record".to_owned(),
                 namespace: None,
@@ -2801,7 +2836,7 @@ mod tests {
                     doc: None,
                     default: None,
                     aliases: None,
-                    schema: Schema::Fixed {
+                    schema: Schema::Fixed(FixedSchema {
                         name: Name {
                             name: "fixed".to_owned(),
                             namespace: None,
@@ -2810,7 +2845,7 @@ mod tests {
                         doc: None,
                         size: 456,
                         attributes: Default::default(),
-                    },
+                    }),
                     order: RecordFieldOrder::Ascending,
                     position: 0,
                     custom_attributes: Default::default(),
@@ -2820,7 +2855,7 @@ mod tests {
                     doc: None,
                     default: None,
                     aliases: None,
-                    schema: Schema::Fixed {
+                    schema: Schema::Fixed(FixedSchema {
                         name: Name {
                             name: "fixed".to_owned(),
                             namespace: None,
@@ -2829,7 +2864,7 @@ mod tests {
                         doc: None,
                         size: 456,
                         attributes: Default::default(),
-                    },
+                    }),
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                     custom_attributes: Default::default(),
@@ -2837,7 +2872,7 @@ mod tests {
             ],
             lookup,
             attributes: Default::default(),
-        };
+        });
         assert_eq!(schema, expected);
 
         let canonical_form = &schema.canonical_form();
@@ -2851,7 +2886,7 @@ mod tests {
             r#"{"type": "enum", "name": "Suit", "symbols": ["diamonds", "spades", "clubs", "hearts"]}"#,
         ).unwrap();
 
-        let expected = Schema::Enum {
+        let expected = Schema::Enum(EnumSchema {
             name: Name::new("Suit").unwrap(),
             aliases: None,
             doc: None,
@@ -2862,7 +2897,7 @@ mod tests {
                 "hearts".to_owned(),
             ],
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(expected, schema);
     }
@@ -2889,13 +2924,13 @@ mod tests {
     fn test_fixed_schema() {
         let schema = Schema::parse_str(r#"{"type": "fixed", "name": "test", "size": 16}"#).unwrap();
 
-        let expected = Schema::Fixed {
+        let expected = Schema::Fixed(FixedSchema {
             name: Name::new("test").unwrap(),
             aliases: None,
             doc: None,
             size: 16usize,
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(expected, schema);
     }
@@ -2907,13 +2942,13 @@ mod tests {
         )
         .unwrap();
 
-        let expected = Schema::Fixed {
+        let expected = Schema::Fixed(FixedSchema {
             name: Name::new("test").unwrap(),
             aliases: None,
             doc: Some(String::from("FixedSchema documentation")),
             size: 16usize,
             attributes: Default::default(),
-        };
+        });
 
         assert_eq!(expected, schema);
     }
@@ -2925,7 +2960,7 @@ mod tests {
                 .unwrap();
 
         let doc = match schema {
-            Schema::Enum { doc, .. } => doc,
+            Schema::Enum(EnumSchema { doc, .. }) => doc,
             _ => return,
         };
 
@@ -2939,7 +2974,7 @@ mod tests {
         ).unwrap();
 
         let doc = match schema {
-            Schema::Enum { doc, .. } => doc,
+            Schema::Enum(EnumSchema { doc, .. }) => doc,
             _ => None,
         };
 
@@ -3103,7 +3138,7 @@ mod tests {
     "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = schema {
+        if let Schema::Record(RecordSchema { name, .. }) = schema {
             assert_eq!(name.name, "name");
             assert_eq!(name.namespace, Some("space".to_string()));
         } else {
@@ -3128,7 +3163,7 @@ mod tests {
     "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = schema {
+        if let Schema::Record(RecordSchema { name, .. }) = schema {
             assert_eq!(name.namespace, Some("space1".to_string()));
         } else {
             panic!("Expected a record schema!");
@@ -3152,7 +3187,7 @@ mod tests {
     "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = schema {
+        if let Schema::Record(RecordSchema { name, .. }) = schema {
             assert_eq!(name.namespace, Some("space2".to_string()));
         } else {
             panic!("Expected a record schema!");
@@ -3870,7 +3905,7 @@ mod tests {
         )
         .unwrap();
 
-        if let Schema::Record { ref aliases, .. } = schema {
+        if let Schema::Record(RecordSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
         } else {
             panic!("The Schema should be a record: {schema:?}");
@@ -3894,7 +3929,7 @@ mod tests {
         )
         .unwrap();
 
-        if let Schema::Enum { ref aliases, .. } = schema {
+        if let Schema::Enum(EnumSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
         } else {
             panic!("The Schema should be an enum: {schema:?}");
@@ -3916,7 +3951,7 @@ mod tests {
         )
         .unwrap();
 
-        if let Schema::Fixed { ref aliases, .. } = schema {
+        if let Schema::Fixed(FixedSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
         } else {
             panic!("The Schema should be a fixed: {schema:?}");
@@ -4028,7 +4063,7 @@ mod tests {
         "#;
         let schema = Schema::parse_str(schema_str).unwrap();
 
-        if let Schema::Record { name, fields, .. } = schema {
+        if let Schema::Record(RecordSchema { name, fields, .. }) = schema {
             assert_eq!(name, Name::new("AccountEvent").unwrap());
 
             let field = &fields[0];
@@ -4187,7 +4222,7 @@ mod tests {
             Schema::parse_str(schema_str.replace("{{{}}}", CUSTOM_ATTRS_SUFFIX).as_str()).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("Rec").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
@@ -4215,7 +4250,7 @@ mod tests {
         let schema = Schema::parse_str(&schema_str).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("union_schema_test").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
@@ -4252,7 +4287,7 @@ mod tests {
         let schema = Schema::parse_str(&schema_str).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("union_schema_test").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
@@ -4288,7 +4323,7 @@ mod tests {
         let schema = Schema::parse_str(&schema_str).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("union_schema_test").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
@@ -4325,7 +4360,7 @@ mod tests {
         let schema = Schema::parse_str(&schema_str).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("union_schema_test").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
@@ -4361,7 +4396,7 @@ mod tests {
         "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { fields, .. } = schema {
+        if let Schema::Record(RecordSchema { fields, .. }) = schema {
             let num_field = &fields[0];
             assert_eq!(num_field.name, "num");
             assert_eq!(num_field.aliases, Some(vec!("num1".into(), "num2".into())));
