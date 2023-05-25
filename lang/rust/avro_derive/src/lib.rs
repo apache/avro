@@ -190,14 +190,14 @@ fn get_data_struct_schema_def(
             .iter()
             .map(|field| (field.name.to_owned(), field.position))
             .collect();
-        apache_avro::schema::Schema::Record {
+        apache_avro::schema::Schema::Record(apache_avro::schema::RecordSchema {
             name,
             aliases: #record_aliases,
             doc: #record_doc,
             fields: schema_fields,
             lookup,
             attributes: Default::default(),
-        }
+        })
     })
 }
 
@@ -217,13 +217,13 @@ fn get_data_enum_schema_def(
             .map(|variant| variant.ident.to_string())
             .collect();
         Ok(quote! {
-            apache_avro::schema::Schema::Enum {
+            apache_avro::schema::Schema::Enum(apache_avro::schema::EnumSchema {
                 name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
                 aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*],
                 attributes: Default::default(),
-            }
+            })
         })
     } else {
         Err(vec![syn::Error::new(

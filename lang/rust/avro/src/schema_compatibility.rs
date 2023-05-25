@@ -16,7 +16,7 @@
 // under the License.
 
 //! Logic for checking schema compatibility
-use crate::schema::{Schema, SchemaKind};
+use crate::schema::{EnumSchema, FixedSchema, RecordSchema, Schema, SchemaKind};
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     hash::Hasher,
@@ -88,13 +88,13 @@ impl Checker {
             SchemaKind::Union => self.match_union_schemas(writers_schema, readers_schema),
             SchemaKind::Enum => {
                 // reader's symbols must contain all writer's symbols
-                if let Schema::Enum {
+                if let Schema::Enum(EnumSchema {
                     symbols: w_symbols, ..
-                } = writers_schema
+                }) = writers_schema
                 {
-                    if let Schema::Enum {
+                    if let Schema::Enum(EnumSchema {
                         symbols: r_symbols, ..
-                    } = readers_schema
+                    }) = readers_schema
                     {
                         return !w_symbols.iter().any(|e| !r_symbols.contains(e));
                     }
@@ -121,15 +121,15 @@ impl Checker {
             return false;
         }
 
-        if let Schema::Record {
+        if let Schema::Record(RecordSchema {
             fields: w_fields,
             lookup: w_lookup,
             ..
-        } = writers_schema
+        }) = writers_schema
         {
-            if let Schema::Record {
+            if let Schema::Record(RecordSchema {
                 fields: r_fields, ..
-            } = readers_schema
+            }) = readers_schema
             {
                 for field in r_fields.iter() {
                     if let Some(pos) = w_lookup.get(&field.name) {
@@ -219,8 +219,8 @@ impl SchemaCompatibility {
 
             match r_type {
                 SchemaKind::Record => {
-                    if let Schema::Record { name: w_name, .. } = writers_schema {
-                        if let Schema::Record { name: r_name, .. } = readers_schema {
+                    if let Schema::Record(RecordSchema { name: w_name, .. }) = writers_schema {
+                        if let Schema::Record(RecordSchema { name: r_name, .. }) = readers_schema {
                             return w_name.fullname(None) == r_name.fullname(None);
                         } else {
                             unreachable!("readers_schema should have been Schema::Record")
@@ -230,21 +230,21 @@ impl SchemaCompatibility {
                     }
                 }
                 SchemaKind::Fixed => {
-                    if let Schema::Fixed {
+                    if let Schema::Fixed(FixedSchema {
                         name: w_name,
                         aliases: _,
                         doc: _w_doc,
                         size: w_size,
                         attributes: _,
-                    } = writers_schema
+                    }) = writers_schema
                     {
-                        if let Schema::Fixed {
+                        if let Schema::Fixed(FixedSchema {
                             name: r_name,
                             aliases: _,
                             doc: _r_doc,
                             size: r_size,
                             attributes: _,
-                        } = readers_schema
+                        }) = readers_schema
                         {
                             return w_name.fullname(None) == r_name.fullname(None)
                                 && w_size == r_size;
@@ -256,8 +256,8 @@ impl SchemaCompatibility {
                     }
                 }
                 SchemaKind::Enum => {
-                    if let Schema::Enum { name: w_name, .. } = writers_schema {
-                        if let Schema::Enum { name: r_name, .. } = readers_schema {
+                    if let Schema::Enum(EnumSchema { name: w_name, .. }) = writers_schema {
+                        if let Schema::Enum(EnumSchema { name: r_name, .. }) = readers_schema {
                             return w_name.fullname(None) == r_name.fullname(None);
                         } else {
                             unreachable!("readers_schema should have been Schema::Enum")

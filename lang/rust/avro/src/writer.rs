@@ -632,7 +632,7 @@ mod tests {
     use crate::{
         decimal::Decimal,
         duration::{Days, Duration, Millis, Months},
-        schema::Name,
+        schema::{DecimalSchema, FixedSchema, Name},
         types::Record,
         util::zig_i64,
     };
@@ -781,21 +781,21 @@ mod tests {
     #[test]
     fn decimal_fixed() -> TestResult<()> {
         let size = 30;
-        let inner = Schema::Fixed {
+        let inner = Schema::Fixed(FixedSchema {
             name: Name::new("decimal").unwrap(),
             aliases: None,
             doc: None,
             size,
             attributes: Default::default(),
-        };
+        });
         let value = vec![0u8; size];
         logical_type_test(
             r#"{"type": {"type": "fixed", "size": 30, "name": "decimal"}, "logicalType": "decimal", "precision": 20, "scale": 5}"#,
-            &Schema::Decimal {
+            &Schema::Decimal(DecimalSchema {
                 precision: 20,
                 scale: 5,
                 inner: Box::new(inner.clone()),
-            },
+            }),
             Value::Decimal(Decimal::from(value.clone())),
             &inner,
             Value::Fixed(size, value),
@@ -808,11 +808,11 @@ mod tests {
         let value = vec![0u8; 10];
         logical_type_test(
             r#"{"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 3}"#,
-            &Schema::Decimal {
+            &Schema::Decimal(DecimalSchema {
                 precision: 4,
                 scale: 3,
                 inner: Box::new(inner.clone()),
-            },
+            }),
             Value::Decimal(Decimal::from(value.clone())),
             &inner,
             value,
@@ -821,13 +821,13 @@ mod tests {
 
     #[test]
     fn duration() -> TestResult<()> {
-        let inner = Schema::Fixed {
+        let inner = Schema::Fixed(FixedSchema {
             name: Name::new("duration").unwrap(),
             aliases: None,
             doc: None,
             size: 12,
             attributes: Default::default(),
-        };
+        });
         let value = Value::Duration(Duration::new(
             Months::new(256),
             Days::new(512),
