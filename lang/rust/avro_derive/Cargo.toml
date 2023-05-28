@@ -34,7 +34,7 @@ proc-macro = true
 
 [dependencies]
 darling = { default-features = false, version = "0.20.1" }
-proc-macro2 = { default-features = false, version = "1.0.58" }
+proc-macro2 = { default-features = false, version = "1.0.59" }
 quote = { default-features = false, version = "1.0.27" }
 serde_json = { default-features = false, version = "1.0.96", features = ["std"] }
 syn = { default-features = false, version = "2.0.16", features = ["full", "fold"] }
