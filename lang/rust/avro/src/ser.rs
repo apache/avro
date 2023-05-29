@@ -492,6 +492,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
     use std::sync::atomic::Ordering;
+    use apache_avro_test_helper::TestResult;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {
@@ -683,7 +684,7 @@ mod tests {
     }
 
     #[test]
-    fn test_to_value() {
+    fn test_to_value() -> TestResult {
         let test = Test {
             a: 27,
             b: "foo".to_owned(),
@@ -693,7 +694,7 @@ mod tests {
             ("b".to_owned(), Value::String("foo".to_owned())),
         ]);
 
-        assert_eq!(to_value(test.clone()).unwrap(), expected);
+        assert_eq!(to_value(test.clone())?, expected);
 
         let test_inner = TestInner { a: test, b: 35 };
 
@@ -708,11 +709,13 @@ mod tests {
             ("b".to_owned(), Value::Int(35)),
         ]);
 
-        assert_eq!(to_value(test_inner).unwrap(), expected_inner);
+        assert_eq!(to_value(test_inner)?, expected_inner);
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_unit_enum() {
+    fn test_to_value_unit_enum() -> TestResult {
         let test = TestUnitExternalEnum {
             a: UnitExternalEnum::Val1,
         };
@@ -720,7 +723,7 @@ mod tests {
         let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit external enum"
         );
@@ -735,7 +738,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit internal enum"
         );
@@ -750,7 +753,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit adjacent enum"
         );
@@ -762,14 +765,16 @@ mod tests {
         let expected = Value::Record(vec![("a".to_owned(), Value::Null)]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing unit untagged enum"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_single_value_enum() {
+    fn test_to_value_single_value_enum() -> TestResult {
         let test = TestSingleValueExternalEnum {
             a: SingleValueExternalEnum::Double(64.0),
         };
@@ -786,7 +791,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value external enum"
         );
@@ -811,7 +816,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value adjacent enum"
         );
@@ -823,14 +828,16 @@ mod tests {
         let expected = Value::Record(vec![("a".to_owned(), Value::Double(64.0))]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "Error serializing single value untagged enum"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_struct_enum() {
+    fn test_to_value_struct_enum() -> TestResult {
         let test = TestStructExternalEnum {
             a: StructExternalEnum::Val1 { x: 1.0, y: 2.0 },
         };
@@ -852,7 +859,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct external enum"
         );
@@ -872,7 +879,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct internal enum"
         );
@@ -895,7 +902,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct adjacent enum"
         );
@@ -912,7 +919,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct untagged enum"
         );
@@ -934,14 +941,16 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing struct untagged enum variant"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_to_value_tuple_enum() {
+    fn test_to_value_tuple_enum() -> TestResult {
         let test = TestTupleExternalEnum {
             a: TupleExternalEnum::Val2(1.0, 2.0, 3.0),
         };
@@ -962,7 +971,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple external enum"
         );
@@ -983,7 +992,7 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple adjacent enum"
         );
@@ -998,10 +1007,12 @@ mod tests {
         )]);
 
         assert_eq!(
-            to_value(test).unwrap(),
+            to_value(test)?,
             expected,
             "error serializing tuple untagged enum"
         );
+
+        Ok(())
     }
 
     #[test]

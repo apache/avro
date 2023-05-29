@@ -20,6 +20,7 @@ use apache_avro::{
     types::{Record, Value},
     Reader, Writer,
 };
+use apache_avro_test_helper::TestResult;
 use std::{
     io::{BufReader, BufWriter},
     time::{Duration, Instant},
@@ -45,7 +46,7 @@ fn benchmark(
     big_or_small: &str,
     count: usize,
     runs: usize,
-) -> anyhow::Result<()> {
+) -> TestResult {
     let mut records = Vec::new();
     for __ in 0..count {
         records.push(record.clone());
@@ -100,7 +101,7 @@ fn benchmark(
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> TestResult {
     let raw_small_schema = r#"
         {"namespace": "test", "type": "record", "name": "Test", "fields": [{"type": {"type": "string"}, "name": "field"}]}
     "#;

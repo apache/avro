@@ -20,6 +20,7 @@ use apache_avro::{from_avro_datum, to_avro_datum, types::Value, Error, Schema};
 use lazy_static::lazy_static;
 use pretty_assertions::assert_eq;
 use std::io::Cursor;
+use apache_avro_test_helper::TestResult;
 
 lazy_static! {
     static ref SCHEMAS_TO_VALIDATE: Vec<(&'static str, Value)> = vec![
@@ -99,44 +100,52 @@ lazy_static! {
 }
 
 #[test]
-fn test_validate() {
+fn test_validate() -> TestResult {
     for (raw_schema, value) in SCHEMAS_TO_VALIDATE.iter() {
-        let schema = Schema::parse_str(raw_schema).unwrap();
+        let schema = Schema::parse_str(raw_schema)?;
         assert!(
             value.validate(&schema),
             "value {value:?} does not validate schema: {raw_schema}"
         );
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_round_trip() {
+fn test_round_trip() -> TestResult {
     for (raw_schema, value) in SCHEMAS_TO_VALIDATE.iter() {
-        let schema = Schema::parse_str(raw_schema).unwrap();
+        let schema = Schema::parse_str(raw_schema)?;
         let encoded = to_avro_datum(&schema, value.clone()).unwrap();
         let decoded = from_avro_datum(&schema, &mut Cursor::new(encoded), None).unwrap();
         assert_eq!(value, &decoded);
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_binary_int_encoding() {
+fn test_binary_int_encoding() -> TestResult {
     for (number, hex_encoding) in BINARY_ENCODINGS.iter() {
-        let encoded = to_avro_datum(&Schema::Int, Value::Int(*number as i32)).unwrap();
+        let encoded = to_avro_datum(&Schema::Int, Value::Int(*number as i32))?;
         assert_eq!(&encoded, hex_encoding);
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_binary_long_encoding() {
+fn test_binary_long_encoding() -> TestResult {
     for (number, hex_encoding) in BINARY_ENCODINGS.iter() {
-        let encoded = to_avro_datum(&Schema::Long, Value::Long(*number)).unwrap();
+        let encoded = to_avro_datum(&Schema::Long, Value::Long(*number))?;
         assert_eq!(&encoded, hex_encoding);
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_schema_promotion() {
+fn test_schema_promotion() -> TestResult {
     // Each schema is present in order of promotion (int -> long, long -> float, float -> double)
     // Each value represents the expected decoded value when promoting a value previously encoded with a promotable schema
     let promotable_schemas = vec![r#""int""#, r#""long""#, r#""float""#, r#""double""#];
@@ -147,11 +156,11 @@ fn test_schema_promotion() {
         Value::Double(219.0),
     ];
     for (i, writer_raw_schema) in promotable_schemas.iter().enumerate() {
-        let writer_schema = Schema::parse_str(writer_raw_schema).unwrap();
+        let writer_schema = Schema::parse_str(writer_raw_schema)?;
         let original_value = &promotable_values[i];
         for (j, reader_raw_schema) in promotable_schemas.iter().enumerate().skip(i + 1) {
-            let reader_schema = Schema::parse_str(reader_raw_schema).unwrap();
-            let encoded = to_avro_datum(&writer_schema, original_value.clone()).unwrap();
+            let reader_schema = Schema::parse_str(reader_raw_schema)?;
+            let encoded = to_avro_datum(&writer_schema, original_value.clone())?;
             let decoded = from_avro_datum(
                 &writer_schema,
                 &mut Cursor::new(encoded),
@@ -163,28 +172,30 @@ fn test_schema_promotion() {
             assert_eq!(decoded, promotable_values[j]);
         }
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_unknown_symbol() {
+fn test_unknown_symbol() -> TestResult {
     let writer_schema =
-        Schema::parse_str(r#"{"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]}"#)
-            .unwrap();
+        Schema::parse_str(r#"{"type": "enum", "name": "Test", "symbols": ["FOO", "BAR"]}"#)?;
     let reader_schema =
-        Schema::parse_str(r#"{"type": "enum", "name": "Test", "symbols": ["BAR", "BAZ"]}"#)
-            .unwrap();
+        Schema::parse_str(r#"{"type": "enum", "name": "Test", "symbols": ["BAR", "BAZ"]}"#)?;
     let original_value = Value::Enum(0, "FOO".to_string());
-    let encoded = to_avro_datum(&writer_schema, original_value).unwrap();
+    let encoded = to_avro_datum(&writer_schema, original_value)?;
     let decoded = from_avro_datum(
         &writer_schema,
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     );
     assert!(decoded.is_err());
+
+    Ok(())
 }
 
 #[test]
-fn test_default_value() {
+fn test_default_value() -> TestResult {
     for (field_type, default_json, default_datum) in DEFAULT_VALUE_EXAMPLES.iter() {
         let reader_schema = Schema::parse_str(&format!(
             r#"{{
@@ -194,26 +205,26 @@ fn test_default_value() {
                     {{"name": "H", "type": {field_type}, "default": {default_json}}}
                 ]
             }}"#
-        ))
-        .unwrap();
+        ))?;
         let datum_to_read = Value::Record(vec![("H".to_string(), default_datum.clone())]);
-        let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone()).unwrap();
+        let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
         let datum_read = from_avro_datum(
             &LONG_RECORD_SCHEMA,
             &mut Cursor::new(encoded),
             Some(&reader_schema),
-        )
-        .unwrap();
+        )?;
         assert_eq!(
             datum_read, datum_to_read,
             "{} -> {}",
             *field_type, *default_json
         );
     }
+
+    Ok(())
 }
 
 #[test]
-fn test_no_default_value() {
+fn test_no_default_value() -> TestResult {
     let reader_schema = Schema::parse_str(
         r#"{
             "type": "record",
@@ -222,19 +233,20 @@ fn test_no_default_value() {
                 {"name": "H", "type": "int"}
             ]
         }"#,
-    )
-    .unwrap();
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone()).unwrap();
+    )?;
+    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
     let result = from_avro_datum(
         &LONG_RECORD_SCHEMA,
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     );
     assert!(result.is_err());
+
+    Ok(())
 }
 
 #[test]
-fn test_projection() {
+fn test_projection() -> TestResult {
     let reader_schema = Schema::parse_str(
         r#"
         {
@@ -246,24 +258,24 @@ fn test_projection() {
             ]
         }
     "#,
-    )
-    .unwrap();
+    )?;
     let datum_to_read = Value::Record(vec![
         ("E".to_string(), Value::Int(5)),
         ("F".to_string(), Value::Int(6)),
     ]);
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone()).unwrap();
+    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
     let datum_read = from_avro_datum(
         &LONG_RECORD_SCHEMA,
         &mut Cursor::new(encoded),
         Some(&reader_schema),
-    )
-    .unwrap();
+    )?;
     assert_eq!(datum_to_read, datum_read);
+
+    Ok(())
 }
 
 #[test]
-fn test_field_order() {
+fn test_field_order() -> TestResult {
     let reader_schema = Schema::parse_str(
         r#"
         {
@@ -275,20 +287,20 @@ fn test_field_order() {
             ]
         }
     "#,
-    )
-    .unwrap();
+    )?;
     let datum_to_read = Value::Record(vec![
         ("F".to_string(), Value::Int(6)),
         ("E".to_string(), Value::Int(5)),
     ]);
-    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone()).unwrap();
+    let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone())?;
     let datum_read = from_avro_datum(
         &LONG_RECORD_SCHEMA,
         &mut Cursor::new(encoded),
         Some(&reader_schema),
-    )
-    .unwrap();
+    )?;
     assert_eq!(datum_to_read, datum_read);
+
+    Ok(())
 }
 
 #[test]
@@ -304,8 +316,7 @@ fn test_type_exception() -> Result<(), String> {
              ]
         }
     "#,
-    )
-    .unwrap();
+    ).unwrap();
     let datum_to_write = Value::Record(vec![
         ("E".to_string(), Value::Int(5)),
         ("F".to_string(), Value::String(String::from("Bad"))),

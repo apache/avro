@@ -654,6 +654,8 @@ mod tests {
     use std::sync::atomic::Ordering;
     use uuid::Uuid;
 
+    use apache_avro_test_helper::TestResult;
+
     use super::*;
 
     #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
@@ -749,7 +751,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value() {
+    fn test_from_value() -> TestResult {
         let test = Value::Record(vec![
             ("a".to_owned(), Value::Long(27)),
             ("b".to_owned(), Value::String("foo".to_owned())),
@@ -758,7 +760,7 @@ mod tests {
             a: 27,
             b: "foo".to_owned(),
         };
-        let final_value: Test = from_value(&test).unwrap();
+        let final_value: Test = from_value(&test)?;
         assert_eq!(final_value, expected);
 
         let test_inner = Value::Record(vec![
@@ -773,18 +775,20 @@ mod tests {
         ]);
 
         let expected_inner = TestInner { a: expected, b: 35 };
-        let final_value: TestInner = from_value(&test_inner).unwrap();
-        assert_eq!(final_value, expected_inner)
+        let final_value: TestInner = from_value(&test_inner)?;
+        assert_eq!(final_value, expected_inner);
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_unit_enum() {
+    fn test_from_value_unit_enum() -> TestResult {
         let expected = TestUnitExternalEnum {
             a: UnitExternalEnum::Val1,
         };
 
         let test = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
-        let final_value: TestUnitExternalEnum = from_value(&test).unwrap();
+        let final_value: TestUnitExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit external enum"
@@ -798,7 +802,7 @@ mod tests {
             "a".to_owned(),
             Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
         )]);
-        let final_value: TestUnitInternalEnum = from_value(&test).unwrap();
+        let final_value: TestUnitInternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit internal enum"
@@ -811,7 +815,7 @@ mod tests {
             "a".to_owned(),
             Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
         )]);
-        let final_value: TestUnitAdjacentEnum = from_value(&test).unwrap();
+        let final_value: TestUnitAdjacentEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit adjacent enum"
@@ -821,15 +825,16 @@ mod tests {
         };
 
         let test = Value::Record(vec![("a".to_owned(), Value::Null)]);
-        let final_value: TestUnitUntaggedEnum = from_value(&test).unwrap();
+        let final_value: TestUnitUntaggedEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit untagged enum"
         );
+        Ok(())
     }
 
     #[test]
-    fn avro_3645_3646_test_from_value_enum() {
+    fn avro_3645_3646_test_from_value_enum() -> TestResult {
         #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
         struct TestNullExternalEnum {
             a: NullExternalEnum,
@@ -901,13 +906,15 @@ mod tests {
         ];
 
         for (expected, test) in data.iter() {
-            let actual: TestNullExternalEnum = from_value(test).unwrap();
+            let actual: TestNullExternalEnum = from_value(test)?;
             assert_eq!(actual, *expected);
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_single_value_enum() {
+    fn test_from_value_single_value_enum() -> TestResult {
         let expected = TestSingleValueExternalEnum {
             a: SingleValueExternalEnum::Double(64.0),
         };
@@ -922,15 +929,17 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestSingleValueExternalEnum = from_value(&test).unwrap();
+        let final_value: TestSingleValueExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing single value external enum(union)"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_struct_enum() {
+    fn test_from_value_struct_enum() -> TestResult {
         let expected = TestStructExternalEnum {
             a: StructExternalEnum::Val1 { x: 1.0, y: 2.0 },
         };
@@ -951,15 +960,17 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestStructExternalEnum = from_value(&test).unwrap();
+        let final_value: TestStructExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "error deserializing struct external enum(union)"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3692_from_value_struct_flatten() {
+    fn test_avro_3692_from_value_struct_flatten() -> TestResult {
         #[derive(Deserialize, PartialEq, Debug)]
         struct S1 {
             f1: String,
@@ -981,12 +992,14 @@ mod tests {
             ("f1".to_owned(), "Hello".into()),
             ("f2".to_owned(), "World".into()),
         ]);
-        let final_value: S1 = from_value(&test).unwrap();
+        let final_value: S1 = from_value(&test)?;
         assert_eq!(final_value, expected);
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_tuple_enum() {
+    fn test_from_value_tuple_enum() -> TestResult {
         let expected = TestTupleExternalEnum {
             a: TupleExternalEnum::Val1(1.0, 2.0),
         };
@@ -1004,17 +1017,17 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestTupleExternalEnum = from_value(&test).unwrap();
+        let final_value: TestTupleExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "error serializing tuple external enum(union)"
         );
+
+        Ok(())
     }
 
-    type TestResult<T> = anyhow::Result<T, Box<dyn std::error::Error>>;
-
     #[test]
-    fn test_date() -> TestResult<()> {
+    fn test_date() -> TestResult {
         let raw_value = 1;
         let value = Value::Date(raw_value);
         let result = crate::from_value::<i32>(&value)?;
@@ -1023,7 +1036,7 @@ mod tests {
     }
 
     #[test]
-    fn test_time_millis() -> TestResult<()> {
+    fn test_time_millis() -> TestResult {
         let raw_value = 1;
         let value = Value::TimeMillis(raw_value);
         let result = crate::from_value::<i32>(&value)?;
@@ -1032,7 +1045,7 @@ mod tests {
     }
 
     #[test]
-    fn test_time_micros() -> TestResult<()> {
+    fn test_time_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::TimeMicros(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -1041,7 +1054,7 @@ mod tests {
     }
 
     #[test]
-    fn test_timestamp_millis() -> TestResult<()> {
+    fn test_timestamp_millis() -> TestResult {
         let raw_value = 1;
         let value = Value::TimestampMillis(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -1050,7 +1063,7 @@ mod tests {
     }
 
     #[test]
-    fn test_timestamp_micros() -> TestResult<()> {
+    fn test_timestamp_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::TimestampMicros(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -1059,16 +1072,16 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_uuid_str() -> TestResult<()> {
+    fn test_from_value_uuid_str() -> TestResult {
         let raw_value = "9ec535ff-3e2a-45bd-91d3-0a01321b5a49";
-        let value = Value::Uuid(Uuid::parse_str(raw_value).unwrap());
+        let value = Value::Uuid(Uuid::parse_str(raw_value)?);
         let result = crate::from_value::<Uuid>(&value)?;
         assert_eq!(result.to_string(), raw_value);
         Ok(())
     }
 
     #[test]
-    fn test_from_value_uuid_slice() -> TestResult<()> {
+    fn test_from_value_uuid_slice() -> TestResult {
         let raw_value = &[4, 54, 67, 12, 43, 2, 2, 76, 32, 50, 87, 5, 1, 33, 43, 87];
         let value = Value::Uuid(Uuid::from_slice(raw_value)?);
         let result = crate::from_value::<Uuid>(&value)?;
@@ -1077,7 +1090,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_with_union() -> TestResult<()> {
+    fn test_from_value_with_union() -> TestResult {
         // AVRO-3232 test for deserialize_any on missing fields on the destination struct:
         // Error: DeserializeValue("Unsupported union")
         // Error: DeserializeValue("incorrect value of type: String")
@@ -1227,7 +1240,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_3747_human_readable_false() -> TestResult<()> {
+    fn avro_3747_human_readable_false() -> TestResult {
         use serde::de::Deserializer as SerdeDeserializer;
 
         let is_human_readable = false;
@@ -1241,7 +1254,7 @@ mod tests {
     }
 
     #[test]
-    fn avro_3747_human_readable_true() -> TestResult<()> {
+    fn avro_3747_human_readable_true() -> TestResult {
         use serde::de::Deserializer as SerdeDeserializer;
 
         crate::util::SERDE_HUMAN_READABLE.store(true, Ordering::Release);
