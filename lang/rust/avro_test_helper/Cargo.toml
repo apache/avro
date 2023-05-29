@@ -35,5 +35,5 @@ color-backtrace = { default-features = false, version = "0.5.1" }
 ctor = { default-features = false, version = "0.2.0" }
 env_logger = { default-features = false, version = "0.10.0" }
 lazy_static = { default-features = false, version = "1.4.0" }
-log = { default-features = false, version = "0.4.17" }
+log = { default-features = false, version = "0.4.18" }
 ref_thread_local = { default-features = false, version = "0.1.1" }

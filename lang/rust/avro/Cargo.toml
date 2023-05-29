@@ -61,7 +61,7 @@ crc32fast = { default-features = false, version = "1.3.2", optional = true }
 digest = { default-features = false, version = "0.10.7", features = ["core-api"] }
 lazy_static = { default-features = false, version = "1.4.0" }
 libflate = { default-features = false, version = "1.2.0" }
-log = { default-features = false, version = "0.4.17" }
+log = { default-features = false, version = "0.4.18" }
 num-bigint = { default-features = false, version = "0.4.3" }
 regex = { default-features = false, version = "1.8.3", features = ["std", "perf"] }
 serde = { default-features = false, version = "1.0.163", features = ["derive"] }
