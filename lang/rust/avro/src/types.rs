@@ -561,6 +561,18 @@ impl Value {
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
     }
 
+    /// Attempt to perform schema resolution on the value, with the given
+    /// [Schema](../schema/enum.Schema.html) and set of schemas to use for Refs resolution.
+    ///
+    /// See [Schema Resolution](https://avro.apache.org/docs/current/spec.html#Schema+Resolution)
+    /// in the Avro specification for the full set of rules of schema
+    /// resolution.
+    pub fn resolve_schemata(self, schema: &Schema, schemata: Vec<&Schema>) -> AvroResult<Self> {
+        let enclosing_namespace = schema.namespace();
+        let rs = ResolvedSchema::try_from(schemata)?;
+        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
+    }
+
     fn resolve_internal(
         mut self,
         schema: &Schema,
