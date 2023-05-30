@@ -2650,4 +2650,46 @@ Field with name '"b"' is not a member of the map items"#,
     fn test_avro_3688_field_b_set() {
         avro_3688_schema_resolution_panic(true);
     }
+
+    #[test]
+    fn test_avro_3764_use_resolve_schemata() {
+        let referenced_schema =
+            r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
+        let main_schema = r#"{"name": "recordWithReference", "type": "record", "fields": [{"name": "reference", "type": "enumForReference"}]}"#;
+
+        let value: serde_json::Value = serde_json::from_str(
+            r#"
+            {
+                "reference": "A"
+            }
+        "#,
+        )
+        .unwrap();
+
+        let avro_value = Value::from(value);
+
+        let mut schemas = Schema::parse_list(&[main_schema, referenced_schema])
+            .unwrap()
+            .into_iter();
+
+        let schema = schemas.next().unwrap();
+        let schemata: Vec<_> = schemas.collect();
+
+        let resolve_result = avro_value
+            .clone()
+            .resolve_schemata(&schema, schemata.iter().collect());
+
+        assert!(
+            resolve_result.is_ok(),
+            "result of resolving with schemata should be ok, got: {:?}",
+            resolve_result
+        );
+
+        let resolve_result = avro_value.resolve(&schema);
+        assert!(
+            resolve_result.is_err(),
+            "result of resolving without schemata should be err, got: {:?}",
+            resolve_result
+        );
+    }
 }
