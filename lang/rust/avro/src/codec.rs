@@ -185,8 +185,8 @@ impl Codec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq, assert_ne};
     use apache_avro_test_helper::TestResult;
+    use pretty_assertions::{assert_eq, assert_ne};
 
     const INPUT: &[u8] = b"theanswertolifetheuniverseandeverythingis42theanswertolifetheuniverseandeverythingis4theanswertolifetheuniverseandeverythingis2";
 
@@ -202,31 +202,31 @@ mod tests {
     }
 
     #[test]
-    fn deflate_compress_and_decompress()-> TestResult  {
+    fn deflate_compress_and_decompress() -> TestResult {
         compress_and_decompress(Codec::Deflate)
     }
 
     #[cfg(feature = "snappy")]
     #[test]
-    fn snappy_compress_and_decompress()-> TestResult  {
+    fn snappy_compress_and_decompress() -> TestResult {
         compress_and_decompress(Codec::Snappy)
     }
 
     #[cfg(feature = "zstandard")]
     #[test]
-    fn zstd_compress_and_decompress()-> TestResult  {
+    fn zstd_compress_and_decompress() -> TestResult {
         compress_and_decompress(Codec::Zstandard)
     }
 
     #[cfg(feature = "bzip")]
     #[test]
-    fn bzip_compress_and_decompress()-> TestResult  {
+    fn bzip_compress_and_decompress() -> TestResult {
         compress_and_decompress(Codec::Bzip2)
     }
 
     #[cfg(feature = "xz")]
     #[test]
-    fn xz_compress_and_decompress()-> TestResult  {
+    fn xz_compress_and_decompress() -> TestResult {
         compress_and_decompress(Codec::Xz)
     }
 

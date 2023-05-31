@@ -1028,10 +1028,12 @@ mod tests {
         schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
         types::Value,
     };
-    use apache_avro_test_helper::logger::{assert_logged, assert_not_logged};
+    use apache_avro_test_helper::{
+        logger::{assert_logged, assert_not_logged},
+        TestResult,
+    };
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
-    use apache_avro_test_helper::TestResult;
 
     #[test]
     fn validate() -> TestResult {
@@ -1336,9 +1338,7 @@ mod tests {
                     doc: None,
                     default: Some(JsonValue::Null),
                     aliases: None,
-                    schema: Schema::Union(
-                        UnionSchema::new(vec![Schema::Null, Schema::Int])?,
-                    ),
+                    schema: Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::Int])?),
                     order: RecordFieldOrder::Ascending,
                     position: 2,
                     custom_attributes: Default::default(),
@@ -1498,14 +1498,11 @@ Field with name '"b"' is not a member of the map items"#,
     #[test]
     fn resolve_decimal_bytes() -> TestResult {
         let value = Value::Decimal(Decimal::from(vec![1, 2]));
-        value
-            .clone()
-            .resolve(&Schema::Decimal(DecimalSchema {
-                precision: 10,
-                scale: 4,
-                inner: Box::new(Schema::Bytes),
-            }))
-            ?;
+        value.clone().resolve(&Schema::Decimal(DecimalSchema {
+            precision: 10,
+            scale: 4,
+            inner: Box::new(Schema::Bytes),
+        }))?;
         assert!(value.resolve(&Schema::String).is_err());
 
         Ok(())
@@ -1657,8 +1654,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let value = Value::Record(vec![(
             "event".to_string(),
@@ -1723,8 +1719,7 @@ Field with name '"b"' is not a member of the map items"#,
             JsonValue::String("test_enum".into())
         );
         assert_eq!(
-            JsonValue::try_from(Value::Union(1, Box::new(Value::String("test_enum".into()))))
-                ?,
+            JsonValue::try_from(Value::Union(1, Box::new(Value::String("test_enum".into()))))?,
             JsonValue::String("test_enum".into())
         );
         assert_eq!(
@@ -1732,8 +1727,7 @@ Field with name '"b"' is not a member of the map items"#,
                 Value::Int(1),
                 Value::Int(2),
                 Value::Int(3)
-            ]))
-            ?,
+            ]))?,
             JsonValue::Array(vec![
                 JsonValue::Number(1.into()),
                 JsonValue::Number(2.into()),
@@ -1749,8 +1743,7 @@ Field with name '"b"' is not a member of the map items"#,
                 ]
                 .into_iter()
                 .collect()
-            ))
-            ?,
+            ))?,
             JsonValue::Object(
                 vec![
                     ("v1".to_string(), JsonValue::Number(1.into())),
@@ -1766,8 +1759,7 @@ Field with name '"b"' is not a member of the map items"#,
                 ("v1".to_string(), Value::Int(1)),
                 ("v2".to_string(), Value::Int(2)),
                 ("v3".to_string(), Value::Int(3))
-            ]))
-            ?,
+            ]))?,
             JsonValue::Object(
                 vec![
                     ("v1".to_string(), JsonValue::Number(1.into())),
@@ -1809,8 +1801,7 @@ Field with name '"b"' is not a member of the map items"#,
         assert_eq!(
             JsonValue::try_from(Value::Duration(
                 [1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8].into()
-            ))
-            ?,
+            ))?,
             JsonValue::Array(vec![
                 JsonValue::Number(1.into()),
                 JsonValue::Number(2.into()),
@@ -1827,10 +1818,9 @@ Field with name '"b"' is not a member of the map items"#,
             ])
         );
         assert_eq!(
-            JsonValue::try_from(Value::Uuid(
-                Uuid::parse_str("936DA01F-9ABD-4D9D-80C7-02AF85C822A8")?
-            ))
-            ?,
+            JsonValue::try_from(Value::Uuid(Uuid::parse_str(
+                "936DA01F-9ABD-4D9D-80C7-02AF85C822A8"
+            )?))?,
             JsonValue::String("936da01f-9abd-4d9d-80c7-02af85c822a8".into())
         );
 
@@ -1862,8 +1852,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -1906,8 +1895,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -1953,8 +1941,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -2004,8 +1991,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![(
@@ -2050,8 +2036,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -2094,8 +2079,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -2407,8 +2391,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value_right = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value_wrong1 = Value::Record(vec![("z".into(), Value::Null)]);
@@ -2486,8 +2469,7 @@ Field with name '"b"' is not a member of the map items"#,
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let test_inner = TestInner { z: 3 };
         let test_outer1 = TestRefSchemaStruct1 {
@@ -2691,17 +2673,17 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn test_avro_3688_field_b_not_set()-> TestResult  {
+    fn test_avro_3688_field_b_not_set() -> TestResult {
         avro_3688_schema_resolution_panic(false)
     }
 
     #[test]
-    fn test_avro_3688_field_b_set()-> TestResult  {
+    fn test_avro_3688_field_b_set() -> TestResult {
         avro_3688_schema_resolution_panic(true)
     }
 
     #[test]
-    fn test_avro_3764_use_resolve_schemata() -> TestResult  {
+    fn test_avro_3764_use_resolve_schemata() -> TestResult {
         let referenced_schema =
             r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
         let main_schema = r#"{"name": "recordWithReference", "type": "record", "fields": [{"name": "reference", "type": "enumForReference"}]}"#;
@@ -2721,9 +2703,7 @@ Field with name '"b"' is not a member of the map items"#,
         let main_schema = schemas.get(0).unwrap();
         let schemata: Vec<_> = schemas.iter().skip(1).collect();
 
-        let resolve_result = avro_value
-            .clone()
-            .resolve_schemata(main_schema, schemata);
+        let resolve_result = avro_value.clone().resolve_schemata(main_schema, schemata);
 
         assert!(
             resolve_result.is_ok(),

@@ -187,8 +187,8 @@ pub(crate) fn is_human_readable() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
     use apache_avro_test_helper::TestResult;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_zigzag() {

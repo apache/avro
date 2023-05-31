@@ -489,10 +489,10 @@ pub fn to_value<S: Serialize>(value: S) -> Result<Value, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
     use std::sync::atomic::Ordering;
-    use apache_avro_test_helper::TestResult;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {

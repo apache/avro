@@ -326,8 +326,8 @@ impl SchemaCompatibility {
 
 #[cfg(test)]
 mod tests {
-    use apache_avro_test_helper::TestResult;
     use super::*;
+    use apache_avro_test_helper::TestResult;
 
     fn int_array_schema() -> Schema {
         Schema::parse_str(r#"{"type":"array", "items":"int"}"#).unwrap()

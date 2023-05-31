@@ -2071,9 +2071,9 @@ pub mod derive {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde_json::json;
-    use apache_avro_test_helper::TestResult;
 
     #[test]
     fn test_invalid_schema() {
@@ -2156,18 +2156,15 @@ mod tests {
             doc: None,
             default: None,
             aliases: None,
-            schema: Schema::Union(
-                UnionSchema::new(vec![
-                    Schema::Null,
-                    Schema::Ref {
-                        name: Name {
-                            name: "LongList".to_owned(),
-                            namespace: None,
-                        },
+            schema: Schema::Union(UnionSchema::new(vec![
+                Schema::Null,
+                Schema::Ref {
+                    name: Name {
+                        name: "LongList".to_owned(),
+                        namespace: None,
                     },
-                ])
-                ?,
-            ),
+                },
+            ])?),
             order: RecordFieldOrder::Ascending,
             position: 1,
             custom_attributes: Default::default(),
@@ -2235,17 +2232,14 @@ mod tests {
                 doc: None,
                 default: None,
                 aliases: None,
-                schema: Schema::Union(
-                    UnionSchema::new(vec![
-                        Schema::Ref {
-                            name: Name::new("A")?,
-                        },
-                        Schema::Ref {
-                            name: Name::new("B")?,
-                        },
-                    ])
-                    ?,
-                ),
+                schema: Schema::Union(UnionSchema::new(vec![
+                    Schema::Ref {
+                        name: Name::new("A")?,
+                    },
+                    Schema::Ref {
+                        name: Name::new("B")?,
+                    },
+                ])?),
                 order: RecordFieldOrder::Ignore,
                 position: 0,
                 custom_attributes: Default::default(),
@@ -2327,15 +2321,12 @@ mod tests {
                 doc: None,
                 default: Some(Value::Null),
                 aliases: None,
-                schema: Schema::Union(
-                    UnionSchema::new(vec![
-                        Schema::Null,
-                        Schema::Ref {
-                            name: Name::new("A")?,
-                        },
-                    ])
-                    ?,
-                ),
+                schema: Schema::Union(UnionSchema::new(vec![
+                    Schema::Null,
+                    Schema::Ref {
+                        name: Name::new("A")?,
+                    },
+                ])?),
                 order: RecordFieldOrder::Ignore,
                 position: 0,
                 custom_attributes: Default::default(),
@@ -2362,8 +2353,7 @@ mod tests {
                 ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("a".to_owned(), 0);
@@ -2424,8 +2414,7 @@ mod tests {
                 }]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("recordField".to_owned(), 0);
@@ -2608,8 +2597,7 @@ mod tests {
               ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
@@ -2638,18 +2626,15 @@ mod tests {
                     doc: None,
                     default: None,
                     aliases: None,
-                    schema: Schema::Union(
-                        UnionSchema::new(vec![
-                            Schema::Null,
-                            Schema::Ref {
-                                name: Name {
-                                    name: "LongList".to_owned(),
-                                    namespace: None,
-                                },
+                    schema: Schema::Union(UnionSchema::new(vec![
+                        Schema::Null,
+                        Schema::Ref {
+                            name: Name {
+                                name: "LongList".to_owned(),
+                                namespace: None,
                             },
-                        ])
-                        ?,
-                    ),
+                        },
+                    ])?),
                     order: RecordFieldOrder::Ascending,
                     position: 1,
                     custom_attributes: Default::default(),
@@ -2680,8 +2665,7 @@ mod tests {
              ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("value".to_owned(), 0);
@@ -2750,8 +2734,7 @@ mod tests {
              ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("enum".to_owned(), 0);
@@ -2833,8 +2816,7 @@ mod tests {
              ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let mut lookup = BTreeMap::new();
         lookup.insert("fixed".to_owned(), 0);
@@ -2966,8 +2948,7 @@ mod tests {
     fn test_fixed_schema_with_documentation() -> TestResult {
         let schema = Schema::parse_str(
             r#"{"type": "fixed", "name": "test", "size": 16, "doc": "FixedSchema documentation"}"#,
-        )
-        ?;
+        )?;
 
         let expected = Schema::Fixed(FixedSchema {
             name: Name::new("test")?,
@@ -2984,9 +2965,9 @@ mod tests {
 
     #[test]
     fn test_no_documentation() -> TestResult {
-        let schema =
-            Schema::parse_str(r#"{"type": "enum", "name": "Coin", "symbols": ["heads", "tails"]}"#)
-                ?;
+        let schema = Schema::parse_str(
+            r#"{"type": "enum", "name": "Coin", "symbols": ["heads", "tails"]}"#,
+        )?;
 
         let doc = match schema {
             Schema::Enum(EnumSchema { doc, .. }) => doc,
@@ -3001,7 +2982,7 @@ mod tests {
     #[test]
     fn test_documentation() -> TestResult {
         let schema = Schema::parse_str(
-            r#"{"type": "enum", "name": "Coin", "doc": "Some documentation", "symbols": ["heads", "tails"]}"#
+            r#"{"type": "enum", "name": "Coin", "doc": "Some documentation", "symbols": ["heads", "tails"]}"#,
         )?;
 
         let doc = match schema {
@@ -3074,8 +3055,7 @@ mod tests {
         let schema = Schema::parse_str(r#"{"type": "int", "logicalType": "date"}"#)?;
         assert_eq!(schema, Schema::Date);
 
-        let schema =
-            Schema::parse_str(r#"{"type": "long", "logicalType": "timestamp-micros"}"#)?;
+        let schema = Schema::parse_str(r#"{"type": "long", "logicalType": "timestamp-micros"}"#)?;
         assert_eq!(schema, Schema::TimestampMicros);
 
         Ok(())
@@ -3085,11 +3065,13 @@ mod tests {
     fn test_nullable_logical_type() -> TestResult {
         let schema = Schema::parse_str(
             r#"{"type": ["null", {"type": "long", "logicalType": "timestamp-micros"}]}"#,
-        )
-        ?;
+        )?;
         assert_eq!(
             schema,
-            Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::TimestampMicros])?)
+            Schema::Union(UnionSchema::new(vec![
+                Schema::Null,
+                Schema::TimestampMicros
+            ])?)
         );
 
         Ok(())
@@ -3129,8 +3111,7 @@ mod tests {
               ]
             }
             "#,
-        )
-        ?;
+        )?;
 
         let json = schema.canonical_form();
         assert_eq!(
@@ -3985,8 +3966,7 @@ mod tests {
               ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         if let Schema::Record(RecordSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
@@ -4011,8 +3991,7 @@ mod tests {
               ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         if let Schema::Enum(EnumSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
@@ -4035,8 +4014,7 @@ mod tests {
               "size" : 12
             }
         "#,
-        )
-        ?;
+        )?;
 
         if let Schema::Fixed(FixedSchema { ref aliases, .. }) = schema {
             assert_avro_3512_aliases(aliases);
@@ -4067,8 +4045,7 @@ mod tests {
               ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let value = serde_json::to_value(&schema)?;
         let serialized = serde_json::to_string(&value)?;
@@ -4095,8 +4072,7 @@ mod tests {
               ]
             }
         "#,
-        )
-        ?;
+        )?;
 
         let value = serde_json::to_value(&schema)?;
         let serialized = serde_json::to_string(&value)?;
@@ -4121,8 +4097,7 @@ mod tests {
               "size" : 12
             }
         "#,
-        )
-        ?;
+        )?;
 
         let value = serde_json::to_value(&schema)?;
         let serialized = serde_json::to_string(&value)?;
@@ -4273,8 +4248,7 @@ mod tests {
                     .to_owned()
                     .replace("{{{}}}", CUSTOM_ATTRS_SUFFIX)
                     .as_str(),
-            )
-            ?;
+            )?;
 
             assert_eq!(
                 schema.custom_attributes(),
@@ -4319,8 +4293,7 @@ mod tests {
         "#,
         );
 
-        let schema =
-            Schema::parse_str(schema_str.replace("{{{}}}", CUSTOM_ATTRS_SUFFIX).as_str())?;
+        let schema = Schema::parse_str(schema_str.replace("{{{}}}", CUSTOM_ATTRS_SUFFIX).as_str())?;
 
         match schema {
             Schema::Record(RecordSchema { name, fields, .. }) => {
@@ -4671,8 +4644,7 @@ mod tests {
         let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
         let mut x = &datum[..];
         let reader_schema = Schema::parse_str(reader_schema)?;
-        let deser_value =
-            crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+        let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
         match deser_value {
             types::Value::Record(fields) => {
                 assert_eq!(fields.len(), 2);

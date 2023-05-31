@@ -17,10 +17,10 @@
 
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_io.py
 use apache_avro::{from_avro_datum, to_avro_datum, types::Value, Error, Schema};
+use apache_avro_test_helper::TestResult;
 use lazy_static::lazy_static;
 use pretty_assertions::assert_eq;
 use std::io::Cursor;
-use apache_avro_test_helper::TestResult;
 
 lazy_static! {
     static ref SCHEMAS_TO_VALIDATE: Vec<(&'static str, Value)> = vec![
@@ -316,7 +316,8 @@ fn test_type_exception() -> Result<(), String> {
              ]
         }
     "#,
-    ).unwrap();
+    )
+    .unwrap();
     let datum_to_write = Value::Record(vec![
         ("E".to_string(), Value::Int(5)),
         ("F".to_string(), Value::String(String::from("Bad"))),

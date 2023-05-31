@@ -701,8 +701,7 @@ fn test_equivalence_after_round_trip() -> TestResult {
     init();
     for (raw_schema, _) in VALID_EXAMPLES.iter() {
         let original_schema = Schema::parse_str(raw_schema)?;
-        let round_trip_schema =
-            Schema::parse_str(original_schema.canonical_form().as_str())?;
+        let round_trip_schema = Schema::parse_str(original_schema.canonical_form().as_str())?;
         assert_eq!(original_schema, round_trip_schema);
     }
     Ok(())
@@ -992,8 +991,7 @@ fn test_parse_list_multiple_dependencies() -> TestResult {
         ]
     }"#;
 
-    let parsed =
-        Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str])?;
+    let parsed = Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str])?;
     let schema_strs = vec![schema_a_str, schema_b_str, schema_c_str];
     for schema_str_perm in permutations(&schema_strs) {
         let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
@@ -1033,8 +1031,7 @@ fn test_parse_list_shared_dependency() -> TestResult {
         ]
     }"#;
 
-    let parsed =
-        Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str])?;
+    let parsed = Schema::parse_list(&[schema_a_str, schema_b_str, schema_c_str])?;
     let schema_strs = vec![schema_a_str, schema_b_str, schema_c_str];
     for schema_str_perm in permutations(&schema_strs) {
         let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
@@ -1200,8 +1197,7 @@ fn test_avro_3452_parse_json_without_name_field() -> TestResult {
 fn test_fullname_fullname_namespace_and_default_namespace_specified() -> TestResult {
     init();
     let name: Name =
-        serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.a", "aliases": null}"#)
-            ?;
+        serde_json::from_str(r#"{"name": "a.b.c.d", "namespace": "o.a.a", "aliases": null}"#)?;
     assert_eq!(&name.name, "d");
     assert_eq!(name.namespace, Some("a.b.c".to_owned()));
     let fullname = name.fullname(Some("o.a.h".into()));
@@ -1320,8 +1316,7 @@ fn test_record_schema_with_cyclic_references() -> TestResult {
                 }]
             }
         "#,
-    )
-    ?;
+    )?;
 
     let mut datum = Record::new(&schema).unwrap();
     datum.put(

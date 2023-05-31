@@ -529,10 +529,10 @@ pub fn read_marker(bytes: &[u8]) -> [u8; 16] {
 mod tests {
     use super::*;
     use crate::{encode::encode, from_value, types::Record, Reader};
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde::Deserialize;
     use std::io::Cursor;
-    use apache_avro_test_helper::TestResult;
 
     const SCHEMA: &str = r#"
     {
@@ -579,10 +579,7 @@ mod tests {
         record.put("b", "foo");
         let expected = record.into();
 
-        assert_eq!(
-            from_avro_datum(&schema, &mut encoded, None)?,
-            expected
-        );
+        assert_eq!(from_avro_datum(&schema, &mut encoded, None)?, expected);
 
         Ok(())
     }

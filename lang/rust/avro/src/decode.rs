@@ -303,9 +303,9 @@ mod tests {
         },
         Decimal,
     };
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
-    use apache_avro_test_helper::TestResult;
 
     #[test]
     fn test_decode_array_without_size() -> TestResult {
@@ -431,8 +431,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -498,8 +497,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -549,8 +547,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        ?;
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);

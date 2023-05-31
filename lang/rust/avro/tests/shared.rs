@@ -16,6 +16,7 @@
 // under the License.
 
 use apache_avro::{types::Value, Codec, Reader, Schema, Writer};
+use apache_avro_test_helper::TestResult;
 use std::{
     fmt,
     fs::{DirEntry, File, ReadDir},
@@ -23,7 +24,6 @@ use std::{
     path::Path,
     slice::Iter,
 };
-use apache_avro_test_helper::TestResult;
 
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 

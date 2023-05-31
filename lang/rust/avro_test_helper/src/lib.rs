@@ -51,7 +51,7 @@ pub enum TestError {}
 
 /// A converter of any error into [TestError].
 /// It is used to print better error messages in the tests.
-/// Borrowed from https://bluxte.net/musings/2023/01/08/improving_failure_messages_rust_tests/
+/// Borrowed from <https://bluxte.net/musings/2023/01/08/improving_failure_messages_rust_tests/>
 impl<Err: std::fmt::Display> From<Err> for TestError {
     #[track_caller]
     fn from(err: Err) -> Self {
