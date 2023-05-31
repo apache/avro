@@ -561,6 +561,18 @@ impl Value {
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
     }
 
+    /// Attempt to perform schema resolution on the value, with the given
+    /// [Schema](../schema/enum.Schema.html) and set of schemas to use for Refs resolution.
+    ///
+    /// See [Schema Resolution](https://avro.apache.org/docs/current/spec.html#Schema+Resolution)
+    /// in the Avro specification for the full set of rules of schema
+    /// resolution.
+    pub fn resolve_schemata(self, schema: &Schema, schemata: Vec<&Schema>) -> AvroResult<Self> {
+        let enclosing_namespace = schema.namespace();
+        let rs = ResolvedSchema::try_from(schemata)?;
+        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
+    }
+
     fn resolve_internal(
         mut self,
         schema: &Schema,
@@ -2637,5 +2649,45 @@ Field with name '"b"' is not a member of the map items"#,
     #[test]
     fn test_avro_3688_field_b_set() {
         avro_3688_schema_resolution_panic(true);
+    }
+
+    #[test]
+    fn test_avro_3764_use_resolve_schemata() {
+        let referenced_schema =
+            r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
+        let main_schema = r#"{"name": "recordWithReference", "type": "record", "fields": [{"name": "reference", "type": "enumForReference"}]}"#;
+
+        let value: serde_json::Value = serde_json::from_str(
+            r#"
+            {
+                "reference": "A"
+            }
+        "#,
+        )
+        .unwrap();
+
+        let avro_value = Value::from(value);
+
+        let schemas = Schema::parse_list(&[main_schema, referenced_schema]).unwrap();
+
+        let main_schema = schemas.get(0).unwrap();
+        let schemata: Vec<_> = schemas.iter().skip(1).collect();
+
+        let resolve_result = avro_value
+            .clone()
+            .resolve_schemata(main_schema, schemata.clone());
+
+        assert!(
+            resolve_result.is_ok(),
+            "result of resolving with schemata should be ok, got: {:?}",
+            resolve_result
+        );
+
+        let resolve_result = avro_value.resolve(main_schema);
+        assert!(
+            resolve_result.is_err(),
+            "result of resolving without schemata should be err, got: {:?}",
+            resolve_result
+        );
     }
 }
