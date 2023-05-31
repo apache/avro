@@ -23,11 +23,12 @@ use std::{
     path::Path,
     slice::Iter,
 };
+use apache_avro_test_helper::TestResult;
 
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 
 #[test]
-fn test_schema() {
+fn test_schema() -> TestResult {
     let directory: ReadDir = scan_shared_folder();
     let mut result: Result<(), ErrorsDesc> = Ok(());
     for f in directory {
@@ -54,6 +55,7 @@ fn test_schema() {
     if let Err(e) = result {
         core::panic!("{}", e)
     }
+    Ok(())
 }
 
 #[derive(Debug)]

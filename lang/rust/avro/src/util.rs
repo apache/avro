@@ -188,6 +188,7 @@ pub(crate) fn is_human_readable() -> bool {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+    use apache_avro_test_helper::TestResult;
 
     #[test]
     fn test_zigzag() {
@@ -280,8 +281,10 @@ mod tests {
     }
 
     #[test]
-    fn test_safe_len() {
-        assert_eq!(42usize, safe_len(42usize).unwrap());
+    fn test_safe_len() -> TestResult {
+        assert_eq!(42usize, safe_len(42usize)?);
         assert!(safe_len(1024 * 1024 * 1024).is_err());
+
+        Ok(())
     }
 }

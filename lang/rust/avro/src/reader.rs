@@ -532,6 +532,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use serde::Deserialize;
     use std::io::Cursor;
+    use apache_avro_test_helper::TestResult;
 
     const SCHEMA: &str = r#"
     {
@@ -569,8 +570,8 @@ mod tests {
     ];
 
     #[test]
-    fn test_from_avro_datum() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_from_avro_datum() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
         let mut record = Record::new(&schema).unwrap();
@@ -579,13 +580,15 @@ mod tests {
         let expected = record.into();
 
         assert_eq!(
-            from_avro_datum(&schema, &mut encoded, None).unwrap(),
+            from_avro_datum(&schema, &mut encoded, None)?,
             expected
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_avro_datum_with_union_to_struct() {
+    fn test_from_avro_datum_with_union_to_struct() -> TestResult {
         const TEST_RECORD_SCHEMA_3240: &str = r#"
     {
       "type": "record",
@@ -628,7 +631,7 @@ mod tests {
             a_nullable_string: Option<String>,
         }
 
-        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240).unwrap();
+        let schema = Schema::parse_str(TEST_RECORD_SCHEMA_3240)?;
         let mut encoded: &'static [u8] = &[54, 6, 102, 111, 111];
 
         let expected_record: TestRecord3240 = TestRecord3240 {
@@ -638,32 +641,36 @@ mod tests {
             a_nullable_string: None,
         };
 
-        let avro_datum = from_avro_datum(&schema, &mut encoded, None).unwrap();
+        let avro_datum = from_avro_datum(&schema, &mut encoded, None)?;
         let parsed_record: TestRecord3240 = match &avro_datum {
-            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum).unwrap(),
+            Value::Record(_) => from_value::<TestRecord3240>(&avro_datum)?,
             unexpected => {
                 panic!("could not map avro data to struct, found unexpected: {unexpected:?}")
             }
         };
 
         assert_eq!(parsed_record, expected_record);
+
+        Ok(())
     }
 
     #[test]
-    fn test_null_union() {
-        let schema = Schema::parse_str(UNION_SCHEMA).unwrap();
+    fn test_null_union() -> TestResult {
+        let schema = Schema::parse_str(UNION_SCHEMA)?;
         let mut encoded: &'static [u8] = &[2, 0];
 
         assert_eq!(
-            from_avro_datum(&schema, &mut encoded, None).unwrap(),
+            from_avro_datum(&schema, &mut encoded, None)?,
             Value::Union(1, Box::new(Value::Long(0)))
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_iterator() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
-        let reader = Reader::with_schema(&schema, ENCODED).unwrap();
+    fn test_reader_iterator() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
+        let reader = Reader::with_schema(&schema, ENCODED)?;
 
         let mut record1 = Record::new(&schema).unwrap();
         record1.put("a", 27i64);
@@ -676,20 +683,24 @@ mod tests {
         let expected = vec![record1.into(), record2.into()];
 
         for (i, value) in reader.enumerate() {
-            assert_eq!(value.unwrap(), expected[i]);
+            assert_eq!(value?, expected[i]);
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_invalid_header() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_reader_invalid_header() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let invalid = ENCODED.iter().copied().skip(1).collect::<Vec<u8>>();
         assert!(Reader::with_schema(&schema, &invalid[..]).is_err());
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_invalid_block() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+    fn test_reader_invalid_block() -> TestResult {
+        let schema = Schema::parse_str(SCHEMA)?;
         let invalid = ENCODED
             .iter()
             .copied()
@@ -699,32 +710,38 @@ mod tests {
             .into_iter()
             .rev()
             .collect::<Vec<u8>>();
-        let reader = Reader::with_schema(&schema, &invalid[..]).unwrap();
+        let reader = Reader::with_schema(&schema, &invalid[..])?;
         for value in reader {
             assert!(value.is_err());
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_empty_buffer() {
+    fn test_reader_empty_buffer() -> TestResult {
         let empty = Cursor::new(Vec::new());
         assert!(Reader::new(empty).is_err());
+
+        Ok(())
     }
 
     #[test]
-    fn test_reader_only_header() {
+    fn test_reader_only_header() -> TestResult {
         let invalid = ENCODED.iter().copied().take(165).collect::<Vec<u8>>();
-        let reader = Reader::new(&invalid[..]).unwrap();
+        let reader = Reader::new(&invalid[..])?;
         for value in reader {
             assert!(value.is_err());
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3405_read_user_metadata_success() {
+    fn test_avro_3405_read_user_metadata_success() -> TestResult {
         use crate::writer::Writer;
 
-        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
 
         let mut user_meta_data: HashMap<String, Vec<u8>> = HashMap::new();
@@ -736,20 +753,22 @@ mod tests {
         user_meta_data.insert("vecKey".to_string(), vec![1, 2, 3]);
 
         for (k, v) in user_meta_data.iter() {
-            writer.add_user_metadata(k.to_string(), v).unwrap();
+            writer.add_user_metadata(k.to_string(), v)?;
         }
 
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
-        writer.append(record.clone()).unwrap();
-        writer.append(record.clone()).unwrap();
-        writer.flush().unwrap();
-        let result = writer.into_inner().unwrap();
+        writer.append(record.clone())?;
+        writer.append(record.clone())?;
+        writer.flush()?;
+        let result = writer.into_inner()?;
 
-        let reader = Reader::new(&result[..]).unwrap();
+        let reader = Reader::new(&result[..])?;
         assert_eq!(reader.user_metadata(), &user_meta_data);
+
+        Ok(())
     }
 
     #[derive(Deserialize, Clone, PartialEq, Debug)]
@@ -833,7 +852,7 @@ mod tests {
     }
 
     #[test]
-    fn test_avro_3507_single_object_reader() {
+    fn test_avro_3507_single_object_reader() -> TestResult {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
@@ -860,10 +879,12 @@ mod tests {
             .expect("Should read");
         let expected_value: Value = obj.into();
         assert_eq!(expected_value, val);
+
+        Ok(())
     }
 
     #[test]
-    fn avro_3642_test_single_object_reader_incomplete_reads() {
+    fn avro_3642_test_single_object_reader_incomplete_reads() -> TestResult {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
@@ -892,10 +913,12 @@ mod tests {
             .expect("Should read");
         let expected_value: Value = obj.into();
         assert_eq!(expected_value, val);
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3507_reader_parity() {
+    fn test_avro_3507_reader_parity() -> TestResult {
         let obj = TestSingleObjectReader {
             a: 42,
             b: 3.33,
@@ -935,7 +958,9 @@ mod tests {
         let expected_value: Value = obj.clone().into();
         assert_eq!(obj, read_obj1);
         assert_eq!(obj, read_obj2);
-        assert_eq!(val, expected_value)
+        assert_eq!(val, expected_value);
+
+        Ok(())
     }
 
     #[cfg(not(feature = "snappy"))]
