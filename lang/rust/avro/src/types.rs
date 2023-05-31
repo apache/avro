@@ -2668,16 +2668,14 @@ Field with name '"b"' is not a member of the map items"#,
 
         let avro_value = Value::from(value);
 
-        let mut schemas = Schema::parse_list(&[main_schema, referenced_schema])
-            .unwrap()
-            .into_iter();
+        let schemas = Schema::parse_list(&[main_schema, referenced_schema]).unwrap();
 
-        let schema = schemas.next().unwrap();
-        let schemata: Vec<_> = schemas.collect();
+        let main_schema = schemas.get(0).unwrap();
+        let schemata: Vec<_> = schemas.iter().skip(1).collect();
 
         let resolve_result = avro_value
             .clone()
-            .resolve_schemata(&schema, schemata.iter().collect());
+            .resolve_schemata(main_schema, schemata.clone());
 
         assert!(
             resolve_result.is_ok(),
@@ -2685,7 +2683,7 @@ Field with name '"b"' is not a member of the map items"#,
             resolve_result
         );
 
-        let resolve_result = avro_value.resolve(&schema);
+        let resolve_result = avro_value.resolve(main_schema);
         assert!(
             resolve_result.is_err(),
             "result of resolving without schemata should be err, got: {:?}",
