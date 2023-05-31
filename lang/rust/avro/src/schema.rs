@@ -1142,20 +1142,39 @@ impl Parser {
         match complex.get("logicalType") {
             Some(Value::String(t)) => match t.as_str() {
                 "decimal" => {
-                    let inner = Box::new(logical_verify_type(
+                    match logical_verify_type(
                         complex,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
                         self,
                         enclosing_namespace,
-                    )?);
+                    ) {
+                        Ok(schema) => {
+                            let inner = Box::new(schema);
+                            let (precision, scale) = Self::parse_precision_and_scale(complex)?;
 
-                    let (precision, scale) = Self::parse_precision_and_scale(complex)?;
-
-                    return Ok(Schema::Decimal(DecimalSchema {
-                        precision,
-                        scale,
-                        inner,
-                    }));
+                            return Ok(Schema::Decimal(DecimalSchema {
+                                precision,
+                                scale,
+                                inner,
+                            }));
+                        }
+                        Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
+                            Value::String(_) => {
+                                match self.parse(&json_value, enclosing_namespace) {
+                                    Ok(schema) => {
+                                        warn!(
+                                        "Ignoring invalid logical type decimal for schema of type: {:?}!",
+                                        schema
+                                    );
+                                        return Ok(schema);
+                                    }
+                                    Err(parse_err) => return Err(parse_err),
+                                }
+                            }
+                            _ => return Err(Error::GetLogicalTypeVariant(json_value)),
+                        },
+                        err => return err,
+                    }
                 }
                 "uuid" => {
                     logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
