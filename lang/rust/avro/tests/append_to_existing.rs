@@ -20,9 +20,10 @@ use apache_avro::{
     types::{Record, Value},
     AvroResult, Reader, Schema, Writer,
 };
+use apache_avro_test_helper::TestResult;
 
 #[test]
-fn avro_3630_append_to_an_existing_file() {
+fn avro_3630_append_to_an_existing_file() -> TestResult {
     let schema_str = r#"
             {
                 "type": "record",
@@ -53,6 +54,8 @@ fn avro_3630_append_to_an_existing_file() {
         check(value, i);
         i += 1
     }
+
+    Ok(())
 }
 
 /// Simulates reading from a pre-existing .avro file and returns its bytes

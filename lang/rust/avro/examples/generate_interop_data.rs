@@ -20,6 +20,7 @@ use apache_avro::{
     types::{Record, Value},
     Codec, Writer,
 };
+use apache_avro_test_helper::TestResult;
 use std::{
     collections::HashMap,
     io::{BufWriter, Write},
@@ -74,7 +75,7 @@ fn create_datum(schema: &Schema) -> Record {
     datum
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> TestResult {
     let schema_str = std::fs::read_to_string("../../share/test/schemas/interop.avsc")
         .expect("Unable to read the interop Avro schema");
     let schema = Schema::parse_str(schema_str.as_str())?;
@@ -104,7 +105,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn write_user_metadata<W: Write>(writer: &mut Writer<BufWriter<W>>) -> anyhow::Result<()> {
+fn write_user_metadata<W: Write>(writer: &mut Writer<BufWriter<W>>) -> TestResult {
     writer.add_user_metadata("user_metadata".to_string(), b"someByteArray")?;
 
     Ok(())

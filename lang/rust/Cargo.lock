@@ -98,6 +98,7 @@ dependencies = [
 name = "apache-avro-test-helper"
 version = "0.15.0"
 dependencies = [
+ "anyhow",
  "color-backtrace",
  "ctor 0.2.0",
  "env_logger",
