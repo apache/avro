@@ -469,7 +469,7 @@ impl Value {
                 .get(i as usize)
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
-            (v, Schema::Union(inner)) => match inner.find_schema(v) {
+            (v, Schema::Union(inner)) => match inner.find_schema(v, Some(names)) {
                 Some(_) => None,
                 None => Some("Could not find matching type in union".to_string()),
             },
@@ -557,6 +557,7 @@ impl Value {
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
         let enclosing_namespace = schema.namespace();
+        println!("here");
         let rs = ResolvedSchema::try_from(schema)?;
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
     }
@@ -590,9 +591,14 @@ impl Value {
             };
             self = v;
         }
+
+        println!("tmp: resolving schema: {:#?}", schema);
         match *schema {
             Schema::Ref { ref name } => {
                 let name = name.fully_qualified_name(enclosing_namespace);
+                println!("tmp: resolving ref: {:#?}", name);
+
+                println!("tmp: all names: {:#?}", names);
 
                 if let Some(resolved) = names.get(&name) {
                     debug!("Resolved {:?}", name);
@@ -874,27 +880,8 @@ impl Value {
             v => v,
         };
 
-        // A union might contain references to another schema in the form of a Schema::Ref,
-        // resolve these prior to finding the schema.
-        let resolved_schemas: Vec<Schema> = schema
-            .schemas
-            .iter()
-            .cloned()
-            .map(|schema| match schema {
-                Schema::Ref { name } => {
-                    let name = name.fully_qualified_name(enclosing_namespace);
-                    names
-                        .get(&name)
-                        .map(|s| (**s).clone())
-                        .ok_or_else(|| Error::SchemaResolutionError(name.clone()))
-                }
-                schema => Ok(schema),
-            })
-            .collect::<Result<Vec<Schema>, Error>>()?;
-
-        let resolved_union_schema = UnionSchema::new(resolved_schemas).unwrap();
-        let (i, inner) = resolved_union_schema
-            .find_schema(&v)
+        let (i, inner) = schema
+            .find_schema(&v, Some(names))
             .ok_or(Error::FindUnionVariant)?;
 
         Ok(Value::Union(
