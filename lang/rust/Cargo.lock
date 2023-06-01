@@ -100,7 +100,7 @@ version = "0.15.0"
 dependencies = [
  "anyhow",
  "color-backtrace",
- "ctor 0.2.0",
+ "ctor 0.2.1",
  "env_logger",
  "lazy_static",
  "log",
@@ -351,9 +351,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd4056f63fce3b82d852c3da92b08ea59959890813a7f4ce9c0ff85b10cf301b"
+checksum = "990a40740adf249724a6000c0fc4bd574712f50bb17c2d6f6cec837ae2f0ee75"
 dependencies = [
  "quote",
  "syn 2.0.18",
