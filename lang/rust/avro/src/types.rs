@@ -2720,4 +2720,39 @@ Field with name '"b"' is not a member of the map items"#,
 
         Ok(())
     }
+
+    #[test]
+    fn test_avro_resolve_union_ref() -> TestResult {
+        let referenced_enum =
+            r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
+        let referenced_record = r#"{"name": "recordForReference", "type": "record", "fields": [{"name": "refInRecord", "type": "enumForReference"}]}"#;
+        let main_schema = r#"{"name": "recordWithReference", "type": "record", "fields": [{"name": "reference", "type": ["null", "recordForReference"]}]}"#;
+
+        let value: serde_json::Value = serde_json::from_str(
+            r#"
+            {
+                "reference": {
+                    "refInRecord": "A"
+                }
+            }
+        "#,
+        )?;
+
+        let avro_value = Value::from(value);
+
+        let schemas = Schema::parse_list(&[main_schema, referenced_enum, referenced_record])?;
+
+        let main_schema = schemas.get(0).unwrap();
+        let schemata: Vec<_> = schemas.iter().skip(1).collect();
+
+        let resolve_result = avro_value.resolve_schemata(main_schema, schemata);
+
+        assert!(
+            resolve_result.is_ok(),
+            "result of resolving with schemata should be ok, got: {:?}",
+            resolve_result
+        );
+
+        Ok(())
+    }
 }
