@@ -385,7 +385,7 @@ impl<'s> ResolvedSchema<'s> {
             names_ref: names,
             schemata,
         };
-        rs.resolve_internal(rs.get_schemata(), &None, Some(known_schemas))?;
+        rs.resolve(rs.get_schemata(), &None, Some(known_schemas))?;
         Ok(rs)
     }
 }
@@ -399,7 +399,7 @@ impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
             names_ref: names,
             schemata: vec![schema],
         };
-        rs.resolve_internal(rs.get_schemata(), &None, None)?;
+        rs.resolve(rs.get_schemata(), &None, None)?;
         Ok(rs)
     }
 }
@@ -413,7 +413,7 @@ impl<'s> TryFrom<Vec<&'s Schema>> for ResolvedSchema<'s> {
             names_ref: names,
             schemata,
         };
-        rs.resolve_internal(rs.get_schemata(), &None, None)?;
+        rs.resolve(rs.get_schemata(), &None, None)?;
         Ok(rs)
     }
 }
@@ -427,7 +427,7 @@ impl<'s> ResolvedSchema<'s> {
         &self.names_ref
     }
 
-    fn resolve_internal<'n>(
+    fn resolve<'n>(
         &mut self,
         schemata: Vec<&'s Schema>,
         enclosing_namespace: &Namespace,
@@ -436,11 +436,11 @@ impl<'s> ResolvedSchema<'s> {
         for schema in schemata {
             match schema {
                 Schema::Array(schema) | Schema::Map(schema) => {
-                    self.resolve_internal(vec![schema], enclosing_namespace, known_schemas)?
+                    self.resolve(vec![schema], enclosing_namespace, known_schemas)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
-                        self.resolve_internal(vec![schema], enclosing_namespace, known_schemas)?
+                        self.resolve(vec![schema], enclosing_namespace, known_schemas)?
                     }
                 }
                 Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
@@ -464,11 +464,7 @@ impl<'s> ResolvedSchema<'s> {
                     } else {
                         let record_namespace = fully_qualified_name.namespace;
                         for field in fields {
-                            self.resolve_internal(
-                                vec![&field.schema],
-                                &record_namespace,
-                                known_schemas,
-                            )?
+                            self.resolve(vec![&field.schema], &record_namespace, known_schemas)?
                         }
                     }
                 }
