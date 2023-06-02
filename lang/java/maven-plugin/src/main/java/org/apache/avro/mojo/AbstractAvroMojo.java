@@ -165,6 +165,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
+   * The createNullSafeAnnotations parameters adds @Nullable and @NotNull
+   * annotations for fhe fields of the record. The default is to not include
+   * annotations.
+   *
+   * @parameter property="createNullSafeAnnotations"
+   */
+  protected boolean createNullSafeAnnotations = false;
+
+  /**
    * A set of fully qualified class names of custom
    * {@link org.apache.avro.Conversion} implementations to add to the compiler.
    * The classes must be on the classpath at compile time and whenever the Java

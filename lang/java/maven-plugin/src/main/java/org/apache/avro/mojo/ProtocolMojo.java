@@ -67,6 +67,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
+    compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
     compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     final URLClassLoader classLoader;

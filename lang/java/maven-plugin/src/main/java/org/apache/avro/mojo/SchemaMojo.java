@@ -84,6 +84,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
+    compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {
       final URLClassLoader classLoader = createClassLoader();
