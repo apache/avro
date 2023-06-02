@@ -592,13 +592,9 @@ impl Value {
             self = v;
         }
 
-        println!("tmp: resolving schema: {:#?}", schema);
         match *schema {
             Schema::Ref { ref name } => {
                 let name = name.fully_qualified_name(enclosing_namespace);
-                println!("tmp: resolving ref: {:#?}", name);
-
-                println!("tmp: all names: {:#?}", names);
 
                 if let Some(resolved) = names.get(&name) {
                     debug!("Resolved {:?}", name);
