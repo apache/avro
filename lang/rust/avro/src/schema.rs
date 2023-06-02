@@ -803,10 +803,9 @@ impl UnionSchema {
 
                 // extend known schemas with just resolved names
                 collected_names.extend(resolved_names);
-                let result = value
+                value
                     .validate_internal(schema, &collected_names, &schema.namespace())
-                    .is_none();
-                result
+                    .is_none()
             })
         }
     }
