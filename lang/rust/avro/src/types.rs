@@ -557,7 +557,6 @@ impl Value {
     /// resolution.
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
         let enclosing_namespace = schema.namespace();
-        println!("here");
         let rs = ResolvedSchema::try_from(schema)?;
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
     }
@@ -2705,7 +2704,7 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn test_avro_resolve_union_ref() -> TestResult {
+    fn test_avro_3767_union_resolve_complex_refs() -> TestResult {
         let referenced_enum =
             r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
         let referenced_record = r#"{"name": "recordForReference", "type": "record", "fields": [{"name": "refInRecord", "type": "enumForReference"}]}"#;
@@ -2728,12 +2727,17 @@ Field with name '"b"' is not a member of the map items"#,
         let main_schema = schemas.get(0).unwrap();
         let schemata: Vec<_> = schemas.iter().skip(1).collect();
 
-        let resolve_result = avro_value.resolve_schemata(main_schema, schemata);
+        let resolve_result = avro_value.clone().resolve_schemata(main_schema, schemata);
 
         assert!(
             resolve_result.is_ok(),
             "result of resolving with schemata should be ok, got: {:?}",
             resolve_result
+        );
+
+        assert!(
+            avro_value.validate_schemata(schemas.iter().collect()),
+            "result of validation with schemata should be true"
         );
 
         Ok(())
