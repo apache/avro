@@ -1,4 +1,4 @@
-{"type":"record", "name":"NullSafeAnnotationsFieldsTest", "namespace": "avro.examples.baseball","doc":"Test that @Nullable and @NotNull annotations are created for all fields",
+{"type":"record", "name":"NullSafeAnnotationsFieldsTest", "namespace": "avro.examples.baseball", "doc":"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields",
   "fields": [
     {"name": "name", "type": "string"},
     {"name": "nullable_name",  "type": ["string", "null"]},

@@ -11,16 +11,14 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 
-/** Test that @Nullable and @NotNull annotations are created for all fields */
+/** Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields */
 @org.apache.avro.specific.AvroGenerated
 public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 2020521726426674816L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @Nullable and @NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -95,7 +93,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * @param favorite_number The new value for favorite_number
    * @param nullable_favorite_number The new value for nullable_favorite_number
    */
-  public NullSafeAnnotationsFieldsTest(@NotNull java.lang.String name, @Nullable java.lang.String nullable_name, @NotNull java.lang.Integer favorite_number, @Nullable java.lang.Integer nullable_favorite_number) {
+  public NullSafeAnnotationsFieldsTest(@org.jetbrains.annotations.NotNull java.lang.String name, @org.jetbrains.annotations.Nullable java.lang.String nullable_name, @org.jetbrains.annotations.NotNull java.lang.Integer favorite_number, @org.jetbrains.annotations.Nullable java.lang.Integer nullable_favorite_number) {
     this.name = name;
     this.nullable_name = nullable_name;
     this.favorite_number = favorite_number;
@@ -137,7 +135,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'name' field.
    * @return The value of the 'name' field.
    */
-  @NotNull
+  @org.jetbrains.annotations.NotNull
   public java.lang.String getName() {
     return name;
   }
@@ -147,7 +145,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'name' field.
    * @param value the value to set.
    */
-  public void setName(@NotNull java.lang.String value) {
+  public void setName(@org.jetbrains.annotations.NotNull java.lang.String value) {
     this.name = value;
   }
 
@@ -155,7 +153,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'nullable_name' field.
    * @return The value of the 'nullable_name' field.
    */
-  @Nullable
+  @org.jetbrains.annotations.Nullable
   public java.lang.String getNullableName() {
     return nullable_name;
   }
@@ -165,7 +163,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'nullable_name' field.
    * @param value the value to set.
    */
-  public void setNullableName(@Nullable java.lang.String value) {
+  public void setNullableName(@org.jetbrains.annotations.Nullable java.lang.String value) {
     this.nullable_name = value;
   }
 
@@ -173,7 +171,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'favorite_number' field.
    * @return The value of the 'favorite_number' field.
    */
-  @NotNull
+  @org.jetbrains.annotations.NotNull
   public int getFavoriteNumber() {
     return favorite_number;
   }
@@ -183,7 +181,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'favorite_number' field.
    * @param value the value to set.
    */
-  public void setFavoriteNumber(@NotNull int value) {
+  public void setFavoriteNumber(@org.jetbrains.annotations.NotNull int value) {
     this.favorite_number = value;
   }
 
@@ -191,7 +189,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Gets the value of the 'nullable_favorite_number' field.
    * @return The value of the 'nullable_favorite_number' field.
    */
-  @Nullable
+  @org.jetbrains.annotations.Nullable
   public java.lang.Integer getNullableFavoriteNumber() {
     return nullable_favorite_number;
   }
@@ -201,7 +199,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * Sets the value of the 'nullable_favorite_number' field.
    * @param value the value to set.
    */
-  public void setNullableFavoriteNumber(@Nullable java.lang.Integer value) {
+  public void setNullableFavoriteNumber(@org.jetbrains.annotations.Nullable java.lang.Integer value) {
     this.nullable_favorite_number = value;
   }
 
@@ -318,7 +316,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'name'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setName(@NotNull java.lang.String value) {
+    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setName(@org.jetbrains.annotations.NotNull java.lang.String value) {
       validate(fields()[0], value);
       this.name = value;
       fieldSetFlags()[0] = true;
@@ -358,7 +356,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'nullable_name'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableName(@Nullable java.lang.String value) {
+    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableName(@org.jetbrains.annotations.Nullable java.lang.String value) {
       validate(fields()[1], value);
       this.nullable_name = value;
       fieldSetFlags()[1] = true;
@@ -398,7 +396,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'favorite_number'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setFavoriteNumber(@NotNull int value) {
+    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setFavoriteNumber(@org.jetbrains.annotations.NotNull int value) {
       validate(fields()[2], value);
       this.favorite_number = value;
       fieldSetFlags()[2] = true;
@@ -437,7 +435,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
       * @param value The value of 'nullable_favorite_number'.
       * @return This builder.
       */
-    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableFavoriteNumber(@Nullable java.lang.Integer value) {
+    public avro.examples.baseball.NullSafeAnnotationsFieldsTest.Builder setNullableFavoriteNumber(@org.jetbrains.annotations.Nullable java.lang.Integer value) {
       validate(fields()[3], value);
       this.nullable_favorite_number = value;
       fieldSetFlags()[3] = true;
