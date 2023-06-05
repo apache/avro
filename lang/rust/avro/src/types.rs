@@ -350,7 +350,7 @@ impl Value {
 
             match self.validate_internal(schema, rs.get_names(), &enclosing_namespace) {
                 Some(error_msg) => {
-                    error!(
+                    debug!(
                         "Invalid value: {:?} for schema: {:?}. Reason: {}",
                         self, schema, error_msg
                     );
