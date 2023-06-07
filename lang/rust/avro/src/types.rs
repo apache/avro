@@ -345,15 +345,21 @@ impl Value {
     pub fn validate_schemata(&self, schemata: Vec<&Schema>) -> bool {
         let rs = ResolvedSchema::try_from(schemata.clone())
             .expect("Schemata didn't successfully resolve");
+        let schemata_len = schemata.len();
         schemata.iter().any(|schema| {
             let enclosing_namespace = schema.namespace();
 
             match self.validate_internal(schema, rs.get_names(), &enclosing_namespace) {
-                Some(error_msg) => {
-                    error!(
+                Some(reason) => {
+                    let log_message = format!(
                         "Invalid value: {:?} for schema: {:?}. Reason: {}",
-                        self, schema, error_msg
+                        self, schema, reason
                     );
+                    if schemata_len == 1 {
+                        error!("{}", log_message);
+                    } else {
+                        debug!("{}", log_message);
+                    };
                     false
                 }
                 None => true,
