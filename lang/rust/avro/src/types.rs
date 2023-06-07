@@ -469,10 +469,12 @@ impl Value {
                 .get(i as usize)
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
-            (v, Schema::Union(inner)) => match inner.find_schema(v, Some(names)) {
-                Some(_) => None,
-                None => Some("Could not find matching type in union".to_string()),
-            },
+            (v, Schema::Union(inner)) => {
+                match inner.find_schema_with_known_schemata(v, Some(names)) {
+                    Some(_) => None,
+                    None => Some("Could not find matching type in union".to_string()),
+                }
+            }
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
@@ -876,7 +878,7 @@ impl Value {
         };
 
         let (i, inner) = schema
-            .find_schema(&v, Some(names))
+            .find_schema_with_known_schemata(&v, Some(names))
             .ok_or(Error::FindUnionVariant)?;
 
         Ok(Value::Union(
@@ -2722,12 +2724,12 @@ Field with name '"b"' is not a member of the map items"#,
 
         let avro_value = Value::from(value);
 
-        let schemas = Schema::parse_list(&[referenced_enum, referenced_record, main_schema])?;
+        let schemata = Schema::parse_list(&[referenced_enum, referenced_record, main_schema])?;
 
-        let main_schema = schemas.last().unwrap();
-        let schemata: Vec<_> = schemas.iter().take(2).collect();
+        let main_schema = schemata.last().unwrap();
+        let other_schemata: Vec<&Schema> = schemata.iter().take(2).collect();
 
-        let resolve_result = avro_value.clone().resolve_schemata(main_schema, schemata);
+        let resolve_result = avro_value.resolve_schemata(main_schema, other_schemata);
 
         assert!(
             resolve_result.is_ok(),
@@ -2736,7 +2738,7 @@ Field with name '"b"' is not a member of the map items"#,
         );
 
         assert!(
-            avro_value.validate_schemata(schemas.iter().collect()),
+            resolve_result?.validate_schemata(schemata.iter().collect()),
             "result of validation with schemata should be true"
         );
 

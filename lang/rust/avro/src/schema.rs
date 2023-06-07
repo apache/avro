@@ -371,25 +371,6 @@ pub struct ResolvedSchema<'s> {
     schemata: Vec<&'s Schema>,
 }
 
-impl<'s> ResolvedSchema<'s> {
-    /// Creates `ResolvedSchema` with some already known schemas.
-    ///
-    /// Those schemas would be used to resolve references if needed.
-    pub fn new_with_known_schemas<'n>(
-        schemata: Vec<&'s Schema>,
-        known_schemas: &'n NamesRef<'n>,
-    ) -> AvroResult<Self> {
-        let names = HashMap::new();
-
-        let mut rs = ResolvedSchema {
-            names_ref: names,
-            schemata,
-        };
-        rs.resolve(rs.get_schemata(), &None, Some(known_schemas))?;
-        Ok(rs)
-    }
-}
-
 impl<'s> TryFrom<&'s Schema> for ResolvedSchema<'s> {
     type Error = Error;
 
@@ -427,20 +408,36 @@ impl<'s> ResolvedSchema<'s> {
         &self.names_ref
     }
 
+    /// Creates `ResolvedSchema` with some already known schemas.
+    ///
+    /// Those schemata would be used to resolve references if needed.
+    pub fn new_with_known_schemata<'n>(
+        schemata_to_resolve: Vec<&'s Schema>,
+        known_schemata: &'n NamesRef<'n>,
+    ) -> AvroResult<Self> {
+        let names = HashMap::new();
+        let mut rs = ResolvedSchema {
+            names_ref: names,
+            schemata: schemata_to_resolve,
+        };
+        rs.resolve(rs.get_schemata(), &None, Some(known_schemata))?;
+        Ok(rs)
+    }
+
     fn resolve<'n>(
         &mut self,
         schemata: Vec<&'s Schema>,
         enclosing_namespace: &Namespace,
-        known_schemas: Option<&'n NamesRef<'n>>,
+        known_schemata: Option<&'n NamesRef<'n>>,
     ) -> AvroResult<()> {
         for schema in schemata {
             match schema {
                 Schema::Array(schema) | Schema::Map(schema) => {
-                    self.resolve(vec![schema], enclosing_namespace, known_schemas)?
+                    self.resolve(vec![schema], enclosing_namespace, known_schemata)?
                 }
                 Schema::Union(UnionSchema { schemas, .. }) => {
                     for schema in schemas {
-                        self.resolve(vec![schema], enclosing_namespace, known_schemas)?
+                        self.resolve(vec![schema], enclosing_namespace, known_schemata)?
                     }
                 }
                 Schema::Enum(EnumSchema { name, .. }) | Schema::Fixed(FixedSchema { name, .. }) => {
@@ -464,20 +461,21 @@ impl<'s> ResolvedSchema<'s> {
                     } else {
                         let record_namespace = fully_qualified_name.namespace;
                         for field in fields {
-                            self.resolve(vec![&field.schema], &record_namespace, known_schemas)?
+                            self.resolve(vec![&field.schema], &record_namespace, known_schemata)?
                         }
                     }
                 }
                 Schema::Ref { name } => {
                     let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-                    // first search for reference in current schema, then look into external references.
-                    let is_resolved_locally = self.names_ref.get(&fully_qualified_name).is_some();
-                    let is_resolved_with_known_schemas = known_schemas
-                        .as_ref()
-                        .map(|schemas| schemas.get(&fully_qualified_name).is_some())
-                        .unwrap_or(false);
-                    if !is_resolved_locally && !is_resolved_with_known_schemas {
-                        return Err(Error::SchemaResolutionError(fully_qualified_name));
+                    // first search for reference in current schemata, then look into external references.
+                    if !self.names_ref.contains_key(&fully_qualified_name) {
+                        let is_resolved_with_known_schemas = known_schemata
+                            .as_ref()
+                            .map(|names| names.contains_key(&fully_qualified_name))
+                            .unwrap_or(false);
+                        if !is_resolved_with_known_schemas {
+                            return Err(Error::SchemaResolutionError(fully_qualified_name));
+                        }
                     }
                 }
                 _ => (),
@@ -770,13 +768,23 @@ impl UnionSchema {
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
     /// within this union.
+    #[deprecated(
+        since = "0.15.0",
+        note = "Please use `find_schema_with_known_schemata` instead"
+    )]
+    pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
+        self.find_schema_with_known_schemata::<Schema>(value, None)
+    }
+
+    /// Optionally returns a reference to the schema matched by this value, as well as its position
+    /// within this union.
     ///
     /// Extra arguments:
-    /// - `known_schemas` - mapping between `Name` and `Schema` - if passed, additional external schemas would be used to resolve references.
-    pub fn find_schema<S: Borrow<Schema>>(
+    /// - `known_schemata` - mapping between `Name` and `Schema` - if passed, additional external schemas would be used to resolve references.
+    pub fn find_schema_with_known_schemata<S: Borrow<Schema>>(
         &self,
         value: &types::Value,
-        known_schemas: Option<&HashMap<Name, S>>,
+        known_schemata: Option<&HashMap<Name, S>>,
     ) -> Option<(usize, &Schema)> {
         let schema_kind = SchemaKind::from(value);
         if let Some(&i) = self.variant_index.get(&schema_kind) {
@@ -786,7 +794,7 @@ impl UnionSchema {
             // slow path (required for matching logical or named types)
 
             // first collect what schemas we already know
-            let mut collected_names: HashMap<Name, &Schema> = known_schemas
+            let mut collected_names: HashMap<Name, &Schema> = known_schemata
                 .map(|names| {
                     names
                         .iter()
@@ -797,7 +805,7 @@ impl UnionSchema {
 
             self.schemas.iter().enumerate().find(|(_, schema)| {
                 let resolved_schema =
-                    ResolvedSchema::new_with_known_schemas(vec![*schema], &collected_names)
+                    ResolvedSchema::new_with_known_schemata(vec![*schema], &collected_names)
                         .expect("Schema didn't successfully parse");
                 let resolved_names = resolved_schema.names_ref;
 
