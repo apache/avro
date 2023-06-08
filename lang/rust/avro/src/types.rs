@@ -475,10 +475,12 @@ impl Value {
                 .get(i as usize)
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
-            (v, Schema::Union(inner)) => match inner.find_schema(v) {
-                Some(_) => None,
-                None => Some("Could not find matching type in union".to_string()),
-            },
+            (v, Schema::Union(inner)) => {
+                match inner.find_schema_with_known_schemata(v, Some(names)) {
+                    Some(_) => None,
+                    None => Some("Could not find matching type in union".to_string()),
+                }
+            }
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
@@ -596,6 +598,7 @@ impl Value {
             };
             self = v;
         }
+
         match *schema {
             Schema::Ref { ref name } => {
                 let name = name.fully_qualified_name(enclosing_namespace);
@@ -880,27 +883,8 @@ impl Value {
             v => v,
         };
 
-        // A union might contain references to another schema in the form of a Schema::Ref,
-        // resolve these prior to finding the schema.
-        let resolved_schemas: Vec<Schema> = schema
-            .schemas
-            .iter()
-            .cloned()
-            .map(|schema| match schema {
-                Schema::Ref { name } => {
-                    let name = name.fully_qualified_name(enclosing_namespace);
-                    names
-                        .get(&name)
-                        .map(|s| (**s).clone())
-                        .ok_or_else(|| Error::SchemaResolutionError(name.clone()))
-                }
-                schema => Ok(schema),
-            })
-            .collect::<Result<Vec<Schema>, Error>>()?;
-
-        let resolved_union_schema = UnionSchema::new(resolved_schemas).unwrap();
-        let (i, inner) = resolved_union_schema
-            .find_schema(&v)
+        let (i, inner) = schema
+            .find_schema_with_known_schemata(&v, Some(names))
             .ok_or(Error::FindUnionVariant)?;
 
         Ok(Value::Union(
@@ -2722,6 +2706,46 @@ Field with name '"b"' is not a member of the map items"#,
             resolve_result.is_err(),
             "result of resolving without schemata should be err, got: {:?}",
             resolve_result
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3767_union_resolve_complex_refs() -> TestResult {
+        let referenced_enum =
+            r#"{"name": "enumForReference", "type": "enum", "symbols": ["A", "B"]}"#;
+        let referenced_record = r#"{"name": "recordForReference", "type": "record", "fields": [{"name": "refInRecord", "type": "enumForReference"}]}"#;
+        let main_schema = r#"{"name": "recordWithReference", "type": "record", "fields": [{"name": "reference", "type": ["null", "recordForReference"]}]}"#;
+
+        let value: serde_json::Value = serde_json::from_str(
+            r#"
+            {
+                "reference": {
+                    "refInRecord": "A"
+                }
+            }
+        "#,
+        )?;
+
+        let avro_value = Value::from(value);
+
+        let schemata = Schema::parse_list(&[referenced_enum, referenced_record, main_schema])?;
+
+        let main_schema = schemata.last().unwrap();
+        let other_schemata: Vec<&Schema> = schemata.iter().take(2).collect();
+
+        let resolve_result = avro_value.resolve_schemata(main_schema, other_schemata);
+
+        assert!(
+            resolve_result.is_ok(),
+            "result of resolving with schemata should be ok, got: {:?}",
+            resolve_result
+        );
+
+        assert!(
+            resolve_result?.validate_schemata(schemata.iter().collect()),
+            "result of validation with schemata should be true"
         );
 
         Ok(())
