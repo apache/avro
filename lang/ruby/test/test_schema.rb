@@ -618,7 +618,7 @@ class TestSchema < Test::Unit::TestCase
         type: 'record',
         name: 'account',
         fields: [
-          { name: 'balance', type: 'bytes', "logicalType": "decimal", "precision": 9, "scale": 2 }
+          { name: 'balance', type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 }
         ]
       )
     end
@@ -633,10 +633,10 @@ class TestSchema < Test::Unit::TestCase
           {
             name: 'balance',
             type: [
-              { type: 'bytes', "logicalType": "decimal", "precision": 9, "scale": 2 },
-              "null"
+              { type: 'bytes', logicalType: 'decimal', precision: 9, scale: 2 },
+              'null'
             ],
-            default: "\u00ff"
+            default: '\u00ff'
           }
         ]
       )
