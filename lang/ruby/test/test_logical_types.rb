@@ -124,6 +124,70 @@ class TestLogicalTypes < Test::Unit::TestCase
     end
   end
 
+  def test_bytes_decimal_default
+    Avro.disable_field_default_validation = true
+    sales_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            }  
+        ]
+    }')
+
+    sales_tax_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            },
+            {
+                "name": "tax",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            }  
+        ]
+    }')
+
+    sales_record = {"sales" => BigDecimal("12.34")}
+    sales_tax_record = {"sales" => BigDecimal("12.34"), "tax" => BigDecimal("0.000")}
+    encoded = encode(sales_record, sales_schema)
+    assert_equal sales_record, decode(encoded, sales_schema)
+
+    assert_equal sales_tax_record, decode(encoded, sales_tax_schema, writer_schema: sales_schema)
+    Avro.disable_field_default_validation = false
+  end
+
   def test_bytes_decimal_range_errors
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2 }
@@ -209,6 +273,7 @@ class TestLogicalTypes < Test::Unit::TestCase
       end
 
       assert_equal 5, report.total_allocated
+      # Ruby 2.7 does not retain anything. Ruby 2.6 retains 1
       assert_operator 1, :>=, report.total_retained
     end
   end
@@ -229,7 +294,8 @@ class TestLogicalTypes < Test::Unit::TestCase
       end
 
       assert_equal 5, report.total_allocated
-      assert_equal 0, report.total_retained
+      # Ruby 2.7 does not retain anything. Ruby 2.6 retains 1
+      assert_operator 1, :>=, report.total_retained
     end
   end
 
@@ -243,11 +309,12 @@ class TestLogicalTypes < Test::Unit::TestCase
     buffer.string
   end
 
-  def decode(encoded, schema)
+  def decode(encoded, schema, writer_schema: nil)
+    writer_schema ||= schema
     buffer = StringIO.new(encoded)
     decoder = Avro::IO::BinaryDecoder.new(buffer)
 
-    datum_reader = Avro::IO::DatumReader.new(schema, schema)
+    datum_reader = Avro::IO::DatumReader.new(writer_schema, schema)
     datum_reader.read(decoder)
   end
 
