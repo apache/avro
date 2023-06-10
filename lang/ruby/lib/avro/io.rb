@@ -397,8 +397,10 @@ module Avro
           return Integer(default_value)
         when :float, :double
           return Float(default_value)
-        when :boolean, :enum, :fixed, :string, :bytes
+        when :boolean, :enum, :fixed, :string
           return default_value
+        when :bytes
+          return field_schema.type_adapter.decode(default_value)
         when :array
           read_array = []
           default_value.each do |json_val|
