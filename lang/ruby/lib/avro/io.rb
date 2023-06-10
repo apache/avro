@@ -400,8 +400,10 @@ module Avro
         when :boolean, :enum, :fixed, :string
           return default_value
         when :bytes
-          return default_value unless field_schema.type_adapter
-          return field_schema.type_adapter.decode(default_value)
+          if field_schema.logical_type == Schema::DECIMAL_LOGICAL_TYPE
+            return field_schema.type_adapter.decode(default_value)
+          end
+          return default_value
         when :array
           read_array = []
           default_value.each do |json_val|
