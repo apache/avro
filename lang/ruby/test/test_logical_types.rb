@@ -293,7 +293,7 @@ class TestLogicalTypes < Test::Unit::TestCase
       end
 
       assert_equal 5, report.total_allocated
-      assert_operator 1, :>=, report.total_retained
+      assert_equal 0, report.total_retained
     end
   end
 
