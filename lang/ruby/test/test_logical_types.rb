@@ -108,15 +108,17 @@ class TestLogicalTypes < Test::Unit::TestCase
             "fields" : [
                 {
                     "name": "sales",
-                    "type": "bytes",
-                    "logicalType": "decimal",
-                    "precision": 4,
-                    "scale": 2
+                    "type": {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2    
+                    }
                 }  
             ]
         }
     SCHEMA
-    assert_encode_and_decode({"sales": BigDecimal("12.34")}, schema)
+    assert_encode_and_decode({"sales" => BigDecimal("12.34")}, schema)
   end
 
   def test_bytes_decimal
