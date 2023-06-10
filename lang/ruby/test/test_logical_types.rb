@@ -100,6 +100,25 @@ class TestLogicalTypes < Test::Unit::TestCase
     assert_equal 'duration', schema.logical_type
   end
 
+  def test_bytes_decimal_field
+    schema = Avro::Schema.parse <<-SCHEMA
+        {
+            "type": "record",
+            "name": "Order",
+            "fields" : [
+                {
+                    "name": "sales",
+                    "type": "bytes",
+                    "logicalType": "decimal",
+                    "precision": 4,
+                    "scale": 2
+                }  
+            ]
+        }
+    SCHEMA
+    assert_encode_and_decode({"sales": BigDecimal("12.34")}, schema)
+  end
+
   def test_bytes_decimal
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "bytes", "logicalType": "decimal", "precision": 9, "scale": 6 }
