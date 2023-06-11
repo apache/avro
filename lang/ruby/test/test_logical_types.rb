@@ -183,8 +183,13 @@ class TestLogicalTypes < Test::Unit::TestCase
     sales_tax_record = {"sales" => BigDecimal("12.34"), "tax" => BigDecimal("0.000")}
     encoded = encode(sales_record, sales_schema)
     assert_equal sales_record, decode(encoded, sales_schema)
-
+    # decode with different schema applies default
     assert_equal sales_tax_record, decode(encoded, sales_tax_schema, writer_schema: sales_schema)
+
+    # decode with same schema does not apply default, since it is nullable during encode
+    encoded = encode(sales_record, sales_tax_schema)
+    tax_nil_record = {"sales" => BigDecimal("12.34"), "tax" => nil}
+    assert_equal tax_nil_record, decode(encoded, sales_tax_schema)
     Avro.disable_field_default_validation = false
   end
 
