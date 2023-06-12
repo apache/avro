@@ -871,18 +871,7 @@ impl Value {
         };
 
         match self {
-            Value::Enum(raw_index, s) => {
-                let index = usize::try_from(raw_index)
-                    .map_err(|e| Error::ConvertU32ToUsize(e, raw_index))?;
-                if (0..=symbols.len()).contains(&index) {
-                    validate_symbol(s, symbols)
-                } else {
-                    Err(Error::GetEnumValue {
-                        index,
-                        nsymbols: symbols.len(),
-                    })
-                }
-            }
+            Value::Enum(_raw_index, s) => validate_symbol(s, symbols),
             Value::String(s) => validate_symbol(s, symbols),
             other => Err(Error::GetEnum(other.into())),
         }
