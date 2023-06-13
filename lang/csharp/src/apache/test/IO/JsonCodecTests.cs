@@ -316,8 +316,8 @@ namespace Avro.Test
             GenericDatumWriter<object> writer = new GenericDatumWriter<object>(schema);
             MemoryStream output = new MemoryStream();
 
-            JsonDecoder decoder = new JsonDecoder(schema, json);
-            BinaryEncoder encoder = new BinaryEncoder(output);
+            Decoder decoder = new JsonDecoder(schema, json);
+            Encoder encoder = new BinaryEncoder(output);
 
             object datum = reader.Read(null, decoder);
 
