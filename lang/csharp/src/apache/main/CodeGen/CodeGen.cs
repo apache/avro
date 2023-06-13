@@ -1142,40 +1142,42 @@ namespace Avro
         /// <returns></returns>
         public virtual IDictionary<string, string> GetTypes()
         {
-            var cscp = new CSharpCodeProvider();
-            var opts = new CodeGeneratorOptions
+            using (var cscp = new CSharpCodeProvider())
             {
-                BracingStyle = "C", IndentString = "\t", BlankLinesBetweenMembers = false
-            };
-            CodeNamespaceCollection nsc = CompileUnit.Namespaces;
-
-            var sourceCodeByName = new Dictionary<string, string>();
-            for (int i = 0; i < nsc.Count; i++)
-            {
-                var ns = nsc[i];
-
-                var new_ns = new CodeNamespace(ns.Name);
-                new_ns.Comments.Add(CodeGenUtil.Instance.FileComment);
-                foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
+                var opts = new CodeGeneratorOptions
                 {
-                    new_ns.Imports.Add(nci);
-                }
+                    BracingStyle = "C", IndentString = "\t", BlankLinesBetweenMembers = false
+                };
+                CodeNamespaceCollection nsc = CompileUnit.Namespaces;
 
-                var types = ns.Types;
-                for (int j = 0; j < types.Count; j++)
+                var sourceCodeByName = new Dictionary<string, string>();
+                for (int i = 0; i < nsc.Count; i++)
                 {
-                    var ctd = types[j];
-                    using (var writer = new StringWriter())
+                    var ns = nsc[i];
+
+                    var new_ns = new CodeNamespace(ns.Name);
+                    new_ns.Comments.Add(CodeGenUtil.Instance.FileComment);
+                    foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
                     {
-                        new_ns.Types.Add(ctd);
-                        cscp.GenerateCodeFromNamespace(new_ns, writer, opts);
-                        new_ns.Types.Remove(ctd);
-                        sourceCodeByName[ctd.Name] = writer.ToString();
+                        new_ns.Imports.Add(nci);
+                    }
+
+                    var types = ns.Types;
+                    for (int j = 0; j < types.Count; j++)
+                    {
+                        var ctd = types[j];
+                        using (var writer = new StringWriter())
+                        {
+                            new_ns.Types.Add(ctd);
+                            cscp.GenerateCodeFromNamespace(new_ns, writer, opts);
+                            new_ns.Types.Remove(ctd);
+                            sourceCodeByName[ctd.Name] = writer.ToString();
+                        }
                     }
                 }
-            }
 
-            return sourceCodeByName;
+                return sourceCodeByName;
+            }
         }
 
         /// <summary>
