@@ -566,7 +566,7 @@ impl Value {
     pub fn resolve(self, schema: &Schema) -> AvroResult<Self> {
         let enclosing_namespace = schema.namespace();
         let rs = ResolvedSchema::try_from(schema)?;
-        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
+        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace, &None)
     }
 
     /// Attempt to perform schema resolution on the value, with the given
@@ -578,7 +578,7 @@ impl Value {
     pub fn resolve_schemata(self, schema: &Schema, schemata: Vec<&Schema>) -> AvroResult<Self> {
         let enclosing_namespace = schema.namespace();
         let rs = ResolvedSchema::try_from(schemata)?;
-        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace)
+        self.resolve_internal(schema, rs.get_names(), &enclosing_namespace, &None)
     }
 
     fn resolve_internal(
@@ -586,6 +586,7 @@ impl Value {
         schema: &Schema,
         names: &NamesRef,
         enclosing_namespace: &Namespace,
+        field_default: &Option<JsonValue>,
     ) -> AvroResult<Self> {
         // Check if this schema is a union, and if the reader schema is not.
         if SchemaKind::from(&self) == SchemaKind::Union
@@ -605,7 +606,7 @@ impl Value {
 
                 if let Some(resolved) = names.get(&name) {
                     debug!("Resolved {:?}", name);
-                    self.resolve_internal(resolved, names, &name.namespace)
+                    self.resolve_internal(resolved, names, &name.namespace, field_default)
                 } else {
                     error!("Failed to resolve schema {:?}", name);
                     Err(Error::SchemaResolutionError(name.clone()))
@@ -620,8 +621,12 @@ impl Value {
             Schema::Bytes => self.resolve_bytes(),
             Schema::String => self.resolve_string(),
             Schema::Fixed(FixedSchema { size, .. }) => self.resolve_fixed(size),
-            Schema::Union(ref inner) => self.resolve_union(inner, names, enclosing_namespace),
-            Schema::Enum(EnumSchema { ref symbols, .. }) => self.resolve_enum(symbols),
+            Schema::Union(ref inner) => {
+                self.resolve_union(inner, names, enclosing_namespace, field_default)
+            }
+            Schema::Enum(EnumSchema { ref symbols, .. }) => {
+                self.resolve_enum(symbols, field_default)
+            }
             Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
             Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
@@ -840,31 +845,36 @@ impl Value {
         }
     }
 
-    fn resolve_enum(self, symbols: &[String]) -> Result<Self, Error> {
+    fn resolve_enum(
+        self,
+        symbols: &[String],
+        field_default: &Option<JsonValue>,
+    ) -> Result<Self, Error> {
         let validate_symbol = |symbol: String, symbols: &[String]| {
             if let Some(index) = symbols.iter().position(|item| item == &symbol) {
                 Ok(Value::Enum(index as u32, symbol))
             } else {
-                Err(Error::GetEnumDefault {
-                    symbol,
-                    symbols: symbols.into(),
-                })
+                match field_default {
+                    Some(JsonValue::String(default)) => {
+                        if let Some(index) = symbols.iter().position(|item| item == default) {
+                            Ok(Value::Enum(index as u32, default.clone()))
+                        } else {
+                            Err(Error::GetEnumDefault {
+                                symbol,
+                                symbols: symbols.into(),
+                            })
+                        }
+                    }
+                    _ => Err(Error::GetEnumDefault {
+                        symbol,
+                        symbols: symbols.into(),
+                    }),
+                }
             }
         };
 
         match self {
-            Value::Enum(raw_index, s) => {
-                let index = usize::try_from(raw_index)
-                    .map_err(|e| Error::ConvertU32ToUsize(e, raw_index))?;
-                if (0..=symbols.len()).contains(&index) {
-                    validate_symbol(s, symbols)
-                } else {
-                    Err(Error::GetEnumValue {
-                        index,
-                        nsymbols: symbols.len(),
-                    })
-                }
-            }
+            Value::Enum(_raw_index, s) => validate_symbol(s, symbols),
             Value::String(s) => validate_symbol(s, symbols),
             other => Err(Error::GetEnum(other.into())),
         }
@@ -875,6 +885,7 @@ impl Value {
         schema: &UnionSchema,
         names: &NamesRef,
         enclosing_namespace: &Namespace,
+        field_default: &Option<JsonValue>,
     ) -> Result<Self, Error> {
         let v = match self {
             // Both are unions case.
@@ -889,7 +900,7 @@ impl Value {
 
         Ok(Value::Union(
             i as u32,
-            Box::new(v.resolve_internal(inner, names, enclosing_namespace)?),
+            Box::new(v.resolve_internal(inner, names, enclosing_namespace, field_default)?),
         ))
     }
 
@@ -903,7 +914,7 @@ impl Value {
             Value::Array(items) => Ok(Value::Array(
                 items
                     .into_iter()
-                    .map(|item| item.resolve_internal(schema, names, enclosing_namespace))
+                    .map(|item| item.resolve_internal(schema, names, enclosing_namespace, &None))
                     .collect::<Result<_, _>>()?,
             )),
             other => Err(Error::GetArray {
@@ -925,7 +936,7 @@ impl Value {
                     .into_iter()
                     .map(|(key, value)| {
                         value
-                            .resolve_internal(schema, names, enclosing_namespace)
+                            .resolve_internal(schema, names, enclosing_namespace, &None)
                             .map(|value| (key, value))
                     })
                     .collect::<Result<_, _>>()?,
@@ -963,7 +974,8 @@ impl Value {
                     None => match field.default {
                         Some(ref value) => match field.schema {
                             Schema::Enum(EnumSchema { ref symbols, .. }) => {
-                                Value::from(value.clone()).resolve_enum(symbols)?
+                                Value::from(value.clone())
+                                    .resolve_enum(symbols, &field.default.clone())?
                             }
                             Schema::Union(ref union_schema) => {
                                 let first = &union_schema.variants()[0];
@@ -977,6 +989,7 @@ impl Value {
                                             first,
                                             names,
                                             enclosing_namespace,
+                                            &field.default,
                                         )?),
                                     ),
                                 }
@@ -989,7 +1002,7 @@ impl Value {
                     },
                 };
                 value
-                    .resolve_internal(&field.schema, names, enclosing_namespace)
+                    .resolve_internal(&field.schema, names, enclosing_namespace, &field.default)
                     .map(|value| (field.name.clone(), value))
             })
             .collect::<Result<Vec<_>, _>>()?;
