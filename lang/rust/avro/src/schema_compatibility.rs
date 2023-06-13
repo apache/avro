@@ -327,6 +327,10 @@ impl SchemaCompatibility {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        types::{Record, Value},
+        Codec, Reader, Writer,
+    };
     use apache_avro_test_helper::TestResult;
 
     fn int_array_schema() -> Schema {
@@ -905,5 +909,133 @@ mod tests {
             &point_2d_fullname_schema(),
             &read_schema
         ));
+    }
+
+    #[test]
+    fn avro_3772_enum_default() -> TestResult {
+        let writer_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                "type": "enum",
+                "name": "suit",
+                "symbols": ["diamonds", "spades", "clubs", "hearts"]
+              },
+              "default": "spades"
+            }
+          ]
+        }
+        "#;
+
+        let reader_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                 "type": "enum",
+                "name": "suit",
+                  "symbols": ["diamonds", "spades", "ninja", "hearts"]
+              },
+              "default": "spades"
+            }
+          ]
+        }
+      "#;
+        let writer_schema = Schema::parse_str(writer_raw_schema)?;
+        let reader_schema = Schema::parse_str(reader_raw_schema)?;
+        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
+        let mut record = Record::new(writer.schema()).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+        record.put("c", "clubs");
+        writer.append(record).unwrap();
+        let input = writer.into_inner()?;
+        let mut reader = Reader::with_schema(&reader_schema, &input[..])?;
+        assert_eq!(
+            reader.next().unwrap().unwrap(),
+            Value::Record(vec![
+                ("a".to_string(), Value::Long(27)),
+                ("b".to_string(), Value::String("foo".to_string())),
+                ("c".to_string(), Value::Enum(1, "spades".to_string())),
+            ])
+        );
+        assert!(reader.next().is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3772_enum_default_less_symbols() -> TestResult {
+        let writer_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                "type": "enum",
+                "name": "suit",
+                "symbols": ["diamonds", "spades", "clubs", "hearts"]
+              },
+              "default": "spades"
+            }
+          ]
+        }
+        "#;
+
+        let reader_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                 "type": "enum",
+                "name": "suit",
+                  "symbols": ["hearts", "spades"]
+              },
+              "default": "spades"
+            }
+          ]
+        }
+      "#;
+        let writer_schema = Schema::parse_str(writer_raw_schema)?;
+        let reader_schema = Schema::parse_str(reader_raw_schema)?;
+        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
+        let mut record = Record::new(writer.schema()).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+        record.put("c", "hearts");
+        writer.append(record).unwrap();
+        let input = writer.into_inner()?;
+        let mut reader = Reader::with_schema(&reader_schema, &input[..])?;
+        assert_eq!(
+            reader.next().unwrap().unwrap(),
+            Value::Record(vec![
+                ("a".to_string(), Value::Long(27)),
+                ("b".to_string(), Value::String("foo".to_string())),
+                ("c".to_string(), Value::Enum(0, "hearts".to_string())),
+            ])
+        );
+        assert!(reader.next().is_none());
+
+        Ok(())
     }
 }
