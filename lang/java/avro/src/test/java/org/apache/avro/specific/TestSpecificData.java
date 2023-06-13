@@ -176,7 +176,7 @@ public class TestSpecificData {
   }
 
   @Test
-  void classNameContainingReservedWords() {
+  public void classNameContainingReservedWords() {
     final Schema schema = Schema.createRecord("AnyName", null, "db.public.table", false);
 
     assertEquals("db.public$.table.AnyName", SpecificData.getClassName(schema));
