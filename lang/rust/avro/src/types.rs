@@ -1023,6 +1023,7 @@ mod tests {
         TestResult,
     };
     use pretty_assertions::assert_eq;
+    use serde_json::json;
     use uuid::Uuid;
 
     #[test]
@@ -2746,6 +2747,36 @@ Field with name '"b"' is not a member of the map items"#,
         assert!(
             resolve_result?.validate_schemata(schemata.iter().collect()),
             "result of validation with schemata should be true"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_decimal_schema_type_with_fixed() -> TestResult {
+        let schema = json!(
+        {
+          "type": "record",
+          "name": "recordWithDecimal",
+          "fields": [
+            {
+              "name": "decimal",
+              "type": {
+                "type": "fixed",
+                "name": "nestedFixed",
+                "size": 8,
+                "logicalType": "decimal",
+                "precision": 4
+              }
+            }
+          ]
+        });
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
         );
 
         Ok(())
