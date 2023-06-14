@@ -601,8 +601,16 @@ module Avro
                            else
                              type
                            end
-
-        Avro::SchemaValidator.validate!(type_for_default, default)
+        case type_for_default.logical_type
+        when DECIMAL_LOGICAL_TYPE
+          # https://avro.apache.org/docs/1.11.1/specification/#schema-record
+          # Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255
+          options = SchemaValidator::DEFAULT_VALIDATION_OPTIONS.dup
+          options[:encoded] = true
+          Avro::SchemaValidator.validate!(type_for_default, default, options)
+        else
+          Avro::SchemaValidator.validate!(type_for_default, default)
+        end
       rescue Avro::SchemaValidator::ValidationError => e
         raise Avro::SchemaParseError, "Error validating default for #{name}: #{e.message}"
       end
