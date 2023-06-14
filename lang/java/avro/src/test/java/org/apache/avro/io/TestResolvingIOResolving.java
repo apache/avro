@@ -101,7 +101,7 @@ public class TestResolvingIOResolving {
             "{\"type\":\"record\",\"name\":\"outer\",\"fields\":[" + "{\"name\": \"g1\", "
                 + "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
                 + "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101}," + "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
-                + "{\"name\": \"g2\", \"type\": \"long\"}]}}",
+                + "{\"name\": \"g2\", \"type\": \"long\"}]}",
             "RRIIL", new Object[] { 10, 101, 11L } },
         // Default value for a record.
         { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":[" + "{\"name\": \"g2\", \"type\": \"long\"}]}", "L",
