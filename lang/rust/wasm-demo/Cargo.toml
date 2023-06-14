@@ -36,12 +36,12 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 apache-avro = { path = "../avro" }
-serde = { default-features = false, version = "1.0.160", features = ["derive"] }
-wasm-bindgen = "0.2.84"
+serde = { default-features = false, version = "1.0.164", features = ["derive"] }
+wasm-bindgen = "0.2.87"
 
 [dev-dependencies]
 console_error_panic_hook = { version = "0.1.6" }
-wasm-bindgen-test = "0.3.34"
+wasm-bindgen-test = "0.3.36"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

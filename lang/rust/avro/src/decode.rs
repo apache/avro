@@ -18,7 +18,10 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    schema::{Name, Namespace, ResolvedSchema, Schema},
+    schema::{
+        DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
+        Schema,
+    },
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
     AvroResult, Error,
@@ -98,7 +101,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 }
             }
         }
-        Schema::Decimal { ref inner, .. } => match &**inner {
+        Schema::Decimal(DecimalSchema { ref inner, .. }) => match &**inner {
             Schema::Fixed { .. } => {
                 match decode_internal(inner, names, enclosing_namespace, reader)? {
                     Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
@@ -164,7 +167,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 }
             }
         }
-        Schema::Fixed { size, .. } => {
+        Schema::Fixed(FixedSchema { size, .. }) => {
             let mut buf = vec![0u8; size];
             reader
                 .read_exact(&mut buf)
@@ -232,11 +235,11 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             }
             Err(io_err) => Err(io_err),
         },
-        Schema::Record {
+        Schema::Record(RecordSchema {
             ref name,
             ref fields,
             ..
-        } => {
+        }) => {
             let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
             // Benchmarks indicate ~10% improvement using this method.
             let mut items = Vec::with_capacity(fields.len());
@@ -254,7 +257,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             }
             Ok(Value::Record(items))
         }
-        Schema::Enum { ref symbols, .. } => {
+        Schema::Enum(EnumSchema { ref symbols, .. }) => {
             Ok(if let Value::Int(raw_index) = decode_int(reader)? {
                 let index = usize::try_from(raw_index)
                     .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
@@ -293,64 +296,73 @@ mod tests {
     use crate::{
         decode::decode,
         encode::{encode, tests::success},
-        schema::Schema,
+        schema::{DecimalSchema, FixedSchema, Schema},
         types::{
             Value,
             Value::{Array, Int, Map},
         },
         Decimal,
     };
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use std::collections::HashMap;
 
     #[test]
-    fn test_decode_array_without_size() {
+    fn test_decode_array_without_size() -> TestResult {
         let mut input: &[u8] = &[6, 2, 4, 6, 0];
         let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
-        assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result.unwrap());
+        assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
+
+        Ok(())
     }
 
     #[test]
-    fn test_decode_array_with_size() {
+    fn test_decode_array_with_size() -> TestResult {
         let mut input: &[u8] = &[5, 6, 2, 4, 6, 0];
         let result = decode(&Schema::Array(Box::new(Schema::Int)), &mut input);
-        assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result.unwrap());
+        assert_eq!(Array(vec!(Int(1), Int(2), Int(3))), result?);
+
+        Ok(())
     }
 
     #[test]
-    fn test_decode_map_without_size() {
+    fn test_decode_map_without_size() -> TestResult {
         let mut input: &[u8] = &[0x02, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
         let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
-        assert_eq!(Map(expected), result.unwrap());
+        assert_eq!(Map(expected), result?);
+
+        Ok(())
     }
 
     #[test]
-    fn test_decode_map_with_size() {
+    fn test_decode_map_with_size() -> TestResult {
         let mut input: &[u8] = &[0x01, 0x0C, 0x08, 0x74, 0x65, 0x73, 0x74, 0x02, 0x00];
         let result = decode(&Schema::Map(Box::new(Schema::Int)), &mut input);
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
-        assert_eq!(Map(expected), result.unwrap());
+        assert_eq!(Map(expected), result?);
+
+        Ok(())
     }
 
     #[test]
-    fn test_negative_decimal_value() {
+    fn test_negative_decimal_value() -> TestResult {
         use crate::{encode::encode, schema::Name};
         use num_bigint::ToBigInt;
-        let inner = Box::new(Schema::Fixed {
+        let inner = Box::new(Schema::Fixed(FixedSchema {
             size: 2,
             doc: None,
-            name: Name::new("decimal").unwrap(),
+            name: Name::new("decimal")?,
             aliases: None,
             attributes: Default::default(),
-        });
-        let schema = Schema::Decimal {
+        }));
+        let schema = Schema::Decimal(DecimalSchema {
             inner,
             precision: 4,
             scale: 2,
-        };
+        });
         let bigint = (-423).to_bigint().unwrap();
         let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
 
@@ -358,26 +370,28 @@ mod tests {
         encode(&value, &schema, &mut buffer).expect(&success(&value, &schema));
 
         let mut bytes = &buffer[..];
-        let result = decode(&schema, &mut bytes).unwrap();
+        let result = decode(&schema, &mut bytes)?;
         assert_eq!(result, value);
+
+        Ok(())
     }
 
     #[test]
-    fn test_decode_decimal_with_bigger_than_necessary_size() {
+    fn test_decode_decimal_with_bigger_than_necessary_size() -> TestResult {
         use crate::{encode::encode, schema::Name};
         use num_bigint::ToBigInt;
-        let inner = Box::new(Schema::Fixed {
+        let inner = Box::new(Schema::Fixed(FixedSchema {
             size: 13,
-            name: Name::new("decimal").unwrap(),
+            name: Name::new("decimal")?,
             aliases: None,
             doc: None,
             attributes: Default::default(),
-        });
-        let schema = Schema::Decimal {
+        }));
+        let schema = Schema::Decimal(DecimalSchema {
             inner,
             precision: 4,
             scale: 2,
-        };
+        });
         let value = Value::Decimal(Decimal::from(
             ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
         ));
@@ -385,12 +399,14 @@ mod tests {
 
         encode(&value, &schema, &mut buffer).expect(&success(&value, &schema));
         let mut bytes: &[u8] = &buffer[..];
-        let result = decode(&schema, &mut bytes).unwrap();
+        let result = decode(&schema, &mut bytes)?;
         assert_eq!(result, value);
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3448_recursive_definition_decode_union() {
+    fn test_avro_3448_recursive_definition_decode_union() -> TestResult {
         // if encoding fails in this test check the corresponding test in encode
         let schema = Schema::parse_str(
             r#"
@@ -415,8 +431,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        .unwrap();
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -450,10 +465,12 @@ mod tests {
                 &schema
             ))
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3448_recursive_definition_decode_array() {
+    fn test_avro_3448_recursive_definition_decode_array() -> TestResult {
         let schema = Schema::parse_str(
             r#"
         {
@@ -480,8 +497,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        .unwrap();
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -498,11 +514,13 @@ mod tests {
                 "Failed to decode using recursive definitions with schema:\n {:?}\n",
                 &schema
             ))
-        )
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3448_recursive_definition_decode_map() {
+    fn test_avro_3448_recursive_definition_decode_map() -> TestResult {
         let schema = Schema::parse_str(
             r#"
         {
@@ -529,8 +547,7 @@ mod tests {
                 }
             ]
         }"#,
-        )
-        .unwrap();
+        )?;
 
         let inner_value1 = Value::Record(vec![("z".into(), Value::Int(3))]);
         let inner_value2 = Value::Record(vec![("z".into(), Value::Int(6))]);
@@ -550,11 +567,13 @@ mod tests {
                 "Failed to decode using recursive definitions with schema:\n {:?}\n",
                 &schema
             ))
-        )
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3448_proper_multi_level_decoding_middle_namespace() {
+    fn test_avro_3448_proper_multi_level_decoding_middle_namespace() -> TestResult {
         // if encoding fails in this test check the corresponding test in encode
         let schema = r#"
         {
@@ -598,7 +617,7 @@ mod tests {
           ]
         }
         "#;
-        let schema = Schema::parse_str(schema).unwrap();
+        let schema = Schema::parse_str(schema)?;
         let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
         let middle_record_variation_1 = Value::Record(vec![(
             "middle_field_1".into(),
@@ -665,10 +684,12 @@ mod tests {
                 &schema
             ))
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_avro_3448_proper_multi_level_decoding_inner_namespace() {
+    fn test_avro_3448_proper_multi_level_decoding_inner_namespace() -> TestResult {
         // if encoding fails in this test check the corresponding test in encode
         let schema = r#"
         {
@@ -713,7 +734,7 @@ mod tests {
           ]
         }
         "#;
-        let schema = Schema::parse_str(schema).unwrap();
+        let schema = Schema::parse_str(schema)?;
         let inner_record = Value::Record(vec![("inner_field_1".into(), Value::Double(5.4))]);
         let middle_record_variation_1 = Value::Record(vec![(
             "middle_field_1".into(),
@@ -780,5 +801,7 @@ mod tests {
                 &schema
             ))
         );
+
+        Ok(())
     }
 }
