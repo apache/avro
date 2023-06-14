@@ -1035,6 +1035,7 @@ mod tests {
         logger::{assert_logged, assert_not_logged},
         TestResult,
     };
+    use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
@@ -2762,5 +2763,20 @@ Field with name '"b"' is not a member of the map items"#,
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn test_avro_incorrect_decimal_resolving() {
+        let schema = r#"{"name": "decimalSchema", "logicalType": "decimal", "type": "fixed", "precision": 8, "scale": 0, "size": 8}"#;
+
+        let avro_value = Value::Decimal(Decimal::from(
+            BigInt::from(12345678u32).to_signed_bytes_be(),
+        ));
+        let schema = Schema::parse_str(schema).unwrap();
+        let resolve_result = avro_value.resolve(&schema);
+        assert!(
+            resolve_result.is_ok(),
+            "resolve result must be ok, got: {resolve_result:?}"
+        );
     }
 }
