@@ -105,8 +105,9 @@ namespace Avro.Test.CodeGen
                 GenerateCode();
                 var types = GetTypes();
                 Assert.That(types.Count, Is.EqualTo(1));
-                Assert.That(types.ContainsKey("PlanetEnum"));
-                Assert.That(Regex.Matches(types["PlanetEnum"], "public enum PlanetEnum").Count, Is.EqualTo(1));
+                bool hasPlanetEnumCode = types.TryGetValue("PlanetEnum", out string planetEnumCode);
+                Assert.That(hasPlanetEnumCode);
+                Assert.That(Regex.Matches(planetEnumCode, "public enum PlanetEnum").Count, Is.EqualTo(1));
             }
         }
     }
