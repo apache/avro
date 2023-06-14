@@ -316,7 +316,10 @@ pub enum Error {
     #[error("No `values` in map")]
     GetMapValuesField,
 
-    #[error("No `size` in fixed")]
+    #[error("Fixed schema `size` value must be a positive integer: {0}")]
+    GetFixedSizeFieldPositive(serde_json::Value),
+
+    #[error("Fixed schema has no `size`")]
     GetFixedSizeField,
 
     #[error("Failed to compress with flate")]
