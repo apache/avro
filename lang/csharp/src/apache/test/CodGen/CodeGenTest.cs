@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
@@ -80,6 +81,32 @@ namespace Avro.Test.CodeGen
             {
                 Protocol protocol = null;
                 Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+
+
+            [Test]
+            public void GetTypesShouldReturnTypes()
+            {
+                AddSchema(@"
+{
+  ""name"": ""PlanetEnum"",
+  ""namespace"": ""Space.Models"",
+  ""type"": ""enum"",
+  ""symbols"": [
+    ""Earth"",
+    ""Mars"",
+    ""Jupiter"",
+    ""Saturn"",
+    ""Uranus"",
+    ""Neptune""
+  ]
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                Assert.That(types.Count, Is.EqualTo(1));
+                Assert.That(types.ContainsKey("PlanetEnum"));
+                Assert.That(Regex.Matches(types["PlanetEnum"], "public enum PlanetEnum").Count, Is.EqualTo(1));
             }
         }
     }
