@@ -413,16 +413,16 @@ public class TestSchema {
     assertEquals("Int", nameInt.getQualified("space"));
   }
 
-  @Test(expected = SchemaParseException.class)
-  public void testContentAfterAvsc() throws Exception {
+  @Test
+  void testContentAfterAvsc() throws Exception {
     Schema.Parser parser = new Schema.Parser();
     parser.setValidate(true);
     parser.setValidateDefaults(true);
-    parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS");
+    assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
   }
 
   @Test
-  public void testContentAfterAvscInInputStream() throws Exception {
+  void testContentAfterAvscInInputStream() throws Exception {
     Schema.Parser parser = new Schema.Parser();
     parser.setValidate(true);
     parser.setValidateDefaults(true);
@@ -432,8 +432,8 @@ public class TestSchema {
     assertNotNull(schema);
   }
 
-  @Test(expected = SchemaParseException.class)
-  public void testContentAfterAvscInFile() throws Exception {
+  @Test
+  void testContentAfterAvscInFile() throws Exception {
     File avscFile = Files.createTempFile("testContentAfterAvscInFile", null).toFile();
     try (FileWriter writer = new FileWriter(avscFile)) {
       writer.write("{\"type\": \"string\"}; DROP TABLE STUDENTS");
@@ -443,6 +443,6 @@ public class TestSchema {
     Schema.Parser parser = new Schema.Parser();
     parser.setValidate(true);
     parser.setValidateDefaults(true);
-    parser.parse(avscFile);
+    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }
 }
