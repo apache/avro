@@ -743,12 +743,16 @@ pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
 pub use error::Error;
 pub use reader::{
-    from_avro_datum, read_marker, GenericSingleObjectReader, Reader, SpecificSingleObjectReader,
+    from_avro_datum, from_avro_datum_schemata, read_marker, GenericSingleObjectReader, Reader,
+    SpecificSingleObjectReader,
 };
 pub use schema::{AvroSchema, Schema};
 pub use ser::to_value;
-pub use util::max_allocation_bytes;
-pub use writer::{to_avro_datum, GenericSingleObjectWriter, SpecificSingleObjectWriter, Writer};
+pub use util::{max_allocation_bytes, set_serde_human_readable};
+pub use writer::{
+    to_avro_datum, to_avro_datum_schemata, GenericSingleObjectWriter, SpecificSingleObjectWriter,
+    Writer,
+};
 
 #[cfg(feature = "derive")]
 pub use apache_avro_derive::*;
@@ -859,61 +863,6 @@ mod tests {
                 ("c".to_string(), Value::Enum(2, "clubs".to_string())),
             ])
         );
-        assert!(reader.next().is_none());
-    }
-
-    //TODO: move where it fits better
-    #[test]
-    fn test_enum_resolution() {
-        let writer_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "clubs", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let reader_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "ninja", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let writer_schema = Schema::parse_str(writer_raw_schema).unwrap();
-        let reader_schema = Schema::parse_str(reader_raw_schema).unwrap();
-        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
-        let mut record = Record::new(writer.schema()).unwrap();
-        record.put("a", 27i64);
-        record.put("b", "foo");
-        record.put("c", "clubs");
-        writer.append(record).unwrap();
-        let input = writer.into_inner().unwrap();
-        let mut reader = Reader::with_schema(&reader_schema, &input[..]).unwrap();
-        assert!(reader.next().unwrap().is_err());
         assert!(reader.next().is_none());
     }
 

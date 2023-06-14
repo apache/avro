@@ -17,6 +17,8 @@
  */
 package org.apache.avro.generic;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,16 +27,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.avro.Schema;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class TestGenericDatumReader {
 
   private static final Random r = new Random(System.currentTimeMillis());
 
   @Test
-  public void testReaderCache() {
+  void readerCache() {
     final GenericDatumReader.ReaderCache cache = new GenericDatumReader.ReaderCache(this::findStringClass);
     List<Thread> threads = IntStream.rangeClosed(1, 200).mapToObj((int index) -> {
       final Schema schema = TestGenericDatumReader.this.build(index);
@@ -52,7 +52,7 @@ public class TestGenericDatumReader {
   }
 
   @Test
-  public void testNewInstanceFromString() {
+  void newInstanceFromString() {
     final GenericDatumReader.ReaderCache cache = new GenericDatumReader.ReaderCache(this::findStringClass);
 
     Object object = cache.newInstanceFromString(StringBuilder.class, "Hello");

@@ -329,7 +329,7 @@ public class LogicalTypes {
     }
 
     private boolean hasProperty(Schema schema, String name) {
-      return (schema.getObjectProp(name) != null);
+      return schema.propsContainsKey(name);
     }
 
     private int getInt(Schema schema, String name) {

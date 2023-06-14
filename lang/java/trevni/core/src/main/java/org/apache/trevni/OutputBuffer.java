@@ -30,7 +30,11 @@ class OutputBuffer extends ByteArrayOutputStream {
   private int bitCount; // position in booleans
 
   public OutputBuffer() {
-    super((BLOCK_SIZE + BLOCK_SIZE) >> 2);
+    this(BLOCK_SIZE + (BLOCK_SIZE >> 2));
+  }
+
+  public OutputBuffer(int size) {
+    super(size);
   }
 
   public boolean isFull() {

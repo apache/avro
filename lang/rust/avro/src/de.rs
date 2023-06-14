@@ -42,7 +42,7 @@ struct MapDeserializer<'de> {
     input_values: Values<'de, String, Value>,
 }
 
-struct StructDeserializer<'de> {
+struct RecordDeserializer<'de> {
     input: Iter<'de, (String, Value)>,
     value: Option<&'de Value>,
 }
@@ -72,17 +72,15 @@ impl<'de> SeqDeserializer<'de> {
 impl<'de> MapDeserializer<'de> {
     pub fn new(input: &'de HashMap<String, Value>) -> Self {
         MapDeserializer {
-            input_keys: input.keys(), // input.keys().map(|k| Value::String(k.clone())).collect::<Vec<_>>().iter(),
+            input_keys: input.keys(),
             input_values: input.values(),
-            // keys: input.keys().map(|s| Value::String(s.to_owned())).collect::<Vec<Value>>(),
-            // values: input.values().map(|s| s.to_owned()).collect::<Vec<Value>>(),
         }
     }
 }
 
-impl<'de> StructDeserializer<'de> {
+impl<'de> RecordDeserializer<'de> {
     pub fn new(input: &'de [(String, Value)]) -> Self {
-        StructDeserializer {
+        RecordDeserializer {
             input: input.iter(),
             value: None,
         }
@@ -169,8 +167,7 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
                     self,
                 )),
                 (field, Value::String(_)) => Err(de::Error::custom(format!(
-                    "Expected first field named 'type': got '{}' instead",
-                    field
+                    "Expected first field named 'type': got '{field}' instead"
                 ))),
                 (_, _) => Err(de::Error::custom(
                     "Expected first field of type String or Enum for the type name".to_string(),
@@ -253,25 +250,27 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Union(_i, u) => match **u {
                 Value::Null => visitor.visit_unit(),
                 Value::Boolean(b) => visitor.visit_bool(b),
-                Value::Int(i) => visitor.visit_i32(i),
+                Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => visitor.visit_i32(i),
                 Value::Long(i)
                 | Value::TimeMicros(i)
                 | Value::TimestampMillis(i)
                 | Value::TimestampMicros(i) => visitor.visit_i64(i),
                 Value::Float(f) => visitor.visit_f32(f),
                 Value::Double(d) => visitor.visit_f64(d),
-                Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+                Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
                 Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
                 Value::String(ref s) => visitor.visit_borrowed_str(s),
+                Value::Uuid(uuid) => visitor.visit_str(&uuid.to_string()),
                 Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
                 _ => Err(de::Error::custom(format!(
                     "unsupported union: {:?}",
                     self.input
                 ))),
             },
-            Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
             Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
             Value::String(ref s) => visitor.visit_borrowed_str(s),
+            Value::Uuid(uuid) => visitor.visit_str(&uuid.to_string()),
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
             value => Err(de::Error::custom(format!(
                 "incorrect value of type: {:?}",
@@ -301,7 +300,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 .map_err(|e| de::Error::custom(e.to_string()))
                 .and_then(|s| visitor.visit_borrowed_str(s)),
             Value::Uuid(ref u) => visitor.visit_str(&u.to_string()),
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Uuid, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -316,11 +318,23 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                     .map_err(|e| de::Error::custom(e.to_string()))
                     .and_then(|s| visitor.visit_string(s))
             }
+            Value::Uuid(ref u) => visitor.visit_str(&u.to_string()),
             Value::Union(_i, ref x) => match **x {
                 Value::String(ref s) => visitor.visit_borrowed_str(s),
-                _ => Err(de::Error::custom("not a string|bytes|fixed")),
+                Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
+                    String::from_utf8(bytes.to_owned())
+                        .map_err(|e| de::Error::custom(e.to_string()))
+                        .and_then(|s| visitor.visit_string(s))
+                }
+                Value::Uuid(ref u) => visitor.visit_str(&u.to_string()),
+                _ => Err(de::Error::custom(format!(
+                    "Expected a String|Bytes|Fixed|Uuid, but got {x:?}"
+                ))),
             },
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Uuid|Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -332,7 +346,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
             Value::Uuid(ref u) => visitor.visit_bytes(u.as_bytes()),
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed|Uuid, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -345,7 +362,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 visitor.visit_byte_buf(bytes.to_owned())
             }
-            _ => Err(de::Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a String|Bytes|Fixed, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -356,7 +376,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::Union(_i, ref inner) if inner.as_ref() == &Value::Null => visitor.visit_none(),
             Value::Union(_i, ref inner) => visitor.visit_some(&Deserializer::new(inner)),
-            _ => Err(de::Error::custom("not a union")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -368,15 +391,21 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Null => visitor.visit_unit(),
             Value::Union(_i, ref x) => match **x {
                 Value::Null => visitor.visit_unit(),
-                _ => Err(de::Error::custom("not a null")),
+                _ => Err(de::Error::custom(format!(
+                    "Expected a Null, but got {:?}",
+                    self.input
+                ))),
             },
-            _ => Err(de::Error::custom("not a null")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Null|Union, but got {:?}",
+                self.input
+            ))),
         }
     }
 
     fn deserialize_unit_struct<V>(
         self,
-        _: &'static str,
+        _struct_name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -387,7 +416,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
 
     fn deserialize_newtype_struct<V>(
         self,
-        _: &'static str,
+        _struct_name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -404,9 +433,15 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
             Value::Union(_i, ref inner) => match **inner {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-                _ => Err(de::Error::custom("not an array")),
+                Value::Null => visitor.visit_seq(SeqDeserializer::new(&[])),
+                _ => Err(de::Error::custom(format!(
+                    "Expected an Array or Null, but got: {inner:?}"
+                ))),
             },
-            _ => Err(de::Error::custom("not an array")),
+            _ => Err(de::Error::custom(format!(
+                "Expected an Array or Union, but got: {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -419,8 +454,8 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
 
     fn deserialize_tuple_struct<V>(
         self,
-        _: &'static str,
-        _: usize,
+        _struct_name: &'static str,
+        _len: usize,
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -435,32 +470,42 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
-            _ => Err(de::Error::custom("not a map")),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
+            _ => Err(de::Error::custom(format_args!(
+                "Expected a record or a map. Got: {:?}",
+                &self.input
+            ))),
         }
     }
 
     fn deserialize_struct<V>(
         self,
-        _: &'static str,
-        _: &'static [&'static str],
+        _struct_name: &'static str,
+        _fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
         match *self.input {
-            Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
+            Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
             Value::Union(_i, ref inner) => match **inner {
-                Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
-                _ => Err(de::Error::custom("not a record")),
+                Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
+                Value::Null => visitor.visit_map(RecordDeserializer::new(&[])),
+                _ => Err(de::Error::custom(format!(
+                    "Expected a Record or Null, got: {inner:?}"
+                ))),
             },
-            _ => Err(de::Error::custom("not a record")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Record or Union, got: {:?}",
+                self.input
+            ))),
         }
     }
 
     fn deserialize_enum<V>(
         self,
-        _: &'static str,
+        _enum_name: &'static str,
         _variants: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
@@ -472,7 +517,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(fields)),
             // This has to be a unit Enum
             Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(field)),
-            _ => Err(de::Error::custom("not an enum")),
+            _ => Err(de::Error::custom(format!(
+                "Expected a Record|Enum, but got {:?}",
+                self.input
+            ))),
         }
     }
 
@@ -488,6 +536,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         V: Visitor<'de>,
     {
         self.deserialize_any(visitor)
+    }
+
+    fn is_human_readable(&self) -> bool {
+        crate::util::is_human_readable()
     }
 }
 
@@ -533,7 +585,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer<'de> {
     }
 }
 
-impl<'de> de::MapAccess<'de> for StructDeserializer<'de> {
+impl<'de> de::MapAccess<'de> for RecordDeserializer<'de> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
@@ -599,7 +651,10 @@ pub fn from_value<'de, D: Deserialize<'de>>(value: &'de Value) -> Result<D, Erro
 mod tests {
     use pretty_assertions::assert_eq;
     use serde::Serialize;
+    use std::sync::atomic::Ordering;
     use uuid::Uuid;
+
+    use apache_avro_test_helper::TestResult;
 
     use super::*;
 
@@ -662,17 +717,6 @@ mod tests {
         Val2,
     }
 
-    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-    struct TestNullExternalEnum {
-        a: NullExternalEnum,
-    }
-
-    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-    enum NullExternalEnum {
-        Val1(()),
-        Val2(u64),
-    }
-
     #[derive(Debug, Serialize, Deserialize, PartialEq)]
     struct TestSingleValueExternalEnum {
         a: SingleValueExternalEnum,
@@ -707,7 +751,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value() {
+    fn test_from_value() -> TestResult {
         let test = Value::Record(vec![
             ("a".to_owned(), Value::Long(27)),
             ("b".to_owned(), Value::String("foo".to_owned())),
@@ -716,7 +760,7 @@ mod tests {
             a: 27,
             b: "foo".to_owned(),
         };
-        let final_value: Test = from_value(&test).unwrap();
+        let final_value: Test = from_value(&test)?;
         assert_eq!(final_value, expected);
 
         let test_inner = Value::Record(vec![
@@ -731,17 +775,20 @@ mod tests {
         ]);
 
         let expected_inner = TestInner { a: expected, b: 35 };
-        let final_value: TestInner = from_value(&test_inner).unwrap();
-        assert_eq!(final_value, expected_inner)
+        let final_value: TestInner = from_value(&test_inner)?;
+        assert_eq!(final_value, expected_inner);
+
+        Ok(())
     }
+
     #[test]
-    fn test_from_value_unit_enum() {
+    fn test_from_value_unit_enum() -> TestResult {
         let expected = TestUnitExternalEnum {
             a: UnitExternalEnum::Val1,
         };
 
         let test = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
-        let final_value: TestUnitExternalEnum = from_value(&test).unwrap();
+        let final_value: TestUnitExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit external enum"
@@ -755,7 +802,7 @@ mod tests {
             "a".to_owned(),
             Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
         )]);
-        let final_value: TestUnitInternalEnum = from_value(&test).unwrap();
+        let final_value: TestUnitInternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit internal enum"
@@ -768,7 +815,7 @@ mod tests {
             "a".to_owned(),
             Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
         )]);
-        let final_value: TestUnitAdjacentEnum = from_value(&test).unwrap();
+        let final_value: TestUnitAdjacentEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit adjacent enum"
@@ -778,35 +825,96 @@ mod tests {
         };
 
         let test = Value::Record(vec![("a".to_owned(), Value::Null)]);
-        let final_value: TestUnitUntaggedEnum = from_value(&test).unwrap();
+        let final_value: TestUnitUntaggedEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing unit untagged enum"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_null_enum() {
-        let expected = TestNullExternalEnum {
-            a: NullExternalEnum::Val1(()),
-        };
+    fn avro_3645_3646_test_from_value_enum() -> TestResult {
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        struct TestNullExternalEnum {
+            a: NullExternalEnum,
+        }
 
-        let test = Value::Record(vec![(
-            "a".to_owned(),
-            Value::Record(vec![
-                ("type".to_owned(), Value::String("Val1".to_owned())),
-                ("value".to_owned(), Value::Union(0, Box::new(Value::Null))),
-            ]),
-        )]);
-        let final_value: TestNullExternalEnum = from_value(&test).unwrap();
-        assert_eq!(
-            final_value, expected,
-            "Error deserializing null external enum"
-        );
+        #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+        enum NullExternalEnum {
+            Val1,
+            Val2(),
+            Val3(()),
+            Val4(u64),
+        }
+
+        let data = vec![
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val1,
+                },
+                Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val2(),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                        ("value".to_owned(), Value::Union(1, Box::new(Value::Null))),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val2(),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                        ("value".to_owned(), Value::Array(vec![])),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val3(()),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(2, "Val3".to_owned())),
+                        ("value".to_owned(), Value::Union(2, Box::new(Value::Null))),
+                    ]),
+                )]),
+            ),
+            (
+                TestNullExternalEnum {
+                    a: NullExternalEnum::Val4(123),
+                },
+                Value::Record(vec![(
+                    "a".to_owned(),
+                    Value::Record(vec![
+                        ("type".to_owned(), Value::Enum(3, "Val4".to_owned())),
+                        ("value".to_owned(), Value::Union(3, Value::Long(123).into())),
+                    ]),
+                )]),
+            ),
+        ];
+
+        for (expected, test) in data.iter() {
+            let actual: TestNullExternalEnum = from_value(test)?;
+            assert_eq!(actual, *expected);
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_single_value_enum() {
+    fn test_from_value_single_value_enum() -> TestResult {
         let expected = TestSingleValueExternalEnum {
             a: SingleValueExternalEnum::Double(64.0),
         };
@@ -821,15 +929,17 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestSingleValueExternalEnum = from_value(&test).unwrap();
+        let final_value: TestSingleValueExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "Error deserializing single value external enum(union)"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_struct_enum() {
+    fn test_from_value_struct_enum() -> TestResult {
         let expected = TestStructExternalEnum {
             a: StructExternalEnum::Val1 { x: 1.0, y: 2.0 },
         };
@@ -850,15 +960,46 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestStructExternalEnum = from_value(&test).unwrap();
+        let final_value: TestStructExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "error deserializing struct external enum(union)"
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_from_value_tuple_enum() {
+    fn test_avro_3692_from_value_struct_flatten() -> TestResult {
+        #[derive(Deserialize, PartialEq, Debug)]
+        struct S1 {
+            f1: String,
+            #[serde(flatten)]
+            inner: S2,
+        }
+        #[derive(Deserialize, PartialEq, Debug)]
+        struct S2 {
+            f2: String,
+        }
+        let expected = S1 {
+            f1: "Hello".to_owned(),
+            inner: S2 {
+                f2: "World".to_owned(),
+            },
+        };
+
+        let test = Value::Record(vec![
+            ("f1".to_owned(), "Hello".into()),
+            ("f2".to_owned(), "World".into()),
+        ]);
+        let final_value: S1 = from_value(&test)?;
+        assert_eq!(final_value, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_from_value_tuple_enum() -> TestResult {
         let expected = TestTupleExternalEnum {
             a: TupleExternalEnum::Val1(1.0, 2.0),
         };
@@ -876,17 +1017,17 @@ mod tests {
                 ),
             ]),
         )]);
-        let final_value: TestTupleExternalEnum = from_value(&test).unwrap();
+        let final_value: TestTupleExternalEnum = from_value(&test)?;
         assert_eq!(
             final_value, expected,
             "error serializing tuple external enum(union)"
         );
+
+        Ok(())
     }
 
-    type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
-
     #[test]
-    fn test_date() -> TestResult<()> {
+    fn test_date() -> TestResult {
         let raw_value = 1;
         let value = Value::Date(raw_value);
         let result = crate::from_value::<i32>(&value)?;
@@ -895,7 +1036,7 @@ mod tests {
     }
 
     #[test]
-    fn test_time_millis() -> TestResult<()> {
+    fn test_time_millis() -> TestResult {
         let raw_value = 1;
         let value = Value::TimeMillis(raw_value);
         let result = crate::from_value::<i32>(&value)?;
@@ -904,7 +1045,7 @@ mod tests {
     }
 
     #[test]
-    fn test_time_micros() -> TestResult<()> {
+    fn test_time_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::TimeMicros(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -913,7 +1054,7 @@ mod tests {
     }
 
     #[test]
-    fn test_timestamp_millis() -> TestResult<()> {
+    fn test_timestamp_millis() -> TestResult {
         let raw_value = 1;
         let value = Value::TimestampMillis(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -922,7 +1063,7 @@ mod tests {
     }
 
     #[test]
-    fn test_timestamp_micros() -> TestResult<()> {
+    fn test_timestamp_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::TimestampMicros(raw_value);
         let result = crate::from_value::<i64>(&value)?;
@@ -931,16 +1072,16 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_uuid_str() -> TestResult<()> {
+    fn test_from_value_uuid_str() -> TestResult {
         let raw_value = "9ec535ff-3e2a-45bd-91d3-0a01321b5a49";
-        let value = Value::Uuid(Uuid::parse_str(raw_value).unwrap());
+        let value = Value::Uuid(Uuid::parse_str(raw_value)?);
         let result = crate::from_value::<Uuid>(&value)?;
         assert_eq!(result.to_string(), raw_value);
         Ok(())
     }
 
     #[test]
-    fn test_from_value_uuid_slice() -> TestResult<()> {
+    fn test_from_value_uuid_slice() -> TestResult {
         let raw_value = &[4, 54, 67, 12, 43, 2, 2, 76, 32, 50, 87, 5, 1, 33, 43, 87];
         let value = Value::Uuid(Uuid::from_slice(raw_value)?);
         let result = crate::from_value::<Uuid>(&value)?;
@@ -949,7 +1090,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_value_with_union() -> TestResult<()> {
+    fn test_from_value_with_union() -> TestResult {
         // AVRO-3232 test for deserialize_any on missing fields on the destination struct:
         // Error: DeserializeValue("Unsupported union")
         // Error: DeserializeValue("incorrect value of type: String")
@@ -1095,6 +1236,33 @@ mod tests {
             a_union_map: Some(raw_map),
         };
         assert_eq!(deserialized, reference);
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3747_human_readable_false() -> TestResult {
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        let is_human_readable = false;
+        crate::util::SERDE_HUMAN_READABLE.store(is_human_readable, Ordering::Release);
+
+        let deser = &Deserializer::new(&Value::Null);
+
+        assert_eq!(deser.is_human_readable(), is_human_readable);
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3747_human_readable_true() -> TestResult {
+        use serde::de::Deserializer as SerdeDeserializer;
+
+        crate::util::SERDE_HUMAN_READABLE.store(true, Ordering::Release);
+
+        let deser = &Deserializer::new(&Value::Null);
+
+        assert!(deser.is_human_readable());
+
         Ok(())
     }
 }

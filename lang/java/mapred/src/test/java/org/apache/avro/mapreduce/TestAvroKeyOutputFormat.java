@@ -18,9 +18,10 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -36,27 +37,26 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 
 public class TestAvroKeyOutputFormat {
   private static final String SYNC_INTERVAL_KEY = org.apache.avro.mapred.AvroOutputFormat.SYNC_INTERVAL_KEY;
   private static final int TEST_SYNC_INTERVAL = 12345;
 
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
   @Test
-  public void testWithNullCodec() throws IOException {
+  void withNullCodec() throws IOException {
     Configuration conf = new Configuration();
     conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
     testGetRecordWriter(conf, CodecFactory.nullCodec(), TEST_SYNC_INTERVAL);
   }
 
   @Test
-  public void testWithDeflateCodec() throws IOException {
+  void withDeflateCodec() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, 3);
@@ -64,7 +64,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithSnappyCode() throws IOException {
+  void withSnappyCode() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.SNAPPY_CODEC);
@@ -73,7 +73,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithBZip2Code() throws IOException {
+  void withBZip2Code() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.BZIP2_CODEC);
@@ -81,7 +81,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithZstandardCode() throws IOException {
+  void withZstandardCode() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.ZSTANDARD_CODEC);
@@ -89,7 +89,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithDeflateCodeWithHadoopConfig() throws IOException {
+  void withDeflateCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.DeflateCodec");
@@ -99,7 +99,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithSnappyCodeWithHadoopConfig() throws IOException {
+  void withSnappyCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
@@ -107,7 +107,7 @@ public class TestAvroKeyOutputFormat {
   }
 
   @Test
-  public void testWithBZip2CodeWithHadoopConfig() throws IOException {
+  void withBZip2CodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
@@ -123,7 +123,7 @@ public class TestAvroKeyOutputFormat {
       throws IOException {
     // Configure a mock task attempt context.
     Job job = Job.getInstance(conf);
-    job.getConfiguration().set("mapred.output.dir", mTempDir.getRoot().getPath());
+    job.getConfiguration().set("mapred.output.dir", mTempDir.getPath());
     Schema writerSchema = Schema.create(Schema.Type.INT);
     AvroJob.setOutputKeySchema(job, writerSchema);
     TaskAttemptContext context = mock(TaskAttemptContext.class);

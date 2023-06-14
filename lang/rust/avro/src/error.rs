@@ -199,6 +199,9 @@ pub enum Error {
     #[error("Could not find matching type in union")]
     FindUnionVariant,
 
+    #[error("Union type should not be empty")]
+    EmptyUnion,
+
     #[error("Array({expected:?}) expected, got {other:?}")]
     GetArray {
         expected: SchemaKind,
@@ -229,7 +232,7 @@ pub enum Error {
     #[error("Unions cannot contain duplicate types")]
     GetUnionDuplicate,
 
-    #[error("Union's first type {0:?} must match the `default`'s value type {1:?}")]
+    #[error("One union type {0:?} must match the `default`'s value type {1:?}")]
     GetDefaultUnion(SchemaKind, ValueKind),
 
     #[error("JSON value {0} claims to be u64 but cannot be converted")]
@@ -313,7 +316,10 @@ pub enum Error {
     #[error("No `values` in map")]
     GetMapValuesField,
 
-    #[error("No `size` in fixed")]
+    #[error("Fixed schema `size` value must be a positive integer: {0}")]
+    GetFixedSizeFieldPositive(serde_json::Value),
+
+    #[error("Fixed schema has no `size`")]
     GetFixedSizeField,
 
     #[error("Failed to compress with flate")]

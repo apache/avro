@@ -35,11 +35,12 @@ concurrency:
 jobs:
   test:
     name: Python ${{ matrix.python }} Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         python:
+        - '3.11'
         - '3.10'
         - '3.9'
         - '3.8'
@@ -66,7 +67,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install --upgrade pip setuptools tox
 
       - name: Lint
         if: ${{ matrix.python == '3.10' }}
@@ -81,11 +82,12 @@ jobs:
 
   interop:
     name: Python ${{ matrix.python }} Interop
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         python:
+        - '3.11'
         - '3.10'
         - '3.9'
         - '3.8'
@@ -112,7 +114,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          python3 -m pip install --upgrade pip setuptools tox-wheel
+          python3 -m pip install --upgrade pip setuptools tox
           python3 -m pip install python-snappy zstandard
 
       - name: Cache Local Maven Repository

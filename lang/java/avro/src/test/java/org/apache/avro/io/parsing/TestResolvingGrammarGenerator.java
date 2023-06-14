@@ -103,9 +103,9 @@ public class TestResolvingGrammarGenerator {
   public static Collection<Object[]> data() {
     Collection<Object[]> ret = Arrays.asList(new Object[][] {
         { "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " + " { \"name\" : \"f1\", \"type\": \"int\" }, "
-            + " { \"name\" : \"f2\", \"type\": \"float\" } " + "] } }", "{ \"f2\": 10.4, \"f1\": 10 } " },
-        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] } }", " \"s1\" " },
-        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] } }", " \"s2\" " },
+            + " { \"name\" : \"f2\", \"type\": \"float\" } " + "] }", "{ \"f2\": 10.4, \"f1\": 10 } " },
+        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s1\" " },
+        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] }", " \"s2\" " },
         { "{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"" },
         { "{ \"type\": \"array\", \"items\": \"int\" }", "[ 10, 20, 30 ]" },
         { "{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": 10, \"k3\": 20, \"k3\": 30 }" },

@@ -20,9 +20,10 @@ use apache_avro::{
     types::{Record, Value},
     AvroResult, Reader, Schema, Writer,
 };
+use apache_avro_test_helper::TestResult;
 
 #[test]
-fn avro_3630_append_to_an_existing_file() {
+fn avro_3630_append_to_an_existing_file() -> TestResult {
     let schema_str = r#"
             {
                 "type": "record",
@@ -53,6 +54,8 @@ fn avro_3630_append_to_an_existing_file() {
         check(value, i);
         i += 1
     }
+
+    Ok(())
 }
 
 /// Simulates reading from a pre-existing .avro file and returns its bytes
@@ -79,8 +82,8 @@ fn check(value: AvroResult<Value>, expected: i32) {
                 (_, Value::Int(actual)) => assert_eq!(&expected, actual),
                 _ => panic!("The field value type must be an Int: {:?}!", &fields[0]),
             },
-            _ => panic!("The value type must be a Record: {:?}!", value),
+            _ => panic!("The value type must be a Record: {value:?}!"),
         },
-        Err(e) => panic!("Error while reading the data: {:?}", e),
+        Err(e) => panic!("Error while reading the data: {e:?}"),
     }
 }

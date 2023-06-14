@@ -49,6 +49,7 @@ jobs:
             3.1.x
             5.0.x
             6.0.x
+            7.0.x
 
       - uses: actions/cache@v3
         with:
@@ -61,19 +62,6 @@ jobs:
         run: ./build.sh lint
 
       - name: Test
-        run: ./build.sh test
-
-      # Build and test against .NET 7
-      # .NET 7 is not released yet, however this is a good way to test if the project is ready for the release
-      # Once .NET 7 is officially released, this can be removed and 7.0.x can be used instead above
-      - name: Install .NET SDK 7.0 (pre-release)
-        uses: actions/setup-dotnet@v3
-        with:
-          include-prerelease: true
-          dotnet-version: |
-            7.0.x
-      
-      - name: Test .NET 7.0 (pre-release)
         run: ./build.sh test
 
   interop:
@@ -92,6 +80,7 @@ jobs:
             3.1.x
             5.0.x
             6.0.x
+            7.0.x
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v3

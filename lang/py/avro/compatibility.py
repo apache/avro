@@ -50,6 +50,9 @@ class SchemaType(str, Enum):
     STRING = "string"
     UNION = "union"
 
+    def __str__(self):
+        return self.value
+
 
 class SchemaCompatibilityType(Enum):
     compatible = "compatible"
@@ -82,7 +85,7 @@ class SchemaCompatibilityResult:
     def __init__(
         self,
         compatibility: SchemaCompatibilityType = SchemaCompatibilityType.recursion_in_progress,
-        incompatibilities: List[SchemaIncompatibilityType] = None,
+        incompatibilities: Optional[List[SchemaIncompatibilityType]] = None,
         messages: Optional[Set[str]] = None,
         locations: Optional[Set[str]] = None,
     ):

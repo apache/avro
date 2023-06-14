@@ -176,6 +176,7 @@ namespace Avro.Specific
                 var list = (IList) array;
                 for (int i = 0; i < list.Count; i++ )
                 {
+                    encoder.StartItem();
                     valueWriter(list[i], encoder);
                 }
             }

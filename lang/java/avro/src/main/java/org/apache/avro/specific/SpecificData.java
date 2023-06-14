@@ -91,6 +91,8 @@ public class SpecificData extends GenericData {
   public static final String KEY_CLASS_PROP = "java-key-class";
   public static final String ELEMENT_PROP = "java-element-class";
 
+  public static final char RESERVED_WORD_ESCAPE_CHAR = '$';
+
   /**
    * Reserved words from
    * https://docs.oracle.com/javase/specs/jls/se16/html/jls-3.html require
@@ -150,16 +152,16 @@ public class SpecificData extends GenericData {
   }
 
   /**
-   * For RECORD type schemas, this method returns the SpecificData instance of the
-   * class associated with the schema, in order to get the right conversions for
-   * any logical types used.
+   * For RECORD and UNION type schemas, this method returns the SpecificData
+   * instance of the class associated with the schema, in order to get the right
+   * conversions for any logical types used.
    *
    * @param reader the reader schema
    * @return the SpecificData associated with the schema's class, or the default
    *         instance.
    */
   public static SpecificData getForSchema(Schema reader) {
-    if (reader != null && reader.getType() == Type.RECORD) {
+    if (reader != null && (reader.getType() == Type.RECORD || reader.getType() == Type.UNION)) {
       final Class<?> clazz = SpecificData.get().getClass(reader);
       if (clazz != null) {
         return getForClass(clazz);
@@ -329,8 +331,26 @@ public class SpecificData extends GenericData {
     String name = schema.getName();
     if (namespace == null || "".equals(namespace))
       return name;
-    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
-    return namespace + dot + name;
+
+    StringBuilder classNameBuilder = new StringBuilder();
+    String[] words = namespace.split("\\.");
+
+    for (int i = 0; i < words.length; i++) {
+      String word = words[i];
+      classNameBuilder.append(word);
+
+      if (RESERVED_WORDS.contains(word)) {
+        classNameBuilder.append(RESERVED_WORD_ESCAPE_CHAR);
+      }
+
+      if (i != words.length - 1 || !word.endsWith("$")) { // back-compatibly handle $
+        classNameBuilder.append(".");
+      }
+    }
+
+    classNameBuilder.append(name);
+
+    return classNameBuilder.toString();
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid

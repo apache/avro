@@ -27,9 +27,11 @@ import org.apache.avro.Schema;
 import org.apache.avro.protobuf.ProtoConversions.TimestampMicrosConversion;
 import org.apache.avro.protobuf.ProtoConversions.TimestampMillisConversion;
 import org.apache.avro.reflect.ReflectData;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestProtoConversions {
 
@@ -49,7 +51,7 @@ public class TestProtoConversions {
     Jan_2_1900_3_4_5_678.set(Calendar.MILLISECOND, 678);
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void createSchemas() {
     TestProtoConversions.TIMESTAMP_MILLIS_SCHEMA = LogicalTypes.timestampMillis()
         .addToSchema(Schema.create(Schema.Type.LONG));
@@ -58,7 +60,7 @@ public class TestProtoConversions {
   }
 
   @Test
-  public void testTimestampMillisConversion() throws Exception {
+  void timestampMillisConversion() throws Exception {
     TimestampMillisConversion conversion = new TimestampMillisConversion();
     Timestamp May_28_2015_21_46_53_221_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221000000).build();
     Timestamp Jan_2_1900_3_4_5_678_ts = Timestamp.newBuilder().setSeconds(-2208891355L).setNanos(678000000).build();
@@ -67,25 +69,29 @@ public class TestProtoConversions {
     Timestamp tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
     long roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
 
-    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
-    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_ts,
-        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
-    Assert.assertEquals("Known timestamp should be correct", instant,
-        (long) conversion.toLong(May_28_2015_21_46_53_221_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    assertEquals(instant, roundTrip, "Round-trip conversion should work");
+    assertEquals(May_28_2015_21_46_53_221_ts,
+        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()),
+        "Known timestamp should be correct");
+    assertEquals(instant,
+        (long) conversion.toLong(May_28_2015_21_46_53_221_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()),
+        "Known timestamp should be correct");
 
     instant = Jan_2_1900_3_4_5_678.getTimeInMillis();
     tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
     roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
 
-    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
-    Assert.assertEquals("Known timestamp should be correct", Jan_2_1900_3_4_5_678_ts,
-        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
-    Assert.assertEquals("Known timestamp should be correct", instant,
-        (long) conversion.toLong(Jan_2_1900_3_4_5_678_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    assertEquals(instant, roundTrip, "Round-trip conversion should work");
+    assertEquals(Jan_2_1900_3_4_5_678_ts,
+        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()),
+        "Known timestamp should be correct");
+    assertEquals(instant,
+        (long) conversion.toLong(Jan_2_1900_3_4_5_678_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()),
+        "Known timestamp should be correct");
   }
 
   @Test
-  public void testTimestampMicrosConversion() {
+  void timestampMicrosConversion() {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
     Timestamp May_28_2015_21_46_53_221_843_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221843000)
         .build();
@@ -95,49 +101,60 @@ public class TestProtoConversions {
     Timestamp tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
     long roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
 
-    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
-    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_843_ts,
-        conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
-    Assert.assertEquals("Known timestamp should be correct", instant, (long) conversion
-        .toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+    assertEquals(instant, roundTrip, "Round-trip conversion should work");
+    assertEquals(May_28_2015_21_46_53_221_843_ts,
+        conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()),
+        "Known timestamp should be correct");
+    assertEquals(instant, (long) conversion.toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA,
+        LogicalTypes.timestampMicros()), "Known timestamp should be correct");
 
     instant = Jan_2_1900_3_4_5_678.getTimeInMillis() * 1000 + 901;
     tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
     roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
 
-    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
-    Assert.assertEquals("Known timestamp should be correct", Jan_2_1900_3_4_5_678_901_ts,
-        conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
-    Assert.assertEquals("Known timestamp should be correct", instant,
-        (long) conversion.toLong(Jan_2_1900_3_4_5_678_901_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+    assertEquals(instant, roundTrip, "Round-trip conversion should work");
+    assertEquals(Jan_2_1900_3_4_5_678_901_ts,
+        conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()),
+        "Known timestamp should be correct");
+    assertEquals(instant,
+        (long) conversion.toLong(Jan_2_1900_3_4_5_678_901_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()),
+        "Known timestamp should be correct");
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testTimestampMillisConversionSecondsLowerLimit() throws Exception {
-    TimestampMillisConversion conversion = new TimestampMillisConversion();
-    long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000;
-    conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+  @Test
+  void timestampMillisConversionSecondsLowerLimit() throws Exception {
+    assertThrows(IllegalArgumentException.class, () -> {
+      TimestampMillisConversion conversion = new TimestampMillisConversion();
+      long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000;
+      conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testTimestampMillisConversionSecondsUpperLimit() throws Exception {
-    TimestampMillisConversion conversion = new TimestampMillisConversion();
-    long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000;
-    conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+  @Test
+  void timestampMillisConversionSecondsUpperLimit() throws Exception {
+    assertThrows(IllegalArgumentException.class, () -> {
+      TimestampMillisConversion conversion = new TimestampMillisConversion();
+      long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000;
+      conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testTimestampMicrosConversionSecondsLowerLimit() throws Exception {
-    TimestampMicrosConversion conversion = new TimestampMicrosConversion();
-    long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000000;
-    conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+  @Test
+  void timestampMicrosConversionSecondsLowerLimit() throws Exception {
+    assertThrows(IllegalArgumentException.class, () -> {
+      TimestampMicrosConversion conversion = new TimestampMicrosConversion();
+      long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000000;
+      conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+    });
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testTimestampMicrosConversionSecondsUpperLimit() throws Exception {
-    TimestampMicrosConversion conversion = new TimestampMicrosConversion();
-    long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000000;
-    conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+  @Test
+  void timestampMicrosConversionSecondsUpperLimit() throws Exception {
+    assertThrows(IllegalArgumentException.class, () -> {
+      TimestampMicrosConversion conversion = new TimestampMicrosConversion();
+      long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000000;
+      conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+    });
   }
 
   /*
@@ -146,15 +163,15 @@ public class TestProtoConversions {
    * ProtoConversions.TimestampMicrosConversion());
    */
   @Test
-  public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
+  void dynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
     Schema schema = getReflectedSchemaByName("com.google.protobuf.Timestamp", new TimestampMillisConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
+    assertEquals(TIMESTAMP_MILLIS_SCHEMA, schema, "Reflected schema should be logicalType timestampMillis");
   }
 
   @Test
-  public void testDynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
+  void dynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
     Schema schema = getReflectedSchemaByName("com.google.protobuf.Timestamp", new TimestampMicrosConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timestampMicros", TIMESTAMP_MICROS_SCHEMA, schema);
+    assertEquals(TIMESTAMP_MICROS_SCHEMA, schema, "Reflected schema should be logicalType timestampMicros");
   }
 
   private Schema getReflectedSchemaByName(String className, Conversion<?> conversion) throws ClassNotFoundException {

@@ -31,6 +31,12 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Some schemas use lower cased names, which causes some class names being lower case only -->
+    <!-- e.g. The type name 'test' only contains lower-cased ascii characters. Such names may become reserved for the language. -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="$(BenchmarkDotNetVersion)" />
   </ItemGroup>

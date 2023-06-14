@@ -27,12 +27,12 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.util.Utf8;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +102,7 @@ public class TestProtocolGeneric {
   protected static Transceiver client;
   protected static GenericRequestor requestor;
 
-  @Before
+  @BeforeEach
   public void testStartServer() throws Exception {
     if (server != null)
       return;
@@ -113,7 +113,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testHello() throws Exception {
+  void hello() throws Exception {
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", new Utf8("bob"));
     Utf8 response = (Utf8) requestor.request("hello", params);
@@ -121,7 +121,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testEcho() throws Exception {
+  void echo() throws Exception {
     GenericRecord record = new GenericData.Record(PROTOCOL.getType("TestRecord"));
     record.put("name", new Utf8("foo"));
     record.put("kind", new GenericData.EnumSymbol(PROTOCOL.getType("Kind"), "BAR"));
@@ -134,7 +134,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testEchoBytes() throws Exception {
+  void echoBytes() throws Exception {
     Random random = new Random();
     int length = random.nextInt(1024 * 16);
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("echoBytes").getRequest());
@@ -147,7 +147,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testError() throws Exception {
+  void error() throws Exception {
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
     AvroRemoteException error = null;
     try {
@@ -160,7 +160,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testUndeclaredError() throws Exception {
+  void undeclaredError() throws Exception {
     this.throwUndeclaredError = true;
     RuntimeException error = null;
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
@@ -175,12 +175,12 @@ public class TestProtocolGeneric {
     assertTrue(error.toString().contains("foo"));
   }
 
-  @Test
   /**
    * Construct and use a different protocol whose "hello" method has an extra
    * argument to check that schema is sent to parse request.
    */
-  public void testHandshake() throws Exception {
+  @Test
+  public void handshake() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     List<Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN), null, null));
@@ -198,12 +198,12 @@ public class TestProtocolGeneric {
     }
   }
 
-  @Test
   /**
    * Construct and use a different protocol whose "echo" response has an extra
    * field to check that correct schema is used to parse response.
    */
-  public void testResponseChange() throws Exception {
+  @Test
+  public void responseChange() throws Exception {
 
     List<Field> fields = new ArrayList<>();
     for (Field f : PROTOCOL.getType("TestRecord").getFields())
@@ -234,7 +234,7 @@ public class TestProtocolGeneric {
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void testStopServer() throws Exception {
     client.close();
     server.close();

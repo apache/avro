@@ -17,8 +17,8 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,12 +31,12 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Simple test of DataFileWriter and DataFileStream with deflate codec. */
 public class TestDataFileDeflate {
   @Test
-  public void testWriteAndRead() throws IOException {
+  void writeAndRead() throws IOException {
     Schema schema = Schema.create(Type.STRING);
 
     // Write it
