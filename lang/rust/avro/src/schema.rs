@@ -1139,7 +1139,12 @@ impl Parser {
         ) -> AvroResult<Schema> {
             match complex.get("type") {
                 Some(value) => {
-                    let ty = parser.parse(value, enclosing_namespace)?;
+                    let ty = match value {
+                        Value::String(s) if s == "fixed" => {
+                            parser.parse_fixed(complex, enclosing_namespace)?
+                        }
+                        _ => parser.parse(value, enclosing_namespace)?,
+                    };
 
                     if kinds
                         .iter()
@@ -1576,9 +1581,12 @@ impl Parser {
             _ => None,
         });
 
-        let size = size_opt
-            .and_then(|v| v.as_i64())
-            .ok_or(Error::GetFixedSizeField)?;
+        let size = match size_opt {
+            Some(size) => size
+                .as_u64()
+                .ok_or_else(|| Error::GetFixedSizeFieldPositive(size.clone())),
+            None => Err(Error::GetFixedSizeField),
+        }?;
 
         let name = Name::parse(complex)?;
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
@@ -4714,6 +4722,34 @@ mod tests {
             }
             _ => panic!("Expected Value::Record"),
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3780_decimal_schema_type_with_fixed() -> TestResult {
+        let schema = json!(
+        {
+          "type": "record",
+          "name": "recordWithDecimal",
+          "fields": [
+            {
+                "name": "decimal",
+                "type": "fixed",
+                "name": "nestedFixed",
+                "size": 8,
+                "logicalType": "decimal",
+                "precision": 4
+            }
+          ]
+        });
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
+        );
 
         Ok(())
     }
