@@ -694,7 +694,7 @@ impl Value {
         match self {
             Value::Decimal(num) => {
                 let num_bytes = num.len();
-                if max_prec_for_len(num_bytes)? > precision {
+                if max_prec_for_len(num_bytes)? < precision {
                     Err(Error::ComparePrecisionAndSize {
                         precision,
                         num_bytes,
@@ -705,7 +705,7 @@ impl Value {
                 // check num.bits() here
             }
             Value::Fixed(_, bytes) | Value::Bytes(bytes) => {
-                if max_prec_for_len(bytes.len())? > precision {
+                if max_prec_for_len(bytes.len())? < precision {
                     Err(Error::ComparePrecisionAndSize {
                         precision,
                         num_bytes: bytes.len(),
@@ -1035,6 +1035,7 @@ mod tests {
         logger::{assert_logged, assert_not_logged},
         TestResult,
     };
+    use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
@@ -1500,7 +1501,7 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn resolve_decimal_bytes() -> TestResult {
-        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        let value = Value::Decimal(Decimal::from(vec![1, 2, 3, 4, 5]));
         value.clone().resolve(&Schema::Decimal(DecimalSchema {
             precision: 10,
             scale: 4,
@@ -1513,7 +1514,7 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn resolve_decimal_invalid_scale() {
-        let value = Value::Decimal(Decimal::from(vec![1]));
+        let value = Value::Decimal(Decimal::from(vec![1, 2]));
         assert!(value
             .resolve(&Schema::Decimal(DecimalSchema {
                 precision: 2,
@@ -1532,12 +1533,12 @@ Field with name '"b"' is not a member of the map items"#,
                 scale: 0,
                 inner: Box::new(Schema::Bytes),
             }))
-            .is_err());
+            .is_ok());
     }
 
     #[test]
     fn resolve_decimal_fixed() {
-        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        let value = Value::Decimal(Decimal::from(vec![1, 2, 3, 4, 5]));
         assert!(value
             .clone()
             .resolve(&Schema::Decimal(DecimalSchema {
@@ -2759,6 +2760,23 @@ Field with name '"b"' is not a member of the map items"#,
         assert!(
             resolve_result?.validate_schemata(schemata.iter().collect()),
             "result of validation with schemata should be true"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3782_incorrect_decimal_resolving() -> TestResult {
+        let schema = r#"{"name": "decimalSchema", "logicalType": "decimal", "type": "fixed", "precision": 8, "scale": 0, "size": 8}"#;
+
+        let avro_value = Value::Decimal(Decimal::from(
+            BigInt::from(12345678u32).to_signed_bytes_be(),
+        ));
+        let schema = Schema::parse_str(schema)?;
+        let resolve_result = avro_value.resolve(&schema);
+        assert!(
+            resolve_result.is_ok(),
+            "resolve result must be ok, got: {resolve_result:?}"
         );
 
         Ok(())
