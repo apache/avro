@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -231,8 +233,59 @@ namespace Avro
             return Parse(json.Trim(), new SchemaNames(), null); // standalone schema, so no enclosing namespace
         }
 
+
         /// <summary>
-        /// 
+        ///
+        /// </summary>
+        /// <param name="schemaJsons"></param>
+        /// <returns></returns>
+        /// <exception cref="SchemaParseException"></exception>
+        public static IDictionary<string, Schema> ParseAll(IEnumerable<string> schemaJsons)
+        {
+            var schemaNames = new SchemaNames();
+
+            var remainingSchemasToParse = schemaJsons.ToList();
+            int retriesRemaining = 20;
+            var parsedSchemasByName = new Dictionary<string, Schema>();
+            while (remainingSchemasToParse.Any() && retriesRemaining > 0)
+            {
+                var failedSchemaJsons = new List<string>();
+                foreach (string schemaJson in remainingSchemasToParse)
+                {
+                    var successfulSchemaNames = schemaNames.Names
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value);
+                    try
+                    {
+                        var schema = Parse(schemaJson, schemaNames);
+                        parsedSchemasByName[schema.Name] = schema;
+                    }
+                    catch (SchemaParseException e)
+                    {
+                        Console.WriteLine(
+                            $"Failed to parse schema with exception {e.Message}, its dependencies may not have been parsed yet and will be retried.");
+                        foreach (var failedSchemaName in schemaNames.Names.Except(successfulSchemaNames))
+                        {
+                            schemaNames.Names.Remove(failedSchemaName);
+                        }
+                        retriesRemaining--;
+                        failedSchemaJsons.Add(schemaJson);
+                    }
+                }
+
+                remainingSchemasToParse = failedSchemaJsons.ToList();
+            }
+            if (retriesRemaining == 0)
+            {
+                throw new SchemaParseException($"Failed to parse schema(s) after 20 attempts. Please ensure your schemas are valid and do not have circular dependencies.");
+            }
+
+            return parsedSchemasByName;
+        }
+
+        /// <summary>
+        ///
         /// </summary>
         /// <param name="json"></param>
         /// <param name="schemaNames">schemas already read</param>
