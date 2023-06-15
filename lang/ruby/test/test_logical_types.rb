@@ -125,7 +125,6 @@ class TestLogicalTypes < Test::Unit::TestCase
   end
 
   def test_bytes_decimal_default
-    Avro.disable_field_default_validation = true
     sales_schema = Avro::Schema.parse('{
         "type": "record",
         "name": "Order",
@@ -190,7 +189,6 @@ class TestLogicalTypes < Test::Unit::TestCase
     encoded = encode(sales_record, sales_tax_schema)
     tax_nil_record = {"sales" => BigDecimal("12.34"), "tax" => nil}
     assert_equal tax_nil_record, decode(encoded, sales_tax_schema)
-    Avro.disable_field_default_validation = false
   end
 
   def test_bytes_decimal_range_errors
