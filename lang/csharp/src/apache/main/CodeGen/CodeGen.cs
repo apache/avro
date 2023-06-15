@@ -139,14 +139,6 @@ namespace Avro
             Schemas.Add(schema);
         }
 
-        public virtual void AddSchema(string schemaText, SchemaNames names, IEnumerable<KeyValuePair<string, string>> namespaceMapping = null)
-        {
-            // Map namespaces
-            schemaText = ReplaceMappedNamespacesInSchema(schemaText, namespaceMapping);
-            Schema schema = Schema.Parse(schemaText, names);
-            Schemas.Add(schema);
-        }
-
         /// <summary>
         /// Adds a namespace object for the given name into the dictionary if it doesn't exist yet.
         /// </summary>
@@ -1144,11 +1136,6 @@ namespace Avro
             }
         }
 
-        public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
-        {
-            WriteTypes(outputdir, CompileUnit.Namespaces, skipDirectories);
-        }
-
         /// <summary>
         /// Gets names and generated code of the schema(s) types
         /// </summary>
@@ -1198,7 +1185,7 @@ namespace Avro
         /// </summary>
         /// <param name="outputdir">name of directory to write to.</param>
         /// <param name="skipDirectories">skip creation of directories based on schema namespace</param>
-        public virtual void WriteTypes(string outputdir, CodeNamespaceCollection nsc, bool skipDirectories = false)
+        public virtual void WriteTypes(string outputdir, bool skipDirectories = false)
         {
             var cscp = new CSharpCodeProvider();
 
@@ -1207,6 +1194,7 @@ namespace Avro
             opts.IndentString = "\t";
             opts.BlankLinesBetweenMembers = false;
 
+            CodeNamespaceCollection nsc = CompileUnit.Namespaces;
             for (int i = 0; i < nsc.Count; i++)
             {
                 var ns = nsc[i];

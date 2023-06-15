@@ -130,7 +130,7 @@ namespace Avro
             }
 
             if (msFiles.Any())
-                return GenSchema(msFiles, outputDir, namespaceMapping, skipDirectoriesCreation);
+                return GenSchema(msFiles, outputDir, namespaceMapping);
 
 
             // Ensure we got all the command line arguments we need
@@ -221,36 +221,70 @@ namespace Avro
             return 0;
         }
 
-        static int GenSchema(List<string> msfiles, string outdir, IEnumerable<KeyValuePair<string, string>> namespaceMapping, bool skipDirectories)
+        static int GenSchema(List<string> infiles, string outdir, IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
             {
                 var sn = new SchemaNames();
                 CodeGen codegen = new CodeGen();
+                var targetNs = new List<string>();
 
-                if (msfiles.Count == 1)
+                if (infiles.Count == 1)
                 {
-                    FileAttributes attr = System.IO.File.GetAttributes(msfiles.First());
+                    FileAttributes attr = System.IO.File.GetAttributes(infiles.First());
                     if (attr.HasFlag(FileAttributes.Directory))
                     {
-                        var dirInfo = new DirectoryInfo(msfiles.First());
-                        msfiles = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly)
+                        var dirInfo = new DirectoryInfo(infiles.First());
+                        infiles = dirInfo.GetFiles("*.*", SearchOption.TopDirectoryOnly)
                                          .OrderBy(f => f.Name)
                                          .Select(f => f.FullName)
                                          .ToList();
                     }
                 }
 
-                var mergedSchema = MergeSchemaFiles(msfiles);
+                var toRetry = new List<string>();
+                foreach (var infile in infiles)
+                {
+                    FileAttributes attr = System.IO.File.GetAttributes(infile);
+                    if (attr.HasFlag(FileAttributes.Directory))
+                        continue;
 
-                codegen.AddSchema(mergedSchema, sn, namespaceMapping);
+                    Console.WriteLine($"Loading Schema from: [{infile}]");
+                    string text = System.IO.File.ReadAllText(infile);
+
+                    //try
+                    {
+                        Schema schema = Schema.Parse(text, sn);
+                        var namespaces = GetNamespacesFromSchema(schema);
+
+                        foreach (var n in namespaces)
+                        {
+                            if (!targetNs.Contains(n))
+                            {
+                                targetNs.Add(n);
+                            }
+                        }
+
+                        codegen.AddSchema(schema);
+                    }
+                    //catch(Avro.SchemaParseException e)
+                    //{
+                    //    if (toRetry.Contains(infile))
+                    //        toRetry.Remove(infile);
+                    //    else
+                    //        toRetry.Add(infile);
+                    //}
+                }
+
+                foreach (var entry in namespaceMapping)
+                    codegen.NamespaceMapping[entry.Key] = entry.Value;
 
                 Console.WriteLine("Generating code ...");
                 codegen.GenerateCode();
 
                 Console.WriteLine($"Output code to [{Path.GetFullPath(outdir)}]");
 
-                codegen.WriteTypes(outdir, skipDirectories);
+                codegen.WriteTypes(outdir);
 
                 return 0;
             }
@@ -259,27 +293,6 @@ namespace Avro
                 Console.WriteLine("Exception occurred. " + ex.Message);
                 return 1;
             }
-        }
-
-        private static string MergeSchemaFiles(List<string> files)
-        {
-            var schemas = new List<string>();
-
-            var schemaBegin = "[";
-            var schemaEnd = "]";
-
-            foreach (var inFile in files)
-            {
-                Console.WriteLine($"Loading schema from: [{inFile}]");
-                var schema = System.IO.File.ReadAllText(inFile).Trim();
-
-                schema = schema.TrimStart(schemaBegin.ToCharArray());
-                schema = schema.TrimEnd(schemaEnd.ToCharArray());
-
-                schemas.Add(schema);
-            }
-
-            return schemaBegin + string.Join(",", schemas) + schemaEnd;
         }
 
         private static List<string> GetNamespacesFromSchema(Schema schema)
