@@ -429,7 +429,7 @@ module Avro
           raise AvroError, fail_msg
         end
 
-        field_schema.logical_type ? field_schema.type_adapter.decode(datum) : datum
+        field_schema.type_adapter.decode(datum)
       end
 
       def skip_data(writers_schema, decoder)
