@@ -197,7 +197,7 @@ SCHEMAS_TO_VALIDATE = tuple(
         ),
         (
             [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
-            datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=avro.timezones.utc),
+            datetime.datetime(1000, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc),
         ),
         (
             [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
