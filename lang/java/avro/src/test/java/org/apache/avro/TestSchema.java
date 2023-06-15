@@ -400,7 +400,7 @@ public class TestSchema {
   }
 
   @Test
-  void testContentAfterAvsc() throws Exception {
+  public void testContentAfterAvsc() throws Exception {
     Schema.Parser parser = new Schema.Parser();
     parser.setValidate(true);
     parser.setValidateDefaults(true);
@@ -408,7 +408,7 @@ public class TestSchema {
   }
 
   @Test
-  void testContentAfterAvscInInputStream() throws Exception {
+  public void testContentAfterAvscInInputStream() throws Exception {
     Schema.Parser parser = new Schema.Parser();
     parser.setValidate(true);
     parser.setValidateDefaults(true);
@@ -419,7 +419,7 @@ public class TestSchema {
   }
 
   @Test
-  void testContentAfterAvscInFile() throws Exception {
+  public void testContentAfterAvscInFile() throws Exception {
     File avscFile = Files.createTempFile("testContentAfterAvscInFile", null).toFile();
     try (FileWriter writer = new FileWriter(avscFile)) {
       writer.write("{\"type\": \"string\"}; DROP TABLE STUDENTS");

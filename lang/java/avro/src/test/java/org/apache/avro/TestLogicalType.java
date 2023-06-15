@@ -290,7 +290,7 @@ public class TestLogicalType {
 
   @Test
   public void testRegisterLogicalTypeFactoryByServiceLoader() {
-    assertThat(LogicalTypes.getCustomRegisteredTypes(),
+    MatcherAssert.assertThat(LogicalTypes.getCustomRegisteredTypes(),
         IsMapContaining.hasEntry(equalTo("custom"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
   }
 
