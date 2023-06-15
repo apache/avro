@@ -15,16 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.avro;
 
-public class DummyLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
-  @Override
-  public LogicalType fromSchema(Schema schema) {
-    return LogicalTypes.date();
+import java.util.Objects;
+
+public final class CustomType {
+  private final String name;
+
+  public CustomType(CharSequence name) {
+    this.name = name.toString();
+  }
+
+  public String getName() {
+    return name;
   }
 
   @Override
-  public String getTypeName() {
-    return "service-example";
+  public int hashCode() {
+    return Objects.hashCode(name);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof CustomType && name.equals(((CustomType) obj).name);
+  }
+
+  @Override
+  public String toString() {
+    return "CustomType{name='" + name + "'}";
   }
 }

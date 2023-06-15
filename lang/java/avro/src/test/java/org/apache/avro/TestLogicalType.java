@@ -288,9 +288,9 @@ public class TestLogicalType {
   }
 
   @Test
-  void registerLogicalTypeFactoryByServiceLoader() {
+  public void testRegisterLogicalTypeFactoryByServiceLoader() {
     assertThat(LogicalTypes.getCustomRegisteredTypes(),
-        IsMapContaining.hasEntry(equalTo("service-example"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
+        IsMapContaining.hasEntry(equalTo("custom"), instanceOf(LogicalTypes.LogicalTypeFactory.class)));
   }
 
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
