@@ -692,6 +692,8 @@ pub struct EnumSchema {
     pub doc: Documentation,
     /// The set of symbols of the schema
     pub symbols: Vec<String>,
+    /// An optional default symbol used for compatibility
+    pub default: Option<String>,
     /// The custom attributes of the schema
     pub attributes: BTreeMap<String, Value>,
 }
@@ -1486,11 +1488,21 @@ impl Parser {
             existing_symbols.insert(symbol);
         }
 
+        let mut default: Option<String> = None;
+        if let Some(value) = complex.get("default") {
+            if let Value::String(ref s) = *value {
+                default = Some(s.clone());
+            } else {
+                return Err(Error::EnumDefaultWrongType(value.clone()));
+            }
+        }
+
         let schema = Schema::Enum(EnumSchema {
             name,
             aliases: aliases.clone(),
             doc: complex.doc(),
             symbols,
+            default,
             attributes: self.get_custom_attributes(complex, vec!["symbols"]),
         });
 
@@ -2828,6 +2840,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -2847,6 +2860,7 @@ mod tests {
                         aliases: None,
                         doc: None,
                         symbols: vec!["one".to_string(), "two".to_string(), "three".to_string()],
+                        default: None,
                         attributes: Default::default(),
                     }),
                     order: RecordFieldOrder::Ascending,
@@ -2964,6 +2978,7 @@ mod tests {
                 "clubs".to_owned(),
                 "hearts".to_owned(),
             ],
+            default: None,
             attributes: Default::default(),
         });
 
@@ -4751,6 +4766,40 @@ mod tests {
             parse_result
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3772_enum_default_wrong_type() -> TestResult {
+        let schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                "type": "enum",
+                "name": "suit",
+                "symbols": ["diamonds", "spades", "clubs", "hearts"],
+                "default": 123
+              }
+            }
+          ]
+        }
+        "#;
+
+        match Schema::parse_str(schema) {
+            Err(err) => {
+                assert_eq!(
+                    err.to_string(),
+                    "Default value for enum must be a string! Got: 123"
+                );
+            }
+            _ => panic!("Expected an error"),
+        }
         Ok(())
     }
 }
