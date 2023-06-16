@@ -17,7 +17,7 @@
 
 use crate::{
     schema::{Name, SchemaKind},
-    types::ValueKind,
+    types::ValueKind, decimal::DecimalExtractionError,
 };
 use std::fmt;
 
@@ -445,6 +445,9 @@ pub enum Error {
 
     #[error("Invalid Avro data! Cannot read codec type from value that is not Value::Bytes.")]
     BadCodecMetadata,
+
+    #[error("Decimal could not be extracted")]
+    DecimalExtraction(#[source] DecimalExtractionError)
 }
 
 impl serde::ser::Error for Error {

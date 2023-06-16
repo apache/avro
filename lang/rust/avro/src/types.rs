@@ -717,6 +717,7 @@ impl Value {
                     Ok(Value::Decimal(Decimal::from(bytes)))
                 }
             }
+
             other => Err(Error::ResolveDecimal(other.into())),
         }
     }
