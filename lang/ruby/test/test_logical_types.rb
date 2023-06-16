@@ -124,6 +124,113 @@ class TestLogicalTypes < Test::Unit::TestCase
     end
   end
 
+  def test_logical_type_default_value
+    sales_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            }  
+        ]
+    }')
+
+    sales_tax_schema = Avro::Schema.parse('{
+        "type": "record",
+        "name": "Order",
+        "fields" : [
+            {
+                "name": "sales",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            },
+            {
+                "name": "tax",
+                "type": [
+                    {
+                        "type": "bytes",
+                        "logicalType": "decimal",
+                        "precision": 4,
+                        "scale": 2
+                    },
+                    "null"
+                ],
+                "default": "\u0000"
+            },
+            {
+                "name": "invoice_date",
+                "type": [
+                    {
+                        "type": "int",
+                        "logicalType": "date"
+                    },
+                    "null"
+                ],
+                "default": 0
+            },
+            {
+                "name": "invoice_time",
+                "type": [
+                    {
+                        "type": "int",
+                        "logicalType": "time-millis"
+                    },
+                    "null"
+                ],
+                "default": 0
+            },
+            {
+                "name": "created_at",
+                "type": [
+                    {
+                        "type": "long",
+                        "logicalType": "timestamp-millis"
+                    },
+                    "null"
+                ],
+                "default": 0
+            }
+        ]
+    }')
+
+    sales_record = {"sales" => BigDecimal("12.34")}
+    sales_tax_record = {
+      "sales" => BigDecimal("12.34"),
+      "tax" => BigDecimal("0.000"),
+      "invoice_date" => Time.at(0).to_date,
+      # time-millis is not supported
+      "invoice_time" => 0,
+      "created_at" => Time.at(0).utc,
+    }
+    encoded = encode(sales_record, sales_schema)
+    assert_equal sales_record, decode(encoded, sales_schema)
+    # decode with different schema applies default
+    assert_equal sales_tax_record, decode(encoded, sales_tax_schema, writer_schema: sales_schema)
+
+    # decode with same schema does not apply default, since it is nullable during encode
+    encoded = encode(sales_record, sales_tax_schema)
+    tax_nil_record = {"sales" => BigDecimal("12.34"), "tax" => nil, "invoice_date" => nil, "invoice_time" => nil, "created_at" => nil}
+    assert_equal tax_nil_record, decode(encoded, sales_tax_schema)
+  end
+
   def test_bytes_decimal_range_errors
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2 }
@@ -243,11 +350,12 @@ class TestLogicalTypes < Test::Unit::TestCase
     buffer.string
   end
 
-  def decode(encoded, schema)
+  def decode(encoded, schema, writer_schema: nil)
+    writer_schema ||= schema
     buffer = StringIO.new(encoded)
     decoder = Avro::IO::BinaryDecoder.new(buffer)
 
-    datum_reader = Avro::IO::DatumReader.new(schema, schema)
+    datum_reader = Avro::IO::DatumReader.new(writer_schema, schema)
     datum_reader.read(decoder)
   end
 
