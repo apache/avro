@@ -24,6 +24,7 @@ import io
 import itertools
 import json
 import unittest
+import uuid
 import warnings
 from typing import BinaryIO, Collection, Dict, List, Optional, Tuple, Union, cast
 
@@ -184,6 +185,23 @@ SCHEMAS_TO_VALIDATE = tuple(
         (
             {"type": "record", "name": "ns.long", "fields": [{"name": "value", "type": "int"}, {"name": "next", "type": ["null", "ns.long"]}]},
             {"value": 0, "next": {"value": 1, "next": None}},
+        ),
+        # Optional logical types.
+        (
+            [{"logicalType": "uuid", "type": "string"}, "null"],
+            None,
+        ),
+        (
+            [{"logicalType": "uuid", "type": "string"}, "null"],
+            uuid.uuid4().hex,
+        ),
+        (
+            [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
+            datetime.datetime(1000, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc),
+        ),
+        (
+            [{"type": "long", "logicalType": "timestamp-millis"}, "null"],
+            None,
         ),
     )
 )

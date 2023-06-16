@@ -18,11 +18,6 @@
 
 package org.apache.avro.generic;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -35,8 +30,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.CustomType;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -50,6 +47,11 @@ import org.apache.avro.io.DatumWriter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class TestGenericLogicalTypes {
 
@@ -401,5 +403,54 @@ public class TestGenericLogicalTypes {
     File test = write(GENERIC, timestampSchema, i1, i2);
     assertEquals(expected, read(GenericData.get().createDatumReader(timestampSchema), test),
         "Should read LocalDateTime as longs");
+  }
+
+  @Test
+  public void testReadAutomaticallyRegisteredUri() throws IOException {
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(stringSchema, GenericData.StringType.String);
+    LogicalType customType = LogicalTypes.getCustomRegisteredTypes().get("custom").fromSchema(stringSchema);
+    Schema customTypeSchema = customType.addToSchema(Schema.create(Schema.Type.STRING));
+
+    CustomType ct1 = new CustomType("foo");
+    CustomType ct2 = new CustomType("bar");
+    List<CustomType> expected = Arrays.asList(ct1, ct2);
+
+    Conversion<CustomType> conversion = GENERIC.getConversionFor(customType);
+
+    // use the conversion directly instead of relying on the write side
+    CharSequence ct1String = conversion.toCharSequence(ct1, stringSchema, customType);
+    CharSequence ct2String = conversion.toCharSequence(ct2, stringSchema, customType);
+
+    File test = write(stringSchema, ct1String, ct2String);
+    assertEquals(expected, read(GENERIC.createDatumReader(customTypeSchema), test),
+        "Should convert string to CustomType");
+  }
+
+  @Test
+  public void testWriteAutomaticallyRegisteredUri() throws IOException {
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    GenericData.setStringType(stringSchema, GenericData.StringType.String);
+    LogicalType customType = LogicalTypes.getCustomRegisteredTypes().get("custom").fromSchema(stringSchema);
+    Schema customTypeSchema = customType.addToSchema(Schema.create(Schema.Type.STRING));
+
+    CustomType ct1 = new CustomType("foo");
+    CustomType ct2 = new CustomType("bar");
+
+    Conversion<CustomType> conversion = GENERIC.getConversionFor(customType);
+
+    // use the conversion directly instead of relying on the write side
+    CharSequence ct1String = conversion.toCharSequence(ct1, stringSchema, customType);
+    CharSequence ct2String = conversion.toCharSequence(ct2, stringSchema, customType);
+    List<CharSequence> expected = Arrays.asList(ct1String, ct2String);
+
+    File test = write(GENERIC, customTypeSchema, ct1, ct2);
+
+    // Note that this test still cannot read strings using the logical type
+    // schema, as all GenericData instances have the logical type and the
+    // conversions loaded. That's why this final assert is slightly different.
+
+    assertEquals(expected, read(GenericData.get().createDatumReader(stringSchema), test),
+        "Should read CustomType as strings");
   }
 }

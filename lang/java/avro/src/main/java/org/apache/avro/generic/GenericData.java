@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -117,11 +118,23 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
+    loadConversions();
   }
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() {
     return classLoader;
+  }
+
+  /**
+   * Use the Java 6 ServiceLoader to load conversions.
+   *
+   * @see #addLogicalTypeConversion(Conversion)
+   */
+  private void loadConversions() {
+    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
+      addLogicalTypeConversion(conversion);
+    }
   }
 
   private Map<String, Conversion<?>> conversions = new HashMap<>();
@@ -134,19 +147,17 @@ public class GenericData {
 
   /**
    * Registers the given conversion to be used when reading and writing with this
-   * data model.
+   * data model. Conversions can also be registered automatically, as documented
+   * on the class {@link Conversion Conversion&lt;T&gt;}.
    *
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(type);
-    if (conversions == null) {
-      conversions = new LinkedHashMap<>();
-      conversionsByClass.put(type, conversions);
-    }
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
+        k -> new LinkedHashMap<>());
+    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
@@ -187,11 +198,11 @@ public class GenericData {
    * @return the conversion for the logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+  public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
     if (logicalType == null) {
       return null;
     }
-    return (Conversion<Object>) conversions.get(logicalType.getName());
+    return (Conversion<T>) conversions.get(logicalType.getName());
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
