@@ -624,9 +624,11 @@ impl Value {
             Schema::Union(ref inner) => {
                 self.resolve_union(inner, names, enclosing_namespace, field_default)
             }
-            Schema::Enum(EnumSchema { ref symbols, .. }) => {
-                self.resolve_enum(symbols, field_default)
-            }
+            Schema::Enum(EnumSchema {
+                ref symbols,
+                ref default,
+                ..
+            }) => self.resolve_enum(symbols, default, field_default),
             Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
             Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
@@ -848,14 +850,15 @@ impl Value {
     fn resolve_enum(
         self,
         symbols: &[String],
-        field_default: &Option<JsonValue>,
+        enum_default: &Option<String>,
+        _field_default: &Option<JsonValue>,
     ) -> Result<Self, Error> {
         let validate_symbol = |symbol: String, symbols: &[String]| {
             if let Some(index) = symbols.iter().position(|item| item == &symbol) {
                 Ok(Value::Enum(index as u32, symbol))
             } else {
-                match field_default {
-                    Some(JsonValue::String(default)) => {
+                match enum_default {
+                    Some(default) => {
                         if let Some(index) = symbols.iter().position(|item| item == default) {
                             Ok(Value::Enum(index as u32, default.clone()))
                         } else {
@@ -973,10 +976,15 @@ impl Value {
                     Some(value) => value,
                     None => match field.default {
                         Some(ref value) => match field.schema {
-                            Schema::Enum(EnumSchema { ref symbols, .. }) => {
-                                Value::from(value.clone())
-                                    .resolve_enum(symbols, &field.default.clone())?
-                            }
+                            Schema::Enum(EnumSchema {
+                                ref symbols,
+                                ref default,
+                                ..
+                            }) => Value::from(value.clone()).resolve_enum(
+                                symbols,
+                                default,
+                                &field.default.clone(),
+                            )?,
                             Schema::Union(ref union_schema) => {
                                 let first = &union_schema.variants()[0];
                                 // NOTE: this match exists only to optimize null defaults for large
@@ -1236,6 +1244,7 @@ mod tests {
                 "diamonds".to_string(),
                 "clubs".to_string(),
             ],
+            default: None,
             attributes: Default::default(),
         });
 
@@ -1282,6 +1291,7 @@ mod tests {
                 "clubs".to_string(),
                 "spades".to_string(),
             ],
+            default: None,
             attributes: Default::default(),
         });
 

@@ -310,6 +310,9 @@ pub enum Error {
     #[error("Duplicate enum symbol {0}")]
     EnumSymbolDuplicate(String),
 
+    #[error("Default value for enum must be a string! Got: {0}")]
+    EnumDefaultWrongType(serde_json::Value),
+
     #[error("No `items` in array")]
     GetArrayItemsField,
 

@@ -222,6 +222,7 @@ fn get_data_enum_schema_def(
                 aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*],
+                default: None,
                 attributes: Default::default(),
             })
         })
