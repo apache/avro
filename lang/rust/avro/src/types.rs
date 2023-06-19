@@ -693,19 +693,8 @@ impl Value {
             Schema::Bytes => (),
             _ => return Err(Error::ResolveDecimalSchema(inner.into())),
         };
-        match self {
-            Value::Decimal(num) => {
-                let num_bytes = num.len();
-                if max_prec_for_len(num_bytes)? < precision {
-                    Err(Error::ComparePrecisionAndSize {
-                        precision,
-                        num_bytes,
-                    })
-                } else {
-                    Ok(Value::Decimal(num))
-                }
-                // check num.bits() here
-            }
+        let decimal = match self {
+            Value::Decimal(decimal) => Ok(decimal),
             Value::Fixed(_, bytes) | Value::Bytes(bytes) => {
                 if max_prec_for_len(bytes.len())? < precision {
                     Err(Error::ComparePrecisionAndSize {
@@ -714,12 +703,26 @@ impl Value {
                     })
                 } else {
                     // precision and scale match, can we assume the underlying type can hold the data?
-                    Ok(Value::Decimal(Decimal::from(bytes)))
+                    Ok(Decimal::from(bytes))
                 }
             }
+            Value::Float(float) => Ok(Decimal::try_from_f32(float)?),
+            Value::Double(double) => Ok(Decimal::try_from_f64(double)?),
+            Value::String(string) => Ok(string.parse()?),
 
             other => Err(Error::ResolveDecimal(other.into())),
+        }?;
+
+        let size = decimal.inner_byte_size();
+        if max_prec_for_len(size as usize)? > precision {
+            return Err(Error::ComparePrecisionAndSize {
+                precision,
+                num_bytes: size as usize,
+            });
         }
+        // check num.bits() here
+
+        Ok(decimal.into())
     }
 
     fn resolve_date(self) -> Result<Self, Error> {
@@ -2789,6 +2792,31 @@ Field with name '"b"' is not a member of the map items"#,
             resolve_result.is_ok(),
             "resolve result must be ok, got: {resolve_result:?}"
         );
+
+        Ok(())
+    }
+
+    // this test only checks some simple cases of "extra" resolving algorithms. More tests could be found in the `decimal` module.
+    #[test]
+    fn test_avro_3781_decimal_resolving_ways() -> TestResult {
+        fn check(value: Value) -> TestResult {
+            let schema = r#"{"name": "decimalSchema", "logicalType": "decimal", "type": "fixed", "precision": 8, "scale": 4, "size": 8}"#;
+            let schema = Schema::parse_str(schema)?;
+            let resolve_result = value.resolve(&schema);
+            assert!(
+                resolve_result.is_ok(),
+                "resolve result must be ok, got: {resolve_result:?}"
+            );
+            Ok(())
+        }
+
+        let str_value = Value::String("1234.123".to_string());
+        let f32_value = Value::Float(1234.123);
+        let f64_value = Value::Double(1234.1234567);
+
+        check(str_value)?;
+        check(f32_value)?;
+        check(f64_value)?;
 
         Ok(())
     }

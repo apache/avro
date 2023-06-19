@@ -77,6 +77,15 @@ impl Decimal {
         let string = num.to_string();
         string.parse()
     }
+
+    /// Returns byte size of the inner `BigInt`.
+    pub(crate) fn inner_byte_size(&self) -> u64 {
+        let mut bits = self.value.bits();
+        if bits % 8 != 0 {
+            bits += 8;
+        }
+        bits / 8
+    }
 }
 
 impl From<Decimal> for BigInt {
