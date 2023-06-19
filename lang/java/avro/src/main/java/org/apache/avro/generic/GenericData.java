@@ -17,25 +17,6 @@
  */
 package org.apache.avro.generic;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.time.temporal.Temporal;
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -57,9 +38,26 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.avro.util.springframework.ConcurrentReferenceHashMap;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.temporal.Temporal;
+import java.util.AbstractList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.apache.avro.util.springframework.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
@@ -118,6 +116,7 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
+    this.conversions = new ConversionsContainer(classLoader);
   }
 
   /** Return the class loader that's used (by subclasses). */
@@ -125,7 +124,7 @@ public class GenericData {
     return classLoader;
   }
 
-  private final ConversionsContainer conversions = new ConversionsContainer();
+  private final ConversionsContainer conversions;
 
   public Collection<Conversion<?>> getConversions() {
     return this.conversions.getConversions();

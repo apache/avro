@@ -30,7 +30,7 @@ class ConversionsContainerTest {
 
   @Test
   void getConversions() {
-    ConversionsContainer conversions = new ConversionsContainer();
+    ConversionsContainer conversions = new ConversionsContainer(Thread.currentThread().getContextClassLoader());
 
     // test for empty container.
     Assertions.assertNull(conversions.getConversionByClass(String.class));

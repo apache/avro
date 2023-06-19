@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 public class ConversionsContainer {
 
@@ -51,6 +52,21 @@ public class ConversionsContainer {
 
   public Collection<Conversion<?>> getConversions() {
     return conversions.values();
+  }
+
+  public ConversionsContainer(ClassLoader classLoader) {
+    this.loadConversions(classLoader);
+  }
+
+  /**
+   * Use the Java 6 ServiceLoader to load conversions.
+   *
+   * @see #addLogicalTypeConversion(Conversion)
+   */
+  private void loadConversions(ClassLoader classLoader) {
+    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
+      addLogicalTypeConversion(conversion);
+    }
   }
 
   /**
@@ -107,11 +123,11 @@ public class ConversionsContainer {
    * @return the conversion for the logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+  public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
     if (logicalType == null) {
       return null;
     }
-    return (Conversion<Object>) conversions.get(logicalType.getName());
+    return (Conversion<T>) conversions.get(logicalType.getName());
   }
 
   public ClassConversions forClass(Class<?> clazz) {
