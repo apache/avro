@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::str::FromStr;
+
 use crate::{AvroResult, Error};
 use num_bigint::{BigInt, Sign};
 use thiserror::Error;
@@ -58,6 +60,22 @@ impl Decimal {
     fn from_bigint(bigint: BigInt) -> Self {
         let len = (bigint.bits() as f64 / 8.0).ceil() as usize;
         Self { value: bigint, len }
+    }
+
+    // NOTE: conversion implementations below might be not that performant.
+    // It might be best to rewrite them using bits extraction and float number unpacking.
+
+    /// Converts from f32 by converting number to string firstly, then parsing it.
+    pub(crate) fn try_from_f32(num: f32) -> Result<Self, DecimalParsingError> {
+        if !num.is_finite() {}
+        let string = num.to_string();
+        string.parse()
+    }
+
+    /// Converts from f64 by converting number to string firstly, then parsing it.
+    pub(crate) fn try_from_f64(num: f64) -> Result<Self, DecimalParsingError> {
+        let string = num.to_string();
+        string.parse()
     }
 }
 
@@ -111,7 +129,7 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
     }
 }
 #[derive(Debug, Copy, Clone, Error, PartialEq)]
-pub enum DecimalExtractionError {
+pub enum DecimalParsingError {
     #[error("Exponent of decimal number is invalid - either incomplete or malformed")]
     MalformedExponent,
 
@@ -120,10 +138,20 @@ pub enum DecimalExtractionError {
 
     #[error("Failed to initialize bigint to represent decimal")]
     BigIntInitializeFailed,
+
+    #[error("Float is infinite, so could not be represented as a decimal")]
+    InfiniteFloat,
+}
+
+impl FromStr for Decimal {
+    type Err = DecimalParsingError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        parse_decimal(s)
+    }
 }
 
 /// Extract decimal as bigint from string representation of floating point number.
-fn parse_decimal(source: &str) -> Result<Decimal, DecimalExtractionError> {
+fn parse_decimal(source: &str) -> Result<Decimal, DecimalParsingError> {
     let mut be_digits = Vec::<u8>::new();
     let mut sign = Sign::Plus;
 
@@ -147,23 +175,23 @@ fn parse_decimal(source: &str) -> Result<Decimal, DecimalExtractionError> {
             (_, '.') => {
                 // dot was already met.
                 if dot_position.is_some() {
-                    return Err(DecimalExtractionError::UnexpectedSymbol('.'));
+                    return Err(DecimalParsingError::UnexpectedSymbol('.'));
                 }
                 dot_position = Some(be_digits.len());
             }
             (index, 'e' | 'E') => {
                 // no digits after exponent.
                 if index == source.len() - 1 {
-                    return Err(DecimalExtractionError::MalformedExponent);
+                    return Err(DecimalParsingError::MalformedExponent);
                 }
                 let parsed_exponent: i64 = source[index + 1..]
                     .parse()
-                    .map_err(|_| DecimalExtractionError::MalformedExponent)?;
+                    .map_err(|_| DecimalParsingError::MalformedExponent)?;
                 exponent = Some(parsed_exponent);
                 // we must exist the loop, as exponent is always the end of the float.
                 break;
             }
-            (_, symbol) => return Err(DecimalExtractionError::UnexpectedSymbol(symbol)),
+            (_, symbol) => return Err(DecimalParsingError::UnexpectedSymbol(symbol)),
         }
     }
 
@@ -187,7 +215,7 @@ fn parse_decimal(source: &str) -> Result<Decimal, DecimalExtractionError> {
     be_digits.extend(std::iter::repeat(0).take(trailing_zeroes));
 
     let bigint = BigInt::from_radix_be(sign, &be_digits, 10)
-        .ok_or(DecimalExtractionError::BigIntInitializeFailed)?;
+        .ok_or(DecimalParsingError::BigIntInitializeFailed)?;
 
     Ok(Decimal::from_bigint(bigint))
 }
@@ -221,25 +249,64 @@ mod tests {
         Ok(())
     }
 
+    #[derive(Debug)]
+    struct TestCase<'a> {
+        source: &'a str,
+        expected: Option<&'a str>,
+    }
+
+    impl<'a> TestCase<'a> {
+        fn check_str_parsing(&self) {
+            let result = parse_decimal(self.source).map(|result| result.value.to_string());
+            assert_eq!(
+                result.clone().ok(),
+                self.expected.map(|value| value.to_string()),
+                "test case({self:?}) failed, parsing result is: {result:?}"
+            );
+        }
+
+        fn check_f32_parsing(&self) {
+            let parsed: f32 = self.source.parse().unwrap();
+            let result = Decimal::try_from_f32(parsed).map(|result| result.value.to_string());
+            assert_eq!(
+                result.clone().ok(),
+                self.expected.map(|value| value.to_string()),
+                "test case({self:?}) failed, parsing result is: {result:?}"
+            );
+        }
+
+        fn check_f64_parsing(&self) {
+            let parsed: f64 = self.source.parse().unwrap();
+            let result = Decimal::try_from_f64(parsed).map(|result| result.value.to_string());
+            assert_eq!(
+                result.clone().ok(),
+                self.expected.map(|value| value.to_string()),
+                "test case({self:?}) failed, parsing result is: {result:?}"
+            );
+        }
+    }
+
+    const INVALID_FLOATS_TESTCASES: [TestCase; 4] = [
+        TestCase {
+            source: "1.ee",
+            expected: None,
+        },
+        TestCase {
+            source: "+-+1.2",
+            expected: None,
+        },
+        TestCase {
+            source: "NaN",
+            expected: None,
+        },
+        TestCase {
+            source: "inf",
+            expected: None,
+        },
+    ];
+
     #[test]
-    fn test_parse_decimal_from_string() -> TestResult {
-        #[derive(Debug)]
-        struct TestCase<'a> {
-            source: &'a str,
-            expected: Option<&'a str>,
-        }
-
-        impl<'a> TestCase<'a> {
-            fn exec(&self) {
-                let result = parse_decimal(self.source).map(|result| result.value.to_string());
-                assert_eq!(
-                    result.clone().ok(),
-                    self.expected.map(|value| value.to_string()),
-                    "test case({self:?}) failed, parsing result is: {result:?}"
-                );
-            }
-        }
-
+    fn test_str_parsing() -> TestResult {
         // these are two "compatible" decimals - they have the same BigInt representation.
         let huge_decimal = format!("1123456789{}", "0".repeat(10_000));
         let decimal_with_explicit_huge_scale = format!("1.123456789{}", "0".repeat(10_000));
@@ -294,22 +361,65 @@ mod tests {
         ];
 
         for case in success_cases {
-            case.exec()
+            case.check_str_parsing()
         }
 
-        let failures = vec![
+        for case in INVALID_FLOATS_TESTCASES.iter() {
+            case.check_str_parsing()
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_floats_parsing() -> TestResult {
+        let success_cases = vec![
             TestCase {
-                source: "1.ee",
-                expected: None,
+                source: "123",
+                expected: Some("123"),
             },
             TestCase {
-                source: "+-+1.2",
-                expected: None,
+                source: "1.1",
+                expected: Some("11"),
+            },
+            // even malformed float ideally should be working, as, for example, f64 would allow that.
+            TestCase {
+                source: "000001.1",
+                expected: Some("11"),
+            },
+            TestCase {
+                source: "1.",
+                expected: Some("1"),
+            },
+            TestCase {
+                source: ".1",
+                expected: Some("1"),
+            },
+            TestCase {
+                source: "1e5",
+                expected: Some("100000"),
+            },
+            TestCase {
+                source: "1e-5",
+                expected: Some("1"),
+            },
+            TestCase {
+                source: "-12345.678",
+                expected: Some("-12345678"),
+            },
+            TestCase {
+                source: "-1e+5",
+                expected: Some("-100000"),
             },
         ];
 
-        for case in failures {
-            case.exec()
+        for case in success_cases {
+            case.check_f32_parsing();
+            case.check_f64_parsing();
+        }
+
+        for case in INVALID_FLOATS_TESTCASES.iter() {
+            case.check_str_parsing()
         }
 
         Ok(())
