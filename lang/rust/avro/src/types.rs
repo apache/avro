@@ -721,7 +721,6 @@ impl Value {
                 digits: digits_amount as usize,
             });
         }
-        // check num.bits() here
 
         Ok(decimal.into())
     }
