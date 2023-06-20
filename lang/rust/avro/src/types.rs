@@ -713,11 +713,12 @@ impl Value {
             other => Err(Error::ResolveDecimal(other.into())),
         }?;
 
-        let size = decimal.inner_byte_size();
-        if max_prec_for_len(size as usize)? > precision {
-            return Err(Error::ComparePrecisionAndSize {
+        let digits_amount = decimal.digits();
+
+        if digits_amount > precision as u64 {
+            return Err(Error::ComparePrecisionAndLength {
                 precision,
-                num_bytes: size as usize,
+                digits: digits_amount as usize,
             });
         }
         // check num.bits() here

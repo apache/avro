@@ -36,10 +36,6 @@ impl PartialEq for Decimal {
 }
 
 impl Decimal {
-    pub(crate) fn len(&self) -> usize {
-        self.len
-    }
-
     fn to_vec(&self) -> AvroResult<Vec<u8>> {
         self.to_sign_extended_bytes_with_len(self.len)
     }
@@ -78,13 +74,17 @@ impl Decimal {
         string.parse()
     }
 
-    /// Returns byte size of the inner `BigInt`.
-    pub(crate) fn inner_byte_size(&self) -> u64 {
+    /// Returns digits amount of the `self`.
+    pub(crate) fn digits(&self) -> u64 {
+        // Since `num_bigint` crate has such an absurd amount of the encapsulation,
+        // we can't really get to the amount of digits directly, so we have to use `bits` and compute length ourselves.
         let mut bits = self.value.bits();
-        if bits % 8 != 0 {
-            bits += 8;
+        // how many bits one digit occupies.
+        let digit_bits = 64;
+        if bits % digit_bits != 0 {
+            bits += digit_bits;
         }
-        bits / 8
+        bits / digit_bits
     }
 }
 

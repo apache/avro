@@ -134,6 +134,9 @@ pub enum Error {
     #[error("Precision {precision} too small to hold decimal values with {num_bytes} bytes")]
     ComparePrecisionAndSize { precision: usize, num_bytes: usize },
 
+    #[error("Precision {precision} too small to afford decimal with {digits} digits")]
+    ComparePrecisionAndLength { precision: usize, digits: usize },
+
     #[error("Cannot convert length to i32: {1}")]
     ConvertLengthToI32(#[source] std::num::TryFromIntError, usize),
 
