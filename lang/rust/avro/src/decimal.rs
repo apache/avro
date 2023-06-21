@@ -55,6 +55,12 @@ impl Decimal {
     }
 }
 
+impl From<Decimal> for BigInt {
+    fn from(decimal: Decimal) -> Self {
+        decimal.value
+    }
+}
+
 /// Gets the internal byte array representation of a referenced decimal.
 /// Usage:
 /// ```
