@@ -37,7 +37,7 @@ use uuid::Uuid;
 use crate::decimal::deserialize_big_decimal;
 
 #[inline]
-fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
+pub(crate) fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
     zag_i64(reader).map(Value::Long)
 }
 
@@ -47,7 +47,7 @@ fn decode_int<R: Read>(reader: &mut R) -> AvroResult<Value> {
 }
 
 #[inline]
-fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
+pub(crate) fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
     let len = zag_i64(reader)?;
     safe_len(usize::try_from(len).map_err(|e| Error::ConvertI64ToUsize(e, len))?)
 }

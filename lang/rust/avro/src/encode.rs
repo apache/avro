@@ -41,13 +41,13 @@ pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) -> AvroResul
     encode_internal(value, schema, rs.get_names(), &None, buffer)
 }
 
-fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
+pub(crate) fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
     let bytes = s.as_ref();
     encode_long(bytes.len() as i64, buffer);
     buffer.extend_from_slice(bytes);
 }
 
-fn encode_long(i: i64, buffer: &mut Vec<u8>) {
+pub(crate) fn encode_long(i: i64, buffer: &mut Vec<u8>) {
     zig_i64(i, buffer)
 }
 

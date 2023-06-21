@@ -15,9 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::io::Read;
 use crate::{AvroResult, Error };
 use num_bigint::{BigInt, Sign};
 use bigdecimal::{BigDecimal};
+use crate::decode::{decode_len, decode_long};
+use crate::encode::{encode_bytes, encode_long};
+use crate::types::Value;
 
 #[derive(Debug, Clone)]
 pub struct Decimal {
@@ -109,46 +113,38 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
 
 pub(crate) fn serialize_big_decimal(bg: &BigDecimal) -> Result<Vec<u8>, Error> {
     let mut buffer : Vec<u8> = Vec::new();
-    let inner: (BigInt, i64) = bg.as_bigint_and_exponent();
-    let mut bigint :(Sign, Vec<u8>) = inner.0.to_bytes_le();
+    let big_dec_inner: (BigInt, i64) = bg.as_bigint_and_exponent();
 
-    match bigint.0 {
-        Sign::Minus => { buffer.push(2u8) }
-        Sign::NoSign => { buffer.push(0u8)}
-        Sign::Plus => { buffer.push(1u8) }
-    }
-    let mut vec = bigint.1.len().to_le_bytes().to_vec();
+    let big_endian_value: Vec<u8> = big_dec_inner.0.to_signed_bytes_be();
+    encode_bytes(&big_endian_value, &mut buffer);
+    encode_long(big_dec_inner.1, &mut buffer);
 
-    buffer.append(&mut vec);
-    buffer.append(&mut bigint.1);
-
-    let scale: [u8; 8] = inner.1.to_be_bytes();
-
-    buffer.append(&mut scale.to_vec());
     Ok(buffer)
 }
 
 pub(crate) fn deserialize_big_decimal(stream: &Vec<u8>) -> Result<BigDecimal, Error>  {
-    let sign: Option<&u8> = stream.get(0);
-    let the_sign: Sign = match sign {
-        Some(0) => Sign::NoSign,
-        Some(1) => Sign::Plus,
-        Some(2) => Sign::Minus,
-        _ => Sign::NoSign
-    };
-    let x:[u8; 8] = stream[1..=8].try_into().unwrap();
-    let size: usize = usize::from_le_bytes(x);
-    let end: usize = 9 + size;
+    let mut x1: &[u8] = stream.as_slice();
+    let result: AvroResult<usize> = decode_len(&mut x1);
 
-    let unsigned_int = stream[9..end].to_vec();
-    let bigint = BigInt::from_bytes_le(the_sign, unsigned_int.as_slice());
+    if !result.is_ok() {
+        return Err(Error::BigDecimalSign);
+    }
+    let size: usize = result.unwrap();
+    let mut bufbg = vec![0u8; size];
+    x1.read_exact(&mut bufbg[..]).map_err(Error::ReadDouble)?;
 
-    let start_scale = end;
-    let end_scale = start_scale + 8;
-    let scale : i64 = i64::from_be_bytes(stream[start_scale..end_scale].try_into().unwrap());
-
-    let bg = BigDecimal::new(bigint, scale);
-    Ok(bg)
+    let scale: AvroResult<Value> = decode_long(&mut x1);
+    if !scale.is_ok() {
+        return Err(Error::BigDecimalSign);
+    }
+    match scale.unwrap() {
+        Value::Long(scale_value) => {
+            let big_int: BigInt = BigInt::from_signed_bytes_be(&bufbg);
+            let bg = BigDecimal::new(big_int, scale_value);
+            Ok(bg)
+        },
+        _ => Err(Error::BigDecimalSign)
+    }
 }
 
 
@@ -204,11 +200,6 @@ mod tests {
         let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> = deserialize_big_decimal(&result.unwrap());
         assert!(deserialize_big_decimal.is_ok(), "can't deserialize for zero");
         assert_eq!(BigDecimal::zero(), deserialize_big_decimal.unwrap(), "not equals for zero");
-
-        let testvalue: bigdecimal::BigDecimal = bigdecimal::BigDecimal::from(-1421581).cube()
-            .div(bigdecimal::BigDecimal::from(17));
-        let test_result: Result<Vec<u8>, Error> = serialize_big_decimal(&current);
-        println!("serialize => {:?}", &test_result);
 
         Ok(())
     }
