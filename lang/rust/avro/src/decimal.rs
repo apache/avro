@@ -191,7 +191,7 @@ mod tests {
         for iter in 1..180 {
             let result: Result<Vec<u8>, Error> = serialize_big_decimal(&current);
             assert!(result.is_ok(), "can't serialize for iter {iter}");
-            //println!("serialize 1 => {:?}", &result.unwrap().len());
+
             let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> = deserialize_big_decimal(&result.unwrap());
             assert!(deserialize_big_decimal.is_ok(), "can't deserialize for iter {iter}");
             assert_eq!(current, deserialize_big_decimal.unwrap(), "not equals for ${iter}");
@@ -200,10 +200,15 @@ mod tests {
 
         let result: Result<Vec<u8>, Error> = serialize_big_decimal(&BigDecimal::zero());
         assert!(result.is_ok(), "can't serialize for zero");
-        //println!("serialize 1 => {:?}", &result.unwrap().len());
+
         let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> = deserialize_big_decimal(&result.unwrap());
         assert!(deserialize_big_decimal.is_ok(), "can't deserialize for zero");
         assert_eq!(BigDecimal::zero(), deserialize_big_decimal.unwrap(), "not equals for zero");
+
+        let testvalue: bigdecimal::BigDecimal = bigdecimal::BigDecimal::from(-1421581).cube()
+            .div(bigdecimal::BigDecimal::from(17));
+        let test_result: Result<Vec<u8>, Error> = serialize_big_decimal(&current);
+        println!("serialize => {:?}", &test_result);
 
         Ok(())
     }
