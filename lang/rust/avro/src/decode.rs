@@ -34,6 +34,7 @@ use std::{
     str::FromStr,
 };
 use uuid::Uuid;
+use crate::decimal::deserialize_big_decimal;
 
 #[inline]
 fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
@@ -113,6 +114,13 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
                 value => Err(Error::BytesValue(value.into())),
             },
             schema => Err(Error::ResolveDecimalSchema(schema.into())),
+        },
+        Schema::BigDecimal => {
+            match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
+                Value::Bytes(bytes) => deserialize_big_decimal(&bytes)
+                    .map(Value::BigDecimal),
+                value => Err(Error::BytesValue(value.into())),
+            }
         },
         Schema::Uuid => Ok(Value::Uuid(
             Uuid::from_str(

@@ -29,6 +29,7 @@ use std::{
     collections::HashMap,
     convert::{TryFrom, TryInto},
 };
+use crate::decimal::serialize_big_decimal;
 
 /// Encode a `Value` into avro format.
 ///
@@ -116,6 +117,12 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             &uuid.to_string(),
             buffer,
         ),
+        Value::BigDecimal(bg) => {
+            let result: Result<Vec<u8>, Error> = serialize_big_decimal(bg);
+            if result.is_ok() {
+                buffer.append(&mut result.unwrap());
+            }
+        },
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
             Schema::Fixed { .. } => buffer.extend(bytes),

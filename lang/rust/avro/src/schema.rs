@@ -189,6 +189,7 @@ impl From<&types::Value> for SchemaKind {
             Value::Enum(_, _) => Self::Enum,
             Value::Fixed(_, _) => Self::Fixed,
             Value::Decimal { .. } => Self::Decimal,
+            Value::BigDecimal(_) => Self::BigDecimal,
             Value::Uuid(_) => Self::Uuid,
             Value::Date(_) => Self::Date,
             Value::TimeMillis(_) => Self::TimeMillis,
@@ -1339,6 +1340,10 @@ impl Parser {
                         inner,
                     }));
                 }
+                "big-decimal" => {
+                    logical_verify_type(complex, &[SchemaKind::Bytes], self, enclosing_namespace)?;
+                    return Ok(Schema::BigDecimal);
+                }
                 "uuid" => {
                     logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
                     return Ok(Schema::Uuid);
@@ -1887,6 +1892,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "decimal")?;
                 map.serialize_entry("scale", scale)?;
                 map.serialize_entry("precision", precision)?;
+                map.end()
+            }
+            Schema::BigDecimal => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "bytes")?;
+                map.serialize_entry("logicalType", "big-decimal")?;
                 map.end()
             }
             Schema::Uuid => {
@@ -5135,6 +5146,32 @@ mod tests {
         Ok(())
     }
 
+
+    #[test]
+    fn test_avro_3779_bigdecimal_schema() -> TestResult {
+        let schema = json!(
+        {
+          "type": "record",
+          "name": "recordWithDecimal",
+          "fields": [
+            {
+                "name": "decimal",
+                "type": "bytes",
+                "logicalType": "big-decimal"
+            }
+          ]
+        });
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
+        );
+
+        Ok(())
+    }
+
     #[test]
     fn test_avro_3820_deny_invalid_field_names() -> TestResult {
         let schema_str = r#"
@@ -5565,7 +5602,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""int""#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5608,7 +5645,7 @@ mod tests {
             r#"{"name":"ns.record2","type":"record","fields":[{"name":"f1_1","type":"int"}]}"#
                 .to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5645,7 +5682,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.enum1","type":"enum","symbols":["a","b","c"]}"#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5682,7 +5719,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.fixed1","type":"fixed","size":3}"#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5716,7 +5753,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"array","items":"int"}"#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5750,7 +5787,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"map","values":"string"}"#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5795,7 +5832,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""ns.record2""#.to_string(),
         )
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5840,7 +5877,7 @@ mod tests {
             symbol: "d".to_string(),
             symbols: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }
-        .to_string();
+            .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5851,4 +5888,5 @@ mod tests {
 
         Ok(())
     }
+
 }
