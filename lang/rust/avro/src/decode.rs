@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::decimal::deserialize_big_decimal;
 use crate::{
     decimal::Decimal,
     duration::Duration,
@@ -34,7 +35,6 @@ use std::{
     str::FromStr,
 };
 use uuid::Uuid;
-use crate::decimal::deserialize_big_decimal;
 
 #[inline]
 pub(crate) fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
@@ -117,11 +117,10 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
         },
         Schema::BigDecimal => {
             match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
-                Value::Bytes(bytes) => deserialize_big_decimal(&bytes)
-                    .map(Value::BigDecimal),
+                Value::Bytes(bytes) => deserialize_big_decimal(&bytes).map(Value::BigDecimal),
                 value => Err(Error::BytesValue(value.into())),
             }
-        },
+        }
         Schema::Uuid => Ok(Value::Uuid(
             Uuid::from_str(
                 match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {

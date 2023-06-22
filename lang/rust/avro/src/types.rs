@@ -16,6 +16,7 @@
 // under the License.
 
 //! Logic handling the intermediate representation of Avro values.
+use crate::decimal::{deserialize_big_decimal, serialize_big_decimal};
 use crate::{
     decimal::Decimal,
     duration::Duration,
@@ -25,6 +26,7 @@ use crate::{
     },
     AvroResult, Error,
 };
+use bigdecimal::BigDecimal;
 use serde_json::{Number, Value as JsonValue};
 use std::{
     borrow::Borrow,
@@ -35,8 +37,6 @@ use std::{
     str::FromStr,
 };
 use uuid::Uuid;
-use bigdecimal::BigDecimal;
-use crate::decimal::{deserialize_big_decimal, serialize_big_decimal};
 
 /// Compute the maximum decimal value precision of a byte array of length `len` could hold.
 fn max_prec_for_len(len: usize) -> Result<usize, Error> {
@@ -335,7 +335,7 @@ impl TryFrom<Value> for JsonValue {
             Value::BigDecimal(ref bg) => {
                 let vec1: Vec<u8> = serialize_big_decimal(bg).unwrap();
                 Ok(Self::Array(vec1.into_iter().map(|b| b.into()).collect()))
-            },
+            }
             Value::TimeMillis(t) => Ok(Self::Number(t.into())),
             Value::TimeMicros(t) => Ok(Self::Number(t.into())),
             Value::TimestampMillis(t) => Ok(Self::Number(t.into())),
@@ -710,7 +710,7 @@ impl Value {
         Ok(match self {
             bg @ Value::BigDecimal(_) => bg,
             Value::Bytes(b) => Value::BigDecimal(deserialize_big_decimal(&b).unwrap()),
-            other => return Err(Error::GetBigdecimal(other.into()))
+            other => return Err(Error::GetBigdecimal(other.into())),
         })
     }
 
@@ -2946,11 +2946,10 @@ Field with name '"b"' is not a member of the map items"#,
 
     #[test]
     fn test_avro_3779_bigdecimal_resolving() -> TestResult {
-        let schema = r#"{"name": "bigDecimalSchema", "logicalType": "big-decimal", "type": "bytes" }"#;
+        let schema =
+            r#"{"name": "bigDecimalSchema", "logicalType": "big-decimal", "type": "bytes" }"#;
 
-        let avro_value = Value::BigDecimal(
-            BigDecimal::from(12345678u32)
-        );
+        let avro_value = Value::BigDecimal(BigDecimal::from(12345678u32));
         let schema = Schema::parse_str(schema)?;
         let resolve_result: AvroResult<Value> = avro_value.resolve(&schema);
         assert!(
