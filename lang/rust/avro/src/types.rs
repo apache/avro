@@ -332,7 +332,7 @@ impl TryFrom<Value> for JsonValue {
             Value::Decimal(ref d) => <Vec<u8>>::try_from(d)
                 .map(|vec| Self::Array(vec.into_iter().map(|v| v.into()).collect())),
             Value::BigDecimal(ref bg) => {
-                let vec1: Vec<u8> = serialize_big_decimal(bg).unwrap();
+                let vec1: Vec<u8> = serialize_big_decimal(bg);
                 Ok(Self::Array(vec1.into_iter().map(|b| b.into()).collect()))
             }
             Value::TimeMillis(t) => Ok(Self::Number(t.into())),

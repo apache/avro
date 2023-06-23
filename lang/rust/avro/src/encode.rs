@@ -118,10 +118,8 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             buffer,
         ),
         Value::BigDecimal(bg) => {
-            let result: Result<Vec<u8>, Error> = serialize_big_decimal(bg);
-            if let Ok(mut buf) = result {
-                buffer.append(&mut buf);
-            }
+            let mut buf: Vec<u8> = serialize_big_decimal(bg);
+            buffer.append(&mut buf);
         }
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),

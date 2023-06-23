@@ -112,21 +112,21 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
     }
 }
 
-pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Result<Vec<u8>, Error> {
+pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Vec<u8> {
     let mut buffer: Vec<u8> = Vec::new();
     let (big_int, exponent): (BigInt, i64) = decimal.as_bigint_and_exponent();
     let big_endian_value: Vec<u8> = big_int.to_signed_bytes_be();
     encode_bytes(&big_endian_value, &mut buffer);
     encode_long(exponent, &mut buffer);
 
-    Ok(buffer)
+    buffer
 }
 
 pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Error> {
     let mut bytes: &[u8] = bytes.as_slice();
     let mut big_decimal_buffer = match decode_len(&mut bytes) {
         Ok(size) => vec![0u8; size],
-        Err(_err) => return Err(Error::BigDecimalSign),
+        Err(_err) => return Err(Error::BigDecimalLen),
     };
 
     bytes
@@ -183,11 +183,10 @@ mod tests {
         let mut current: bigdecimal::BigDecimal = bigdecimal::BigDecimal::one();
 
         for iter in 1..180 {
-            let result: Result<Vec<u8>, Error> = serialize_big_decimal(&current);
-            assert!(result.is_ok(), "can't serialize for iter {iter}");
+            let result: Vec<u8> = serialize_big_decimal(&current);
 
             let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-                deserialize_big_decimal(&result.unwrap());
+                deserialize_big_decimal(&result);
             assert!(
                 deserialize_big_decimal.is_ok(),
                 "can't deserialize for iter {iter}"
@@ -200,11 +199,9 @@ mod tests {
             current = current.mul(&value);
         }
 
-        let result: Result<Vec<u8>, Error> = serialize_big_decimal(&BigDecimal::zero());
-        assert!(result.is_ok(), "can't serialize for zero");
-
+        let result: Vec<u8> = serialize_big_decimal(&BigDecimal::zero());
         let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-            deserialize_big_decimal(&result.unwrap());
+            deserialize_big_decimal(&result);
         assert!(
             deserialize_big_decimal.is_ok(),
             "can't deserialize for zero"

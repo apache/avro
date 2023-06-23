@@ -295,6 +295,9 @@ pub enum Error {
     #[error("Unreadable decimal sign")]
     BigDecimalSign,
 
+    #[error("Unreadable length for decimal inner bytes")]
+    BigDecimalLen,
+
     #[error("Unreadable decimal scale")]
     BigDecimalScale,
 
