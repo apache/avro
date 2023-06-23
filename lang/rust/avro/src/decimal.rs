@@ -63,21 +63,26 @@ impl Decimal {
 
     /// Converts from f32 by converting number to string firstly, then parsing it.
     pub(crate) fn try_from_f32(num: f32) -> Result<Self, DecimalParsingError> {
-        if !num.is_finite() {}
+        if num.is_infinite() {
+            return Err(DecimalParsingError::InfiniteFloat);
+        }
         let string = num.to_string();
         string.parse()
     }
 
     /// Converts from f64 by converting number to string firstly, then parsing it.
     pub(crate) fn try_from_f64(num: f64) -> Result<Self, DecimalParsingError> {
+        if num.is_infinite() {
+            return Err(DecimalParsingError::InfiniteFloat);
+        }
         let string = num.to_string();
         string.parse()
     }
 
     /// Returns digits amount of the `self`.
     pub(crate) fn digits(&self) -> u64 {
-        // Since `num_bigint` crate has such an absurd amount of the encapsulation,
-        // we can't really get to the amount of digits directly, so we have to use `bits` and compute length ourselves.
+        // `num_bigint` encapsulates any methods related to digits amount estimation,
+        // so we have to use `bits` and compute it ourselves.
         let mut bits = self.value.bits();
         // how many bits one digit occupies.
         let digit_bits = 64;
