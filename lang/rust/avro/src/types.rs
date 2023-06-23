@@ -16,9 +16,8 @@
 // under the License.
 
 //! Logic handling the intermediate representation of Avro values.
-use crate::decimal::{deserialize_big_decimal, serialize_big_decimal};
 use crate::{
-    decimal::Decimal,
+    decimal::{deserialize_big_decimal, serialize_big_decimal, Decimal},
     duration::Duration,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, Precision, RecordField,

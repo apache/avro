@@ -295,6 +295,9 @@ pub enum Error {
     #[error("Unreadable decimal sign")]
     BigDecimalSign,
 
+    #[error("Unreadable decimal scale")]
+    BigDecimalScale,
+
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
 

@@ -15,9 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::decimal::deserialize_big_decimal;
 use crate::{
-    decimal::Decimal,
+    decimal::{deserialize_big_decimal, Decimal},
     duration::Duration,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,

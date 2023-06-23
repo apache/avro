@@ -15,10 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::decode::{decode_len, decode_long};
-use crate::encode::{encode_bytes, encode_long};
-use crate::types::Value;
-use crate::{AvroResult, Error};
+use crate::{
+    decode::{decode_len, decode_long},
+    encode::{encode_bytes, encode_long},
+    types::Value,
+    AvroResult, Error,
+};
 use bigdecimal::BigDecimal;
 use num_bigint::{BigInt, Sign};
 use std::io::Read;
@@ -110,39 +112,34 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
     }
 }
 
-pub(crate) fn serialize_big_decimal(bg: &BigDecimal) -> Result<Vec<u8>, Error> {
+pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Result<Vec<u8>, Error> {
     let mut buffer: Vec<u8> = Vec::new();
-    let big_dec_inner: (BigInt, i64) = bg.as_bigint_and_exponent();
-
-    let big_endian_value: Vec<u8> = big_dec_inner.0.to_signed_bytes_be();
+    let (big_int, exponent): (BigInt, i64) = decimal.as_bigint_and_exponent();
+    let big_endian_value: Vec<u8> = big_int.to_signed_bytes_be();
     encode_bytes(&big_endian_value, &mut buffer);
-    encode_long(big_dec_inner.1, &mut buffer);
+    encode_long(exponent, &mut buffer);
 
     Ok(buffer)
 }
 
-pub(crate) fn deserialize_big_decimal(stream: &Vec<u8>) -> Result<BigDecimal, Error> {
-    let mut x1: &[u8] = stream.as_slice();
-    let result: AvroResult<usize> = decode_len(&mut x1);
+pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Error> {
+    let mut bytes: &[u8] = bytes.as_slice();
+    let mut big_decimal_buffer = match decode_len(&mut bytes) {
+        Ok(size) => vec![0u8; size],
+        Err(_err) => return Err(Error::BigDecimalSign),
+    };
 
-    if result.is_err() {
-        return Err(Error::BigDecimalSign);
-    }
-    let size: usize = result.unwrap();
-    let mut bufbg = vec![0u8; size];
-    x1.read_exact(&mut bufbg[..]).map_err(Error::ReadDouble)?;
+    bytes
+        .read_exact(&mut big_decimal_buffer[..])
+        .map_err(Error::ReadDouble)?;
 
-    let scale: AvroResult<Value> = decode_long(&mut x1);
-    if scale.is_err() {
-        return Err(Error::BigDecimalSign);
-    }
-    match scale.unwrap() {
-        Value::Long(scale_value) => {
-            let big_int: BigInt = BigInt::from_signed_bytes_be(&bufbg);
-            let bg = BigDecimal::new(big_int, scale_value);
-            Ok(bg)
+    match decode_long(&mut bytes) {
+        Ok(Value::Long(scale_value)) => {
+            let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
+            let decimal = BigDecimal::new(big_int, scale_value);
+            Ok(decimal)
         }
-        _ => Err(Error::BigDecimalSign),
+        _ => Err(Error::BigDecimalScale),
     }
 }
 
@@ -152,8 +149,10 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
-    use std::convert::TryFrom;
-    use std::ops::{Div, Mul};
+    use std::{
+        convert::TryFrom,
+        ops::{Div, Mul},
+    };
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
@@ -178,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bigdecimal_serial() -> TestResult {
+    fn test_avro_3779_bigdecimal_serial() -> TestResult {
         let value: bigdecimal::BigDecimal =
             bigdecimal::BigDecimal::from(-1421).div(bigdecimal::BigDecimal::from(2));
         let mut current: bigdecimal::BigDecimal = bigdecimal::BigDecimal::one();
