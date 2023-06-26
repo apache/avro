@@ -29,6 +29,7 @@ use serde_json::{Number, Value as JsonValue};
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryFrom,
+    fmt::Debug,
     hash::BuildHasher,
     str::FromStr,
 };
@@ -376,7 +377,7 @@ impl Value {
         }
     }
 
-    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema>>(
+    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema> + Debug>(
         &self,
         schema: &Schema,
         names: &HashMap<Name, S>,
@@ -476,7 +477,7 @@ impl Value {
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
             (v, Schema::Union(inner)) => {
-                match inner.find_schema_with_known_schemata(v, Some(names)) {
+                match inner.find_schema_with_known_schemata(v, Some(names), enclosing_namespace) {
                     Some(_) => None,
                     None => Some("Could not find matching type in union".to_string()),
                 }
@@ -896,9 +897,8 @@ impl Value {
             // Reader is a union, but writer is not.
             v => v,
         };
-
         let (i, inner) = schema
-            .find_schema_with_known_schemata(&v, Some(names))
+            .find_schema_with_known_schemata(&v, Some(names), enclosing_namespace)
             .ok_or(Error::FindUnionVariant)?;
 
         Ok(Value::Union(
