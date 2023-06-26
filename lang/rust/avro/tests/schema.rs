@@ -1409,3 +1409,134 @@ fn avro_old_issue_47() -> TestResult {
     let _ = to_avro_datum(&schema, to_value(record)?)?;
     Ok(())
 }
+
+#[test]
+fn test_avro_3785_deserialize_namespace_with_nullable_type_containing_reference_type() -> TestResult
+{
+    use apache_avro::{from_avro_datum, to_avro_datum, types::Value};
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
+    pub struct BarUseParent {
+        #[serde(rename = "barUse")]
+        pub bar_use: Bar,
+    }
+
+    #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Deserialize, Serialize)]
+    pub enum Bar {
+        #[serde(rename = "bar0")]
+        Bar0,
+        #[serde(rename = "bar1")]
+        Bar1,
+        #[serde(rename = "bar2")]
+        Bar2,
+    }
+
+    #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
+    pub struct Foo {
+        #[serde(rename = "barInit")]
+        pub bar_init: Bar,
+        #[serde(rename = "barUseParent")]
+        pub bar_use_parent: Option<BarUseParent>,
+    }
+
+    let writer_schema = r#"{
+            "type": "record",
+            "name": "Foo",
+            "namespace": "name.space",
+            "fields":
+            [
+                {
+                    "name": "barInit",
+                    "type":
+                    {
+                        "type": "enum",
+                        "name": "Bar",
+                        "symbols":
+                        [
+                            "bar0",
+                            "bar1",
+                            "bar2"
+                        ]
+                    }
+                },
+                {
+                    "name": "barUseParent",
+                    "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "BarUseParent",
+                            "fields": [
+                                {
+                                    "name": "barUse",
+                                    "type": "Bar"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }"#;
+
+    let reader_schema = r#"{
+            "type": "record",
+            "name": "Foo",
+            "namespace": "name.space",
+            "fields":
+            [
+                {
+                    "name": "barInit",
+                    "type":
+                    {
+                        "type": "enum",
+                        "name": "Bar",
+                        "symbols":
+                        [
+                            "bar0",
+                            "bar1"
+                        ]
+                    }
+                },
+                {
+                    "name": "barUseParent",
+                    "type": [
+                        "null",
+                        {
+                            "type": "record",
+                            "name": "BarUseParent",
+                            "fields": [
+                                {
+                                    "name": "barUse",
+                                    "type": "Bar"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+            }"#;
+
+    let writer_schema = Schema::parse_str(writer_schema)?;
+    let foo1 = Foo {
+        bar_init: Bar::Bar0,
+        bar_use_parent: Some(BarUseParent { bar_use: Bar::Bar1 }),
+    };
+    let avro_value = crate::to_value(foo1)?;
+    assert!(
+        avro_value.validate(&writer_schema),
+        "value is valid for schema",
+    );
+    let datum = to_avro_datum(&writer_schema, avro_value)?;
+    let mut x = &datum[..];
+    let reader_schema = Schema::parse_str(reader_schema)?;
+    let deser_value = from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+    match deser_value {
+        Value::Record(fields) => {
+            assert_eq!(fields.len(), 2);
+        }
+        _ => panic!("Expected Value::Record"),
+    }
+
+    Ok(())
+}
