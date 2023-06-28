@@ -1,0 +1,627 @@
+---
+title: "Specification"
+linkTitle: "Specification"
+weight: 4
+date: 2021-10-25
+aliases:
+- spec.html
+---
+
+<!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+
+## Introduction
+This document defines Apache Avro. It is intended to be the authoritative specification. Implementations of Avro must adhere to this document.
+
+## Schema Declaration {#schema-declaration}
+A Schema is represented in [JSON](https://www.json.org/) by one of:
+
+* A JSON string, naming a defined type.
+* A JSON object, of the form:
+```js
+{"type": "typeName" ...attributes...}
+```
+where _typeName_ is either a primitive or derived type name, as defined below. Attributes not defined in this document are permitted as metadata, but must not affect the format of serialized data.
+* A JSON array, representing a union of embedded types.
+
+## Primitive Types
+The set of primitive type names is:
+
+* _null_: no value
+* _boolean_: a binary value
+* _int_: 32-bit signed integer
+* _long_: 64-bit signed integer
+* _float_: single precision (32-bit) IEEE 754 floating-point number
+* _double_: double precision (64-bit) IEEE 754 floating-point number
+* _bytes_: sequence of 8-bit unsigned bytes
+* _string_: unicode character sequence
+
+Primitive types have no specified attributes.
+
+Primitive type names are also defined type names. Thus, for example, the schema "string" is equivalent to:
+```json
+{"type": "string"}
+```
+
+## Complex Types
+Avro supports six kinds of complex types: _records_, _enums_, _arrays_, _maps_, _unions_ and _fixed_.
+
+### Records {#schema-record}
+Records use the type name "record" and support three attributes:
+
+* _name_: a JSON string providing the name of the record (required).
+* _namespace_, a JSON string that qualifies the name;
+* _doc_: a JSON string providing documentation to the user of this schema (optional).
+* _aliases_: a JSON array of strings, providing alternate names for this record (optional).
+* _fields_: a JSON array, listing fields (required). Each field is a JSON object with the following attributes:
+  * _name_: a JSON string providing the name of the field (required), and
+  * _doc_: a JSON string describing this field for users (optional).
+  * _type_:  A JSON object defining a schema, or a JSON string naming a record definition (required).
+  * default: A default value for this field, used when reading instances that lack this field (optional). Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255.
+
+*field default values*
+
+| **avro type** | **json type**  | **example** |
+|---------------|----------------|-------------|
+| null          | null           | `null`      |
+| boolean       | boolean        | `true`      |
+| int,long      | integer        | `1`         |
+| float,double  | number         | `1.1`       |
+| bytes         | string         | `"\u00FF"`  |
+| string        | string         | `"foo"`     |
+| record        | object         | `{"a": 1}`  |
+| enum          | string         | `"FOO"`     |
+| array         | array          | `[1]`       |
+| map           | object         | `{"a": 1}`  |
+| fixed         | string         | `"\u00ff"`  |
+
+  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
+  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
+
+For example, a linked-list of 64-bit values may be defined with:
+```jsonc
+{
+  "type": "record",
+  "name": "LongList",
+  "aliases": ["LinkedLongs"],                      // old name for this
+  "fields" : [
+    {"name": "value", "type": "long"},             // each element has a long
+    {"name": "next", "type": ["LongList", "null"]} // optional next element
+  ]
+}
+```
+	  
+### Enums
+Enums use the type name "enum" and support the following attributes:
+
+* _name_: a JSON string providing the name of the enum (required).
+* _namespace_, a JSON string that qualifies the name ;
+* _aliases_: a JSON array of strings, providing alternate names for this enum (optional).
+* _doc_: a JSON string providing documentation to the user of this schema (optional).
+* _symbols_: a JSON array, listing symbols, as JSON strings (required). All symbols in an enum must be unique; duplicates are prohibited.
+
+For example, playing card suits might be defined with:
+```json
+{
+  "type": "enum",
+  "name": "Suit",
+  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+}
+```
+	  
+### Arrays
+Arrays use the type name "array" and support a single attribute:
+
+* _items_: the schema of the array's items.
+
+For example, an array of strings is declared with:
+```json
+{
+  "type": "array",
+  "items" : "string"
+}
+```
+    
+### Maps
+Maps use the type name "map" and support one attribute:
+
+* _values_: the schema of the map's values.
+
+Map keys are assumed to be strings.
+
+For example, a map from string to long is declared with:
+```json
+{
+  "type": "map",
+  "values" : "long"
+}
+```
+    
+### Unions
+Unions, as mentioned above, are represented using JSON arrays. For example, `["string", "null"]` declares a schema which may be either a string or null.
+
+Unions may not contain more than one schema with the same type, except for the named types record, fixed and enum. For example, unions containing two array types or two map types are not permitted, but two types with different names are permitted. (Names permit efficient resolution when reading and writing unions.)
+
+Unions may not immediately contain other unions.
+
+### Fixed
+Fixed uses the type name "fixed" and supports two attributes:
+
+* _name_: a string naming this fixed (required).
+* _namespace_, a string that qualifies the name;
+* _aliases_: a JSON array of strings, providing alternate names for this enum (optional).
+* _size_: an integer, specifying the number of bytes per value (required).
+
+For example, 16-byte quantity may be declared with:
+```json
+{"type": "fixed", "size": 16, "name": "md5"}
+```
+
+### Names {#names}
+Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace. Equality of names is defined on the fullname.
+
+The name portion of a fullname, and record field names must:
+
+* start with [A-Za-z_]
+* subsequently contain only [A-Za-z0-9_]
+
+A namespace is a dot-separated sequence of such names.
+
+In record, enum and fixed definitions, the fullname is determined in one of the following ways:
+
+A name and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
+
+* A fullname is specified. If the name specified contains a dot, then it is assumed to be a fullname, and any namespace also specified is ignored. For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
+
+* A name only is specified, i.e., a name that contains no dots. In this case the namespace is taken from the most tightly enclosing schema or protocol. For example, if "name": "X" is specified, and this occurs within a field of the record definition of org.foo.Y, then the fullname is org.foo.X.
+
+References to previously defined names are as in the latter two cases above: if they contain a dot they are a fullname, if they do not contain a dot, the namespace is the namespace of the enclosing definition.
+
+Primitive type names have no namespace and their names may not be defined in any namespace. A schema may only contain multiple definitions of a fullname if the definitions are equivalent.
+
+
+### Aliases
+Named types and fields may have aliases. An implementation may optionally use aliases to map a writer's schema to the reader's. This facilitates both schema evolution as well as processing disparate datasets.
+
+Aliases function by re-writing the writer's schema using aliases from the reader's schema. For example, if the writer's schema was named "Foo" and the reader's schema is named "Bar" and has an alias of "Foo", then the implementation would act as though "Foo" were named "Bar" when reading. Similarly, if data was written as a record with a field named "x" and is read as a record with a field named "y" with alias "x", then the implementation would act as though "x" were named "y" when reading.
+
+A type alias may be specified either as a fully namespace-qualified, or relative to the namespace of the name it is an alias for. For example, if a type named "a.b" has aliases of "c" and "x.y", then the fully qualified names of its aliases are "a.c" and "x.y".
+
+## Data Serialization
+Avro data is always serialized with its schema. Files that store Avro data should always also include the schema for that data in the same file. Avro-based remote procedure call (RPC) systems must also guarantee that remote recipients of data have a copy of the schema used to write that data.
+
+
+Because the schema used to write data is always available when the data is read, Avro data itself is not tagged with type information. The schema is required to parse data.
+
+In general, both serialization and deserialization proceed as a depth-first, left-to-right traversal of the schema, serializing primitive types as they are encountered.
+
+### Encodings
+Avro specifies two serialization encodings: binary and JSON. Most applications will use the binary encoding, as it is smaller and faster. But, for debugging and web-based applications, the JSON encoding may sometimes be appropriate.
+
+### Binary Encoding {#binary-encoding}
+
+#### Primitive Types
+Primitive types are encoded in binary as follows:
+
+* _null_ is written as zero bytes.
+* a _boolean_ is written as a single byte whose value is either 0 (false) or 1 (true).
+* _int_ and _long_ values are written using [variable-length](https://lucene.apache.org/java/3_5_0/fileformats.html#VInt) [zig-zag](https://code.google.com/apis/protocolbuffers/docs/encoding.html#types) coding. Some examples:
+
+| *value* | *hex* |
+|---|---|
+| 0 | 00 |
+|-1 | 01 |
+| 1 | 02 |
+|-2 | 03 |
+| 2 | 04 |
+|...| |
+|-64 | 7f |
+|64 | 80 01|
+|...| |
+
+* a _float_ is written as 4 bytes. The float is converted into a 32-bit integer using a method equivalent to Java's [floatToIntBits](https://docs.oracle.com/javase/8/docs/api/java/lang/Float.html#floatToIntBits-float-) and then encoded in little-endian format.
+* a _double_ is written as 8 bytes. The double is converted into a 64-bit integer using a method equivalent to Java's [doubleToLongBits](https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#doubleToLongBits-double-) and then encoded in little-endian format.
+* _bytes_ are encoded as a long followed by that many bytes of data.
+* 	a string is encoded as a long followed by that many bytes of UTF-8 encoded character data.
+
+For example, the three-character string "foo" would be encoded as the long value 3 (encoded as hex 06) followed by the UTF-8 encoding of 'f', 'o', and 'o' (the hex bytes 66 6f 6f):
+```
+06 66 6f 6f
+```
+
+### Complex Types
+Complex types are encoded in binary as follows:
+
+#### Records
+A record is encoded by encoding the values of its fields in the order that they are declared. In other words, a record is encoded as just the concatenation of the encodings of its fields. Field values are encoded per their schema.
+
+For example, the record schema
+```json
+{
+  "type": "record",
+  "name": "test",
+  "fields" : [
+    {"name": "a", "type": "long"},
+    {"name": "b", "type": "string"}
+  ]
+}
+```
+	    
+An instance of this record whose a field has value 27 (encoded as hex 36) and whose b field has value "foo" (encoded as hex bytes 06 66 6f 6f), would be encoded simply as the concatenation of these, namely the hex byte sequence:
+```
+36 06 66 6f 6f
+```
+
+#### Enums
+An enum is encoded by a int, representing the zero-based position of the symbol in the schema.
+
+For example, consider the enum:
+```json
+{"type": "enum", "name": "Foo", "symbols": ["A", "B", "C", "D"] }
+```
+
+This would be encoded by an int between zero and three, with zero indicating "A", and 3 indicating "D".
+
+#### Arrays
+Arrays are encoded as a series of blocks. Each block consists of a long count value, followed by that many array items. A block with count zero indicates the end of the array. Each item is encoded per the array's item schema.
+
+If a block's count is negative, its absolute value is used, and the count is followed immediately by a long block size indicating the number of bytes in the block. This block size permits fast skipping through data, e.g., when projecting a record to a subset of its fields.
+
+For example, the array schema
+```json
+{"type": "array", "items": "long"}
+```
+an array containing the items 3 and 27 could be encoded as the long value 2 (encoded as hex 04) followed by long values 3 and 27 (encoded as hex 06 36) terminated by zero:
+```
+04 06 36 00
+```
+
+The blocked representation permits one to read and write arrays larger than can be buffered in memory, since one can start writing items without knowing the full length of the array.
+
+#### Maps {#schema-maps}
+Maps are encoded as a series of _blocks_. Each block consists of a `long` _count_ value, followed by that many key/value pairs. A block with count zero indicates the end of the map. Each item is encoded per the map's value schema.
+
+If a block's count is negative, its absolute value is used, and the count is followed immediately by a `long` block size indicating the number of bytes in the block. This block size permits fast skipping through data, e.g., when projecting a record to a subset of its fields.
+
+The blocked representation permits one to read and write maps larger than can be buffered in memory, since one can start writing items without knowing the full length of the map.
+
+#### Unions
+A union is encoded by first writing a `long` value indicating the zero-based position within the union of the schema of its value. The value is then encoded per the indicated schema within the union.
+
+For example, the union schema `["string","null"]` would encode:
+
+* null as the integer 1 (the index of "null" in the union, encoded as hex 02):
+02
+
+* the string "a" as zero (the index of "string" in the union), followed by the serialized string:
+`02 02 61`
+
+#### Fixed
+Fixed instances are encoded using the number of bytes declared in the schema.
+
+### JSON Encoding
+Except for unions, the JSON encoding is the same as is used to encode [field default values]({{< ref "#schema-record" >}}).
+
+The value of a union is encoded in JSON as follows:
+
+* if its type is _null_, then it is encoded as a JSON _null_;
+* otherwise it is encoded as a JSON object with one name/value pair whose name is the type's name and whose value is the recursively encoded value. For Avro's named types (record, fixed or enum) the user-specified name is used, for other types the type name is used.
+
+For example, the union schema `["null","string","Foo"]`, where Foo is a record name, would encode:
+
+* _null_ as _null_;
+* the string "a" as `{"string": "a"}` and
+* a Foo instance as `{"Foo": {...}}`, where `{...}` indicates the JSON encoding of a Foo instance.
+
+Note that a schema is still required to correctly process JSON-encoded data. For example, the JSON encoding does not distinguish between int and long, float and double, records and maps, enums and strings, etc.
+
+## Sort Order
+Avro defines a standard sort order for data. This permits data written by one system to be efficiently sorted by another system. This can be an important optimization, as sort order comparisons are sometimes the most frequent per-object operation. Note also that Avro binary-encoded data can be efficiently ordered without deserializing it to objects.
+
+Data items may only be compared if they have identical schemas. Pairwise comparisons are implemented recursively with a depth-first, left-to-right traversal of the schema. The first mismatch encountered determines the order of the items.
+
+Two items with the same schema are compared according to the following rules.
+
+* _null_ data is always equal.
+* _boolean_ data is ordered with false before true.
+* _int_, _long_, _float_ and _double_ data is ordered by ascending numeric value.
+* _bytes_ and fixed data are compared lexicographically by unsigned 8-bit values.
+* _string_ data is compared lexicographically by Unicode code point. Note that since UTF-8 is used as the binary encoding for strings, sorting of bytes and string binary data is identical.
+* _array_ data is compared lexicographically by element.
+* _enum_ data is ordered by the symbol's position in the enum schema. For example, an enum whose symbols are `["z", "a"]` would sort "z" values before "a" values.
+* _union_ data is first ordered by the branch within the union, and, within that, by the type of the branch. For example, an `["int", "string"]` union would order all int values before all string values, with the ints and strings themselves ordered as defined above.
+* _record_ data is ordered lexicographically by field. If a field specifies that its order is:
+    * "ascending", then the order of its values is unaltered.
+    * "descending", then the order of its values is reversed.
+    * "ignore", then its values are ignored when sorting.
+* _map_ data may not be compared. It is an error to attempt to compare data containing maps unless those maps are in an `"order":"ignore"` record field.
+
+## Object Container Files
+Avro includes a simple object container file format. A file has a schema, and all objects stored in the file must be written according to that schema, using binary encoding. Objects are stored in blocks that may be compressed. Syncronization markers are used between blocks to permit efficient splitting of files for MapReduce processing.
+
+Files may include arbitrary user-specified metadata.
+
+A file consists of:
+
+* A file header, followed by
+* one or more file data blocks.
+
+A file header consists of:
+
+* Four bytes, ASCII 'O', 'b', 'j', followed by 1.
+* file metadata, including the schema.
+*  The 16-byte, randomly-generated sync marker for this file.
+
+File metadata consists of:
+
+A long indicating the number of metadata key/value pairs.
+
+For each pair, a string key and bytes value.
+
+All metadata properties that start with "avro." are reserved. The following file metadata properties are currently used:
+
+* **avro.schema** contains the schema of objects stored in the file, as JSON data (required).
+* **avro.codec** the name of the compression codec used to compress blocks, as a string. Implementations are required to support the following codecs: "null" and "deflate". If codec is absent, it is assumed to be "null". The codecs are described with more detail below.
+
+A file header is thus described by the following schema:
+```json
+{"type": "record", "name": "org.apache.avro.file.Header",
+ "fields" : [
+   {"name": "magic", "type": {"type": "fixed", "name": "Magic", "size": 4}},
+   {"name": "meta", "type": {"type": "map", "values": "bytes"}},
+   {"name": "sync", "type": {"type": "fixed", "name": "Sync", "size": 16}}
+  ]
+}
+```
+      
+A file data block consists of:
+
+* A long indicating the count of objects in this block.
+* A long indicating the size in bytes of the serialized objects in the current block, after any codec is applied
+* The serialized objects. If a codec is specified, this is compressed by that codec.
+* The file's 16-byte sync marker.
+
+Thus, each block's binary data can be efficiently extracted or skipped without deserializing the contents. The combination of block size, object counts, and sync markers enable detection of corrupt blocks and help ensure data integrity.
+
+### Required Codecs
+
+_null_
+
+The "null" codec simply passes through data uncompressed.
+
+_deflate_
+
+The "deflate" codec writes the data block using the deflate algorithm as specified in [RFC 1951](https://www.isi.edu/in-notes/rfc1951.txt), and typically implemented using the zlib library. Note that this format (unlike the "zlib format" in RFC 1950) does not have a checksum.
+
+### Protocol Declaration
+Avro protocols describe RPC interfaces. Like schemas, they are defined with JSON text.
+
+A protocol is a JSON object with the following attributes:
+
+* _protocol_, a string, the name of the protocol (required);
+* _namespace_, an optional string that qualifies the name;
+* _doc_, an optional string describing this protocol;
+* _types_, an optional list of definitions of named types (records, enums, fixed and errors). An error definition is just like a record definition except it uses "error" instead of "record". Note that forward references to named types are not permitted.
+* _messages_, an optional JSON object whose keys are message names and whose values are objects whose attributes are described below. No two messages may have the same name.
+
+The name and namespace qualification rules defined for schema objects apply to protocols as well.
+
+### Messages
+A message has attributes:
+
+* a _doc_, an optional description of the message,
+* a _request_, a list of named, typed parameter schemas (this has the same form as the fields of a record declaration);
+* a _response_ schema;
+* an optional union of declared error schemas. The effective union has "string" prepended to the declared union, to permit transmission of undeclared "system" errors. For example, if the declared error union is `["AccessError"]`, then the effective union is `["string", "AccessError"]`. When no errors are declared, the effective error union is `["string"]`. Errors are serialized using the effective union; however, a protocol's JSON declaration contains only the declared union.
+* an optional one-way boolean parameter.
+
+A request parameter list is processed equivalently to an anonymous record. Since record field lists may vary between reader and writer, request parameters may also differ between the caller and responder, and such differences are resolved in the same manner as record field differences.
+
+The one-way parameter may only be true when the response type is `"null"` and no errors are listed.
+
+### Sample Protocol
+For example, one may define a simple HelloWorld protocol with:
+```json
+{
+  "namespace": "com.acme",
+  "protocol": "HelloWorld",
+  "doc": "Protocol Greetings",
+
+  "types": [
+    {"name": "Greeting", "type": "record", "fields": [
+      {"name": "message", "type": "string"}]},
+    {"name": "Curse", "type": "error", "fields": [
+      {"name": "message", "type": "string"}]}
+  ],
+
+  "messages": {
+    "hello": {
+      "doc": "Say hello.",
+      "request": [{"name": "greeting", "type": "Greeting" }],
+      "response": "Greeting",
+      "errors": ["Curse"]
+    }
+  }
+}
+```
+        
+## Protocol Wire Format
+
+### Message Transport
+Messages may be transmitted via different transport mechanisms.
+
+To the transport, a _message_ is an opaque byte sequence.
+
+A transport is a system that supports:
+
+* **transmission of request messages**
+* **receipt of corresponding response messages**
+
+Servers may send a response message back to the client corresponding to a request message. The mechanism of correspondance is transport-specific. For example, in HTTP it is implicit, since HTTP directly supports requests and responses. But a transport that multiplexes many client threads over a single socket would need to tag messages with unique identifiers.
+
+Transports may be either stateless or stateful. In a stateless transport, messaging assumes no established connection state, while stateful transports establish connections that may be used for multiple messages. This distinction is discussed further in the [handshake](#handshake) section below.
+
+#### HTTP as Transport
+When [HTTP](https://www.w3.org/Protocols/rfc2616/rfc2616.html) is used as a transport, each Avro message exchange is an HTTP request/response pair. All messages of an Avro protocol should share a single URL at an HTTP server. Other protocols may also use that URL. Both normal and error Avro response messages should use the 200 (OK) response code. The chunked encoding may be used for requests and responses, but, regardless the Avro request and response are the entire content of an HTTP request and response. The HTTP Content-Type of requests and responses should be specified as "avro/binary". Requests should be made using the POST method.
+
+HTTP is used by Avro as a stateless transport.
+
+### Message Framing
+Avro messages are _framed_ as a list of buffers.
+
+Framing is a layer between messages and the transport. It exists to optimize certain operations.
+
+The format of framed message data is:
+
+* a series of buffers, where each buffer consists of:
+    * a four-byte, big-endian _buffer length_, followed by
+    * that many bytes of _buffer_ data.
+* A message is always terminated by a zero-lenghted buffer.
+
+Framing is transparent to request and response message formats (described below). Any message may be presented as a single or multiple buffers.
+
+Framing can permit readers to more efficiently get different buffers from different sources and for writers to more efficiently store different buffers to different destinations. In particular, it can reduce the number of times large binary objects are copied. For example, if an RPC parameter consists of a megabyte of file data, that data can be copied directly to a socket from a file descriptor, and, on the other end, it could be written directly to a file descriptor, never entering user space.
+
+A simple, recommended, framing policy is for writers to create a new segment whenever a single binary object is written that is larger than a normal output buffer. Small objects are then appended in buffers, while larger objects are written as their own buffers. When a reader then tries to read a large object the runtime can hand it an entire buffer directly, without having to copy it.
+
+### Handshake
+The purpose of the handshake is to ensure that the client and the server have each other's protocol definition, so that the client can correctly deserialize responses, and the server can correctly deserialize requests. Both clients and servers should maintain a cache of recently seen protocols, so that, in most cases, a handshake will be completed without extra round-trip network exchanges or the transmission of full protocol text.
+
+RPC requests and responses may not be processed until a handshake has been completed. With a stateless transport, all requests and responses are prefixed by handshakes. With a stateful transport, handshakes are only attached to requests and responses until a successful handshake response has been returned over a connection. After this, request and response payloads are sent without handshakes for the lifetime of that connection.
+
+The handshake process uses the following record schemas:
+```json
+{
+  "type": "record",
+  "name": "HandshakeRequest", "namespace":"org.apache.avro.ipc",
+  "fields": [
+    {"name": "clientHash",
+     "type": {"type": "fixed", "name": "MD5", "size": 16}},
+    {"name": "clientProtocol", "type": ["null", "string"]},
+    {"name": "serverHash", "type": "MD5"},
+    {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+{
+  "type": "record",
+  "name": "HandshakeResponse", "namespace": "org.apache.avro.ipc",
+  "fields": [
+    {"name": "match",
+     "type": {"type": "enum", "name": "HandshakeMatch",
+              "symbols": ["BOTH", "CLIENT", "NONE"]}},
+    {"name": "serverProtocol",
+     "type": ["null", "string"]},
+    {"name": "serverHash",
+     "type": ["null", {"type": "fixed", "name": "MD5", "size": 16}]},
+    {"name": "meta",
+     "type": ["null", {"type": "map", "values": "bytes"}]}
+  ]
+}
+```
+
+        
+* A client first prefixes each request with a `HandshakeRequest` containing just the hash of its protocol and of the server's protocol (`clientHash!=null, clientProtocol=null, serverHash!=null`), where the hashes are 128-bit MD5 hashes of the JSON protocol text. If a client has never connected to a given server, it sends its hash as a guess of the server's hash, otherwise it sends the hash that it previously obtained from this server.
+
+The server responds with a HandshakeResponse containing one of:
+  * `match=BOTH, serverProtocol=null, serverHash=null` if the client sent the valid hash of the server's protocol and the server knows what protocol corresponds to the client's hash. In this case, the request is complete and the response data immediately follows the HandshakeResponse.
+
+  * `match=CLIENT, serverProtocol!=null, serverHash!=null` if the server has previously seen the client's protocol, but the client sent an incorrect hash of the server's protocol. The request is complete and the response data immediately follows the HandshakeResponse. The client must use the returned protocol to process the response and should also cache that protocol and its hash for future interactions with this server.
+
+  * `match=NONE` if the server has not previously seen the client's protocol. The serverHash and serverProtocol may also be non-null if the server's protocol hash was incorrect.
+
+In this case the client must then re-submit its request with its protocol text (`clientHash!=null, clientProtocol!=null, serverHash!=null`) and the server should respond with a successful match (match=BOTH, serverProtocol=null, serverHash=null) as above.
+
+The meta field is reserved for future handshake enhancements.
+
+### Call Format
+A _call_ consists of a request message paired with its resulting response or error message. Requests and responses contain extensible metadata, and both kinds of messages are framed as described above.
+
+The format of a call request is:
+
+* _request metadata_, a map with values of type bytes
+* the _message name_, an Avro string, followed by
+* the _message parameters_. Parameters are serialized according to the message's request declaration.
+
+When a message is declared one-way and a stateful connection has been established by a successful handshake response, no response data is sent. Otherwise the format of the call response is:
+
+* _response metadata_, a map with values of type bytes
+* a one-byte error _flag_ boolean, followed by either:
+  * if the error flag is false, the message _response_, serialized per the message's response schema.
+  * if the error flag is true, the _error_, serialized per the message's effective error union schema.
+
+### Schema Resolution {#schema-resolution}
+
+A reader of Avro data, whether from an RPC or a file, can always parse that data because its schema is provided. But that schema may not be exactly the schema that was expected. For example, if the data was written with a different version of the software than it is read, then records may have had fields added or removed. This section specifies how such schema differences should be resolved.
+
+We refer to the schema used to write the data as the writer's schema, and the schema that the application expects the reader's schema. Differences between these should be resolved as follows:
+
+* It is an error if the two schemas do not _match_.
+
+To match, one of the following must hold:
+  * both schemas are arrays whose item types match
+  * both schemas are maps whose value types match
+  * both schemas are enums whose names match
+  * both schemas are fixed whose sizes and names match
+  * both schemas are records with the same name
+  * either schema is a union
+  * both schemas have same primitive type
+  * the writer's schema may be promoted to the reader's as follows:
+    * int is promotable to long, float, or double
+    * long is promotable to float or double
+    * float is promotable to double
+    * string is promotable to bytes
+    * bytes is promotable to string
+    
+* **if both are records**:
+
+  * the ordering of fields may be different: fields are matched by name.
+  * schemas for fields with the same name in both records are resolved recursively.
+  * if the writer's record contains a field with a name not present in the reader's record, the writer's value for that field is ignored.
+  * if the reader's record schema has a field that contains a default value, and writer's schema does not have a field with the same name, then the reader should use the default value from its field.
+  * if the reader's record schema has a field with no default value, and writer's schema does not have a field with the same name, an error is signalled.
+
+* **if both are enums**:
+
+if the writer's symbol is not present in the reader's enum, then an error is signalled.
+
+* **if both are arrays**:
+
+This resolution algorithm is applied recursively to the reader's and writer's array item schemas.
+
+* **if both are maps**:
+
+This resolution algorithm is applied recursively to the reader's and writer's value schemas.
+
+* **if both are unions**:
+
+The first schema in the reader's union that matches the selected writer's union schema is recursively resolved against it. if none match, an error is signalled.
+
+* **if reader's is a union, but writer's is not**:
+
+The first schema in the reader's union that matches the writer's schema is recursively resolved against it. If none match, an error is signalled.
+
+* **if writer's is a union, but reader's is not**:
+
+If the reader's schema matches the selected writer's schema, it is recursively resolved against it. If they do not match, an error is signalled.
+
+A schema's "doc" fields are ignored for the purposes of schema resolution. Hence, the "doc" portion of a schema may be dropped at serialization.
+
+Apache Avro, Avro, Apache, and the Avro and Apache logos are trademarks of The Apache Software Foundation.

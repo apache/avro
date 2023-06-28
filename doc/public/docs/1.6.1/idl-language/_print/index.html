@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.111.2">
+<link rel="canonical" type="text/html" href="/docs/1.6.1/idl-language/">
+<link rel="alternate" type="application/rss&#43;xml" href="/docs/1.6.1/idl-language/index.xml">
+<meta name="robots" content="noindex, nofollow">
+
+
+<link rel="apple-touch-icon" sizes="57x57" href="https://apache.org/favicons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="https://apache.org/favicons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="https://apache.org/favicons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="https://apache.org/favicons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="https://apache.org/favicons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://apache.org/favicons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="https://apache.org/favicons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://apache.org/favicons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://apache.org/favicons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-194x194.png" sizes="194x194">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/android-chrome-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="https://apache.org/favicons/manifest.json">
+<link rel="shortcut icon" href="https://apache.org/favicons/favicon.ico">
+
+<title>IDL Language | Apache Avro</title>
+<meta name="description" content="">
+<meta property="og:title" content="IDL Language" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/1.6.1/idl-language/" /><meta property="og:site_name" content="Apache Avro" />
+<meta itemprop="name" content="IDL Language">
+<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="IDL Language"/>
+<meta name="twitter:description" content=""/>
+
+
+
+
+<link rel="preload" href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" as="style">
+<link href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/prism.css"/>
+
+  </head>
+  <body class="td-section">
+    <header>
+      
+
+
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/">
+
+		<span class="navbar-logo"><img src="/docs/1.11.1/logo.svg" width="100" height="30" style="margin: 0 10px"></span><span class="text-uppercase font-weight-bold">Apache Avro</span>
+	</a>
+
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Project
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/project/download/">Download</a>
+	
+	<a class="dropdown-item" href="/project/credits/">Credits</a>
+	
+	<a class="dropdown-item" href="/project/how-to-contribute/">How to Contribute</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/licenses/">License</a>
+	
+	<a class="dropdown-item" href="https://hadoop.apache.org/privacy_policy.html">Privacy Policy</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/security/">Security</a>
+	
+	<a class="dropdown-item" href="/project/events/">Events</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/sponsorship.html">Donate</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/thanks.html">Thanks</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Blog
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/blog/news/">News</a>
+	
+	<a class="dropdown-item" href="/blog/releases/">Releases</a>
+	
+</div>
+
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+					
+					
+					
+					
+					
+					
+					
+					
+					<a class="nav-link" href="/community/" ><span>Community</span></a>
+				
+			</li>
+
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Documentation
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/docs/1.11.1/">1.11.1 (Current)</a>
+	
+	<a class="dropdown-item" href="/docs/1.11.0/">1.11.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.2/">1.10.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.1/">1.10.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.0/">1.10.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.2/">1.9.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.1/">1.9.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.0/">1.9.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.2/">1.8.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.1/">1.8.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.0/">1.8.0</a>
+	
+	<a class="dropdown-item" href="docs/1.7.7/">1.7.7</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.6/">1.7.6</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.5/">1.7.5</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.4/">1.7.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.3/">1.7.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.2/">1.7.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.1/">1.7.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.0/">1.7.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.3/">1.6.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.2/">1.6.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.1/">1.6.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.0/">1.6.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.4/">1.5.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.3/">1.5.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.2/">1.5.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.1/">1.5.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.0/">1.5.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.1/">1.4.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.0/">1.4.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.3/">1.3.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.2/">1.3.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.1/">1.3.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.0/">1.3.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.2.0/">1.2.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.1.0/">1.1.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.0.0/">1.0.0</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	ASF links
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="http://www.apache.org/" target="_blank">ASF Web Site</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/licenses/" target="_blank">License</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Donate</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/security/" target="_blank">Security</a>
+	
+</div>
+
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block"></div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+
+
+
+
+<div class="td-content">
+<div class="pageinfo pageinfo-primary d-print-none">
+<p>
+This is the multi-page printable view of this section.
+<a href="#" onclick="print();return false;">Click here to print</a>.
+</p><p>
+<a href="/docs/1.6.1/idl-language/">Return to the regular view of this page</a>.
+</p>
+</div>
+
+
+
+<h1 class="title">IDL Language</h1>
+
+
+
+
+
+    <ul>
+    
+  
+  
+  
+  
+
+  
+
+    </ul>
+
+
+<div class="content">
+      <!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+<h2 id="introduction">Introduction</h2>
+<p>This document defines Avro IDL, a higher-level language for authoring Avro schemata. Before reading this document, you should have familiarity with the concepts of schemata and protocols, as well as the various primitive and complex types available in Avro.</p>
+<h2 id="overview">Overview</h2>
+<h3 id="purpose">Purpose</h3>
+<p>The aim of the Avro IDL language is to enable developers to author schemata in a way that feels more similar to common programming languages like Java, C++, or Python. Additionally, the Avro IDL language may feel more familiar for those users who have previously used the interface description languages (IDLs) in other frameworks like Thrift, Protocol Buffers, or CORBA.</p>
+<h3 id="usage">Usage</h3>
+<p>Each Avro IDL file defines a single Avro Protocol, and thus generates as its output a JSON-format Avro Protocol file with extension .avpr.</p>
+<p>To convert a <em>.avdl</em> file into a <em>.avpr</em> file, it may be processed by the <code>idl</code> tool. For example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>	$ java -jar avroj-tools-1.4.0.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+</span></span><span style="display:flex;"><span>  $ head /tmp/namespaces.avpr
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#4e9a06">&#34;protocol&#34;</span> : <span style="color:#4e9a06">&#34;TestNamespace&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#4e9a06">&#34;namespace&#34;</span> : <span style="color:#4e9a06">&#34;avro.test.protocol&#34;</span>,
+</span></span></code></pre></div><p>The <code>idl</code> tool can also process input to and from <em>stdin</em> and <em>stdout</em>. See <code>idl --help</code> for full usage information.</p>
+<h2 id="defining-a-protocol-in-avro-idl">Defining a Protocol in Avro IDL</h2>
+<p>An Avro IDL file consists of exactly one protocol definition. The minimal protocol is defined by the following code:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">protocol</span> <span style="color:#000">MyProtocol</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>This is equivalent to (and generates) the following JSON protocol definition:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">&#34;protocol&#34;</span> <span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;MyProtocol&#34;</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">&#34;types&#34;</span> <span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">[</span> <span style="color:#000;font-weight:bold">],</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">&#34;messages&#34;</span> <span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The namespace of the protocol may be changed using the @namespace annotation:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#5c35cc;font-weight:bold">@namespace</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;mynamespace&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000">protocol</span> <span style="color:#000">MyProtocol</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>This notation is used throughout Avro IDL as a way of specifying properties for the annotated element, as will be described later in this document.</p>
+<p>Protocols in Avro IDL can contain the following items:</p>
+<ul>
+<li>Imports of external protocol and schema files.</li>
+<li>Definitions of named schemata, including records, errors, enums, and fixeds.</li>
+<li>Definitions of RPC messages</li>
+</ul>
+<h2 id="imports">Imports</h2>
+<p>Files may be imported in one of three formats:</p>
+<ul>
+<li>
+<p>An IDL file may be imported with a statement like:</p>
+<p><code>import idl &quot;foo.avdl&quot;;</code></p>
+</li>
+<li>
+<p>A JSON protocol file may be imported with a statement like:</p>
+<p><code>import protocol &quot;foo.avpr&quot;;</code></p>
+</li>
+<li>
+<p>A JSON schema file may be imported with a statement like:</p>
+<p><code>import schema &quot;foo.avsc&quot;;</code></p>
+</li>
+</ul>
+<p>Messages and types in the imported file are added to this file&rsquo;s protocol.</p>
+<p>Imported file names are resolved relative to the current IDL file.</p>
+<h2 id="defining-an-enumeration">Defining an Enumeration</h2>
+<p>Enums are defined in Avro IDL using a syntax similar to C or Java:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">enum</span> <span style="color:#000">Suit</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">SPADES</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#000">DIAMONDS</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#000">CLUBS</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#000">HEARTS</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Note that, unlike the JSON format, anonymous enums cannot be defined.</p>
+<h2 id="defining-a-fixed-length-field">Defining a Fixed Length Field</h2>
+<p>Fixed fields are defined using the following syntax:</p>
+<pre tabindex="0"><code>fixed MD5(16);
+</code></pre><p>This example defines a fixed-length type called MD5 which contains 16 bytes.</p>
+<h2 id="defining-records-and-errors">Defining Records and Errors</h2>
+<p>Records are defined in Avro IDL using a syntax similar to a struct definition in C:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">Employee</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#000">name</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">boolean</span> <span style="color:#000">active</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">true</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">long</span> <span style="color:#000">salary</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The above example defines a record with the name “Employee” with three fields.</p>
+<p>To define an error, simply use the keyword <em>error</em> instead of <em>record</em>. For example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">error</span> <span style="color:#000">Kaboom</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#000">explanation</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">result_code</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#ce5c00;font-weight:bold">-</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Each field in a record or error consists of a type and a name, optional property annotations and an optional default value.</p>
+<p>A type reference in Avro IDL must be one of:</p>
+<ul>
+<li>A primitive type</li>
+<li>A logical type</li>
+<li>A named schema defined prior to this usage in the same Protocol</li>
+<li>A complex type (array, map, or union)</li>
+</ul>
+<h3 id="primitive-types">Primitive Types</h3>
+<p>The primitive types supported by Avro IDL are the same as those supported by Avro&rsquo;s JSON format. This list includes <em>int</em>, <em>long</em>, <em>string</em>, <em>boolean</em>, <em>float</em>, <em>double</em>, <em>null</em>, and <em>bytes</em>.</p>
+<h3 id="references-to-named-schemata">References to Named Schemata</h3>
+<p>If a named schema has already been defined in the same Avro IDL file, it may be referenced by name as if it were a primitive type:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">Card</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">Suit</span> <span style="color:#000">suit</span><span style="color:#ce5c00;font-weight:bold">;</span> <span style="color:#8f5902;font-style:italic">// refers to the enum Card defined above
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">number</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><h3 id="default-values">Default Values</h3>
+<p>Default values for fields may be optionally specified by using an equals sign after the field name followed by a JSON expression indicating the default value. This JSON is interpreted as described in the <a href="/docs/1.11.1/specification/#schema-record">spec</a>.</p>
+<h3 id="complex-types">Complex Types</h3>
+<h4 id="arrays">Arrays</h4>
+<p>Array types are written in a manner that will seem familiar to C++ or Java programmers. An array of any type t is denoted <code>array&lt;t&gt;</code>. For example, an array of strings is denoted <code>array&lt;string&gt;</code>, and a multidimensional array of Foo records would be <code>array&lt;array&lt;Foo&gt;&gt;</code>.</p>
+<h4 id="maps">Maps</h4>
+<p>Map types are written similarly to array types. An array that contains values of type t is written <code>map&lt;t&gt;</code>. As in the JSON schema format, all maps contain <code>string</code>-type keys.</p>
+<h4 id="unions">Unions</h4>
+<p>Union types are denoted as union { typeA, typeB, typeC, &hellip; }. For example, this record contains a string field that is optional (unioned with null):</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">RecordWithUnion</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">union</span> <span style="color:#ce5c00;font-weight:bold">{</span> <span style="color:#204a87;font-weight:bold">null</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#000">string</span> <span style="color:#ce5c00;font-weight:bold">}</span> <span style="color:#000">optionalString</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the JSON format; namely, a record may not contain multiple elements of the same type.</p>
+<h2 id="defining-rpc-messages">Defining RPC Messages</h2>
+<p>The syntax to define an RPC message within a Avro IDL protocol is similar to the syntax for a method declaration within a C header file or a Java interface. To define an RPC message add which takes two arguments named <em>foo</em> and <em>bar</em>, returning an <em>int</em>, simply include the following definition within the protocol:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">add</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">bar</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span></code></pre></div><p>Message arguments, like record fields, may specify default values.</p>
+<p>To define a message with no response, you may use the alias <em>void</em>, equivalent to the Avro <em>null</em> type:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">void</span> <span style="color:#000">logMessage</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#000">string</span> <span style="color:#000">message</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span></code></pre></div><p>If you have previously defined an error type within the same protocol, you may declare that a message can throw this error using the syntax:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">void</span> <span style="color:#000">goKaboom</span><span style="color:#ce5c00;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">throws</span> <span style="color:#000">Kaboom</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span></code></pre></div><p>To define a one-way message, use the keyword <code>oneway</code> after the parameter list, for example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">void</span> <span style="color:#000">fireAndForget</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#000">string</span> <span style="color:#000">message</span><span style="color:#ce5c00;font-weight:bold">)</span> <span style="color:#000">oneway</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span></code></pre></div><h2 id="other-language-features">Other Language Features</h2>
+<h3 id="comments">Comments</h3>
+<p>All Java-style comments are supported within a Avro IDL file. Any text following <em>//</em> on a line is ignored, as is any text between <em>/*</em> and <em>*/</em>, possibly spanning multiple lines.</p>
+<p>Comments that begin with <em>/**</em> are used as the documentation string for the type or field definition that follows the comment.</p>
+<h3 id="escaping-identifiers">Escaping Identifiers</h3>
+<p>Occasionally, one will need to use a reserved language keyword as an identifier. In order to do so, backticks (`) may be used to escape the identifier. For example, to define a message with the literal name error, you may write:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">void</span> <span style="color:#a40000">`</span><span style="color:#000">error</span><span style="color:#a40000">`</span><span style="color:#ce5c00;font-weight:bold">();</span>
+</span></span></code></pre></div><p>This syntax is allowed anywhere an identifier is expected.</p>
+<h3 id="annotations-for-ordering-and-namespaces">Annotations for Ordering and Namespaces</h3>
+<p>Java-style annotations may be used to add additional properties to types and fields throughout Avro IDL.</p>
+<p>For example, to specify the sort order of a field within a record, one may use the <code>@order</code> annotation before the field name as follows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">MyRecord</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#5c35cc;font-weight:bold">@order</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;ascending&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span> <span style="color:#000">myAscendingSortField</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#5c35cc;font-weight:bold">@order</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;descending&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>  <span style="color:#000">myDescendingField</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#5c35cc;font-weight:bold">@order</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;ignore&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span> <span style="color:#000">myIgnoredField</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>A field&rsquo;s type may also be preceded by annotations, e.g.:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">MyRecord</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#5c35cc;font-weight:bold">@java</span><span style="color:#ce5c00;font-weight:bold">-</span><span style="color:#000">class</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;java.util.ArrayList&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span> <span style="color:#000">array</span><span style="color:#ce5c00;font-weight:bold">&lt;</span><span style="color:#000">string</span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">myStrings</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Similarly, a <code>@namespace</code> annotation may be used to modify the namespace when defining a named schema. For example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#5c35cc;font-weight:bold">@namespace</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;org.apache.avro.firstNamespace&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000">protocol</span> <span style="color:#000">MyProto</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#5c35cc;font-weight:bold">@namespace</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;org.apache.avro.someOtherNamespace&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">record</span> <span style="color:#000">Foo</span> <span style="color:#ce5c00;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">record</span> <span style="color:#000">Bar</span> <span style="color:#ce5c00;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>will define a protocol in the <em>firstNamespace</em> namespace. The record <em>Foo</em> will be defined in <em>someOtherNamespace</em> and <em>Bar</em> will be defined in <em>firstNamespace</em> as it inherits its default from its container.</p>
+<p>Type and field aliases are specified with the <code>@aliases</code> annotation as follows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#5c35cc;font-weight:bold">@aliases</span><span style="color:#ce5c00;font-weight:bold">([</span><span style="color:#4e9a06">&#34;org.old.OldRecord&#34;</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;org.ancient.AncientRecord&#34;</span><span style="color:#ce5c00;font-weight:bold">])</span>
+</span></span><span style="display:flex;"><span><span style="color:#000">record</span> <span style="color:#000">MyRecord</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#5c35cc;font-weight:bold">@aliases</span><span style="color:#ce5c00;font-weight:bold">([</span><span style="color:#4e9a06">&#34;oldField&#34;</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;ancientField&#34;</span><span style="color:#ce5c00;font-weight:bold">])</span> <span style="color:#000">myNewField</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><h2 id="complete-example">Complete Example</h2>
+<p>The following is a complete example of a Avro IDL file that shows most of the above features:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"> * An example protocol in Avro IDL
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#5c35cc;font-weight:bold">@namespace</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;org.apache.avro.test&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000">protocol</span> <span style="color:#000">Simple</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#5c35cc;font-weight:bold">@aliases</span><span style="color:#ce5c00;font-weight:bold">([</span><span style="color:#4e9a06">&#34;org.foo.KindOf&#34;</span><span style="color:#ce5c00;font-weight:bold">])</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">enum</span> <span style="color:#000">Kind</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">FOO</span><span style="color:#ce5c00;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">BAR</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#8f5902;font-style:italic">// the bar enum value
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">BAZ</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ce5c00;font-weight:bold">}</span> 
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000">fixed</span> <span style="color:#000">MD5</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">16</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">record</span> <span style="color:#000">TestRecord</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#5c35cc;font-weight:bold">@order</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;ignore&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">string</span> <span style="color:#000">name</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#5c35cc;font-weight:bold">@order</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#4e9a06">&#34;descending&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">Kind</span> <span style="color:#000">kind</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">MD5</span> <span style="color:#000">hash</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">union</span> <span style="color:#ce5c00;font-weight:bold">{</span> <span style="color:#000">MD5</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">null</span><span style="color:#ce5c00;font-weight:bold">}</span> <span style="color:#5c35cc;font-weight:bold">@aliases</span><span style="color:#ce5c00;font-weight:bold">([</span><span style="color:#4e9a06">&#34;hash&#34;</span><span style="color:#ce5c00;font-weight:bold">])</span> <span style="color:#000">nullableHash</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">array</span><span style="color:#ce5c00;font-weight:bold">&lt;</span><span style="color:#204a87;font-weight:bold">long</span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">arrayOfLongs</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">error</span> <span style="color:#000">TestError</span> <span style="color:#ce5c00;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">string</span> <span style="color:#000">message</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">string</span> <span style="color:#000">hello</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#000">string</span> <span style="color:#000">greeting</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">TestRecord</span> <span style="color:#000">echo</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#000">TestRecord</span> <span style="color:#a40000">`</span><span style="color:#000">record</span><span style="color:#a40000">`</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">add</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">arg1</span><span style="color:#ce5c00;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">arg2</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000">bytes</span> <span style="color:#000">echoBytes</span><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#000">bytes</span> <span style="color:#000">data</span><span style="color:#ce5c00;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">void</span> <span style="color:#a40000">`</span><span style="color:#000">error</span><span style="color:#a40000">`</span><span style="color:#ce5c00;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">throws</span> <span style="color:#000">TestError</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#204a87;font-weight:bold">void</span> <span style="color:#000">ping</span><span style="color:#ce5c00;font-weight:bold">()</span> <span style="color:#000">oneway</span><span style="color:#ce5c00;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Additional examples may be found in the Avro source tree under the <code>src/test/idl/input</code> directory.</p>
+<p>Apache Avro, Avro, Apache, and the Avro and Apache logos are trademarks of The Apache Software Foundation.</p>
+
+</div>
+</div>
+
+
+  
+  
+  
+  
+
+  
+  
+
+  
+
+
+
+          </main>
+        </div>
+      </div>
+      
+
+
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid2 mx-sm-5">
+    <div class="row">
+      <div class="col-4 col-sm-3 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:user@avro.apache.org" aria-label="User mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter" aria-label="Twitter">
+    <a class="text-white" target="_blank" rel="noopener" href="https://twitter.com/ApacheAvro" aria-label="Twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow" aria-label="Stack Overflow">
+    <a class="text-white" target="_blank" rel="noopener" href="https://stackoverflow.com/questions/tagged/avro" aria-label="Stack Overflow">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-4 col-sm-3 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" rel="noopener" href="https://github.com/apache/avro" aria-label="GitHub">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Issues" aria-label="Issues">
+    <a class="text-white" target="_blank" rel="noopener" href="https://issues.apache.org/jira/projects/AVRO/issues" aria-label="Issues">
+      <i class="fab fa-jira"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Chat with other project developers at Slack" aria-label="Chat with other project developers at Slack">
+    <a class="text-white" target="_blank" rel="noopener" href="https://the-asf.slack.com/" aria-label="Chat with other project developers at Slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Developer mailing list" aria-label="Developer mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:dev@avro.apache.org" aria-label="Developer mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-10 col-sm-3 text-center py-2 order-sm-2">
+        <a href="https://www.apache.org/"><small class="text-white">&copy; 2023 The Apache Software Foundation </small></a><small class="text-white">All Rights Reserved</small>
+	
+      <p><small class="text-white">Apache Avro, Avro&trade;, Apache&reg;, and the Apache feather logo are either registered trademarks or trademarks of The Apache Software Foundation.</small></p>
+      </div>
+      <div class="col-5 col-sm-3 order-sm-2">
+          <a href="https://www.apache.org/events/current-event.html"><img src="https://www.apache.org/events/current-event-234x60.png"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+    integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js"
+    integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
+    crossorigin="anonymous"></script>
+
+
+
+
+
+<script src='/js/tabpane-persist.js'></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/main.min.aa9f4c5dae6a98b2c46277f4c56f1673a2b000d1756ce4ffae93784cab25e6d5.js" integrity="sha256-qp9MXa5qmLLEYnf0xW8Wc6KwANF1bOT/rpN4TKsl5tU=" crossorigin="anonymous"></script>
+
+
+
+<script src='/js/prism.js'></script>
+
+
+
+  </body>
+</html>

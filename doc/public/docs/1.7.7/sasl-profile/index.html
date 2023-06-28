@@ -1,0 +1,1783 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.111.2">
+<link rel="alternate" type="text/html" href="/docs/1.7.7/sasl-profile/_print/">
+<link rel="alternate" type="application/rss&#43;xml" href="/docs/1.7.7/sasl-profile/index.xml">
+<meta name="robots" content="index, follow">
+
+
+<link rel="apple-touch-icon" sizes="57x57" href="https://apache.org/favicons/apple-touch-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="https://apache.org/favicons/apple-touch-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="https://apache.org/favicons/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="https://apache.org/favicons/apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="https://apache.org/favicons/apple-touch-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="https://apache.org/favicons/apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="https://apache.org/favicons/apple-touch-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="https://apache.org/favicons/apple-touch-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://apache.org/favicons/apple-touch-icon-180x180.png">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-194x194.png" sizes="194x194">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/android-chrome-192x192.png" sizes="192x192">
+<link rel="icon" type="image/png" href="https://apache.org/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="https://apache.org/favicons/manifest.json">
+<link rel="shortcut icon" href="https://apache.org/favicons/favicon.ico">
+
+<title>SASL profile | Apache Avro</title>
+<meta name="description" content="">
+<meta property="og:title" content="SASL profile" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="/docs/1.7.7/sasl-profile/" /><meta property="og:site_name" content="Apache Avro" />
+<meta itemprop="name" content="SASL profile">
+<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="SASL profile"/>
+<meta name="twitter:description" content=""/>
+
+
+
+
+<link rel="preload" href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" as="style">
+<link href="/scss/main.min.c8d1e8740b9f6b456ed100552e8c731d32c957ed3c5969d324484575041a0be1.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/css/prism.css"/>
+
+  </head>
+  <body class="td-section">
+    <header>
+      
+
+
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/">
+
+		<span class="navbar-logo"><img src="/docs/1.11.1/logo.svg" width="100" height="30" style="margin: 0 10px"></span><span class="text-uppercase font-weight-bold">Apache Avro</span>
+	</a>
+
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Project
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/project/download/">Download</a>
+	
+	<a class="dropdown-item" href="/project/credits/">Credits</a>
+	
+	<a class="dropdown-item" href="/project/how-to-contribute/">How to Contribute</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/licenses/">License</a>
+	
+	<a class="dropdown-item" href="https://hadoop.apache.org/privacy_policy.html">Privacy Policy</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/security/">Security</a>
+	
+	<a class="dropdown-item" href="/project/events/">Events</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/sponsorship.html">Donate</a>
+	
+	<a class="dropdown-item" href="https://www.apache.org/foundation/thanks.html">Thanks</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Blog
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/blog/news/">News</a>
+	
+	<a class="dropdown-item" href="/blog/releases/">Releases</a>
+	
+</div>
+
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+					
+					
+					
+					
+					
+					
+					
+					
+					<a class="nav-link" href="/community/" ><span>Community</span></a>
+				
+			</li>
+
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	Documentation
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="/docs/1.11.1/">1.11.1 (Current)</a>
+	
+	<a class="dropdown-item" href="/docs/1.11.0/">1.11.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.2/">1.10.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.1/">1.10.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.10.0/">1.10.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.2/">1.9.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.1/">1.9.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.9.0/">1.9.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.2/">1.8.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.1/">1.8.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.8.0/">1.8.0</a>
+	
+	<a class="dropdown-item" href="docs/1.7.7/">1.7.7</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.6/">1.7.6</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.5/">1.7.5</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.4/">1.7.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.3/">1.7.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.2/">1.7.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.1/">1.7.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.7.0/">1.7.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.3/">1.6.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.2/">1.6.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.1/">1.6.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.6.0/">1.6.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.4/">1.5.4</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.3/">1.5.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.2/">1.5.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.1/">1.5.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.5.0/">1.5.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.1/">1.4.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.4.0/">1.4.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.3/">1.3.3</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.2/">1.3.2</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.1/">1.3.1</a>
+	
+	<a class="dropdown-item" href="/docs/1.3.0/">1.3.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.2.0/">1.2.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.1.0/">1.1.0</a>
+	
+	<a class="dropdown-item" href="/docs/1.0.0/">1.0.0</a>
+	
+</div>
+
+			</li>
+			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+				
+
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	ASF links
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+	
+	<a class="dropdown-item" href="http://www.apache.org/" target="_blank">ASF Web Site</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/licenses/" target="_blank">License</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/sponsorship.html" target="_blank">Donate</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/foundation/thanks.html" target="_blank">Thanks</a>
+	
+	<a class="dropdown-item" href="http://www.apache.org/security/" target="_blank">Security</a>
+	
+</div>
+
+			</li>
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block"></div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <aside class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  <div id="content-mobile">
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  </div>
+  <div id="content-desktop"></div>
+  <nav class="collapse td-sidebar-nav foldable-nav" id="td-section-nav">
+    <ul class="td-sidebar-nav__section pr-md-3 ul-0">
+      <li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child active-path" id="m-docs-li">
+  <a href="/docs/" class="align-left pl-0 td-sidebar-link td-sidebar-link__section tree-root" id="m-docs"><span class="">Documentation</span></a>
+  <ul class="ul-1">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs1111-li">
+  <input type="checkbox" id="m-docs1111-check"/>
+  <label for="m-docs1111-check"><a href="/docs/1.11.1/" title="Apache Avro™ 1.11.1(Current) Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111"><span class="">1.11.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111getting-started-java-li">
+  <input type="checkbox" id="m-docs1111getting-started-java-check"/>
+  <label for="m-docs1111getting-started-java-check"><a href="/docs/1.11.1/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111getting-started-python-li">
+  <input type="checkbox" id="m-docs1111getting-started-python-check"/>
+  <label for="m-docs1111getting-started-python-check"><a href="/docs/1.11.1/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111specification-li">
+  <input type="checkbox" id="m-docs1111specification-check"/>
+  <label for="m-docs1111specification-check"><a href="/docs/1.11.1/specification/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111specification"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111mapreduce-guide-li">
+  <input type="checkbox" id="m-docs1111mapreduce-guide-check"/>
+  <label for="m-docs1111mapreduce-guide-check"><a href="/docs/1.11.1/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111idl-language-li">
+  <input type="checkbox" id="m-docs1111idl-language-check"/>
+  <label for="m-docs1111idl-language-check"><a href="/docs/1.11.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1111sasl-profile-li">
+  <input type="checkbox" id="m-docs1111sasl-profile-check"/>
+  <label for="m-docs1111sasl-profile-check"><a href="/docs/1.11.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1111sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs1110-li">
+  <input type="checkbox" id="m-docs1110-check"/>
+  <label for="m-docs1110-check"><a href="/docs/1.11.0/" title="Apache Avro™ 1.11.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110"><span class="">1.11.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110getting-started-java-li">
+  <input type="checkbox" id="m-docs1110getting-started-java-check"/>
+  <label for="m-docs1110getting-started-java-check"><a href="/docs/1.11.0/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110getting-started-python-li">
+  <input type="checkbox" id="m-docs1110getting-started-python-check"/>
+  <label for="m-docs1110getting-started-python-check"><a href="/docs/1.11.0/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110specification1-li">
+  <input type="checkbox" id="m-docs1110specification1-check"/>
+  <label for="m-docs1110specification1-check"><a href="/docs/1.11.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110trevni-li">
+  <input type="checkbox" id="m-docs1110trevni-check"/>
+  <label for="m-docs1110trevni-check"><a href="/docs/1.11.0/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110mapreduce-guide-li">
+  <input type="checkbox" id="m-docs1110mapreduce-guide-check"/>
+  <label for="m-docs1110mapreduce-guide-check"><a href="/docs/1.11.0/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110idl-language-li">
+  <input type="checkbox" id="m-docs1110idl-language-check"/>
+  <label for="m-docs1110idl-language-check"><a href="/docs/1.11.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110sasl-profile-li">
+  <input type="checkbox" id="m-docs1110sasl-profile-check"/>
+  <label for="m-docs1110sasl-profile-check"><a href="/docs/1.11.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110wiki-li">
+  <input type="checkbox" id="m-docs1110wiki-check"/>
+  <label for="m-docs1110wiki-check"><a href="/docs/1.11.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1110faq-li">
+  <input type="checkbox" id="m-docs1110faq-check"/>
+  <label for="m-docs1110faq-check"><a href="/docs/1.11.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1110faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs1102-li">
+  <input type="checkbox" id="m-docs1102-check"/>
+  <label for="m-docs1102-check"><a href="/docs/1.10.2/" title="Apache Avro™ 1.10.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102"><span class="">1.10.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102getting-started-java-li">
+  <input type="checkbox" id="m-docs1102getting-started-java-check"/>
+  <label for="m-docs1102getting-started-java-check"><a href="/docs/1.10.2/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102getting-started-python-li">
+  <input type="checkbox" id="m-docs1102getting-started-python-check"/>
+  <label for="m-docs1102getting-started-python-check"><a href="/docs/1.10.2/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102specification1-li">
+  <input type="checkbox" id="m-docs1102specification1-check"/>
+  <label for="m-docs1102specification1-check"><a href="/docs/1.10.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102trevni-li">
+  <input type="checkbox" id="m-docs1102trevni-check"/>
+  <label for="m-docs1102trevni-check"><a href="/docs/1.10.2/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102mapreduce-guide-li">
+  <input type="checkbox" id="m-docs1102mapreduce-guide-check"/>
+  <label for="m-docs1102mapreduce-guide-check"><a href="/docs/1.10.2/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102idl-language-li">
+  <input type="checkbox" id="m-docs1102idl-language-check"/>
+  <label for="m-docs1102idl-language-check"><a href="/docs/1.10.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102sasl-profile-li">
+  <input type="checkbox" id="m-docs1102sasl-profile-check"/>
+  <label for="m-docs1102sasl-profile-check"><a href="/docs/1.10.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102wiki-li">
+  <input type="checkbox" id="m-docs1102wiki-check"/>
+  <label for="m-docs1102wiki-check"><a href="/docs/1.10.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1102faq-li">
+  <input type="checkbox" id="m-docs1102faq-check"/>
+  <label for="m-docs1102faq-check"><a href="/docs/1.10.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1102faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs1101-li">
+  <input type="checkbox" id="m-docs1101-check"/>
+  <label for="m-docs1101-check"><a href="/docs/1.10.1/" title="Apache Avro™ 1.10.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101"><span class="">1.10.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101getting-started-java-li">
+  <input type="checkbox" id="m-docs1101getting-started-java-check"/>
+  <label for="m-docs1101getting-started-java-check"><a href="/docs/1.10.1/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101getting-started-python-li">
+  <input type="checkbox" id="m-docs1101getting-started-python-check"/>
+  <label for="m-docs1101getting-started-python-check"><a href="/docs/1.10.1/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101specification1-li">
+  <input type="checkbox" id="m-docs1101specification1-check"/>
+  <label for="m-docs1101specification1-check"><a href="/docs/1.10.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101trevni-li">
+  <input type="checkbox" id="m-docs1101trevni-check"/>
+  <label for="m-docs1101trevni-check"><a href="/docs/1.10.1/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101mapreduce-guide-li">
+  <input type="checkbox" id="m-docs1101mapreduce-guide-check"/>
+  <label for="m-docs1101mapreduce-guide-check"><a href="/docs/1.10.1/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101idl-language-li">
+  <input type="checkbox" id="m-docs1101idl-language-check"/>
+  <label for="m-docs1101idl-language-check"><a href="/docs/1.10.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101sasl-profile-li">
+  <input type="checkbox" id="m-docs1101sasl-profile-check"/>
+  <label for="m-docs1101sasl-profile-check"><a href="/docs/1.10.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101wiki-li">
+  <input type="checkbox" id="m-docs1101wiki-check"/>
+  <label for="m-docs1101wiki-check"><a href="/docs/1.10.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1101faq-li">
+  <input type="checkbox" id="m-docs1101faq-check"/>
+  <label for="m-docs1101faq-check"><a href="/docs/1.10.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1101faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs1100-li">
+  <input type="checkbox" id="m-docs1100-check"/>
+  <label for="m-docs1100-check"><a href="/docs/1.10.0/" title="Apache Avro™ 1.10.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100"><span class="">1.10.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100getting-started-java-li">
+  <input type="checkbox" id="m-docs1100getting-started-java-check"/>
+  <label for="m-docs1100getting-started-java-check"><a href="/docs/1.10.0/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100getting-started-python-li">
+  <input type="checkbox" id="m-docs1100getting-started-python-check"/>
+  <label for="m-docs1100getting-started-python-check"><a href="/docs/1.10.0/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100specification1-li">
+  <input type="checkbox" id="m-docs1100specification1-check"/>
+  <label for="m-docs1100specification1-check"><a href="/docs/1.10.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100trevni-li">
+  <input type="checkbox" id="m-docs1100trevni-check"/>
+  <label for="m-docs1100trevni-check"><a href="/docs/1.10.0/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100mapreduce-guide-li">
+  <input type="checkbox" id="m-docs1100mapreduce-guide-check"/>
+  <label for="m-docs1100mapreduce-guide-check"><a href="/docs/1.10.0/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100idl-language-li">
+  <input type="checkbox" id="m-docs1100idl-language-check"/>
+  <label for="m-docs1100idl-language-check"><a href="/docs/1.10.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100sasl-profile-li">
+  <input type="checkbox" id="m-docs1100sasl-profile-check"/>
+  <label for="m-docs1100sasl-profile-check"><a href="/docs/1.10.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100wiki-li">
+  <input type="checkbox" id="m-docs1100wiki-check"/>
+  <label for="m-docs1100wiki-check"><a href="/docs/1.10.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs1100faq-li">
+  <input type="checkbox" id="m-docs1100faq-check"/>
+  <label for="m-docs1100faq-check"><a href="/docs/1.10.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs1100faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs192-li">
+  <input type="checkbox" id="m-docs192-check"/>
+  <label for="m-docs192-check"><a href="/docs/1.9.2/" title="Apache Avro™ 1.9.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192"><span class="">1.9.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192getting-started-java-li">
+  <input type="checkbox" id="m-docs192getting-started-java-check"/>
+  <label for="m-docs192getting-started-java-check"><a href="/docs/1.9.2/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192getting-started-python-li">
+  <input type="checkbox" id="m-docs192getting-started-python-check"/>
+  <label for="m-docs192getting-started-python-check"><a href="/docs/1.9.2/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192specification1-li">
+  <input type="checkbox" id="m-docs192specification1-check"/>
+  <label for="m-docs192specification1-check"><a href="/docs/1.9.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192trevni-li">
+  <input type="checkbox" id="m-docs192trevni-check"/>
+  <label for="m-docs192trevni-check"><a href="/docs/1.9.2/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192mapreduce-guide-li">
+  <input type="checkbox" id="m-docs192mapreduce-guide-check"/>
+  <label for="m-docs192mapreduce-guide-check"><a href="/docs/1.9.2/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192idl-language-li">
+  <input type="checkbox" id="m-docs192idl-language-check"/>
+  <label for="m-docs192idl-language-check"><a href="/docs/1.9.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192sasl-profile-li">
+  <input type="checkbox" id="m-docs192sasl-profile-check"/>
+  <label for="m-docs192sasl-profile-check"><a href="/docs/1.9.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192wiki-li">
+  <input type="checkbox" id="m-docs192wiki-check"/>
+  <label for="m-docs192wiki-check"><a href="/docs/1.9.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs192faq-li">
+  <input type="checkbox" id="m-docs192faq-check"/>
+  <label for="m-docs192faq-check"><a href="/docs/1.9.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs192faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs191-li">
+  <input type="checkbox" id="m-docs191-check"/>
+  <label for="m-docs191-check"><a href="/docs/1.9.1/" title="Apache Avro™ 1.9.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191"><span class="">1.9.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191getting-started-java-li">
+  <input type="checkbox" id="m-docs191getting-started-java-check"/>
+  <label for="m-docs191getting-started-java-check"><a href="/docs/1.9.1/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191getting-started-python-li">
+  <input type="checkbox" id="m-docs191getting-started-python-check"/>
+  <label for="m-docs191getting-started-python-check"><a href="/docs/1.9.1/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191specification1-li">
+  <input type="checkbox" id="m-docs191specification1-check"/>
+  <label for="m-docs191specification1-check"><a href="/docs/1.9.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191trevni-li">
+  <input type="checkbox" id="m-docs191trevni-check"/>
+  <label for="m-docs191trevni-check"><a href="/docs/1.9.1/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191mapreduce-guide-li">
+  <input type="checkbox" id="m-docs191mapreduce-guide-check"/>
+  <label for="m-docs191mapreduce-guide-check"><a href="/docs/1.9.1/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191idl-language-li">
+  <input type="checkbox" id="m-docs191idl-language-check"/>
+  <label for="m-docs191idl-language-check"><a href="/docs/1.9.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191sasl-profile-li">
+  <input type="checkbox" id="m-docs191sasl-profile-check"/>
+  <label for="m-docs191sasl-profile-check"><a href="/docs/1.9.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191wiki-li">
+  <input type="checkbox" id="m-docs191wiki-check"/>
+  <label for="m-docs191wiki-check"><a href="/docs/1.9.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs191faq-li">
+  <input type="checkbox" id="m-docs191faq-check"/>
+  <label for="m-docs191faq-check"><a href="/docs/1.9.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs191faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs190-li">
+  <input type="checkbox" id="m-docs190-check"/>
+  <label for="m-docs190-check"><a href="/docs/1.9.0/" title="Apache Avro™ 1.9.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190"><span class="">1.9.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190getting-started-java-li">
+  <input type="checkbox" id="m-docs190getting-started-java-check"/>
+  <label for="m-docs190getting-started-java-check"><a href="/docs/1.9.0/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190getting-started-python-li">
+  <input type="checkbox" id="m-docs190getting-started-python-check"/>
+  <label for="m-docs190getting-started-python-check"><a href="/docs/1.9.0/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190specification1-li">
+  <input type="checkbox" id="m-docs190specification1-check"/>
+  <label for="m-docs190specification1-check"><a href="/docs/1.9.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190trevni-li">
+  <input type="checkbox" id="m-docs190trevni-check"/>
+  <label for="m-docs190trevni-check"><a href="/docs/1.9.0/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190mapreduce-guide-li">
+  <input type="checkbox" id="m-docs190mapreduce-guide-check"/>
+  <label for="m-docs190mapreduce-guide-check"><a href="/docs/1.9.0/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190idl-language-li">
+  <input type="checkbox" id="m-docs190idl-language-check"/>
+  <label for="m-docs190idl-language-check"><a href="/docs/1.9.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190sasl-profile-li">
+  <input type="checkbox" id="m-docs190sasl-profile-check"/>
+  <label for="m-docs190sasl-profile-check"><a href="/docs/1.9.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190wiki-li">
+  <input type="checkbox" id="m-docs190wiki-check"/>
+  <label for="m-docs190wiki-check"><a href="/docs/1.9.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs190faq-li">
+  <input type="checkbox" id="m-docs190faq-check"/>
+  <label for="m-docs190faq-check"><a href="/docs/1.9.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs190faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs182-li">
+  <input type="checkbox" id="m-docs182-check"/>
+  <label for="m-docs182-check"><a href="/docs/1.8.2/" title="Apache Avro™ 1.8.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182"><span class="">1.8.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182getting-started-java-li">
+  <input type="checkbox" id="m-docs182getting-started-java-check"/>
+  <label for="m-docs182getting-started-java-check"><a href="/docs/1.8.2/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182getting-started-python-li">
+  <input type="checkbox" id="m-docs182getting-started-python-check"/>
+  <label for="m-docs182getting-started-python-check"><a href="/docs/1.8.2/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182specification1-li">
+  <input type="checkbox" id="m-docs182specification1-check"/>
+  <label for="m-docs182specification1-check"><a href="/docs/1.8.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182trevni-li">
+  <input type="checkbox" id="m-docs182trevni-check"/>
+  <label for="m-docs182trevni-check"><a href="/docs/1.8.2/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182mapreduce-guide-li">
+  <input type="checkbox" id="m-docs182mapreduce-guide-check"/>
+  <label for="m-docs182mapreduce-guide-check"><a href="/docs/1.8.2/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182idl-language-li">
+  <input type="checkbox" id="m-docs182idl-language-check"/>
+  <label for="m-docs182idl-language-check"><a href="/docs/1.8.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182sasl-profile-li">
+  <input type="checkbox" id="m-docs182sasl-profile-check"/>
+  <label for="m-docs182sasl-profile-check"><a href="/docs/1.8.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182wiki-li">
+  <input type="checkbox" id="m-docs182wiki-check"/>
+  <label for="m-docs182wiki-check"><a href="/docs/1.8.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs182faq-li">
+  <input type="checkbox" id="m-docs182faq-check"/>
+  <label for="m-docs182faq-check"><a href="/docs/1.8.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs182faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs181-li">
+  <input type="checkbox" id="m-docs181-check"/>
+  <label for="m-docs181-check"><a href="/docs/1.8.1/" title="Apache Avro™ 1.8.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181"><span class="">1.8.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181getting-started-java-li">
+  <input type="checkbox" id="m-docs181getting-started-java-check"/>
+  <label for="m-docs181getting-started-java-check"><a href="/docs/1.8.1/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181getting-started-python-li">
+  <input type="checkbox" id="m-docs181getting-started-python-check"/>
+  <label for="m-docs181getting-started-python-check"><a href="/docs/1.8.1/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181specification1-li">
+  <input type="checkbox" id="m-docs181specification1-check"/>
+  <label for="m-docs181specification1-check"><a href="/docs/1.8.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181trevni-li">
+  <input type="checkbox" id="m-docs181trevni-check"/>
+  <label for="m-docs181trevni-check"><a href="/docs/1.8.1/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181mapreduce-guide-li">
+  <input type="checkbox" id="m-docs181mapreduce-guide-check"/>
+  <label for="m-docs181mapreduce-guide-check"><a href="/docs/1.8.1/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181idl-language-li">
+  <input type="checkbox" id="m-docs181idl-language-check"/>
+  <label for="m-docs181idl-language-check"><a href="/docs/1.8.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181sasl-profile-li">
+  <input type="checkbox" id="m-docs181sasl-profile-check"/>
+  <label for="m-docs181sasl-profile-check"><a href="/docs/1.8.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181wiki-li">
+  <input type="checkbox" id="m-docs181wiki-check"/>
+  <label for="m-docs181wiki-check"><a href="/docs/1.8.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs181faq-li">
+  <input type="checkbox" id="m-docs181faq-check"/>
+  <label for="m-docs181faq-check"><a href="/docs/1.8.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs181faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs180-li">
+  <input type="checkbox" id="m-docs180-check"/>
+  <label for="m-docs180-check"><a href="/docs/1.8.0/" title="Apache Avro™ 1.8.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180"><span class="">1.8.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180getting-started-java-li">
+  <input type="checkbox" id="m-docs180getting-started-java-check"/>
+  <label for="m-docs180getting-started-java-check"><a href="/docs/1.8.0/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180getting-started-python-li">
+  <input type="checkbox" id="m-docs180getting-started-python-check"/>
+  <label for="m-docs180getting-started-python-check"><a href="/docs/1.8.0/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180specification1-li">
+  <input type="checkbox" id="m-docs180specification1-check"/>
+  <label for="m-docs180specification1-check"><a href="/docs/1.8.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180trevni-li">
+  <input type="checkbox" id="m-docs180trevni-check"/>
+  <label for="m-docs180trevni-check"><a href="/docs/1.8.0/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180mapreduce-guide-li">
+  <input type="checkbox" id="m-docs180mapreduce-guide-check"/>
+  <label for="m-docs180mapreduce-guide-check"><a href="/docs/1.8.0/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180idl-language-li">
+  <input type="checkbox" id="m-docs180idl-language-check"/>
+  <label for="m-docs180idl-language-check"><a href="/docs/1.8.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180sasl-profile-li">
+  <input type="checkbox" id="m-docs180sasl-profile-check"/>
+  <label for="m-docs180sasl-profile-check"><a href="/docs/1.8.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180wiki-li">
+  <input type="checkbox" id="m-docs180wiki-check"/>
+  <label for="m-docs180wiki-check"><a href="/docs/1.8.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs180faq-li">
+  <input type="checkbox" id="m-docs180faq-check"/>
+  <label for="m-docs180faq-check"><a href="/docs/1.8.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs180faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child active-path" id="m-docs177-li">
+  <input type="checkbox" id="m-docs177-check" checked/>
+  <label for="m-docs177-check"><a href="/docs/1.7.7/" title="Apache Avro™ 1.7.7 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177"><span class="">1.7.7</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177getting-started-java-li">
+  <input type="checkbox" id="m-docs177getting-started-java-check"/>
+  <label for="m-docs177getting-started-java-check"><a href="/docs/1.7.7/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177getting-started-python-li">
+  <input type="checkbox" id="m-docs177getting-started-python-check"/>
+  <label for="m-docs177getting-started-python-check"><a href="/docs/1.7.7/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177specification1-li">
+  <input type="checkbox" id="m-docs177specification1-check"/>
+  <label for="m-docs177specification1-check"><a href="/docs/1.7.7/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177trevni-li">
+  <input type="checkbox" id="m-docs177trevni-check"/>
+  <label for="m-docs177trevni-check"><a href="/docs/1.7.7/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177mapreduce-guide-li">
+  <input type="checkbox" id="m-docs177mapreduce-guide-check"/>
+  <label for="m-docs177mapreduce-guide-check"><a href="/docs/1.7.7/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177idl-language-li">
+  <input type="checkbox" id="m-docs177idl-language-check"/>
+  <label for="m-docs177idl-language-check"><a href="/docs/1.7.7/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177sasl-profile-li">
+  <input type="checkbox" id="m-docs177sasl-profile-check"/>
+  <label for="m-docs177sasl-profile-check"><a href="/docs/1.7.7/sasl-profile/" class="align-left pl-0  active td-sidebar-link td-sidebar-link__section" id="m-docs177sasl-profile"><span class="td-sidebar-nav-active-item">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177wiki-li">
+  <input type="checkbox" id="m-docs177wiki-check"/>
+  <label for="m-docs177wiki-check"><a href="/docs/1.7.7/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs177faq-li">
+  <input type="checkbox" id="m-docs177faq-check"/>
+  <label for="m-docs177faq-check"><a href="/docs/1.7.7/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs177faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs176-li">
+  <input type="checkbox" id="m-docs176-check"/>
+  <label for="m-docs176-check"><a href="/docs/1.7.6/" title="Apache Avro™ 1.7.6 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176"><span class="">1.7.6</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176getting-started-java-li">
+  <input type="checkbox" id="m-docs176getting-started-java-check"/>
+  <label for="m-docs176getting-started-java-check"><a href="/docs/1.7.6/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176getting-started-python-li">
+  <input type="checkbox" id="m-docs176getting-started-python-check"/>
+  <label for="m-docs176getting-started-python-check"><a href="/docs/1.7.6/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176specification1-li">
+  <input type="checkbox" id="m-docs176specification1-check"/>
+  <label for="m-docs176specification1-check"><a href="/docs/1.7.6/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176trevni-li">
+  <input type="checkbox" id="m-docs176trevni-check"/>
+  <label for="m-docs176trevni-check"><a href="/docs/1.7.6/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176mapreduce-guide-li">
+  <input type="checkbox" id="m-docs176mapreduce-guide-check"/>
+  <label for="m-docs176mapreduce-guide-check"><a href="/docs/1.7.6/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176idl-language-li">
+  <input type="checkbox" id="m-docs176idl-language-check"/>
+  <label for="m-docs176idl-language-check"><a href="/docs/1.7.6/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176sasl-profile-li">
+  <input type="checkbox" id="m-docs176sasl-profile-check"/>
+  <label for="m-docs176sasl-profile-check"><a href="/docs/1.7.6/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176wiki-li">
+  <input type="checkbox" id="m-docs176wiki-check"/>
+  <label for="m-docs176wiki-check"><a href="/docs/1.7.6/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs176faq-li">
+  <input type="checkbox" id="m-docs176faq-check"/>
+  <label for="m-docs176faq-check"><a href="/docs/1.7.6/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs176faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs175-li">
+  <input type="checkbox" id="m-docs175-check"/>
+  <label for="m-docs175-check"><a href="/docs/1.7.5/" title="Apache Avro™ 1.7.5 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175"><span class="">1.7.5</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175getting-started-java-li">
+  <input type="checkbox" id="m-docs175getting-started-java-check"/>
+  <label for="m-docs175getting-started-java-check"><a href="/docs/1.7.5/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175getting-started-python-li">
+  <input type="checkbox" id="m-docs175getting-started-python-check"/>
+  <label for="m-docs175getting-started-python-check"><a href="/docs/1.7.5/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175specification1-li">
+  <input type="checkbox" id="m-docs175specification1-check"/>
+  <label for="m-docs175specification1-check"><a href="/docs/1.7.5/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175trevni-li">
+  <input type="checkbox" id="m-docs175trevni-check"/>
+  <label for="m-docs175trevni-check"><a href="/docs/1.7.5/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175mapreduce-guide-li">
+  <input type="checkbox" id="m-docs175mapreduce-guide-check"/>
+  <label for="m-docs175mapreduce-guide-check"><a href="/docs/1.7.5/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175idl-language-li">
+  <input type="checkbox" id="m-docs175idl-language-check"/>
+  <label for="m-docs175idl-language-check"><a href="/docs/1.7.5/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175sasl-profile-li">
+  <input type="checkbox" id="m-docs175sasl-profile-check"/>
+  <label for="m-docs175sasl-profile-check"><a href="/docs/1.7.5/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175wiki-li">
+  <input type="checkbox" id="m-docs175wiki-check"/>
+  <label for="m-docs175wiki-check"><a href="/docs/1.7.5/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs175faq-li">
+  <input type="checkbox" id="m-docs175faq-check"/>
+  <label for="m-docs175faq-check"><a href="/docs/1.7.5/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs175faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs174-li">
+  <input type="checkbox" id="m-docs174-check"/>
+  <label for="m-docs174-check"><a href="/docs/1.7.4/" title="Apache Avro™ 1.7.4 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174"><span class="">1.7.4</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174getting-started-java-li">
+  <input type="checkbox" id="m-docs174getting-started-java-check"/>
+  <label for="m-docs174getting-started-java-check"><a href="/docs/1.7.4/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174getting-started-python-li">
+  <input type="checkbox" id="m-docs174getting-started-python-check"/>
+  <label for="m-docs174getting-started-python-check"><a href="/docs/1.7.4/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174specification1-li">
+  <input type="checkbox" id="m-docs174specification1-check"/>
+  <label for="m-docs174specification1-check"><a href="/docs/1.7.4/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174trevni-li">
+  <input type="checkbox" id="m-docs174trevni-check"/>
+  <label for="m-docs174trevni-check"><a href="/docs/1.7.4/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174mapreduce-guide-li">
+  <input type="checkbox" id="m-docs174mapreduce-guide-check"/>
+  <label for="m-docs174mapreduce-guide-check"><a href="/docs/1.7.4/mapreduce-guide/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174mapreduce-guide"><span class="">MapReduce guide</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174idl-language-li">
+  <input type="checkbox" id="m-docs174idl-language-check"/>
+  <label for="m-docs174idl-language-check"><a href="/docs/1.7.4/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174sasl-profile-li">
+  <input type="checkbox" id="m-docs174sasl-profile-check"/>
+  <label for="m-docs174sasl-profile-check"><a href="/docs/1.7.4/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174wiki-li">
+  <input type="checkbox" id="m-docs174wiki-check"/>
+  <label for="m-docs174wiki-check"><a href="/docs/1.7.4/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs174faq-li">
+  <input type="checkbox" id="m-docs174faq-check"/>
+  <label for="m-docs174faq-check"><a href="/docs/1.7.4/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs174faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs173-li">
+  <input type="checkbox" id="m-docs173-check"/>
+  <label for="m-docs173-check"><a href="/docs/1.7.3/" title="Apache Avro™ 1.7.3 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173"><span class="">1.7.3</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173getting-started-java-li">
+  <input type="checkbox" id="m-docs173getting-started-java-check"/>
+  <label for="m-docs173getting-started-java-check"><a href="/docs/1.7.3/getting-started-java/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173getting-started-java"><span class="">Getting Started (Java)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173getting-started-python-li">
+  <input type="checkbox" id="m-docs173getting-started-python-check"/>
+  <label for="m-docs173getting-started-python-check"><a href="/docs/1.7.3/getting-started-python/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173getting-started-python"><span class="">Getting Started (Python)</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173specification1-li">
+  <input type="checkbox" id="m-docs173specification1-check"/>
+  <label for="m-docs173specification1-check"><a href="/docs/1.7.3/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173trevni-li">
+  <input type="checkbox" id="m-docs173trevni-check"/>
+  <label for="m-docs173trevni-check"><a href="/docs/1.7.3/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173idl-language-li">
+  <input type="checkbox" id="m-docs173idl-language-check"/>
+  <label for="m-docs173idl-language-check"><a href="/docs/1.7.3/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173sasl-profile-li">
+  <input type="checkbox" id="m-docs173sasl-profile-check"/>
+  <label for="m-docs173sasl-profile-check"><a href="/docs/1.7.3/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173wiki-li">
+  <input type="checkbox" id="m-docs173wiki-check"/>
+  <label for="m-docs173wiki-check"><a href="/docs/1.7.3/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs173faq-li">
+  <input type="checkbox" id="m-docs173faq-check"/>
+  <label for="m-docs173faq-check"><a href="/docs/1.7.3/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs173faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs172-li">
+  <input type="checkbox" id="m-docs172-check"/>
+  <label for="m-docs172-check"><a href="/docs/1.7.2/" title="Apache Avro™ 1.7.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172"><span class="">1.7.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172specification1-li">
+  <input type="checkbox" id="m-docs172specification1-check"/>
+  <label for="m-docs172specification1-check"><a href="/docs/1.7.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172trevni-li">
+  <input type="checkbox" id="m-docs172trevni-check"/>
+  <label for="m-docs172trevni-check"><a href="/docs/1.7.2/trevni/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172trevni"><span class="">Trevni</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172idl-language-li">
+  <input type="checkbox" id="m-docs172idl-language-check"/>
+  <label for="m-docs172idl-language-check"><a href="/docs/1.7.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172sasl-profile-li">
+  <input type="checkbox" id="m-docs172sasl-profile-check"/>
+  <label for="m-docs172sasl-profile-check"><a href="/docs/1.7.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172wiki-li">
+  <input type="checkbox" id="m-docs172wiki-check"/>
+  <label for="m-docs172wiki-check"><a href="/docs/1.7.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs172faq-li">
+  <input type="checkbox" id="m-docs172faq-check"/>
+  <label for="m-docs172faq-check"><a href="/docs/1.7.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs172faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs171-li">
+  <input type="checkbox" id="m-docs171-check"/>
+  <label for="m-docs171-check"><a href="/docs/1.7.1/" title="Apache Avro™ 1.7.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171"><span class="">1.7.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs171specification1-li">
+  <input type="checkbox" id="m-docs171specification1-check"/>
+  <label for="m-docs171specification1-check"><a href="/docs/1.7.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs171idl-language-li">
+  <input type="checkbox" id="m-docs171idl-language-check"/>
+  <label for="m-docs171idl-language-check"><a href="/docs/1.7.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs171sasl-profile-li">
+  <input type="checkbox" id="m-docs171sasl-profile-check"/>
+  <label for="m-docs171sasl-profile-check"><a href="/docs/1.7.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs171wiki-li">
+  <input type="checkbox" id="m-docs171wiki-check"/>
+  <label for="m-docs171wiki-check"><a href="/docs/1.7.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs171faq-li">
+  <input type="checkbox" id="m-docs171faq-check"/>
+  <label for="m-docs171faq-check"><a href="/docs/1.7.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs171faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs170-li">
+  <input type="checkbox" id="m-docs170-check"/>
+  <label for="m-docs170-check"><a href="/docs/1.7.0/" title="Apache Avro™ 1.7.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170"><span class="">1.7.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs170specification1-li">
+  <input type="checkbox" id="m-docs170specification1-check"/>
+  <label for="m-docs170specification1-check"><a href="/docs/1.7.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs170idl-language-li">
+  <input type="checkbox" id="m-docs170idl-language-check"/>
+  <label for="m-docs170idl-language-check"><a href="/docs/1.7.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs170sasl-profile-li">
+  <input type="checkbox" id="m-docs170sasl-profile-check"/>
+  <label for="m-docs170sasl-profile-check"><a href="/docs/1.7.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs170wiki-li">
+  <input type="checkbox" id="m-docs170wiki-check"/>
+  <label for="m-docs170wiki-check"><a href="/docs/1.7.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs170faq-li">
+  <input type="checkbox" id="m-docs170faq-check"/>
+  <label for="m-docs170faq-check"><a href="/docs/1.7.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs170faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs163-li">
+  <input type="checkbox" id="m-docs163-check"/>
+  <label for="m-docs163-check"><a href="/docs/1.6.3/" title="Apache Avro™ 1.6.3 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163"><span class="">1.6.3</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs163specification1-li">
+  <input type="checkbox" id="m-docs163specification1-check"/>
+  <label for="m-docs163specification1-check"><a href="/docs/1.6.3/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs163idl-language-li">
+  <input type="checkbox" id="m-docs163idl-language-check"/>
+  <label for="m-docs163idl-language-check"><a href="/docs/1.6.3/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs163sasl-profile-li">
+  <input type="checkbox" id="m-docs163sasl-profile-check"/>
+  <label for="m-docs163sasl-profile-check"><a href="/docs/1.6.3/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs163wiki-li">
+  <input type="checkbox" id="m-docs163wiki-check"/>
+  <label for="m-docs163wiki-check"><a href="/docs/1.6.3/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs163faq-li">
+  <input type="checkbox" id="m-docs163faq-check"/>
+  <label for="m-docs163faq-check"><a href="/docs/1.6.3/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs163faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs162-li">
+  <input type="checkbox" id="m-docs162-check"/>
+  <label for="m-docs162-check"><a href="/docs/1.6.2/" title="Apache Avro™ 1.6.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162"><span class="">1.6.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs162specification1-li">
+  <input type="checkbox" id="m-docs162specification1-check"/>
+  <label for="m-docs162specification1-check"><a href="/docs/1.6.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs162idl-language-li">
+  <input type="checkbox" id="m-docs162idl-language-check"/>
+  <label for="m-docs162idl-language-check"><a href="/docs/1.6.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs162sasl-profile-li">
+  <input type="checkbox" id="m-docs162sasl-profile-check"/>
+  <label for="m-docs162sasl-profile-check"><a href="/docs/1.6.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs162wiki-li">
+  <input type="checkbox" id="m-docs162wiki-check"/>
+  <label for="m-docs162wiki-check"><a href="/docs/1.6.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs162faq-li">
+  <input type="checkbox" id="m-docs162faq-check"/>
+  <label for="m-docs162faq-check"><a href="/docs/1.6.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs162faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs161-li">
+  <input type="checkbox" id="m-docs161-check"/>
+  <label for="m-docs161-check"><a href="/docs/1.6.1/" title="Apache Avro™ 1.6.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161"><span class="">1.6.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs161specification1-li">
+  <input type="checkbox" id="m-docs161specification1-check"/>
+  <label for="m-docs161specification1-check"><a href="/docs/1.6.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs161idl-language-li">
+  <input type="checkbox" id="m-docs161idl-language-check"/>
+  <label for="m-docs161idl-language-check"><a href="/docs/1.6.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs161sasl-profile-li">
+  <input type="checkbox" id="m-docs161sasl-profile-check"/>
+  <label for="m-docs161sasl-profile-check"><a href="/docs/1.6.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs161wiki-li">
+  <input type="checkbox" id="m-docs161wiki-check"/>
+  <label for="m-docs161wiki-check"><a href="/docs/1.6.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs161faq-li">
+  <input type="checkbox" id="m-docs161faq-check"/>
+  <label for="m-docs161faq-check"><a href="/docs/1.6.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs161faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs160-li">
+  <input type="checkbox" id="m-docs160-check"/>
+  <label for="m-docs160-check"><a href="/docs/1.6.0/" title="Apache Avro™ 1.6.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160"><span class="">1.6.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs160specification1-li">
+  <input type="checkbox" id="m-docs160specification1-check"/>
+  <label for="m-docs160specification1-check"><a href="/docs/1.6.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs160idl-language-li">
+  <input type="checkbox" id="m-docs160idl-language-check"/>
+  <label for="m-docs160idl-language-check"><a href="/docs/1.6.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs160sasl-profile-li">
+  <input type="checkbox" id="m-docs160sasl-profile-check"/>
+  <label for="m-docs160sasl-profile-check"><a href="/docs/1.6.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs160wiki-li">
+  <input type="checkbox" id="m-docs160wiki-check"/>
+  <label for="m-docs160wiki-check"><a href="/docs/1.6.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs160faq-li">
+  <input type="checkbox" id="m-docs160faq-check"/>
+  <label for="m-docs160faq-check"><a href="/docs/1.6.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs160faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs154-li">
+  <input type="checkbox" id="m-docs154-check"/>
+  <label for="m-docs154-check"><a href="/docs/1.5.4/" title="Apache Avro™ 1.5.4 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154"><span class="">1.5.4</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs154specification1-li">
+  <input type="checkbox" id="m-docs154specification1-check"/>
+  <label for="m-docs154specification1-check"><a href="/docs/1.5.4/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs154idl-language-li">
+  <input type="checkbox" id="m-docs154idl-language-check"/>
+  <label for="m-docs154idl-language-check"><a href="/docs/1.5.4/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs154sasl-profile-li">
+  <input type="checkbox" id="m-docs154sasl-profile-check"/>
+  <label for="m-docs154sasl-profile-check"><a href="/docs/1.5.4/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs154wiki-li">
+  <input type="checkbox" id="m-docs154wiki-check"/>
+  <label for="m-docs154wiki-check"><a href="/docs/1.5.4/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs154faq-li">
+  <input type="checkbox" id="m-docs154faq-check"/>
+  <label for="m-docs154faq-check"><a href="/docs/1.5.4/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs154faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs153-li">
+  <input type="checkbox" id="m-docs153-check"/>
+  <label for="m-docs153-check"><a href="/docs/1.5.3/" title="Apache Avro™ 1.5.3 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153"><span class="">1.5.3</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs153specification1-li">
+  <input type="checkbox" id="m-docs153specification1-check"/>
+  <label for="m-docs153specification1-check"><a href="/docs/1.5.3/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs153idl-language-li">
+  <input type="checkbox" id="m-docs153idl-language-check"/>
+  <label for="m-docs153idl-language-check"><a href="/docs/1.5.3/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs153sasl-profile-li">
+  <input type="checkbox" id="m-docs153sasl-profile-check"/>
+  <label for="m-docs153sasl-profile-check"><a href="/docs/1.5.3/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs153wiki-li">
+  <input type="checkbox" id="m-docs153wiki-check"/>
+  <label for="m-docs153wiki-check"><a href="/docs/1.5.3/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs153faq-li">
+  <input type="checkbox" id="m-docs153faq-check"/>
+  <label for="m-docs153faq-check"><a href="/docs/1.5.3/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs153faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs152-li">
+  <input type="checkbox" id="m-docs152-check"/>
+  <label for="m-docs152-check"><a href="/docs/1.5.2/" title="Apache Avro™ 1.5.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152"><span class="">1.5.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs152specification1-li">
+  <input type="checkbox" id="m-docs152specification1-check"/>
+  <label for="m-docs152specification1-check"><a href="/docs/1.5.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs152idl-language-li">
+  <input type="checkbox" id="m-docs152idl-language-check"/>
+  <label for="m-docs152idl-language-check"><a href="/docs/1.5.2/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs152sasl-profile-li">
+  <input type="checkbox" id="m-docs152sasl-profile-check"/>
+  <label for="m-docs152sasl-profile-check"><a href="/docs/1.5.2/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs152wiki-li">
+  <input type="checkbox" id="m-docs152wiki-check"/>
+  <label for="m-docs152wiki-check"><a href="/docs/1.5.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs152faq-li">
+  <input type="checkbox" id="m-docs152faq-check"/>
+  <label for="m-docs152faq-check"><a href="/docs/1.5.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs152faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs151-li">
+  <input type="checkbox" id="m-docs151-check"/>
+  <label for="m-docs151-check"><a href="/docs/1.5.1/" title="Apache Avro™ 1.5.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151"><span class="">1.5.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs151specification1-li">
+  <input type="checkbox" id="m-docs151specification1-check"/>
+  <label for="m-docs151specification1-check"><a href="/docs/1.5.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs151idl-language-li">
+  <input type="checkbox" id="m-docs151idl-language-check"/>
+  <label for="m-docs151idl-language-check"><a href="/docs/1.5.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs151sasl-profile-li">
+  <input type="checkbox" id="m-docs151sasl-profile-check"/>
+  <label for="m-docs151sasl-profile-check"><a href="/docs/1.5.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs151wiki-li">
+  <input type="checkbox" id="m-docs151wiki-check"/>
+  <label for="m-docs151wiki-check"><a href="/docs/1.5.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs151faq-li">
+  <input type="checkbox" id="m-docs151faq-check"/>
+  <label for="m-docs151faq-check"><a href="/docs/1.5.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs151faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs150-li">
+  <input type="checkbox" id="m-docs150-check"/>
+  <label for="m-docs150-check"><a href="/docs/1.5.0/" title="Apache Avro™ 1.5.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150"><span class="">1.5.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs150specification1-li">
+  <input type="checkbox" id="m-docs150specification1-check"/>
+  <label for="m-docs150specification1-check"><a href="/docs/1.5.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs150idl-language-li">
+  <input type="checkbox" id="m-docs150idl-language-check"/>
+  <label for="m-docs150idl-language-check"><a href="/docs/1.5.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs150sasl-profile-li">
+  <input type="checkbox" id="m-docs150sasl-profile-check"/>
+  <label for="m-docs150sasl-profile-check"><a href="/docs/1.5.0/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs150wiki-li">
+  <input type="checkbox" id="m-docs150wiki-check"/>
+  <label for="m-docs150wiki-check"><a href="/docs/1.5.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs150faq-li">
+  <input type="checkbox" id="m-docs150faq-check"/>
+  <label for="m-docs150faq-check"><a href="/docs/1.5.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs150faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs141-li">
+  <input type="checkbox" id="m-docs141-check"/>
+  <label for="m-docs141-check"><a href="/docs/1.4.1/" title="Apache Avro™ 1.4.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141"><span class="">1.4.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs141specification1-li">
+  <input type="checkbox" id="m-docs141specification1-check"/>
+  <label for="m-docs141specification1-check"><a href="/docs/1.4.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs141idl-language-li">
+  <input type="checkbox" id="m-docs141idl-language-check"/>
+  <label for="m-docs141idl-language-check"><a href="/docs/1.4.1/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs141sasl-profile-li">
+  <input type="checkbox" id="m-docs141sasl-profile-check"/>
+  <label for="m-docs141sasl-profile-check"><a href="/docs/1.4.1/sasl-profile/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141sasl-profile"><span class="">SASL profile</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs141wiki-li">
+  <input type="checkbox" id="m-docs141wiki-check"/>
+  <label for="m-docs141wiki-check"><a href="/docs/1.4.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs141faq-li">
+  <input type="checkbox" id="m-docs141faq-check"/>
+  <label for="m-docs141faq-check"><a href="/docs/1.4.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs141faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs140-li">
+  <input type="checkbox" id="m-docs140-check"/>
+  <label for="m-docs140-check"><a href="/docs/1.4.0/" title="Apache Avro™ 1.4.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs140"><span class="">1.4.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs140specification1-li">
+  <input type="checkbox" id="m-docs140specification1-check"/>
+  <label for="m-docs140specification1-check"><a href="/docs/1.4.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs140specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs140idl-language-li">
+  <input type="checkbox" id="m-docs140idl-language-check"/>
+  <label for="m-docs140idl-language-check"><a href="/docs/1.4.0/idl-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs140idl-language"><span class="">IDL Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs140wiki-li">
+  <input type="checkbox" id="m-docs140wiki-check"/>
+  <label for="m-docs140wiki-check"><a href="/docs/1.4.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs140wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs140faq-li">
+  <input type="checkbox" id="m-docs140faq-check"/>
+  <label for="m-docs140faq-check"><a href="/docs/1.4.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs140faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs133-li">
+  <input type="checkbox" id="m-docs133-check"/>
+  <label for="m-docs133-check"><a href="/docs/1.3.3/" title="Apache Avro™ 1.3.3 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs133"><span class="">1.3.3</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs133specification1-li">
+  <input type="checkbox" id="m-docs133specification1-check"/>
+  <label for="m-docs133specification1-check"><a href="/docs/1.3.3/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs133specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs133genavro-language-li">
+  <input type="checkbox" id="m-docs133genavro-language-check"/>
+  <label for="m-docs133genavro-language-check"><a href="/docs/1.3.3/genavro-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs133genavro-language"><span class="">GenAvro Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs133wiki-li">
+  <input type="checkbox" id="m-docs133wiki-check"/>
+  <label for="m-docs133wiki-check"><a href="/docs/1.3.3/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs133wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs133faq-li">
+  <input type="checkbox" id="m-docs133faq-check"/>
+  <label for="m-docs133faq-check"><a href="/docs/1.3.3/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs133faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs132-li">
+  <input type="checkbox" id="m-docs132-check"/>
+  <label for="m-docs132-check"><a href="/docs/1.3.2/" title="Apache Avro™ 1.3.2 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs132"><span class="">1.3.2</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs132specification1-li">
+  <input type="checkbox" id="m-docs132specification1-check"/>
+  <label for="m-docs132specification1-check"><a href="/docs/1.3.2/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs132specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs132genavro-language-li">
+  <input type="checkbox" id="m-docs132genavro-language-check"/>
+  <label for="m-docs132genavro-language-check"><a href="/docs/1.3.2/genavro-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs132genavro-language"><span class="">GenAvro Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs132wiki-li">
+  <input type="checkbox" id="m-docs132wiki-check"/>
+  <label for="m-docs132wiki-check"><a href="/docs/1.3.2/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs132wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs132faq-li">
+  <input type="checkbox" id="m-docs132faq-check"/>
+  <label for="m-docs132faq-check"><a href="/docs/1.3.2/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs132faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs131-li">
+  <input type="checkbox" id="m-docs131-check"/>
+  <label for="m-docs131-check"><a href="/docs/1.3.1/" title="Apache Avro™ 1.3.1 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs131"><span class="">1.3.1</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs131specification1-li">
+  <input type="checkbox" id="m-docs131specification1-check"/>
+  <label for="m-docs131specification1-check"><a href="/docs/1.3.1/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs131specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs131genavro-language-li">
+  <input type="checkbox" id="m-docs131genavro-language-check"/>
+  <label for="m-docs131genavro-language-check"><a href="/docs/1.3.1/genavro-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs131genavro-language"><span class="">GenAvro Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs131wiki-li">
+  <input type="checkbox" id="m-docs131wiki-check"/>
+  <label for="m-docs131wiki-check"><a href="/docs/1.3.1/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs131wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs131faq-li">
+  <input type="checkbox" id="m-docs131faq-check"/>
+  <label for="m-docs131faq-check"><a href="/docs/1.3.1/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs131faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs130-li">
+  <input type="checkbox" id="m-docs130-check"/>
+  <label for="m-docs130-check"><a href="/docs/1.3.0/" title="Apache Avro™ 1.3.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs130"><span class="">1.3.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs130specification1-li">
+  <input type="checkbox" id="m-docs130specification1-check"/>
+  <label for="m-docs130specification1-check"><a href="/docs/1.3.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs130specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs130genavro-language-li">
+  <input type="checkbox" id="m-docs130genavro-language-check"/>
+  <label for="m-docs130genavro-language-check"><a href="/docs/1.3.0/genavro-language/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs130genavro-language"><span class="">GenAvro Language</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs130wiki-li">
+  <input type="checkbox" id="m-docs130wiki-check"/>
+  <label for="m-docs130wiki-check"><a href="/docs/1.3.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs130wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs130faq-li">
+  <input type="checkbox" id="m-docs130faq-check"/>
+  <label for="m-docs130faq-check"><a href="/docs/1.3.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs130faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs120-li">
+  <input type="checkbox" id="m-docs120-check"/>
+  <label for="m-docs120-check"><a href="/docs/1.2.0/" title="Apache Avro™ 1.2.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs120"><span class="">1.2.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs120specification1-li">
+  <input type="checkbox" id="m-docs120specification1-check"/>
+  <label for="m-docs120specification1-check"><a href="/docs/1.2.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs120specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs120wiki-li">
+  <input type="checkbox" id="m-docs120wiki-check"/>
+  <label for="m-docs120wiki-check"><a href="/docs/1.2.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs120wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs120faq-li">
+  <input type="checkbox" id="m-docs120faq-check"/>
+  <label for="m-docs120faq-check"><a href="/docs/1.2.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs120faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs110-li">
+  <input type="checkbox" id="m-docs110-check"/>
+  <label for="m-docs110-check"><a href="/docs/1.1.0/" title="Apache Avro™ 1.1.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs110"><span class="">1.1.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs110specification1-li">
+  <input type="checkbox" id="m-docs110specification1-check"/>
+  <label for="m-docs110specification1-check"><a href="/docs/1.1.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs110specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs110wiki-li">
+  <input type="checkbox" id="m-docs110wiki-check"/>
+  <label for="m-docs110wiki-check"><a href="/docs/1.1.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs110wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs110faq-li">
+  <input type="checkbox" id="m-docs110faq-check"/>
+  <label for="m-docs110faq-check"><a href="/docs/1.1.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs110faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child" id="m-docs100-li">
+  <input type="checkbox" id="m-docs100-check"/>
+  <label for="m-docs100-check"><a href="/docs/1.0.0/" title="Apache Avro™ 1.0.0 Documentation" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs100"><span class="">1.0.0</span></a></label>
+  
+  <ul class="ul-2 foldable">
+    <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs100specification1-li">
+  <input type="checkbox" id="m-docs100specification1-check"/>
+  <label for="m-docs100specification1-check"><a href="/docs/1.0.0/specification1/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs100specification1"><span class="">Specification</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs100wiki-li">
+  <input type="checkbox" id="m-docs100wiki-check"/>
+  <label for="m-docs100wiki-check"><a href="/docs/1.0.0/wiki/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs100wiki"><span class="">Wiki</span></a></label>
+  
+</li><li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child" id="m-docs100faq-li">
+  <input type="checkbox" id="m-docs100faq-check"/>
+  <label for="m-docs100faq-check"><a href="/docs/1.0.0/faq/" class="align-left pl-0  td-sidebar-link td-sidebar-link__section" id="m-docs100faq"><span class="">FAQ</span></a></label>
+  
+</li>
+  </ul>
+</li>
+  </ul>
+</li>
+    </ul>
+  </nav>
+</div>
+
+          </aside>
+          <aside class="d-none d-xl-block col-xl-2 td-sidebar-toc d-print-none">
+            
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+<a href="https://github.com/apache/avro/tree/master/doc/content/en/docs/1.7.7/SASL%20profile/_index.md" class="td-page-meta--view" target="_blank" rel="noopener"><i class="fa fa-file-alt fa-fw"></i> View page source</a>
+  <a href="https://github.com/apache/avro/edit/master/doc/content/en/docs/1.7.7/SASL%20profile/_index.md" class="td-page-meta--edit" target="_blank" rel="noopener"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+  <a href="https://github.com/apache/avro/new/master/doc/content/en/docs/1.7.7/SASL%20profile/_index.md?filename=change-me.md&amp;value=---%0Atitle%3A&#43;%22Long&#43;Page&#43;Title%22%0AlinkTitle%3A&#43;%22Short&#43;Nav&#43;Title%22%0Aweight%3A&#43;100%0Adescription%3A&#43;%3E-%0A&#43;&#43;&#43;&#43;&#43;Page&#43;description&#43;for&#43;heading&#43;and&#43;indexes.%0A---%0A%0A%23%23&#43;Heading%0A%0AEdit&#43;this&#43;template&#43;to&#43;create&#43;your&#43;new&#43;page.%0A%0A%2A&#43;Give&#43;it&#43;a&#43;good&#43;name%2C&#43;ending&#43;in&#43;%60.md%60&#43;-&#43;e.g.&#43;%60getting-started.md%60%0A%2A&#43;Edit&#43;the&#43;%22front&#43;matter%22&#43;section&#43;at&#43;the&#43;top&#43;of&#43;the&#43;page&#43;%28weight&#43;controls&#43;how&#43;its&#43;ordered&#43;amongst&#43;other&#43;pages&#43;in&#43;the&#43;same&#43;directory%3B&#43;lowest&#43;number&#43;first%29.%0A%2A&#43;Add&#43;a&#43;good&#43;commit&#43;message&#43;at&#43;the&#43;bottom&#43;of&#43;the&#43;page&#43;%28%3C80&#43;characters%3B&#43;use&#43;the&#43;extended&#43;description&#43;field&#43;for&#43;more&#43;detail%29.%0A%2A&#43;Create&#43;a&#43;new&#43;branch&#43;so&#43;you&#43;can&#43;preview&#43;your&#43;new&#43;file&#43;and&#43;request&#43;a&#43;review&#43;via&#43;Pull&#43;Request.%0A" class="td-page-meta--child" target="_blank" rel="noopener"><i class="fa fa-edit fa-fw"></i> Create child page</a>
+  <a href="https://github.com/apache/avro/issues/new?title=SASL%20profile" class="td-page-meta--issue" target="_blank" rel="noopener"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+  <a href="https://github.com/apache/avro/issues/new" class="td-page-meta--project-issue" target="_blank" rel="noopener"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+  <a id="print" href="/docs/1.7.7/sasl-profile/_print/"><i class="fa fa-print fa-fw"></i> Print entire section</a>
+
+</div>
+
+            
+
+
+<div class="td-toc"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#introduction">Introduction</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#negotiation">Negotiation</a>
+      <ul>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="#process">Process</a></li>
+      </ul>
+    </li>
+    <li><a href="#session-data">Session Data</a></li>
+    <li><a href="#anonymous-mechanism">Anonymous Mechanism</a></li>
+  </ul>
+</nav></div>
+
+
+
+            
+
+	
+		
+			
+		
+		
+
+
+
+  
+  
+    <div class="taxonomy taxonomy-terms-cloud taxo-tags">
+      
+        <h5 class="taxonomy-title">Tag Cloud</h5>
+      
+      <ul class="taxonomy-terms">
+        
+          <li><a class="taxonomy-term" href="/tags/java/" data-taxonomy-term="java"><span class="taxonomy-label">java</span><span class="taxonomy-count">16</span></a></li>
+        
+          <li><a class="taxonomy-term" href="/tags/python/" data-taxonomy-term="python"><span class="taxonomy-label">python</span><span class="taxonomy-count">16</span></a></li>
+        
+      </ul>
+    </div>
+  
+
+	
+		
+			
+		
+		
+
+
+
+  
+  
+
+	
+
+          </aside>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="td-breadcrumbs">
+  <ol class="breadcrumb">
+  <li class="breadcrumb-item">
+    <a href="/docs/">Documentation</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="/docs/1.7.7/">1.7.7</a>
+  </li>
+  <li class="breadcrumb-item active" aria-current="page">
+    <a href="/docs/1.7.7/sasl-profile/">SASL profile</a>
+  </li>
+  </ol>
+</nav>
+            
+<div class="td-content">
+	<h1>SASL profile</h1>
+  
+	<header class="article-meta">
+		
+		
+			
+				
+
+
+			
+				
+
+
+			
+		
+		
+			<p class="reading-time"><i class="fa fa-clock" aria-hidden="true"></i>&nbsp; 4 minute read &nbsp;</p>
+
+		
+	</header>
+	<!--
+
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+
+-->
+<h2 id="introduction">Introduction</h2>
+<p>SASL (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2222</a>) provides a framework for authentication and security of network protocols. Each protocol that uses SASL is meant to define a SASL profile. This document provides a SASL profile for connection-based Avro RPC.</p>
+<h2 id="overview">Overview</h2>
+<p>SASL negotiation proceeds as a series of message interactions over a connection between a client and server using a selected SASL mechanism. The client starts this negotiation by sending its chosen mechanism name with an initial (possibly empty) message. Negotiation proceeds with the exchange of messages until either side indicates success or failure. The content of the messages is mechanism-specific. If the negotiation succeeds, then the session can proceed over the connection, otherwise it must be abandoned.</p>
+<p>Some mechanisms continue to process session data after negotiation (e.g., encrypting it), while some specify that further session data is transmitted unmodified.</p>
+<h2 id="negotiation">Negotiation</h2>
+<h3 id="commands">Commands</h3>
+<p>Avro SASL negotiation uses four one-byte commands.</p>
+<ul>
+<li>0: START Used in a client&rsquo;s initial message.</li>
+<li>1: CONTINUE Used while negotiation is ongoing.</li>
+<li>2: FAIL Terminates negotiation unsuccessfully.</li>
+<li>3: COMPLETE Terminates negotiation successfully.</li>
+</ul>
+<p>The format of a START message is:</p>
+<p><code>| 0 | 4-byte mechanism name length | mechanism name | 4-byte payload length | payload data |</code></p>
+<p>The format of a CONTINUE message is:</p>
+<p><code>| 1 | 4-byte payload length | payload data |</code></p>
+<p>The format of a FAIL message is:</p>
+<p><code>| 2 | 4-byte message length | UTF-8 message |</code></p>
+<p>The format of a COMPLETE message is:</p>
+<p><code>| 3 | 4-byte payload length | payload data |</code></p>
+<h3 id="process">Process</h3>
+<p>Negotiation is initiated by a client sending a START command containing the client&rsquo;s chosen mechanism name and any mechanism-specific payload data.</p>
+<p>The server and client then interchange some number (possibly zero) of CONTINUE messages. Each message contains payload data that is processed by the security mechanism to generate the next message.</p>
+<p>Once either the client or server send a FAIL message then negotiation has failed. UTF-8-encoded text is included in the failure message. Once either a FAIL message has been sent or received, or any other error occurs in the negotiation, further communication on this connection must cease.</p>
+<p>Once either the client or server send a COMPLETE message then negotiation has completed successfully. Session data may now be transmitted over the connection until it is closed by either side.</p>
+<h2 id="session-data">Session Data</h2>
+<p>If no SASL QOP (quality of protection) is negotiated, then all subsequent writes to/reads over this connection are written/read unmodified. In particular, messages use Avro <a href="#Message+Framing">framing</a>, and are of the form:</p>
+<p><code>| 4-byte frame length | frame data | ... | 4 zero bytes |</code></p>
+<p>If a SASL QOP is negotiated, then it must be used by the connection for all subsequent messages. This is done by wrapping each non-empty frame written using the security mechanism and unwrapping each non-empty frame read. The length written in each non-empty frame is the length of the wrapped data. Complete frames must be passed to the security mechanism for unwrapping. Unwrapped data is then passed to the application as the content of the frame.</p>
+<p>If at any point processing fails due to wrapping, unwrapping or framing errors, then all further communication on this connection must cease.</p>
+<h2 id="anonymous-mechanism">Anonymous Mechanism</h2>
+<p>The SASL anonymous mechanism (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2245</a>) is quite simple to implement. In particular, an initial anonymous request may be prefixed by the following static sequence:</p>
+<p><code>| 0 | 0009 | ANONYMOUS | 0000 |</code></p>
+<p>If a server uses the anonymous mechanism, it should check that the mechanism name in the start message prefixing the first request received is &lsquo;ANONYMOUS&rsquo;, then simply prefix its initial response with a COMPLETE message of:</p>
+<p><code>| 3 | 0000 |</code></p>
+<p>If an anonymous server recieves some other mechanism name, then it may respond with a FAIL message as simple as:</p>
+<p><code>| 2 | 0000 |</code></p>
+<p>Note that the anonymous mechanism need add no additional round-trip messages between client and server. The START message can be piggybacked on the initial request and the COMPLETE or FAIL message can be piggybacked on the initial response.</p>
+<p>Apache Avro, Avro, Apache, and the Avro and Apache logos are trademarks of The Apache Software Foundation.</p>
+
+        <div class="section-index">
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">
+  Last modified March 30, 2023: <a href="https://github.com/apache/avro/commit/e0fb25d1d731e3ced9d61962c97518065293b0b2">changes to themes (e0fb25d1d)</a>
+</div>
+
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+
+
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid2 mx-sm-5">
+    <div class="row">
+      <div class="col-4 col-sm-3 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:user@avro.apache.org" aria-label="User mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter" aria-label="Twitter">
+    <a class="text-white" target="_blank" rel="noopener" href="https://twitter.com/ApacheAvro" aria-label="Twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow" aria-label="Stack Overflow">
+    <a class="text-white" target="_blank" rel="noopener" href="https://stackoverflow.com/questions/tagged/avro" aria-label="Stack Overflow">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-4 col-sm-3 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" rel="noopener" href="https://github.com/apache/avro" aria-label="GitHub">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Issues" aria-label="Issues">
+    <a class="text-white" target="_blank" rel="noopener" href="https://issues.apache.org/jira/projects/AVRO/issues" aria-label="Issues">
+      <i class="fab fa-jira"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Chat with other project developers at Slack" aria-label="Chat with other project developers at Slack">
+    <a class="text-white" target="_blank" rel="noopener" href="https://the-asf.slack.com/" aria-label="Chat with other project developers at Slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Developer mailing list" aria-label="Developer mailing list">
+    <a class="text-white" target="_blank" rel="noopener" href="mailto:dev@avro.apache.org" aria-label="Developer mailing list">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-10 col-sm-3 text-center py-2 order-sm-2">
+        <a href="https://www.apache.org/"><small class="text-white">&copy; 2023 The Apache Software Foundation </small></a><small class="text-white">All Rights Reserved</small>
+	
+      <p><small class="text-white">Apache Avro, Avro&trade;, Apache&reg;, and the Apache feather logo are either registered trademarks or trademarks of The Apache Software Foundation.</small></p>
+      </div>
+      <div class="col-5 col-sm-3 order-sm-2">
+          <a href="https://www.apache.org/events/current-event.html"><img src="https://www.apache.org/events/current-event-234x60.png"></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+    integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js"
+    integrity="sha512-UR25UO94eTnCVwjbXozyeVd6ZqpaAE9naiEUBK/A+QDbfSTQFhPGj5lOR6d8tsgbBk84Ggb5A3EkjsOgPRPcKA=="
+    crossorigin="anonymous"></script>
+
+
+
+
+
+<script src='/js/tabpane-persist.js'></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/main.min.aa9f4c5dae6a98b2c46277f4c56f1673a2b000d1756ce4ffae93784cab25e6d5.js" integrity="sha256-qp9MXa5qmLLEYnf0xW8Wc6KwANF1bOT/rpN4TKsl5tU=" crossorigin="anonymous"></script>
+
+
+
+<script src='/js/prism.js'></script>
+
+
+
+  </body>
+</html>

@@ -108,8 +108,8 @@ weight = 1
 # Everything below this are Site Params
 
 # Comment out if you don't want the "print entire section" link enabled.
-[outputs]
-section = ["HTML", "print", "RSS"]
+# [outputs]
+# section = ["HTML", "print", "RSS"]
 
 [params]
 avroversion = "++version++"
@@ -199,6 +199,53 @@ no = 'Sorry to hear that. Please <a href="https://github.com/USERNAME/REPOSITORY
 [params.ui.readingtime]
 enable = true
 
+
+[params.project]
+[[params.project.links]]
+name = "Download"
+url = "/project/download/"
+
+[[params.project.links]]
+name = "Credits"
+url = "/project/credits/"
+
+[[params.project.links]]
+name = "How to Contribute"
+url = "/project/how-to-contribute/"
+
+[[params.project.links]]
+name = "License"
+url = "https://www.apache.org/licenses/"
+
+[[params.project.links]]
+name = "Privacy Policy"
+url = "https://hadoop.apache.org/privacy_policy.html"
+
+[[params.project.links]]
+name = "Security"
+url = "https://www.apache.org/security/"
+
+[[params.project.links]]
+name = "Events"
+url = "/project/events/"
+
+[[params.project.links]]
+name = "Donate"
+url = "https://www.apache.org/foundation/sponsorship.html"
+
+[[params.project.links]]
+name = "Thanks"
+url = "https://www.apache.org/foundation/thanks.html"
+
+[params.blog]
+[[params.blog.links]]
+name = "News"
+url = "/blog/news/"
+
+[[params.blog.links]]
+name = "Releases"
+url = "/blog/releases/"
+
 [params.asf]
 [[params.asf.links]]
 name = "ASF Web Site"
@@ -262,150 +309,150 @@ url = "http://www.apache.org/security/"
   desc = "Discuss development issues around the project"
 
 [[params.versions]]
-  version = "++version++ (Current)"
-  url = "/docs/++version++/"
+  version = "1.11.1 (Current)"
+  url = "/docs/1.11.1/"
 
 [[params.versions]]
   version = "1.11.0"
-  url = "https://avro.apache.org/docs/1.11.0/"
+  url = "/docs/1.11.0/"
 
 [[params.versions]]
   version = "1.10.2"
-  url = "https://avro.apache.org/docs/1.10.2/"
+  url = "/docs/1.10.2/"
 
 [[params.versions]]
   version = "1.10.1"
-  url = "https://avro.apache.org/docs/1.10.1/"
+  url = "/docs/1.10.1/"
 
 [[params.versions]]
   version = "1.10.0"
-  url = "https://avro.apache.org/docs/1.10.0/"
+  url = "/docs/1.10.0/"
 
 [[params.versions]]
   version = "1.9.2"
-  url = "https://avro.apache.org/docs/1.9.2/"
+  url = "/docs/1.9.2/"
 
 [[params.versions]]
   version = "1.9.1"
-  url = "https://avro.apache.org/docs/1.9.1/"
+  url = "/docs/1.9.1/"
 
 [[params.versions]]
   version = "1.9.0"
-  url = "https://avro.apache.org/docs/1.9.0/"
+  url = "/docs/1.9.0/"
 
 [[params.versions]]
   version = "1.8.2"
-  url = "https://avro.apache.org/docs/1.8.2/"
+  url = "/docs/1.8.2/"
 
 [[params.versions]]
   version = "1.8.1"
-  url = "https://avro.apache.org/docs/1.8.1/"
+  url = "/docs/1.8.1/"
 
 [[params.versions]]
   version = "1.8.0"
-  url = "https://avro.apache.org/docs/1.8.0/"
+  url = "/docs/1.8.0/"
 
 [[params.versions]]
   version = "1.7.7"
-  url = "https://avro.apache.org/docs/1.7.7/"
+  url = "docs/1.7.7/"
 
 [[params.versions]]
   version = "1.7.6"
-  url = "https://avro.apache.org/docs/1.7.6/"
+  url = "/docs/1.7.6/"
 
 [[params.versions]]
   version = "1.7.5"
-  url = "https://avro.apache.org/docs/1.7.5/"
+  url = "/docs/1.7.5/"
 
 [[params.versions]]
   version = "1.7.4"
-  url = "https://avro.apache.org/docs/1.7.4/"
+  url = "/docs/1.7.4/"
 
 [[params.versions]]
   version = "1.7.3"
-  url = "https://avro.apache.org/docs/1.7.3/"
+  url = "/docs/1.7.3/"
 
 [[params.versions]]
   version = "1.7.2"
-  url = "https://avro.apache.org/docs/1.7.2/"
+  url = "/docs/1.7.2/"
 
 [[params.versions]]
   version = "1.7.1"
-  url = "https://avro.apache.org/docs/1.7.1/"
+  url = "/docs/1.7.1/"
   
 [[params.versions]]
   version = "1.7.0"
-  url = "https://avro.apache.org/docs/1.7.0/"
+  url = "/docs/1.7.0/"
   
 [[params.versions]]
   version = "1.6.3"
-  url = "https://avro.apache.org/docs/1.6.3/"
+  url = "/docs/1.6.3/"
   
 [[params.versions]]
   version = "1.6.2"
-  url = "https://avro.apache.org/docs/1.6.2/"
+  url = "/docs/1.6.2/"
   
 [[params.versions]]
   version = "1.6.1"
-  url = "https://avro.apache.org/docs/1.6.1/"
+  url = "/docs/1.6.1/"
   
 [[params.versions]]
   version = "1.6.0"
-  url = "https://avro.apache.org/docs/1.6.0/"
+  url = "/docs/1.6.0/"
   
 [[params.versions]]
   version = "1.5.4"
-  url = "https://avro.apache.org/docs/1.5.4/"
+  url = "/docs/1.5.4/"
   
 [[params.versions]]
   version = "1.5.3"
-  url = "https://avro.apache.org/docs/1.5.3/"
+  url = "/docs/1.5.3/"
   
 [[params.versions]]
   version = "1.5.2"
-  url = "https://avro.apache.org/docs/1.5.2/"
+  url = "/docs/1.5.2/"
   
 [[params.versions]]
   version = "1.5.1"
-  url = "https://avro.apache.org/docs/1.5.1/"
+  url = "/docs/1.5.1/"
   
 [[params.versions]]
   version = "1.5.0"
-  url = "https://avro.apache.org/docs/1.5.0/"
+  url = "/docs/1.5.0/"
   
 [[params.versions]]
   version = "1.4.1"
-  url = "https://avro.apache.org/docs/1.4.1/"
+  url = "/docs/1.4.1/"
   
 [[params.versions]]
   version = "1.4.0"
-  url = "https://avro.apache.org/docs/1.4.0/"
+  url = "/docs/1.4.0/"
   
 [[params.versions]]
   version = "1.3.3"
-  url = "https://avro.apache.org/docs/1.3.3/"
+  url = "/docs/1.3.3/"
   
 [[params.versions]]
   version = "1.3.2"
-  url = "https://avro.apache.org/docs/1.3.2/"
+  url = "/docs/1.3.2/"
   
 [[params.versions]]
   version = "1.3.1"
-  url = "https://avro.apache.org/docs/1.3.1/"
+  url = "/docs/1.3.1/"
   
 [[params.versions]]
   version = "1.3.0"
-  url = "https://avro.apache.org/docs/1.3.0/"
+  url = "/docs/1.3.0/"
   
 [[params.versions]]
   version = "1.2.0"
-  url = "https://avro.apache.org/docs/1.2.0/"
+  url = "/docs/1.2.0/"
   
 [[params.versions]]
   version = "1.1.0"
-  url = "https://avro.apache.org/docs/1.1.0/"
+  url = "/docs/1.1.0/"
   
 [[params.versions]]
   version = "1.0.0"
-  url = "https://avro.apache.org/docs/1.0.0/"
+  url = "/docs/1.0.0/"
   

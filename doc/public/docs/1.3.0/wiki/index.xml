@@ -1,0 +1,18 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Apache Avro – Wiki</title>
+    <link>/docs/1.3.0/wiki/</link>
+    <description>Recent content in Wiki on Apache Avro</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 25 Oct 2021 00:00:00 +0000</lastBuildDate>
+    
+	  <atom:link href="/docs/1.3.0/wiki/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+  </channel>
+</rss>
