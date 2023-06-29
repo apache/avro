@@ -1,0 +1,25 @@
+<!DOCTYPE import-control PUBLIC
+    "-//Checkstyle//DTD ImportControl Configuration 1.4//EN"
+    "https://checkstyle.org/dtds/import_control_1_4.dtd">
+<import-control pkg="com.github.davidmc24.gradle.plugin.avro">
+    <allow pkg="com.github.davidmc24.gradle.plugin.avro"/>
+
+    <allow pkg="java.io"/>
+    <allow pkg="java.lang"/>
+    <allow pkg="java.net"/>
+    <allow pkg="java.nio.charset"/>
+    <allow pkg="java.nio.file"/>
+    <allow pkg="java.util"/>
+    <allow pkg="java.util.concurrent"/>
+    <allow pkg="javax.annotation"/>
+    <allow pkg="javax.inject"/>
+
+    <allow pkg="org.apache.avro"/>
+    <allow pkg="org.apache.avro.compiler.idl"/>
+    <allow pkg="org.apache.avro.compiler.specific"/>
+    <allow pkg="org.apache.avro.generic"/>
+
+    <allow pkg="org.gradle.api"/>
+    <allow pkg="org.gradle.plugins.ide.idea"/>
+    <allow pkg="org.gradle.util"/>
+</import-control>

@@ -1,0 +1,10 @@
+{
+    "name": "UseRecord",
+    "namespace": "resolver",
+    "type": "record",
+    "fields" : [
+        {"name": "field1", "type": {"type": "map", "values": "SimpleRecord"} },
+        {"name": "field2", "type": {"type": "map", "values": "SimpleEnum"} },
+        {"name": "field3", "type": {"type": "map", "values": "SimpleFixed"} }
+    ]
+}
