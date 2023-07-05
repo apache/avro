@@ -23,6 +23,7 @@ import http.client
 import io
 import os
 import struct
+from typing import Any, NamedTuple
 
 import avro.errors
 import avro.io
@@ -160,14 +161,18 @@ class BaseRequestor:
         elif match == "CLIENT":
             if self.send_protocol:
                 raise avro.errors.AvroException("Handshake failure.")
-            self.remote_protocol = avro.protocol.parse(handshake_response.get("serverProtocol"))
+            self.remote_protocol = avro.protocol.parse(
+                handshake_response.get("serverProtocol")
+            )
             self.remote_hash = handshake_response.get("serverHash")
             self.send_protocol = False
             return True
         elif match == "NONE":
             if self.send_protocol:
                 raise avro.errors.AvroException("Handshake failure.")
-            self.remote_protocol = avro.protocol.parse(handshake_response.get("serverProtocol"))
+            self.remote_protocol = avro.protocol.parse(
+                handshake_response.get("serverProtocol")
+            )
             self.remote_hash = handshake_response.get("serverHash")
             self.send_protocol = True
             return False
@@ -185,7 +190,7 @@ class BaseRequestor:
               the error, serialized per the message's error union schema.
         """
         # response metadata
-        response_metadata = META_READER.read(decoder)
+        META_READER.read(decoder)
 
         # remote response schema
         remote_message_schema = self.remote_protocol.messages.get(message_name)
@@ -226,6 +231,12 @@ class Requestor(BaseRequestor):
         return self.request(message_name, request_datum)
 
 
+
+class AvroHandshake(NamedTuple):
+    remote_protocol: avro.protocol.Protocol
+    handshake_response: dict[str, str]
+
+
 class Responder:
     """Base class for the server side of a protocol interaction."""
 
@@ -247,70 +258,12 @@ class Responder:
     def set_protocol_cache(self, hash, protocol):
         self.protocol_cache[hash] = protocol
 
-    def respond(self, call_request):
-        """
-        Called by a server to deserialize a request, compute and serialize
-        a response or error. Compare to 'handle()' in Thrift.
-        """
-        buffer_reader = io.BytesIO(call_request)
-        buffer_decoder = avro.io.BinaryDecoder(buffer_reader)
-        buffer_writer = io.BytesIO()
-        buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
-        error = None
-        response_metadata = {}
-
-        try:
-            remote_protocol = self.process_handshake(buffer_decoder, buffer_encoder)
-            # handshake failure
-            if remote_protocol is None:
-                return buffer_writer.getvalue()
-
-            # read request using remote protocol
-            request_metadata = META_READER.read(buffer_decoder)
-            remote_message_name = buffer_decoder.read_utf8()
-
-            # get remote and local request schemas so we can do
-            # schema resolution (one fine day)
-            remote_message = remote_protocol.messages.get(remote_message_name)
-            if remote_message is None:
-                fail_msg = f"Unknown remote message: {remote_message_name}"
-                raise avro.errors.AvroException(fail_msg)
-            local_message = self.local_protocol.messages.get(remote_message_name)
-            if local_message is None:
-                fail_msg = f"Unknown local message: {remote_message_name}"
-                raise avro.errors.AvroException(fail_msg)
-            writers_schema = remote_message.request
-            readers_schema = local_message.request
-            request = self.read_request(writers_schema, readers_schema, buffer_decoder)
-
-            # perform server logic
-            try:
-                response = self.invoke(local_message, request)
-            except avro.errors.AvroRemoteException as e:
-                error = e
-            except Exception as e:
-                error = avro.errors.AvroRemoteException(str(e))
-
-            # write response using local protocol
-            META_WRITER.write(response_metadata, buffer_encoder)
-            buffer_encoder.write_boolean(error is not None)
-            if error is None:
-                writers_schema = local_message.response
-                self.write_response(writers_schema, response, buffer_encoder)
-            else:
-                writers_schema = local_message.errors
-                self.write_error(writers_schema, error, buffer_encoder)
-        except schema.AvroException as e:
-            error = avro.errors.AvroRemoteException(str(e))
-            buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
-            META_WRITER.write(response_metadata, buffer_encoder)
-            buffer_encoder.write_boolean(True)
-            self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
-        return buffer_writer.getvalue()
-
-    def process_handshake(self, decoder, encoder):
+    def process_handshake(
+        self,
+        decoder: avro.io.BinaryDecoder,
+    ) -> AvroHandshake:
         handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
-        handshake_response = {}
+        handshake_response: dict[str, str] = {}
 
         # determine the remote protocol
         client_hash = handshake_request.get("clientHash")
@@ -337,8 +290,131 @@ class Responder:
             handshake_response["serverProtocol"] = str(self.local_protocol)
             handshake_response["serverHash"] = self.local_hash
 
-        HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
-        return remote_protocol
+        return AvroHandshake(remote_protocol, handshake_response)
+
+    def extract_messages_from_handshake(
+        self,
+        handshake: AvroHandshake,
+        buffer_decoder: avro.io.BinaryDecoder,
+    ) -> tuple[avro.protocol.Message, avro.protocol.Message]:
+        remote_protocol, handshake_response = handshake
+
+        # read request using remote protocol
+        META_READER.read(buffer_decoder)
+        remote_message_name = buffer_decoder.read_utf8()
+
+        # get remote and local request schemas so we can do
+        # schema resolution (one fine day)
+        remote_message = remote_protocol.messages.get(remote_message_name)
+        if remote_message is None:
+            fail_msg = f"Unknown remote message: {remote_message_name}"
+            raise avro.errors.AvroException(fail_msg)
+        local_message = self.local_protocol.messages.get(remote_message_name)
+        if local_message is None:
+            fail_msg = f"Unknown local message: {remote_message_name}"
+            raise avro.errors.AvroException(fail_msg)
+
+        return local_message, remote_message
+
+    def handle_request(
+        self,
+        local_message: avro.protocol.Message,
+        remote_message: avro.protocol.Message,
+        buffer_decoder: avro.io.BinaryDecoder,
+    ) -> Any:
+        writers_schema = remote_message.request
+        readers_schema = local_message.request
+        request = self.read_request(writers_schema, readers_schema, buffer_decoder)
+        response = self.invoke(local_message, request)
+
+        return response
+
+    def handle_response(
+        self,
+        response_metadata: dict,
+        handshake: AvroHandshake,
+        local_message: avro.protocol.Message,
+        response: Any,
+    ) -> bytes:
+        buffer_writer = io.BytesIO()
+        buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
+        HANDSHAKE_RESPONDER_WRITER.write(handshake.handshake_response, buffer_encoder)
+        META_WRITER.write(response_metadata, buffer_encoder)
+        buffer_encoder.write_boolean(False)
+        writers_schema = local_message.response
+        self.write_response(writers_schema, response, buffer_encoder)
+        return buffer_writer.getvalue()
+
+    def handle_error(
+        self,
+        response_metadata: dict,
+        writers_schema: avro.schema.ErrorUnionSchema,
+        handshake: AvroHandshake,
+        error: Any,
+    ):
+        buffer_writer = io.BytesIO()
+        buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
+        HANDSHAKE_RESPONDER_WRITER.write(handshake.handshake_response, buffer_encoder)
+        META_WRITER.write(response_metadata, buffer_encoder)
+        buffer_encoder.write_boolean(True)
+        self.write_error(writers_schema, error, buffer_encoder)
+        return buffer_writer.getvalue()
+
+    def respond(self, call_request: bytes):
+        """
+        Called by a server to deserialize a request, compute and serialize
+        a response or error. Compare to 'handle()' in Thrift.
+        """
+        buffer_reader = io.BytesIO(call_request)
+        buffer_decoder = avro.io.BinaryDecoder(buffer_reader)
+        response_metadata = {}
+
+        handshake = self.process_handshake(buffer_decoder)
+
+        try:
+            # handshake failure
+            if handshake.remote_protocol is None:
+                return b""
+            local_message, remote_message = self.extract_messages_from_handshake(
+                handshake,
+                buffer_decoder,
+            )
+
+            # perform server logic
+            try:
+                response = self.handle_request(
+                    local_message=local_message,
+                    remote_message=remote_message,
+                    buffer_decoder=buffer_decoder,
+                )
+            except avro.errors.AvroRemoteException as err:
+                return self.handle_error(
+                    response_metadata=response_metadata,
+                    writers_schema=local_message.errors,
+                    handshake=handshake,
+                    error=err,
+                )
+            except Exception as e:
+                return self.handle_error(
+                    response_metadata=response_metadata,
+                    writers_schema=local_message.errors,
+                    handshake=handshake,
+                    error=avro.errors.AvroRemoteException(str(e)),
+                )
+
+            return self.handle_response(
+                response_metadata=response_metadata,
+                local_message=local_message,
+                response=response,
+                handshake=handshake,
+            )
+        except avro.errors.AvroException as e:
+            return self.handle_error(
+                response_metadata=response_metadata,
+                writers_schema=SYSTEM_ERROR_SCHEMA,
+                handshake=handshake,
+                error=avro.errors.AvroRemoteException(str(e)),
+            )
 
     def invoke(self, local_message, request):
         """
@@ -357,7 +433,6 @@ class Responder:
     def write_error(self, writers_schema, error_exception, encoder):
         datum_writer = avro.io.DatumWriter(writers_schema)
         datum_writer.write(str(error_exception), encoder)
-
 
 #
 # Utility classes
@@ -382,7 +457,7 @@ class FramedReader:
                 return b"".join(message)
             while buffer.tell() < buffer_length:
                 chunk = self.reader.read(buffer_length - buffer.tell())
-                if chunk == "":
+                if chunk == b"":
                     raise avro.errors.ConnectionClosedException("Reader read 0 bytes.")
                 buffer.write(chunk)
             message.append(buffer.getvalue())
@@ -411,7 +486,9 @@ class FramedWriter:
                 buffer_length = BUFFER_SIZE
             else:
                 buffer_length = message_length - total_bytes_sent
-            self.write_buffer(message[total_bytes_sent : (total_bytes_sent + buffer_length)])
+            self.write_buffer(
+                message[total_bytes_sent : (total_bytes_sent + buffer_length)]
+            )
             total_bytes_sent += buffer_length
         # A message is always terminated by a zero-length buffer.
         self.write_buffer_length(0)

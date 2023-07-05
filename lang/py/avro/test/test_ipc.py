@@ -23,8 +23,10 @@ servers yet available.
 """
 
 import unittest
+import io
 
 import avro.ipc
+import avro.errors
 
 
 class TestIPC(unittest.TestCase):
@@ -37,6 +39,12 @@ class TestIPC(unittest.TestCase):
 
         client_with_default_path = avro.ipc.HTTPTransceiver("apache.org", 80)
         self.assertEqual("/", client_with_default_path.req_resource)
+    
+    def test_empty_reader(self):
+        response_reader = avro.ipc.FramedReader(io.BytesIO(b"Bad Response"))
+        with self.assertRaises(avro.errors.ConnectionClosedException) as cm:
+            response_reader.read_framed_message()
+        assert str(cm.exception) == "Reader read 0 bytes."
 
 
 if __name__ == "__main__":  # pragma: no coverage
