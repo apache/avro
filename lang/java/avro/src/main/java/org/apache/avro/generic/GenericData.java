@@ -1178,7 +1178,7 @@ public class GenericData {
       return 0;
     }
 
-    if (m1.size() == 0 && m2.size() == 0) {
+    if (m1.isEmpty() && m2.isEmpty()) {
       return 0;
     }
 
