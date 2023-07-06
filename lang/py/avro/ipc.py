@@ -23,7 +23,7 @@ import http.client
 import io
 import os
 import struct
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Dict, Tuple
 
 import avro.errors
 import avro.io
@@ -234,7 +234,7 @@ class Requestor(BaseRequestor):
 
 class AvroHandshake(NamedTuple):
     remote_protocol: avro.protocol.Protocol
-    handshake_response: dict[str, str]
+    handshake_response: Dict[str, str]
 
 
 class Responder:
@@ -263,7 +263,7 @@ class Responder:
         decoder: avro.io.BinaryDecoder,
     ) -> AvroHandshake:
         handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
-        handshake_response: dict[str, str] = {}
+        handshake_response: Dict[str, str] = {}
 
         # determine the remote protocol
         client_hash = handshake_request.get("clientHash")
@@ -296,7 +296,7 @@ class Responder:
         self,
         handshake: AvroHandshake,
         buffer_decoder: avro.io.BinaryDecoder,
-    ) -> tuple[avro.protocol.Message, avro.protocol.Message]:
+    ) -> Tuple[avro.protocol.Message, avro.protocol.Message]:
         remote_protocol, handshake_response = handshake
 
         # read request using remote protocol
