@@ -88,5 +88,5 @@ apache-avro-test-helper = { default-features = false, version = "0.15.0", path =
 criterion = { default-features = false, version = "0.4.0" }
 hex-literal = { default-features = false, version = "0.4.1" }
 md-5 = { default-features = false, version = "0.10.5" }
-pretty_assertions = { default-features = false, version = "1.3.0", features = ["std"] }
+pretty_assertions = { default-features = false, version = "1.4.0", features = ["std"] }
 sha2 = { default-features = false, version = "0.10.7" }
