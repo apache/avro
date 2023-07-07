@@ -213,7 +213,9 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     if (hasImports) {
       for (String importedFile : imports) {
         File file = new File(importedFile);
-        if (file.isDirectory()) {
+        if (!file.exists()) {
+          throw new MojoExecutionException("Path " + file.getAbsolutePath() + " does not exist");
+        } else if (file.isDirectory()) {
           String[] includedFiles = getIncludedFiles(file.getAbsolutePath(), excludes, getIncludes());
           getLog().info("Importing Directory: " + file.getAbsolutePath());
           getLog().debug("Importing Directory Files: " + Arrays.toString(includedFiles));
