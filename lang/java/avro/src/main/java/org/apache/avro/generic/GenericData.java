@@ -1174,11 +1174,11 @@ public class GenericData {
   }
 
   protected int compareMaps(final Map<?, ?> m1, final Map<?, ?> m2) {
-    if (m1 == m2) {
+    if (m1 == m2 || (m1.isEmpty() && m2.isEmpty())) {
       return 0;
     }
 
-    if (m2.size() != m2.size()) {
+    if (m1.size() != m2.size()) {
       return 1;
     }
 

@@ -566,6 +566,73 @@ public class TestGenericData {
   }
 
   @Test
+  void mapCompareMatch() {
+    Schema mapSchema = Schema.createMap(Schema.create(Type.STRING));
+    List<Field> fields = new ArrayList<>();
+    fields.add(new Field("map", mapSchema, null, null));
+
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    schema.setFields(fields);
+
+    Map<String, String> map1 = new HashMap<>();
+    map1.put("dummy", "foo");
+
+    Map<String, String> map2 = new HashMap<>();
+    map1.put("dummy", "foo");
+
+    Record testRecord1 = new Record(schema);
+    testRecord1.put("map", map1);
+    Record testRecord2 = new Record(schema);
+    testRecord2.put("map", map2);
+
+    assertEquals(0, testRecord1.compareTo(testRecord2));
+  }
+
+  @Test
+  void mapCompareMismatch() {
+    Schema mapSchema = Schema.createMap(Schema.create(Type.STRING));
+    List<Field> fields = new ArrayList<>();
+    fields.add(new Field("map", mapSchema, null, null));
+
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    schema.setFields(fields);
+
+    Map<String, String> map1 = new HashMap<>();
+    map1.put("dummy", "foo");
+
+    Map<String, String> map2 = new HashMap<>();
+    map1.put("dummy", "foo");
+    map1.put("dummy2", "bar");
+
+    Record testRecord1 = new Record(schema);
+    testRecord1.put("map", map1);
+    Record testRecord2 = new Record(schema);
+    testRecord2.put("map", map2);
+
+    assertNotEquals(0, testRecord1.compareTo(testRecord2));
+  }
+
+  @Test
+  void mapCompareEmptyMatch() {
+    Schema mapSchema = Schema.createMap(Schema.create(Type.STRING));
+    List<Field> fields = new ArrayList<>();
+    fields.add(new Field("map", mapSchema, null, null));
+
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    schema.setFields(fields);
+
+    Map<String, String> map1 = new HashMap<>();
+    Map<String, String> map2 = new HashMap<>();
+
+    Record testRecord1 = new Record(schema);
+    testRecord1.put("map", map1);
+    Record testRecord2 = new Record(schema);
+    testRecord2.put("map", map2);
+
+    assertEquals(0, testRecord1.compareTo(testRecord2));
+  }
+
+  @Test
   void byteBufferDeepCopy() {
     // Test that a deep copy of a byte buffer respects the byte buffer
     // limits and capacity.
