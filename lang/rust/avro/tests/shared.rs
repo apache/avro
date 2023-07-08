@@ -28,7 +28,7 @@ use std::{
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 
 #[test]
-fn aa_test_schema() -> TestResult {
+fn test_schema() -> TestResult {
     let directory: ReadDir = match std::fs::read_dir(ROOT_DIRECTORY) {
         Ok(root_folder) => root_folder,
         Err(err) => {
