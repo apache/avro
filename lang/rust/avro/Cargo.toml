@@ -17,17 +17,17 @@
 
 [package]
 name = "apache-avro"
-version = "0.15.0"
-authors = ["Apache Avro team <dev@avro.apache.org>"]
 description = "A library for working with Apache Avro in Rust"
-license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/apache/avro"
-edition = "2021"
-rust-version = "1.60.0"
-keywords = ["avro", "data", "serialization"]
-categories = ["encoding"]
-documentation = "https://docs.rs/apache-avro"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+documentation.workspace = true
 
 [features]
 bzip = ["bzip2"]
