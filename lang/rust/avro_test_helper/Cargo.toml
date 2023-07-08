@@ -17,16 +17,16 @@
 
 [package]
 name = "apache-avro-test-helper"
-version = "0.15.0"
-edition = "2021"
-rust-version = "1.60.0"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "Apache Avro tests helper."
-authors = ["Apache Avro team <dev@avro.apache.org>"]
-license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/apache/avro"
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
 keywords = ["avro", "data", "serialization", "test"]
-categories = ["encoding"]
+categories.workspace = true
 documentation = "https://docs.rs/apache-avro-test-helper"
 
 

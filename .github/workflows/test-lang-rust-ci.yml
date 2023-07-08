@@ -43,7 +43,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - 1.60.0  # MSRV
+          - 1.65.0  # MSRV
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown

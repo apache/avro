@@ -18,16 +18,16 @@
 [package]
 name = "hello-wasm"
 version = "0.1.0"
-authors = ["Apache Avro team <dev@avro.apache.org>"]
+authors.workspace = true
 description = "A demo project for testing apache_avro in WebAssembly"
-license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/apache/avro"
-edition = "2021"
-rust-version = "1.60.0"
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 keywords = ["avro", "data", "serialization", "wasm", "web assembly"]
-categories = ["encoding"]
-documentation = "https://docs.rs/apache-avro"
+categories.workspace = true
+documentation.workspace = true
 publish = false
 
 
