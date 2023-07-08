@@ -31,10 +31,7 @@ extern crate serde;
 #[cfg(test)]
 mod test_derive {
     use apache_avro::schema::{Alias, EnumSchema, RecordSchema};
-    use std::{
-        borrow::{Borrow, Cow},
-        sync::Mutex,
-    };
+    use std::{borrow::Cow, sync::Mutex};
 
     use super::*;
 
@@ -866,7 +863,7 @@ mod test_derive {
         // test serde with manual equality for mutex
         let test = serde(test);
         assert_eq!("hey", test.a);
-        assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
+        assert_eq!(vec![42], *test.b.lock().unwrap());
         assert_eq!(Cow::Owned::<i32>(32), test.c);
     }
 
