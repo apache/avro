@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 /**
  * Test the Schema Mojo.
  */
@@ -33,6 +35,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
   private File testPom = new File(getBasedir(), "src/test/resources/unit/schema/pom.xml");
   private File injectingVelocityToolsTestPom = new File(getBasedir(),
       "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
+  private File testNonexistentFilePom = new File(getBasedir(),
+      "src/test/resources/unit/schema/pom-nonexistent-file.xml");
 
   @Test
   public void testSchemaMojo() throws Exception {
@@ -66,5 +70,12 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
     final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
     assertTrue("Got " + schemaUserContent + " instead", schemaUserContent.contains("It works!"));
+  }
+
+  @Test(expected = MojoExecutionException.class)
+  public void throwsErrorForNonexistentFile() throws Exception {
+    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testNonexistentFilePom);
+
+    mojo.execute();
   }
 }
