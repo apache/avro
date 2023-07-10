@@ -460,7 +460,12 @@ impl Value {
                     None
                 }
             }
-            (&Value::Enum(i, ref s), Schema::Enum(EnumSchema { symbols, .. })) => symbols
+            (
+                &Value::Enum(i, ref s),
+                Schema::Enum(EnumSchema {
+                    symbols, default, ..
+                }),
+            ) => symbols
                 .get(i as usize)
                 .map(|ref symbol| {
                     if symbol != &s {
@@ -469,7 +474,10 @@ impl Value {
                         None
                     }
                 })
-                .unwrap_or_else(|| Some(format!("No symbol at position '{i}'"))),
+                .unwrap_or_else(|| match default {
+                    Some(_) => None,
+                    None => Some(format!("No symbol at position '{i}'")),
+                }),
             // (&Value::Union(None), &Schema::Union(_)) => None,
             (&Value::Union(i, ref value), Schema::Union(inner)) => inner
                 .variants()
