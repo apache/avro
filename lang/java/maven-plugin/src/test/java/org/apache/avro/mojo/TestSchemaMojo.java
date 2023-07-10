@@ -21,6 +21,8 @@ import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,5 +68,23 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
     final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
     assertTrue("Got " + schemaUserContent + " instead", schemaUserContent.contains("It works!"));
+  }
+
+  @Test
+  public void testSymbolicLinkValidInputDirectoryMojo() throws Exception {
+    Path sourcePath = new File(getBasedir(), "src/test/avro").toPath();
+    Path symbolicLinkPath = new File(getBasedir(), "target/test-harness/symbolic-link-directory").toPath();
+    File outputDirectory = new File(getBasedir(), "target/test-harness/symbolic-link-schema-output/test");
+    File symbolicLinkPom = new File(getBasedir(), "src/test/resources/unit/schema/symbolic-link-pom.xml");
+    Files.deleteIfExists(symbolicLinkPath);
+    Files.createSymbolicLink(symbolicLinkPath, sourcePath);
+    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", symbolicLinkPom);
+    assertNotNull(mojo);
+    mojo.execute();
+
+    final Set<String> generatedFiles = new HashSet<>(
+        Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"));
+
+    assertFilesExist(outputDirectory, generatedFiles);
   }
 }
