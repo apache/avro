@@ -22,11 +22,11 @@ There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
 
-import unittest
 import io
+import unittest
 
-import avro.ipc
 import avro.errors
+import avro.ipc
 
 
 class TestIPC(unittest.TestCase):

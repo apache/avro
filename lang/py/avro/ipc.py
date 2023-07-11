@@ -23,7 +23,7 @@ import http.client
 import io
 import os
 import struct
-from typing import Any, NamedTuple, Dict, Tuple
+from typing import Any, Dict, NamedTuple, Tuple
 
 import avro.errors
 import avro.io
@@ -161,18 +161,14 @@ class BaseRequestor:
         elif match == "CLIENT":
             if self.send_protocol:
                 raise avro.errors.AvroException("Handshake failure.")
-            self.remote_protocol = avro.protocol.parse(
-                handshake_response.get("serverProtocol")
-            )
+            self.remote_protocol = avro.protocol.parse(handshake_response.get("serverProtocol"))
             self.remote_hash = handshake_response.get("serverHash")
             self.send_protocol = False
             return True
         elif match == "NONE":
             if self.send_protocol:
                 raise avro.errors.AvroException("Handshake failure.")
-            self.remote_protocol = avro.protocol.parse(
-                handshake_response.get("serverProtocol")
-            )
+            self.remote_protocol = avro.protocol.parse(handshake_response.get("serverProtocol"))
             self.remote_hash = handshake_response.get("serverHash")
             self.send_protocol = True
             return False
@@ -229,7 +225,6 @@ class Requestor(BaseRequestor):
         if call_response_exists:
             return self.read_call_response(message_name, buffer_decoder)
         return self.request(message_name, request_datum)
-
 
 
 class AvroHandshake(NamedTuple):
@@ -434,6 +429,7 @@ class Responder:
         datum_writer = avro.io.DatumWriter(writers_schema)
         datum_writer.write(str(error_exception), encoder)
 
+
 #
 # Utility classes
 #
@@ -486,9 +482,7 @@ class FramedWriter:
                 buffer_length = BUFFER_SIZE
             else:
                 buffer_length = message_length - total_bytes_sent
-            self.write_buffer(
-                message[total_bytes_sent : (total_bytes_sent + buffer_length)]
-            )
+            self.write_buffer(message[total_bytes_sent : (total_bytes_sent + buffer_length)])
             total_bytes_sent += buffer_length
         # A message is always terminated by a zero-length buffer.
         self.write_buffer_length(0)
