@@ -1057,7 +1057,7 @@ public class SpecificCompiler {
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;");
+    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
