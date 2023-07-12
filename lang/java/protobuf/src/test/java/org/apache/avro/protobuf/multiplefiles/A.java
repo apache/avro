@@ -42,6 +42,8 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
   }
 
   /**
+   * @param value The numeric wire value of the corresponding enum entry.
+   * @return The enum associated with the given numeric wire value.
    * @deprecated Use {@link #forNumber(int)} instead.
    */
   @java.lang.Deprecated
@@ -49,6 +51,10 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
     return forNumber(value);
   }
 
+  /**
+   * @param value The numeric wire value of the corresponding enum entry.
+   * @return The enum associated with the given numeric wire value.
+   */
   public static A forNumber(int value) {
     switch (value) {
     case 1:

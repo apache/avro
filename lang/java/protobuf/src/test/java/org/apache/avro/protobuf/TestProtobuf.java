@@ -19,8 +19,14 @@ package org.apache.avro.protobuf;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericEnumSymbol;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -30,14 +36,30 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.google.protobuf.ByteString;
 
 import org.apache.avro.protobuf.noopt.Test.Foo;
 import org.apache.avro.protobuf.noopt.Test.A;
+import org.apache.avro.protobuf.noopt.Test.M;
 import org.apache.avro.protobuf.noopt.Test.M.N;
 
 public class TestProtobuf {
+
+  protected <T> GenericRecord convertProtoToAvro(T objToConvert, Class clazz) throws Exception {
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    ProtobufDatumWriter<T> w = new ProtobufDatumWriter<T>(clazz);
+    Schema schema = ProtobufData.get().getSchema(clazz);
+    Encoder e = EncoderFactory.get().jsonEncoder(schema, bao);
+    w.write(objToConvert, e);
+    e.flush();
+    GenericDatumReader gdr = new GenericDatumReader(schema, schema);
+    Decoder d = DecoderFactory.get().jsonDecoder(schema, new ByteArrayInputStream(bao.toByteArray()));
+
+    return (GenericRecord) gdr.read(null, d);
+  }
+
   @Test
   void message() throws Exception {
 
@@ -145,5 +167,60 @@ public class TestProtobuf {
     instance2.addLogicalTypeConversion(conversion);
     Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
     assertEquals(conversion.getRecommendedSchema(), s2);
+  }
+
+  @Test
+  void nestedEnumWithValue() throws Exception {
+    Schema enumSchema = Schema.createEnum("N", null, null, Arrays.asList("A"));
+    GenericEnumSymbol enumA = new GenericData.EnumSymbol(enumSchema, "A");
+
+    M.Builder builder = M.newBuilder();
+    builder.setEnumN(M.N.A);
+
+    GenericRecord converted = convertProtoToAvro(builder.build(), M.class);
+
+    assertEquals(0, ((GenericEnumSymbol) converted.get("enumN")).compareTo(enumA));
+  }
+
+  @Test
+  void nestedEnumWithNull() throws Exception {
+    M.Builder builder = M.newBuilder();
+
+    GenericRecord converted = convertProtoToAvro(builder.build(), M.class);
+
+    assertNull(converted.get("enumN"));
+  }
+
+  @Test
+  void handlingOptionalValuesCorrectly() throws Exception {
+    Schema enumSchema = Schema.createEnum("A", null, null, Arrays.asList("X", "Y", "Z"));
+    GenericEnumSymbol enumZ = new GenericData.EnumSymbol(enumSchema, "Z");
+
+    Foo.Builder builder = Foo.newBuilder();
+    builder.setInt32(10);
+    builder.setInt64(2);
+    Foo foo = builder.build();
+
+    GenericRecord converted = convertProtoToAvro(foo, Foo.class);
+
+    assertEquals(10, converted.get("int32"));
+    assertEquals(2L, converted.get("int64"));
+    assertNull(converted.get("uint32"));
+    assertNull(converted.get("uint64"));
+    assertNull(converted.get("sint32"));
+    assertNull(converted.get("sint64"));
+    assertNull(converted.get("fixed32"));
+    assertNull(converted.get("fixed64"));
+    assertNull(converted.get("sfixed32"));
+    assertNull(converted.get("sfixed64"));
+    assertNull(converted.get("float"));
+    assertNull(converted.get("double"));
+    assertNull(converted.get("bool"));
+    assertNull(converted.get("string"));
+    assertNull(converted.get("bytes"));
+    assertEquals(0, ((GenericEnumSymbol) converted.get("enum")).compareTo(enumZ));
+    assertEquals(0, ((GenericData.Array) converted.get("intArray")).size());
+    assertEquals(0, ((GenericData.Array) converted.get("fooArray")).size());
+    assertEquals(0, ((GenericData.Array) converted.get("syms")).size());
   }
 }
