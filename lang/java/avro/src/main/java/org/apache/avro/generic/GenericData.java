@@ -1153,7 +1153,11 @@ public class GenericData {
       return 0;
     }
 
-    if (m2.size() != m2.size()) {
+    if (m1.isEmpty() && m2.isEmpty()) {
+      return 0;
+    }
+
+    if (m1.size() != m2.size()) {
       return 1;
     }
 
