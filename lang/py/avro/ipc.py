@@ -260,6 +260,8 @@ class Responder:
         handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
         handshake_response: Dict[str, str] = {}
 
+        if not isinstance(handshake_request, dict):
+            raise avro.errors.AvroTypeException(f"invalid handshake request - {handshake_request}")
         # determine the remote protocol
         client_hash = handshake_request.get("clientHash")
         client_protocol = handshake_request.get("clientProtocol")
@@ -300,10 +302,14 @@ class Responder:
 
         # get remote and local request schemas so we can do
         # schema resolution (one fine day)
+        if remote_protocol.messages is None:
+            raise avro.errors.AvroTypeException("Missing messages in remote_protocol")
         remote_message = remote_protocol.messages.get(remote_message_name)
         if remote_message is None:
             fail_msg = f"Unknown remote message: {remote_message_name}"
             raise avro.errors.AvroException(fail_msg)
+        if self.local_protocol.messages is None:
+            raise avro.errors.AvroTypeException("Missing messages in local_protocol")
         local_message = self.local_protocol.messages.get(remote_message_name)
         if local_message is None:
             fail_msg = f"Unknown local message: {remote_message_name}"
@@ -343,7 +349,7 @@ class Responder:
     def handle_error(
         self,
         response_metadata: dict,
-        writers_schema: avro.schema.ErrorUnionSchema,
+        writers_schema: avro.schema.Schema,
         handshake: AvroHandshake,
         error: Any,
     ):
@@ -362,14 +368,12 @@ class Responder:
         """
         buffer_reader = io.BytesIO(call_request)
         buffer_decoder = avro.io.BinaryDecoder(buffer_reader)
-        response_metadata = {}
+        response_metadata: dict = {}
 
         handshake = self.process_handshake(buffer_decoder)
 
         try:
             # handshake failure
-            if handshake.remote_protocol is None:
-                return b""
             local_message, remote_message = self.extract_messages_from_handshake(
                 handshake,
                 buffer_decoder,
