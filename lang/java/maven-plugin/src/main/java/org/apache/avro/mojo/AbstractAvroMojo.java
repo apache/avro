@@ -211,11 +211,10 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
 
     if (hasImports) {
+      checkImportPaths();
       for (String importedFile : imports) {
         File file = new File(importedFile);
-        if (!file.exists()) {
-          throw new MojoExecutionException("Path " + file.getAbsolutePath() + " does not exist");
-        } else if (file.isDirectory()) {
+        if (file.isDirectory()) {
           String[] includedFiles = getIncludedFiles(file.getAbsolutePath(), excludes, getIncludes());
           getLog().info("Importing Directory: " + file.getAbsolutePath());
           getLog().debug("Importing Directory Files: " + Arrays.toString(includedFiles));
@@ -240,6 +239,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       String[] includedFiles = getIncludedFiles(testSourceDirectory.getAbsolutePath(), testExcludes, getTestIncludes());
       compileFiles(includedFiles, testSourceDirectory, testOutputDirectory);
       project.addTestCompileSourceRoot(testOutputDirectory.getAbsolutePath());
+    }
+  }
+
+  private void checkImportPaths() throws MojoExecutionException {
+    for (String importedFile : imports) {
+      File file = new File(importedFile);
+      if (!file.exists()) {
+        throw new MojoExecutionException("Path " + file.getAbsolutePath() + " does not exist");
+      }
     }
   }
 
