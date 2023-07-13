@@ -17,6 +17,7 @@
  */
 package org.apache.avro.mojo;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 
@@ -24,8 +25,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Test the Schema Mojo.
@@ -37,6 +36,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
       "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
   private File testNonexistentFilePom = new File(getBasedir(),
       "src/test/resources/unit/schema/pom-nonexistent-file.xml");
+  private File testNonexistentSecondFilePom = new File(getBasedir(),
+      "src/test/resources/unit/schema/pom-nonexistent-second-file.xml");
 
   @Test
   public void testSchemaMojo() throws Exception {
@@ -72,10 +73,23 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
     assertTrue("Got " + schemaUserContent + " instead", schemaUserContent.contains("It works!"));
   }
 
-  @Test(expected = MojoExecutionException.class)
-  public void throwsErrorForNonexistentFile() throws Exception {
-    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testNonexistentFilePom);
+  @Test
+  public void testThrowsErrorForNonexistentFile() throws Exception {
+    try {
+      final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testNonexistentFilePom);
+      mojo.execute();
+      fail("MojoExecutionException not thrown!");
+    } catch (MojoExecutionException ignored) {
+    }
+  }
 
-    mojo.execute();
+  @Test
+  public void testThrowsErrorForNonexistentSecondFile() throws Exception {
+    try {
+      final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testNonexistentSecondFilePom);
+      mojo.execute();
+      fail("MojoExecutionException not thrown!");
+    } catch (MojoExecutionException ignored) {
+    }
   }
 }
