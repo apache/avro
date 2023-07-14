@@ -211,6 +211,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
 
     if (hasImports) {
+      checkImportPaths();
       for (String importedFile : imports) {
         File file = new File(importedFile);
         if (file.isDirectory()) {
@@ -238,6 +239,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       String[] includedFiles = getIncludedFiles(testSourceDirectory.getAbsolutePath(), testExcludes, getTestIncludes());
       compileFiles(includedFiles, testSourceDirectory, testOutputDirectory);
       project.addTestCompileSourceRoot(testOutputDirectory.getAbsolutePath());
+    }
+  }
+
+  private void checkImportPaths() throws MojoExecutionException {
+    for (String importedFile : imports) {
+      File file = new File(importedFile);
+      if (!file.exists()) {
+        throw new MojoExecutionException("Path " + file.getAbsolutePath() + " does not exist");
+      }
     }
   }
 
