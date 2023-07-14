@@ -89,17 +89,7 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import (
-    IO,
-    Deque,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
 
 import avro.constants
 import avro.errors
@@ -776,6 +766,9 @@ class DatumReader:
         # read data
         index_of_symbol = decoder.read_int()
         if index_of_symbol >= len(writers_schema.symbols):
+            default = writers_schema.default
+            if default is not None:
+                return default
             raise avro.errors.SchemaResolutionException(
                 f"Can't access enum index {index_of_symbol} for enum with {len(writers_schema.symbols)} symbols", writers_schema, readers_schema
             )

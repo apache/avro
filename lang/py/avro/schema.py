@@ -587,6 +587,15 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             return symbols
         raise Exception
 
+    @property
+    def default(self) -> Union[str, None]:
+        symbol = self.get_prop("default")
+        if isinstance(symbol, str):
+            return symbol
+        if symbol is None:
+            return None
+        raise Exception
+
     doc = property(lambda self: self.get_prop("doc"))
 
     def match(self, writer):
