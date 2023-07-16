@@ -276,9 +276,17 @@ class NamedSchema(Schema):
         return self.name if self.namespace == names.default_namespace else self.fullname
 
     # read-only properties
-    name = property(lambda self: self.get_prop("name"))
-    namespace = property(lambda self: self.get_prop("namespace"))
-    fullname = property(lambda self: self._fullname)
+    @property
+    def name(self):
+        return self.get_prop("name")
+
+    @property
+    def namespace(self):
+        return self.get_prop("namespace")
+
+    @property
+    def fullname(self):
+        return self._fullname
 
 
 #
@@ -347,10 +355,21 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
             self.set_prop("doc", doc)
 
     # read-only properties
-    default = property(lambda self: self.get_prop("default"))
-    has_default = property(lambda self: self._has_default)
-    order = property(lambda self: self.get_prop("order"))
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def default(self):
+        return self.get_prop("default")
+
+    @property
+    def has_default(self):
+        return self._has_default
+
+    @property
+    def order(self):
+        return self.get_prop("order")
+
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     def __str__(self):
         return json.dumps(self.to_json())
@@ -449,8 +468,13 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
         self.set_prop("scale", scale)
 
     # read-only properties
-    precision = property(lambda self: self.get_prop("precision"))
-    scale = property(lambda self: self.get_prop("scale"))
+    @property
+    def precision(self):
+        return self.get_prop("precision")
+
+    @property
+    def scale(self):
+        return self.get_prop("scale")
 
     def to_json(self, names=None):
         return self.props
@@ -477,7 +501,9 @@ class FixedSchema(EqualByPropsMixin, NamedSchema):
         self.set_prop("size", size)
 
     # read-only properties
-    size = property(lambda self: self.get_prop("size"))
+    @property
+    def size(self):
+        return self.get_prop("size")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -531,8 +557,13 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
         self.set_prop("scale", scale)
 
     # read-only properties
-    precision = property(lambda self: self.get_prop("precision"))
-    scale = property(lambda self: self.get_prop("scale"))
+    @property
+    def precision(self):
+        return self.get_prop("precision")
+
+    @property
+    def scale(self):
+        return self.get_prop("scale")
 
     def to_json(self, names=None):
         return self.props
@@ -587,7 +618,9 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             return symbols
         raise Exception
 
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -645,7 +678,9 @@ class ArraySchema(EqualByJsonMixin, Schema):
         self.set_prop("items", items_schema)
 
     # read-only properties
-    items = property(lambda self: self.get_prop("items"))
+    @property
+    def items(self):
+        return self.get_prop("items")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -697,7 +732,9 @@ class MapSchema(EqualByJsonMixin, Schema):
         self.set_prop("values", values_schema)
 
     # read-only properties
-    values = property(lambda self: self.get_prop("values"))
+    @property
+    def values(self):
+        return self.get_prop("values")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -766,7 +803,9 @@ class UnionSchema(EqualByJsonMixin, Schema):
         self._schemas = schema_objects
 
     # read-only properties
-    schemas = property(lambda self: self._schemas)
+    @property
+    def schemas(self):
+        return self._schemas
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -890,8 +929,13 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             names.default_namespace = old_default
 
     # read-only properties
-    fields = property(lambda self: self.get_prop("fields"))
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def fields(self):
+        return self.get_prop("fields")
+
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     @property
     def fields_dict(self):
