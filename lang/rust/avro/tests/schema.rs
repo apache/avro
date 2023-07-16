@@ -689,7 +689,7 @@ fn test_parse_reader() -> TestResult {
     init();
     for (raw_schema, valid) in EXAMPLES.iter() {
         let schema = Schema::parse_reader(&mut Cursor::new(raw_schema));
-           if *valid {
+        if *valid {
             assert!(
                 schema.is_ok(),
                 "schema {raw_schema} was supposed to be valid; error: {schema:?}",
@@ -706,7 +706,7 @@ fn test_parse_reader() -> TestResult {
     for (raw_schema, valid) in EXAMPLES.iter() {
         let reader: &mut dyn Read = &mut Cursor::new(raw_schema);
         let schema = Schema::parse_reader(reader);
-           if *valid {
+        if *valid {
             assert!(
                 schema.is_ok(),
                 "schema {raw_schema} was supposed to be valid; error: {schema:?}",
@@ -730,7 +730,9 @@ fn test_raise_io_error_from_parse_read() -> Result<(), String> {
 
     if let Error::ReadSchemaFromReader(e) = error {
         assert!(
-            e.to_string().contains("stream did not contain valid UTF-8"), "{e}");
+            e.to_string().contains("stream did not contain valid UTF-8"),
+            "{e}"
+        );
         Ok(())
     } else {
         Err(format!("Expected std::io::Error, got {error:?}"))
