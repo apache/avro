@@ -685,7 +685,7 @@ fn test_parse() -> TestResult {
 }
 
 #[test]
-fn test_parse_reader() -> TestResult {
+fn test_3799_parse_reader() -> TestResult {
     init();
     for (raw_schema, valid) in EXAMPLES.iter() {
         let schema = Schema::parse_reader(&mut Cursor::new(raw_schema));
@@ -722,7 +722,7 @@ fn test_parse_reader() -> TestResult {
 }
 
 #[test]
-fn test_raise_io_error_from_parse_read() -> Result<(), String> {
+fn test_3799_raise_io_error_from_parse_read() -> Result<(), String> {
     // 0xDF is invalid for UTF-8.
     let mut invalid_data = Cursor::new([0xDF]);
 
