@@ -18,7 +18,7 @@
 
 package org.apache.avro.ipc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,7 +26,7 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestRpcPluginOrdering {
 
@@ -64,7 +64,7 @@ public class TestRpcPluginOrdering {
   }
 
   @Test
-  public void testRpcPluginOrdering() throws Exception {
+  void rpcPluginOrdering() throws Exception {
     OrderPlugin plugin = new OrderPlugin();
 
     SpecificResponder responder = new SpecificResponder(Mail.class, new TestMailImpl());

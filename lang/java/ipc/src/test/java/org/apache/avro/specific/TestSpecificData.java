@@ -20,7 +20,10 @@ package org.apache.avro.specific;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.ByteArrayInputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,21 +43,20 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.Reserved;
 import org.apache.avro.test.TestRecord;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestSpecificData {
 
-  @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
-  public void testHashCode() {
+  @Test
+  void testHashCode() {
     new TestRecord().hashCode();
     SpecificData.get().hashCode(null, TestRecord.SCHEMA$);
   }
 
-  @Test
   /** Make sure that even with nulls, toString() doesn't throw NPE. */
-  public void testToString() {
+  @Test
+  void testToString() {
     new TestRecord().toString();
   }
 
@@ -63,13 +65,13 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testGetMapSchema() throws Exception {
+  void getMapSchema() throws Exception {
     SpecificData.get().getSchema(X.class.getField("map").getGenericType());
   }
 
-  @Test
   /** Test nesting of specific data within generic. */
-  public void testSpecificWithinGeneric() throws Exception {
+  @Test
+  void specificWithinGeneric() throws Exception {
     // define a record with a field that's a generated TestRecord
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
     List<Schema.Field> fields = new ArrayList<>();
@@ -93,7 +95,7 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testConvertGenericToSpecific() {
+  void convertGenericToSpecific() {
     GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
     generic.put("name", "foo");
     generic.put("kind", new GenericData.EnumSymbol(Kind.SCHEMA$, "BAR"));
@@ -103,14 +105,14 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testGetClassSchema() throws Exception {
-    Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
-    Assert.assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
-    Assert.assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
+  void getClassSchema() throws Exception {
+    assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
+    assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
+    assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
   }
 
   @Test
-  public void testSpecificRecordToString() throws IOException {
+  void specificRecordToString() throws IOException {
     FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder().setId(123).setName("foo")
         .setNicknames(Collections.singletonList("bar")).setRelatedids(Arrays.asList(1, 2, 3)).setTypeEnum(TypeEnum.c)
         .build();
@@ -125,7 +127,7 @@ public class TestSpecificData {
   }
 
   @Test
-  public void testExternalizeable() throws Exception {
+  void externalizeable() throws Exception {
     TestRecord before = new TestRecord();
     before.setName("foo");
     before.setKind(Kind.BAR);
@@ -138,13 +140,13 @@ public class TestSpecificData {
     ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
     TestRecord after = (TestRecord) in.readObject();
 
-    Assert.assertEquals(before, after);
+    assertEquals(before, after);
 
   }
 
   @Test
-  public void testReservedEnumSymbol() throws Exception {
-    Assert.assertEquals(Reserved.default$, SpecificData.get().createEnum("default", Reserved.SCHEMA$));
+  void reservedEnumSymbol() throws Exception {
+    assertEquals(Reserved.default$, SpecificData.get().createEnum("default", Reserved.SCHEMA$));
   }
 
 }

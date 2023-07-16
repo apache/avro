@@ -17,6 +17,8 @@
  */
 package org.apache.avro.generic;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,67 +29,70 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData.Record;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the GenericRecordBuilder class.
  */
 public class TestGenericRecordBuilder {
   @Test
-  public void testGenericBuilder() {
+  void genericBuilder() {
     Schema schema = recordSchema();
     GenericRecordBuilder builder = new GenericRecordBuilder(schema);
 
     // Verify that builder has no fields set after initialization:
     for (Field field : schema.getFields()) {
-      Assert.assertFalse("RecordBuilder should not have field " + field.name(), builder.has(field.name()));
-      Assert.assertNull("Field " + field.name() + " should be null", builder.get(field.name()));
+      assertFalse(builder.has(field.name()), "RecordBuilder should not have field " + field.name());
+      assertNull(builder.get(field.name()), "Field " + field.name() + " should be null");
     }
 
     // Set field in builder:
     builder.set("intField", 1);
     List<String> anArray = Arrays.asList("one", "two", "three");
     builder.set("anArray", anArray);
-    Assert.assertTrue("anArray should be set", builder.has("anArray"));
-    Assert.assertEquals(anArray, builder.get("anArray"));
-    Assert.assertFalse("id should not be set", builder.has("id"));
-    Assert.assertNull(builder.get("id"));
+    assertTrue(builder.has("anArray"), "anArray should be set");
+    assertEquals(anArray, builder.get("anArray"));
+    assertFalse(builder.has("id"), "id should not be set");
+    assertNull(builder.get("id"));
 
     // Build the record, and verify that fields are set:
     Record record = builder.build();
-    Assert.assertEquals(1, record.get("intField"));
-    Assert.assertEquals(anArray, record.get("anArray"));
-    Assert.assertNotNull(record.get("id"));
-    Assert.assertEquals("0", record.get("id").toString());
+    assertEquals(1, record.get("intField"));
+    assertEquals(anArray, record.get("anArray"));
+    assertNotNull(record.get("id"));
+    assertEquals("0", record.get("id").toString());
 
     // Test copy constructors:
-    Assert.assertEquals(builder, new GenericRecordBuilder(builder));
-    Assert.assertEquals(record, new GenericRecordBuilder(record).build());
+    assertEquals(builder, new GenericRecordBuilder(builder));
+    assertEquals(record, new GenericRecordBuilder(record).build());
 
     // Test clear:
     builder.clear("intField");
-    Assert.assertFalse(builder.has("intField"));
-    Assert.assertNull(builder.get("intField"));
+    assertFalse(builder.has("intField"));
+    assertNull(builder.get("intField"));
   }
 
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
-  public void attemptToSetNonNullableFieldToNull() {
-    new GenericRecordBuilder(recordSchema()).set("intField", null);
+  @Test
+  void attemptToSetNonNullableFieldToNull() {
+    assertThrows(org.apache.avro.AvroRuntimeException.class, () -> {
+      new GenericRecordBuilder(recordSchema()).set("intField", null);
+    });
   }
 
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
-  public void buildWithoutSettingRequiredFields1() {
-    new GenericRecordBuilder(recordSchema()).build();
+  @Test
+  void buildWithoutSettingRequiredFields1() {
+    assertThrows(org.apache.avro.AvroRuntimeException.class, () -> {
+      new GenericRecordBuilder(recordSchema()).build();
+    });
   }
 
-  @Test()
-  public void buildWithoutSettingRequiredFields2() {
+  @Test
+  void buildWithoutSettingRequiredFields2() {
     try {
       new GenericRecordBuilder(recordSchema()).set("anArray", Collections.singletonList("one")).build();
-      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
+      fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
     } catch (AvroRuntimeException e) {
-      Assert.assertTrue(e.getMessage().contains("intField"));
+      assertTrue(e.getMessage().contains("intField"));
     }
   }
 

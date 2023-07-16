@@ -23,12 +23,13 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -56,14 +57,14 @@ public class TestBulkData {
 
     @Override
     public void write(ByteBuffer data) {
-      Assert.assertEquals(SIZE, data.remaining());
+      assertEquals(SIZE, data.remaining());
     }
   }
 
   private static Server server;
   private static BulkData proxy;
 
-  @Before
+  @BeforeEach
   public void startServer() throws Exception {
     if (server != null)
       return;
@@ -74,18 +75,18 @@ public class TestBulkData {
   }
 
   @Test
-  public void testRead() throws IOException {
-    for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(SIZE, proxy.read().remaining());
+  void read() throws IOException {
+    for (long i = 0; i < COUNT; i++)
+      assertEquals(SIZE, proxy.read().remaining());
   }
 
   @Test
-  public void testWrite() throws IOException {
-    for (int i = 0; i < COUNT; i++)
+  void write() throws IOException {
+    for (long i = 0; i < COUNT; i++)
       proxy.write(DATA.duplicate());
   }
 
-  @AfterClass
+  @AfterAll
   public static void stopServer() throws Exception {
     server.close();
   }
@@ -95,11 +96,11 @@ public class TestBulkData {
     test.startServer();
     System.out.println("READ");
     long start = System.currentTimeMillis();
-    test.testRead();
+    test.read();
     printStats(start);
     System.out.println("WRITE");
     start = System.currentTimeMillis();
-    test.testWrite();
+    test.write();
     printStats(start);
     test.stopServer();
   }

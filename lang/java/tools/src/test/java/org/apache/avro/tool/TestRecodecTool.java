@@ -18,6 +18,8 @@
 package org.apache.avro.tool;
 
 import static java.util.Arrays.asList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,21 +33,19 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestRecodecTool {
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   @Test
-  public void testRecodec() throws Exception {
+  void recodec() throws Exception {
     String metaKey = "myMetaKey";
     String metaValue = "myMetaValue";
 
-    File inputFile = new File(DIR.getRoot(), "input.avro");
+    File inputFile = new File(DIR, "input.avro");
 
     Schema schema = Schema.create(Type.STRING);
     DataFileWriter<String> writer = new DataFileWriter<>(new GenericDatumWriter<String>(schema));
@@ -59,11 +59,11 @@ public class TestRecodecTool {
     }
     writer.close();
 
-    File defaultOutputFile = new File(DIR.getRoot(), "default-output.avro");
-    File nullOutputFile = new File(DIR.getRoot(), "null-output.avro");
-    File deflateDefaultOutputFile = new File(DIR.getRoot(), "deflate-default-output.avro");
-    File deflate1OutputFile = new File(DIR.getRoot(), "deflate-1-output.avro");
-    File deflate9OutputFile = new File(DIR.getRoot(), "deflate-9-output.avro");
+    File defaultOutputFile = new File(DIR, "default-output.avro");
+    File nullOutputFile = new File(DIR, "null-output.avro");
+    File deflateDefaultOutputFile = new File(DIR, "deflate-default-output.avro");
+    File deflate1OutputFile = new File(DIR, "deflate-1-output.avro");
+    File deflate9OutputFile = new File(DIR, "deflate-9-output.avro");
 
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<>());
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null,
@@ -78,11 +78,11 @@ public class TestRecodecTool {
     // We assume that metadata copying is orthogonal to codec selection, and
     // so only test it for a single file.
     try (DataFileReader<Void> reader = new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>())) {
-      Assert.assertEquals(metaValue, reader.getMetaString(metaKey));
+      assertEquals(metaValue, reader.getMetaString(metaKey));
     }
 
     // The "default" codec should be the same as null.
-    Assert.assertEquals(defaultOutputFile.length(), nullOutputFile.length());
+    assertEquals(defaultOutputFile.length(), nullOutputFile.length());
 
     // All of the deflated files should be smaller than the null file.
     assertLessThan(deflateDefaultOutputFile.length(), nullOutputFile.length());
@@ -95,7 +95,7 @@ public class TestRecodecTool {
 
   private static void assertLessThan(long less, long more) {
     if (less >= more) {
-      Assert.fail("Expected " + less + " to be less than " + more);
+      fail("Expected " + less + " to be less than " + more);
     }
   }
 }

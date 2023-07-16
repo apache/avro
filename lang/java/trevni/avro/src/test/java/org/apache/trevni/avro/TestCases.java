@@ -32,8 +32,9 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.generic.GenericDatumReader;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestCases {
 
@@ -41,7 +42,7 @@ public class TestCases {
   private static final File FILE = new File("target", "case.trv");
 
   @Test
-  public void testCases() throws Exception {
+  void cases() throws Exception {
     for (File f : DIR.listFiles())
       if (f.isDirectory() && !f.getName().startsWith("."))
         runCase(f);

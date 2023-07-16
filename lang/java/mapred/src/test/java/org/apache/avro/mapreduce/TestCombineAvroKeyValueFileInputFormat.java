@@ -31,46 +31,41 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCombineAvroKeyValueFileInputFormat {
 
   /** A temporary directory for test data. */
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
   /**
    * Verifies that avro records can be read in multi files.
    */
   @Test
-  public void testReadRecords() throws IOException, InterruptedException, ClassNotFoundException {
+  void readRecords() throws IOException, InterruptedException, ClassNotFoundException {
 
     Schema keyValueSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.STRING));
 
     AvroKeyValue<Integer, CharSequence> record1 = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record1.setKey(1);
     record1.setValue("apple banana carrot");
-    AvroFiles.createFile(new File(mTempDir.getRoot(), "combineSplit00.avro"), keyValueSchema, record1.get());
+    AvroFiles.createFile(new File(mTempDir, "combineSplit00.avro"), keyValueSchema, record1.get());
 
     AvroKeyValue<Integer, CharSequence> record2 = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record2.setKey(2);
     record2.setValue("apple banana");
 
-    AvroFiles.createFile(new File(mTempDir.getRoot(), "combineSplit01.avro"), keyValueSchema, record2.get());
+    AvroFiles.createFile(new File(mTempDir, "combineSplit01.avro"), keyValueSchema, record2.get());
 
     // Configure the job input.
     Job job = Job.getInstance();
-    FileInputFormat.setInputPaths(job, new Path(mTempDir.getRoot().getAbsolutePath()));
+    FileInputFormat.setInputPaths(job, new Path(mTempDir.getAbsolutePath()));
     job.setInputFormatClass(CombineAvroKeyValueFileInputFormat.class);
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.INT));
     AvroJob.setInputValueSchema(job, Schema.create(Schema.Type.STRING));
@@ -86,7 +81,7 @@ public class TestCombineAvroKeyValueFileInputFormat {
 
     // Configure the output format.
     job.setOutputFormatClass(AvroKeyValueOutputFormat.class);
-    Path outputPath = new Path(mTempDir.getRoot().getPath(), "out");
+    Path outputPath = new Path(mTempDir.getPath(), "out");
     FileOutputFormat.setOutputPath(job, outputPath);
 
     // Run the job.

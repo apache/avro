@@ -18,10 +18,7 @@
 package org.apache.avro.reflect;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -45,7 +42,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test serialization and de-serialization of non-string map-keys
@@ -53,7 +50,7 @@ import org.junit.Test;
 public class TestNonStringMapKeys {
 
   @Test
-  public void testNonStringMapKeys() throws Exception {
+  void nonStringMapKeys() throws Exception {
 
     Company entityObj1 = buildCompany();
     Company entityObj2 = buildCompany();
@@ -65,7 +62,7 @@ public class TestNonStringMapKeys {
 
     GenericRecord record = records.get(0);
     Object employees = record.get("employees");
-    assertTrue("Unable to read 'employees' map", employees instanceof GenericArray);
+    assertTrue(employees instanceof GenericArray, "Unable to read 'employees' map");
     GenericArray arrayEmployees = ((GenericArray) employees);
     Object employeeRecord = arrayEmployees.get(0);
     assertTrue(employeeRecord instanceof GenericRecord);
@@ -90,13 +87,13 @@ public class TestNonStringMapKeys {
     }
 
     byte[] jsonBytes = testJsonEncoder(testType, entityObj1);
-    assertNotNull("Unable to serialize using jsonEncoder", jsonBytes);
+    assertNotNull(jsonBytes, "Unable to serialize using jsonEncoder");
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
-    assertEquals("JSON decoder output not same as Binary Decoder", record, jsonRecord);
+    assertEquals(record, jsonRecord, "JSON decoder output not same as Binary Decoder");
   }
 
   @Test
-  public void testNonStringMapKeysInNestedMaps() throws Exception {
+  void nonStringMapKeysInNestedMaps() throws Exception {
 
     Company2 entityObj1 = buildCompany2();
 
@@ -107,7 +104,7 @@ public class TestNonStringMapKeys {
 
     GenericRecord record = records.get(0);
     Object employees = record.get("employees");
-    assertTrue("Unable to read 'employees' map", employees instanceof GenericArray);
+    assertTrue(employees instanceof GenericArray, "Unable to read 'employees' map");
     GenericArray employeesMapArray = ((GenericArray) employees);
 
     Object employeeMapElement = employeesMapArray.get(0);
@@ -146,13 +143,13 @@ public class TestNonStringMapKeys {
     }
 
     byte[] jsonBytes = testJsonEncoder(testType, entityObj1);
-    assertNotNull("Unable to serialize using jsonEncoder", jsonBytes);
+    assertNotNull(jsonBytes, "Unable to serialize using jsonEncoder");
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
-    assertEquals("JSON decoder output not same as Binary Decoder", record, jsonRecord);
+    assertEquals(record, jsonRecord, "JSON decoder output not same as Binary Decoder");
   }
 
   @Test
-  public void testRecordNameInvariance() throws Exception {
+  void recordNameInvariance() throws Exception {
 
     SameMapSignature entityObj1 = buildSameMapSignature();
 
@@ -163,7 +160,7 @@ public class TestNonStringMapKeys {
 
     GenericRecord record = records.get(0);
     Object map1obj = record.get("map1");
-    assertTrue("Unable to read map1", map1obj instanceof GenericArray);
+    assertTrue(map1obj instanceof GenericArray, "Unable to read map1");
     GenericArray map1array = ((GenericArray) map1obj);
 
     Object map1element = map1array.get(0);
@@ -207,10 +204,10 @@ public class TestNonStringMapKeys {
     assertEquals(map1schema, map4schema);
 
     byte[] jsonBytes = testJsonEncoder(testType, entityObj1);
-    assertNotNull("Unable to serialize using jsonEncoder", jsonBytes);
+    assertNotNull(jsonBytes, "Unable to serialize using jsonEncoder");
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
-    assertEquals("JSON decoder output not same as Binary Decoder", record.get("map1"), jsonRecord.get("map1"));
-    assertEquals("JSON decoder output not same as Binary Decoder", record.get("map2"), jsonRecord.get("map2"));
+    assertEquals(record.get("map1"), jsonRecord.get("map1"), "JSON decoder output not same as Binary Decoder");
+    assertEquals(record.get("map2"), jsonRecord.get("map2"), "JSON decoder output not same as Binary Decoder");
   }
 
   /**
@@ -223,7 +220,7 @@ public class TestNonStringMapKeys {
     ReflectData rdata = ReflectData.AllowNull.get();
 
     Schema schema = rdata.getSchema(entityObj1.getClass());
-    assertNotNull("Unable to get schema for " + testType, schema);
+    assertNotNull(schema, "Unable to get schema for " + testType);
     log(schema.toString(true));
 
     ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter(entityObj1.getClass(), rdata);
@@ -252,7 +249,7 @@ public class TestNonStringMapKeys {
     try (DataFileReader<GenericRecord> fileReader = new DataFileReader<>(avroInputStream, datumReader)) {
 
       Schema schema = fileReader.getSchema();
-      assertNotNull("Unable to get schema for " + testType, schema);
+      assertNotNull(schema, "Unable to get schema for " + testType);
       GenericRecord record = null;
       while (fileReader.hasNext()) {
         try {

@@ -20,13 +20,14 @@ package org.apache.trevni.avro;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.trevni.ColumnFileMetaData;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestMetadataFiltering {
 
   @Test
-  public void testMetadataFiltering() throws Exception {
+  void metadataFiltering() throws Exception {
     JobConf job = new JobConf();
 
     job.set(AvroTrevniOutputFormat.META_PREFIX + "test1", "1");
@@ -38,13 +39,13 @@ public class TestMetadataFiltering {
     ColumnFileMetaData metadata = AvroTrevniOutputFormat.filterMetadata(job);
 
     assertTrue(metadata.get("test1") != null);
-    assertTrue(new String(metadata.get("test1")).equals("1"));
+    assertEquals(new String(metadata.get("test1")), "1");
     assertTrue(metadata.get("test2") != null);
-    assertTrue(new String(metadata.get("test2")).equals("2"));
+    assertEquals(new String(metadata.get("test2")), "2");
     assertTrue(metadata.get("test5") != null);
-    assertTrue(new String(metadata.get("test5")).equals("5"));
-    assertTrue(metadata.get("test3") == null);
-    assertTrue(metadata.get("test4") == null);
+    assertEquals(new String(metadata.get("test5")), "5");
+    assertNull(metadata.get("test3"));
+    assertNull(metadata.get("test4"));
 
   }
 

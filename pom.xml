@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>28</version>
+    <version>29</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -48,19 +48,20 @@
 
     <!-- plugin versions -->
     <apache-rat-plugin.version>0.15</apache-rat-plugin.version>
-    <checkstyle-plugin.version>3.2.0</checkstyle-plugin.version>
+    <checkstyle-plugin.version>3.2.2</checkstyle-plugin.version>
     <checkstyle.version>9.3</checkstyle.version>
-    <enforcer-plugin.version>3.1.0</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.6.1</extra-enforcer-rules.version>
+    <enforcer-plugin.version>3.3.0</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.7.0</extra-enforcer-rules.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
-    <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
-    <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
-    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
+    <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
+    <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
+    <maven-plugin-plugin.version>3.8.2</maven-plugin-plugin.version>
+    <maven-remote-resources-plugin.version>3.0.0</maven-remote-resources-plugin.version>
     <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-    <plugin-tools-javadoc.version>3.7.0</plugin-tools-javadoc.version>
+    <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
     <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
-    <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
     <project.build.outputTimestamp>10</project.build.outputTimestamp>
@@ -152,6 +153,11 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>${apache-rat-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-remote-resources-plugin</artifactId>
+          <version>${maven-remote-resources-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -339,17 +345,6 @@
               </execution>
             </executions>
             <configuration>
-              <licenses>
-                <!-- TODO (low prio): Remove this simple workaround when Apache Rat 0.14 has been released. -->
-                <!-- See also: https://issues.apache.org/jira/browse/RAT-212 -->
-                <!-- and       https://issues.apache.org/jira/browse/LEGAL-265 -->
-                <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20">
-                  <notes>Also allow the license url to be https.</notes>
-                  <patterns>
-                    <pattern>https://www.apache.org/licenses/LICENSE-2.0</pattern>
-                  </patterns>
-                </license>
-              </licenses>
               <consoleOutput>true</consoleOutput>
               <excludeSubProjects>false</excludeSubProjects>
               <excludes>
@@ -394,6 +389,7 @@
                 <exclude>lang/rust/.requirements-precommit.txt</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
+                <exclude>lang/java/ipc-netty/src/test/resources/**/*.txt</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/FieldTest.java</exclude>

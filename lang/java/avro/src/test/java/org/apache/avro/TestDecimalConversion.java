@@ -19,32 +19,26 @@ package org.apache.avro;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
 import static java.math.RoundingMode.HALF_EVEN;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestDecimalConversion {
 
   private static final Conversion<BigDecimal> CONVERSION = new Conversions.DecimalConversion();
-
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
 
   private Schema smallerSchema;
   private LogicalType smallerLogicalType;
   private Schema largerSchema;
   private LogicalType largerLogicalType;
 
-  @Before
+  @BeforeEach
   public void setup() {
     smallerSchema = Schema.createFixed("smallFixed", null, null, 3);
     smallerSchema.addProp("logicalType", "decimal");
@@ -60,7 +54,7 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFromBytes() {
+  void toFromBytes() {
     final BigDecimal value = BigDecimal.valueOf(10.99).setScale(15, HALF_EVEN);
     final ByteBuffer byteBuffer = CONVERSION.toBytes(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromBytes(byteBuffer, largerSchema, largerLogicalType);
@@ -68,7 +62,7 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFromBytesMaxPrecision() {
+  void toFromBytesMaxPrecision() {
     final BigDecimal value = new BigDecimal("4567335489766.99834").setScale(15, HALF_EVEN);
     final ByteBuffer byteBuffer = CONVERSION.toBytes(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromBytes(byteBuffer, largerSchema, largerLogicalType);
@@ -76,15 +70,15 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToBytesPrecisionError() {
+  void toBytesPrecisionError() {
     final BigDecimal value = new BigDecimal("1.07046455859736525E+18").setScale(15, HALF_EVEN);
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Cannot encode decimal with precision 34 as max precision 28");
-    CONVERSION.toBytes(value, largerSchema, largerLogicalType);
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toBytes(value, largerSchema, largerLogicalType));
+    assertEquals("Cannot encode decimal with precision 34 as max precision 28", avroTypeException.getMessage());
   }
 
   @Test
-  public void testToBytesFixedSmallerScale() {
+  void toBytesFixedSmallerScale() {
     final BigDecimal value = new BigDecimal("99892.1234").setScale(10, HALF_EVEN);
     final ByteBuffer byteBuffer = CONVERSION.toBytes(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromBytes(byteBuffer, largerSchema, largerLogicalType);
@@ -92,15 +86,15 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToBytesScaleError() {
+  void toBytesScaleError() {
     final BigDecimal value = new BigDecimal("4567335489766.989989998435899453").setScale(16, HALF_EVEN);
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Cannot encode decimal with scale 16 as scale 15 without rounding");
-    CONVERSION.toBytes(value, largerSchema, largerLogicalType);
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toBytes(value, largerSchema, largerLogicalType));
+    assertEquals("Cannot encode decimal with scale 16 as scale 15 without rounding", avroTypeException.getMessage());
   }
 
   @Test
-  public void testToFromFixed() {
+  void toFromFixed() {
     final BigDecimal value = new BigDecimal("3").setScale(15, HALF_EVEN);
     final GenericFixed fixed = CONVERSION.toFixed(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromFixed(fixed, largerSchema, largerLogicalType);
@@ -108,7 +102,7 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFromFixedMaxPrecision() {
+  void toFromFixedMaxPrecision() {
     final BigDecimal value = new BigDecimal("4567335489766.99834").setScale(15, HALF_EVEN);
     final GenericFixed fixed = CONVERSION.toFixed(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromFixed(fixed, largerSchema, largerLogicalType);
@@ -116,15 +110,16 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFixedPrecisionError() {
+  void toFixedPrecisionError() {
     final BigDecimal value = new BigDecimal("1.07046455859736525E+18").setScale(15, HALF_EVEN);
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Cannot encode decimal with precision 34 as max precision 28");
-    CONVERSION.toFixed(value, largerSchema, largerLogicalType);
+
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toFixed(value, largerSchema, largerLogicalType));
+    assertEquals("Cannot encode decimal with precision 34 as max precision 28", avroTypeException.getMessage());
   }
 
   @Test
-  public void testToFromFixedSmallerScale() {
+  void toFromFixedSmallerScale() {
     final BigDecimal value = new BigDecimal("99892.1234").setScale(10, HALF_EVEN);
     final GenericFixed fixed = CONVERSION.toFixed(value, largerSchema, largerLogicalType);
     final BigDecimal result = CONVERSION.fromFixed(fixed, largerSchema, largerLogicalType);
@@ -132,15 +127,16 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFixedScaleError() {
+  void toFixedScaleError() {
     final BigDecimal value = new BigDecimal("4567335489766.3453453453453453453453").setScale(16, HALF_EVEN);
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Cannot encode decimal with scale 16 as scale 15 without rounding");
-    CONVERSION.toFixed(value, largerSchema, largerLogicalType);
+
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toFixed(value, largerSchema, largerLogicalType));
+    assertEquals("Cannot encode decimal with scale 16 as scale 15 without rounding", avroTypeException.getMessage());
   }
 
   @Test
-  public void testToFromFixedMatchScaleAndPrecision() {
+  void toFromFixedMatchScaleAndPrecision() {
     final BigDecimal value = new BigDecimal("123.45");
     final GenericFixed fixed = CONVERSION.toFixed(value, smallerSchema, smallerLogicalType);
     final BigDecimal result = CONVERSION.fromFixed(fixed, smallerSchema, smallerLogicalType);
@@ -148,7 +144,7 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFromFixedRepresentedInLogicalTypeAllowRoundUnneccesary() {
+  void toFromFixedRepresentedInLogicalTypeAllowRoundUnneccesary() {
     final BigDecimal value = new BigDecimal("123.4500");
     final GenericFixed fixed = CONVERSION.toFixed(value, smallerSchema, smallerLogicalType);
     final BigDecimal result = CONVERSION.fromFixed(fixed, smallerSchema, smallerLogicalType);
@@ -156,24 +152,27 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testToFromFixedPrecisionErrorAfterAdjustingScale() {
+  void toFromFixedPrecisionErrorAfterAdjustingScale() {
     final BigDecimal value = new BigDecimal("1234.560");
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage(
-        "Cannot encode decimal with precision 6 as max precision 5. This is after safely adjusting scale from 3 to required 2");
-    CONVERSION.toFixed(value, smallerSchema, smallerLogicalType);
+
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toFixed(value, smallerSchema, smallerLogicalType));
+    assertEquals(
+        "Cannot encode decimal with precision 6 as max precision 5. This is after safely adjusting scale from 3 to required 2",
+        avroTypeException.getMessage());
   }
 
   @Test
-  public void testToFixedRepresentedInLogicalTypeErrorIfRoundingRequired() {
+  void toFixedRepresentedInLogicalTypeErrorIfRoundingRequired() {
     final BigDecimal value = new BigDecimal("123.456");
-    expectedException.expect(AvroTypeException.class);
-    expectedException.expectMessage("Cannot encode decimal with scale 3 as scale 2 without rounding");
-    CONVERSION.toFixed(value, smallerSchema, smallerLogicalType);
+
+    AvroTypeException avroTypeException = assertThrows(AvroTypeException.class,
+        () -> CONVERSION.toFixed(value, smallerSchema, smallerLogicalType));
+    assertEquals("Cannot encode decimal with scale 3 as scale 2 without rounding", avroTypeException.getMessage());
   }
 
   @Test
-  public void testImportanceOfEnsuringCorrectScaleWhenConvertingFixed() {
+  void importanceOfEnsuringCorrectScaleWhenConvertingFixed() {
     LogicalTypes.Decimal decimal = (LogicalTypes.Decimal) smallerLogicalType;
 
     final BigDecimal bigDecimal = new BigDecimal("1234.5");
@@ -192,7 +191,7 @@ public class TestDecimalConversion {
   }
 
   @Test
-  public void testImportanceOfEnsuringCorrectScaleWhenConvertingBytes() {
+  void importanceOfEnsuringCorrectScaleWhenConvertingBytes() {
     LogicalTypes.Decimal decimal = (LogicalTypes.Decimal) smallerLogicalType;
 
     final BigDecimal bigDecimal = new BigDecimal("1234.5");

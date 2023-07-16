@@ -16,7 +16,7 @@
 // under the License.
 
 //! Logic for checking schema compatibility
-use crate::schema::{Schema, SchemaKind};
+use crate::schema::{EnumSchema, FixedSchema, RecordSchema, Schema, SchemaKind};
 use std::{
     collections::{hash_map::DefaultHasher, HashSet},
     hash::Hasher,
@@ -88,13 +88,13 @@ impl Checker {
             SchemaKind::Union => self.match_union_schemas(writers_schema, readers_schema),
             SchemaKind::Enum => {
                 // reader's symbols must contain all writer's symbols
-                if let Schema::Enum {
+                if let Schema::Enum(EnumSchema {
                     symbols: w_symbols, ..
-                } = writers_schema
+                }) = writers_schema
                 {
-                    if let Schema::Enum {
+                    if let Schema::Enum(EnumSchema {
                         symbols: r_symbols, ..
-                    } = readers_schema
+                    }) = readers_schema
                     {
                         return !w_symbols.iter().any(|e| !r_symbols.contains(e));
                     }
@@ -121,15 +121,15 @@ impl Checker {
             return false;
         }
 
-        if let Schema::Record {
+        if let Schema::Record(RecordSchema {
             fields: w_fields,
             lookup: w_lookup,
             ..
-        } = writers_schema
+        }) = writers_schema
         {
-            if let Schema::Record {
+            if let Schema::Record(RecordSchema {
                 fields: r_fields, ..
-            } = readers_schema
+            }) = readers_schema
             {
                 for field in r_fields.iter() {
                     if let Some(pos) = w_lookup.get(&field.name) {
@@ -219,8 +219,8 @@ impl SchemaCompatibility {
 
             match r_type {
                 SchemaKind::Record => {
-                    if let Schema::Record { name: w_name, .. } = writers_schema {
-                        if let Schema::Record { name: r_name, .. } = readers_schema {
+                    if let Schema::Record(RecordSchema { name: w_name, .. }) = writers_schema {
+                        if let Schema::Record(RecordSchema { name: r_name, .. }) = readers_schema {
                             return w_name.fullname(None) == r_name.fullname(None);
                         } else {
                             unreachable!("readers_schema should have been Schema::Record")
@@ -230,21 +230,21 @@ impl SchemaCompatibility {
                     }
                 }
                 SchemaKind::Fixed => {
-                    if let Schema::Fixed {
+                    if let Schema::Fixed(FixedSchema {
                         name: w_name,
                         aliases: _,
                         doc: _w_doc,
                         size: w_size,
                         attributes: _,
-                    } = writers_schema
+                    }) = writers_schema
                     {
-                        if let Schema::Fixed {
+                        if let Schema::Fixed(FixedSchema {
                             name: r_name,
                             aliases: _,
                             doc: _r_doc,
                             size: r_size,
                             attributes: _,
-                        } = readers_schema
+                        }) = readers_schema
                         {
                             return w_name.fullname(None) == r_name.fullname(None)
                                 && w_size == r_size;
@@ -256,8 +256,8 @@ impl SchemaCompatibility {
                     }
                 }
                 SchemaKind::Enum => {
-                    if let Schema::Enum { name: w_name, .. } = writers_schema {
-                        if let Schema::Enum { name: r_name, .. } = readers_schema {
+                    if let Schema::Enum(EnumSchema { name: w_name, .. }) = writers_schema {
+                        if let Schema::Enum(EnumSchema { name: r_name, .. }) = readers_schema {
                             return w_name.fullname(None) == r_name.fullname(None);
                         } else {
                             unreachable!("readers_schema should have been Schema::Enum")
@@ -327,6 +327,11 @@ impl SchemaCompatibility {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        types::{Record, Value},
+        Codec, Reader, Writer,
+    };
+    use apache_avro_test_helper::TestResult;
 
     fn int_array_schema() -> Schema {
         Schema::parse_str(r#"{"type":"array", "items":"int"}"#).unwrap()
@@ -437,7 +442,7 @@ mod tests {
             .map(|s| s.canonical_form())
             .collect::<Vec<String>>()
             .join(",");
-        Schema::parse_str(&format!("[{}]", schema_string)).unwrap()
+        Schema::parse_str(&format!("[{schema_string}]")).unwrap()
     }
 
     fn empty_union_schema() -> Schema {
@@ -589,15 +594,14 @@ mod tests {
     }
 
     #[test]
-    fn test_missing_field() {
+    fn test_missing_field() -> TestResult {
         let reader_schema = Schema::parse_str(
             r#"
       {"type":"record", "name":"Record", "fields":[
         {"name":"oldfield1", "type":"int"}
       ]}
 "#,
-        )
-        .unwrap();
+        )?;
         assert!(SchemaCompatibility::can_read(
             &writer_schema(),
             &reader_schema,
@@ -606,18 +610,19 @@ mod tests {
             &reader_schema,
             &writer_schema()
         ));
+
+        Ok(())
     }
 
     #[test]
-    fn test_missing_second_field() {
+    fn test_missing_second_field() -> TestResult {
         let reader_schema = Schema::parse_str(
             r#"
         {"type":"record", "name":"Record", "fields":[
           {"name":"oldfield2", "type":"string"}
         ]}
 "#,
-        )
-        .unwrap();
+        )?;
         assert!(SchemaCompatibility::can_read(
             &writer_schema(),
             &reader_schema
@@ -626,10 +631,12 @@ mod tests {
             &reader_schema,
             &writer_schema()
         ));
+
+        Ok(())
     }
 
     #[test]
-    fn test_all_fields() {
+    fn test_all_fields() -> TestResult {
         let reader_schema = Schema::parse_str(
             r#"
         {"type":"record", "name":"Record", "fields":[
@@ -637,8 +644,7 @@ mod tests {
           {"name":"oldfield2", "type":"string"}
         ]}
 "#,
-        )
-        .unwrap();
+        )?;
         assert!(SchemaCompatibility::can_read(
             &writer_schema(),
             &reader_schema
@@ -647,10 +653,12 @@ mod tests {
             &reader_schema,
             &writer_schema()
         ));
+
+        Ok(())
     }
 
     #[test]
-    fn test_new_field_with_default() {
+    fn test_new_field_with_default() -> TestResult {
         let reader_schema = Schema::parse_str(
             r#"
         {"type":"record", "name":"Record", "fields":[
@@ -658,8 +666,7 @@ mod tests {
           {"name":"newfield1", "type":"int", "default":42}
         ]}
 "#,
-        )
-        .unwrap();
+        )?;
         assert!(SchemaCompatibility::can_read(
             &writer_schema(),
             &reader_schema
@@ -668,10 +675,12 @@ mod tests {
             &reader_schema,
             &writer_schema()
         ));
+
+        Ok(())
     }
 
     #[test]
-    fn test_new_field() {
+    fn test_new_field() -> TestResult {
         let reader_schema = Schema::parse_str(
             r#"
         {"type":"record", "name":"Record", "fields":[
@@ -679,8 +688,7 @@ mod tests {
           {"name":"newfield1", "type":"int"}
         ]}
 "#,
-        )
-        .unwrap();
+        )?;
         assert!(!SchemaCompatibility::can_read(
             &writer_schema(),
             &reader_schema
@@ -689,6 +697,8 @@ mod tests {
             &reader_schema,
             &writer_schema()
         ));
+
+        Ok(())
     }
 
     #[test]
@@ -720,7 +730,7 @@ mod tests {
     }
 
     #[test]
-    fn test_union_reader_writer_subset_incompatiblity() {
+    fn test_union_reader_writer_subset_incompatibility() {
         // reader union schema must contain all writer union branches
         let union_writer = union_schema(vec![Schema::Int, Schema::String]);
         let union_reader = union_schema(vec![Schema::String]);
@@ -730,15 +740,14 @@ mod tests {
     }
 
     #[test]
-    fn test_incompatible_record_field() {
+    fn test_incompatible_record_field() -> TestResult {
         let string_schema = Schema::parse_str(
             r#"
         {"type":"record", "name":"MyRecord", "namespace":"ns", "fields": [
             {"name":"field1", "type":"string"}
         ]}
         "#,
-        )
-        .unwrap();
+        )?;
 
         let int_schema = Schema::parse_str(
             r#"
@@ -746,25 +755,26 @@ mod tests {
         {"name":"field1", "type":"int"}
       ]}
 "#,
-        )
-        .unwrap();
+        )?;
 
         assert!(!SchemaCompatibility::can_read(&string_schema, &int_schema));
+
+        Ok(())
     }
 
     #[test]
-    fn test_enum_symbols() {
+    fn test_enum_symbols() -> TestResult {
         let enum_schema1 = Schema::parse_str(
             r#"
       {"type":"enum", "name":"MyEnum", "symbols":["A","B"]}
 "#,
-        )
-        .unwrap();
+        )?;
         let enum_schema2 =
-            Schema::parse_str(r#"{"type":"enum", "name":"MyEnum", "symbols":["A","B","C"]}"#)
-                .unwrap();
+            Schema::parse_str(r#"{"type":"enum", "name":"MyEnum", "symbols":["A","B","C"]}"#)?;
         assert!(!SchemaCompatibility::can_read(&enum_schema2, &enum_schema1));
         assert!(SchemaCompatibility::can_read(&enum_schema1, &enum_schema2));
+
+        Ok(())
     }
 
     fn point_2d_schema() -> Schema {
@@ -899,5 +909,133 @@ mod tests {
             &point_2d_fullname_schema(),
             &read_schema
         ));
+    }
+
+    #[test]
+    fn test_avro_3772_enum_default() -> TestResult {
+        let writer_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                "type": "enum",
+                "name": "suit",
+                "symbols": ["diamonds", "spades", "clubs", "hearts"],
+                "default": "spades"
+              }
+            }
+          ]
+        }
+        "#;
+
+        let reader_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                 "type": "enum",
+                 "name": "suit",
+                 "symbols": ["diamonds", "spades", "ninja", "hearts"],
+                 "default": "spades"
+              }
+            }
+          ]
+        }
+      "#;
+        let writer_schema = Schema::parse_str(writer_raw_schema)?;
+        let reader_schema = Schema::parse_str(reader_raw_schema)?;
+        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
+        let mut record = Record::new(writer.schema()).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+        record.put("c", "clubs");
+        writer.append(record).unwrap();
+        let input = writer.into_inner()?;
+        let mut reader = Reader::with_schema(&reader_schema, &input[..])?;
+        assert_eq!(
+            reader.next().unwrap().unwrap(),
+            Value::Record(vec![
+                ("a".to_string(), Value::Long(27)),
+                ("b".to_string(), Value::String("foo".to_string())),
+                ("c".to_string(), Value::Enum(1, "spades".to_string())),
+            ])
+        );
+        assert!(reader.next().is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3772_enum_default_less_symbols() -> TestResult {
+        let writer_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                "type": "enum",
+                "name": "suit",
+                "symbols": ["diamonds", "spades", "clubs", "hearts"],
+                "default": "spades"
+              }
+            }
+          ]
+        }
+        "#;
+
+        let reader_raw_schema = r#"
+        {
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {"name": "a", "type": "long", "default": 42},
+            {"name": "b", "type": "string"},
+            {
+              "name": "c",
+              "type": {
+                 "type": "enum",
+                  "name": "suit",
+                  "symbols": ["hearts", "spades"],
+                  "default": "spades"
+              }
+            }
+          ]
+        }
+      "#;
+        let writer_schema = Schema::parse_str(writer_raw_schema)?;
+        let reader_schema = Schema::parse_str(reader_raw_schema)?;
+        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
+        let mut record = Record::new(writer.schema()).unwrap();
+        record.put("a", 27i64);
+        record.put("b", "foo");
+        record.put("c", "hearts");
+        writer.append(record).unwrap();
+        let input = writer.into_inner()?;
+        let mut reader = Reader::with_schema(&reader_schema, &input[..])?;
+        assert_eq!(
+            reader.next().unwrap().unwrap(),
+            Value::Record(vec![
+                ("a".to_string(), Value::Long(27)),
+                ("b".to_string(), Value::String("foo".to_string())),
+                ("c".to_string(), Value::Enum(0, "hearts".to_string())),
+            ])
+        );
+        assert!(reader.next().is_none());
+
+        Ok(())
     }
 }

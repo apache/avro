@@ -26,17 +26,17 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.avro.thrift.test.Test;
 import org.apache.avro.thrift.test.FooOrBar;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.apache.avro.thrift.test.E;
 import org.apache.avro.thrift.test.Nested;
 
 public class TestThrift {
 
-  @org.junit.Test
-  public void testStruct() throws Exception {
+  @org.junit.jupiter.api.Test
+  void testStruct() throws Exception {
 
     System.out.println(ThriftData.get().getSchema(Test.class).toString(true));
 
@@ -62,8 +62,8 @@ public class TestThrift {
     check(test);
   }
 
-  @org.junit.Test
-  public void testOptionals() throws Exception {
+  @org.junit.jupiter.api.Test
+  void testOptionals() throws Exception {
 
     Test test = new Test();
     test.setBoolField(true);

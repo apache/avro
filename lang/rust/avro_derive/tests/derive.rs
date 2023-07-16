@@ -30,11 +30,8 @@ extern crate serde;
 
 #[cfg(test)]
 mod test_derive {
-    use apache_avro::schema::Alias;
-    use std::{
-        borrow::{Borrow, Cow},
-        sync::Mutex,
-    };
+    use apache_avro::schema::{Alias, EnumSchema, RecordSchema};
+    use std::{borrow::Cow, sync::Mutex};
 
     use super::*;
 
@@ -60,7 +57,7 @@ mod test_derive {
         let schema = T::get_schema();
         let mut writer = Writer::new(&schema, Vec::new());
         if let Err(e) = writer.append_ser(obj) {
-            panic!("{:?}", e);
+            panic!("{e:?}");
         }
         writer.into_inner().unwrap()
     }
@@ -77,7 +74,7 @@ mod test_derive {
                 Ok(value) => {
                     return from_value::<T>(&value).unwrap();
                 }
-                Err(e) => panic!("{:?}", e),
+                Err(e) => panic!("{e:?}"),
             }
         }
         unreachable!()
@@ -144,7 +141,7 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestBasicNamespace::get_schema());
-        if let Schema::Record { name, .. } = TestBasicNamespace::get_schema() {
+        if let Schema::Record(RecordSchema { name, .. }) = TestBasicNamespace::get_schema() {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap())
         } else {
             panic!("TestBasicNamespace schema must be a record schema")
@@ -191,7 +188,9 @@ mod test_derive {
         "#;
         let schema = Schema::parse_str(schema).unwrap();
         assert_eq!(schema, TestComplexNamespace::get_schema());
-        if let Schema::Record { name, fields, .. } = TestComplexNamespace::get_schema() {
+        if let Schema::Record(RecordSchema { name, fields, .. }) =
+            TestComplexNamespace::get_schema()
+        {
             assert_eq!(
                 "com.testing.complex.namespace".to_owned(),
                 name.namespace.unwrap()
@@ -201,7 +200,7 @@ mod test_derive {
                 .filter(|field| field.name == "a")
                 .map(|field| &field.schema)
                 .next();
-            if let Some(Schema::Record { name, .. }) = inner_schema {
+            if let Some(Schema::Record(RecordSchema { name, .. })) = inner_schema {
                 assert_eq!(
                     "com.testing.namespace".to_owned(),
                     name.namespace.clone().unwrap()
@@ -864,7 +863,7 @@ mod test_derive {
         // test serde with manual equality for mutex
         let test = serde(test);
         assert_eq!("hey", test.a);
-        assert_eq!(vec![42], *test.b.borrow().lock().unwrap());
+        assert_eq!(vec![42], *test.b.lock().unwrap());
         assert_eq!(Cow::Owned::<i32>(32), test.c);
     }
 
@@ -944,7 +943,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithAttributes::get_schema() {
+        if let Schema::Record(RecordSchema { name, doc, .. }) =
+            TestBasicWithAttributes::get_schema()
+        {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
@@ -985,13 +986,14 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithOuterDocAttributes::get_schema() {
+        let derived_schema = TestBasicWithOuterDocAttributes::get_schema();
+        assert_eq!(&schema, &derived_schema);
+        if let Schema::Record(RecordSchema { name, doc, .. }) = derived_schema {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!("A Documented Record", doc.unwrap())
         } else {
             panic!("TestBasicWithOuterDocAttributes schema must be a record schema")
         }
-        assert_eq!(schema, TestBasicWithOuterDocAttributes::get_schema());
     }
 
     #[derive(Debug, Serialize, Deserialize, AvroSchema, Clone, PartialEq, Eq)]
@@ -1028,7 +1030,8 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, doc, .. } = TestBasicWithLargeDoc::get_schema() {
+        if let Schema::Record(RecordSchema { name, doc, .. }) = TestBasicWithLargeDoc::get_schema()
+        {
             assert_eq!("com.testing.namespace".to_owned(), name.namespace.unwrap());
             assert_eq!(
                 "A Documented Record\nthat spans\nmultiple lines",
@@ -1068,7 +1071,7 @@ mod test_derive {
         let schema = Schema::parse_str(schema).unwrap();
         let derived_schema = TestBasicWithBool::get_schema();
 
-        if let Schema::Record { name, .. } = derived_schema {
+        if let Schema::Record(RecordSchema { name, .. }) = derived_schema {
             assert_eq!("TestBasicWithBool", name.fullname(None))
         } else {
             panic!("TestBasicWithBool schema must be a record schema")
@@ -1099,7 +1102,7 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, .. } = TestBasicWithU32::get_schema() {
+        if let Schema::Record(RecordSchema { name, .. }) = TestBasicWithU32::get_schema() {
             assert_eq!("TestBasicWithU32", name.fullname(None))
         } else {
             panic!("TestBasicWithU32 schema must be a record schema")
@@ -1131,7 +1134,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases::get_schema() {
+        if let Schema::Record(RecordSchema { name, aliases, .. }) =
+            TestBasicStructWithAliases::get_schema()
+        {
             assert_eq!("TestBasicStructWithAliases", name.fullname(None));
             assert_eq!(
                 Some(vec![
@@ -1173,7 +1178,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, aliases, .. } = TestBasicStructWithAliases2::get_schema() {
+        if let Schema::Record(RecordSchema { name, aliases, .. }) =
+            TestBasicStructWithAliases2::get_schema()
+        {
             assert_eq!("TestBasicStructWithAliases2", name.fullname(None));
             assert_eq!(
                 Some(vec![
@@ -1212,7 +1219,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases::get_schema() {
+        if let Schema::Enum(EnumSchema { name, aliases, .. }) =
+            TestBasicEnumWithAliases::get_schema()
+        {
             assert_eq!("TestBasicEnumWithAliases", name.fullname(None));
             assert_eq!(
                 Some(vec![
@@ -1253,7 +1262,9 @@ mod test_derive {
         }
         "#;
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Enum { name, aliases, .. } = TestBasicEnumWithAliases2::get_schema() {
+        if let Schema::Enum(EnumSchema { name, aliases, .. }) =
+            TestBasicEnumWithAliases2::get_schema()
+        {
             assert_eq!("TestBasicEnumWithAliases2", name.fullname(None));
             assert_eq!(
                 Some(vec![
@@ -1357,7 +1368,8 @@ mod test_derive {
         "#;
 
         let schema = Schema::parse_str(schema).unwrap();
-        if let Schema::Record { name, fields, .. } = TestBasicStructWithDefaultValues::get_schema()
+        if let Schema::Record(RecordSchema { name, fields, .. }) =
+            TestBasicStructWithDefaultValues::get_schema()
         {
             assert_eq!("TestBasicStructWithDefaultValues", name.fullname(None));
             use serde_json::json;
@@ -1454,7 +1466,7 @@ mod test_derive {
 
         let schema = Schema::parse_str(schema).unwrap();
         let derived_schema = TestBasicStructWithSkipAttribute::get_schema();
-        if let Schema::Record { name, fields, .. } = &derived_schema {
+        if let Schema::Record(RecordSchema { name, fields, .. }) = &derived_schema {
             assert_eq!("TestBasicStructWithSkipAttribute", name.fullname(None));
             for field in fields {
                 match field.name.as_str() {
@@ -1466,8 +1478,7 @@ mod test_derive {
             }
         } else {
             panic!(
-                "TestBasicStructWithSkipAttribute schema must be a record schema: {:?}",
-                derived_schema
+                "TestBasicStructWithSkipAttribute schema must be a record schema: {derived_schema:?}"
             )
         }
         assert_eq!(schema, derived_schema);
@@ -1522,7 +1533,7 @@ mod test_derive {
 
         let schema = Schema::parse_str(schema).unwrap();
         let derived_schema = TestBasicStructWithRenameAttribute::get_schema();
-        if let Schema::Record { name, fields, .. } = &derived_schema {
+        if let Schema::Record(RecordSchema { name, fields, .. }) = &derived_schema {
             assert_eq!("TestBasicStructWithRenameAttribute", name.fullname(None));
             for field in fields {
                 match field.name.as_str() {
@@ -1533,8 +1544,7 @@ mod test_derive {
             }
         } else {
             panic!(
-                "TestBasicStructWithRenameAttribute schema must be a record schema: {:?}",
-                derived_schema
+                "TestBasicStructWithRenameAttribute schema must be a record schema: {derived_schema:?}"
             )
         }
         assert_eq!(schema, derived_schema);
@@ -1554,11 +1564,11 @@ mod test_derive {
         }
 
         let derived_schema = TestRawIdent::get_schema();
-        if let Schema::Record { fields, .. } = derived_schema {
+        if let Schema::Record(RecordSchema { fields, .. }) = derived_schema {
             let field = fields.get(0).expect("TestRawIdent must contain a field");
             assert_eq!(field.name, "type");
         } else {
-            panic!("Unexpected schema type for {:?}", derived_schema)
+            panic!("Unexpected schema type for {derived_schema:?}")
         }
     }
 }

@@ -17,9 +17,11 @@
  */
 package org.apache.avro.tool;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
@@ -31,12 +33,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-
 public class TestIdlTool {
 
   @Test
-  public void testWriteIdlAsProtocol() throws Exception {
+  void writeIdlAsProtocol() throws Exception {
     String idl = "src/test/idl/protocol.avdl";
     String protocol = "src/test/idl/protocol.avpr";
     String outfile = "target/test-protocol.avpr";

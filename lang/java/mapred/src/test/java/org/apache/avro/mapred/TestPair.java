@@ -22,13 +22,15 @@ import java.util.ArrayList;
 
 import org.apache.avro.AvroRuntimeException;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestPair {
 
   @Test
-  public void testCollectionFailure() throws Exception {
+  void collectionFailure() throws Exception {
     try {
       new Pair("foo", new ArrayList());
     } catch (AvroRuntimeException e) {

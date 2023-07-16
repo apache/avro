@@ -173,15 +173,21 @@ ENV PIP_NO_CACHE_DIR=off
 
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox-wheel zstandard
+ && python3 -m pip install tox zstandard
 
 
 # Install Ruby
 RUN apt-get -qqy install ruby-full \
  && apt-get -qqy clean
+RUN mkdir -p /tmp/lang/ruby/lib/avro && mkdir -p /tmp/share
+COPY lang/ruby/* /tmp/lang/ruby/
+COPY share/VERSION.txt /tmp/share/
+RUN gem install bundler --no-document && \
+    apt-get install -qqy libyaml-dev && \
+    cd /tmp/lang/ruby && bundle install
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.60.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.65.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8
@@ -195,8 +201,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 RUN cd /opt ; \
     wget https://dot.net/v1/dotnet-install.sh ; \
     bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ;  \
-    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ;
+    bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ;
     
 ENV PATH $PATH:/opt/dotnet
 

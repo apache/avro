@@ -22,20 +22,21 @@ import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.util.internal.JacksonUtils;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestReflectData {
   @Test
   @SuppressWarnings("unchecked")
-  public void testWeakSchemaCaching() throws Exception {
+  void weakSchemaCaching() throws Exception {
     int numSchemas = 1000000;
     for (int i = 0; i < numSchemas; i++) {
       // Create schema
@@ -54,7 +55,7 @@ public class TestReflectData {
   }
 
   @Test
-  public void testGenericProtocol() {
+  void genericProtocol() {
     Protocol protocol = ReflectData.get().getProtocol(FooBarProtocol.class);
     Schema recordSchema = ReflectData.get().getSchema(FooBarReflectiveRecord.class);
 
@@ -107,7 +108,7 @@ public class TestReflectData {
   }
 
   @Test
-  public void testCreateSchemaDefaultValue() {
+  void createSchemaDefaultValue() {
     Meta meta = new Meta();
     validateSchema(meta);
 
@@ -127,7 +128,7 @@ public class TestReflectData {
     Map testCases = JacksonUtils.objectToMap(meta);
 
     for (Schema.Field field : cloneSchema.getFields()) {
-      assertEquals("Invalid field " + field.name(), field.defaultVal(), testCases.get(field.name()));
+      assertEquals(field.defaultVal(), testCases.get(field.name()), "Invalid field " + field.name());
     }
   }
 
@@ -135,13 +136,15 @@ public class TestReflectData {
     public Map<String, String> tokens;
   }
 
-  @Test(expected = AvroTypeException.class)
-  public void testNonStaticInnerClasses() {
-    ReflectData.get().getSchema(Definition.class);
+  @Test
+  void nonStaticInnerClasses() {
+    assertThrows(AvroTypeException.class, () -> {
+      ReflectData.get().getSchema(Definition.class);
+    });
   }
 
   @Test
-  public void testStaticInnerClasses() {
+  void staticInnerClasses() {
     ReflectData.get().getSchema(Meta.class);
   }
 }

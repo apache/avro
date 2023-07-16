@@ -26,11 +26,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1429,7 +1431,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      * names known to this parser.
      */
     public Schema parse(File file) throws IOException {
-      return parse(FACTORY.createParser(file));
+      return parse(FACTORY.createParser(file), false);
     }
 
     /**
@@ -1437,7 +1439,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      * names known to this parser. The input stream stays open after the parsing.
      */
     public Schema parse(InputStream in) throws IOException {
-      return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE));
+      return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE), true);
     }
 
     /** Read a schema from one or more json strings */
@@ -1454,19 +1456,36 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Schema parse(String s) {
       try {
-        return parse(FACTORY.createParser(s));
+        return parse(FACTORY.createParser(s), false);
       } catch (IOException e) {
         throw new SchemaParseException(e);
       }
     }
 
-    private Schema parse(JsonParser parser) throws IOException {
+    private Schema parse(JsonParser parser, boolean allowDanglingContent) throws IOException {
       boolean saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
         validateNames.set(validate);
         VALIDATE_DEFAULTS.set(validateDefaults);
-        return Schema.parse(MAPPER.readTree(parser), names);
+        JsonNode jsonNode = MAPPER.readTree(parser);
+        Schema schema = Schema.parse(jsonNode, names);
+        if (!allowDanglingContent) {
+          String dangling;
+          StringWriter danglingWriter = new StringWriter();
+          int numCharsReleased = parser.releaseBuffered(danglingWriter);
+          if (numCharsReleased == -1) {
+            ByteArrayOutputStream danglingOutputStream = new ByteArrayOutputStream();
+            parser.releaseBuffered(danglingOutputStream); // if input isnt chars above it must be bytes
+            dangling = new String(danglingOutputStream.toByteArray(), StandardCharsets.UTF_8).trim();
+          } else {
+            dangling = danglingWriter.toString().trim();
+          }
+          if (!dangling.isEmpty()) {
+            throw new SchemaParseException("dangling content after end of schema: " + dangling);
+          }
+        }
+        return schema;
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {

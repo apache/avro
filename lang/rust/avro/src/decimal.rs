@@ -55,6 +55,12 @@ impl Decimal {
     }
 }
 
+impl From<Decimal> for BigInt {
+    fn from(decimal: Decimal) -> Self {
+        decimal.value
+    }
+}
+
 /// Gets the internal byte array representation of a referenced decimal.
 /// Usage:
 /// ```
@@ -102,24 +108,29 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use std::convert::TryFrom;
 
     #[test]
-    fn test_decimal_from_bytes_from_ref_decimal() {
+    fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
         let input = vec![1, 24];
         let d = Decimal::from(&input);
 
-        let output = <Vec<u8>>::try_from(&d).unwrap();
+        let output = <Vec<u8>>::try_from(&d)?;
         assert_eq!(output, input);
+
+        Ok(())
     }
 
     #[test]
-    fn test_decimal_from_bytes_from_owned_decimal() {
+    fn test_decimal_from_bytes_from_owned_decimal() -> TestResult {
         let input = vec![1, 24];
         let d = Decimal::from(&input);
 
-        let output = <Vec<u8>>::try_from(d).unwrap();
+        let output = <Vec<u8>>::try_from(d)?;
         assert_eq!(output, input);
+
+        Ok(())
     }
 }

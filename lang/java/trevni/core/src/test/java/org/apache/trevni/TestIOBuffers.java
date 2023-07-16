@@ -18,43 +18,43 @@
 package org.apache.trevni;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Random;
 
 import java.io.ByteArrayOutputStream;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestIOBuffers {
 
   private static final int COUNT = 1001;
 
   @Test
-  public void testEmpty() throws Exception {
+  void empty() throws Exception {
     OutputBuffer out = new OutputBuffer();
     ByteArrayOutputStream temp = new ByteArrayOutputStream();
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    Assert.assertEquals(0, in.tell());
-    Assert.assertEquals(0, in.length());
+    assertEquals(0, in.tell());
+    assertEquals(0, in.length());
     out.close();
   }
 
   @Test
-  public void testZero() throws Exception {
+  void zero() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     out.writeInt(0);
     byte[] bytes = out.toByteArray();
-    Assert.assertEquals(1, bytes.length);
-    Assert.assertEquals(0, bytes[0]);
+    assertEquals(1, bytes.length);
+    assertEquals(0, bytes[0]);
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    Assert.assertEquals(0, in.readInt());
+    assertEquals(0, in.readInt());
     out.close();
   }
 
   @Test
-  public void testBoolean() throws Exception {
+  void testBoolean() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -63,12 +63,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextBoolean(), in.readValue(ValueType.BOOLEAN));
+      assertEquals(random.nextBoolean(), in.readValue(ValueType.BOOLEAN));
     out.close();
   }
 
   @Test
-  public void testInt() throws Exception {
+  void testInt() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -77,12 +77,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextInt(), in.readInt());
+      assertEquals(random.nextInt(), in.readInt());
     out.close();
   }
 
   @Test
-  public void testLong() throws Exception {
+  void testLong() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -91,12 +91,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextLong(), in.readLong());
+      assertEquals(random.nextLong(), in.readLong());
     out.close();
   }
 
   @Test
-  public void testFixed32() throws Exception {
+  void fixed32() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -105,12 +105,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextInt(), in.readFixed32());
+      assertEquals(random.nextInt(), in.readFixed32());
     out.close();
   }
 
   @Test
-  public void testFixed64() throws Exception {
+  void fixed64() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -119,12 +119,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextLong(), in.readFixed64());
+      assertEquals(random.nextLong(), in.readFixed64());
     out.close();
   }
 
   @Test
-  public void testFloat() throws Exception {
+  void testFloat() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -133,24 +133,24 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(random.nextFloat(), in.readFloat(), 0);
+      assertEquals(random.nextFloat(), in.readFloat(), 0);
     out.close();
   }
 
   @Test
-  public void testDouble() throws Exception {
+  void testDouble() throws Exception {
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
       out.writeDouble(Double.MIN_VALUE);
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0);
+      assertEquals(Double.MIN_VALUE, in.readDouble(), 0);
     out.close();
   }
 
   @Test
-  public void testBytes() throws Exception {
+  void bytes() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -159,12 +159,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(TestUtil.randomBytes(random), in.readBytes(null));
+      assertEquals(TestUtil.randomBytes(random), in.readBytes(null));
     out.close();
   }
 
   @Test
-  public void testString() throws Exception {
+  void string() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
@@ -173,12 +173,12 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(TestUtil.randomString(random), in.readString());
+      assertEquals(TestUtil.randomString(random), in.readString());
     out.close();
   }
 
   @Test
-  public void testSkipNull() throws Exception {
+  void skipNull() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(null, ValueType.NULL);
@@ -186,12 +186,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.NULL);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipBoolean() throws Exception {
+  void skipBoolean() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(false, ValueType.BOOLEAN);
@@ -199,12 +199,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.BOOLEAN);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipInt() throws Exception {
+  void skipInt() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Integer.MAX_VALUE, ValueType.INT);
@@ -212,12 +212,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.INT);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipLong() throws Exception {
+  void skipLong() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Long.MAX_VALUE, ValueType.LONG);
@@ -225,12 +225,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipFixed32() throws Exception {
+  void skipFixed32() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Integer.MAX_VALUE, ValueType.FIXED32);
@@ -238,12 +238,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipFixed64() throws Exception {
+  void skipFixed64() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Long.MAX_VALUE, ValueType.FIXED64);
@@ -251,12 +251,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipFloat() throws Exception {
+  void skipFloat() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Float.MAX_VALUE, ValueType.FLOAT);
@@ -264,12 +264,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.FLOAT);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipDouble() throws Exception {
+  void skipDouble() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Double.MAX_VALUE, ValueType.DOUBLE);
@@ -277,12 +277,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.DOUBLE);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipString() throws Exception {
+  void skipString() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue("trevni", ValueType.STRING);
@@ -290,12 +290,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.STRING);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testSkipBytes() throws Exception {
+  void skipBytes() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue("trevni".getBytes(UTF_8), ValueType.BYTES);
@@ -303,12 +303,12 @@ public class TestIOBuffers {
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.BYTES);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 
   @Test
-  public void testInitPos() throws Exception {
+  void initPos() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
     out.writeValue(Integer.MAX_VALUE, ValueType.INT);
@@ -317,7 +317,7 @@ public class TestIOBuffers {
     in.readInt();
     long pos = in.tell();
     in = new InputBuffer(new InputBytes(out.toByteArray()), pos);
-    Assert.assertEquals(sentinel, in.readLong());
+    assertEquals(sentinel, in.readLong());
     out.close();
   }
 }
