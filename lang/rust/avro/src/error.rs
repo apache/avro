@@ -259,6 +259,9 @@ pub enum Error {
     #[error("Failed to parse schema from JSON")]
     ParseSchemaJson(#[source] serde_json::Error),
 
+    #[error("Failed to read schema")]
+    ReadSchemaFromReader(#[source] std::io::Error),
+
     #[error("Must be a JSON string, object or array")]
     ParseSchemaFromValidJson,
 
