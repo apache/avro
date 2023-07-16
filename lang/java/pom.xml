@@ -48,7 +48,7 @@
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
     <reload4j.version>1.2.25</reload4j.version>
-    <snappy.version>1.1.10.1</snappy.version>
+    <snappy.version>1.1.10.2</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
     <ant.version>1.10.13</ant.version>
