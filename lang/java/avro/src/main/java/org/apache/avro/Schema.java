@@ -1388,10 +1388,19 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     /**
      * Adds the provided types to the set of defined, named types known to this
+     * parser. deprecated: use addTypes(Iterable<Schema> types)
+     */
+    @Deprecated
+    public Parser addTypes(Map<String, Schema> types) {
+      return this.addTypes(types.values());
+    }
+
+    /**
+     * Adds the provided types to the set of defined, named types known to this
      * parser.
      */
-    public Parser addTypes(Map<String, Schema> types) {
-      for (Schema s : types.values())
+    public Parser addTypes(Iterable<Schema> types) {
+      for (Schema s : types)
         names.add(s);
       return this;
     }
