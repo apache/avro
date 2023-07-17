@@ -147,7 +147,7 @@ def _crc_64_fingerprint(data: bytes) -> bytes:
         data: A bytes object containing the UTF-8 encoded parsing canonical
         form of an Avro schema.
     Returns:
-        A bytes object with a length of eight.
+        A bytes object with a length of eight in little-endian format.
     """
     result = _EMPTY64_FINGERPRINT
 
