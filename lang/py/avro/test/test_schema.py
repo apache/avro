@@ -833,13 +833,9 @@ class TestMisc(unittest.TestCase):
         """Disabling enumschema symbol validation should allow invalid symbols to pass."""
         test_schema_string = json.dumps({"type": "enum", "name": "AVRO2174", "symbols": ["white space"]})
 
-        try:
+        with self.assertRaises(avro.errors.InvalidName, msg="When enum symbol validation is enabled, an invalid symbol should raise InvalidName."):
             avro.schema.parse(test_schema_string, validate_enum_symbols=True)
-        except avro.errors.InvalidName:
-            pass
-        else:
-            self.fail("When enum symbol validation is enabled, an invalid symbol should raise InvalidName.")
-
+    
         try:
             avro.schema.parse(test_schema_string, validate_enum_symbols=False)
         except avro.errors.InvalidName:  # pragma: no coverage
