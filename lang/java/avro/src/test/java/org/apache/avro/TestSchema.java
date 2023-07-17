@@ -445,4 +445,19 @@ public class TestSchema {
     parser.setValidateDefaults(true);
     assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }
+
+  @Test
+  void add_types() {
+    String schemaRecord2 = "{\"type\":\"record\", \"name\":\"record2\", \"fields\": ["
+        + "  {\"name\":\"f1\", \"type\":\"record1\" }" + "]}";
+    // register schema1 in schema.
+    Schema schemaRecord1 = Schema.createRecord("record1", "doc", "", false);
+    Schema.Parser parser = new Schema.Parser().addTypes(Collections.singleton(schemaRecord1));
+
+    // parse schema for record2 that contains field for schema1.
+    final Schema schema = parser.parse(schemaRecord2);
+    final Field f1 = schema.getField("f1");
+    assertNotNull(f1);
+    assertEquals(schemaRecord1, f1.schema());
+  }
 }

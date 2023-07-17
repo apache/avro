@@ -1284,7 +1284,7 @@ Schema ImportSchema() : {
     {
       try (InputStream stream=findFile(importFile).openStream()){
         Parser parser = new Schema.Parser();
-        parser.addTypes(names);                   // inherit names
+        parser.addTypes(names.values());          // inherit names
         Schema value = parser.parse(stream);
         names = parser.getTypes();                // update names
         return value;
