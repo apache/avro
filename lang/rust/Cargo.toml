@@ -37,3 +37,7 @@ rust-version = "1.65.0"
 keywords = ["avro", "data", "serialization"]
 categories = ["encoding"]
 documentation = "https://docs.rs/apache-avro"
+
+[profile.release.package.hello-wasm]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
