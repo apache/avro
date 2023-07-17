@@ -838,12 +838,12 @@ class TestMisc(unittest.TestCase):
         except avro.errors.InvalidName:
             pass
         else:
-            self.fail("When enum symbol validation is enabled, " "an invalid symbol should raise InvalidName.")
+            self.fail("When enum symbol validation is enabled, an invalid symbol should raise InvalidName.")
 
         try:
             avro.schema.parse(test_schema_string, validate_enum_symbols=False)
         except avro.errors.InvalidName:
-            self.fail("When enum symbol validation is disabled, " "an invalid symbol should not raise InvalidName.")
+            self.fail("When enum symbol validation is disabled, an invalid symbol should not raise InvalidName.")
 
     def test_unsupported_fingerprint_algorithm(self):
         s = avro.schema.parse('"int"')

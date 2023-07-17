@@ -308,11 +308,11 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         """
         schema = self.canonical_form.encode("utf-8")
 
-        if algorithm not in SUPPORTED_ALGORITHMS:
-            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
-
         if algorithm == "CRC-64-AVRO":
             return _crc_64_fingerprint(schema)
+
+        if algorithm not in SUPPORTED_ALGORITHMS:
+            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
 
         # Generate digests with hashlib for all other algorithms
         # Lowercase algorithm to support algorithm strings sent by other languages like Java
