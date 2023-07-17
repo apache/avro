@@ -835,7 +835,7 @@ class TestMisc(unittest.TestCase):
 
         with self.assertRaises(avro.errors.InvalidName, msg="When enum symbol validation is enabled, an invalid symbol should raise InvalidName."):
             avro.schema.parse(test_schema_string, validate_enum_symbols=True)
-    
+
         try:
             avro.schema.parse(test_schema_string, validate_enum_symbols=False)
         except avro.errors.InvalidName:  # pragma: no coverage
