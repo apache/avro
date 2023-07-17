@@ -32,6 +32,7 @@ use std::{
     fmt,
     fmt::Debug,
     hash::Hash,
+    io::Read,
     str::FromStr,
 };
 use strum_macros::{EnumDiscriminants, EnumString};
@@ -931,6 +932,15 @@ impl Schema {
             parsed_schemas: HashMap::with_capacity(input.len()),
         };
         parser.parse_list()
+    }
+
+    /// Create a `Schema` from a reader which implements [`Read`].
+    pub fn parse_reader(reader: &mut (impl Read + ?Sized)) -> AvroResult<Schema> {
+        let mut buf = String::new();
+        match reader.read_to_string(&mut buf) {
+            Ok(_) => Self::parse_str(&buf),
+            Err(e) => Err(Error::ReadSchemaFromReader(e)),
+        }
     }
 
     /// Parses an Avro schema from JSON.
