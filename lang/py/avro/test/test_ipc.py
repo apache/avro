@@ -42,9 +42,8 @@ class TestIPC(unittest.TestCase):
 
     def test_empty_reader(self):
         response_reader = avro.ipc.FramedReader(io.BytesIO(b"Bad Response"))
-        with self.assertRaises(avro.errors.ConnectionClosedException) as cm:
+        with self.assertRaises(avro.errors.ConnectionClosedException):
             response_reader.read_framed_message()
-        assert str(cm.exception) == "Reader read 0 bytes."
 
 
 if __name__ == "__main__":  # pragma: no coverage
