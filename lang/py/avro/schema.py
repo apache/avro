@@ -884,7 +884,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             )
 
         names = names or Names(validate_names=self.validate_names)
-        if (schema_type == "record") or (schema_type == "error"):
+        if schema_type in ("record", "error"):
             old_default = names.default_namespace
             names.default_namespace = Name(
                 name,
