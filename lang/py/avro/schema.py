@@ -62,7 +62,6 @@ from typing import (
 
 import avro.constants
 import avro.errors
-from avro.constants import NAMED_TYPES, PRIMITIVE_TYPES, VALID_TYPES
 from avro.name import Name, Names, validate_basename
 
 #
@@ -232,7 +231,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
     def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None, validate_names: bool = True) -> None:
         if not isinstance(type_, str):
             raise avro.errors.SchemaParseException("Schema type must be a string.")
-        if type_ not in VALID_TYPES:
+        if type_ not in avro.constants.VALID_TYPES:
             raise avro.errors.SchemaParseException(f"{type_} is not a valid type.")
         self.set_prop("type", type_)
         self.type = type_
@@ -491,7 +490,7 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
 
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
-        if type not in PRIMITIVE_TYPES:
+        if type not in avro.constants.PRIMITIVE_TYPES:
             raise avro.errors.AvroException(f"{type} is not a valid primitive type.")
 
         # Call parent ctor
@@ -870,8 +869,8 @@ class UnionSchema(EqualByJsonMixin, Schema):
                     raise avro.errors.SchemaParseException(f"Union item must be a valid Avro schema: {e}")
             # check the new schema
             if (
-                new_schema.type in VALID_TYPES
-                and new_schema.type not in NAMED_TYPES
+                new_schema.type in avro.constants.VALID_TYPES
+                and new_schema.type not in avro.constants.NAMED_TYPES
                 and new_schema.type in [schema.type for schema in schema_objects]
             ):
                 raise avro.errors.SchemaParseException(f"{new_schema.type} type already in Union")
@@ -910,9 +909,7 @@ class UnionSchema(EqualByJsonMixin, Schema):
 
     def validate(self, datum):
         """Return the first branch schema of which datum is a valid example, else None."""
-        for branch in self.schemas:
-            if branch.validate(datum) is not None:
-                return branch
+        return next((branch for branch in self.schemas if branch.validate(datum) is not None), None)
 
 
 class ErrorUnionSchema(UnionSchema):
@@ -1243,7 +1240,7 @@ def make_avsc_object(
             if logical_schema is not None:
                 return cast(Schema, logical_schema)
 
-        if type_ in NAMED_TYPES:
+        if type_ in avro.constants.NAMED_TYPES:
             name = json_data.get("name")
             if not isinstance(name, str):
                 raise avro.errors.SchemaParseException(f"Name {name} must be a string, but it is {type(name)}.")
@@ -1273,10 +1270,10 @@ def make_avsc_object(
                 return RecordSchema(name, namespace, fields, names, type_, doc, other_props, validate_names)
             raise avro.errors.SchemaParseException(f"Unknown Named Type: {type_}")
 
-        if type_ in PRIMITIVE_TYPES:
+        if type_ in avro.constants.PRIMITIVE_TYPES:
             return PrimitiveSchema(type_, other_props)
 
-        if type_ in VALID_TYPES:
+        if type_ in avro.constants.VALID_TYPES:
             if type_ == "array":
                 items = json_data.get("items")
                 return ArraySchema(items, names, other_props, validate_names)
@@ -1296,7 +1293,7 @@ def make_avsc_object(
     elif isinstance(json_data, list):
         return UnionSchema(json_data, names, validate_names=validate_names)
     # JSON string (primitive)
-    elif json_data in PRIMITIVE_TYPES:
+    elif json_data in avro.constants.PRIMITIVE_TYPES:
         return PrimitiveSchema(json_data)
     # not for us!
     fail_msg = f"Could not make an Avro Schema object from {json_data}"
