@@ -903,7 +903,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         if doc is not None:
             self.set_prop("doc", doc)
 
-        if (schema_type == "record") or (schema_type == "error"):
+        if schema_type in ("record", "error"):
             names.default_namespace = old_default
 
     # read-only properties
