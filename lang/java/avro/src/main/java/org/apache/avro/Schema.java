@@ -1678,12 +1678,36 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!defaultValue.isObject())
         return false;
       for (Field field : schema.getFields())
-        if (!isValidDefault(field.schema(),
+        if (!isValidValue(field.schema(),
             defaultValue.has(field.name()) ? defaultValue.get(field.name()) : field.defaultValue()))
           return false;
       return true;
     default:
       return false;
+    }
+  }
+
+  /**
+   * Validate a value against the schema.
+   * 
+   * @param schema : schema for value.
+   * @param value  : value to validate.
+   * @return true if ok.
+   */
+  private static boolean isValidValue(Schema schema, JsonNode value) {
+    if (value == null)
+      return false;
+    if (schema.isUnion()) {
+      // For Union, only need that one sub schema is ok.
+      for (Schema sub : schema.getTypes()) {
+        if (Schema.isValidDefault(sub, value)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      // for other types, same as validate default.
+      return Schema.isValidDefault(schema, value);
     }
   }
 
