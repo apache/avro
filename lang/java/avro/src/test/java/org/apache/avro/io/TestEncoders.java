@@ -337,7 +337,7 @@ public class TestEncoders {
 
   @Test
   public void testJsonEncoderInitAutoFlush() throws IOException {
-    Schema s = Schema.parse("\"int\"");
+    Schema s = new Schema.Parser().parse("\"int\"");
     OutputStream baos = new ByteArrayOutputStream();
     OutputStream out = new BufferedOutputStream(baos);
     JsonEncoder enc = factory.jsonEncoder(s, out, false);
