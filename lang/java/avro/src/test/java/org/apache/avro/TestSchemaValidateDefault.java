@@ -40,14 +40,8 @@ public class TestSchemaValidateDefault {
   @Test
   public void valueReadWithCorrectDefaultValue() throws IOException {
 
-    Schema schm = ReflectData.get().getSchema(ExampleRecord.class);
     ExampleRecord writtenValue = new ExampleRecord(new ComplexValue(42L), new ComplexValue(666L));
     byte[] bytes = getSerializer(ExampleRecord.SCHEMA_WITH_ONE_FIELD).apply(writtenValue);
-
-    // Function<byte[], ExampleRecord> deserializer =
-    // getDeserializer(ExampleRecord.class, ExampleRecord.SCHEMA_WITH_TWO_FIELDS,
-    // ExampleRecord.SCHEMA_WITH_ONE_FIELD);
-    // ExampleRecord deserializedValue = deserializer.apply(bytes);
 
     ReflectDatumReader<ExampleRecord> reader = new ReflectDatumReader<>(ExampleRecord.SCHEMA_WITH_ONE_FIELD,
         ExampleRecord.SCHEMA_WITH_TWO_FIELDS, ReflectData.get());
@@ -83,13 +77,14 @@ public class TestSchemaValidateDefault {
     Objects.requireNonNull(writerSchema, "writerSchema must not be null");
 
     ReflectDatumReader<T> reader = new ReflectDatumReader<>(writerSchema, readerSchema, new ReflectData());
-    return bytes -> {
+    return (byte[] bytes) -> {
       try {
         Decoder decoder = DecoderFactory.get().jsonDecoder(writerSchema, new ByteArrayInputStream(bytes));
         T readValue = reader.read(null, decoder);
         return readValue;
       } catch (IOException e) {
-        throw new IllegalStateException(String.format("Avro failed to decode %s to %s", bytes, readClass), e);
+        throw new IllegalStateException(String.format("Avro failed to decode %s to %s", new String(bytes), readClass),
+            e);
       }
     };
   }
@@ -123,7 +118,6 @@ public class TestSchemaValidateDefault {
     public static final Schema SCHEMA_WITH_TWO_FIELDS;
 
     static {
-      Schema schm = ReflectData.get().getSchema(ExampleRecord.class);
       SCHEMA_WITH_ONE_FIELD = SchemaBuilder.record("org.apache.avro.TestSchemaValidateDefault.ExampleRecord").fields()
           .name("value1").type(TestSchemaValidateDefault.SCHEMA).noDefault().endRecord();
 
