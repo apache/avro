@@ -890,6 +890,31 @@ class SchemaParseTestCase(unittest.TestCase):
             self.test_schema.parse()
 
 
+class HashableTestCase(unittest.TestCase):
+    """Ensure that Schema are hashable.
+
+    While hashability is implemented with parsing canonical form fingerprinting,
+    this test should be kept distinct to avoid coupling."""
+
+    def __init__(self, test_schema):
+        """Ignore the normal signature for unittest.TestCase because we are generating
+        many test cases from this one class. This is safe as long as the autoloader
+        ignores this class. The autoloader will ignore this class as long as it has
+        no methods starting with `test_`.
+        """
+        super().__init__("parse_and_hash")
+        self.test_schema = test_schema
+
+    def parse_and_hash(self):
+        """Ensure that every schema can be hashed."""
+        try:
+            hash(self.test_schema.parse())
+        except TypeError as e:
+            if "unhashable type" in str(e):
+                self.fail(f"{self.test_schema} is not hashable")
+            raise
+
+
 class RoundTripParseTestCase(unittest.TestCase):
     """Enable generating round-trip parse test cases over all the valid test schema."""
 
@@ -1434,6 +1459,7 @@ def load_tests(loader, default_tests, pattern):
     suite.addTests(OtherAttributesTestCase(ex) for ex in OTHER_PROP_EXAMPLES)
     suite.addTests(loader.loadTestsFromTestCase(CanonicalFormTestCase))
     suite.addTests(FingerprintTestCase(ex[0], ex[1]) for ex in FINGERPRINT_EXAMPLES)
+    suite.addTests(HashableTestCase(ex) for ex in VALID_EXAMPLES)
     return suite
 
 
