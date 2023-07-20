@@ -283,15 +283,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private void compileFiles(String[] files, File sourceDir, File outDir) throws MojoExecutionException {
-    for (String filename : files) {
-      try {
-        // Need to register custom logical type factories before schema compilation.
-        loadLogicalTypesFactories();
-        doCompile(filename, sourceDir, outDir);
-      } catch (IOException e) {
-        throw new MojoExecutionException("Error compiling protocol file " + filename + " to " + outDir, e);
-      }
+    // Need to register custom logical type factories before schema compilation.
+    try {
+      loadLogicalTypesFactories();
+    } catch (IOException e) {
+      throw new MojoExecutionException("Error while loading logical types factories ", e);
     }
+    this.doCompile(files, sourceDir, outDir);
   }
 
   private void loadLogicalTypesFactories() throws IOException, MojoExecutionException {
@@ -330,6 +328,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       }
     }
     return velocityTools;
+  }
+
+  protected void doCompile(String[] files, File sourceDirectory, File outputDirectory) throws MojoExecutionException {
+    for (String filename : files) {
+      try {
+        doCompile(filename, sourceDirectory, outputDirectory);
+      } catch (IOException e) {
+        throw new MojoExecutionException("Error compiling protocol file " + filename + " to " + outputDirectory, e);
+      }
+    }
   }
 
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;

@@ -183,6 +183,12 @@ public class SpecificCompiler {
     this.protocol = null;
   }
 
+  public SpecificCompiler(Iterable<Schema> schemas) {
+    this();
+    schemas.forEach(this::enqueue);
+    this.protocol = null;
+  }
+
   /**
    * Creates a specific compiler with the given type to use for date/time related
    * logical types.

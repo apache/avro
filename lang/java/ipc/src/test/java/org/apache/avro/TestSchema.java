@@ -513,7 +513,7 @@ public class TestSchema {
   private static void checkParseError(String json) {
     try {
       new Schema.Parser().parse(json);
-    } catch (SchemaParseException e) {
+    } catch (AvroRuntimeException e) {
       return;
     }
     fail("Should not have parsed: " + json);
