@@ -22,8 +22,10 @@ There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
 
+import io
 import unittest
 
+import avro.errors
 import avro.ipc
 
 
@@ -37,6 +39,11 @@ class TestIPC(unittest.TestCase):
 
         client_with_default_path = avro.ipc.HTTPTransceiver("apache.org", 80)
         self.assertEqual("/", client_with_default_path.req_resource)
+
+    def test_empty_reader(self):
+        response_reader = avro.ipc.FramedReader(io.BytesIO(b"Bad Response"))
+        with self.assertRaises(avro.errors.ConnectionClosedException):
+            response_reader.read_framed_message()
 
 
 if __name__ == "__main__":  # pragma: no coverage

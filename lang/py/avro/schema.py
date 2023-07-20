@@ -991,20 +991,37 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         if schema_type == "request":
             Schema.__init__(self, schema_type, other_props)
         else:
-            NamedSchema.__init__(self, schema_type, name, namespace, names, other_props, validate_names=validate_names)
+            NamedSchema.__init__(
+                self,
+                schema_type,
+                name,
+                namespace,
+                names,
+                other_props,
+                validate_names=validate_names,
+            )
 
         names = names or Names(validate_names=self.validate_names)
-        if schema_type == "record":
+        if schema_type in ("record", "error"):
             old_default = names.default_namespace
-            names.default_namespace = Name(name, namespace, names.default_namespace, validate_name=validate_names).space
+            names.default_namespace = Name(
+                name,
+                namespace,
+                names.default_namespace,
+                validate_name=validate_names,
+            ).space
 
         # Add class members
-        field_objects = RecordSchema.make_field_objects(fields, names, validate_names=validate_names)
+        field_objects = RecordSchema.make_field_objects(
+            fields,
+            names,
+            validate_names=validate_names,
+        )
         self.set_prop("fields", field_objects)
         if doc is not None:
             self.set_prop("doc", doc)
 
-        if schema_type == "record":
+        if schema_type in ("record", "error"):
             names.default_namespace = old_default
 
     # read-only properties
