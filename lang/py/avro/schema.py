@@ -50,6 +50,7 @@ import warnings
 from functools import reduce
 from pathlib import Path
 from typing import (
+    Callable,
     FrozenSet,
     List,
     Mapping,
@@ -196,8 +197,10 @@ class PropertiesMixin:
         return get_other_props(self.props, self._reserved_properties)
 
 
-class EqualByJsonMixin:
+class EqualByJsonMixin(collections.abc.Hashable):
     """A mixin that defines equality as equal if the json deserializations are equal."""
+
+    fingerprint: Callable[..., bytes]
 
     def __eq__(self, that: object) -> bool:
         try:
@@ -206,12 +209,28 @@ class EqualByJsonMixin:
             return False
         return cast(bool, json.loads(str(self)) == that_obj)
 
+    def __hash__(self) -> int:
+        """Make it so a schema can be in a set or a key in a dictionary.
 
-class EqualByPropsMixin(PropertiesMixin):
+        NB: Python has special rules for this method being defined in the same class as __eq__.
+        """
+        return hash(self.fingerprint())
+
+
+class EqualByPropsMixin(collections.abc.Hashable, PropertiesMixin):
     """A mixin that defines equality as equal if the props are equal."""
+
+    fingerprint: Callable[..., bytes]
 
     def __eq__(self, that: object) -> bool:
         return hasattr(that, "props") and self.props == getattr(that, "props")
+
+    def __hash__(self) -> int:
+        """Make it so a schema can be in a set or a key in a dictionary.
+
+        NB: Python has special rules for this method being defined in the same class as __eq__.
+        """
+        return hash(self.fingerprint())
 
 
 class CanonicalPropertiesMixin(PropertiesMixin):
