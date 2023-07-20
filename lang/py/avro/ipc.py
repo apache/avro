@@ -199,7 +199,7 @@ class BaseRequestor:
               the error, serialized per the message's error union schema.
         """
         # response metadata
-        response_metadata = META_READER.read(decoder)
+        META_READER.read(decoder)
 
         # remote response schema
         remote_message_schema = self.remote_protocol.messages.get(message_name)
@@ -288,7 +288,7 @@ class Responder:
                 return buffer_writer.getvalue()
 
             # read request using remote protocol
-            request_metadata = META_READER.read(buffer_decoder)
+            META_READER.read(buffer_decoder)
             remote_message_name = buffer_decoder.read_utf8()
 
             # get remote and local request schemas so we can do
@@ -364,9 +364,8 @@ class Responder:
 
     def invoke(self, local_message, request):
         """
-        Aactual work done by server: cf. handler in thrift.
+        Actual work done by server: cf. handler in thrift.
         """
-        pass
 
     def read_request(self, writers_schema, readers_schema, decoder):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
