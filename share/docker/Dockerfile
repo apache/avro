@@ -25,6 +25,9 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
 
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
+ && apt-get -qqy install software-properties-common \
+ && add-apt-repository ppa:deadsnakes/ppa \
+ && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
                                                  apt-utils \
@@ -52,8 +55,8 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
-                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
+                                                 openjdk-17-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python3 \
@@ -62,16 +65,17 @@ RUN apt-get -qqy update \
                                                  python3-snappy \
                                                  python3-venv \
                                                  python3-wheel \
+                                                 python3.10 \
+                                                 python3.11 \
+                                                 python3.6 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 \
-                                                 python3.7 \
-                                                 python3.8 \
-                                                 python3.9 \
-                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -114,8 +118,11 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
+# The node deprecation warnings cause a 20 second sleep.
+# But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | bash - \
+  | sed 's/sleep 20/echo "But mom!"/' \
+  | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
