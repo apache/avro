@@ -66,7 +66,7 @@ class TaskRunnerResponder(avro.ipc.Responder):
                 self.log.info("TetherTaskRunner: Received partitions")
                 try:
                     self.task.partitions = request["partitions"]
-                except Exception as e:
+                except Exception:
                     self.log.error("Exception occured while processing the partitions message: Message:\n%s", traceback.format_exc())
                     raise
             elif message.name == "input":

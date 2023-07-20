@@ -58,12 +58,12 @@ class InvalidTestSchema(TestSchema):
     valid = False
 
 
-PRIMITIVE_EXAMPLES = [InvalidTestSchema('"True"')]  # type: List[TestSchema]
+PRIMITIVE_EXAMPLES: List[TestSchema] = [InvalidTestSchema('"True"')]
 PRIMITIVE_EXAMPLES.append(InvalidTestSchema("True"))
 PRIMITIVE_EXAMPLES.append(InvalidTestSchema('{"no_type": "test"}'))
 PRIMITIVE_EXAMPLES.append(InvalidTestSchema('{"type": "panther"}'))
-PRIMITIVE_EXAMPLES.extend([ValidTestSchema(f'"{t}"') for t in avro.schema.PRIMITIVE_TYPES])
-PRIMITIVE_EXAMPLES.extend([ValidTestSchema({"type": t}) for t in avro.schema.PRIMITIVE_TYPES])
+PRIMITIVE_EXAMPLES.extend([ValidTestSchema(f'"{t}"') for t in avro.constants.PRIMITIVE_TYPES])
+PRIMITIVE_EXAMPLES.extend([ValidTestSchema({"type": t}) for t in avro.constants.PRIMITIVE_TYPES])
 
 FIXED_EXAMPLES = [
     ValidTestSchema({"type": "fixed", "name": "Test", "size": 1}),

@@ -285,7 +285,7 @@ class TetherTask(abc.ABC):
 
         try:
             inSchema = avro.schema.parse(inSchemaText)
-            outSchema = avro.schema.parse(outSchemaText)
+            avro.schema.parse(outSchemaText)
 
             if taskType == TaskType.MAP:
                 self.inReader = avro.io.DatumReader(writers_schema=inSchema, readers_schema=self.inschema)
@@ -299,7 +299,7 @@ class TetherTask(abc.ABC):
                 # determine which fields in the input record are they keys for the reducer
                 self._red_fkeys = [f.name for f in self.midschema.fields if not (f.order == "ignore")]
 
-        except Exception as e:
+        except Exception:
             estr = traceback.format_exc()
             self.fail(estr)
 
@@ -345,7 +345,7 @@ class TetherTask(abc.ABC):
                         self.reduceFlush(prev, self.outCollector)
                     self.reduce(self.midRecord, self.outCollector)
 
-        except Exception as e:
+        except Exception:
             estr = traceback.format_exc()
             self.log.warning("failing: %s", estr)
             self.fail(estr)
@@ -357,7 +357,7 @@ class TetherTask(abc.ABC):
         if (self.taskType == TaskType.REDUCE) and not (self.midRecord is None):
             try:
                 self.reduceFlush(self.midRecord, self.outCollector)
-            except Exception as e:
+            except Exception:
                 estr = traceback.format_exc()
                 self.log.warning("failing: %s", estr)
                 self.fail(estr)
@@ -430,7 +430,7 @@ class TetherTask(abc.ABC):
 
         try:
             self.outputClient.request("fail", {"message": message})
-        except Exception as e:
+        except Exception:
             self.log.exception("TetherTask.fail: an exception occured while trying to send the fail message to the output server.")
 
         self.close()
@@ -441,7 +441,7 @@ class TetherTask(abc.ABC):
             try:
                 self.clienTransciever.close()
 
-            except Exception as e:
+            except Exception:
                 # ignore exceptions
                 pass
 

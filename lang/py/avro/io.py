@@ -89,17 +89,7 @@ import datetime
 import decimal
 import struct
 import warnings
-from typing import (
-    IO,
-    Deque,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import IO, Generator, Iterable, List, Mapping, Optional, Sequence, Union
 
 import avro.constants
 import avro.errors
@@ -435,7 +425,6 @@ class BinaryEncoder:
         """
         null is written as zero bytes
         """
-        pass
 
     def write_boolean(self, datum: bool) -> None:
         """
@@ -810,7 +799,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 read_items.append(self.read_data(writers_schema.items, readers_schema.items, decoder))
             block_count = decoder.read_long()
@@ -847,7 +836,7 @@ class DatumReader:
         while block_count != 0:
             if block_count < 0:
                 block_count = -block_count
-                block_size = decoder.read_long()
+                decoder.skip_long()
             for i in range(block_count):
                 key = decoder.read_utf8()
                 read_items[key] = self.read_data(writers_schema.values, readers_schema.values, decoder)
