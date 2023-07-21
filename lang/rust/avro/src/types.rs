@@ -1069,7 +1069,7 @@ mod tests {
     use uuid::Uuid;
 
     #[test]
-    fn validate_nested_records_with_implicit_namespace() -> TestResult {
+    fn avro_3809_validate_nested_records_with_implicit_namespace() -> TestResult {
         let schema = Schema::parse_str(
             r#"{
             "name": "record_name",
