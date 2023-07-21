@@ -225,6 +225,11 @@ jobs:
           name: api-java
           path: api-java
 
+      - name: Download api-python
+        uses: actions/download-artifact@v3
+        with:
+          name: api-python
+          path: api-python
       - name: Copy & push the generated HTML
         run: |
           set -x
