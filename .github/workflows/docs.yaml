@@ -161,6 +161,29 @@ jobs:
           name: api-java
           path: lang/java/target/site/apidocs
 
+  build-api-python:
+    name: Build Python API docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install tox
+        run: python3 -m pip install tox
+        
+      - name: Build docs
+        working-directory: lang/py
+        run: ./build.sh doc
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: api-python
+          path: lang/py/docs/build/
   push-website:
     name: Push website
     needs: [build-website, build-api-c, build-api-cpp, build-api-csharp, build-api-java]
