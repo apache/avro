@@ -54,10 +54,8 @@ jobs:
           extended: true
 
       - name: Build docs
-        run: |
-          set -x
-          cd doc
-          hugo --minify --destination ../website --baseURL=/
+        working-directory: doc
+        run: hugo --minify --destination ../website --baseURL=/
 
       - uses: actions/upload-artifact@v3
         with:
