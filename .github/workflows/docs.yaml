@@ -44,10 +44,8 @@ jobs:
           node-version: 16
 
       - name: Install NPM dependencies
-        run: |
-          set -x
-          cd doc
-          npm install
+        working-directory: doc
+        run: npm install
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
