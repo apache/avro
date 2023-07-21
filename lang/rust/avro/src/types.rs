@@ -504,7 +504,15 @@ impl Value {
                     )
                 })
             }
-            (Value::Record(record_fields), Schema::Record(RecordSchema { fields, lookup, .. })) => {
+            (
+                Value::Record(record_fields),
+                Schema::Record(RecordSchema {
+                    fields,
+                    lookup,
+                    name,
+                    ..
+                }),
+            ) => {
                 let non_nullable_fields_count =
                     fields.iter().filter(|&rf| !rf.is_nullable()).count();
 
@@ -525,6 +533,11 @@ impl Value {
                 record_fields
                     .iter()
                     .fold(None, |acc, (field_name, record_field)| {
+                        let record_namespace = if name.namespace.is_none() {
+                            enclosing_namespace
+                        } else {
+                            &name.namespace
+                        };
                         match lookup.get(field_name) {
                             Some(idx) => {
                                 let field = &fields[*idx];
@@ -533,7 +546,7 @@ impl Value {
                                     record_field.validate_internal(
                                         &field.schema,
                                         names,
-                                        enclosing_namespace,
+                                        record_namespace,
                                     ),
                                 )
                             }
@@ -1054,6 +1067,56 @@ mod tests {
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
+
+    #[test]
+    fn avro_3809_validate_nested_records_with_implicit_namespace() -> TestResult {
+        let schema = Schema::parse_str(
+            r#"{
+            "name": "record_name",
+            "namespace": "space",
+            "type": "record",
+            "fields": [
+              {
+                "name": "outer_field_1",
+                "type": {
+                  "type": "record",
+                  "name": "middle_record_name",
+                  "namespace": "middle_namespace",
+                  "fields": [
+                    {
+                      "name": "middle_field_1",
+                      "type": {
+                        "type": "record",
+                        "name": "inner_record_name",
+                        "fields": [
+                          { "name": "inner_field_1", "type": "double" }
+                        ]
+                      }
+                    },
+                    { "name": "middle_field_2", "type": "inner_record_name" }
+                  ]
+                }
+              }
+            ]
+          }"#,
+        )?;
+        let value = Value::Record(vec![(
+            "outer_field_1".into(),
+            Value::Record(vec![
+                (
+                    "middle_field_1".into(),
+                    Value::Record(vec![("inner_field_1".into(), Value::Double(1.2f64))]),
+                ),
+                (
+                    "middle_field_2".into(),
+                    Value::Record(vec![("inner_field_1".into(), Value::Double(1.6f64))]),
+                ),
+            ]),
+        )]);
+
+        assert!(value.validate(&schema));
+        Ok(())
+    }
 
     #[test]
     fn validate() -> TestResult {
