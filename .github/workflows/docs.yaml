@@ -239,6 +239,7 @@ jobs:
           mv api-c++/* website/docs/++version++/api/cpp/html/
           mv api-csharp/* website/docs/++version++/api/csharp/html/
           mv api-java/* website/docs/++version++/api/java/
+          mv api-python/* website/docs/++version++/api/python/html/
           rmdir api-c api-c++ api-csharp api-java
 
           cd asf-site
