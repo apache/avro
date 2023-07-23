@@ -266,8 +266,16 @@ url = "http://www.apache.org/security/"
   url = "/docs/++version++/"
 
 [[params.versions]]
-  version = "1.11.0"
-  url = "https://avro.apache.org/docs/1.11.0/"
+version = "1.11.2"
+url = "https://avro.apache.org/docs/1.11.2/"
+
+[[params.versions]]
+version = "1.11.1"
+url = "https://avro.apache.org/docs/1.11.1/"
+
+[[params.versions]]
+version = "1.11.0"
+url = "https://avro.apache.org/docs/1.11.0/"
 
 [[params.versions]]
   version = "1.10.2"
