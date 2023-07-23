@@ -252,7 +252,8 @@ impl Name {
 
         Ok(Self {
             name: type_name.unwrap_or(name),
-            namespace: namespace_from_name.or_else(|| complex.string("namespace").filter(|ns| !ns.is_empty())),
+            namespace: namespace_from_name
+                .or_else(|| complex.string("namespace").filter(|ns| !ns.is_empty())),
         })
     }
 
