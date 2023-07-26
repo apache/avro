@@ -20,11 +20,15 @@ package org.apache.avro.mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Test the Schema Mojo.
@@ -39,6 +43,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
   private File testNonexistentSecondFilePom = new File(getBasedir(),
       "src/test/resources/unit/schema/pom-nonexistent-second-file.xml");
 
+  private File testExtendsFilePom = new File(getBasedir(), "src/test/resources/unit/schema/pom-customExtends.xml");
+
   @Test
   public void testSchemaMojo() throws Exception {
     final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testPom);
@@ -47,8 +53,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
-    final Set<String> generatedFiles = new HashSet<>(
-        Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"));
+    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java",
+        "SchemaPrivacy.java", "SchemaUser.java", "SchemaCustom.java", "SchemaCustom.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
@@ -64,8 +70,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     final File outputDir = new File(getBasedir(), "target/test-harness/schema-inject/test");
-    final Set<String> generatedFiles = new HashSet<>(
-        Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"));
+    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java",
+        "SchemaPrivacy.java", "SchemaUser.java", "SchemaCustom.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
@@ -91,5 +97,22 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
       fail("MojoExecutionException not thrown!");
     } catch (MojoExecutionException ignored) {
     }
+  }
+
+  @Test
+  public void testExtends() throws Exception {
+    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testExtendsFilePom);
+    assertNotNull(mojo);
+
+    mojo.execute();
+    final File outputDir = new File(getBasedir(), "target/extends/schema/test");
+    File outputFile = new File(outputDir, "SchemaCustom.java");
+    assertTrue(outputFile.exists());
+    List<String> extendsLines = Files.readAllLines(outputFile.toPath()).stream()
+        .filter((String line) -> line.contains("class SchemaCustom extends ")).collect(Collectors.toList());
+    assertEquals(1, extendsLines.size());
+    String extendLine = extendsLines.get(0);
+    assertTrue(extendLine.contains(" org.apache.avro.custom.CustomRecordBase "));
+    assertFalse(extendLine.contains("org.apache.avro.specific.SpecificRecordBase"));
   }
 }
