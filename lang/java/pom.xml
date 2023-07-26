@@ -42,13 +42,13 @@
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.51.v20230217</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit5.version>5.9.3</junit5.version>
-    <netty.version>4.1.94.Final</netty.version>
+    <junit5.version>5.10.0</junit5.version>
+    <netty.version>4.1.95.Final</netty.version>
     <protobuf.version>3.23.4</protobuf.version>
     <thrift.version>0.16.0</thrift.version>
     <slf4j.version>1.7.36</slf4j.version>
     <reload4j.version>1.2.25</reload4j.version>
-    <snappy.version>1.1.10.1</snappy.version>
+    <snappy.version>1.1.10.3</snappy.version>
     <velocity.version>2.3</velocity.version>
     <maven-core.version>3.3.9</maven-core.version>
     <ant.version>1.10.13</ant.version>
@@ -59,7 +59,7 @@
     <mockito.version>4.11.0</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.56.1</grpc.version>
-    <zstd-jni.version>1.5.5-4</zstd-jni.version>
+    <zstd-jni.version>1.5.5-5</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.8</bundle-plugin-version>

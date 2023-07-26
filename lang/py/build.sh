@@ -56,6 +56,7 @@ doc() {
   [[ -s VERSION.txt ]] || cp ../../share/VERSION.txt .
   doc_dir="../../build/avro-doc-$(<VERSION.txt)/api/py"
   python3 -m tox -e docs
+  mkdir -p "$doc_dir"
   cp -a docs/build/* "$doc_dir"
 }
 
