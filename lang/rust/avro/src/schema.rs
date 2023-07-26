@@ -252,7 +252,8 @@ impl Name {
 
         Ok(Self {
             name: type_name.unwrap_or(name),
-            namespace: namespace_from_name.or_else(|| complex.string("namespace")),
+            namespace: namespace_from_name
+                .or_else(|| complex.string("namespace").filter(|ns| !ns.is_empty())),
         })
     }
 
@@ -267,8 +268,10 @@ impl Name {
             let namespace = self.namespace.clone().or(default_namespace);
 
             match namespace {
-                Some(ref namespace) => format!("{}.{}", namespace, self.name),
-                None => self.name.clone(),
+                Some(ref namespace) if !namespace.is_empty() => {
+                    format!("{}.{}", namespace, self.name)
+                }
+                _ => self.name.clone(),
             }
         }
     }
@@ -292,7 +295,7 @@ impl Name {
             namespace: self
                 .namespace
                 .clone()
-                .or_else(|| enclosing_namespace.clone()),
+                .or_else(|| enclosing_namespace.clone().filter(|ns| !ns.is_empty())),
         }
     }
 }
@@ -4817,6 +4820,49 @@ mod tests {
             }
             _ => panic!("Expected an error"),
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3812_handle_null_namespace_properly() -> TestResult {
+        let schema_str = r#"
+        {
+          "namespace": "",
+          "type": "record",
+          "name": "my_schema",
+          "fields": [
+            {
+              "name": "a",
+              "type": {
+                "type": "enum",
+                "name": "my_enum",
+                "namespace": "",
+                "symbols": ["a", "b"]
+              }
+            },  {
+              "name": "b",
+              "type": {
+                "type": "fixed",
+                "name": "my_fixed",
+                "namespace": "",
+                "size": 10
+              }
+            }
+          ]
+         }
+         "#;
+
+        let expected = r#"{"name":"my_schema","type":"record","fields":[{"name":"a","type":{"name":"my_enum","type":"enum","symbols":["a","b"]}},{"name":"b","type":{"name":"my_fixed","type":"fixed","size":10}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        let name = Name::new("my_name")?;
+        let fullname = name.fullname(Some("".to_string()));
+        assert_eq!(fullname, "my_name");
+        let qname = name.fully_qualified_name(&Some("".to_string())).to_string();
+        assert_eq!(qname, "my_name");
+
         Ok(())
     }
 }
