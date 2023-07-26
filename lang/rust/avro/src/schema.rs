@@ -268,8 +268,10 @@ impl Name {
             let namespace = self.namespace.clone().or(default_namespace);
 
             match namespace {
-                Some(ref namespace) => format!("{}.{}", namespace, self.name),
-                None => self.name.clone(),
+                Some(ref namespace) if !namespace.is_empty() => {
+                    format!("{}.{}", namespace, self.name)
+                }
+                _ => self.name.clone(),
             }
         }
     }
@@ -4851,8 +4853,9 @@ mod tests {
          "#;
 
         let expected = r#"{"name":"my_schema","type":"record","fields":[{"name":"a","type":{"name":"my_enum","type":"enum","symbols":["a","b"]}},{"name":"b","type":{"name":"my_fixed","type":"fixed","size":10}}]}"#;
-        let schema = Schema::parse_str(schema_str).unwrap().canonical_form();
-        assert_eq!(schema, expected);
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
         Ok(())
     }
 }
