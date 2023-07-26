@@ -4857,7 +4857,7 @@ mod tests {
         let canonical_form = schema.canonical_form();
         assert_eq!(canonical_form, expected);
 
-        let name = Name::new("my_name").unwrap();
+        let name = Name::new("my_name")?;
         let fullname = name.fullname(Some("".to_string()));
         assert_eq!(fullname, "my_name");
         let qname = name.fully_qualified_name(&Some("".to_string())).to_string();
