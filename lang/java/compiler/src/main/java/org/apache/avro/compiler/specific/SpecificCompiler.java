@@ -128,6 +128,10 @@ public class SpecificCompiler {
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
 
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
+
   /*
    * Used in the record.vm template.
    */
@@ -1321,5 +1325,21 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String getSchemaParentClass(boolean isError) {
+    if (isError) {
+      return this.errorSpecificClass;
+    } else {
+      return this.recordSpecificClass;
+    }
+  }
+
+  public void setRecordSpecificClass(final String recordSpecificClass) {
+    this.recordSpecificClass = recordSpecificClass;
+  }
+
+  public void setErrorSpecificClass(final String errorSpecificClass) {
+    this.errorSpecificClass = errorSpecificClass;
   }
 }

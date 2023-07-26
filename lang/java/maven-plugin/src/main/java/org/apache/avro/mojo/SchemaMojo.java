@@ -61,6 +61,16 @@ public class SchemaMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
+  /**
+   * generated record schema classes will extend this class.
+   */
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  /**
+   * generated error schema classes will extend this class.
+   */
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -95,6 +105,8 @@ public class SchemaMojo extends AbstractAvroMojo {
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
+    compiler.setRecordSpecificClass(this.recordSpecificClass);
+    compiler.setErrorSpecificClass(this.errorSpecificClass);
     compiler.compileToDestination(src, outputDirectory);
   }
 
