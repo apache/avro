@@ -111,7 +111,7 @@ class Name:
         return full.rsplit(".", 1)[0] if "." in full else None
 
     def get_space(self) -> Optional[str]:
-        warnings.warn("Name.get_space() is deprecated in favor of Name.space")
+        warnings.warn("Name.get_space() is deprecated in favor of Name.space", DeprecationWarning)
         return self.space
 
 

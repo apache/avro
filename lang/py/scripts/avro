@@ -21,7 +21,7 @@ import warnings
 
 from avro.__main__ import main
 
-warnings.warn(DeprecationWarning("'scripts/avro' is deprecated; use the installed avro cli or `python -m avro`."))
+warnings.warn("'scripts/avro' is deprecated; use the installed avro cli or `python -m avro`.", DeprecationWarning)
 
 if __name__ == "__main__":
     main()
