@@ -161,7 +161,7 @@ def convert(value: str, field: avro.schema.Field) -> Union[int, float, str, byte
 
 
 def convert_union(value: str, field: avro.schema.Field) -> Union[int, float, str, bytes, bool, None]:
-    for name in (s.name for s in field.type.schemas):
+    for name in (s.name for s in cast(avro.schema.UnionSchema, field.type).schemas):
         try:
             return convert(value, name)
         except ValueError:
