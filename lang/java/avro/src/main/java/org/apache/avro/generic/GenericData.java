@@ -350,6 +350,14 @@ public class GenericData {
     }
 
     @Override
+    public boolean equals(final Object o) {
+      if (!(o instanceof Collection)) {
+        return false;
+      }
+      return GenericData.get().compare(this, o, this.getSchema()) == 0;
+    }
+
+    @Override
     public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
@@ -467,11 +475,6 @@ public class GenericData {
     @Override
     public T peek() {
       return (size < elements.length) ? (T) elements[size] : null;
-    }
-
-    @Override
-    public int compareTo(GenericArray<T> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
     }
 
     @Override

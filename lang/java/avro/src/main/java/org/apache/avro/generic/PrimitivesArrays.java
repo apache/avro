@@ -112,11 +112,6 @@ public class PrimitivesArrays {
     }
 
     @Override
-    public int compareTo(GenericArray<Integer> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
     protected void swap(final int index1, final int index2) {
       int tmp = elements[index1];
       elements[index1] = elements[index2];
@@ -208,11 +203,6 @@ public class PrimitivesArrays {
     @Override
     public Long peek() {
       return (size < elements.length) ? elements[size] : null;
-    }
-
-    @Override
-    public int compareTo(GenericArray<Long> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
     }
 
     @Override
@@ -371,11 +361,6 @@ public class PrimitivesArrays {
     }
 
     @Override
-    public int compareTo(GenericArray<Boolean> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
     protected void swap(final int index1, final int index2) {
       boolean tmp = this.get(index1);
       this.set(index1, this.get(index2));
@@ -470,11 +455,6 @@ public class PrimitivesArrays {
     }
 
     @Override
-    public int compareTo(GenericArray<Float> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
     protected void swap(final int index1, final int index2) {
       float tmp = this.get(index1);
       this.set(index1, this.get(index2));
@@ -566,11 +546,6 @@ public class PrimitivesArrays {
     @Override
     public Double peek() {
       return (size < elements.length) ? elements[size] : null;
-    }
-
-    @Override
-    public int compareTo(GenericArray<Double> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
     }
 
     @Override
