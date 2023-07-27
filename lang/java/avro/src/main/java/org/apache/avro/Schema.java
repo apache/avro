@@ -48,6 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -1279,6 +1281,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
       for (Schema type : types)
         type.toJson(names, gen);
       gen.writeEndArray();
+    }
+
+    @Override
+    public String getName() {
+      return super.getName()
+          + this.getTypes().stream().map(Schema::getName).collect(Collectors.joining(", ", "[", "]"));
     }
   }
 
