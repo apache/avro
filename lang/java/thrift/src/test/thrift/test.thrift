@@ -45,6 +45,7 @@ struct Test {
   5: i64 i64Field
   6: double doubleField
   7: string stringField
+  17: optional string stringOptionalFieldWithDefault = "default"
   8: optional binary binaryField
   9: map<string,i32> mapField
  10: list<i32> listField
@@ -65,4 +66,13 @@ service Foo {
    i32 add(1:i32 num1, 2:i32 num2),
 
    oneway void zip(),
+}
+
+// structs for testing compatibility
+struct MessageVersion1 {
+  1: required string f1,
+  2: optional string f2
+}
+struct MessageVersion2 {
+  3: optional string f3
 }

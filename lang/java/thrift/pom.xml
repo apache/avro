@@ -55,7 +55,7 @@
               <execution>
                 <phase>generate-test-sources</phase>
                 <configuration>
-                  <tasks>
+                  <target>
                     <mkdir dir="target/thrift-tmp"/>
                     <exec executable="thrift">
                       <arg value="--gen"/>
@@ -67,7 +67,7 @@
                     <copy todir="src/test/java" overwrite="true">
                       <fileset dir="target/thrift-tmp/gen-javabean"/>
                     </copy>
-                  </tasks>
+                  </target>
                 </configuration>
                 <goals>
                   <goal>run</goal>
