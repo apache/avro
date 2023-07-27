@@ -75,6 +75,8 @@ Records use the type name "record" and support the following attributes:
   * _name_: a JSON string providing the name of the field (required), and
   * _doc_: a JSON string describing this field for users (optional).
   * _type_: a [schema]({{< ref "#schema-declaration" >}} "Schema declaration"), as defined above
+  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
+  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
   * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
 
 *field default values*
@@ -92,9 +94,6 @@ Records use the type name "record" and support the following attributes:
 | array         | array          | `[1]`       |
 | map           | object         | `{"a": 1}`  |
 | fixed         | string         | `"\u00ff"`  |
-
-  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
-  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
 
 For example, a linked-list of 64-bit values may be defined with:
 ```jsonc
