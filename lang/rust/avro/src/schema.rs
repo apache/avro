@@ -4969,7 +4969,7 @@ mod tests {
             }),
         };
 
-        // Serialize using the writer schema (newer).
+        // Serialize using the writer schema.
         let writer_schema = Schema::parse(&writer_schema)?;
         let avro_value = crate::to_value(s)?;
         assert!(
@@ -4978,7 +4978,7 @@ mod tests {
         );
         let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
 
-        // Now, attempt to deserialize using the reader schema (older).
+        // Now, attempt to deserialize using the reader schema.
         let reader_schema = Schema::parse(&reader_schema)?;
         let mut x = &datum[..];
 
