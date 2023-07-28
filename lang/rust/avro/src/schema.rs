@@ -826,13 +826,9 @@ impl UnionSchema {
                 let namespace = &schema.namespace().or_else(|| enclosing_namespace.clone());
 
                 // Attempt to validate the value in order to ensure we've selected the right schema.
-                match value.validate_internal(schema, &collected_names, namespace, true) {
-                    None => true,
-                    Some(err) => {
-                        println!("Validation failed: {:?}", err);
-                        false
-                    }
-                }
+                value
+                    .validate_internal(schema, &collected_names, namespace, true)
+                    .is_none()
             })
         }
     }
