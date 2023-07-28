@@ -477,19 +477,35 @@ impl Value {
                 Schema::Enum(EnumSchema {
                     symbols, default, ..
                 }),
-            ) => symbols
-                .get(i as usize)
-                .map(|ref symbol| {
-                    if symbol != &s {
-                        Some(format!("Symbol '{s}' is not at position '{i}'"))
-                    } else {
+            ) => {
+                if schema_resolution {
+                    // When resolving a schema the following rule applies:
+                    // if both are enums: if the writer’s symbol is not present in the reader’s enum and the reader has a default value,
+                    // then that value is used, otherwise an error is signalled.
+                    if symbols.contains(s) || default.is_some() {
+                        // If `s` is a symbol in the schema, or a default is available then the value is valid.
                         None
+                    } else {
+                        Some(format!(
+                            "Unknown symbol '{s}': no symbol to fallback to is available."
+                        ))
                     }
-                })
-                .unwrap_or_else(|| match default {
-                    Some(_) => None,
-                    None => Some(format!("No symbol at position '{i}'")),
-                }),
+                } else {
+                    symbols
+                        .get(i as usize)
+                        .map(|ref symbol| {
+                            if symbol != &s {
+                                Some(format!("Symbol '{s}' is not at position '{i}'"))
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or_else(|| match default {
+                            Some(_) => None,
+                            None => Some(format!("No symbol at position '{i}'")),
+                        })
+                }
+            }
             // (&Value::Union(None), &Schema::Union(_)) => None,
             (&Value::Union(i, ref value), Schema::Union(inner)) => inner
                 .variants()
