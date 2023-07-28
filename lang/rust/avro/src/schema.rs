@@ -814,7 +814,6 @@ impl UnionSchema {
             Some((i, &self.schemas[i]))
         } else {
             // slow path (required for matching logical or named types)
-
             // first collect what schemas we already know
             let mut collected_names: HashMap<Name, &Schema> = known_schemata
                 .map(|names| {
@@ -838,8 +837,10 @@ impl UnionSchema {
                 // extend known schemas with just resolved names
                 collected_names.extend(resolved_names);
                 let namespace = &schema.namespace().or_else(|| enclosing_namespace.clone());
+
+                // Attempt to validate the value in order to ensure we've selected the right schema.
                 value
-                    .validate_internal(schema, &collected_names, namespace)
+                    .validate_internal(schema, &collected_names, namespace, true)
                     .is_none()
             })
         }
