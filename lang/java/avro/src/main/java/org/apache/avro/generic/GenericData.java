@@ -358,6 +358,11 @@ public class GenericData {
     }
 
     @Override
+    public int hashCode() {
+      return super.hashCode();
+    }
+
+    @Override
     public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
