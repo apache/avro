@@ -4984,6 +4984,7 @@ mod tests {
 
         // Deserialization should succeed and we should be able to resolve the schema.
         let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+        assert!(deser_value.validate(&reader_schema));
 
         // Verify that we can read a field from the record.
         let d: MyRecordReader = crate::from_value(&deser_value)?;
