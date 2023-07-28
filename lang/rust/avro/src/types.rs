@@ -1483,6 +1483,23 @@ mod tests {
         ])
         .validate(&schema));
 
+        // AVRO-3814 - when validating a record, extraneous fields should be ignored when schema resolution rules
+        // are applied.
+        let rs =
+            ResolvedSchema::try_from(vec![&schema]).expect("Schemata didn't successfully resolve");
+        let value = Value::Record(vec![
+            ("a".to_string(), Value::Long(42i64)),
+            ("b".to_string(), Value::String("foo".to_string())),
+            ("f".to_string(), Value::String("foo".to_string())), // extraneous field
+        ]);
+        assert!(value
+            .validate_internal(&schema, rs.get_names(), &schema.namespace(), false)
+            .is_some());
+        // However, when applying schema resolution rules, the extraneous should be ignored by the validation logic.
+        assert!(value
+            .validate_internal(&schema, rs.get_names(), &schema.namespace(), true)
+            .is_none());
+
         let value = Value::Record(vec![
             ("b".to_string(), Value::String("foo".to_string())),
             ("a".to_string(), Value::Long(42i64)),
