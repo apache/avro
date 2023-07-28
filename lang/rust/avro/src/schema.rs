@@ -801,6 +801,7 @@ impl UnionSchema {
             Some((i, &self.schemas[i]))
         } else {
             // slow path (required for matching logical or named types)
+
             // first collect what schemas we already know
             let mut collected_names: HashMap<Name, &Schema> = known_schemata
                 .map(|names| {
@@ -818,7 +819,6 @@ impl UnionSchema {
                     &collected_names,
                 )
                 .expect("Schema didn't successfully parse");
-
                 let resolved_names = resolved_schema.names_ref;
 
                 // extend known schemas with just resolved names
