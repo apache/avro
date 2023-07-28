@@ -801,7 +801,6 @@ impl UnionSchema {
             Some((i, &self.schemas[i]))
         } else {
             // slow path (required for matching logical or named types)
-
             // first collect what schemas we already know
             let mut collected_names: HashMap<Name, &Schema> = known_schemata
                 .map(|names| {
@@ -825,8 +824,10 @@ impl UnionSchema {
                 // extend known schemas with just resolved names
                 collected_names.extend(resolved_names);
                 let namespace = &schema.namespace().or_else(|| enclosing_namespace.clone());
+
+                // Attempt to validate the value in order to ensure we've selected the right schema.
                 value
-                    .validate_internal(schema, &collected_names, namespace)
+                    .validate_internal(schema, &collected_names, namespace, true)
                     .is_none()
             })
         }
@@ -4935,37 +4936,37 @@ mod tests {
         // to mimick two different versions of a producer & consumer application.
         #[derive(Serialize, Deserialize, Debug)]
         struct MyInnerRecordReader {
-            a: String
+            a: String,
         }
 
         #[derive(Serialize, Deserialize, Debug)]
         struct MyRecordReader {
-            inner_record: Option<MyInnerRecordReader>
+            inner_record: Option<MyInnerRecordReader>,
         }
 
         #[derive(Serialize, Deserialize, Debug)]
         enum MyEnum {
             A,
             B,
-            C
+            C,
         }
 
         #[derive(Serialize, Deserialize, Debug)]
         struct MyInnerRecordWriter {
             a: String,
-            b: Option<MyEnum>
+            b: Option<MyEnum>,
         }
 
         #[derive(Serialize, Deserialize, Debug)]
         struct MyRecordWriter {
-            inner_record: Option<MyInnerRecordWriter>
+            inner_record: Option<MyInnerRecordWriter>,
         }
 
         let s = MyRecordWriter {
             inner_record: Some(MyInnerRecordWriter {
                 a: "foo".to_string(),
-                b: None
-            })
+                b: None,
+            }),
         };
 
         // Serialize using the writer schema (newer).
