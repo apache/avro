@@ -20,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.Encoder;
@@ -71,8 +73,9 @@ public class TestGeneratedCode {
 
   @Test
   void withSchemaMigration() throws IOException {
+    Map<CharSequence, CharSequence> map = new HashMap<>();
     FullRecordV2 src = new FullRecordV2(true, 731, 87231, 38L, 54.2832F, "Hi there",
-        ByteBuffer.wrap(Utf8.getBytesFor("Hello, world!")));
+        ByteBuffer.wrap(Utf8.getBytesFor("Hello, world!")), map);
     assertTrue(((SpecificRecordBase) src).hasCustomCoders(), "Test schema must allow for custom coders.");
 
     ByteArrayOutputStream out = new ByteArrayOutputStream(1024);
