@@ -89,6 +89,7 @@ FIELD_RESERVED_PROPS = (
     "doc",
     "order",
     "type",
+    "aliases",
 )
 
 VALID_FIELD_SORT_ORDERS = (
@@ -429,7 +430,19 @@ class DecimalLogicalSchema(LogicalSchema):
 class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
     _reserved_properties: Sequence[str] = FIELD_RESERVED_PROPS
 
-    def __init__(self, type_, name, has_default, default=None, order=None, names=None, doc=None, other_props=None, validate_names: bool = True):
+    def __init__(
+        self,
+        type_,
+        name,
+        has_default,
+        default=None,
+        order=None,
+        names=None,
+        doc=None,
+        other_props=None,
+        validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
+    ):
         if not name:
             raise avro.errors.SchemaParseException("Fields must have a non-empty name.")
         if not isinstance(name, str):
@@ -451,6 +464,7 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
         self.type = type_schema
         self.name = name
         self.validate_names = validate_names
+        self.aliases = aliases
         # TODO(hammer): check to ensure default is valid
         if has_default:
             self.set_prop("default", default)
@@ -1012,8 +1026,23 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             default = field.get("default")
             order = field.get("order")
             doc = field.get("doc")
+            aliases = field.get("aliases") or ()
+            if not hasattr(aliases, "__contains__"):
+                raise avro.errors.SchemaParseException(f"Aliases for field {field} must be a collection of strings.")
+            aliases = cast(Collection[str], aliases)
             other_props = get_other_props(field, FIELD_RESERVED_PROPS)
-            new_field = Field(type, name, has_default, default, order, names, doc, other_props, validate_names=validate_names)
+            new_field = Field(
+                type,
+                name,
+                has_default,
+                default,
+                order,
+                names,
+                doc,
+                other_props,
+                validate_names=validate_names,
+                aliases=aliases,
+            )
             # make sure field name has not been used yet
             if new_field.name in field_names:
                 fail_msg = f"Field name {new_field.name} already in use."
