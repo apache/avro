@@ -51,6 +51,7 @@ from functools import reduce
 from pathlib import Path
 from typing import (
     Callable,
+    Collection,
     FrozenSet,
     List,
     Mapping,
@@ -79,6 +80,7 @@ SCHEMA_RESERVED_PROPS = (
     "symbols",  # Enum
     "values",  # Map
     "doc",  # Named
+    "aliases",  # Named
 )
 
 FIELD_RESERVED_PROPS = (
@@ -174,6 +176,8 @@ class PropertiesMixin:
     def props(self) -> MutableMapping[str, object]:
         if self._props is None:
             self._props = {}
+        if hasattr(self, "aliases"):
+            self._props.setdefault("aliases", self.aliases)
         return self._props
 
     def get_prop(self, key: str) -> Optional[object]:
@@ -341,6 +345,8 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
 
+    aliases: Optional[Collection[str]]
+
     def __init__(
         self,
         type_: str,
@@ -349,6 +355,7 @@ class NamedSchema(Schema):
         names: Optional[Names] = None,
         other_props: Optional[Mapping[str, object]] = None,
         validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
     ) -> None:
         super().__init__(type_, other_props, validate_names=validate_names)
         if not name:
@@ -360,6 +367,7 @@ class NamedSchema(Schema):
         namespace = namespace or None  # Empty string -> None
         names = names or Names(validate_names=self.validate_names)
         new_name = names.add_name(name, namespace, self)
+        self.aliases = aliases
 
         # Store name and namespace as they were read in origin schema
         self.set_prop("name", new_name.name)
@@ -585,14 +593,32 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 # Complex Types (non-recursive)
 #
 class FixedSchema(EqualByPropsMixin, NamedSchema):
-    def __init__(self, name, namespace, size, names=None, other_props=None, validate_names: bool = True):
+    def __init__(
+        self,
+        name,
+        namespace,
+        size,
+        names=None,
+        other_props=None,
+        validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
+    ) -> None:
         # Ensure valid ctor args
         if not isinstance(size, int) or size < 0:
             fail_msg = "Fixed Schema requires a valid positive integer for size property."
             raise avro.errors.AvroException(fail_msg)
 
         # Call parent ctor
-        NamedSchema.__init__(self, "fixed", name, namespace, names, other_props, validate_names=validate_names)
+        NamedSchema.__init__(
+            self,
+            "fixed",
+            name,
+            namespace,
+            names,
+            other_props,
+            validate_names=validate_names,
+            aliases=aliases,
+        )
 
         # Add class members
         self.set_prop("size", size)
@@ -646,10 +672,20 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
         names=None,
         other_props=None,
         validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
     ):
         max_precision = int(math.floor(math.log10(2) * (8 * size - 1)))
         DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
-        FixedSchema.__init__(self, name, namespace, size, names, other_props, validate_names=validate_names)
+        FixedSchema.__init__(
+            self,
+            name,
+            namespace,
+            size,
+            names,
+            other_props,
+            validate_names=validate_names,
+            aliases=aliases,
+        )
         self.set_prop("precision", precision)
         self.set_prop("scale", scale)
 
@@ -681,6 +717,7 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
         other_props: Optional[Mapping[str, object]] = None,
         validate_enum_symbols: bool = True,
         validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
     ) -> None:
         """
         @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names and default, which is not an enumerated symbol.
@@ -696,7 +733,16 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             raise avro.errors.AvroException(f"Duplicate symbol: {symbols}")
 
         # Call parent ctor
-        NamedSchema.__init__(self, "enum", name, namespace, names, other_props, validate_names)
+        NamedSchema.__init__(
+            self,
+            "enum",
+            name,
+            namespace,
+            names,
+            other_props,
+            validate_names,
+            aliases=aliases,
+        )
 
         # Add class members
         self.set_prop("symbols", symbols)
@@ -994,6 +1040,7 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         doc=None,
         other_props=None,
         validate_names: bool = True,
+        aliases: Optional[Collection[str]] = None,
     ):
         # Ensure valid ctor args
         if fields is None:
@@ -1007,7 +1054,16 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
         if schema_type == "request":
             Schema.__init__(self, schema_type, other_props)
         else:
-            NamedSchema.__init__(self, schema_type, name, namespace, names, other_props, validate_names=validate_names)
+            NamedSchema.__init__(
+                self,
+                schema_type,
+                name,
+                namespace,
+                names,
+                other_props,
+                validate_names=validate_names,
+                aliases=aliases,
+            )
 
         names = names or Names(validate_names=self.validate_names)
         if schema_type == "record":
@@ -1263,6 +1319,7 @@ def make_avsc_object(
             name = json_data.get("name")
             if not isinstance(name, str):
                 raise avro.errors.SchemaParseException(f"Name {name} must be a string, but it is {type(name)}.")
+            aliases = json_data.get("aliases")
             namespace = json_data.get("namespace", names.default_namespace)
             if type_ == "fixed":
                 size = json_data.get("size")
@@ -1270,7 +1327,17 @@ def make_avsc_object(
                     precision = json_data.get("precision")
                     scale = json_data.get("scale", 0)
                     try:
-                        return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props, validate_names)
+                        return FixedDecimalSchema(
+                            size,
+                            name,
+                            precision,
+                            scale,
+                            namespace,
+                            names,
+                            other_props,
+                            validate_names,
+                            aliases,
+                        )
                     except avro.errors.IgnoredLogicalType as warning:
                         warnings.warn(warning)
                 return FixedSchema(name, namespace, size, names, other_props, validate_names=validate_names)
@@ -1282,11 +1349,31 @@ def make_avsc_object(
                     if not isinstance(symbol, str):
                         raise avro.errors.SchemaParseException(f"Enum symbols must be a sequence of strings, but one symbol is a {type(symbol)}")
                 doc = json_data.get("doc")
-                return EnumSchema(name, namespace, symbols, names, doc, other_props, validate_enum_symbols, validate_names)
+                return EnumSchema(
+                    name,
+                    namespace,
+                    symbols,
+                    names,
+                    doc,
+                    other_props,
+                    validate_enum_symbols,
+                    validate_names,
+                    aliases=aliases,
+                )
             if type_ in ["record", "error"]:
                 fields = json_data.get("fields")
                 doc = json_data.get("doc")
-                return RecordSchema(name, namespace, fields, names, type_, doc, other_props, validate_names)
+                return RecordSchema(
+                    name,
+                    namespace,
+                    fields,
+                    names,
+                    type_,
+                    doc,
+                    other_props,
+                    validate_names,
+                    aliases=aliases,
+                )
             raise avro.errors.SchemaParseException(f"Unknown Named Type: {type_}")
 
         if type_ in avro.constants.PRIMITIVE_TYPES:
