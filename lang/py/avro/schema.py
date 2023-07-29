@@ -70,15 +70,15 @@ from avro.name import Name, Names, validate_basename
 #
 
 SCHEMA_RESERVED_PROPS = (
-    "type",
-    "name",
-    "namespace",
+    "type",  # All
+    "name",  # Named
+    "namespace",  # Named
     "fields",  # Record
     "items",  # Array
     "size",  # Fixed
     "symbols",  # Enum
     "values",  # Map
-    "doc",
+    "doc",  # Named
 )
 
 FIELD_RESERVED_PROPS = (
