@@ -4910,7 +4910,7 @@ mod tests {
         assert_eq!(canonical_form, expected);
 
         // Enclosing namespace and inner namespaces are specified
-        // but innner namespaces are ""
+        // but inner namespaces are ""
         let schema_str = r#"
         {
           "namespace": "my_ns",
