@@ -239,7 +239,10 @@ impl Name {
     }
 
     /// Parse a `serde_json::Value` into a `Name`.
-    pub(crate) fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
+    pub(crate) fn parse(
+        complex: &Map<String, Value>,
+        enclosing_namespace: &Namespace,
+    ) -> AvroResult<Self> {
         let (name, namespace_from_name) = complex
             .name()
             .map(|name| Name::get_name_and_namespace(name.as_str()).unwrap())
@@ -252,8 +255,12 @@ impl Name {
 
         Ok(Self {
             name: type_name.unwrap_or(name),
-            namespace: namespace_from_name
-                .or_else(|| complex.string("namespace").filter(|ns| !ns.is_empty())),
+            namespace: namespace_from_name.or_else(|| {
+                complex
+                    .string("namespace")
+                    .or(enclosing_namespace.clone())
+                    .filter(|ns| !ns.is_empty())
+            }),
         })
     }
 
@@ -320,7 +327,7 @@ impl<'de> Deserialize<'de> for Name {
         Value::deserialize(deserializer).and_then(|value| {
             use serde::de::Error;
             if let Value::Object(json) = value {
-                Name::parse(&json).map_err(Error::custom)
+                Name::parse(&json, &None).map_err(Error::custom)
             } else {
                 Err(Error::custom(format!("Expected a JSON object: {value:?}")))
             }
@@ -918,7 +925,7 @@ impl Schema {
         for js in input {
             let schema: Value = serde_json::from_str(js).map_err(Error::ParseSchemaJson)?;
             if let Value::Object(inner) = &schema {
-                let name = Name::parse(inner)?;
+                let name = Name::parse(inner, &None)?;
                 let previous_value = input_schemas.insert(name.clone(), schema);
                 if previous_value.is_some() {
                     return Err(Error::NameCollision(name.fullname(None)));
@@ -1087,7 +1094,9 @@ impl Parser {
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
 
         if self.parsed_schemas.get(&fully_qualified_name).is_some() {
-            return Ok(Schema::Ref { name });
+            return Ok(Schema::Ref {
+                name: fully_qualified_name,
+            });
         }
         if let Some(resolving_schema) = self.resolving_schemas.get(&fully_qualified_name) {
             return Ok(resolving_schema.clone());
@@ -1403,11 +1412,12 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex)?;
+        let name = Name::parse(complex, enclosing_namespace)?;
         let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
         let mut lookup = BTreeMap::new();
-        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+        let fully_qualified_name = name.clone();
+
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 
         let fields: Vec<RecordField> = fields_opt
@@ -1435,7 +1445,7 @@ impl Parser {
         }
 
         let schema = Schema::Record(RecordSchema {
-            name,
+            name: fully_qualified_name.clone(),
             aliases: aliases.clone(),
             doc: complex.doc(),
             fields,
@@ -1478,8 +1488,8 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex)?;
-        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+        let name = Name::parse(complex, enclosing_namespace)?;
+        let fully_qualified_name = name.clone();
         let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
         let symbols: Vec<String> = symbols_opt
@@ -1518,7 +1528,7 @@ impl Parser {
         }
 
         let schema = Schema::Enum(EnumSchema {
-            name,
+            name: fully_qualified_name.clone(),
             aliases: aliases.clone(),
             doc: complex.doc(),
             symbols,
@@ -1620,12 +1630,12 @@ impl Parser {
             None => Err(Error::GetFixedSizeField),
         }?;
 
-        let name = Name::parse(complex)?;
-        let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
+        let name = Name::parse(complex, enclosing_namespace)?;
+        let fully_qualified_name = name.clone();
         let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
 
         let schema = Schema::Fixed(FixedSchema {
-            name,
+            name: fully_qualified_name.clone(),
             aliases: aliases.clone(),
             doc,
             size: size as usize,
@@ -2626,7 +2636,7 @@ mod tests {
 
         let schema = Schema::parse_str(schema)?;
         let schema_str = schema.canonical_form();
-        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"gender","type":{"name":"Gender","type":"enum","symbols":["male","female"]}}]},{"name":"Manager","type":"record","fields":[{"name":"gender","type":"Gender"}]}]}]}"#;
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"office.Employee","type":"record","fields":[{"name":"gender","type":{"name":"office.Gender","type":"enum","symbols":["male","female"]}}]},{"name":"office.Manager","type":"record","fields":[{"name":"gender","type":"office.Gender"}]}]}]}"#;
         assert_eq!(schema_str, expected);
 
         Ok(())
@@ -2676,7 +2686,7 @@ mod tests {
 
         let schema = Schema::parse_str(schema)?;
         let schema_str = schema.canonical_form();
-        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"Employee","type":"record","fields":[{"name":"id","type":{"name":"EmployeeId","type":"fixed","size":16}}]},{"name":"Manager","type":"record","fields":[{"name":"id","type":"EmployeeId"}]}]}]}"#;
+        let expected = r#"{"name":"office.User","type":"record","fields":[{"name":"details","type":[{"name":"office.Employee","type":"record","fields":[{"name":"id","type":{"name":"office.EmployeeId","type":"fixed","size":16}}]},{"name":"office.Manager","type":"record","fields":[{"name":"id","type":"office.EmployeeId"}]}]}]}"#;
         assert_eq!(schema_str, expected);
 
         Ok(())
@@ -4862,6 +4872,157 @@ mod tests {
         assert_eq!(fullname, "my_name");
         let qname = name.fully_qualified_name(&Some("".to_string())).to_string();
         assert_eq!(qname, "my_name");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3818_inherit_enclosing_namespace() -> TestResult {
+        // Enclosing namespace is specified but inner namespaces are not.
+        let schema_str = r#"
+        {
+          "namespace": "my_ns",
+          "type": "record",
+          "name": "my_schema",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "enum1",
+                "type": "enum",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": "fixed1",
+                "type": "fixed",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"my_ns.my_schema","type":"record","fields":[{"name":"f1","type":{"name":"my_ns.enum1","type":"enum","symbols":["a"]}},{"name":"f2","type":{"name":"my_ns.fixed1","type":"fixed","size":1}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Enclosing namespace and inner namespaces are specified
+        // but inner namespaces are ""
+        let schema_str = r#"
+        {
+          "namespace": "my_ns",
+          "type": "record",
+          "name": "my_schema",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "enum1",
+                "type": "enum",
+                "namespace": "",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": "fixed1",
+                "type": "fixed",
+                "namespace": "",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"my_ns.my_schema","type":"record","fields":[{"name":"f1","type":{"name":"enum1","type":"enum","symbols":["a"]}},{"name":"f2","type":{"name":"fixed1","type":"fixed","size":1}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Enclosing namespace is "" and inner non-empty namespaces are specified.
+        let schema_str = r#"
+        {
+          "namespace": "",
+          "type": "record",
+          "name": "my_schema",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "enum1",
+                "type": "enum",
+                "namespace": "f1.ns",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": "f2.ns.fixed1",
+                "type": "fixed",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"my_schema","type":"record","fields":[{"name":"f1","type":{"name":"f1.ns.enum1","type":"enum","symbols":["a"]}},{"name":"f2","type":{"name":"f2.ns.fixed1","type":"fixed","size":1}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Nested complex types with non-empty enclosing namespace.
+        let schema_str = r#"
+        {
+          "type": "record",
+          "name": "my_ns.my_schema",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "inner_record1",
+                "type": "record",
+                "fields": [
+                  {
+                    "name": "f1_1",
+                    "type": {
+                      "name": "enum1",
+                      "type": "enum",
+                      "symbols": ["a"]
+                    }
+                  }
+                ]
+              }
+            },  {
+              "name": "f2",
+                "type": {
+                "name": "inner_record2",
+                "type": "record",
+                "namespace": "inner_ns",
+                "fields": [
+                  {
+                    "name": "f2_1",
+                    "type": {
+                      "name": "enum2",
+                      "type": "enum",
+                      "symbols": ["a"]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"my_ns.my_schema","type":"record","fields":[{"name":"f1","type":{"name":"my_ns.inner_record1","type":"record","fields":[{"name":"f1_1","type":{"name":"my_ns.enum1","type":"enum","symbols":["a"]}}]}},{"name":"f2","type":{"name":"inner_ns.inner_record2","type":"record","fields":[{"name":"f2_1","type":{"name":"inner_ns.enum2","type":"enum","symbols":["a"]}}]}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
 
         Ok(())
     }
