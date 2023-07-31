@@ -4878,7 +4878,7 @@ mod tests {
 
     #[test]
     fn test_avro_3818_inherit_enclosing_namespace() -> TestResult {
-        // Enclosing namespace is specified but innner namespaces are not.
+        // Enclosing namespace is specified but inner namespaces are not.
         let schema_str = r#"
         {
           "namespace": "my_ns",
