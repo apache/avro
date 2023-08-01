@@ -3,6 +3,8 @@
 *.iws
 *.swp
 *~
+*#*#
+*.#*
 .idea/
 .project
 .settings
