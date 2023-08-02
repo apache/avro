@@ -112,6 +112,9 @@ pub enum Schema {
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     Decimal(DecimalSchema),
+    /// Logical type which represents `Decimal` values without predefined scale.
+    /// The underlying type is serialized and deserialized as `Schema::Bytes`
+    BigDecimal,
     /// A universally unique identifier, annotating a string.
     Uuid,
     /// Logical type which represents the number of days since the unix epoch.
