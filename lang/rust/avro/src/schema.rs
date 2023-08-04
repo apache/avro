@@ -43,6 +43,8 @@ lazy_static! {
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
         Regex::new(r"^((?P<namespace>[A-Za-z_][A-Za-z0-9_\.]*)*\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
+
+    static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
 }
 
 /// Represents an Avro schema fingerprint
@@ -621,6 +623,10 @@ impl RecordField {
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
+
+        if !FIELD_NAME_R.is_match(&name) {
+            return Err(Error::FieldName(name));
+        }
 
         // TODO: "type" = "<record name>"
         let schema = parser.parse_complex(field, enclosing_namespace)?;
@@ -5025,5 +5031,37 @@ mod tests {
         assert_eq!(canonical_form, expected);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_avro_3820_deny_invalid_field_names() -> TestResult {
+        let schema_str = r#"
+        {
+          "name": "my_record",
+          "type": "record",
+          "fields": [
+            {
+              "name": "f1.x",
+              "type": {
+                "name": "my_enum",
+                "type": "enum",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": "my_fixed",
+                "type": "fixed",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::FieldName(x)) if x == "f1.x" => Ok(()),
+            other => Err(format!("Expected Error::FieldName, got {other:?}").into()),
+        }
     }
 }
