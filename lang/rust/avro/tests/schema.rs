@@ -18,6 +18,7 @@
 use std::io::{Cursor, Read};
 
 use apache_avro::{
+    from_avro_datum, from_value,
     schema::{EnumSchema, FixedSchema, Name, RecordField, RecordSchema},
     to_avro_datum, to_value,
     types::{Record, Value},
@@ -1452,7 +1453,7 @@ fn avro_old_issue_47() -> TestResult {
 
     use serde::{Deserialize, Serialize};
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
     pub struct MyRecord {
         b: String,
         a: i64,
@@ -1463,7 +1464,13 @@ fn avro_old_issue_47() -> TestResult {
         a: 1,
     };
 
-    let _ = to_avro_datum(&schema, to_value(record)?)?;
+    let ser_value = to_value(record.clone())?;
+    let serialized_bytes = to_avro_datum(&schema, ser_value)?;
+
+    let de_value = &from_avro_datum(&schema, &mut &*serialized_bytes, None)?;
+    let deserialized_record = from_value::<MyRecord>(de_value)?;
+
+    assert_eq!(record, deserialized_record);
     Ok(())
 }
 
