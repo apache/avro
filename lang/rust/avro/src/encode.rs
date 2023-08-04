@@ -196,33 +196,39 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                 });
             }
         }
-        Value::Record(fields) => {
+        Value::Record(value_fields) => {
             if let Schema::Record(RecordSchema {
                 ref name,
                 fields: ref schema_fields,
-                ref lookup,
                 ..
             }) = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for (name, value) in fields.iter() {
-                    match lookup.get(name) {
-                        Some(idx) => {
-                            encode_internal(
-                                value,
-                                &schema_fields[*idx].schema,
-                                names,
-                                &record_namespace,
-                                buffer,
-                            )?;
-                        }
+
+                let mut lookup = HashMap::new();
+                value_fields.iter().for_each(|(name, field)| {
+                    lookup.insert(name, field);
+                });
+
+                for schema_field in schema_fields.iter() {
+                    let name = &schema_field.name;
+                    let value = match lookup.get(name) {
+                        Some(value) => value,
                         None => {
                             return Err(Error::NoEntryInLookupTable(
                                 name.clone(),
                                 format!("{lookup:?}"),
                             ));
                         }
-                    }
+                    };
+
+                    encode_internal(
+                        value,
+                        &schema_field.schema,
+                        names,
+                        &record_namespace,
+                        buffer,
+                    )?;
                 }
             } else {
                 error!("invalid schema type for Record: {:?}", schema);
