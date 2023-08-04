@@ -307,6 +307,9 @@ pub enum Error {
     #[error("Invalid enum symbol name {0}")]
     EnumSymbolName(String),
 
+    #[error("Invalid field name {0}")]
+    FieldName(String),
+
     #[error("Invalid schema name {0}. It must match the regex '{1}'")]
     InvalidSchemaName(String, &'static str),
 
