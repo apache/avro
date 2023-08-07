@@ -1,6 +1,11 @@
 # Apache Avro website
 
 This website is base on [Hugo](https://gohugo.io) and uses the [Docsy](https://www.docsy.dev/) theme.
+Before building the website, you need to initialize submodules.
+
+```
+git submodule update --init --recursive
+```
 
 ## Previewing the website locally
 
