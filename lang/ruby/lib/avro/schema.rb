@@ -111,7 +111,7 @@ module Avro
       elsif PRIMITIVE_TYPES.include? json_obj
         return PrimitiveSchema.new(json_obj)
       else
-        raise UnknownSchemaError.new(json_obj)
+        raise UnknownSchemaError.new(json_obj, default_namespace)
       end
     end
 
@@ -621,9 +621,11 @@ module Avro
 
   class UnknownSchemaError < SchemaParseError
     attr_reader :type_name
+    attr_reader :default_namespace
 
-    def initialize(type)
+    def initialize(type, default_namespace)
       @type_name = type
+      @default_namespace = default_namespace
       super("#{type.inspect} is not a schema we know about.")
     end
   end
