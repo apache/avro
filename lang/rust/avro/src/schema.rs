@@ -1440,7 +1440,12 @@ impl Parser {
                     .collect::<Result<_, _>>()
             })?;
 
+        let mut existing_fields: HashSet<&String> = HashSet::with_capacity(fields.len());
         for field in &fields {
+            if existing_fields.contains(&field.name) {
+                return Err(Error::FieldNameDuplicate(field.name.clone()));
+            }
+            existing_fields.insert(&field.name);
             lookup.insert(field.name.clone(), field.position);
 
             if let Some(ref field_aliases) = field.aliases {
@@ -5063,5 +5068,72 @@ mod tests {
             Err(Error::FieldName(x)) if x == "f1.x" => Ok(()),
             other => Err(format!("Expected Error::FieldName, got {other:?}").into()),
         }
+    }
+
+    #[test]
+    fn test_avro_3827_disallow_duplicate_field_names() -> TestResult {
+        let schema_str = r#"
+        {
+          "name": "my_schema",
+          "type": "record",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "a",
+                "type": "record",
+                "fields": []
+              }
+            },  {
+              "name": "f1",
+              "type": {
+                "name": "b",
+                "type": "record",
+                "fields": []
+              }
+            }
+          ]
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::FieldNameDuplicate(_)) => (),
+            other => {
+                return Err(format!("Expected Error::FieldNameDuplicate, got {other:?}").into())
+            }
+        };
+
+        let schema_str = r#"
+        {
+          "name": "my_schema",
+          "type": "record",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "a",
+                "type": "record",
+                "fields": [
+                  {
+                    "name": "f1",
+                    "type": {
+                      "name": "b",
+                      "type": "record",
+                      "fields": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"my_schema","type":"record","fields":[{"name":"f1","type":{"name":"a","type":"record","fields":[{"name":"f1","type":{"name":"b","type":"record","fields":[]}}]}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        Ok(())
     }
 }

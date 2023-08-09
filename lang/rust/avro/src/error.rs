@@ -310,6 +310,9 @@ pub enum Error {
     #[error("Invalid field name {0}")]
     FieldName(String),
 
+    #[error("Duplicate field name {0}")]
+    FieldNameDuplicate(String),
+
     #[error("Invalid schema name {0}. It must match the regex '{1}'")]
     InvalidSchemaName(String, &'static str),
 
