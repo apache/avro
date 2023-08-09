@@ -460,4 +460,17 @@ public class TestSchema {
     assertNotNull(f1);
     assertEquals(schemaRecord1, f1.schema());
   }
+
+  @Test
+  void testInvalidNamespace() throws Exception {
+    File avscFile = Files.createTempFile("testInvalidNamespace", null).toFile();
+    String schema = "{\"type\":\"record\", \"namespace\": \"foo.123.bar\", \"name\":\"my_record\", \"fields\":[]}";
+    try (FileWriter writer = new FileWriter(avscFile)) {
+      writer.write(schema);
+      writer.flush();
+    }
+
+    Schema.Parser parser = new Schema.Parser();
+    assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
+  }
 }

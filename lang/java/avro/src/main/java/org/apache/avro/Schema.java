@@ -717,9 +717,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         space = name.substring(0, lastDot); // get space from name
         this.name = validateName(name.substring(lastDot + 1));
       }
-      if ("".equals(space))
-        space = null;
-      this.space = space;
+      this.space = validateSpace(space);
       this.full = (this.space == null) ? this.name : this.space + "." + this.name;
     }
 
@@ -1643,6 +1641,17 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new SchemaParseException("Illegal character in: " + name);
     }
     return name;
+  }
+
+  private static String validateSpace(String space) {
+    if ("".equals(space) || space == null) {
+      return null;
+    }
+
+    for (String part : space.split("\\.")) {
+      validateName(part);
+    }
+    return space;
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
