@@ -73,7 +73,7 @@ thiserror = { default-features = false, version = "1.0.44" }
 typed-builder = { default-features = false, version = "0.15.2" }
 uuid = { default-features = false, version = "1.4.1", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
-zerocopy = { default-features = false, version = "0.6.1" }
+zerocopy = { default-features = false, version = "0.6.3" }
 zstd = { default-features = false, version = "0.12.4+zstd.1.5.2", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
