@@ -1440,12 +1440,10 @@ impl Parser {
                     .collect::<Result<_, _>>()
             })?;
 
-        let mut existing_fields: HashSet<&String> = HashSet::with_capacity(fields.len());
         for field in &fields {
-            if existing_fields.contains(&field.name) {
+            if lookup.contains_key(&field.name) {
                 return Err(Error::FieldNameDuplicate(field.name.clone()));
             }
-            existing_fields.insert(&field.name);
             lookup.insert(field.name.clone(), field.position);
 
             if let Some(ref field_aliases) = field.aliases {
