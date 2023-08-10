@@ -1441,10 +1441,9 @@ impl Parser {
             })?;
 
         for field in &fields {
-            if lookup.contains_key(&field.name) {
+            if let Some(_old) = lookup.insert(field.name.clone(), field.position) {
                 return Err(Error::FieldNameDuplicate(field.name.clone()));
             }
-            lookup.insert(field.name.clone(), field.position);
 
             if let Some(ref field_aliases) = field.aliases {
                 for alias in field_aliases {
