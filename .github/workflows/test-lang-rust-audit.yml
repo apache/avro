@@ -27,6 +27,12 @@ on:
       - lang/rust/Cargo.toml
       - lang/rust/Cargo.lock
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust

@@ -26,6 +26,12 @@ on:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust
