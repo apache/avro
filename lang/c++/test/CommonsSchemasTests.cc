@@ -79,6 +79,10 @@ void testCommonSchema(const std::filesystem::path &dir_path)
 void testCommonsSchemas()
 {
 	const std::filesystem::path commons_schemas{"../../share/test/data/schemas"};
+	if (!std::filesystem::exists(commons_schemas)) {
+        std::cout << "\nWarn: Can't access share test folder '../../share/test/data/schemas'\n" << std::endl;
+        return;
+	}
 	for (auto const& dir_entry : std::filesystem::directory_iterator{commons_schemas}) {
         if (std::filesystem::is_directory(dir_entry)) {
 		    testCommonSchema(dir_entry.path());
