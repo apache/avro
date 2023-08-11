@@ -26,6 +26,12 @@ on:
       - .github/workflows/test-lang-rust-clippy.yml
       - lang/rust/**
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust
@@ -39,12 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: stable
           components: clippy
-          override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --manifest-path lang/rust/Cargo.toml  --all-features --all-targets -- -Dclippy::all -Dunused_imports
+      - run: cargo clippy --all-features --all-targets -- -Dclippy::all -Dunused_imports

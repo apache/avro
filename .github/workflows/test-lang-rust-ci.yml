@@ -26,6 +26,12 @@ on:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust
@@ -40,10 +46,10 @@ jobs:
     strategy:
       matrix:
         rust:
-          - stable
-          - beta
-          - nightly
-          - 1.65.0  # MSRV
+          - 'stable'
+          - 'beta'
+          - 'nightly'
+          - '1.65.0'  # MSRV
         target:
           - x86_64-unknown-linux-gnu
           - wasm32-unknown-unknown
@@ -68,48 +74,31 @@ jobs:
           key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
 
       - name: Rust Toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
           components: rustfmt
-          target: ${{ matrix.target }}
+          targets: ${{ matrix.target }}
 
       - name: Rust Format
         if: matrix.target != 'wasm32-unknown-unknown'
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --manifest-path lang/rust/Cargo.toml --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: Rust Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
+        run: cargo build --all-features --all-targets
 
       - name: Rust Test
         if: matrix.target != 'wasm32-unknown-unknown'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path lang/rust/Cargo.toml --all-features --target ${{ matrix.target }}
+        run: cargo test --all-features --target ${{ matrix.target }}
 
       - name: Rust Test AVRO-3549
         if: matrix.target != 'wasm32-unknown-unknown'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path lang/rust/Cargo.toml --target ${{ matrix.target }} test_avro_3549_read_not_enabled_codec
+        run: cargo test --target ${{ matrix.target }} test_avro_3549_read_not_enabled_codec
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
         if: matrix.target != 'wasm32-unknown-unknown'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path lang/rust/Cargo.toml --doc
+        run: cargo test --doc
 
   interop:
     runs-on: ubuntu-latest
@@ -119,11 +108,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Rust Toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
           toolchain: stable
-          override: true
 
       - name: Cache Cargo
         uses: actions/cache@v3
@@ -205,12 +192,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Rust Toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
           toolchain: stable
-          override: true
-          target: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown
 
       - name: Cache Cargo
         uses: actions/cache@v3
