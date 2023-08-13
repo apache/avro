@@ -51,6 +51,15 @@ dist() (
   "$virtualenv/bin/python3" -m build --outdir "$destination"
 )
 
+doc() {
+  local doc_dir
+  [[ -s VERSION.txt ]] || cp ../../share/VERSION.txt .
+  doc_dir="../../build/avro-doc-$(<VERSION.txt)/api/py"
+  python3 -m tox -e docs
+  mkdir -p "$doc_dir"
+  cp -a docs/build/* "$doc_dir"
+}
+
 interop-data-generate() {
   ./setup.py generate_interop_data
   cp -r avro/test/interop/data ../../build/interop
@@ -76,6 +85,7 @@ main() {
     case "$target" in
       clean) clean;;
       dist) dist;;
+      doc) doc;;
       interop-data-generate) interop-data-generate;;
       interop-data-test) interop-data-test;;
       lint) lint;;
