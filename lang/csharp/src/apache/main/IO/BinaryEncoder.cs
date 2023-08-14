@@ -23,7 +23,7 @@ namespace Avro.IO
     /// <summary>
     /// Write leaf values.
     /// </summary>
-    public class BinaryEncoder : Encoder
+    public class BinaryEncoder : Encoder, IDisposable
     {
         private readonly Stream Stream;
 
@@ -228,5 +228,8 @@ namespace Avro.IO
         {
             Stream.Flush();
         }
+
+        /// <inheritdoc />
+        public void Dispose() => Stream?.Dispose();
     }
 }

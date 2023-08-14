@@ -23,7 +23,7 @@ namespace Avro.IO
     /// <summary>
     /// Decoder for Avro binary format
     /// </summary>
-    public partial class BinaryDecoder : Decoder
+    public partial class BinaryDecoder : Decoder, IDisposable
     {
         private readonly Stream stream;
 
@@ -296,5 +296,8 @@ namespace Avro.IO
         {
             stream.Seek(p, SeekOrigin.Current);
         }
+
+        /// <inheritdoc />
+        public void Dispose() => stream?.Dispose();
     }
 }
