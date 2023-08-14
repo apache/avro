@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.description = "Avro is a data serialization and RPC format"
   s.homepage = "https://avro.apache.org/"
   s.license = "Apache-2.0"
-  s.required_ruby_version = ">= 2.6"
+  s.required_ruby_version = ">= 2.7"
 
   s.metadata["homepage_uri"] = s.homepage
   s.metadata["bug_tracker_uri"] = "https://issues.apache.org/jira/browse/AVRO"

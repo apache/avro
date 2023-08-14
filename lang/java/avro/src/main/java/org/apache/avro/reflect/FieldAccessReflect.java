@@ -62,7 +62,29 @@ class FieldAccessReflect extends FieldAccess {
 
     @Override
     public void set(Object object, Object value) throws IllegalAccessException, IOException {
-      field.set(object, value);
+      if (value == null && field.getType().isPrimitive()) {
+        Object defaultValue = null;
+        if (int.class.equals(field.getType())) {
+          defaultValue = INT_DEFAULT_VALUE;
+        } else if (float.class.equals(field.getType())) {
+          defaultValue = FLOAT_DEFAULT_VALUE;
+        } else if (short.class.equals(field.getType())) {
+          defaultValue = SHORT_DEFAULT_VALUE;
+        } else if (byte.class.equals(field.getType())) {
+          defaultValue = BYTE_DEFAULT_VALUE;
+        } else if (boolean.class.equals(field.getType())) {
+          defaultValue = BOOLEAN_DEFAULT_VALUE;
+        } else if (char.class.equals(field.getType())) {
+          defaultValue = CHAR_DEFAULT_VALUE;
+        } else if (long.class.equals(field.getType())) {
+          defaultValue = LONG_DEFAULT_VALUE;
+        } else if (double.class.equals(field.getType())) {
+          defaultValue = DOUBLE_DEFAULT_VALUE;
+        }
+        field.set(object, defaultValue);
+      } else {
+        field.set(object, value);
+      }
     }
 
     @Override

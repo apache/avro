@@ -42,15 +42,14 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("deprecation")
 public class TestGenericJob {
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   private static Schema createSchema() {
     List<Field> fields = new ArrayList<>();
@@ -78,10 +77,10 @@ public class TestGenericJob {
     return innerrecord;
   }
 
-  @Before
+  @BeforeEach
   public void setup() throws IOException {
     // needed to satisfy the framework only - input ignored in mapper
-    String dir = DIR.getRoot().getPath();
+    String dir = DIR.getPath();
     File infile = new File(dir + "/in");
     RandomAccessFile file = new RandomAccessFile(infile, "rw");
     // add some data so framework actually calls our mapper
@@ -108,13 +107,13 @@ public class TestGenericJob {
   }
 
   @Test
-  public void testJob() throws Exception {
+  void job() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(DIR.getRoot().getPath() + "/out");
+    Path outputPath = new Path(DIR.getPath() + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
 
     job.setInputFormat(TextInputFormat.class);
-    FileInputFormat.setInputPaths(job, DIR.getRoot().getPath() + "/in");
+    FileInputFormat.setInputPaths(job, DIR.getPath() + "/in");
 
     job.setMapperClass(AvroTestConverter.class);
     job.setNumReduceTasks(0);

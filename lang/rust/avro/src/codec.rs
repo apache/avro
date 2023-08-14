@@ -34,7 +34,7 @@ use crc32fast::Hasher;
 use xz2::read::{XzDecoder, XzEncoder};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, PartialEq, EnumIter, EnumString, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, EnumIter, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
@@ -185,55 +185,59 @@ impl Codec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
+    use pretty_assertions::{assert_eq, assert_ne};
 
     const INPUT: &[u8] = b"theanswertolifetheuniverseandeverythingis42theanswertolifetheuniverseandeverythingis4theanswertolifetheuniverseandeverythingis2";
 
     #[test]
-    fn null_compress_and_decompress() {
+    fn null_compress_and_decompress() -> TestResult {
         let codec = Codec::Null;
         let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
+        codec.compress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
-        codec.decompress(&mut stream).unwrap();
+        codec.decompress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
+        Ok(())
     }
 
     #[test]
-    fn deflate_compress_and_decompress() {
-        compress_and_decompress(Codec::Deflate);
+    fn deflate_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Deflate)
     }
 
     #[cfg(feature = "snappy")]
     #[test]
-    fn snappy_compress_and_decompress() {
-        compress_and_decompress(Codec::Snappy);
+    fn snappy_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Snappy)
     }
 
     #[cfg(feature = "zstandard")]
     #[test]
-    fn zstd_compress_and_decompress() {
-        compress_and_decompress(Codec::Zstandard);
+    fn zstd_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Zstandard)
     }
 
     #[cfg(feature = "bzip")]
     #[test]
-    fn bzip_compress_and_decompress() {
-        compress_and_decompress(Codec::Bzip2);
+    fn bzip_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Bzip2)
     }
 
     #[cfg(feature = "xz")]
     #[test]
-    fn xz_compress_and_decompress() {
-        compress_and_decompress(Codec::Xz);
+    fn xz_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Xz)
     }
 
-    fn compress_and_decompress(codec: Codec) {
+    fn compress_and_decompress(codec: Codec) -> TestResult {
         let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
+        codec.compress(&mut stream)?;
         assert_ne!(INPUT, stream.as_slice());
         assert!(INPUT.len() > stream.len());
-        codec.decompress(&mut stream).unwrap();
+        codec.decompress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
+        Ok(())
     }
 
     #[test]

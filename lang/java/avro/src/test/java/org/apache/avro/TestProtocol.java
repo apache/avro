@@ -17,15 +17,15 @@
  */
 package org.apache.avro;
 
-import org.junit.Test;
-
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class TestProtocol {
 
   @Test
-  public void testNamespaceAndName() {
+  void namespaceAndNameRules() {
     Protocol p1 = new Protocol("P", null, "foo");
     Protocol p2 = new Protocol("foo.P", null, null);
     Protocol p3 = new Protocol("foo.P", null, "bar");
@@ -41,16 +41,16 @@ public class TestProtocol {
   }
 
   @Test
-  public void testPropEquals() {
+  void propEquals() {
     Protocol p1 = new Protocol("P", null, "foo");
     p1.addProp("a", "1");
     Protocol p2 = new Protocol("P", null, "foo");
     p2.addProp("a", "2");
-    assertFalse(p1.equals(p2));
+    assertNotEquals(p1, p2);
   }
 
   @Test
-  public void testSplitProtocolBuild() {
+  void splitProtocolBuild() {
     Protocol p = new Protocol("P", null, "foo");
     p.addProp("property", "some value");
 
@@ -67,7 +67,7 @@ public class TestProtocol {
   }
 
   @Test
-  public void testCopyMessage() {
+  void copyMessage() {
     Protocol p = new Protocol("P", "protocol", "foo");
     Schema req1 = SchemaBuilder.record("foo.req1").fields().endRecord();
     Protocol.Message m1 = p.createMessage("M", "message", singletonMap("foo", "bar"), req1);

@@ -34,11 +34,23 @@
 
   <properties>
     <avro.version>${project.version}</avro.version>
-    <jackson.version>${jackson.version}</jackson.version>
-    <junit.version>${junit.version}</junit.version>
+    <jackson-bom.version>${jackson-bom.version}</jackson-bom.version>
+    <junit5.version>${junit5.version}</junit5.version>
     <logback.version>1.2.3</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>\${jackson-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -57,16 +69,6 @@
       <version>\${avro.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>\${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>\${jackson.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>\${slf4j.version}</version>
@@ -77,9 +79,9 @@
       <version>\${logback.version}</version>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>\${junit.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>\${junit5.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -20,8 +20,6 @@ package org.apache.avro.ipc.netty;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import static org.junit.Assert.assertEquals;
-
 import io.netty.channel.socket.SocketChannel;
 
 import java.net.InetSocketAddress;
@@ -31,7 +29,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.junit.Assert;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
@@ -39,11 +36,17 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestNettyServer {
+  private static final Logger LOG = LoggerFactory.getLogger(TestNettyServer.class.getName());
+
   static final int CONNECT_TIMEOUT_MILLIS = 2000; // 2 sec
   protected static Server server;
   protected static Transceiver transceiver;
@@ -84,7 +87,7 @@ public class TestNettyServer {
 
   public static void initializeConnections(Consumer<SocketChannel> serverInitializer,
       Consumer<SocketChannel> transceiverInitializer) throws Exception {
-    System.out.println("starting server...");
+    LOG.info("starting server...");
     channelInitializer = transceiverInitializer;
     mailService = new MailImpl();
     Responder responder = new SpecificResponder(Mail.class, mailService);
@@ -92,37 +95,37 @@ public class TestNettyServer {
     server.start();
 
     int serverPort = server.getPort();
-    System.out.println("server port : " + serverPort);
+    LOG.info("server port : {}", serverPort);
 
     transceiver = new NettyTransceiver(new InetSocketAddress(serverPort), CONNECT_TIMEOUT_MILLIS,
         transceiverInitializer, null);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void initializeConnections() throws Exception {
     initializeConnections(null);
   }
 
-  @AfterClass
+  @AfterAll
   public static void tearDownConnections() throws Exception {
     transceiver.close();
     server.close();
   }
 
   @Test
-  public void testRequestResponse() throws Exception {
+  void requestResponse() throws Exception {
     for (int x = 0; x < 5; x++) {
       verifyResponse(proxy.send(createMessage()));
     }
   }
 
   private void verifyResponse(String result) {
-    Assert.assertEquals("Sent message to [wife] from [husband] with body [I love you!]", result);
+    assertEquals("Sent message to [wife] from [husband] with body [I love you!]", result);
   }
 
   @Test
-  public void testOneway() throws Exception {
+  void oneway() throws Exception {
     for (int x = 0; x < 5; x++) {
       proxy.fireandforget(createMessage());
     }
@@ -131,7 +134,7 @@ public class TestNettyServer {
   }
 
   @Test
-  public void testMixtureOfRequests() throws Exception {
+  void mixtureOfRequests() throws Exception {
     mailService.reset();
     for (int x = 0; x < 5; x++) {
       Message createMessage = createMessage();
@@ -144,24 +147,55 @@ public class TestNettyServer {
   }
 
   @Test
-  public void testConnectionsCount() throws Exception {
+  void connectionsCount() throws Exception {
+    // It happens on a regular basis that the server still has a connection
+    // that is in the process of being terminated (previous test?).
+    // We wait for that to happen because otherwise this test will fail.
+    assertNumberOfConnectionsOnServer(1, 1000);
+
     Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(server.getPort()), CONNECT_TIMEOUT_MILLIS,
         channelInitializer);
     Mail proxy2 = SpecificRequestor.getClient(Mail.class, transceiver2);
     proxy.fireandforget(createMessage());
     proxy2.fireandforget(createMessage());
-    Assert.assertEquals(2, ((NettyServer) server).getNumActiveConnections());
+    assertNumberOfConnectionsOnServer(2, 0);
     transceiver2.close();
 
     // Check the active connections with some retries as closing at the client
     // side might not take effect on the server side immediately
+    assertNumberOfConnectionsOnServer(1, 5000);
+  }
+
+  /**
+   * Assert for the number of server connections. This does repeated checks (with
+   * timeout) if it not matches at first because closing at the client side might
+   * not take effect on the server side immediately.
+   *
+   * @param wantedNumberOfConnections How many do we want to have
+   * @param maxWaitMs                 Within how much time (0= immediately)
+   */
+  private static void assertNumberOfConnectionsOnServer(int wantedNumberOfConnections, long maxWaitMs)
+      throws InterruptedException {
     int numActiveConnections = ((NettyServer) server).getNumActiveConnections();
-    for (int i = 0; i < 50 && numActiveConnections == 2; ++i) {
-      System.out.println("Server still has 2 active connections; retrying...");
-      Thread.sleep(100);
-      numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+    if (numActiveConnections == wantedNumberOfConnections) {
+      return; // We're good.
     }
-    Assert.assertEquals(1, numActiveConnections);
+    long startMs = System.currentTimeMillis();
+    long waited = 0;
+    if (maxWaitMs > 0) {
+      boolean timeOut = false;
+      while (numActiveConnections != wantedNumberOfConnections && !timeOut) {
+        LOG.info("Server still has {} active connections (want {}, waiting for {}ms); retrying...",
+            numActiveConnections, wantedNumberOfConnections, waited);
+        Thread.sleep(100);
+        numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+        waited = System.currentTimeMillis() - startMs;
+        timeOut = waited > maxWaitMs;
+      }
+      LOG.info("Server has {} active connections", numActiveConnections);
+    }
+    assertEquals(wantedNumberOfConnections, numActiveConnections,
+        "Not the expected number of connections after a wait of " + waited + " ms");
   }
 
   private Message createMessage() {
@@ -171,7 +205,7 @@ public class TestNettyServer {
 
   // send a malformed request (HTTP) to the NettyServer port
   @Test
-  public void testBadRequest() throws IOException {
+  void badRequest() throws IOException {
     int port = server.getPort();
     String msg = "GET /status HTTP/1.1\n\n";
     InetSocketAddress sockAddr = new InetSocketAddress("127.0.0.1", port);
@@ -183,7 +217,7 @@ public class TestNettyServer {
       out.flush();
       byte[] buf = new byte[2048];
       int bytesRead = sock.getInputStream().read(buf);
-      Assert.assertTrue("Connection should have been closed: " + bytesRead, bytesRead == -1);
+      assertEquals(bytesRead, -1);
     }
   }
 

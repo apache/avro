@@ -17,11 +17,12 @@
  */
 package org.apache.avro.tool;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -85,13 +86,13 @@ public class TestSpecificCompilerTool {
   private static final File TEST_OUTPUT_STRING_PROTO = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/Proto.java");
 
-  @Before
+  @BeforeEach
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
   }
 
   @Test
-  public void testCompileSchemaWithExcludedSetters() throws Exception {
+  void compileSchemaWithExcludedSetters() throws Exception {
 
     TEST_OUTPUT_NO_SETTERS.delete();
     doCompile(new String[] { "-encoding", "UTF-8", "-noSetters", "schema",
@@ -100,7 +101,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaWithOptionalGettersForNullableFieldsOnly() throws Exception {
+  void compileSchemaWithOptionalGettersForNullableFieldsOnly() throws Exception {
 
     TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS.delete();
     doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "only_nullable_fields", "schema",
@@ -109,7 +110,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaWithOptionalGettersForAllFields() throws Exception {
+  void compileSchemaWithOptionalGettersForAllFields() throws Exception {
 
     TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS.delete();
     doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "all_fields", "schema",
@@ -118,7 +119,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaWithAddExtraOptionalGetters() throws Exception {
+  void compileSchemaWithAddExtraOptionalGetters() throws Exception {
 
     TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS.delete();
     doCompile(new String[] { "-encoding", "UTF-8", "-addExtraOptionalGetters", "schema",
@@ -127,7 +128,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaSingleFile() throws Exception {
+  void compileSchemaSingleFile() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_OUTPUT_DIR.getPath() });
@@ -135,7 +136,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaTwoFiles() throws Exception {
+  void compileSchemaTwoFiles() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString() + "/player.avsc", TEST_OUTPUT_DIR.getPath() });
@@ -144,7 +145,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemaFileAndDirectory() throws Exception {
+  void compileSchemaFileAndDirectory() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString(), TEST_OUTPUT_DIR.getPath() });
@@ -153,7 +154,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemasUsingString() throws Exception {
+  void compileSchemasUsingString() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "schema", TEST_INPUT_DIR.toString() + "/position.avsc",
         TEST_INPUT_DIR.toString() + "/player.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
@@ -162,7 +163,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileSchemasWithVariousFieldTypes() throws Exception {
+  void compileSchemasWithVariousFieldTypes() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "schema", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
         TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
@@ -170,7 +171,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testOrderingOfFlags() throws Exception {
+  void orderingOfFlags() throws Exception {
 
     // Order of Flags as per initial implementation
     doCompile(new String[] { "-encoding", "UTF-8", "-string", "-bigDecimal", "schema",
@@ -198,7 +199,7 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
-  public void testCompileProtocol() throws Exception {
+  void compileProtocol() throws Exception {
 
     doCompile(new String[] { "-encoding", "UTF-8", "protocol", TEST_INPUT_DIR.toString() + "/proto.avpr",
         TEST_OUTPUT_STRING_DIR.getPath() });
@@ -223,8 +224,8 @@ public class TestSpecificCompilerTool {
    * https://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
    */
   private static void assertFileMatch(File expected, File found) throws IOException {
-    Assert.assertEquals("Found file: " + found + " does not match expected file: " + expected, readFile(expected),
-        readFile(found));
+    assertEquals(readFile(expected), readFile(found),
+        "Found file: " + found + " does not match expected file: " + expected);
   }
 
   /**

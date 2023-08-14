@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ namespace Avro.Test.Utils
 {
     public class VersionTests
     {
-        // SemVer2.0 regex
+        // SemVer2.0 Regular Expression
         public static string SemVerRegex = @"^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$";
         
         [Test]
@@ -32,7 +32,7 @@ namespace Avro.Test.Utils
             // Avro library's assembly
             Assembly assembly = typeof(Schema).Assembly;
 
-            // Note: InformationalVersion contains pre-release tag if available (e.g. 1.x.y-beta.z)
+            // Note: InformationalVersion contains prerelease tag if available (e.g. 1.x.y-beta.z)
             string libraryVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
             // Check version is SmeVer 2.0 compliant

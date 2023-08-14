@@ -298,7 +298,7 @@ namespace Avro.Test.File
                 }
 
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
-                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                               string.Format(@"Generic object: {0} did not serialize/deserialize correctly", readFoos));
             }
         }
 
@@ -324,7 +324,7 @@ namespace Avro.Test.File
         /// <param name="schemaStr">schema</param>
         /// <param name="recs">initial records</param>
         /// <param name="appendRecs">append records</param>
-        /// <param name="codecType">innitial compression codec type</param>
+        /// <param name="codecType">initial compression codec type</param>
         [TestCaseSource(nameof(TestAppendGenericDataSource))]
         public void TestAppendGenericData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
         {
@@ -362,7 +362,7 @@ namespace Avro.Test.File
 
                 Assert.NotNull(readFoos);
                 Assert.AreEqual((recs.Length + appendRecs.Length) / 2, readFoos.Count,
-                    $"Generic object: {readFoos} did not serialise/deserialise correctly");
+                    $"Generic object: {readFoos} did not serialize/deserialize correctly");
             }
         }
 
@@ -432,7 +432,7 @@ namespace Avro.Test.File
                 }
 
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
-                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                               string.Format(@"Generic object: {0} did not serialize/deserialize correctly", readFoos));
             }
         }
 
@@ -812,7 +812,7 @@ namespace Avro.Test.File
                     }
                 }
 
-                // verify syncs wth seeks
+                // verify syncs with seeks
                 reader.Sync(0); // first sync
                 Assert.AreEqual(reader.PreviousSync(), syncs[0],
                               string.Format("Error syncing reader to position: {0}", syncs[0]));

@@ -52,8 +52,7 @@ namespace Avro
 
         private LogicalSchema(Schema baseSchema, string logicalTypeName,  PropertyMap props) : base(Type.Logical, props)
         {
-            if (null == baseSchema) throw new ArgumentNullException(nameof(baseSchema));
-            BaseSchema = baseSchema;
+            BaseSchema = baseSchema ?? throw new ArgumentNullException(nameof(baseSchema));
             LogicalTypeName = logicalTypeName;
             LogicalType = LogicalTypeFactory.Instance.GetFromLogicalSchema(this);
         }
@@ -74,6 +73,18 @@ namespace Avro
             if (null != Props)
                 Props.WriteJson(writer);
             writer.WriteEndObject();
+        }
+
+        /// <inheritdoc />
+        public override string Name
+        {
+            get { return BaseSchema.Name; }
+        }
+
+        /// <inheritdoc />
+        public override string Fullname
+        {
+            get { return BaseSchema.Fullname; }
         }
 
         /// <summary>

@@ -512,7 +512,7 @@
 //! `apache-avro` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
 //!
 //! 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
-//! 1. UUID using the [`uuid`](https://docs.rs/uuid/0.8.1/uuid) crate
+//! 1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
 //! 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 //! 1. Timestamp (milli and micro) as `i64`
 //! 1. Duration as a custom type with `months`, `days` and `millis` accessor methods each of which returns an `i32`
@@ -604,7 +604,7 @@
 //!     let mut record = Record::new(writer.schema()).unwrap();
 //!     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
 //!     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
-//!     record.put("uuid", uuid::Uuid::new_v4());
+//!     record.put("uuid", uuid::Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
 //!     record.put("date", Value::Date(1));
 //!     record.put("time_millis", Value::TimeMillis(2));
 //!     record.put("time_micros", Value::TimeMicros(3));
@@ -742,11 +742,20 @@ pub use de::from_value;
 pub use decimal::Decimal;
 pub use duration::{Days, Duration, Millis, Months};
 pub use error::Error;
-pub use reader::{from_avro_datum, Reader};
-pub use schema::Schema;
+pub use reader::{
+    from_avro_datum, from_avro_datum_schemata, read_marker, GenericSingleObjectReader, Reader,
+    SpecificSingleObjectReader,
+};
+pub use schema::{AvroSchema, Schema};
 pub use ser::to_value;
-pub use util::max_allocation_bytes;
-pub use writer::{to_avro_datum, Writer};
+pub use util::{max_allocation_bytes, set_serde_human_readable};
+pub use writer::{
+    to_avro_datum, to_avro_datum_schemata, GenericSingleObjectWriter, SpecificSingleObjectWriter,
+    Writer,
+};
+
+#[cfg(feature = "derive")]
+pub use apache_avro_derive::*;
 
 #[macro_use]
 extern crate log;
@@ -761,6 +770,7 @@ mod tests {
         types::{Record, Value},
         Codec, Reader, Schema, Writer,
     };
+    use pretty_assertions::assert_eq;
 
     //TODO: move where it fits better
     #[test]
@@ -853,61 +863,6 @@ mod tests {
                 ("c".to_string(), Value::Enum(2, "clubs".to_string())),
             ])
         );
-        assert!(reader.next().is_none());
-    }
-
-    //TODO: move where it fits better
-    #[test]
-    fn test_enum_resolution() {
-        let writer_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "clubs", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let reader_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "ninja", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let writer_schema = Schema::parse_str(writer_raw_schema).unwrap();
-        let reader_schema = Schema::parse_str(reader_raw_schema).unwrap();
-        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
-        let mut record = Record::new(writer.schema()).unwrap();
-        record.put("a", 27i64);
-        record.put("b", "foo");
-        record.put("c", "clubs");
-        writer.append(record).unwrap();
-        let input = writer.into_inner().unwrap();
-        let mut reader = Reader::with_schema(&reader_schema, &input[..]).unwrap();
-        assert!(reader.next().unwrap().is_err());
         assert!(reader.next().is_none());
     }
 

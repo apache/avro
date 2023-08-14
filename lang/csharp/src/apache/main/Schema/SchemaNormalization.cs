@@ -24,13 +24,13 @@ using System.Text;
 namespace Avro
 {
     /// <summary>
-    /// Collection of static methods for generating the cannonical form of schemas.
+    /// Collection of static methods for generating the canonical form of schemas.
     /// </summary>
     public static class SchemaNormalization
     {
         /// <summary>
         /// Obsolete: This will be removed from the public API in a future version.
-        /// This should be a private const field, similar to the Java implementation. It appears
+        /// This should be a private constant field, similar to the Java implementation. It appears
         /// that this was originally exposed for unit tests. Unit tests should hard-code this value
         /// rather than access it here.
         ///
@@ -71,7 +71,7 @@ namespace Avro
         /// not recognized and an
         /// <code>ArgumentException</code> is thrown
         /// </para>
-        /// <para> Recommended Avro practice dictiates that
+        /// <para> Recommended Avro practice dictates that
         /// <code>"CRC-64-AVRO"</code> is used for 64-bit fingerprints,
         /// <code>"MD5"</code> is used for 128-bit fingerprints, and
         /// <code>"SHA-256"</code> is used for 256-bit fingerprints.

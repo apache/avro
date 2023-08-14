@@ -17,10 +17,11 @@
  */
 package org.apache.avro;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -42,19 +43,19 @@ import org.apache.avro.test.MD5;
 public class TestCompare {
 
   @Test
-  public void testNull() throws Exception {
+  void testNull() throws Exception {
     Schema schema = new Schema.Parser().parse("\"null\"");
     byte[] b = render(null, schema, new GenericDatumWriter<>());
     assertEquals(0, BinaryData.compare(b, 0, b, 0, schema));
   }
 
   @Test
-  public void testBoolean() throws Exception {
+  void testBoolean() throws Exception {
     check("\"boolean\"", Boolean.FALSE, Boolean.TRUE);
   }
 
   @Test
-  public void testString() throws Exception {
+  void string() throws Exception {
     check("\"string\"", new Utf8(""), new Utf8("a"));
     check("\"string\"", new Utf8("a"), new Utf8("b"));
     check("\"string\"", new Utf8("a"), new Utf8("ab"));
@@ -62,38 +63,38 @@ public class TestCompare {
   }
 
   @Test
-  public void testBytes() throws Exception {
+  void bytes() throws Exception {
     check("\"bytes\"", ByteBuffer.wrap(new byte[] {}), ByteBuffer.wrap(new byte[] { 1 }));
     check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1 }), ByteBuffer.wrap(new byte[] { 2 }));
     check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1, 2 }), ByteBuffer.wrap(new byte[] { 2 }));
   }
 
   @Test
-  public void testInt() throws Exception {
+  void testInt() throws Exception {
     check("\"int\"", -1, 0);
     check("\"int\"", 0, 1);
   }
 
   @Test
-  public void testLong() throws Exception {
+  void testLong() throws Exception {
     check("\"long\"", 11L, 12L);
     check("\"long\"", (long) -1, 1L);
   }
 
   @Test
-  public void testFloat() throws Exception {
+  void testFloat() throws Exception {
     check("\"float\"", 1.1f, 1.2f);
     check("\"float\"", (float) -1.1, 1.0f);
   }
 
   @Test
-  public void testDouble() throws Exception {
+  void testDouble() throws Exception {
     check("\"double\"", 1.2, 1.3);
     check("\"double\"", -1.2, 1.3);
   }
 
   @Test
-  public void testArray() throws Exception {
+  void array() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
     Schema schema = new Schema.Parser().parse(json);
     GenericArray<Long> a1 = new GenericData.Array<>(1, schema);
@@ -105,7 +106,7 @@ public class TestCompare {
   }
 
   @Test
-  public void testRecord() throws Exception {
+  void record() throws Exception {
     String fields = " \"fields\":[" + "{\"name\":\"f\",\"type\":\"int\",\"order\":\"ignore\"},"
         + "{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"}," + "{\"name\":\"h\",\"type\":\"int\"}]}";
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\"," + fields;
@@ -134,14 +135,14 @@ public class TestCompare {
   }
 
   @Test
-  public void testEnum() throws Exception {
+  void testEnum() throws Exception {
     String json = "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
     Schema schema = new Schema.Parser().parse(json);
     check(json, new GenericData.EnumSymbol(schema, "A"), new GenericData.EnumSymbol(schema, "B"));
   }
 
   @Test
-  public void testFixed() throws Exception {
+  void fixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
     Schema schema = new Schema.Parser().parse(json);
     check(json, new GenericData.Fixed(schema, new byte[] { (byte) 'a' }),
@@ -149,14 +150,14 @@ public class TestCompare {
   }
 
   @Test
-  public void testUnion() throws Exception {
+  void union() throws Exception {
     check("[\"string\", \"long\"]", new Utf8("a"), new Utf8("b"), false);
     check("[\"string\", \"long\"]", 1L, 2L, false);
     check("[\"string\", \"long\"]", new Utf8("a"), 1L, false);
   }
 
   @Test
-  public void testSpecificRecord() throws Exception {
+  void specificRecord() throws Exception {
     TestRecord s1 = new TestRecord();
     TestRecord s2 = new TestRecord();
     s1.setName("foo");

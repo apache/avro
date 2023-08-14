@@ -58,25 +58,45 @@ public class TestBinaryDecoder {
     return Arrays.asList(new Object[][] { { true }, { false }, });
   }
 
-  private Decoder newDecoderWithNoData() throws IOException {
+  private Decoder newDecoderWithNoData() {
     return newDecoder(new byte[0]);
   }
 
-  private Decoder newDecoder(byte[] bytes, int start, int len) throws IOException {
-    return factory.binaryDecoder(bytes, start, len, null);
-
+  private BinaryDecoder newDecoder(byte[] bytes, int start, int len) {
+    return this.newDecoder(bytes, start, len, null);
   }
 
-  private Decoder newDecoder(InputStream in) {
+  private BinaryDecoder newDecoder(byte[] bytes, int start, int len, BinaryDecoder reuse) {
     if (useDirect) {
-      return factory.directBinaryDecoder(in, null);
+      final ByteArrayInputStream input = new ByteArrayInputStream(bytes, start, len);
+      return factory.directBinaryDecoder(input, reuse);
     } else {
-      return factory.binaryDecoder(in, null);
+      return factory.binaryDecoder(bytes, start, len, reuse);
     }
   }
 
-  private Decoder newDecoder(byte[] bytes) throws IOException {
-    return factory.binaryDecoder(bytes, null);
+  private BinaryDecoder newDecoder(InputStream in) {
+    return this.newDecoder(in, null);
+  }
+
+  private BinaryDecoder newDecoder(InputStream in, BinaryDecoder reuse) {
+    if (useDirect) {
+      return factory.directBinaryDecoder(in, reuse);
+    } else {
+      return factory.binaryDecoder(in, reuse);
+    }
+  }
+
+  private BinaryDecoder newDecoder(byte[] bytes, BinaryDecoder reuse) {
+    if (this.useDirect) {
+      return this.factory.directBinaryDecoder(new ByteArrayInputStream(bytes), reuse);
+    } else {
+      return factory.binaryDecoder(bytes, reuse);
+    }
+  }
+
+  private BinaryDecoder newDecoder(byte[] bytes) {
+    return this.newDecoder(bytes, null);
   }
 
   /** Verify EOFException throw at EOF */
@@ -152,8 +172,8 @@ public class TestBinaryDecoder {
 
   private static byte[] data = null;
   private static Schema schema = null;
-  private static int count = 200;
-  private static ArrayList<Object> records = new ArrayList<>(count);
+  private static final int count = 200;
+  private static final ArrayList<Object> records = new ArrayList<>(count);
 
   @BeforeClass
   public static void generateData() throws IOException {
@@ -197,10 +217,10 @@ public class TestBinaryDecoder {
 
     Decoder fromOffsetArray = newDecoder(data2, 15, data.length);
 
-    BinaryDecoder initOnInputStream = factory.binaryDecoder(new byte[50], 0, 30, null);
-    initOnInputStream = factory.binaryDecoder(is2, initOnInputStream);
-    BinaryDecoder initOnArray = factory.binaryDecoder(is3, null);
-    initOnArray = factory.binaryDecoder(data, 0, data.length, initOnArray);
+    BinaryDecoder initOnInputStream = newDecoder(new byte[50], 0, 30);
+    initOnInputStream = newDecoder(is2, initOnInputStream);
+    BinaryDecoder initOnArray = this.newDecoder(is3, null);
+    initOnArray = this.newDecoder(data, initOnArray);
 
     for (Object datum : records) {
       Assert.assertEquals("InputStream based BinaryDecoder result does not match", datum,
@@ -217,22 +237,22 @@ public class TestBinaryDecoder {
 
   @Test
   public void testInputStreamProxy() throws IOException {
-    Decoder d = newDecoder(data);
-    if (d instanceof BinaryDecoder) {
-      BinaryDecoder bd = (BinaryDecoder) d;
+    BinaryDecoder d = newDecoder(data);
+    if (d != null) {
+      BinaryDecoder bd = d;
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
-      bd = factory.binaryDecoder(data, bd);
+      bd = this.newDecoder(data, bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamSkips(test, check);
       // with input stream sources
-      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = newDecoder(new ByteArrayInputStream(data), bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamReads(test, check);
-      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = newDecoder(new ByteArrayInputStream(data), bd);
       test = bd.inputStream();
       check = new ByteArrayInputStream(data);
       validateInputStreamSkips(test, check);
@@ -247,17 +267,17 @@ public class TestBinaryDecoder {
       InputStream test = bd.inputStream();
       InputStream check = new ByteArrayInputStream(data);
       // detach input stream and decoder from old source
-      factory.binaryDecoder(new byte[56], null);
-      InputStream bad = bd.inputStream();
-      InputStream check2 = new ByteArrayInputStream(data);
-      validateInputStreamReads(test, check);
-      Assert.assertFalse(bad.read() == check2.read());
+      this.newDecoder(new byte[56]);
+      try (InputStream bad = bd.inputStream(); InputStream check2 = new ByteArrayInputStream(data)) {
+        validateInputStreamReads(test, check);
+        Assert.assertNotEquals(bad.read(), check2.read());
+      }
     }
   }
 
   @Test
   public void testInputStreamPartiallyUsed() throws IOException {
-    BinaryDecoder bd = factory.binaryDecoder(new ByteArrayInputStream(data), null);
+    BinaryDecoder bd = this.newDecoder(new ByteArrayInputStream(data));
     InputStream test = bd.inputStream();
     InputStream check = new ByteArrayInputStream(data);
     // triggers buffer fill if unused and tests isEnd()
@@ -317,7 +337,7 @@ public class TestBinaryDecoder {
   public void testBadIntEncoding() throws IOException {
     byte[] badint = new byte[5];
     Arrays.fill(badint, (byte) 0xff);
-    Decoder bd = factory.binaryDecoder(badint, null);
+    Decoder bd = this.newDecoder(badint);
     String message = "";
     try {
       bd.readInt();
@@ -331,7 +351,7 @@ public class TestBinaryDecoder {
   public void testBadLongEncoding() throws IOException {
     byte[] badint = new byte[10];
     Arrays.fill(badint, (byte) 0xff);
-    Decoder bd = factory.binaryDecoder(badint, null);
+    Decoder bd = this.newDecoder(badint);
     String message = "";
     try {
       bd.readLong();
@@ -344,7 +364,7 @@ public class TestBinaryDecoder {
   @Test
   public void testNegativeStringLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
-    Decoder bd = factory.binaryDecoder(bad, null);
+    Decoder bd = this.newDecoder(bad);
 
     Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, bd::readString);
   }
@@ -353,7 +373,7 @@ public class TestBinaryDecoder {
   public void testStringMaxArraySize() throws IOException {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
-    Decoder bd = factory.binaryDecoder(bad, null);
+    Decoder bd = this.newDecoder(bad);
 
     Assert.assertThrows("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
         UnsupportedOperationException.class, bd::readString);
@@ -362,29 +382,29 @@ public class TestBinaryDecoder {
   @Test
   public void testNegativeBytesLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
-    Decoder bd = factory.binaryDecoder(bad, null);
+    Decoder bd = this.newDecoder(bad);
 
     Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, () -> bd.readBytes(null));
   }
 
   @Test
-  public void testBytesMaxArraySize() throws IOException {
+  public void testBytesMaxArraySize() {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
-    Decoder bd = factory.binaryDecoder(bad, null);
+    Decoder bd = this.newDecoder(bad);
 
     Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
         UnsupportedOperationException.class, () -> bd.readBytes(null));
   }
 
   @Test
-  public void testBytesMaxLengthProperty() throws IOException {
+  public void testBytesMaxLengthProperty() {
     int maxLength = 128;
     byte[] bad = new byte[10];
     BinaryData.encodeLong(maxLength + 1, bad, 0);
     try {
       System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
-      Decoder bd = factory.binaryDecoder(bad, null);
+      Decoder bd = this.newDecoder(bad);
 
       Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed", AvroRuntimeException.class,
           () -> bd.readBytes(null));
@@ -397,7 +417,7 @@ public class TestBinaryDecoder {
   public void testLongLengthEncoding() throws IOException {
     // Size equivalent to Integer.MAX_VALUE + 1
     byte[] bad = new byte[] { (byte) -128, (byte) -128, (byte) -128, (byte) -128, (byte) 16 };
-    Decoder bd = factory.binaryDecoder(bad, null);
+    Decoder bd = this.newDecoder(bad);
     bd.readString();
   }
 
@@ -443,7 +463,7 @@ public class TestBinaryDecoder {
           throw e;
         }
       }
-      bd = factory.binaryDecoder(new ByteArrayInputStream(data), bd);
+      bd = this.newDecoder(new ByteArrayInputStream(data), bd);
       skipGenerated(bd);
       try {
         Assert.assertTrue(bd.isEnd());
@@ -476,7 +496,7 @@ public class TestBinaryDecoder {
     } catch (EOFException e) {
       eof = e;
     }
-    Assert.assertTrue(null != eof);
+    Assert.assertNotNull(eof);
   }
 
   @Test(expected = EOFException.class)

@@ -17,9 +17,9 @@
  */
 package org.apache.avro.generic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -38,13 +38,13 @@ import org.apache.avro.Node;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import test.StringablesRecord;
 
 /** Unit test for performing a deep copy of an object with a schema */
 public class TestDeepCopy {
   @Test
-  public void testDeepCopy() {
+  void deepCopy() {
     // Set all non-default fields in an Interop instance:
     Interop.Builder interopBuilder = Interop.newBuilder();
     interopBuilder.setArrayField(Arrays.asList(1.1, 1.2, 1.3, 1.4));
@@ -90,14 +90,14 @@ public class TestDeepCopy {
           && (field.schema().getType() != Type.LONG) && (field.schema().getType() != Type.FLOAT)
           && (field.schema().getType() != Type.DOUBLE) && (field.schema().getType() != Type.STRING)) {
 
-        assertFalse("Field " + field.name() + " is same instance in deep copy",
-            interop.get(field.pos()) == GenericData.get().deepCopy(field.schema(), interop.get(field.pos())));
+        assertFalse(interop.get(field.pos()) == GenericData.get().deepCopy(field.schema(), interop.get(field.pos())),
+            "Field " + field.name() + " is same instance in deep copy");
       }
     }
   }
 
   @Test
-  public void testJavaClassDeepCopy() {
+  void javaClassDeepCopy() {
     // Test java-class deep copy. See AVRO-2438
     StringablesRecord.Builder builder = StringablesRecord.newBuilder();
     builder.setValue(new BigDecimal("1314.11"));

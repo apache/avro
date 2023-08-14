@@ -16,12 +16,19 @@
 // under the License.
 
 use crate::{
-    schema::{NamesRef, Namespace, ResolvedSchema, Schema, SchemaKind},
+    schema::{
+        DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
+        Schema, SchemaKind,
+    },
     types::{Value, ValueKind},
     util::{zig_i32, zig_i64},
     AvroResult, Error,
 };
-use std::convert::{TryFrom, TryInto};
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+};
 
 /// Encode a `Value` into avro format.
 ///
@@ -47,24 +54,24 @@ fn encode_int(i: i32, buffer: &mut Vec<u8>) {
     zig_i32(i, buffer)
 }
 
-pub(crate) fn encode_internal(
+pub(crate) fn encode_internal<S: Borrow<Schema>>(
     value: &Value,
     schema: &Schema,
-    names: &NamesRef,
+    names: &HashMap<Name, S>,
     enclosing_namespace: &Namespace,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
     if let Schema::Ref { ref name } = schema {
         let fully_qualified_name = name.fully_qualified_name(enclosing_namespace);
-        let resolved = *names
+        let resolved = names
             .get(&fully_qualified_name)
             .ok_or(Error::SchemaResolutionError(fully_qualified_name))?;
-        return encode_internal(value, resolved, names, enclosing_namespace, buffer);
+        return encode_internal(value, resolved.borrow(), names, enclosing_namespace, buffer);
     }
 
     match value {
         Value::Null => (),
-        Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
+        Value::Boolean(b) => buffer.push(u8::from(*b)),
         // Pattern | Pattern here to signify that these _must_ have the same encoding.
         Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
         Value::Long(i)
@@ -74,8 +81,8 @@ pub(crate) fn encode_internal(
         Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Decimal(decimal) => match schema {
-            Schema::Decimal { inner, .. } => match *inner.clone() {
-                Schema::Fixed { size, .. } => {
+            Schema::Decimal(DecimalSchema { inner, .. }) => match *inner.clone() {
+                Schema::Fixed(FixedSchema { size, .. }) => {
                     let bytes = decimal.to_sign_extended_bytes_with_len(size).unwrap();
                     let num_bytes = bytes.len();
                     if num_bytes != size {
@@ -101,7 +108,12 @@ pub(crate) fn encode_internal(
             let slice: [u8; 12] = duration.into();
             buffer.extend_from_slice(&slice);
         }
-        Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
+        Value::Uuid(uuid) => encode_bytes(
+            // we need the call .to_string() to properly convert ASCII to UTF-8
+            #[allow(clippy::unnecessary_to_owned)]
+            &uuid.to_string(),
+            buffer,
+        ),
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
             Schema::Fixed { .. } => buffer.extend(bytes),
@@ -113,10 +125,10 @@ pub(crate) fn encode_internal(
             }
         },
         Value::String(s) => match *schema {
-            Schema::String => {
+            Schema::String | Schema::Uuid => {
                 encode_bytes(s, buffer);
             }
-            Schema::Enum { ref symbols, .. } => {
+            Schema::Enum(EnumSchema { ref symbols, .. }) => {
                 if let Some(index) = symbols.iter().position(|item| item == s) {
                     encode_int(index as i32, buffer);
                 } else {
@@ -140,7 +152,7 @@ pub(crate) fn encode_internal(
                     .get(*idx as usize)
                     .expect("Invalid Union validation occurred");
                 encode_long(*idx as i64, buffer);
-                encode_internal(&*item, inner_schema, names, enclosing_namespace, buffer)?;
+                encode_internal(item, inner_schema, names, enclosing_namespace, buffer)?;
             } else {
                 error!("invalid schema type for Union: {:?}", schema);
                 return Err(Error::EncodeValueAsSchemaError {
@@ -184,18 +196,35 @@ pub(crate) fn encode_internal(
                 });
             }
         }
-        Value::Record(fields) => {
-            if let Schema::Record {
+        Value::Record(value_fields) => {
+            if let Schema::Record(RecordSchema {
                 ref name,
                 fields: ref schema_fields,
                 ..
-            } = *schema
+            }) = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for (i, &(_, ref value)) in fields.iter().enumerate() {
+
+                let mut lookup = HashMap::new();
+                value_fields.iter().for_each(|(name, field)| {
+                    lookup.insert(name, field);
+                });
+
+                for schema_field in schema_fields.iter() {
+                    let name = &schema_field.name;
+                    let value = match lookup.get(name) {
+                        Some(value) => value,
+                        None => {
+                            return Err(Error::NoEntryInLookupTable(
+                                name.clone(),
+                                format!("{lookup:?}"),
+                            ));
+                        }
+                    };
+
                     encode_internal(
                         value,
-                        &schema_fields[i].schema,
+                        &schema_field.schema,
                         names,
                         &record_namespace,
                         buffer,
@@ -223,7 +252,9 @@ pub fn encode_to_vec(value: &Value, schema: &Schema) -> AvroResult<Vec<u8>> {
 #[allow(clippy::expect_fun_call)]
 pub(crate) mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::collections::HashMap;
+
     pub(crate) fn success(value: &Value, schema: &Schema) -> String {
         format!(
             "Value: {:?}\n should encode with schema:\n{:?}",
@@ -803,5 +834,15 @@ pub(crate) mod tests {
         encode(&outer_record_variation_3, &schema, &mut buf)
             .expect(&success(&outer_record_variation_3, &schema));
         assert!(!buf.is_empty());
+    }
+
+    #[test]
+    fn test_avro_3585_encode_uuids() {
+        let value = Value::String(String::from("00000000-0000-0000-0000-000000000000"));
+        let schema = Schema::Uuid;
+        let mut buffer = Vec::new();
+        let encoded = encode(&value, &schema, &mut buffer);
+        assert!(encoded.is_ok());
+        assert!(!buffer.is_empty());
     }
 }

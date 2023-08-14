@@ -319,15 +319,14 @@ namespace Avro.Generic
 
             for (int i = 0; i < writerSchema.Count; i++)
             {
-                var writerBranch = writerSchema[i];
+                Schema writerBranch = writerSchema[i];
 
-                if (readerSchema is UnionSchema)
+                if (readerSchema is UnionSchema unionReader)
                 {
-                    var unionReader = (UnionSchema) readerSchema;
-                    var readerBranch = unionReader.MatchingBranch(writerBranch);
+                    int readerBranch = unionReader.MatchingBranch(writerBranch);
                     if (readerBranch == -1)
                     {
-                        lookup[i] = (r, d) => { throw new AvroException( "No matching schema for " + writerBranch + " in " + unionReader ); };
+                        lookup[i] = (r, d) => { throw new AvroException("No matching schema for " + writerBranch + " in " + unionReader); };
                     }
                     else
                     {
@@ -338,7 +337,7 @@ namespace Avro.Generic
                 {
                     if (!readerSchema.CanRead(writerBranch))
                     {
-                        lookup[i] = (r, d) => { throw new AvroException( "Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema ); };
+                        lookup[i] = (r, d) => { throw new AvroException("Schema mismatch Reader: " + ReaderSchema + ", writer: " + WriterSchema); };
                     }
                     else
                     {
@@ -619,7 +618,7 @@ namespace Avro.Generic
             /// Hint that the array should be able to handle at least targetSize elements. The array
             /// is not required to be resized
             /// </summary>
-            /// <param name="array">Array object who needs to support targetSize elements. This is guaranteed to be somthing returned by
+            /// <param name="array">Array object who needs to support targetSize elements. This is guaranteed to be something returned by
             /// a previous call to CreateArray().</param>
             /// <param name="targetSize">The new size.</param>
             void EnsureSize(ref object array, int targetSize);
@@ -627,7 +626,7 @@ namespace Avro.Generic
             /// <summary>
             /// Resizes the array to the new value.
             /// </summary>
-            /// <param name="array">Array object whose size is required. This is guaranteed to be somthing returned by
+            /// <param name="array">Array object whose size is required. This is guaranteed to be something returned by
             /// a previous call to CreateArray().</param>
             /// <param name="targetSize">The new size.</param>
             void Resize(ref object array, int targetSize);

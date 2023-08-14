@@ -59,7 +59,7 @@ public class BinaryDecoder extends Decoder {
   static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
 
   private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
-  private final int maxBytesLength;
+  protected final int maxBytesLength;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -329,9 +329,10 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
+    long length = readLong();
     if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
+      throw new UnsupportedOperationException(
+          "Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes in Java library");
     }
     if (length > maxBytesLength) {
       throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
@@ -344,10 +345,10 @@ public class BinaryDecoder extends Decoder {
       result = old;
       ((Buffer) result).clear();
     } else {
-      result = ByteBuffer.allocate(length);
+      result = ByteBuffer.allocate((int) length);
     }
-    doReadBytes(result.array(), result.position(), length);
-    ((Buffer) result).limit(length);
+    doReadBytes(result.array(), result.position(), (int) length);
+    ((Buffer) result).limit((int) length);
     return result;
   }
 

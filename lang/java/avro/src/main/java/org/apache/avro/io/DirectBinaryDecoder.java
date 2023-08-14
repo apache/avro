@@ -20,9 +20,9 @@ package org.apache.avro.io;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.ByteBufferInputStream;
 
@@ -39,17 +39,31 @@ class DirectBinaryDecoder extends BinaryDecoder {
   private InputStream in;
 
   private class ByteReader {
-    public ByteBuffer read(ByteBuffer old, int length) throws IOException {
-      ByteBuffer result;
+    public ByteBuffer read(ByteBuffer old, long length) throws IOException {
+      this.checkLength(length);
+      final ByteBuffer result;
       if (old != null && length <= old.capacity()) {
         result = old;
-        ((Buffer) result).clear();
+        result.clear();
       } else {
-        result = ByteBuffer.allocate(length);
+        result = ByteBuffer.allocate((int) length);
       }
-      doReadBytes(result.array(), result.position(), length);
-      ((Buffer) result).limit(length);
+      doReadBytes(result.array(), result.position(), (int) length);
+      result.limit((int) length);
       return result;
+    }
+
+    protected final void checkLength(long length) {
+      if (length < 0L) {
+        throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
+      }
+      if (length > MAX_ARRAY_SIZE) {
+        throw new UnsupportedOperationException(
+            "Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes in Java library");
+      }
+      if (length > maxBytesLength) {
+        throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
+      }
     }
   }
 
@@ -61,11 +75,12 @@ class DirectBinaryDecoder extends BinaryDecoder {
     }
 
     @Override
-    public ByteBuffer read(ByteBuffer old, int length) throws IOException {
+    public ByteBuffer read(ByteBuffer old, long length) throws IOException {
+      this.checkLength(length);
       if (old != null) {
         return super.read(old, length);
       } else {
-        return bbi.readBuffer(length);
+        return bbi.readBuffer((int) length);
       }
     }
 
@@ -156,7 +171,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
 
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
-    int length = readInt();
+    long length = readLong();
     return byteReader.read(old, length);
   }
 

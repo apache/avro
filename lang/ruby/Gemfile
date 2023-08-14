@@ -35,5 +35,5 @@ gem 'webrick'
 gem 'memory_profiler'
 
 # next major version will enable new cops
-gem 'rubocop', '~> 1.15'
+gem 'rubocop', ['>= 1.15', '< 1.31']
 gem 'rdoc'

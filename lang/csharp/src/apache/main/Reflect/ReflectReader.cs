@@ -72,7 +72,7 @@ namespace Avro.Reflect
         /// Generic read function
         /// </summary>
         /// <param name="reuse">object to store data read</param>
-        /// <param name="dec">decorder to use for reading data</param>
+        /// <param name="dec">decoder to use for reading data</param>
         /// <returns></returns>
         public T Read(T reuse, Decoder dec)
         {
@@ -82,7 +82,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Generic read function
         /// </summary>
-        /// <param name="dec">decorder to use for reading data</param>
+        /// <param name="dec">decoder to use for reading data</param>
         /// <returns></returns>
         public T Read(Decoder dec)
         {

@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.EnumSet;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -71,11 +72,11 @@ public class EncoderFactory {
    *             likely to improve performance but may be useful for the
    *             downstream OutputStream.
    * @return This factory, to enable method chaining:
-   * 
+   *
    *         <pre>
    *         EncoderFactory factory = new EncoderFactory().configureBufferSize(4096);
    *         </pre>
-   * 
+   *
    * @see #binaryEncoder(OutputStream, BinaryEncoder)
    */
   public EncoderFactory configureBufferSize(int size) {
@@ -90,7 +91,7 @@ public class EncoderFactory {
   /**
    * Returns this factory's configured default buffer size. Used when creating
    * Encoder instances that buffer writes.
-   * 
+   *
    * @see #configureBufferSize(int)
    * @see #binaryEncoder(OutputStream, BinaryEncoder)
    * @return The preferred buffer size, in bytes.
@@ -109,11 +110,11 @@ public class EncoderFactory {
    *             outside this range are set to the nearest value in the range. The
    *             encoder will require at least this amount of memory.
    * @return This factory, to enable method chaining:
-   * 
+   *
    *         <pre>
    *         EncoderFactory factory = new EncoderFactory().configureBlockSize(8000);
    *         </pre>
-   * 
+   *
    * @see #blockingBinaryEncoder(OutputStream, BinaryEncoder)
    */
   public EncoderFactory configureBlockSize(int size) {
@@ -131,7 +132,7 @@ public class EncoderFactory {
    * #blockingBinaryEncoder(OutputStream, BinaryEncoder) will have block buffers
    * of this size.
    * <p/>
-   * 
+   *
    * @see #configureBlockSize(int)
    * @see #blockingBinaryEncoder(OutputStream, BinaryEncoder)
    * @return The preferred block size, in bytes.
@@ -295,6 +296,38 @@ public class EncoderFactory {
    */
   public JsonEncoder jsonEncoder(Schema schema, OutputStream out, boolean pretty) throws IOException {
     return new JsonEncoder(schema, out, pretty);
+  }
+
+  /**
+   * Creates a {@link JsonEncoder} using the OutputStream provided for writing
+   * data conforming to the Schema provided with optional pretty printing.
+   * <p/>
+   * {@link JsonEncoder} buffers its output. Data may not appear on the underlying
+   * OutputStream until {@link Encoder#flush()} is called.
+   * <p/>
+   * {@link JsonEncoder} is not thread-safe.
+   *
+   * @param schema    The Schema for data written to this JsonEncoder. Cannot be
+   *                  null.
+   * @param out       The OutputStream to write to. Cannot be null.
+   * @param pretty    Pretty print encoding.
+   * @param autoflush Whether to Automatically flush the data to storage, default
+   *                  is true controls the underlying FLUSH_PASSED_TO_STREAM
+   *                  feature of JsonGenerator
+   * @return A JsonEncoder configured with <i>out</i>, <i>schema</i> and
+   *         <i>pretty</i>
+   * @throws IOException
+   */
+  public JsonEncoder jsonEncoder(Schema schema, OutputStream out, boolean pretty, boolean autoflush)
+      throws IOException {
+    EnumSet<JsonEncoder.JsonOptions> options = EnumSet.noneOf(JsonEncoder.JsonOptions.class);
+    if (pretty) {
+      options.add(JsonEncoder.JsonOptions.Pretty);
+    }
+    if (!autoflush) {
+      options.add(JsonEncoder.JsonOptions.NoFlushStream);
+    }
+    return new JsonEncoder(schema, out, options);
   }
 
   /**

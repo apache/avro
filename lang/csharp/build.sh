@@ -42,7 +42,7 @@ do
 
     perf)
       pushd ./src/apache/perf/
-      dotnet run --configuration Release --framework net6.0
+      dotnet run --configuration Release --framework net7.0
       ;;
 
     dist)
@@ -68,7 +68,7 @@ do
 
       # build the tarball
       mkdir -p ${ROOT}/dist/csharp
-      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
+      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen codec LICENSE NOTICE)
 
       # build documentation
       doxygen Avro.dox
@@ -77,7 +77,7 @@ do
       ;;
 
     interop-data-generate)
-      dotnet run --project src/apache/test/Avro.test.csproj --framework net6.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      dotnet run --project src/apache/test/Avro.test.csproj --framework net7.0 ../../share/test/schemas/interop.avsc ../../build/interop/data
       ;;
 
     interop-data-test)

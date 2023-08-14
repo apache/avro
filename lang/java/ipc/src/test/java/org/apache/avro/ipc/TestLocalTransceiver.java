@@ -17,7 +17,7 @@
  */
 package org.apache.avro.ipc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
@@ -27,7 +27,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestLocalTransceiver {
 
@@ -48,7 +48,7 @@ public class TestLocalTransceiver {
   }
 
   @Test
-  public void testSingleRpc() throws Exception {
+  void singleRpc() throws Exception {
     Transceiver t = new LocalTransceiver(new TestResponder(protocol));
     GenericRecord params = new GenericData.Record(protocol.getMessages().get("m").getRequest());
     params.put("x", new Utf8("hello"));

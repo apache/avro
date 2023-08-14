@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
+import static org.apache.avro.specific.SpecificData.RESERVED_WORD_ESCAPE_CHAR;
 
 /**
  * Generate specific Java interfaces and classes for protocols and schemas.
@@ -126,6 +127,10 @@ public class SpecificCompiler {
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = Collections.emptyList();
+
+  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
+
+  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
 
   /*
    * Used in the record.vm template.
@@ -663,9 +668,7 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema, Schema> types = new LinkedHashMap<>();
 
-    for (Map.Entry<String, Object> a : p.getObjectProps().entrySet()) {
-      newP.addProp(a.getKey(), a.getValue());
-    }
+    p.forEachProperty(newP::addProp);
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<>();
@@ -1058,7 +1061,7 @@ public class SpecificCompiler {
    * Utility for template use. Escapes comment end with HTML entities.
    */
   public static String escapeForJavadoc(String s) {
-    return s.replace("*/", "*&#47;");
+    return s.replace("*/", "*&#47;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   /**
@@ -1126,7 +1129,7 @@ public class SpecificCompiler {
     }
     if (reservedWords.contains(word) || (isMethod && reservedWords
         .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
-      return word + "$";
+      return word + RESERVED_WORD_ESCAPE_CHAR;
     }
     return word;
   }
@@ -1322,5 +1325,21 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String getSchemaParentClass(boolean isError) {
+    if (isError) {
+      return this.errorSpecificClass;
+    } else {
+      return this.recordSpecificClass;
+    }
+  }
+
+  public void setRecordSpecificClass(final String recordSpecificClass) {
+    this.recordSpecificClass = recordSpecificClass;
+  }
+
+  public void setErrorSpecificClass(final String errorSpecificClass) {
+    this.errorSpecificClass = errorSpecificClass;
   }
 }

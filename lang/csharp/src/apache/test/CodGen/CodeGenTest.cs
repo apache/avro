@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
@@ -63,7 +64,7 @@ namespace Avro.Test.CodeGen
         [TestCase("a.b.int", "a.b.@int")]
         [TestCase("int.long.while", "@int.@long.@while")] // Reserved keywords
         [TestCase("a.value.partial", "a.value.partial")] // Contextual keywords
-        [TestCase("a.value.b.int.c.while.longpartial", "a.value.b.@int.c.@while.longpartial")] // Rseserved and contextual keywords
+        [TestCase("a.value.b.int.c.while.longpartial", "a.value.b.@int.c.@while.longpartial")] // Reserved and contextual keywords
         public void TestMangleUnMangle(string input, string mangled)
         {
             // Mangle
@@ -80,6 +81,33 @@ namespace Avro.Test.CodeGen
             {
                 Protocol protocol = null;
                 Assert.Throws<ArgumentNullException>(() => this.GenerateNames(protocol));
+            }
+
+
+            [Test]
+            public void GetTypesShouldReturnTypes()
+            {
+                AddSchema(@"
+{
+  ""name"": ""PlanetEnum"",
+  ""namespace"": ""Space.Models"",
+  ""type"": ""enum"",
+  ""symbols"": [
+    ""Earth"",
+    ""Mars"",
+    ""Jupiter"",
+    ""Saturn"",
+    ""Uranus"",
+    ""Neptune""
+  ]
+}
+");
+                GenerateCode();
+                var types = GetTypes();
+                Assert.That(types.Count, Is.EqualTo(1));
+                bool hasPlanetEnumCode = types.TryGetValue("PlanetEnum", out string planetEnumCode);
+                Assert.That(hasPlanetEnumCode);
+                Assert.That(Regex.Matches(planetEnumCode, "public enum PlanetEnum").Count, Is.EqualTo(1));
             }
         }
     }

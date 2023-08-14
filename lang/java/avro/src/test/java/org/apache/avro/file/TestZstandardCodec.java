@@ -17,19 +17,20 @@
  */
 package org.apache.avro.file;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestZstandardCodec {
 
   @Test
-  public void testZstandardToStringAndName() throws IOException {
+  void zstandardToStringAndName() throws IOException {
     Codec codec = CodecFactory.zstandardCodec(3).createInstance();
     assertTrue(codec instanceof ZstandardCodec);
-    assertTrue(codec.getName().equals("zstandard"));
-    assertTrue(codec.toString().equals("zstandard[3]"));
+    assertEquals(codec.getName(), "zstandard");
+    assertEquals(codec.toString(), "zstandard[3]");
   }
 }

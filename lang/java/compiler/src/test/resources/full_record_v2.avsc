@@ -24,6 +24,7 @@
   }, {
     "name" : "h",
     "type" : "bytes"
-  } ]
+  },
+    { "name" : "myMap", "type" : { "type" : "map", "values" : "string" } }]
 }
 

@@ -26,11 +26,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -751,8 +755,32 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     public String getQualified(String defaultSpace) {
-      return (space == null || space.equals(defaultSpace)) ? name : full;
+      return this.shouldWriteFull(defaultSpace) ? full : name;
     }
+
+    /**
+     * Determine if full name must be written. There are 2 cases for true :
+     * defaultSpace != from this.space or name is already a Schema.Type (int, array
+     * ...)
+     *
+     * @param defaultSpace : default name space.
+     * @return true if full name must be written.
+     */
+    private boolean shouldWriteFull(String defaultSpace) {
+      if (space != null && space.equals(defaultSpace)) {
+        for (Type schemaType : Type.values()) {
+          if (schemaType.name.equals(name)) {
+            // name is a 'Type', so namespace must be written
+            return true;
+          }
+        }
+        // this.space == defaultSpace
+        return false;
+      }
+      // this.space != defaultSpace, so namespace must be written.
+      return true;
+    }
+
   }
 
   private static abstract class NamedSchema extends Schema {
@@ -1254,6 +1282,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
         type.toJson(names, gen);
       gen.writeEndArray();
     }
+
+    @Override
+    public String getName() {
+      return super.getName()
+          + this.getTypes().stream().map(Schema::getName).collect(Collectors.joining(", ", "[", "]"));
+    }
   }
 
   private static class FixedSchema extends NamedSchema {
@@ -1362,10 +1396,19 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     /**
      * Adds the provided types to the set of defined, named types known to this
+     * parser. deprecated: use addTypes(Iterable<Schema> types)
+     */
+    @Deprecated
+    public Parser addTypes(Map<String, Schema> types) {
+      return this.addTypes(types.values());
+    }
+
+    /**
+     * Adds the provided types to the set of defined, named types known to this
      * parser.
      */
-    public Parser addTypes(Map<String, Schema> types) {
-      for (Schema s : types.values())
+    public Parser addTypes(Iterable<Schema> types) {
+      for (Schema s : types)
         names.add(s);
       return this;
     }
@@ -1405,7 +1448,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      * names known to this parser.
      */
     public Schema parse(File file) throws IOException {
-      return parse(FACTORY.createParser(file));
+      return parse(FACTORY.createParser(file), false);
     }
 
     /**
@@ -1413,7 +1456,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
      * names known to this parser. The input stream stays open after the parsing.
      */
     public Schema parse(InputStream in) throws IOException {
-      return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE));
+      return parse(FACTORY.createParser(in).disable(JsonParser.Feature.AUTO_CLOSE_SOURCE), true);
     }
 
     /** Read a schema from one or more json strings */
@@ -1430,19 +1473,36 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Schema parse(String s) {
       try {
-        return parse(FACTORY.createParser(s));
+        return parse(FACTORY.createParser(s), false);
       } catch (IOException e) {
         throw new SchemaParseException(e);
       }
     }
 
-    private Schema parse(JsonParser parser) throws IOException {
+    private Schema parse(JsonParser parser, boolean allowDanglingContent) throws IOException {
       boolean saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
         validateNames.set(validate);
         VALIDATE_DEFAULTS.set(validateDefaults);
-        return Schema.parse(MAPPER.readTree(parser), names);
+        JsonNode jsonNode = MAPPER.readTree(parser);
+        Schema schema = Schema.parse(jsonNode, names);
+        if (!allowDanglingContent) {
+          String dangling;
+          StringWriter danglingWriter = new StringWriter();
+          int numCharsReleased = parser.releaseBuffered(danglingWriter);
+          if (numCharsReleased == -1) {
+            ByteArrayOutputStream danglingOutputStream = new ByteArrayOutputStream();
+            parser.releaseBuffered(danglingOutputStream); // if input isnt chars above it must be bytes
+            dangling = new String(danglingOutputStream.toByteArray(), StandardCharsets.UTF_8).trim();
+          } else {
+            dangling = danglingWriter.toString().trim();
+          }
+          if (!dangling.isEmpty()) {
+            throw new SchemaParseException("dangling content after end of schema: " + dangling);
+          }
+        }
+        return schema;
       } catch (JsonParseException e) {
         throw new SchemaParseException(e);
       } finally {
@@ -1635,12 +1695,36 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!defaultValue.isObject())
         return false;
       for (Field field : schema.getFields())
-        if (!isValidDefault(field.schema(),
+        if (!isValidValue(field.schema(),
             defaultValue.has(field.name()) ? defaultValue.get(field.name()) : field.defaultValue()))
           return false;
       return true;
     default:
       return false;
+    }
+  }
+
+  /**
+   * Validate a value against the schema.
+   * 
+   * @param schema : schema for value.
+   * @param value  : value to validate.
+   * @return true if ok.
+   */
+  private static boolean isValidValue(Schema schema, JsonNode value) {
+    if (value == null)
+      return false;
+    if (schema.isUnion()) {
+      // For Union, only need that one sub schema is ok.
+      for (Schema sub : schema.getTypes()) {
+        if (Schema.isValidDefault(sub, value)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      // for other types, same as validate default.
+      return Schema.isValidDefault(schema, value);
     }
   }
 

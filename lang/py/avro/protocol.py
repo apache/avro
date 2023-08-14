@@ -70,6 +70,7 @@ class Protocol:
         "_name",
         "_namespace",
         "_types",
+        "_validate_names",
     ]
 
     _md5: bytes
@@ -77,6 +78,7 @@ class Protocol:
     _name: str
     _namespace: Optional[str]
     _types: Optional[Sequence[avro.schema.NamedSchema]]
+    _validate_names: bool
 
     def __init__(
         self,
@@ -84,6 +86,7 @@ class Protocol:
         namespace: Optional[str] = None,
         types: Optional[Sequence[str]] = None,
         messages: Optional[Mapping[str, "MessageObject"]] = None,
+        validate_names: bool = True,
     ) -> None:
         if not name:
             raise avro.errors.ProtocolParseException("Protocols must have a non-empty name.")
@@ -95,12 +98,13 @@ class Protocol:
             raise avro.errors.ProtocolParseException("The types property must be a list.")
         if not (messages is None or callable(getattr(messages, "get", None))):
             raise avro.errors.ProtocolParseException("The messages property must be a JSON object.")
-        type_names = avro.name.Names()
+        self._validate_names = validate_names
+        type_names = avro.name.Names(validate_names=self._validate_names)
 
         self._name = name
         self._namespace = type_names.default_namespace = namespace
-        self._types = _parse_types(types, type_names) if types else None
-        self._messages = _parse_messages(messages, type_names) if messages else None
+        self._types = _parse_types(types, type_names, self._validate_names) if types else None
+        self._messages = _parse_messages(messages, type_names, self._validate_names) if messages else None
         self._md5 = hashlib.md5(str(self).encode()).digest()
 
     @property
@@ -113,7 +117,7 @@ class Protocol:
 
     @property
     def fullname(self) -> Optional[str]:
-        return avro.name.Name(self.name, self.namespace, None).fullname
+        return avro.name.Name(self.name, self.namespace, None, validate_name=self._validate_names).fullname
 
     @property
     def types(self) -> Optional[Sequence[avro.schema.NamedSchema]]:
@@ -132,7 +136,7 @@ class Protocol:
         return self._md5
 
     def to_json(self) -> Mapping[str, Union[str, Sequence[object], Mapping[str, "MessageObject"]]]:
-        names = avro.name.Names(default_namespace=self.namespace)
+        names = avro.name.Names(default_namespace=self.namespace, validate_names=self._validate_names)
         return {
             "protocol": self.name,
             **({"namespace": self.namespace} if self.namespace else {}),
@@ -167,12 +171,7 @@ class Message:
     The one-way parameter may only be true when the response type is "null" and no errors are listed.
     """
 
-    __slots__ = [
-        "_errors",
-        "_name",
-        "_request",
-        "_response",
-    ]
+    __slots__ = ["_errors", "_name", "_request", "_response", "_validate_names"]
 
     def __init__(
         self,
@@ -181,12 +180,14 @@ class Message:
         response: Union[str, object],
         errors: Optional[Sequence[str]] = None,
         names: Optional[avro.name.Names] = None,
+        validate_names: bool = True,
     ) -> None:
         self._name = name
-        names = names or avro.name.Names()
-        self._request = _parse_request(request, names)
-        self._response = _parse_response(response, names)
-        self._errors = _parse_errors(errors or [], names)
+        names = names or avro.name.Names(validate_names=validate_names)
+        self._request = _parse_request(request, names, validate_names)
+        self._response = _parse_response(response, names, validate_names)
+        self._errors = _parse_errors(errors or [], names, validate_names)
+        self._validate_names = validate_names
 
     @property
     def name(self) -> str:
@@ -208,7 +209,7 @@ class Message:
         return json.dumps(self.to_json())
 
     def to_json(self, names: Optional[avro.name.Names] = None) -> "MessageObject":
-        names = names or avro.name.Names()
+        names = names or avro.name.Names(validate_names=self._validate_names)
 
         try:
             to_dump = MessageObject()
@@ -225,25 +226,25 @@ class Message:
         return all(hasattr(that, prop) and getattr(self, prop) == getattr(that, prop) for prop in self.__class__.__slots__)
 
 
-def _parse_request(request: Sequence[Mapping[str, object]], names: avro.name.Names) -> avro.schema.RecordSchema:
+def _parse_request(request: Sequence[Mapping[str, object]], names: avro.name.Names, validate_names: bool = True) -> avro.schema.RecordSchema:
     if not isinstance(request, Sequence):
         raise avro.errors.ProtocolParseException(f"Request property not a list: {request}")
-    return avro.schema.RecordSchema(None, None, request, names, "request")
+    return avro.schema.RecordSchema(None, None, request, names, "request", validate_names=validate_names)
 
 
-def _parse_response(response: Union[str, object], names: avro.name.Names) -> avro.schema.Schema:
-    return (isinstance(response, str) and names.get_name(response)) or avro.schema.make_avsc_object(response, names)
+def _parse_response(response: Union[str, object], names: avro.name.Names, validate_names: bool = True) -> avro.schema.Schema:
+    return (isinstance(response, str) and names.get_name(response)) or avro.schema.make_avsc_object(response, names, validate_names=validate_names)
 
 
-def _parse_errors(errors: Sequence[str], names: avro.name.Names) -> avro.schema.ErrorUnionSchema:
+def _parse_errors(errors: Sequence[str], names: avro.name.Names, validate_names: bool = True) -> avro.schema.ErrorUnionSchema:
     """Even if errors is empty, we still want an ErrorUnionSchema with "string" in it."""
     if not isinstance(errors, Sequence):
         raise avro.errors.ProtocolParseException(f"Errors property not a list: {errors}")
     errors_for_parsing = {"type": "error_union", "declared_errors": errors}
-    return cast(avro.schema.ErrorUnionSchema, avro.schema.make_avsc_object(errors_for_parsing, names))
+    return cast(avro.schema.ErrorUnionSchema, avro.schema.make_avsc_object(errors_for_parsing, names, validate_names=validate_names))
 
 
-def make_avpr_object(json_data: "ProtocolObject") -> Protocol:
+def make_avpr_object(json_data: "ProtocolObject", validate_names: bool = True) -> Protocol:
     """Build Avro Protocol from data parsed out of JSON string."""
     if not hasattr(json_data, "get"):
         raise avro.errors.ProtocolParseException(f"Not a JSON object: {json_data}")
@@ -251,22 +252,22 @@ def make_avpr_object(json_data: "ProtocolObject") -> Protocol:
     namespace = json_data.get("namespace")
     types = json_data.get("types")
     messages = json_data.get("messages")
-    return Protocol(name, namespace, types, messages)
+    return Protocol(name, namespace, types, messages, validate_names)
 
 
-def parse(json_string: str) -> Protocol:
+def parse(json_string: str, validate_names: bool = True) -> Protocol:
     """Constructs the Protocol from the JSON text."""
     try:
         protocol_object = json.loads(json_string)
     except ValueError:
         raise avro.errors.ProtocolParseException(f"Error parsing JSON: {json_string}")
-    return make_avpr_object(protocol_object)
+    return make_avpr_object(protocol_object, validate_names)
 
 
-def _parse_types(types: Sequence[str], type_names: avro.name.Names) -> Sequence[avro.schema.NamedSchema]:
+def _parse_types(types: Sequence[str], type_names: avro.name.Names, validate_names: bool = True) -> Sequence[avro.schema.NamedSchema]:
     schemas = []
     for type_ in types:
-        schema = avro.schema.make_avsc_object(type_, type_names)
+        schema = avro.schema.make_avsc_object(type_, type_names, validate_names=validate_names)
         if isinstance(schema, avro.schema.NamedSchema):
             schemas.append(schema)
             continue
@@ -274,7 +275,7 @@ def _parse_types(types: Sequence[str], type_names: avro.name.Names) -> Sequence[
     return schemas
 
 
-def _parse_messages(message_objects: Mapping[str, "MessageObject"], names: avro.name.Names) -> Mapping[str, Message]:
+def _parse_messages(message_objects: Mapping[str, "MessageObject"], names: avro.name.Names, validate_names: bool = True) -> Mapping[str, Message]:
     messages = {}
     for name, body in message_objects.items():
         if not hasattr(body, "get"):
@@ -282,5 +283,5 @@ def _parse_messages(message_objects: Mapping[str, "MessageObject"], names: avro.
         request = body["request"]
         response = body["response"]
         errors = body.get("errors")
-        messages[name] = Message(name, request, response, errors, names)
+        messages[name] = Message(name, request, response, errors, names, validate_names=validate_names)
     return messages

@@ -430,7 +430,9 @@ public class Protocol extends JsonProperties {
 
     gen.writeStartObject();
     gen.writeStringField("protocol", name);
-    gen.writeStringField("namespace", namespace);
+    if (namespace != null) {
+      gen.writeStringField("namespace", namespace);
+    }
 
     if (doc != null)
       gen.writeStringField("doc", doc);
