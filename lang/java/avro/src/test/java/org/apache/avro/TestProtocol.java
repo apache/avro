@@ -17,10 +17,10 @@
  */
 package org.apache.avro;
 
+import org.junit.jupiter.api.Test;
+
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
 
 public class TestProtocol {
 
@@ -34,7 +34,9 @@ public class TestProtocol {
     assertEquals(p1.getName(), p3.getName());
     assertEquals(p1.getNamespace(), p3.getNamespace());
 
-    // The following situation is allowed, even if confusing, because the specification describes this algorithm without specifying that the resulting namespace mst be non-empty.
+    // The following situation is allowed, even if confusing, because the
+    // specification describes this algorithm without specifying that the resulting
+    // namespace mst be non-empty.
     Protocol invalidName = new Protocol(".P", null, "ignored");
     assertNull(invalidName.getNamespace());
     assertEquals("P", invalidName.getName());
