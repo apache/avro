@@ -29,6 +29,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -331,5 +333,36 @@ public class TestEncoders {
     output.flush();
 
     return new String(output.toByteArray(), StandardCharsets.UTF_8.name());
+  }
+
+  @Test
+  public void testJsonEncoderInitAutoFlush() throws IOException {
+    Schema s = new Schema.Parser().parse("\"int\"");
+    OutputStream baos = new ByteArrayOutputStream();
+    OutputStream out = new BufferedOutputStream(baos);
+    JsonEncoder enc = factory.jsonEncoder(s, out, false);
+    enc.configure(out, false);
+    enc.writeInt(24);
+    enc.flush();
+    assertEquals("", baos.toString());
+    out.flush();
+    assertEquals("24", baos.toString());
+  }
+
+  @Test
+  public void testJsonEncoderInitAutoFlushDisabled() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    OutputStream out = new BufferedOutputStream(baos);
+    Schema ints = Schema.create(Type.INT);
+    Encoder e = factory.jsonEncoder(ints, out, false, false);
+    String separator = System.getProperty("line.separator");
+    GenericDatumWriter<Integer> writer = new GenericDatumWriter<Integer>(ints);
+    writer.write(1, e);
+    writer.write(2, e);
+    e.flush();
+    assertEquals("", baos.toString());
+    out.flush();
+    assertEquals("1" + separator + "2", baos.toString());
+    out.close();
   }
 }

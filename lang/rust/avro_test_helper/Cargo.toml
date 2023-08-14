@@ -17,23 +17,23 @@
 
 [package]
 name = "apache-avro-test-helper"
-version = "0.15.0"
-edition = "2021"
-rust-version = "1.60.0"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "Apache Avro tests helper."
-authors = ["Apache Avro team <dev@avro.apache.org>"]
-license = "Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/apache/avro"
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
 keywords = ["avro", "data", "serialization", "test"]
-categories = ["encoding"]
+categories.workspace = true
 documentation = "https://docs.rs/apache-avro-test-helper"
 
 
 [dependencies]
-anyhow = { default-features = false, version = "1.0.71", features = ["std"] }
+anyhow = { default-features = false, version = "1.0.72", features = ["std"] }
 color-backtrace = { default-features = false, version = "0.5.1" }
-ctor = { default-features = false, version = "0.2.2" }
+ctor = { default-features = false, version = "0.2.4" }
 env_logger = { default-features = false, version = "0.10.0" }
 lazy_static = { default-features = false, version = "1.4.0" }
 log = { default-features = false, version = "0.4.19" }

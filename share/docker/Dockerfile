@@ -25,6 +25,9 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
 
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
+ && apt-get -qqy install software-properties-common \
+ && add-apt-repository ppa:deadsnakes/ppa \
+ && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
                                                  apt-utils \
@@ -52,8 +55,8 @@ RUN apt-get -qqy update \
                                                  libssl-dev \
                                                  make \
                                                  mypy \
-                                                 openjdk-17-jdk \
                                                  openjdk-11-jdk \
+                                                 openjdk-17-jdk \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python3 \
@@ -62,16 +65,16 @@ RUN apt-get -qqy update \
                                                  python3-snappy \
                                                  python3-venv \
                                                  python3-wheel \
+                                                 python3.10 \
+                                                 python3.11 \
+                                                 python3.7 \
+                                                 python3.8 \
+                                                 python3.9 \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
                                                  vim \
                                                  wget \
-                                                 python3.6 \
-                                                 python3.7 \
-                                                 python3.8 \
-                                                 python3.9 \
-                                                 python3.10 \
  && apt-get -qqy clean
 
 # Install PHP
@@ -114,8 +117,11 @@ RUN set -eux; \
 ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs
+# The node deprecation warnings cause a 20 second sleep.
+# But mom, I'm not even tired!
 RUN curl -sSL https://deb.nodesource.com/setup_14.x \
-  | bash - \
+  | sed 's/sleep 20/echo "But mom!"/' \
+  | bash \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && npm install -g grunt-cli \
@@ -168,10 +174,26 @@ RUN curl -sSL https://cpanmin.us \
                                                  Module::Install::Repository \
  && rm -rf .cpanm
 
-# Install Python packages
-ENV PIP_NO_CACHE_DIR=off
+# Install Python3
+ENV PATH="${PATH}:/opt/pypy3.8/bin:/opt/pypy3.9/bin:/opt/pypy3.10/bin" \
+    PIP_NO_CACHE_DIR=off
+    
+# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+ARG BUILDARCH
+RUN case "${BUILDARCH:?}" in \
+      arm64) pypyarch=aarch64;; \
+      *) pypyarch=linux64;; \
+    esac \
+ && cd /opt \
+ && for url in https://downloads.python.org/pypy/pypy3.8-v7.3.11-"$pypyarch".tar.bz2 \
+               https://downloads.python.org/pypy/pypy3.9-v7.3.12-"$pypyarch".tar.bz2 \
+               https://downloads.python.org/pypy/pypy3.10-v7.3.12-"$pypyarch".tar.bz2; \
+    do curl -fsSL "$url" | tar -xvjpf -; \
+    done \
+ && ln -s pypy3.8* pypy3.8 \
+ && ln -s pypy3.9* pypy3.9 \
+ && ln -s pypy3.10* pypy3.10
 
-# Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
 
@@ -187,7 +209,7 @@ RUN gem install bundler --no-document && \
     cd /tmp/lang/ruby && bundle install
 
 # Install Rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.60.0
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.65.0
 
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8

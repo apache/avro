@@ -6,7 +6,7 @@ The following packages must be installed before Avro can be built:
 
  - Java: JDK 1.8, Maven 3 or better, protobuf-compile
  - PHP: php7, phpunit, php7-gmp
- - Python 3: 3.6 or greater
+ - Python 3: 3.7 or greater, tox (tox will install other dependencies as needed)
  - C: gcc, cmake, asciidoc, source-highlight, Jansson, pkg-config
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
  - C#: .NET Core 2.2 SDK
@@ -17,7 +17,7 @@ The following packages must be installed before Avro can be built:
    Math::BigInt, JSON::XS, Try::Tiny, Regexp::Common, Encode,
    IO::String, Object::Tiny, Compress::ZLib, Error::Simple,
    Test::More, Test::Exception, Test::Pod
- - Rust: rustc and Cargo 1.60.0 or greater
+ - Rust: rustc and Cargo 1.65.0 or greater
  - Apache Ant 1.7
  - md5sum, sha1sum, used by top-level dist target
 

@@ -48,6 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -1280,6 +1282,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
         type.toJson(names, gen);
       gen.writeEndArray();
     }
+
+    @Override
+    public String getName() {
+      return super.getName()
+          + this.getTypes().stream().map(Schema::getName).collect(Collectors.joining(", ", "[", "]"));
+    }
   }
 
   private static class FixedSchema extends NamedSchema {
@@ -1388,10 +1396,19 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     /**
      * Adds the provided types to the set of defined, named types known to this
+     * parser. deprecated: use addTypes(Iterable<Schema> types)
+     */
+    @Deprecated
+    public Parser addTypes(Map<String, Schema> types) {
+      return this.addTypes(types.values());
+    }
+
+    /**
+     * Adds the provided types to the set of defined, named types known to this
      * parser.
      */
-    public Parser addTypes(Map<String, Schema> types) {
-      for (Schema s : types.values())
+    public Parser addTypes(Iterable<Schema> types) {
+      for (Schema s : types)
         names.add(s);
       return this;
     }
@@ -1678,12 +1695,36 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!defaultValue.isObject())
         return false;
       for (Field field : schema.getFields())
-        if (!isValidDefault(field.schema(),
+        if (!isValidValue(field.schema(),
             defaultValue.has(field.name()) ? defaultValue.get(field.name()) : field.defaultValue()))
           return false;
       return true;
     default:
       return false;
+    }
+  }
+
+  /**
+   * Validate a value against the schema.
+   * 
+   * @param schema : schema for value.
+   * @param value  : value to validate.
+   * @return true if ok.
+   */
+  private static boolean isValidValue(Schema schema, JsonNode value) {
+    if (value == null)
+      return false;
+    if (schema.isUnion()) {
+      // For Union, only need that one sub schema is ok.
+      for (Schema sub : schema.getTypes()) {
+        if (Schema.isValidDefault(sub, value)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      // for other types, same as validate default.
+      return Schema.isValidDefault(schema, value);
     }
   }
 

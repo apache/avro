@@ -36,7 +36,7 @@ import org.apache.avro.message.SchemaStore;
 @$annotation
 #end
 @org.apache.avro.specific.AvroGenerated
-public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.avro.specific.SpecificRecordBase#end implements org.apache.avro.specific.SpecificRecord {
+public class ${this.mangleTypeIdentifier($schema.getName())} extends ${this.getSchemaParentClass($schema.isError())} implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
 
 #set ($schemaString = $this.javaSplit($schema.toString()))
@@ -228,10 +228,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 #foreach ($field in $schema.getFields())
 #if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
 #if ($field.doc())   * $field.doc()
 #end
-   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -250,10 +250,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
 #if ($field.doc())   * $field.doc()
 #end
-   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
    */
   public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -406,10 +406,10 @@ public class ${this.mangleTypeIdentifier($schema.getName())}#if ($schema.isError
 
 #if (${this.createOptionalGetters})
     /**
-      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
-      * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+      * @return The value wrapped in an Optional&lt;${this.escapeForJavadoc(${this.javaType($field.schema())})}&gt;.
       */
     public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
       return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -837,7 +837,7 @@ $I    }
 $I    long size${nv} = in.readMapStart();
 $I    $t m${nv} = ${var}; // Need fresh name due to limitation of macro system
 $I    if (m${nv} == null) {
-$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)size${nv});
+$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)(size${nv} * 4)/3 + 1);
 $I      $var = m${nv};
 $I    } else m${nv}.clear();
 $I    for ( ; 0 < size${nv}; size${nv} = in.mapNext()) {

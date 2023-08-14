@@ -29,6 +29,7 @@ use serde_json::{Number, Value as JsonValue};
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryFrom,
+    fmt::Debug,
     hash::BuildHasher,
     str::FromStr,
 };
@@ -376,7 +377,7 @@ impl Value {
         }
     }
 
-    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema>>(
+    pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema> + Debug>(
         &self,
         schema: &Schema,
         names: &HashMap<Name, S>,
@@ -459,7 +460,12 @@ impl Value {
                     None
                 }
             }
-            (&Value::Enum(i, ref s), Schema::Enum(EnumSchema { symbols, .. })) => symbols
+            (
+                &Value::Enum(i, ref s),
+                Schema::Enum(EnumSchema {
+                    symbols, default, ..
+                }),
+            ) => symbols
                 .get(i as usize)
                 .map(|ref symbol| {
                     if symbol != &s {
@@ -468,7 +474,10 @@ impl Value {
                         None
                     }
                 })
-                .unwrap_or_else(|| Some(format!("No symbol at position '{i}'"))),
+                .unwrap_or_else(|| match default {
+                    Some(_) => None,
+                    None => Some(format!("No symbol at position '{i}'")),
+                }),
             // (&Value::Union(None), &Schema::Union(_)) => None,
             (&Value::Union(i, ref value), Schema::Union(inner)) => inner
                 .variants()
@@ -476,7 +485,7 @@ impl Value {
                 .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
             (v, Schema::Union(inner)) => {
-                match inner.find_schema_with_known_schemata(v, Some(names)) {
+                match inner.find_schema_with_known_schemata(v, Some(names), enclosing_namespace) {
                     Some(_) => None,
                     None => Some("Could not find matching type in union".to_string()),
                 }
@@ -495,7 +504,15 @@ impl Value {
                     )
                 })
             }
-            (Value::Record(record_fields), Schema::Record(RecordSchema { fields, lookup, .. })) => {
+            (
+                Value::Record(record_fields),
+                Schema::Record(RecordSchema {
+                    fields,
+                    lookup,
+                    name,
+                    ..
+                }),
+            ) => {
                 let non_nullable_fields_count =
                     fields.iter().filter(|&rf| !rf.is_nullable()).count();
 
@@ -516,6 +533,11 @@ impl Value {
                 record_fields
                     .iter()
                     .fold(None, |acc, (field_name, record_field)| {
+                        let record_namespace = if name.namespace.is_none() {
+                            enclosing_namespace
+                        } else {
+                            &name.namespace
+                        };
                         match lookup.get(field_name) {
                             Some(idx) => {
                                 let field = &fields[*idx];
@@ -524,7 +546,7 @@ impl Value {
                                     record_field.validate_internal(
                                         &field.schema,
                                         names,
-                                        enclosing_namespace,
+                                        record_namespace,
                                     ),
                                 )
                             }
@@ -624,9 +646,11 @@ impl Value {
             Schema::Union(ref inner) => {
                 self.resolve_union(inner, names, enclosing_namespace, field_default)
             }
-            Schema::Enum(EnumSchema { ref symbols, .. }) => {
-                self.resolve_enum(symbols, field_default)
-            }
+            Schema::Enum(EnumSchema {
+                ref symbols,
+                ref default,
+                ..
+            }) => self.resolve_enum(symbols, default, field_default),
             Schema::Array(ref inner) => self.resolve_array(inner, names, enclosing_namespace),
             Schema::Map(ref inner) => self.resolve_map(inner, names, enclosing_namespace),
             Schema::Record(RecordSchema { ref fields, .. }) => {
@@ -848,14 +872,15 @@ impl Value {
     fn resolve_enum(
         self,
         symbols: &[String],
-        field_default: &Option<JsonValue>,
+        enum_default: &Option<String>,
+        _field_default: &Option<JsonValue>,
     ) -> Result<Self, Error> {
         let validate_symbol = |symbol: String, symbols: &[String]| {
             if let Some(index) = symbols.iter().position(|item| item == &symbol) {
                 Ok(Value::Enum(index as u32, symbol))
             } else {
-                match field_default {
-                    Some(JsonValue::String(default)) => {
+                match enum_default {
+                    Some(default) => {
                         if let Some(index) = symbols.iter().position(|item| item == default) {
                             Ok(Value::Enum(index as u32, default.clone()))
                         } else {
@@ -893,9 +918,8 @@ impl Value {
             // Reader is a union, but writer is not.
             v => v,
         };
-
         let (i, inner) = schema
-            .find_schema_with_known_schemata(&v, Some(names))
+            .find_schema_with_known_schemata(&v, Some(names), enclosing_namespace)
             .ok_or(Error::FindUnionVariant)?;
 
         Ok(Value::Union(
@@ -973,10 +997,15 @@ impl Value {
                     Some(value) => value,
                     None => match field.default {
                         Some(ref value) => match field.schema {
-                            Schema::Enum(EnumSchema { ref symbols, .. }) => {
-                                Value::from(value.clone())
-                                    .resolve_enum(symbols, &field.default.clone())?
-                            }
+                            Schema::Enum(EnumSchema {
+                                ref symbols,
+                                ref default,
+                                ..
+                            }) => Value::from(value.clone()).resolve_enum(
+                                symbols,
+                                default,
+                                &field.default.clone(),
+                            )?,
                             Schema::Union(ref union_schema) => {
                                 let first = &union_schema.variants()[0];
                                 // NOTE: this match exists only to optimize null defaults for large
@@ -1038,6 +1067,56 @@ mod tests {
     use num_bigint::BigInt;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
+
+    #[test]
+    fn avro_3809_validate_nested_records_with_implicit_namespace() -> TestResult {
+        let schema = Schema::parse_str(
+            r#"{
+            "name": "record_name",
+            "namespace": "space",
+            "type": "record",
+            "fields": [
+              {
+                "name": "outer_field_1",
+                "type": {
+                  "type": "record",
+                  "name": "middle_record_name",
+                  "namespace": "middle_namespace",
+                  "fields": [
+                    {
+                      "name": "middle_field_1",
+                      "type": {
+                        "type": "record",
+                        "name": "inner_record_name",
+                        "fields": [
+                          { "name": "inner_field_1", "type": "double" }
+                        ]
+                      }
+                    },
+                    { "name": "middle_field_2", "type": "inner_record_name" }
+                  ]
+                }
+              }
+            ]
+          }"#,
+        )?;
+        let value = Value::Record(vec![(
+            "outer_field_1".into(),
+            Value::Record(vec![
+                (
+                    "middle_field_1".into(),
+                    Value::Record(vec![("inner_field_1".into(), Value::Double(1.2f64))]),
+                ),
+                (
+                    "middle_field_2".into(),
+                    Value::Record(vec![("inner_field_1".into(), Value::Double(1.6f64))]),
+                ),
+            ]),
+        )]);
+
+        assert!(value.validate(&schema));
+        Ok(())
+    }
 
     #[test]
     fn validate() -> TestResult {
@@ -1236,6 +1315,7 @@ mod tests {
                 "diamonds".to_string(),
                 "clubs".to_string(),
             ],
+            default: None,
             attributes: Default::default(),
         });
 
@@ -1282,6 +1362,7 @@ mod tests {
                 "clubs".to_string(),
                 "spades".to_string(),
             ],
+            default: None,
             attributes: Default::default(),
         });
 
