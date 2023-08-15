@@ -837,9 +837,11 @@ impl UnionSchema {
                 // extend known schemas with just resolved names
                 collected_names.extend(resolved_names);
                 let namespace = &schema.namespace().or_else(|| enclosing_namespace.clone());
+
                 value
-                    .validate_internal(schema, &collected_names, namespace)
-                    .is_none()
+                    .clone()
+                    .resolve_internal(schema, &collected_names, namespace, &None)
+                    .is_ok()
             })
         }
     }
@@ -5207,6 +5209,130 @@ mod tests {
         let qname = name.fully_qualified_name(&None).to_string();
         assert_eq!(qname, "my_name");
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3814_schema_resolution_failure() -> TestResult {
+        // Define a reader schema: a nested record with an optional field.
+        let reader_schema = json!(
+            {
+                "type": "record",
+                "name": "MyOuterRecord",
+                "fields": [
+                    {
+                        "name": "inner_record",
+                        "type": [
+                            "null",
+                            {
+                                "type": "record",
+                                "name": "MyRecord",
+                                "fields": [
+                                    {"name": "a", "type": "string"}
+                                ]
+                            }
+                        ],
+                        "default": null
+                    }
+                ]
+            }
+        );
+
+        // Define a writer schema: a nested record with an optional field, which
+        // may optionally contain an enum.
+        let writer_schema = json!(
+            {
+                "type": "record",
+                "name": "MyOuterRecord",
+                "fields": [
+                    {
+                        "name": "inner_record",
+                        "type": [
+                            "null",
+                            {
+                                "type": "record",
+                                "name": "MyRecord",
+                                "fields": [
+                                    {"name": "a", "type": "string"},
+                                    {
+                                        "name": "b",
+                                        "type": [
+                                            "null",
+                                            {
+                                                "type": "enum",
+                                                "name": "MyEnum",
+                                                "symbols": ["A", "B", "C"],
+                                                "default": "C"
+                                            }
+                                        ],
+                                        "default": null
+                                    },
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "default": null
+            }
+        );
+
+        // Use different structs to represent the "Reader" and the "Writer"
+        // to mimic two different versions of a producer & consumer application.
+        #[derive(Serialize, Deserialize, Debug)]
+        struct MyInnerRecordReader {
+            a: String,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct MyRecordReader {
+            inner_record: Option<MyInnerRecordReader>,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        enum MyEnum {
+            A,
+            B,
+            C,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct MyInnerRecordWriter {
+            a: String,
+            b: Option<MyEnum>,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct MyRecordWriter {
+            inner_record: Option<MyInnerRecordWriter>,
+        }
+
+        let s = MyRecordWriter {
+            inner_record: Some(MyInnerRecordWriter {
+                a: "foo".to_string(),
+                b: None,
+            }),
+        };
+
+        // Serialize using the writer schema.
+        let writer_schema = Schema::parse(&writer_schema)?;
+        let avro_value = crate::to_value(s)?;
+        assert!(
+            avro_value.validate(&writer_schema),
+            "value is valid for schema",
+        );
+        let datum = crate::to_avro_datum(&writer_schema, avro_value)?;
+
+        // Now, attempt to deserialize using the reader schema.
+        let reader_schema = Schema::parse(&reader_schema)?;
+        let mut x = &datum[..];
+
+        // Deserialization should succeed and we should be able to resolve the schema.
+        let deser_value = crate::from_avro_datum(&writer_schema, &mut x, Some(&reader_schema))?;
+        assert!(deser_value.validate(&reader_schema));
+
+        // Verify that we can read a field from the record.
+        let d: MyRecordReader = crate::from_value(&deser_value)?;
+        assert_eq!(d.inner_record.unwrap().a, "foo".to_string());
         Ok(())
     }
 }
