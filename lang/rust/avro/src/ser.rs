@@ -200,10 +200,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_unit_variant(
         self,
         _: &'static str,
-        index: u32,
+        _variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Enum(index, variant.to_string()))
+        Ok(Value::String(variant.to_string()))
     }
 
     fn serialize_newtype_struct<T: ?Sized>(
@@ -720,7 +720,7 @@ mod tests {
             a: UnitExternalEnum::Val1,
         };
 
-        let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+        let expected = Value::Record(vec![("a".to_owned(), Value::String("Val1".to_owned()))]);
 
         assert_eq!(
             to_value(test)?,
