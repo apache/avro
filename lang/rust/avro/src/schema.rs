@@ -233,7 +233,7 @@ impl Name {
         })
     }
 
-    pub(crate) fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
+    fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
         let caps = SCHEMA_NAME_R
             .captures(name)
             .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), SCHEMA_NAME_R.as_str()))?;
