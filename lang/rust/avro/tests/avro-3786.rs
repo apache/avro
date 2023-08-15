@@ -248,10 +248,10 @@ fn avro_3786_deserialize_union_with_different_enum_order_defined_in_record() -> 
         ]
     }"#;
     let writer_schema = Schema::parse_str(writer_schema)?;
-    let foo = Foo {
+    let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar0 }),
     };
-    let avro_value = crate::to_value(foo)?;
+    let avro_value = crate::to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
@@ -361,10 +361,10 @@ fn test_avro_3786_deserialize_union_with_different_enum_order_defined_in_record_
             ]
         }"#;
     let writer_schema = Schema::parse_str(writer_schema)?;
-    let foo = Foo {
+    let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar1 }),
     };
-    let avro_value = crate::to_value(foo)?;
+    let avro_value = crate::to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
@@ -474,10 +474,10 @@ fn test_avro_3786_deserialize_union_with_different_enum_order_defined_in_record_
             ]
         }"#;
     let writer_schema = Schema::parse_str(writer_schema)?;
-    let foo = Foo {
+    let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar1 }),
     };
-    let avro_value = crate::to_value(foo)?;
+    let avro_value = crate::to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
@@ -587,10 +587,10 @@ fn deserialize_union_with_different_enum_order_defined_in_record() -> TestResult
             ]
         }"#;
     let writer_schema = Schema::parse_str(writer_schema)?;
-    let foo = Foo {
+    let foo1 = Foo {
         bar_parent: Some(BarParent { bar: Bar::Bar2 }),
     };
-    let avro_value = crate::to_value(foo)?;
+    let avro_value = crate::to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",
@@ -853,7 +853,7 @@ fn deserialize_union_with_record_with_enum_defined_inline_reader_has_different_i
             ]
         }"#;
     let writer_schema = Schema::parse_str(writer_schema)?;
-    let foo = Foo {
+    let foo1 = Foo {
         bar_init: Bar::Bar0,
         baz: Baz::Baz0,
         parent: Some(Parent {
@@ -864,7 +864,7 @@ fn deserialize_union_with_record_with_enum_defined_inline_reader_has_different_i
             defined_in_record: DefinedInRecord::Val1,
         }),
     };
-    let avro_value = crate::to_value(foo)?;
+    let avro_value = crate::to_value(foo1)?;
     assert!(
         avro_value.validate(&writer_schema),
         "value is valid for schema",

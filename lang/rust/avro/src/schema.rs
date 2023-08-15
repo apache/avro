@@ -840,8 +840,9 @@ impl UnionSchema {
 
                 // Attempt to validate the value in order to ensure we've selected the right schema.
                 value
-                    .validate_internal(schema, &collected_names, namespace, true)
-                    .is_none()
+                    .clone()
+                    .resolve_internal(schema, &collected_names, namespace, &None)
+                    .is_ok()
             })
         }
     }

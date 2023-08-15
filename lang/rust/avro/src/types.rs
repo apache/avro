@@ -656,7 +656,7 @@ impl Value {
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace, &None)
     }
 
-    fn resolve_internal(
+    pub(crate) fn resolve_internal(
         mut self,
         schema: &Schema,
         names: &NamesRef,
