@@ -17,19 +17,23 @@
  */
 package org.apache.avro.generic;
 
-import static org.apache.avro.TestCircularReferences.Reference;
-import static org.apache.avro.TestCircularReferences.Referenceable;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.TestCircularReferences.ReferenceManager;
+import org.apache.avro.generic.GenericData.Record;
+import org.apache.avro.io.BinaryData;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.Utf8;
+import org.junit.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -47,18 +51,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.SchemaBuilder;
-import org.apache.avro.TestCircularReferences.ReferenceManager;
-import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.io.BinaryData;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.util.Utf8;
-import org.junit.Test;
+import static org.apache.avro.TestCircularReferences.Reference;
+import static org.apache.avro.TestCircularReferences.Referenceable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestGenericData {
 
@@ -103,7 +104,7 @@ public class TestGenericData {
   @Test(expected = AvroRuntimeException.class)
   public void testRecordPutInvalidField() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
-    List<Schema.Field> fields = new ArrayList<>();
+    List<Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("someFieldName", s, "docs", null));
     s.setFields(fields);
     Record r = new GenericData.Record(s);
@@ -381,8 +382,9 @@ public class TestGenericData {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(6, schema);
     array.clear();
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 5; ++i) {
       array.add(i);
+    }
     assertEquals(5, array.size());
     array.add(0, 6);
     assertEquals(Integer.valueOf(6), array.get(0));
@@ -411,8 +413,9 @@ public class TestGenericData {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(10, schema);
     array.clear();
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 10; ++i) {
       array.add(i);
+    }
     assertEquals(10, array.size());
     assertEquals(Integer.valueOf(0), array.get(0));
     assertEquals(Integer.valueOf(9), array.get(9));
@@ -454,8 +457,9 @@ public class TestGenericData {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(10, schema);
     array.clear();
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 10; ++i) {
       array.add(i);
+    }
     assertEquals(10, array.size());
     assertEquals(Integer.valueOf(0), array.get(0));
     assertEquals(Integer.valueOf(5), array.get(5));
@@ -702,7 +706,9 @@ public class TestGenericData {
 
   private enum anEnum {
     ONE, TWO, THREE
-  };
+  }
+
+  ;
 
   @Test
   public void validateRequiresGenericSymbolForEnumSchema() {
