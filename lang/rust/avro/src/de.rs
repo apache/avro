@@ -515,6 +515,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             // This branch can be anything...
             Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(fields)),
+            Value::String(ref field) => visitor.visit_enum(EnumUnitDeserializer::new(field)),
             // This has to be a unit Enum
             Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(field)),
             _ => Err(de::Error::custom(format!(
