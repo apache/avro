@@ -42,7 +42,7 @@ lazy_static! {
 
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
-        Regex::new(r"^((?P<namespace>[A-Za-z_][A-Za-z0-9_\.]*)*\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
+        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 
     static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
 }
@@ -227,10 +227,13 @@ impl Name {
     /// `aliases` will not be defined.
     pub fn new(name: &str) -> AvroResult<Self> {
         let (name, namespace) = Name::get_name_and_namespace(name)?;
-        Ok(Self { name, namespace })
+        Ok(Self {
+            name,
+            namespace: namespace.filter(|ns| !ns.is_empty()),
+        })
     }
 
-    pub(crate) fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
+    fn get_name_and_namespace(name: &str) -> AvroResult<(String, Namespace)> {
         let caps = SCHEMA_NAME_R
             .captures(name)
             .ok_or_else(|| Error::InvalidSchemaName(name.to_string(), SCHEMA_NAME_R.as_str()))?;
@@ -257,12 +260,9 @@ impl Name {
 
         Ok(Self {
             name: type_name.unwrap_or(name),
-            namespace: namespace_from_name.or_else(|| {
-                complex
-                    .string("namespace")
-                    .or(enclosing_namespace.clone())
-                    .filter(|ns| !ns.is_empty())
-            }),
+            namespace: namespace_from_name
+                .or_else(|| complex.string("namespace").or(enclosing_namespace.clone()))
+                .filter(|ns| !ns.is_empty()),
         })
     }
 
@@ -5130,6 +5130,82 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let canonical_form = schema.canonical_form();
         assert_eq!(canonical_form, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3830_null_namespace_in_fully_qualified_names() -> TestResult {
+        // Check whether all the named types don't refer to the namespace field
+        // if their name starts with a dot.
+        let schema_str = r#"
+        {
+          "name": ".record1",
+          "namespace": "ns1",
+          "type": "record",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": ".enum1",
+                "namespace": "ns2",
+                "type": "enum",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": ".fxed1",
+                "namespace": "ns3",
+                "type": "fixed",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"record1","type":"record","fields":[{"name":"f1","type":{"name":"enum1","type":"enum","symbols":["a"]}},{"name":"f2","type":{"name":"fxed1","type":"fixed","size":1}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Check whether inner types don't inherit ns1.
+        let schema_str = r#"
+        {
+          "name": ".record1",
+          "namespace": "ns1",
+          "type": "record",
+          "fields": [
+            {
+              "name": "f1",
+              "type": {
+                "name": "enum1",
+                "type": "enum",
+                "symbols": ["a"]
+              }
+            },  {
+              "name": "f2",
+              "type": {
+                "name": "fxed1",
+                "type": "fixed",
+                "size": 1
+              }
+            }
+          ]
+        }
+        "#;
+
+        let expected = r#"{"name":"record1","type":"record","fields":[{"name":"f1","type":{"name":"enum1","type":"enum","symbols":["a"]}},{"name":"f2","type":{"name":"fxed1","type":"fixed","size":1}}]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        let name = Name::new(".my_name")?;
+        let fullname = name.fullname(None);
+        assert_eq!(fullname, "my_name");
+        let qname = name.fully_qualified_name(&None).to_string();
+        assert_eq!(qname, "my_name");
 
         Ok(())
     }
