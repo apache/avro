@@ -31,7 +31,7 @@ documentation = "https://docs.rs/apache-avro-test-helper"
 
 
 [dependencies]
-anyhow = { default-features = false, version = "1.0.72", features = ["std"] }
+anyhow = { default-features = false, version = "1.0.74", features = ["std"] }
 color-backtrace = { default-features = false, version = "0.5.1" }
 ctor = { default-features = false, version = "0.2.4" }
 env_logger = { default-features = false, version = "0.10.0" }
