@@ -137,6 +137,7 @@
                 <argument>org.apache.avro.compiler.specific.SchemaTask</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v1.avsc</argument>
                 <argument>${project.basedir}/src/test/resources/full_record_v2.avsc</argument>
+                <argument>${project.basedir}/src/test/resources/regression_error_field_in_record.avsc</argument>
                 <argument>${project.basedir}/target/generated-test-sources/javacc</argument>
               </arguments>
             </configuration>
