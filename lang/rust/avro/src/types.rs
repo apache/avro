@@ -378,9 +378,6 @@ impl Value {
     }
 
     /// Validates the value against the provided schema.
-    ///
-    /// Arguments:
-    /// * `schema_resolution` - whether schema resolution rules should be applied when validating the `value`.
     pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema> + Debug>(
         &self,
         schema: &Schema,
