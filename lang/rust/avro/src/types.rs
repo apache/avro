@@ -377,6 +377,7 @@ impl Value {
         }
     }
 
+    /// Validates the value against the provided schema.
     pub(crate) fn validate_internal<S: std::borrow::Borrow<Schema> + Debug>(
         &self,
         schema: &Schema,
@@ -516,6 +517,7 @@ impl Value {
                 let non_nullable_fields_count =
                     fields.iter().filter(|&rf| !rf.is_nullable()).count();
 
+                // If the record contains fewer fields as required fields by the schema, it is invalid.
                 if record_fields.len() < non_nullable_fields_count {
                     return Some(format!(
                         "The value's records length ({}) doesn't match the schema ({} non-nullable fields)",
@@ -603,7 +605,7 @@ impl Value {
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace, &None)
     }
 
-    fn resolve_internal(
+    pub(crate) fn resolve_internal(
         mut self,
         schema: &Schema,
         names: &NamesRef,
