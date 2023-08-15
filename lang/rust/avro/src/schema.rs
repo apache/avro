@@ -838,7 +838,6 @@ impl UnionSchema {
                 collected_names.extend(resolved_names);
                 let namespace = &schema.namespace().or_else(|| enclosing_namespace.clone());
 
-                // Attempt to validate the value in order to ensure we've selected the right schema.
                 value
                     .clone()
                     .resolve_internal(schema, &collected_names, namespace, &None)

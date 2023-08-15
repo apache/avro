@@ -350,7 +350,7 @@ impl Value {
         schemata.iter().any(|schema| {
             let enclosing_namespace = schema.namespace();
 
-            match self.validate_internal(schema, rs.get_names(), &enclosing_namespace, false) {
+            match self.validate_internal(schema, rs.get_names(), &enclosing_namespace) {
                 Some(reason) => {
                     let log_message = format!(
                         "Invalid value: {:?} for schema: {:?}. Reason: {}",
@@ -386,7 +386,6 @@ impl Value {
         schema: &Schema,
         names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
-        schema_resolution: bool,
     ) -> Option<String> {
         match (self, schema) {
             (_, Schema::Ref { name }) => {
@@ -399,14 +398,7 @@ impl Value {
                             names.keys()
                         ))
                     },
-                    |s| {
-                        self.validate_internal(
-                            s.borrow(),
-                            names,
-                            &name.namespace,
-                            schema_resolution,
-                        )
-                    },
+                    |s| self.validate_internal(s.borrow(), names, &name.namespace),
                 )
             }
             (&Value::Null, &Schema::Null) => None,
@@ -477,42 +469,24 @@ impl Value {
                 Schema::Enum(EnumSchema {
                     symbols, default, ..
                 }),
-            ) => {
-                if schema_resolution {
-                    // When resolving a schema the following rule applies:
-                    // if both are enums: if the writer’s symbol is not present in the reader’s enum and the reader has a default value,
-                    // then that value is used, otherwise an error is signalled.
-                    if symbols.contains(s) || default.is_some() {
-                        // If `s` is a symbol in the schema, or a default is available then the value is valid.
-                        None
+            ) => symbols
+                .get(i as usize)
+                .map(|ref symbol| {
+                    if symbol != &s {
+                        Some(format!("Symbol '{s}' is not at position '{i}'"))
                     } else {
-                        Some(format!(
-                            "Unknown symbol '{s}': no symbol to fallback to is available."
-                        ))
+                        None
                     }
-                } else {
-                    symbols
-                        .get(i as usize)
-                        .map(|ref symbol| {
-                            if symbol != &s {
-                                Some(format!("Symbol '{s}' is not at position '{i}'"))
-                            } else {
-                                None
-                            }
-                        })
-                        .unwrap_or_else(|| match default {
-                            Some(_) => None,
-                            None => Some(format!("No symbol at position '{i}'")),
-                        })
-                }
-            }
+                })
+                .unwrap_or_else(|| match default {
+                    Some(_) => None,
+                    None => Some(format!("No symbol at position '{i}'")),
+                }),
             // (&Value::Union(None), &Schema::Union(_)) => None,
             (&Value::Union(i, ref value), Schema::Union(inner)) => inner
                 .variants()
                 .get(i as usize)
-                .map(|schema| {
-                    value.validate_internal(schema, names, enclosing_namespace, schema_resolution)
-                })
+                .map(|schema| value.validate_internal(schema, names, enclosing_namespace))
                 .unwrap_or_else(|| Some(format!("No schema in the union at position '{i}'"))),
             (v, Schema::Union(inner)) => {
                 match inner.find_schema_with_known_schemata(v, Some(names), enclosing_namespace) {
@@ -523,19 +497,14 @@ impl Value {
             (Value::Array(items), Schema::Array(inner)) => items.iter().fold(None, |acc, item| {
                 Value::accumulate(
                     acc,
-                    item.validate_internal(inner, names, enclosing_namespace, schema_resolution),
+                    item.validate_internal(inner, names, enclosing_namespace),
                 )
             }),
             (Value::Map(items), Schema::Map(inner)) => {
                 items.iter().fold(None, |acc, (_, value)| {
                     Value::accumulate(
                         acc,
-                        value.validate_internal(
-                            inner,
-                            names,
-                            enclosing_namespace,
-                            schema_resolution,
-                        ),
+                        value.validate_internal(inner, names, enclosing_namespace),
                     )
                 })
             }
@@ -558,7 +527,7 @@ impl Value {
                         record_fields.len(),
                         non_nullable_fields_count
                     ));
-                } else if record_fields.len() > fields.len() && !schema_resolution {
+                } else if record_fields.len() > fields.len() {
                     return Some(format!(
                         "The value's records length ({}) is greater than the schema's ({} fields)",
                         record_fields.len(),
@@ -583,37 +552,20 @@ impl Value {
                                         &field.schema,
                                         names,
                                         record_namespace,
-                                        schema_resolution,
                                     ),
                                 )
                             }
-                            None => {
-                                if schema_resolution {
-                                    // While performing validation during schema resolution we allow
-                                    // extraneous fields to exist in the Value::Record, as these
-                                    // will get cleaned up later by the schema resolution logic.
-                                    acc
-                                } else {
-                                    Value::accumulate(
-                                        acc,
-                                        Some(format!(
-                                            "There is no schema field for field '{field_name}'"
-                                        )),
-                                    )
-                                }
-                            }
+                            None => Value::accumulate(
+                                acc,
+                                Some(format!("There is no schema field for field '{field_name}'")),
+                            ),
                         }
                     })
             }
             (Value::Map(items), Schema::Record(RecordSchema { fields, .. })) => {
                 fields.iter().fold(None, |acc, field| {
                     if let Some(item) = items.get(&field.name) {
-                        let res = item.validate_internal(
-                            &field.schema,
-                            names,
-                            enclosing_namespace,
-                            schema_resolution,
-                        );
+                        let res = item.validate_internal(&field.schema, names, enclosing_namespace);
                         Value::accumulate(acc, res)
                     } else if !field.is_nullable() {
                         Value::accumulate(
@@ -1305,7 +1257,7 @@ mod tests {
 
         for (value, schema, valid, expected_err_message) in value_schema_valid.into_iter() {
             let err_message =
-                value.validate_internal::<Schema>(&schema, &HashMap::default(), &None, false);
+                value.validate_internal::<Schema>(&schema, &HashMap::default(), &None);
             assert_eq!(valid, err_message.is_none());
             if !valid {
                 let full_err_message = format!(
@@ -1498,23 +1450,6 @@ mod tests {
             ("b".to_string(), Value::String("foo".to_string())),
         ])
         .validate(&schema));
-
-        // AVRO-3814 - when validating a record, extraneous fields should be ignored when schema resolution rules
-        // are applied.
-        let rs =
-            ResolvedSchema::try_from(vec![&schema]).expect("Schemata didn't successfully resolve");
-        let value = Value::Record(vec![
-            ("a".to_string(), Value::Long(42i64)),
-            ("b".to_string(), Value::String("foo".to_string())),
-            ("f".to_string(), Value::String("foo".to_string())), // extraneous field
-        ]);
-        assert!(value
-            .validate_internal(&schema, rs.get_names(), &schema.namespace(), false)
-            .is_some());
-        // However, when applying schema resolution rules, the extraneous should be ignored by the validation logic.
-        assert!(value
-            .validate_internal(&schema, rs.get_names(), &schema.namespace(), true)
-            .is_none());
 
         let value = Value::Record(vec![
             ("b".to_string(), Value::String("foo".to_string())),

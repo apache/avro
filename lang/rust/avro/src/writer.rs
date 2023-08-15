@@ -425,7 +425,7 @@ fn write_avro_datum_schemata<T: Into<Value>>(
     let rs = ResolvedSchema::try_from(schemata)?;
     let names = rs.get_names();
     let enclosing_namespace = schema.namespace();
-    if let Some(_err) = avro.validate_internal(schema, names, &enclosing_namespace, false) {
+    if let Some(_err) = avro.validate_internal(schema, names, &enclosing_namespace) {
         return Err(Error::Validation);
     }
     encode_internal(&avro, schema, names, &enclosing_namespace, buffer)
@@ -544,12 +544,7 @@ fn write_value_ref_resolved(
     value: &Value,
     buffer: &mut Vec<u8>,
 ) -> AvroResult<()> {
-    match value.validate_internal(
-        schema,
-        resolved_schema.get_names(),
-        &schema.namespace(),
-        false,
-    ) {
+    match value.validate_internal(schema, resolved_schema.get_names(), &schema.namespace()) {
         Some(err) => Err(Error::ValidationWithReason(err)),
         None => encode_internal(
             value,
@@ -571,7 +566,6 @@ fn write_value_ref_owned_resolved(
         root_schema,
         resolved_schema.get_names(),
         &root_schema.namespace(),
-        false,
     ) {
         return Err(Error::ValidationWithReason(err));
     }
