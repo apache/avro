@@ -17,9 +17,6 @@
  */
 package org.apache.avro;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
 
@@ -28,12 +25,30 @@ import org.junit.Test;
 public class TestProtocol {
 
   @Test
+  public void testNamespaceAndNameRules() {
+    Protocol p1 = new Protocol("P", null, "foo");
+    Protocol p2 = new Protocol("foo.P", null, null);
+    Protocol p3 = new Protocol("foo.P", null, "bar");
+    assertEquals(p1.getName(), p2.getName());
+    assertEquals(p1.getNamespace(), p2.getNamespace());
+    assertEquals(p1.getName(), p3.getName());
+    assertEquals(p1.getNamespace(), p3.getNamespace());
+
+    // The following situation is allowed, even if confusing, because the
+    // specification describes this algorithm without specifying that the resulting
+    // namespace mst be non-empty.
+    Protocol invalidName = new Protocol(".P", null, "ignored");
+    assertNull(invalidName.getNamespace());
+    assertEquals("P", invalidName.getName());
+  }
+
+  @Test
   public void testPropEquals() {
     Protocol p1 = new Protocol("P", null, "foo");
     p1.addProp("a", "1");
     Protocol p2 = new Protocol("P", null, "foo");
     p2.addProp("a", "2");
-    assertFalse(p1.equals(p2));
+    assertNotEquals(p1, p2);
   }
 
   @Test
