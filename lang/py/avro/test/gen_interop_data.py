@@ -73,6 +73,7 @@ def generate(schema_file: TextIO, output_path: IO) -> None:
             continue
         base, ext = os.path.splitext(output_path.name)
         Path(f"{base}_{codec}{ext}").write_bytes(data)
+    output_path.close()
 
 
 def _parse_args() -> argparse.Namespace:
