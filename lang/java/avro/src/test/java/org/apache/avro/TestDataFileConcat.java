@@ -70,7 +70,7 @@ public class TestDataFileConcat {
 
   @ParameterizedTest
   @MethodSource("codecs")
-  public void testConcatenateFiles(CodecFactory codec, CodecFactory codec2, boolean recompress) throws IOException {
+  void concatenateFiles(CodecFactory codec, CodecFactory codec2, boolean recompress) throws IOException {
     System.out.println("SEED = " + SEED);
     System.out.println("COUNT = " + COUNT);
     for (int k = 0; k < 5; k++) {

@@ -44,7 +44,7 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
 
   @ParameterizedTest
   @MethodSource("data")
-  public void testFixedSizeMismatchSchemas(Schema reader, Schema writer, String details, String location) {
+  void fixedSizeMismatchSchemas(Schema reader, Schema writer, String details, String location) {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.FIXED_SIZE_MISMATCH, details, location);
   }
 }

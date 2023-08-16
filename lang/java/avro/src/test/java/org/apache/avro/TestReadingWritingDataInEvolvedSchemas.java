@@ -128,7 +128,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void doubleWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
+  void doubleWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42.0);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -138,7 +138,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsConvertedToUnionLongFloatSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsConvertedToUnionLongFloatSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -148,7 +148,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -158,7 +158,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void intWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
+  void intWrittenWithUnionSchemaIsConvertedToDoubleSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -168,7 +168,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void intWrittenWithUnionSchemaIsReadableByFloatSchema(EncoderType encoderType) throws Exception {
+  void intWrittenWithUnionSchemaIsReadableByFloatSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -178,7 +178,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void intWrittenWithUnionSchemaIsReadableByFloatUnionSchema(EncoderType encoderType) throws Exception {
+  void intWrittenWithUnionSchemaIsReadableByFloatUnionSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -188,7 +188,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsReadableByFloatSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsReadableByFloatSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -198,7 +198,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsReadableByFloatUnionSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsReadableByFloatUnionSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -208,7 +208,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsConvertedToLongFloatUnionSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsConvertedToLongFloatUnionSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -218,7 +218,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsConvertedToFloatDoubleUnionSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsConvertedToFloatDoubleUnionSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_LONG_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -228,9 +228,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void doubleWrittenWithUnionSchemaIsNotConvertedToFloatSchema(EncoderType encoderType) throws Exception {
-    // expectedException.expect(AvroTypeException.class);
-    // expectedException.expectMessage("Found double, expecting float");
+  void doubleWrittenWithUnionSchemaIsNotConvertedToFloatSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42.0);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -241,9 +239,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void floatWrittenWithUnionSchemaIsNotConvertedToLongSchema(EncoderType encoderType) throws Exception {
-    // expectedException.expect(AvroTypeException.class);
-    // expectedException.expectMessage("Found float, expecting long");
+  void floatWrittenWithUnionSchemaIsNotConvertedToLongSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42.0f);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -254,7 +250,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void longWrittenWithUnionSchemaIsNotConvertedToIntSchema(EncoderType encoderType) throws Exception {
+  void longWrittenWithUnionSchemaIsNotConvertedToIntSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42L);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -265,7 +261,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void intWrittenWithUnionSchemaIsConvertedToAllNumberSchemas(EncoderType encoderType) throws Exception {
+  void intWrittenWithUnionSchemaIsConvertedToAllNumberSchemas(EncoderType encoderType) throws Exception {
     Schema writer = UNION_INT_LONG_FLOAT_DOUBLE_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, 42);
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -277,7 +273,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void asciiStringWrittenWithUnionSchemaIsConvertedToBytesSchema(EncoderType encoderType) throws Exception {
+  void asciiStringWrittenWithUnionSchemaIsConvertedToBytesSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_STRING_BYTES_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, "42");
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -287,7 +283,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void utf8StringWrittenWithUnionSchemaIsConvertedToBytesSchema(EncoderType encoderType) throws Exception {
+  void utf8StringWrittenWithUnionSchemaIsConvertedToBytesSchema(EncoderType encoderType) throws Exception {
     String goeran = String.format("G%sran", LATIN_SMALL_LETTER_O_WITH_DIARESIS);
     Schema writer = UNION_STRING_BYTES_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, goeran);
@@ -298,7 +294,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void asciiBytesWrittenWithUnionSchemaIsConvertedToStringSchema(EncoderType encoderType) throws Exception {
+  void asciiBytesWrittenWithUnionSchemaIsConvertedToStringSchema(EncoderType encoderType) throws Exception {
     Schema writer = UNION_STRING_BYTES_RECORD;
     ByteBuffer buf = ByteBuffer.wrap("42".getBytes(StandardCharsets.UTF_8));
     Record record = defaultRecordWithSchema(writer, FIELD_A, buf);
@@ -309,7 +305,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void utf8BytesWrittenWithUnionSchemaIsConvertedToStringSchema(EncoderType encoderType) throws Exception {
+  void utf8BytesWrittenWithUnionSchemaIsConvertedToStringSchema(EncoderType encoderType) throws Exception {
     String goeran = String.format("G%sran", LATIN_SMALL_LETTER_O_WITH_DIARESIS);
     Schema writer = UNION_STRING_BYTES_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, goeran);
@@ -320,7 +316,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void enumRecordCanBeReadWithExtendedEnumSchema(EncoderType encoderType) throws Exception {
+  void enumRecordCanBeReadWithExtendedEnumSchema(EncoderType encoderType) throws Exception {
     Schema writer = ENUM_AB_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, new EnumSymbol(ENUM_AB, "A"));
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -330,7 +326,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void enumRecordWithExtendedSchemaCanBeReadWithOriginalEnumSchemaIfOnlyOldValues(EncoderType encoderType)
+  void enumRecordWithExtendedSchemaCanBeReadWithOriginalEnumSchemaIfOnlyOldValues(EncoderType encoderType)
       throws Exception {
     Schema writer = ENUM_ABC_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, new EnumSymbol(ENUM_ABC, "A"));
@@ -341,9 +337,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void enumRecordWithExtendedSchemaCanNotBeReadIfNewValuesAreUsed(EncoderType encoderType) throws Exception {
-    // expectedException.expect(AvroTypeException.class);
-    // expectedException.expectMessage("No match for C");
+  void enumRecordWithExtendedSchemaCanNotBeReadIfNewValuesAreUsed(EncoderType encoderType) throws Exception {
     Schema writer = ENUM_ABC_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, new EnumSymbol(ENUM_ABC, "C"));
     byte[] encoded = encodeGenericBlob(record, encoderType);
@@ -355,7 +349,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void recordWrittenWithExtendedSchemaCanBeReadWithOriginalSchemaButLossOfData(EncoderType encoderType)
+  void recordWrittenWithExtendedSchemaCanBeReadWithOriginalSchemaButLossOfData(EncoderType encoderType)
       throws Exception {
     Schema writer = SchemaBuilder.record(RECORD_A) //
         .fields() //
@@ -377,7 +371,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void readerWithoutDefaultValueThrowsException(EncoderType encoderType) throws Exception {
+  void readerWithoutDefaultValueThrowsException(EncoderType encoderType) throws Exception {
     Schema reader = SchemaBuilder.record(RECORD_A) //
         .fields() //
         .name("newField").type().intType().noDefault() //
@@ -392,7 +386,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void readerWithDefaultValueIsApplied(EncoderType encoderType) throws Exception {
+  void readerWithDefaultValueIsApplied(EncoderType encoderType) throws Exception {
     Schema reader = SchemaBuilder.record(RECORD_A) //
         .fields() //
         .name("newFieldWithDefault").type().intType().intDefault(314) //
@@ -407,7 +401,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @ParameterizedTest
   @EnumSource(EncoderType.class)
-  public void aliasesInSchema(EncoderType encoderType) throws Exception {
+  void aliasesInSchema(EncoderType encoderType) throws Exception {
     Schema writer = new Schema.Parser()
         .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
             + "{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
