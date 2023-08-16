@@ -34,7 +34,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <jmh.version>1.36</jmh.version>
+    <jmh.version>1.37</jmh.version>
     <main.basedir>${project.parent.parent.basedir}</main.basedir>
   </properties>
 
