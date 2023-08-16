@@ -17,53 +17,32 @@
  */
 package org.apache.avro.io;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.apache.avro.Schema;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.IOException;
+import java.util.stream.Stream;
+
 public class TestResolvingIOResolving {
-  protected TestValidatingIO.Encoding eEnc;
-  protected final int iSkipL;
-  protected final String sJsWrtSchm;
-  protected final String sWrtCls;
-  protected final String sJsRdrSchm;
-  protected final String sRdrCls;
 
-  protected final Object[] oaWrtVals;
-  protected final Object[] oaRdrVals;
-
-  public TestResolvingIOResolving(TestValidatingIO.Encoding encoding, int skipLevel, String jsonWriterSchema,
-      String writerCalls, Object[] writerValues, String jsonReaderSchema, String readerCalls, Object[] readerValues) {
-    this.eEnc = encoding;
-    this.iSkipL = skipLevel;
-    this.sJsWrtSchm = jsonWriterSchema;
-    this.sWrtCls = writerCalls;
-    this.oaWrtVals = writerValues;
-    this.sJsRdrSchm = jsonReaderSchema;
-    this.sRdrCls = readerCalls;
-    this.oaRdrVals = readerValues;
+  @ParameterizedTest
+  @MethodSource("data3")
+  public void testResolving(TestValidatingIO.Encoding encoding, int skipLevel, String jsonWriterSchema,
+      String writerCalls, Object[] writerValues, String jsonReaderSchema, String readerCalls, Object[] readerValues)
+      throws IOException {
+    Schema writerSchema = new Schema.Parser().parse(jsonWriterSchema);
+    byte[] bytes = TestValidatingIO.make(writerSchema, writerCalls, writerValues, encoding);
+    Schema readerSchema = new Schema.Parser().parse(jsonReaderSchema);
+    TestValidatingIO.print(encoding, skipLevel, writerSchema, readerSchema, writerValues, readerValues);
+    TestResolvingIO.check(writerSchema, readerSchema, bytes, readerCalls, readerValues, encoding, skipLevel);
   }
 
-  @Test
-  public void testResolving() throws IOException {
-    Schema writerSchema = new Schema.Parser().parse(sJsWrtSchm);
-    byte[] bytes = TestValidatingIO.make(writerSchema, sWrtCls, oaWrtVals, eEnc);
-    Schema readerSchema = new Schema.Parser().parse(sJsRdrSchm);
-    TestValidatingIO.print(eEnc, iSkipL, writerSchema, readerSchema, oaWrtVals, oaRdrVals);
-    TestResolvingIO.check(writerSchema, readerSchema, bytes, sRdrCls, oaRdrVals, eEnc, iSkipL);
-  }
-
-  @Parameterized.Parameters
-  public static Collection<Object[]> data3() {
-    Collection<Object[]> ret = Arrays.asList(TestValidatingIO.convertTo2dArray(TestResolvingIO.encodings,
-        TestResolvingIO.skipLevels, dataForResolvingTests()));
-    return ret;
+  public static Stream<Arguments> data3() {
+    return TestValidatingIO.convertTo2dStream(TestResolvingIO.encodings, TestResolvingIO.skipLevels,
+        dataForResolvingTests());
   }
 
   private static Object[][] dataForResolvingTests() {
