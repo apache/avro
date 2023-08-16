@@ -17,33 +17,6 @@
  */
 package org.apache.avro.idl;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
@@ -97,6 +70,33 @@ import org.apache.avro.idl.IdlParser.VariableDeclarationContext;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.commons.text.StringEscapeUtils;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableMap;
 
@@ -133,7 +133,7 @@ public class IdlReader {
    * Predicate to check for valid names. Should probably be delegated to the
    * Schema class.
    */
-  private static final Predicate<String> VALID_NAME = Pattern.compile("[_\\p{L}][_\\p{L}\\p{Digit}]*").asPredicate();
+  private static final Predicate<String> VALID_NAME = Pattern.compile("[_\\p{L}][_\\p{L}\\d]*").asPredicate();
   private static final Set<String> INVALID_TYPE_NAMES = new HashSet<>(Arrays.asList("boolean", "int", "long", "float",
       "double", "bytes", "string", "null", "date", "time_ms", "timestamp_ms", "localtimestamp_ms", "uuid"));
   private static final String CLASSPATH_SCHEME = "classpath";
@@ -218,13 +218,8 @@ public class IdlReader {
     parser.setTrace(false);
     parser.setBuildParseTree(false);
 
-    try {
-      // Trigger parsing.
-      parser.idlFile();
-    } catch (RuntimeException e) {
-      e.printStackTrace();
-      throw e;
-    }
+    // Trigger parsing.
+    parser.idlFile();
 
     return parseListener.getIdlFile();
   }
@@ -427,7 +422,7 @@ public class IdlReader {
         case IdlParser.Schema:
           try (InputStream stream = importLocation.toURL().openStream()) {
             Schema.Parser parser = new Schema.Parser();
-            parser.addTypes(getTypes()); // inherit names
+            parser.addTypes(getTypes().values()); // inherit names
             parser.parse(stream);
             setTypes(parser.getTypes()); // update names
           }
