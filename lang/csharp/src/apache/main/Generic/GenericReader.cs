@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using Avro.IO;
 using System.IO;
+using System.Linq;
 
 namespace Avro.Generic
 {
@@ -294,7 +295,7 @@ namespace Avro.Generic
             {
                 var defaultEncoder = new BinaryEncoder(defaultStream);
                 var defaultDecoder = new BinaryDecoder(defaultStream);
-                foreach (Field rf in rs)
+                foreach (Field rf in rs.Fields.Where(rf => !writerSchema.Contains(rf.Name)))
                 {
                     if (writerSchema.Contains(rf.Name)) continue;
 

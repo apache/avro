@@ -23,28 +23,17 @@ namespace Avro.IO
     /// <summary>
     /// Decoder for Avro binary format
     /// </summary>
-    public partial class BinaryDecoder : Decoder, IDisposable
+    public partial class BinaryDecoder : Decoder
     {
         private readonly Stream stream;
-        private readonly bool ownStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
         /// </summary>
         /// <param name="stream">Stream to decode.</param>
-        public BinaryDecoder(Stream stream) : this(stream, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
-        /// </summary>
-        /// <param name="stream">Stream to decode.</param>
-        /// <param name="ownStream">Leave stream open after disposing the object.</param>
-        public BinaryDecoder(Stream stream, bool ownStream)
+        public BinaryDecoder(Stream stream)
         {
             this.stream = stream;
-            this.ownStream = ownStream;
         }
 
         /// <summary>
@@ -306,13 +295,6 @@ namespace Avro.IO
         private void Skip(long p)
         {
             stream.Seek(p, SeekOrigin.Current);
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if(!ownStream)
-                stream?.Dispose();
         }
     }
 }

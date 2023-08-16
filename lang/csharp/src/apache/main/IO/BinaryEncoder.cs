@@ -23,10 +23,9 @@ namespace Avro.IO
     /// <summary>
     /// Write leaf values.
     /// </summary>
-    public class BinaryEncoder : Encoder, IDisposable
+    public class BinaryEncoder : Encoder
     {
         private readonly Stream stream;
-        private readonly bool ownStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinaryEncoder"/> class without a backing
@@ -41,19 +40,9 @@ namespace Avro.IO
         /// the provided stream.
         /// </summary>
         /// <param name="stream">Stream to write to.</param>
-        public BinaryEncoder(Stream stream) : this(stream, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
-        /// </summary>
-        /// <param name="stream">Stream to decode.</param>
-        /// <param name="ownStream">Leave stream open after disposing the object.</param>
-        public BinaryEncoder(Stream stream, bool ownStream)
+        public BinaryEncoder(Stream stream)
         {
             this.stream = stream;
-            this.ownStream = ownStream;
         }
 
         /// <summary>
@@ -238,13 +227,6 @@ namespace Avro.IO
         public void Flush()
         {
             stream.Flush();
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if (!ownStream)
-                stream?.Dispose();
         }
     }
 }
