@@ -33,18 +33,18 @@ public class TestResolvingIO {
 
   @ParameterizedTest
   @MethodSource("data2")
-  public void testIdentical(Encoding eEnc, int iSkipL, String sJsWrtSchm, String sWrtCls, String sJsRdrSchm,
-      String sRdrCls) throws IOException {
-    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsWrtSchm, sWrtCls);
+  public void testIdentical(Encoding encoding, int skip, String jsonWriterSchema, String writerCalls,
+      String jsonReaderSchema, String readerCalls) throws IOException {
+    performTest(encoding, skip, jsonWriterSchema, writerCalls, jsonWriterSchema, writerCalls);
   }
 
   private static final int COUNT = 10;
 
   @ParameterizedTest
   @MethodSource("data2")
-  public void testCompatible(Encoding eEnc, int iSkipL, String sJsWrtSchm, String sWrtCls, String sJsRdrSchm,
-      String sRdrCls) throws IOException {
-    performTest(eEnc, iSkipL, sJsWrtSchm, sWrtCls, sJsRdrSchm, sRdrCls);
+  public void testCompatible(Encoding encoding, int skip, String jsonWriterSchema, String writerCalls,
+      String jsonReaderSchema, String readerCalls) throws IOException {
+    performTest(encoding, skip, jsonWriterSchema, writerCalls, jsonReaderSchema, readerCalls);
   }
 
   private void performTest(Encoding encoding, int skipLevel, String jsonWriterSchema, String writerCalls,
@@ -87,7 +87,7 @@ public class TestResolvingIO {
   }
 
   public static Stream<Arguments> data2() {
-    return TestValidatingIO.convertTo2dArray(encodings, skipLevels, testSchemas());
+    return TestValidatingIO.convertTo2dStream(encodings, skipLevels, testSchemas());
   }
 
   static Object[][] encodings = new Object[][] { { Encoding.BINARY }, { Encoding.BLOCKING_BINARY }, { Encoding.JSON } };

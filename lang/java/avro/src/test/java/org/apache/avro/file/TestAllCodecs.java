@@ -69,6 +69,7 @@ public class TestAllCodecs {
     byte[] input = generateTestData(inputSize);
 
     Codec codecInstance = CodecFactory.fromString(codec).createInstance();
+    Assertions.assertTrue(codecClass.isInstance(codecInstance));
 
     ByteBuffer partialBuffer = ByteBuffer.wrap(input);
     partialBuffer.position(17);

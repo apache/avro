@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestSpecificRecordWithUnion {
   @Test
-  public void testUnionLogicalDecimalConversion() throws IOException {
+  void unionLogicalDecimalConversion() throws IOException {
     final TestUnionRecord record = TestUnionRecord.newBuilder().setAmount(BigDecimal.ZERO).build();
     final Schema schema = SchemaBuilder.unionOf().nullType().and().type(record.getSchema()).endUnion();
 

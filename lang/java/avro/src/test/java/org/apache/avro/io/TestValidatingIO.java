@@ -497,7 +497,7 @@ public class TestValidatingIO {
   }
 
   public static Stream<Arguments> data() {
-    return convertTo2dArray(encodings, skipLevels, testSchemas());
+    return convertTo2dStream(encodings, skipLevels, testSchemas());
   }
 
   private static Object[][] encodings = new Object[][] { { Encoding.BINARY }, { Encoding.BLOCKING_BINARY },
@@ -505,18 +505,11 @@ public class TestValidatingIO {
 
   private static Object[][] skipLevels = new Object[][] { { -1 }, { 0 }, { 1 }, { 2 }, };
 
-  public static Stream<Arguments> convertTo2dArray(final Object[][]... values) {
-    // ArrayList<Object[]> ret = new ArrayList<>();
-
+  public static Stream<Arguments> convertTo2dStream(final Object[][]... values) {
     Iterator<Object[]> iter = cartesian(values);
     Stream<Object[]> stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED),
         false);
     return stream.map(Arguments::of);
-    /*
-     * while (iter.hasNext()) { Object[] objects = iter.next(); ret.add(objects); }
-     * Object[][] retArrays = new Object[ret.size()][]; for (int i = 0; i <
-     * ret.size(); i++) { retArrays[i] = ret.get(i); } return retArrays;
-     */
   }
 
   /**

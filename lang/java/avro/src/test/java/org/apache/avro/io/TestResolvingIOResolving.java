@@ -41,7 +41,7 @@ public class TestResolvingIOResolving {
   }
 
   public static Stream<Arguments> data3() {
-    return TestValidatingIO.convertTo2dArray(TestResolvingIO.encodings, TestResolvingIO.skipLevels,
+    return TestValidatingIO.convertTo2dStream(TestResolvingIO.encodings, TestResolvingIO.skipLevels,
         dataForResolvingTests());
   }
 

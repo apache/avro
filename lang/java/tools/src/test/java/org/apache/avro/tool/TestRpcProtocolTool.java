@@ -63,7 +63,6 @@ public class TestRpcProtocolTool {
     Assertions.assertEquals(simpleProtocol, Protocol.parse(baos2.toString("UTF-8")),
         "Expected the simple.avpr protocol to be echoed to standout");
 
-    if (receive != null)
-      receive.server.close(); // force the server to finish
+    receive.server.close(); // force the server to finish
   }
 }
