@@ -17,44 +17,37 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.*;
-
-import java.util.Arrays;
-
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
+
+import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
+import static org.apache.avro.TestSchemas.A_DINT_B_DENUM_1_RECORD1;
+import static org.apache.avro.TestSchemas.A_DINT_B_DENUM_2_RECORD1;
+import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
+import static org.apache.avro.TestSchemas.EMPTY_RECORD2;
+import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
+import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
+
 public class TestSchemaCompatibilityNameMismatch {
 
   private static final Schema FIXED_4_ANOTHER_NAME = Schema.createFixed("AnotherName", null, null, 4);
 
-  @Parameters(name = "r: {0} | w: {1}")
-  public static Iterable<Object[]> data() {
-    Object[][] fields = { //
-        { ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA, "expected: Enum2", "/name" },
-        { EMPTY_RECORD2, EMPTY_RECORD1, "expected: Record1", "/name" },
-        { FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name" },
-        { A_DINT_B_DENUM_1_RECORD1, A_DINT_B_DENUM_2_RECORD1, "expected: Enum2", "/fields/1/type/name" } };
-    return Arrays.asList(fields);
+  public static Stream<Arguments> data() {
+    return Stream.of(Arguments.of(ENUM1_AB_SCHEMA, ENUM2_AB_SCHEMA, "expected: Enum2", "/name"),
+        Arguments.of(EMPTY_RECORD2, EMPTY_RECORD1, "expected: Record1", "/name"),
+        Arguments.of(FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name"),
+        Arguments.of(A_DINT_B_DENUM_1_RECORD1, A_DINT_B_DENUM_2_RECORD1, "expected: Enum2", "/fields/1/type/name"));
   }
 
-  @Parameter(0)
-  public Schema reader;
-  @Parameter(1)
-  public Schema writer;
-  @Parameter(2)
-  public String details;
-  @Parameter(3)
-  public String location;
-
-  @Test
-  public void testNameMismatchSchemas() throws Exception {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testNameMismatchSchemas(Schema reader, Schema writer, String details, String location) throws Exception {
     validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.NAME_MISMATCH, details, location);
   }
 }

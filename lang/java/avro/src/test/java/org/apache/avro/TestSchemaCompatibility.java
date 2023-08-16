@@ -120,7 +120,7 @@ public class TestSchemaCompatibility {
   @Test
   void validateSchemaPairMissingField() {
     final List<Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -132,7 +132,7 @@ public class TestSchemaCompatibility {
   @Test
   void validateSchemaPairMissingSecondField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -145,7 +145,7 @@ public class TestSchemaCompatibility {
   void validateSchemaPairAllFields() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -158,7 +158,7 @@ public class TestSchemaCompatibility {
   void validateSchemaNewFieldWithDefault() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, 42));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -171,7 +171,7 @@ public class TestSchemaCompatibility {
   void validateSchemaNewField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, WRITER_SCHEMA);
 
     // Test new field without default value.
