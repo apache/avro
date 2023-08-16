@@ -189,6 +189,7 @@ unittest (JsonTests)
 unittest (AvrogencppTests)
 unittest (CompilerTests)
 unittest (AvrogencppTestReservedWords)
+unittest (CommonsSchemasTests)
 
 add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
 
