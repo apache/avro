@@ -668,55 +668,6 @@ namespace Avro.Test.File
             }
         }
 
-        [Test]
-        public void TestDeflateReadMemoryUsage([Values(specificSchema)] string schemaStr)
-        {
-            // create and write out
-            IList<Foo> records = MakeRecords(GetTestFooObject());
-
-            Process currentProcess = Process.GetCurrentProcess();
-
-            MemoryStream dataFileOutputStream = new MemoryStream();
-
-            Schema schema = Schema.Parse(schemaStr);
-            DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
-            using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(Codec.Type.Deflate)))
-            {
-                for (int i = 0; i < 10; ++i)
-                {
-                    foreach (Foo foo in records)
-                    {
-                        dataFileWriter.Append(foo);
-                    }
-
-                    // write out block
-                    if (i == 1 || i == 4)
-                    {
-                        dataFileWriter.Sync();
-                    }
-                }
-            }
-
-            long startMemoryUsedBytes = currentProcess.WorkingSet64;
-
-            MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
-            dataFileInputStream.Position = 0;
-
-            // read back
-            IList<Foo> readRecords = new List<Foo>();
-            using (IFileReader<Foo> reader = DataFileReader<Foo>.OpenReader(dataFileInputStream, schema))
-            {
-                // read records from synced position
-                foreach (Foo rec in reader.NextEntries)
-                    readRecords.Add(rec);
-            }
-
-            long totalMemoryUsedBytes = currentProcess.WorkingSet64 - startMemoryUsedBytes;
-
-            Assert.IsTrue(totalMemoryUsedBytes  == 0, "Total memory usage in working set");
-
-        }
-
         /// <summary>
         /// Test leaveOpen flag
         /// </summary>

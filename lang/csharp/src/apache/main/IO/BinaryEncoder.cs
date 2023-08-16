@@ -25,7 +25,8 @@ namespace Avro.IO
     /// </summary>
     public class BinaryEncoder : Encoder, IDisposable
     {
-        private readonly Stream Stream;
+        private readonly Stream stream;
+        private readonly bool ownStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BinaryEncoder"/> class without a backing
@@ -40,9 +41,19 @@ namespace Avro.IO
         /// the provided stream.
         /// </summary>
         /// <param name="stream">Stream to write to.</param>
-        public BinaryEncoder(Stream stream)
+        public BinaryEncoder(Stream stream) : this(stream, false)
         {
-            this.Stream = stream;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
+        /// </summary>
+        /// <param name="stream">Stream to decode.</param>
+        /// <param name="ownStream">Leave stream open after disposing the object.</param>
+        public BinaryEncoder(Stream stream, bool ownStream)
+        {
+            this.stream = stream;
+            this.ownStream = ownStream;
         }
 
         /// <summary>
@@ -203,22 +214,22 @@ namespace Avro.IO
         /// <inheritdoc/>
         public void WriteFixed(byte[] data, int start, int len)
         {
-            Stream.Write(data, start, len);
+            stream.Write(data, start, len);
         }
 
         private void writeBytes(byte[] bytes)
         {
-            Stream.Write(bytes, 0, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
         }
 
         private void writeBytes(byte[] bytes, int offset, int length)
         {
-            Stream.Write(bytes, offset, length);
+            stream.Write(bytes, offset, length);
         }
 
         private void writeByte(byte b)
         {
-            Stream.WriteByte(b);
+            stream.WriteByte(b);
         }
 
         /// <summary>
@@ -226,10 +237,14 @@ namespace Avro.IO
         /// </summary>
         public void Flush()
         {
-            Stream.Flush();
+            stream.Flush();
         }
 
         /// <inheritdoc />
-        public void Dispose() => Stream?.Dispose();
+        public void Dispose()
+        {
+            if (!ownStream)
+                stream?.Dispose();
+        }
     }
 }

@@ -290,21 +290,23 @@ namespace Avro.Generic
                 }
             }
 
-            var defaultStream = new MemoryStream();
-            var defaultEncoder = new BinaryEncoder(defaultStream);
-            var defaultDecoder = new BinaryDecoder(defaultStream);
-            foreach (Field rf in rs)
+            using (var defaultStream = new MemoryStream())
             {
-                if (writerSchema.Contains(rf.Name)) continue;
+                var defaultEncoder = new BinaryEncoder(defaultStream);
+                var defaultDecoder = new BinaryDecoder(defaultStream);
+                foreach (Field rf in rs)
+                {
+                    if (writerSchema.Contains(rf.Name)) continue;
 
-                defaultStream.Position = 0; // reset for writing
-                Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
-                defaultStream.Flush();
-                defaultStream.Position = 0; // reset for reading
+                    defaultStream.Position = 0; // reset for writing
+                    Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
+                    defaultStream.Flush();
+                    defaultStream.Position = 0; // reset for reading
 
-                object obj = null;
-                TryGetField(rec, rf.Name, rf.Pos, out obj);
-                AddField(rec, rf.Name, rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                    object obj = null;
+                    TryGetField(rec, rf.Name, rf.Pos, out obj);
+                    AddField(rec, rf.Name, rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                }
             }
 
             return rec;
