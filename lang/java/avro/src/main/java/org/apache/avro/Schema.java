@@ -717,7 +717,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         space = name.substring(0, lastDot); // get space from name
         this.name = validateName(name.substring(lastDot + 1));
       }
-      this.space = "".equals(space) || space == null ? null : validateSpace(space);
+      this.space = space == null || space.isEmpty() ? null : validateSpace(space);
       this.full = (this.space == null) ? this.name : this.space + "." + this.name;
     }
 
