@@ -53,6 +53,16 @@ public class PrimitivesArrays {
 
     @Override
     public Integer get(int i) {
+      return this.getInt(i);
+    }
+
+    /**
+     * Direct primitive int access.
+     * 
+     * @param i : index.
+     * @return value at index.
+     */
+    public int getInt(int i) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return elements[i];
@@ -147,6 +157,16 @@ public class PrimitivesArrays {
 
     @Override
     public Long get(int i) {
+      return getLong(i);
+    }
+
+    /**
+     * Direct primitive int access.
+     * 
+     * @param i : index.
+     * @return value at index.
+     */
+    public long getLong(int i) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return elements[i];
@@ -248,6 +268,16 @@ public class PrimitivesArrays {
 
     @Override
     public Boolean get(int i) {
+      return this.getBoolean(i);
+    }
+
+    /**
+     * Direct primitive int access.
+     * 
+     * @param i : index.
+     * @return value at index.
+     */
+    public boolean getBoolean(int i) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return (elements[i / 8] & (1 << (i % 8))) > 0;
@@ -396,6 +426,16 @@ public class PrimitivesArrays {
 
     @Override
     public Float get(int i) {
+      return this.getFloat(i);
+    }
+
+    /**
+     * Direct primitive int access.
+     * 
+     * @param i : index.
+     * @return value at index.
+     */
+    public float getFloat(int i) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return elements[i];
@@ -490,6 +530,16 @@ public class PrimitivesArrays {
 
     @Override
     public Double get(int i) {
+      return this.getDouble(i);
+    }
+
+    /**
+     * Direct primitive int access.
+     * 
+     * @param i : index.
+     * @return value at index.
+     */
+    public double getDouble(int i) {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return elements[i];
