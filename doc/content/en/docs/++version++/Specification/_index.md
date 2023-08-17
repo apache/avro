@@ -259,7 +259,7 @@ Complex types (`record`, `enum`, `array`, `map`, `fixed`) have no namespace, but
 
 A schema or protocol may not contain multiple definitions of a fullname. Further, a name must be defined before it is used ("before" in the depth-first, left-to-right traversal of the JSON parse tree, where the types attribute of a protocol is always deemed to come "before" the messages attribute.)
 
-### Aliases
+### Aliases {#aliases}
 Named types and fields may have aliases. An implementation may optionally use aliases to map a writer's schema to the reader's. This facilitates both schema evolution as well as processing disparate datasets.
 
 Aliases function by re-writing the writer's schema using aliases from the reader's schema. For example, if the writer's schema was named "Foo" and the reader's schema is named "Bar" and has an alias of "Foo", then the implementation would act as though "Foo" were named "Bar" when reading. Similarly, if data was written as a record with a field named "x" and is read as a record with a field named "y" with alias "x", then the implementation would act as though "x" were named "y" when reading.
@@ -267,6 +267,20 @@ Aliases function by re-writing the writer's schema using aliases from the reader
 A type alias may be specified either as a fully namespace-qualified, or relative to the namespace of the name it is an alias for. For example, if a type named "a.b" has aliases of "c" and "x.y", then the fully qualified names of its aliases are "a.c" and "x.y".
 
 Aliases are alternative names, and thus subject to the same uniqueness constraints as names. Aliases should be valid names, but this is not required: any string is accepted as an alias. This allows schema evolution to correct illegal names in old schemata.
+
+## Fixing an invalid, but previously accepted, schema
+Over time, rules and validations on schemas have changed. It is therefore possible that a schema used to work with an older version of Avro, but now fails to parse.
+
+This can have several reasons, as listed below. Each reason also describes a fix, which can be applied using [schema resolution]({{< ref "#schema-resolution" >}}): you fix the problems in the schema in a way that is compatible, and then you can use the new schema to read the old data.
+
+### Invalid names
+Invalid names of types and fields can be corrected by renaming (using an [alias]({{< ref "#aliases" >}})). This works for simple names, namespaces and fullnames.
+
+Ths fix is twofold: first, you add the invalid name as an alias to the type/field. Then, you change the name to any valid name.
+
+### Invalid defaults
+Default values are only used to fill in missing data when reading. Invalid defaults create invalid values in these cases. The fix is to correct the default values.
+
 
 ## Data Serialization and Deserialization
 Binary encoded Avro data does not include type information or field names. The benefit is that the serialized data is small, but as a result a schema must always be used in order to read Avro data correctly. The best way to ensure that the schema is structurally identical to the one used to write the data is to use the exact same schema.
