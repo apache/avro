@@ -22,10 +22,10 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implements a combination of WeakHashMap and IdentityHashMap. Useful for
@@ -41,7 +41,7 @@ import java.util.Set;
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   private final ReferenceQueue<K> queue = new ReferenceQueue<>();
-  private Map<IdentityWeakReference, V> backingStore = new HashMap<>();
+  private Map<IdentityWeakReference, V> backingStore = new ConcurrentHashMap<>();
 
   public WeakIdentityHashMap() {
   }
