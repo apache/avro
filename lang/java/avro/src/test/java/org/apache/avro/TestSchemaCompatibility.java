@@ -233,6 +233,22 @@ public class TestSchemaCompatibility {
     final Schema unionReader = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
     final SchemaPairCompatibility result = checkReaderWriterCompatibility(unionReader, unionWriter);
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+    assertEquals("/2", result.getResult().getIncompatibilities().get(0).getLocation());
+  }
+
+  @Test
+  void unionWriterSimpleReaderIncompatibility() {
+    Schema mandatorySchema = SchemaBuilder.record("Account").fields().name("age").type().intType().noDefault()
+        .endRecord();
+    Schema optionalSchema = SchemaBuilder.record("Account").fields().optionalInt("age").endRecord();
+
+    SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(mandatorySchema, optionalSchema);
+
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
+
+    Incompatibility incompatibility = compatibility.getResult().getIncompatibilities().get(0);
+    assertEquals("reader type: INT not compatible with writer type: NULL", incompatibility.getMessage());
+    assertEquals("/fields/0/type/0", incompatibility.getLocation());
   }
 
   // -----------------------------------------------------------------------------------------------

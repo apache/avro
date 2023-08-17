@@ -90,11 +90,11 @@ public class TestSchemaCompatibilityTypeMismatch {
         Arguments.of(ENUM2_AB_SCHEMA, INT_SCHEMA, "reader type: ENUM not compatible with writer type: INT", "/"),
 
         Arguments.of(FLOAT_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
-            "reader type: FLOAT not compatible with writer type: DOUBLE", "/"),
+            "reader type: FLOAT not compatible with writer type: DOUBLE", "/3"),
         Arguments.of(LONG_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: LONG not compatible with writer type: FLOAT",
-            "/"),
+            "/1"),
         Arguments.of(INT_SCHEMA, INT_FLOAT_UNION_SCHEMA, "reader type: INT not compatible with writer type: FLOAT",
-            "/"),
+            "/1"),
 
         Arguments.of(INT_LIST_RECORD, LONG_LIST_RECORD, "reader type: INT not compatible with writer type: LONG",
             "/fields/0/type"),
