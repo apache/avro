@@ -242,12 +242,12 @@ public class ProtobufData extends GenericData {
       if (inner.length() == 0) {
         inner.insert(0, containing.getName());
       } else {
-        inner.insert(0, containing.getName() + "$");
+        inner.insert(0, containing.getName() + "__dollar__");
       }
       containing = containing.getContainingType();
     }
     String d1 = (!outer.isEmpty() || inner.length() != 0 ? "." : "");
-    String d2 = (!outer.isEmpty() && inner.length() != 0 ? "$" : "");
+    String d2 = (!outer.isEmpty() && inner.length() != 0 ? "__dollar__" : "");
     return p + d1 + outer + d2 + inner;
   }
 

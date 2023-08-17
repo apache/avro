@@ -53,6 +53,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -255,6 +256,7 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
+      name = name.replaceAll("__dollar__", Matcher.quoteReplacement("$"));
       Class<?> c = MapUtil.computeIfAbsent(classCache, name, n -> {
         try {
           return ClassUtils.forName(getClassLoader(), getClassName(schema));
@@ -332,6 +334,7 @@ public class SpecificData extends GenericData {
     if (namespace == null || "".equals(namespace))
       return name;
 
+    namespace = namespace.replaceAll("__dollar__", Matcher.quoteReplacement("$"));
     StringBuilder classNameBuilder = new StringBuilder();
     String[] words = namespace.split("\\.");
 
