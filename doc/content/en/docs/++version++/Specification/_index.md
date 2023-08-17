@@ -276,7 +276,7 @@ This can have several reasons, as listed below. Each reason also describes a fix
 ### Invalid names
 Invalid names of types and fields can be corrected by renaming (using an [alias]({{< ref "#aliases" >}})). This works for simple names, namespaces and fullnames.
 
-Ths fix is twofold: first, you add the invalid name as an alias to the type/field. Then, you change the name to any valid name.
+This fix is twofold: first, you add the invalid name as an alias to the type/field. Then, you change the name to any valid name.
 
 ### Invalid defaults
 Default values are only used to fill in missing data when reading. Invalid defaults create invalid values in these cases. The fix is to correct the default values.
