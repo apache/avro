@@ -23,6 +23,7 @@ import base64
 import io
 import json
 import os
+from contextlib import closing
 from pathlib import Path
 from typing import IO, TextIO
 
@@ -73,7 +74,6 @@ def generate(schema_file: TextIO, output_path: IO) -> None:
             continue
         base, ext = os.path.splitext(output_path.name)
         Path(f"{base}_{codec}{ext}").write_bytes(data)
-    output_path.close()
 
 
 def _parse_args() -> argparse.Namespace:
@@ -94,7 +94,8 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
-    generate(args.schema_path, args.output_path)
+    with closing(args.output_path) as op:
+        generate(args.schema_path, op)
     return 0
 
 
