@@ -86,7 +86,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The InputStream to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -109,7 +109,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * <p/>
    * Otherwise, this JsonDecoder will reset its state and then reconfigure its
    * input.
-   * 
+   *
    * @param in The String to read from. Cannot be null.
    * @throws IOException
    * @throws NullPointerException if {@code in} is {@code null}
@@ -157,25 +157,39 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   @Override
   public int readInt() throws IOException {
     advance(Symbol.INT);
-    if (in.getCurrentToken().isNumeric()) {
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
       int result = in.getIntValue();
       in.nextToken();
       return result;
-    } else {
-      throw error("int");
     }
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+      float value = in.getFloatValue();
+      if (Math.abs(value - Math.round(value)) <= Float.MIN_VALUE) {
+        int result = Math.round(value);
+        in.nextToken();
+        return result;
+      }
+    }
+    throw error("int");
   }
 
   @Override
   public long readLong() throws IOException {
     advance(Symbol.LONG);
-    if (in.getCurrentToken().isNumeric()) {
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_INT) {
       long result = in.getLongValue();
       in.nextToken();
       return result;
-    } else {
-      throw error("long");
     }
+    if (in.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+      double value = in.getDoubleValue();
+      if (Math.abs(value - Math.round(value)) <= Double.MIN_VALUE) {
+        long result = Math.round(value);
+        in.nextToken();
+        return result;
+      }
+    }
+    throw error("long");
   }
 
   @Override
