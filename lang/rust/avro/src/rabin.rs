@@ -16,7 +16,6 @@
 // under the License.
 
 //! Implementation of the Rabin fingerprint algorithm
-use byteorder::{ByteOrder, LittleEndian};
 use digest::{
     consts::U8, core_api::OutputSizeUser, generic_array::GenericArray, FixedOutput,
     FixedOutputReset, HashMarker, Output, Reset, Update,
@@ -61,7 +60,7 @@ lazy_static! {
 /// assert_eq!(result[..], hex!("60335ba6d0415528"));
 /// ```
 ///
-/// To convert the digest to the commonly used 64-bit integer value, you can use the byteorder crate:
+/// To convert the digest to the commonly used 64-bit integer value, you can use the i64::from_le_bytes() function
 ///
 /// ```rust
 /// # use apache_avro::rabin::Rabin;
@@ -75,9 +74,8 @@ lazy_static! {
 /// # let result = hasher.finalize();
 ///
 /// # assert_eq!(result[..], hex!("60335ba6d0415528"));
-/// use byteorder::{ByteOrder, LittleEndian};
 ///
-/// let i = LittleEndian::read_i64(&result.to_vec());
+/// let i = i64::from_le_bytes(result.try_into().unwrap());
 ///
 /// assert_eq!(i, 2906301498937520992)
 /// ```
@@ -103,7 +101,7 @@ impl Update for Rabin {
 
 impl FixedOutput for Rabin {
     fn finalize_into(self, out: &mut GenericArray<u8, Self::OutputSize>) {
-        LittleEndian::write_i64(out, self.result);
+        out.copy_from_slice(&self.result.to_le_bytes());
     }
 }
 
@@ -123,7 +121,7 @@ impl HashMarker for Rabin {}
 
 impl FixedOutputReset for Rabin {
     fn finalize_into_reset(&mut self, out: &mut Output<Self>) {
-        LittleEndian::write_i64(out, self.result);
+        out.copy_from_slice(&self.result.to_le_bytes());
         self.reset();
     }
 }
@@ -131,13 +129,13 @@ impl FixedOutputReset for Rabin {
 #[cfg(test)]
 mod tests {
     use super::Rabin;
-    use byteorder::{ByteOrder, LittleEndian};
+    use apache_avro_test_helper::TestResult;
     use digest::Digest;
     use pretty_assertions::assert_eq;
 
     // See: https://github.com/apache/avro/blob/master/share/test/data/schema-tests.txt
     #[test]
-    fn test1() {
+    fn test1() -> TestResult {
         let data: &[(&str, i64)] = &[
             (r#""null""#, 7195948357588979594),
             (r#""boolean""#, -6970731678124411036),
@@ -155,8 +153,11 @@ mod tests {
 
         for (s, fp) in data {
             hasher.update(s.as_bytes());
-            let result = LittleEndian::read_i64(&hasher.finalize_reset());
+            let res: &[u8] = &hasher.finalize_reset();
+            let result = i64::from_le_bytes(res.try_into()?);
             assert_eq!(*fp, result);
         }
+
+        Ok(())
     }
 }
