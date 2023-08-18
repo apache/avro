@@ -82,8 +82,6 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
-                use byteorder::ByteOrder;
-
                 let mut encoded: Vec<u8> = vec![0; snap::raw::max_compress_len(stream.len())];
                 let compressed_size = snap::raw::Encoder::new()
                     .compress(&stream[..], &mut encoded[..])
@@ -92,8 +90,10 @@ impl Codec {
                 let mut hasher = Hasher::new();
                 hasher.update(&stream[..]);
                 let checksum = hasher.finalize();
-                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], checksum);
-                encoded.truncate(compressed_size + 4);
+                let checksum_as_bytes = checksum.to_be_bytes();
+                let checksum_len = checksum_as_bytes.len();
+                encoded.truncate(compressed_size + checksum_len);
+                encoded[compressed_size..].copy_from_slice(&checksum_as_bytes);
 
                 *stream = encoded;
             }
@@ -137,8 +137,6 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
-                use byteorder::ByteOrder;
-
                 let decompressed_size = snap::raw::decompress_len(&stream[..stream.len() - 4])
                     .map_err(Error::GetSnappyDecompressLen)?;
                 let mut decoded = vec![0; decompressed_size];
@@ -146,7 +144,10 @@ impl Codec {
                     .decompress(&stream[..stream.len() - 4], &mut decoded[..])
                     .map_err(Error::SnappyDecompress)?;
 
-                let expected = byteorder::BigEndian::read_u32(&stream[stream.len() - 4..]);
+                let mut last_four: [u8; 4] = [0; 4];
+                last_four.copy_from_slice(&stream[(stream.len() - 4)..]);
+                let expected: u32 = u32::from_be_bytes(last_four);
+
                 let mut hasher = Hasher::new();
                 hasher.update(&decoded);
                 let actual = hasher.finalize();
