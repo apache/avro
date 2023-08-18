@@ -14,10 +14,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-use byteorder::LittleEndian;
-use zerocopy::U32;
-
 /// A struct representing duration that hides the details of endianness and conversion between
 /// platform-native u32 and byte arrays.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -28,83 +24,77 @@ pub struct Duration {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Months(U32<LittleEndian>);
+pub struct Months(u32);
 
 impl Months {
     pub fn new(months: u32) -> Self {
-        Self(U32::new(months))
+        Self(months)
+    }
+
+    fn as_bytes(&self) -> [u8; 4] {
+        self.0.to_le_bytes()
     }
 }
 
 impl From<Months> for u32 {
     fn from(days: Months) -> Self {
-        days.0.get()
+        days.0
     }
 }
 
 impl From<[u8; 4]> for Months {
     fn from(bytes: [u8; 4]) -> Self {
-        Self(U32::from(bytes))
-    }
-}
-
-impl AsRef<[u8; 4]> for Months {
-    fn as_ref(&self) -> &[u8; 4] {
-        self.0.as_ref()
+        Self(u32::from_le_bytes(bytes))
     }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Days(U32<LittleEndian>);
+pub struct Days(u32);
 
 impl Days {
     pub fn new(days: u32) -> Self {
-        Self(U32::new(days))
+        Self(days)
+    }
+
+    fn as_bytes(&self) -> [u8; 4] {
+        self.0.to_le_bytes()
     }
 }
 
 impl From<Days> for u32 {
     fn from(days: Days) -> Self {
-        days.0.get()
+        days.0
     }
 }
 
 impl From<[u8; 4]> for Days {
     fn from(bytes: [u8; 4]) -> Self {
-        Self(U32::from(bytes))
-    }
-}
-
-impl AsRef<[u8; 4]> for Days {
-    fn as_ref(&self) -> &[u8; 4] {
-        self.0.as_ref()
+        Self(u32::from_le_bytes(bytes))
     }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Millis(U32<LittleEndian>);
+pub struct Millis(u32);
 
 impl Millis {
     pub fn new(millis: u32) -> Self {
-        Self(U32::new(millis))
+        Self(millis)
+    }
+
+    fn as_bytes(&self) -> [u8; 4] {
+        self.0.to_le_bytes()
     }
 }
 
 impl From<Millis> for u32 {
     fn from(days: Millis) -> Self {
-        days.0.get()
+        days.0
     }
 }
 
 impl From<[u8; 4]> for Millis {
     fn from(bytes: [u8; 4]) -> Self {
-        Self(U32::from(bytes))
-    }
-}
-
-impl AsRef<[u8; 4]> for Millis {
-    fn as_ref(&self) -> &[u8; 4] {
-        self.0.as_ref()
+        Self(u32::from_le_bytes(bytes))
     }
 }
 
@@ -137,9 +127,9 @@ impl Duration {
 impl From<Duration> for [u8; 12] {
     fn from(duration: Duration) -> Self {
         let mut bytes = [0u8; 12];
-        bytes[0..4].copy_from_slice(duration.months.as_ref());
-        bytes[4..8].copy_from_slice(duration.days.as_ref());
-        bytes[8..12].copy_from_slice(duration.millis.as_ref());
+        bytes[0..4].copy_from_slice(&duration.months.as_bytes());
+        bytes[4..8].copy_from_slice(&duration.days.as_bytes());
+        bytes[8..12].copy_from_slice(&duration.millis.as_bytes());
         bytes
     }
 }
