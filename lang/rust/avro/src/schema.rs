@@ -261,7 +261,11 @@ impl Name {
         Ok(Self {
             name: type_name.unwrap_or(name),
             namespace: namespace_from_name
-                .or_else(|| complex.string("namespace").or(enclosing_namespace.clone()))
+                .or_else(|| {
+                    complex
+                        .string("namespace")
+                        .or_else(|| enclosing_namespace.clone())
+                })
                 .filter(|ns| !ns.is_empty()),
         })
     }
@@ -1420,11 +1424,10 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let mut lookup = BTreeMap::new();
-        let fully_qualified_name = name.clone();
 
         self.register_resolving_schema(&fully_qualified_name, &aliases);
 

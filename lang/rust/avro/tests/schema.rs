@@ -1453,7 +1453,7 @@ fn avro_old_issue_47() -> TestResult {
 
     use serde::{Deserialize, Serialize};
 
-    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+    #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
     pub struct MyRecord {
         b: String,
         a: i64,
