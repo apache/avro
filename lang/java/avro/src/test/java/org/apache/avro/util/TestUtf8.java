@@ -19,9 +19,7 @@ package org.apache.avro.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +28,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+import org.apache.avro.SystemLimitException;
+import org.apache.avro.TestSystemLimitException;
+import org.junit.jupiter.api.Test;
 
 public class TestUtf8 {
   @Test
@@ -96,6 +96,26 @@ public class TestUtf8 {
     assertEquals(99162322, u.hashCode());
     u.setByteLength(4);
     assertEquals(3198781, u.hashCode());
+  }
+
+  @Test
+  void oversizeUtf8() {
+    Utf8 u = new Utf8();
+    u.setByteLength(1024);
+    assertEquals(1024, u.getByteLength());
+    assertThrows(UnsupportedOperationException.class,
+        () -> u.setByteLength(TestSystemLimitException.MAX_ARRAY_VM_LIMIT + 1));
+
+    try {
+      System.setProperty(SystemLimitException.MAX_STRING_LENGTH_PROPERTY, Long.toString(1000L));
+      TestSystemLimitException.resetLimits();
+
+      Exception ex = assertThrows(SystemLimitException.class, () -> u.setByteLength(1024));
+      assertEquals("String length 1024 exceeds maximum allowed", ex.getMessage());
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_STRING_LENGTH_PROPERTY);
+      TestSystemLimitException.resetLimits();
+    }
   }
 
   @Test
