@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.ByteBufferInputStream;
@@ -40,6 +41,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import static org.apache.avro.TestSystemLimitException.*;
 
 public class TestBinaryDecoder {
   // prime number buffer size so that looping tests hit the buffer edge
@@ -87,6 +90,23 @@ public class TestBinaryDecoder {
 
   private BinaryDecoder newDecoder(byte[] bytes, boolean useDirect) {
     return this.newDecoder(bytes, null, useDirect);
+  }
+
+  /**
+   * Create a decoder for simulating reading corrupt, unexpected or out-of-bounds
+   * data.
+   *
+   * @return a {@link org.apache.avro.io.BinaryDecoder that has been initialized
+   *         on a byte array containing the sequence of encoded longs in order.
+   */
+  private BinaryDecoder newDecoder(boolean useDirect, long... values) throws IOException {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
+      for (long v : values)
+        encoder.writeLong(v);
+      encoder.flush();
+      return newDecoder(baos.toByteArray(), useDirect);
+    }
   }
 
   /** Verify EOFException throw at EOF */
@@ -370,59 +390,191 @@ public class TestBinaryDecoder {
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
-  void negativeStringLength(boolean useDirect) throws IOException {
-    byte[] bad = new byte[] { (byte) 1 };
-    Decoder bd = this.newDecoder(bad, useDirect);
-
-    Assertions.assertThrows(AvroRuntimeException.class, bd::readString, "Malformed data. Length is negative: -1");
+  public void testStringNegativeLength(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(AvroRuntimeException.class, this.newDecoder(useDirect, -1L)::readString);
+    Assertions.assertEquals(ERROR_NEGATIVE, ex.getMessage());
   }
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
-  void stringMaxArraySize(boolean useDirect) {
-    byte[] bad = new byte[10];
-    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
-    Decoder bd = this.newDecoder(bad, useDirect);
-
-    Assertions.assertThrows(UnsupportedOperationException.class, bd::readString,
-        "Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes");
+  public void testStringVmMaxSize(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1L)::readString);
+    Assertions.assertEquals(ERROR_VM_LIMIT_STRING, ex.getMessage());
   }
 
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
-  void negativeBytesLength(boolean useDirect) {
-    byte[] bad = new byte[] { (byte) 1 };
-    Decoder bd = this.newDecoder(bad, useDirect);
-
-    Assertions.assertThrows(AvroRuntimeException.class, () -> bd.readBytes(null),
-        "Malformed data. Length is negative: -1");
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = { true, false })
-  void bytesMaxArraySize(boolean useDirect) {
-    byte[] bad = new byte[10];
-    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
-    Decoder bd = this.newDecoder(bad, useDirect);
-
-    Assertions.assertThrows(UnsupportedOperationException.class, () -> bd.readBytes(null),
-        "Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes");
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = { true, false })
-  void bytesMaxLengthProperty(boolean useDirect) {
-    int maxLength = 128;
-    byte[] bad = new byte[10];
-    BinaryData.encodeLong(maxLength + 1, bad, 0);
+  public void testStringMaxCustom(boolean useDirect) throws IOException {
     try {
-      System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
-      Decoder bd = this.newDecoder(bad, useDirect);
-
-      Assertions.assertThrows(AvroRuntimeException.class, () -> bd.readBytes(null),
-          "Bytes length " + (maxLength + 1) + " exceeds maximum allowed");
+      System.setProperty(SystemLimitException.MAX_STRING_LENGTH_PROPERTY, Long.toString(128));
+      resetLimits();
+      Exception ex = Assertions.assertThrows(SystemLimitException.class, newDecoder(useDirect, 129)::readString);
+      Assertions.assertEquals("String length 129 exceeds maximum allowed", ex.getMessage());
     } finally {
-      System.clearProperty("org.apache.avro.limits.bytes.maxLength");
+      System.clearProperty(SystemLimitException.MAX_STRING_LENGTH_PROPERTY);
+      resetLimits();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testBytesNegativeLength(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(AvroRuntimeException.class,
+        () -> this.newDecoder(useDirect, -1).readBytes(null));
+    Assertions.assertEquals(ERROR_NEGATIVE, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testBytesVmMaxSize(boolean useDirect) throws IOException {
+    Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readBytes(null));
+    Assertions.assertEquals(ERROR_VM_LIMIT_BYTES, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testBytesMaxCustom(boolean useDirect) throws IOException {
+    try {
+      System.setProperty(SystemLimitException.MAX_BYTES_LENGTH_PROPERTY, Long.toString(128));
+      resetLimits();
+      Exception ex = Assertions.assertThrows(SystemLimitException.class,
+          () -> newDecoder(useDirect, 129).readBytes(null));
+      Assertions.assertEquals("Bytes length 129 exceeds maximum allowed", ex.getMessage());
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_BYTES_LENGTH_PROPERTY);
+      resetLimits();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testArrayVmMaxSize(boolean useDirect) throws IOException {
+    // At start
+    Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readArrayStart());
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Next
+    ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).arrayNext());
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // An OK reads followed by an overflow
+    Decoder bd = newDecoder(useDirect, MAX_ARRAY_VM_LIMIT - 100, Long.MAX_VALUE);
+    Assertions.assertEquals(MAX_ARRAY_VM_LIMIT - 100, bd.readArrayStart());
+    ex = Assertions.assertThrows(UnsupportedOperationException.class, bd::arrayNext);
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Two OK reads followed by going over the VM limit.
+    bd = newDecoder(useDirect, MAX_ARRAY_VM_LIMIT - 100, 100, 1);
+    Assertions.assertEquals(MAX_ARRAY_VM_LIMIT - 100, bd.readArrayStart());
+    Assertions.assertEquals(100, bd.arrayNext());
+    ex = Assertions.assertThrows(UnsupportedOperationException.class, bd::arrayNext);
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Two OK reads followed by going over the VM limit, where negative numbers are
+    // followed by the byte length of the items. For testing, the 999 values are
+    // read but ignored.
+    bd = newDecoder(useDirect, 100 - MAX_ARRAY_VM_LIMIT, 999, -100, 999, 1);
+    Assertions.assertEquals(MAX_ARRAY_VM_LIMIT - 100, bd.readArrayStart());
+    Assertions.assertEquals(100, bd.arrayNext());
+    ex = Assertions.assertThrows(UnsupportedOperationException.class, bd::arrayNext);
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testArrayMaxCustom(boolean useDirect) throws IOException {
+    try {
+      System.setProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY, Long.toString(128));
+      resetLimits();
+      Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+          () -> newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readArrayStart());
+      Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+      // Two OK reads followed by going over the custom limit.
+      Decoder bd = newDecoder(useDirect, 118, 10, 1);
+      Assertions.assertEquals(118, bd.readArrayStart());
+      Assertions.assertEquals(10, bd.arrayNext());
+      ex = Assertions.assertThrows(SystemLimitException.class, bd::arrayNext);
+      Assertions.assertEquals("Collection length 129 exceeds maximum allowed", ex.getMessage());
+
+      // Two OK reads followed by going over the VM limit, where negative numbers are
+      // followed by the byte length of the items. For testing, the 999 values are
+      // read but ignored.
+      bd = newDecoder(useDirect, -118, 999, -10, 999, 1);
+      Assertions.assertEquals(118, bd.readArrayStart());
+      Assertions.assertEquals(10, bd.arrayNext());
+      ex = Assertions.assertThrows(SystemLimitException.class, bd::arrayNext);
+      Assertions.assertEquals("Collection length 129 exceeds maximum allowed", ex.getMessage());
+
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
+      resetLimits();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testMapVmMaxSize(boolean useDirect) throws IOException {
+    // At start
+    Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readMapStart());
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Next
+    ex = Assertions.assertThrows(UnsupportedOperationException.class,
+        () -> this.newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).mapNext());
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Two OK reads followed by going over the VM limit.
+    Decoder bd = newDecoder(useDirect, MAX_ARRAY_VM_LIMIT - 100, 100, 1);
+    Assertions.assertEquals(MAX_ARRAY_VM_LIMIT - 100, bd.readMapStart());
+    Assertions.assertEquals(100, bd.mapNext());
+    ex = Assertions.assertThrows(UnsupportedOperationException.class, bd::mapNext);
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+    // Two OK reads followed by going over the VM limit, where negative numbers are
+    // followed by the byte length of the items. For testing, the 999 values are
+    // read but ignored.
+    bd = newDecoder(useDirect, 100 - MAX_ARRAY_VM_LIMIT, 999, -100, 999, 1);
+    Assertions.assertEquals(MAX_ARRAY_VM_LIMIT - 100, bd.readMapStart());
+    Assertions.assertEquals(100, bd.mapNext());
+    ex = Assertions.assertThrows(UnsupportedOperationException.class, bd::mapNext);
+    Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  public void testMapMaxCustom(boolean useDirect) throws IOException {
+    try {
+      System.setProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY, Long.toString(128));
+      resetLimits();
+      Exception ex = Assertions.assertThrows(UnsupportedOperationException.class,
+          () -> newDecoder(useDirect, MAX_ARRAY_VM_LIMIT + 1).readMapStart());
+      Assertions.assertEquals(ERROR_VM_LIMIT_COLLECTION, ex.getMessage());
+
+      // Two OK reads followed by going over the custom limit.
+      Decoder bd = newDecoder(useDirect, 118, 10, 1);
+      Assertions.assertEquals(118, bd.readMapStart());
+      Assertions.assertEquals(10, bd.mapNext());
+      ex = Assertions.assertThrows(SystemLimitException.class, bd::mapNext);
+      Assertions.assertEquals("Collection length 129 exceeds maximum allowed", ex.getMessage());
+
+      // Two OK reads followed by going over the VM limit, where negative numbers are
+      // followed by the byte length of the items. For testing, the 999 values are
+      // read but ignored.
+      bd = newDecoder(useDirect, -118, 999, -10, 999, 1);
+      Assertions.assertEquals(118, bd.readMapStart());
+      Assertions.assertEquals(10, bd.mapNext());
+      ex = Assertions.assertThrows(SystemLimitException.class, bd::mapNext);
+      Assertions.assertEquals("Collection length 129 exceeds maximum allowed", ex.getMessage());
+
+    } finally {
+      System.clearProperty(SystemLimitException.MAX_COLLECTION_LENGTH_PROPERTY);
+      resetLimits();
     }
   }
 
