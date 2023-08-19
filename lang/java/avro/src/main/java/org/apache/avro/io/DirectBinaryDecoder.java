@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
+import org.apache.avro.SystemLimitException;
 import org.apache.avro.util.ByteBufferInputStream;
 
 /**
@@ -39,8 +39,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
   private InputStream in;
 
   private class ByteReader {
-    public ByteBuffer read(ByteBuffer old, long length) throws IOException {
-      this.checkLength(length);
+    public ByteBuffer read(ByteBuffer old, int length) throws IOException {
       final ByteBuffer result;
       if (old != null && length <= old.capacity()) {
         result = old;
@@ -52,19 +51,6 @@ class DirectBinaryDecoder extends BinaryDecoder {
       result.limit((int) length);
       return result;
     }
-
-    protected final void checkLength(long length) {
-      if (length < 0L) {
-        throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
-      }
-      if (length > MAX_ARRAY_SIZE) {
-        throw new UnsupportedOperationException(
-            "Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes in Java library");
-      }
-      if (length > maxBytesLength) {
-        throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
-      }
-    }
   }
 
   private class ReuseByteReader extends ByteReader {
@@ -75,15 +61,13 @@ class DirectBinaryDecoder extends BinaryDecoder {
     }
 
     @Override
-    public ByteBuffer read(ByteBuffer old, long length) throws IOException {
-      this.checkLength(length);
+    public ByteBuffer read(ByteBuffer old, int length) throws IOException {
       if (old != null) {
         return super.read(old, length);
       } else {
         return bbi.readBuffer((int) length);
       }
     }
-
   }
 
   private ByteReader byteReader;
@@ -172,7 +156,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     long length = readLong();
-    return byteReader.read(old, length);
+    return byteReader.read(old, SystemLimitException.checkMaxBytesLength(length));
   }
 
   @Override

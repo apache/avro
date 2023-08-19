@@ -1385,8 +1385,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     public FixedSchema(Name name, String doc, int size) {
       super(Type.FIXED, name, doc);
-      if (size < 0)
-        throw new IllegalArgumentException("Invalid fixed size: " + size);
+      SystemLimitException.checkMaxBytesLength(size);
       this.size = size;
     }
 
