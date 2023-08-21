@@ -491,7 +491,7 @@ mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
-    use serde::{Deserialize, Serialize};
+    use serde_derive::{Deserialize, Serialize};
     use std::sync::atomic::Ordering;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]

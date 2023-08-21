@@ -18,7 +18,7 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 enum PlainEnum {

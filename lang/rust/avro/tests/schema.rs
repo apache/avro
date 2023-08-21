@@ -1451,7 +1451,7 @@ fn avro_old_issue_47() -> TestResult {
     }"#;
     let schema = Schema::parse_str(schema_str)?;
 
-    use serde::{Deserialize, Serialize};
+    use serde_derive::{Deserialize, Serialize};
 
     #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
     pub struct MyRecord {
@@ -1478,7 +1478,7 @@ fn avro_old_issue_47() -> TestResult {
 fn test_avro_3785_deserialize_namespace_with_nullable_type_containing_reference_type() -> TestResult
 {
     use apache_avro::{from_avro_datum, to_avro_datum, types::Value};
-    use serde::{Deserialize, Serialize};
+    use serde_derive::{Deserialize, Serialize};
 
     #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
     pub struct BarUseParent {

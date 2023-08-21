@@ -637,7 +637,7 @@ mod tests {
         util::zig_i64,
     };
     use pretty_assertions::assert_eq;
-    use serde::{Deserialize, Serialize};
+    use serde_derive::{Deserialize, Serialize};
 
     use apache_avro_test_helper::TestResult;
 

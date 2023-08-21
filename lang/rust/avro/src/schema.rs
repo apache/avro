@@ -2208,6 +2208,7 @@ mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
+    use serde_derive::{Deserialize, Serialize};
     use serde_json::json;
 
     #[test]
@@ -4659,9 +4660,7 @@ mod tests {
         } 
         "#;
 
-        #[derive(
-            Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, serde::Deserialize, serde::Serialize,
-        )]
+        #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Deserialize, Serialize)]
         pub enum Bar {
             #[serde(rename = "bar0")]
             Bar0,
@@ -4669,7 +4668,7 @@ mod tests {
             Bar1,
         }
 
-        #[derive(Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+        #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
         pub struct Foo {
             #[serde(rename = "barInit")]
             pub bar_init: Bar,
@@ -4697,9 +4696,7 @@ mod tests {
 
     #[test]
     fn avro_3755_deserialize() -> TestResult {
-        #[derive(
-            Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, serde::Deserialize, serde::Serialize,
-        )]
+        #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone, Deserialize, Serialize)]
         pub enum Bar {
             #[serde(rename = "bar0")]
             Bar0,
@@ -4709,7 +4706,7 @@ mod tests {
             Bar2,
         }
 
-        #[derive(Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+        #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
         pub struct Foo {
             #[serde(rename = "barInit")]
             pub bar_init: Bar,

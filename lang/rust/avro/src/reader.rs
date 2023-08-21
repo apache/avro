@@ -531,7 +531,7 @@ mod tests {
     use crate::{encode::encode, from_value, types::Record, Reader};
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
-    use serde::Deserialize;
+    use serde_derive::Deserialize;
     use std::io::Cursor;
 
     const SCHEMA: &str = r#"
