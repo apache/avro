@@ -45,6 +45,8 @@ lazy_static! {
         Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 
     static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
+
+    static ref NAMESPACE_R: Regex = Regex::new(r"^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?$").unwrap();
 }
 
 /// Represents an Avro schema fingerprint
@@ -258,15 +260,26 @@ impl Name {
             _ => None,
         };
 
+        let namespace = namespace_from_name
+            .or_else(|| {
+                complex
+                    .string("namespace")
+                    .or_else(|| enclosing_namespace.clone())
+            })
+            .filter(|ns| !ns.is_empty());
+
+        if let Some(ref ns) = namespace {
+            if !NAMESPACE_R.is_match(ns) {
+                return Err(Error::InvalidNamespace(
+                    ns.to_string(),
+                    NAMESPACE_R.as_str(),
+                ));
+            }
+        }
+
         Ok(Self {
             name: type_name.unwrap_or(name),
-            namespace: namespace_from_name
-                .or_else(|| {
-                    complex
-                        .string("namespace")
-                        .or_else(|| enclosing_namespace.clone())
-                })
-                .filter(|ns| !ns.is_empty()),
+            namespace,
         })
     }
 
@@ -5336,6 +5349,116 @@ mod tests {
         // Verify that we can read a field from the record.
         let d: MyRecordReader = crate::from_value(&deser_value)?;
         assert_eq!(d.inner_record.unwrap().a, "foo".to_string());
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3837_disallow_invalid_namespace() -> TestResult {
+        // Valid namespace #1 (Single name portion)
+        let schema_str = r#"
+        {
+          "name": "record1",
+          "namespace": "ns1",
+          "type": "record",
+          "fields": []
+        }
+        "#;
+
+        let expected = r#"{"name":"ns1.record1","type":"record","fields":[]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Valid namespace #2 (multiple name portions).
+        let schema_str = r#"
+        {
+          "name": "enum1",
+          "namespace": "ns1.foo.bar",
+          "type": "enum",
+          "symbols": ["a"]
+        }
+        "#;
+
+        let expected = r#"{"name":"ns1.foo.bar.enum1","type":"enum","symbols":["a"]}"#;
+        let schema = Schema::parse_str(schema_str)?;
+        let canonical_form = schema.canonical_form();
+        assert_eq!(canonical_form, expected);
+
+        // Invalid namespace #1 (a name portion starts with dot)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": ".ns1.a.b",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
+        // Invalid namespace #2 (invalid character in a name portion)
+        let schema_str = r#"
+        {
+          "name": "record1",
+          "namespace": "ns1.a*b.c",
+          "type": "record",
+          "fields": []
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
+        // Invalid namespace #3 (a name portion starts with a digit)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": "ns1.1a.b",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
+        // Invalid namespace #4 (a name portion is missing - two dots in a row)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": "ns1..a",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
+        // Invalid namespace #5 (a name portion is missing - ends with a dot)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": "ns1.a.",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
         Ok(())
     }
 }
