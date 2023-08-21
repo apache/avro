@@ -5429,6 +5429,36 @@ mod tests {
             other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
         };
 
+        // Invalid namespace #4 (a name portion is missing - two dots in a row)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": "ns1..a",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
+        // Invalid namespace #5 (a name portion is missing - ends with a dot)
+        let schema_str = r#"
+        {
+          "name": "fixed1",
+          "namespace": "ns1.a.",
+          "type": "fixed",
+          "size": 1
+        }
+        "#;
+
+        match Schema::parse_str(schema_str) {
+            Err(Error::InvalidNamespace(_, _)) => (),
+            other => return Err(format!("Expected Error::InvalidNamespace, got {other:?}").into()),
+        };
+
         Ok(())
     }
 }
