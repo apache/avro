@@ -75,7 +75,6 @@ dependencies = [
  "criterion",
  "digest",
  "hex-literal",
- "lazy_static",
  "libflate",
  "log",
  "md-5",
