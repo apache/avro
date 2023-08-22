@@ -19,7 +19,7 @@
 use crate::{error::Error, types, util::MapHelper, AvroResult};
 use digest::Digest;
 use lazy_static::lazy_static;
-use regex::Regex;
+use regex_lite::Regex;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
