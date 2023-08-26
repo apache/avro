@@ -72,7 +72,7 @@ public class DataFileWriteTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
-    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new Schema.Parser().parse(schemastr);
+    Schema schema = DataFileReadTool.getSchema(schemastr, schemafile);
 
     DatumReader<Object> reader = new GenericDatumReader<>(schema);
 

@@ -104,14 +104,14 @@ public class DataFileReadTool implements Tool {
     return 0;
   }
 
-  private static Schema getSchema(String readerSchemaStr, String readerSchemaFile) throws IOException {
+  static Schema getSchema(String schemaStr, String schemaFile) throws IOException {
     Schema readerSchema = null;
-    if (readerSchemaFile != null) {
-      LOG.info("Reading schema from file'{}'", readerSchemaFile);
-      readerSchema = Util.parseSchemaFromFS(readerSchemaFile);
-    } else if (readerSchemaStr != null) {
-      LOG.info("Reading schema from string '{}'", readerSchemaStr);
-      readerSchema = new Schema.Parser().parse(readerSchemaStr);
+    if (schemaFile != null) {
+      LOG.info("Reading schema from file '{}'", schemaFile);
+      readerSchema = Util.parseSchemaFromFS(schemaFile);
+    } else if (schemaStr != null) {
+      LOG.info("Reading schema from string '{}'", schemaStr);
+      readerSchema = new Schema.Parser().parse(schemaStr);
     }
     return readerSchema;
   }
