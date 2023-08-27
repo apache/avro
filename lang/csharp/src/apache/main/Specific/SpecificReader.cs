@@ -130,20 +130,22 @@ namespace Avro.Specific
                 }
             }
 
-            var defaultStream = new MemoryStream();
-            var defaultEncoder = new BinaryEncoder(defaultStream);
-            var defaultDecoder = new BinaryDecoder(defaultStream);
-            foreach (Field rf in rs)
+            using (var defaultStream = new MemoryStream())
             {
-                if (writerSchema.Contains(rf.Name)) continue;
+                var defaultEncoder = new BinaryEncoder(defaultStream);
+                var defaultDecoder = new BinaryDecoder(defaultStream);
+                foreach (Field rf in rs)
+                {
+                    if (writerSchema.Contains(rf.Name)) continue;
 
-                defaultStream.Position = 0; // reset for writing
-                Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
-                defaultStream.Flush();
-                defaultStream.Position = 0; // reset for reading
+                    defaultStream.Position = 0; // reset for writing
+                    Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
+                    defaultStream.Flush();
+                    defaultStream.Position = 0; // reset for reading
 
-                obj = rec.Get(rf.Pos);
-                rec.Put(rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                    obj = rec.Get(rf.Pos);
+                    rec.Put(rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
+                }
             }
 
             return rec;
