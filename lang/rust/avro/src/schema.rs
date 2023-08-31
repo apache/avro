@@ -5441,7 +5441,7 @@ mod tests {
         let schema = Schema::parse_str(&schema_str).unwrap();
 
         match schema {
-            Schema::Record { name, fields, .. } => {
+            Schema::Record(RecordSchema { name, fields, .. }) => {
                 assert_eq!(name, Name::new("union_schema_test").unwrap());
                 assert_eq!(fields.len(), 1);
                 let field = &fields[0];
