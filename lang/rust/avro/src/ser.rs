@@ -1017,7 +1017,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_false() {
         use serde::ser::Serializer as SerdeSerializer;
 
@@ -1029,7 +1029,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_true() {
         use serde::ser::Serializer as SerdeSerializer;
 
