@@ -20,13 +20,14 @@ use crate::{
     decimal::Decimal,
     duration::Duration,
     schema::{
-        DecimalSchema, EnumSchema, FixedSchema, Name, NamesRef, Namespace, Precision, RecordField,
+        DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, Precision, RecordField,
         RecordSchema, ResolvedSchema, Scale, Schema, SchemaKind, UnionSchema,
     },
     AvroResult, Error,
 };
 use serde_json::{Number, Value as JsonValue};
 use std::{
+    borrow::Borrow,
     collections::{BTreeMap, HashMap},
     convert::TryFrom,
     fmt::Debug,
@@ -605,10 +606,10 @@ impl Value {
         self.resolve_internal(schema, rs.get_names(), &enclosing_namespace, &None)
     }
 
-    pub(crate) fn resolve_internal(
+    pub(crate) fn resolve_internal<S: Borrow<Schema> + Debug>(
         mut self,
         schema: &Schema,
-        names: &NamesRef,
+        names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
         field_default: &Option<JsonValue>,
     ) -> AvroResult<Self> {
@@ -630,7 +631,7 @@ impl Value {
 
                 if let Some(resolved) = names.get(&name) {
                     debug!("Resolved {:?}", name);
-                    self.resolve_internal(resolved, names, &name.namespace, field_default)
+                    self.resolve_internal(resolved.borrow(), names, &name.namespace, field_default)
                 } else {
                     error!("Failed to resolve schema {:?}", name);
                     Err(Error::SchemaResolutionError(name.clone()))
@@ -907,10 +908,10 @@ impl Value {
         }
     }
 
-    fn resolve_union(
+    fn resolve_union<S: Borrow<Schema> + Debug>(
         self,
         schema: &UnionSchema,
-        names: &NamesRef,
+        names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
         field_default: &Option<JsonValue>,
     ) -> Result<Self, Error> {
@@ -930,10 +931,10 @@ impl Value {
         ))
     }
 
-    fn resolve_array(
+    fn resolve_array<S: Borrow<Schema> + Debug>(
         self,
         schema: &Schema,
-        names: &NamesRef,
+        names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
     ) -> Result<Self, Error> {
         match self {
@@ -950,10 +951,10 @@ impl Value {
         }
     }
 
-    fn resolve_map(
+    fn resolve_map<S: Borrow<Schema> + Debug>(
         self,
         schema: &Schema,
-        names: &NamesRef,
+        names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
     ) -> Result<Self, Error> {
         match self {
@@ -974,10 +975,10 @@ impl Value {
         }
     }
 
-    fn resolve_record(
+    fn resolve_record<S: Borrow<Schema> + Debug>(
         self,
         fields: &[RecordField],
-        names: &NamesRef,
+        names: &HashMap<Name, S>,
         enclosing_namespace: &Namespace,
     ) -> Result<Self, Error> {
         let mut items = match self {

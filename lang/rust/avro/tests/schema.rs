@@ -1604,3 +1604,624 @@ fn test_avro_3785_deserialize_namespace_with_nullable_type_containing_reference_
 
     Ok(())
 }
+
+#[test]
+fn test_avro_3847_union_field_with_default_value_of_ref() -> TestResult {
+    // Test for reference to Record
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Record(vec![("f1_1".to_string(), 10.into())]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            },  {
+                "name": "f2",
+                "type": ["record2", "int"],
+                "default": {
+                    "f1_1": 100
+                }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        (
+            "f1".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 10.into())]),
+        ),
+        (
+            "f2".to_string(),
+            Value::Union(
+                0,
+                Box::new(Value::Record(vec![("f1_1".to_string(), 100.into())])),
+            ),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Enum
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Enum(1, "b".to_string()));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            },  {
+                "name": "f2",
+                "type": ["enum1", "int"],
+                "default": "a"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Enum(1, "b".to_string())),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Enum(0, "a".to_string()))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Fixed
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "type": "fixed",
+                    "size": 3
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Fixed(3, vec![0, 1, 2]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "type": "fixed",
+                    "size": 3
+                }
+            },  {
+                "name": "f2",
+                "type": ["fixed1", "int"],
+                "default": "abc"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Fixed(3, vec![0, 1, 2])),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Fixed(3, vec![b'a', b'b', b'c']))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3847_union_field_with_default_value_of_ref_with_namespace() -> TestResult {
+    // Test for reference to Record
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "namespace": "ns",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Record(vec![("f1_1".to_string(), 10.into())]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "namespace": "ns",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.record2", "int"],
+                "default": {
+                    "f1_1": 100
+                }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        (
+            "f1".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 10.into())]),
+        ),
+        (
+            "f2".to_string(),
+            Value::Union(
+                0,
+                Box::new(Value::Record(vec![("f1_1".to_string(), 100.into())])),
+            ),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Enum
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "namespace": "ns",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Enum(1, "b".to_string()));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "namespace": "ns",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.enum1", "int"],
+                "default": "a"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Enum(1, "b".to_string())),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Enum(0, "a".to_string()))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Fixed
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "namespace": "ns",
+                    "type": "fixed",
+                    "size": 3
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Fixed(3, vec![0, 1, 2]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "namespace": "ns",
+                    "type": "fixed",
+                    "size": 3
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.fixed1", "int"],
+                "default": "abc"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Fixed(3, vec![0, 1, 2])),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Fixed(3, vec![b'a', b'b', b'c']))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3847_union_field_with_default_value_of_ref_with_enclosing_namespace() -> TestResult {
+    // Test for reference to Record
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Record(vec![("f1_1".to_string(), 10.into())]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.record2", "int"],
+                "default": {
+                    "f1_1": 100
+                }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        (
+            "f1".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 10.into())]),
+        ),
+        (
+            "f2".to_string(),
+            Value::Union(
+                0,
+                Box::new(Value::Record(vec![("f1_1".to_string(), 100.into())])),
+            ),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Enum
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Enum(1, "b".to_string()));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "enum1",
+                    "type": "enum",
+                    "symbols": ["a", "b"]
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.enum1", "int"],
+                "default": "a"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Enum(1, "b".to_string())),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Enum(0, "a".to_string()))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    // Test for reference to Fixed
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "type": "fixed",
+                    "size": 3
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Fixed(3, vec![0, 1, 2]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "fixed1",
+                    "type": "fixed",
+                    "size": 3
+                }
+            },  {
+                "name": "f2",
+                "type": ["ns.fixed1", "int"],
+                "default": "abc"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Fixed(3, vec![0, 1, 2])),
+        (
+            "f2".to_string(),
+            Value::Union(0, Box::new(Value::Fixed(3, vec![b'a', b'b', b'c']))),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
