@@ -1610,9 +1610,17 @@ impl Parser {
             .and_then(|schemas| {
                 if let Some(default_value) = default.cloned() {
                     let avro_value = types::Value::from(default_value);
-                    let resolved = schemas
-                        .iter()
-                        .any(|schema| avro_value.to_owned().resolve(schema).is_ok());
+                    let resolved = schemas.iter().any(|schema| {
+                        avro_value
+                            .to_owned()
+                            .resolve_internal(
+                                schema,
+                                &self.parsed_schemas,
+                                &schema.namespace(),
+                                &None,
+                            )
+                            .is_ok()
+                    });
 
                     if !resolved {
                         let schema: Option<&Schema> = schemas.get(0);
