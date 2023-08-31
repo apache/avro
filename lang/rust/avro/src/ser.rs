@@ -492,6 +492,7 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
+    use serial_test::serial;
     use std::sync::atomic::Ordering;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -1016,6 +1017,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_false() {
         use serde::ser::Serializer as SerdeSerializer;
 
@@ -1027,6 +1029,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_true() {
         use serde::ser::Serializer as SerdeSerializer;
 
