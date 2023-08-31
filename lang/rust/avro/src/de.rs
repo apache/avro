@@ -652,6 +652,7 @@ pub fn from_value<'de, D: Deserialize<'de>>(value: &'de Value) -> Result<D, Erro
 mod tests {
     use pretty_assertions::assert_eq;
     use serde::Serialize;
+    use serial_test::serial;
     use std::sync::atomic::Ordering;
     use uuid::Uuid;
 
@@ -1241,6 +1242,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_false() -> TestResult {
         use serde::de::Deserializer as SerdeDeserializer;
 
@@ -1255,6 +1257,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_true() -> TestResult {
         use serde::de::Deserializer as SerdeDeserializer;
 
