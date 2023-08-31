@@ -40,9 +40,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.SchemaParseException;
+import org.apache.avro.AvroTypeException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -231,6 +236,18 @@ public class TestSchema {
     // The generated string should be the same as the original parent
     // schema string that did not have the child schema inlined.
     assertEquals(parent, parentWithoutInlinedChildReference);
+  }
+  @Test
+  void unionDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc", null);
+    assertTrue(field.hasDefaultValue());
+    assertNull(field.defaultVal());
+    assertNull(GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1, field.defaultVal());
+    assertEquals(1, GenericData.get().getDefaultValue(field));
   }
 
   @Test

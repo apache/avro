@@ -1817,8 +1817,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (!isValidDefault(schema.getValueType(), value))
           return false;
       return true;
-    case UNION: // union default: first branch
-      return isValidDefault(schema.getTypes().get(0), defaultValue);
+    case UNION: // check against each branch of union
+      for (Schema branch : schema.getTypes())
+        if (isValidDefault(branch, defaultValue))
+          return true;
+      return false;
     case RECORD:
       if (!defaultValue.isObject())
         return false;
