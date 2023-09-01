@@ -165,9 +165,8 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
-   * The createNullSafeAnnotations parameter adds JetBrains {@literal @}Nullable and {@literal @}NotNull
-   * annotations for fhe fields of the record. The default is to not include
-   * annotations.
+   * The createNullSafeAnnotations parameter adds JetBrains {@literal @}Nullable and {@literal @}NotNull annotations
+   * for fhe fields of the record. The default is to not include annotations.
    *
    * @parameter property="createNullSafeAnnotations"
    *
