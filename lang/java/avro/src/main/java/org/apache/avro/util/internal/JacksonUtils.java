@@ -103,7 +103,12 @@ public class JacksonUtils {
 
   public static Object toObject(JsonNode jsonNode, Schema schema) {
     if (schema != null && schema.getType().equals(Schema.Type.UNION)) {
-      return toObject(jsonNode, schema.getTypes().get(0));
+      for (Schema type : schema.getTypes()) {
+        Object o = toObject(jsonNode, type);
+        if (o != null) {
+          return o;
+        }
+      }
     }
     if (jsonNode == null) {
       return null;

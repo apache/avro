@@ -237,17 +237,26 @@ public class TestSchema {
     // schema string that did not have the child schema inlined.
     assertEquals(parent, parentWithoutInlinedChildReference);
   }
+
   @Test
   void unionDefaultValue() {
-    Schema.Field field = new Schema.Field("myField", Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc", null);
-    assertTrue(field.hasDefaultValue());
+    Schema.Field field = new Schema.Field("myField",
+        Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc", null);
+    assertFalse(field.hasDefaultValue());
     assertNull(field.defaultVal());
-    assertNull(GenericData.get().getDefaultValue(field));
 
-    field = new Schema.Field("myField", Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc", 1);
-    assertTrue(field.hasDefaultValue());
+    field = new Schema.Field("myField", Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.INT)), "doc",
+        1);
     assertEquals(1, field.defaultVal());
     assertEquals(1, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  void optionalArrayDefaultValue() {
+    Schema.Field field = new Schema.Field("myField",
+        Schema.createUnion(Schema.create(Type.NULL), Schema.createArray(Schema.create(Type.STRING))), "doc", null);
+    assertFalse(field.hasDefaultValue());
+    assertNull(field.defaultVal());
   }
 
   @Test
