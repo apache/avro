@@ -35,7 +35,7 @@ data structures and a compact, fast, binary data format.
 
 All data in Avro is schematized, as in the following example:
 
-```text
+```json
 {
     "type": "record",
     "name": "test",
