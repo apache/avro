@@ -6,3 +6,4 @@
 precommit_venv/
 fleet.toml
 **/.cargo/config.toml
+Cargo.lock
