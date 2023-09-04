@@ -872,7 +872,7 @@ impl Value {
         }
     }
 
-    fn resolve_enum(
+    pub(crate) fn resolve_enum(
         self,
         symbols: &[String],
         enum_default: &Option<String>,
