@@ -15,7 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::io::{Cursor, Read};
+use std::{
+    collections::HashMap,
+    io::{Cursor, Read},
+};
 
 use apache_avro::{
     from_avro_datum, from_value,
@@ -2221,6 +2224,394 @@ fn test_avro_3847_union_field_with_default_value_of_ref_with_enclosing_namespace
         ),
     ]);
 
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+fn write_schema_for_default_value_test() -> apache_avro::AvroResult<Vec<u8>> {
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema())
+        .ok_or("Expected Some(Record), but got None")
+        .unwrap();
+    record.put("f1", 10);
+    writer.append(record)?;
+
+    writer.into_inner()
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_simple_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": "int",
+                "default": 20
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        ("f2".to_string(), Value::Int(20)),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_nested_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                },
+                "default": {
+                    "f1_1": 100
+                }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        (
+            "f2".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 100.into())]),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_enum_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": {
+                    "name": "enum1",
+                    "type": "enum",
+                    "symbols": ["a", "b", "c"]
+                },
+                "default": "a"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        ("f2".to_string(), Value::Enum(0, "a".to_string())),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_fixed_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": {
+                    "name": "fixed1",
+                    "type": "fixed",
+                    "size": 3
+                },
+                "default": "abc"
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        ("f2".to_string(), Value::Fixed(3, vec![b'a', b'b', b'c'])),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_array_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": "array",
+                "items": "int",
+                "default": [1, 2, 3]
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        (
+            "f2".to_string(),
+            Value::Array(vec![1.into(), 2.into(), 3.into()]),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_map_record_field() -> TestResult {
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": "int"
+            },  {
+                "name": "f2",
+                "type": "map",
+                "values": "string",
+                "default": { "a": "A", "b": "B", "c": "C" }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = write_schema_for_default_value_test()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let map = HashMap::from_iter([
+        ("a".to_string(), "A".into()),
+        ("b".to_string(), "B".into()),
+        ("c".to_string(), "C".into()),
+    ]);
+    let expected = Value::Record(vec![
+        ("f1".to_string(), Value::Int(10)),
+        ("f2".to_string(), Value::Map(map)),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_ref_record_field() -> TestResult {
+    let writer_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    let mut record = Record::new(writer.schema()).ok_or("Expected Some(Record), but got None")?;
+    record.put("f1", Value::Record(vec![("f1_1".to_string(), 10.into())]));
+    writer.append(record)?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "record1",
+        "namespace": "ns",
+        "type": "record",
+        "fields": [
+            {
+                "name": "f1",
+                "type": {
+                    "name": "record2",
+                    "type": "record",
+                    "fields": [
+                        {
+                            "name": "f1_1",
+                            "type": "int"
+                        }
+                    ]
+                }
+            },  {
+                "name": "f2",
+                "type": "ns.record2",
+                "default": { "f1_1": 100 }
+            }
+        ]
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Record(vec![
+        (
+            "f1".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 10.into())]),
+        ),
+        (
+            "f2".to_string(),
+            Value::Record(vec![("f1_1".to_string(), 100.into())]),
+        ),
+    ]);
+
+    assert_eq!(expected, result[0]);
+
+    Ok(())
+}
+
+#[test]
+fn test_avro_3851_read_default_value_for_enum() -> TestResult {
+    let writer_schema_str = r#"
+    {
+        "name": "enum1",
+        "namespace": "ns",
+        "type": "enum",
+        "symbols": ["a", "b", "c"]
+    }
+    "#;
+    let writer_schema = Schema::parse_str(writer_schema_str)?;
+    let mut writer = Writer::new(&writer_schema, Vec::new());
+    writer.append("c")?;
+
+    let reader_schema_str = r#"
+    {
+        "name": "enum1",
+        "namespace": "ns",
+        "type": "enum",
+        "symbols": ["a", "b"],
+        "default": "a"
+    }
+    "#;
+    let reader_schema = Schema::parse_str(reader_schema_str)?;
+    let input = writer.into_inner()?;
+    let reader = Reader::with_schema(&reader_schema, &input[..])?;
+    let result = reader.collect::<Result<Vec<_>, _>>()?;
+
+    assert_eq!(1, result.len());
+
+    let expected = Value::Enum(0, "a".to_string());
     assert_eq!(expected, result[0]);
 
     Ok(())
