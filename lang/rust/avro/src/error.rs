@@ -235,6 +235,9 @@ pub enum Error {
     #[error("One union type {0:?} must match the `default`'s value type {1:?}")]
     GetDefaultUnion(SchemaKind, ValueKind),
 
+    #[error("`default`'s value type of field {0:?} in {1:?} must be {2:?}")]
+    GetDefaultRecordField(String, String, String),
+
     #[error("JSON value {0} claims to be u64 but cannot be converted")]
     GetU64FromJson(serde_json::Number),
 
