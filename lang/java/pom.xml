@@ -37,7 +37,7 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-    <ant.version>1.10.13</ant.version>
+    <ant.version>1.10.14</ant.version>
     <commons-cli.version>1.5.0</commons-cli.version>
     <commons-compress.version>1.22</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
