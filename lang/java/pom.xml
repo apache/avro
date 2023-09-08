@@ -45,7 +45,7 @@
     <hadoop.version>3.3.5</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jackson-bom.version>2.15.2</jackson-bom.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jetty.version>9.4.52.v20230823</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit5.version>5.10.0</junit5.version>
     <maven-core.version>3.3.9</maven-core.version>
