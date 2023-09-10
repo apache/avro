@@ -672,7 +672,7 @@ mod tests {
         let mut expected = Vec::new();
         zig_i64(27, &mut expected);
         zig_i64(3, &mut expected);
-        expected.extend(vec![b'f', b'o', b'o'].into_iter());
+        expected.extend([b'f', b'o', b'o']);
 
         assert_eq!(to_avro_datum(&schema, record)?, expected);
 

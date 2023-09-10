@@ -19,10 +19,16 @@ package org.apache.avro.io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 public class TestJsonDecoder {
 
@@ -75,5 +81,15 @@ public class TestJsonDecoder {
     in.skipArray();
     assertEquals(200, in.readLong());
     in.skipArray();
+  }
+
+  @Test
+  void testIntWithError() throws IOException {
+    Schema schema = SchemaBuilder.builder("test").record("example").fields().requiredInt("id").endRecord();
+    String record = "{ \"id\": -1.2 }";
+
+    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(schema, schema);
+    JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, record);
+    Assertions.assertThrows(AvroTypeException.class, () -> reader.read(null, decoder));
   }
 }

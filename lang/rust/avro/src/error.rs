@@ -235,6 +235,9 @@ pub enum Error {
     #[error("One union type {0:?} must match the `default`'s value type {1:?}")]
     GetDefaultUnion(SchemaKind, ValueKind),
 
+    #[error("`default`'s value type of field {0:?} in {1:?} must be {2:?}")]
+    GetDefaultRecordField(String, String, String),
+
     #[error("JSON value {0} claims to be u64 but cannot be converted")]
     GetU64FromJson(serde_json::Number),
 
@@ -310,8 +313,14 @@ pub enum Error {
     #[error("Invalid field name {0}")]
     FieldName(String),
 
+    #[error("Duplicate field name {0}")]
+    FieldNameDuplicate(String),
+
     #[error("Invalid schema name {0}. It must match the regex '{1}'")]
     InvalidSchemaName(String, &'static str),
+
+    #[error("Invalid namespace {0}. It must match the regex '{1}'")]
+    InvalidNamespace(String, &'static str),
 
     #[error("Duplicate enum symbol {0}")]
     EnumSymbolDuplicate(String),

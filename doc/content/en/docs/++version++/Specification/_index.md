@@ -393,12 +393,12 @@ For example, the union schema `["null","string","Foo"]`, where Foo is a record n
 
 Note that the original schema is still required to correctly process JSON-encoded data. For example, the JSON encoding does not distinguish between _int_ and _long_, _float_ and _double_, records and maps, enums and strings, etc.
 
-#### Single-object encoding
+### Single-object encoding
 In some situations a single Avro serialized object is to be stored for a longer period of time. One very common example is storing Avro records for several weeks in an [Apache Kafka](https://kafka.apache.org/) topic.
 
 In the period after a schema change this persistence system will contain records that have been written with different schemas. So the need arises to know which schema was used to write a record to support schema evolution correctly. In most cases the schema itself is too large to include in the message, so this binary wrapper format supports the use case more effectively.
 
-##### Single object encoding specification
+#### Single object encoding specification
 Single Avro objects are encoded as follows:
 
 1. A two-byte marker, `C3 01`, to show that the message is Avro and uses this single-record format (version 1).

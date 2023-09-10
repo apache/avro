@@ -18,7 +18,7 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
+  echo "Usage: $0 {clean|dist|doc|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 

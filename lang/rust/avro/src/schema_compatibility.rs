@@ -293,7 +293,7 @@ impl SchemaCompatibility {
         }
 
         if w_type == SchemaKind::Int
-            && vec![SchemaKind::Long, SchemaKind::Float, SchemaKind::Double]
+            && [SchemaKind::Long, SchemaKind::Float, SchemaKind::Double]
                 .iter()
                 .any(|&t| t == r_type)
         {
@@ -301,7 +301,7 @@ impl SchemaCompatibility {
         }
 
         if w_type == SchemaKind::Long
-            && vec![SchemaKind::Float, SchemaKind::Double]
+            && [SchemaKind::Float, SchemaKind::Double]
                 .iter()
                 .any(|&t| t == r_type)
         {

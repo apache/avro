@@ -17,15 +17,30 @@
  */
 package org.apache.avro;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
+import org.junit.jupiter.api.Test;
+
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Test;
-
 public class TestProtocol {
+
+  @Test
+  void namespaceAndNameRules() {
+    Protocol p1 = new Protocol("P", null, "foo");
+    Protocol p2 = new Protocol("foo.P", null, null);
+    Protocol p3 = new Protocol("foo.P", null, "bar");
+    assertEquals(p1.getName(), p2.getName());
+    assertEquals(p1.getNamespace(), p2.getNamespace());
+    assertEquals(p1.getName(), p3.getName());
+    assertEquals(p1.getNamespace(), p3.getNamespace());
+
+    // The following situation is allowed, even if confusing, because the
+    // specification describes this algorithm without specifying that the resulting
+    // namespace mst be non-empty.
+    Protocol invalidName = new Protocol(".P", null, "ignored");
+    assertNull(invalidName.getNamespace());
+    assertEquals("P", invalidName.getName());
+  }
 
   @Test
   void propEquals() {

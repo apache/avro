@@ -341,7 +341,7 @@ do
 
     docker-test)
       tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
-        docker build -t avro-test -f share/docker/Dockerfile -
+        DOCKER_BUILDKIT=1 docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 

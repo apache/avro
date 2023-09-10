@@ -26,6 +26,8 @@ exclude = [
     "fuzz"
 ]
 
+resolver = "2"
+
 [workspace.package]
 version = "0.16.0"
 authors = ["Apache Avro team <dev@avro.apache.org>"]

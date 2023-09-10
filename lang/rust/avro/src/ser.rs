@@ -200,10 +200,10 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_unit_variant(
         self,
         _: &'static str,
-        index: u32,
+        _variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        Ok(Value::Enum(index, variant.to_string()))
+        Ok(Value::String(variant.to_string()))
     }
 
     fn serialize_newtype_struct<T: ?Sized>(
@@ -492,6 +492,7 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use pretty_assertions::assert_eq;
     use serde::{Deserialize, Serialize};
+    use serial_test::serial;
     use std::sync::atomic::Ordering;
 
     #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -720,7 +721,7 @@ mod tests {
             a: UnitExternalEnum::Val1,
         };
 
-        let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+        let expected = Value::Record(vec![("a".to_owned(), Value::String("Val1".to_owned()))]);
 
         assert_eq!(
             to_value(test)?,
@@ -1016,6 +1017,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_false() {
         use serde::ser::Serializer as SerdeSerializer;
 
@@ -1027,6 +1029,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(avro_3747)]
     fn avro_3747_human_readable_true() {
         use serde::ser::Serializer as SerdeSerializer;
 

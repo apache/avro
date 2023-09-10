@@ -17,9 +17,15 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.apache.avro.Schema;
+import org.apache.avro.util.Utf8;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,20 +33,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import org.apache.avro.Schema;
-import org.apache.avro.util.Utf8;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-@RunWith(Parameterized.class)
 public class TestValidatingIO {
   enum Encoding {
     BINARY, BLOCKING_BINARY, JSON,
@@ -48,30 +48,19 @@ public class TestValidatingIO {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestValidatingIO.class);
 
-  private Encoding eEnc;
-  private int iSkipL;
-  private String sJsSch;
-  private String sCl;
-
-  public TestValidatingIO(Encoding enc, int skip, String js, String cls) {
-    this.eEnc = enc;
-    this.iSkipL = skip;
-    this.sJsSch = js;
-    this.sCl = cls;
-  }
-
   private static final int COUNT = 1;
 
-  @Test
-  public void testMain() throws IOException {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testMain(Encoding enc, int skip, String js, String cls) throws IOException {
     for (int i = 0; i < COUNT; i++) {
-      testOnce(new Schema.Parser().parse(sJsSch), sCl, iSkipL, eEnc);
+      testOnce(new Schema.Parser().parse(js), cls, skip, enc);
     }
   }
 
   private void testOnce(Schema schema, String calls, int skipLevel, Encoding encoding) throws IOException {
     Object[] values = randomValues(calls);
-    print(eEnc, iSkipL, schema, schema, values, values);
+    print(encoding, skipLevel, schema, schema, values, values);
     byte[] bytes = make(schema, calls, values, encoding);
     check(schema, bytes, calls, values, skipLevel, encoding);
   }
@@ -204,7 +193,7 @@ public class TestValidatingIO {
         break;
       }
       default:
-        fail();
+        Assertions.fail();
         break;
       }
     }
@@ -254,7 +243,7 @@ public class TestValidatingIO {
       case 's':
         break;
       default:
-        fail();
+        Assertions.fail();
         break;
       }
     }
@@ -324,25 +313,25 @@ public class TestValidatingIO {
           vi.readNull();
           break;
         case 'B':
-          assertEquals(msg, values[p++], vi.readBoolean());
+          Assertions.assertEquals(values[p++], vi.readBoolean(), msg);
           break;
         case 'I':
-          assertEquals(msg, values[p++], vi.readInt());
+          Assertions.assertEquals(values[p++], vi.readInt(), msg);
           break;
         case 'L':
-          assertEquals(msg, values[p++], vi.readLong());
+          Assertions.assertEquals(values[p++], vi.readLong(), msg);
           break;
         case 'F':
           if (!(values[p] instanceof Float))
-            fail();
+            Assertions.fail();
           float f = (Float) values[p++];
-          assertEquals(msg, f, vi.readFloat(), Math.abs(f / 1000));
+          Assertions.assertEquals(f, vi.readFloat(), Math.abs(f / 1000));
           break;
         case 'D':
           if (!(values[p] instanceof Double))
-            fail();
+            Assertions.fail();
           double d = (Double) values[p++];
-          assertEquals(msg, d, vi.readDouble(), Math.abs(d / 1000));
+          Assertions.assertEquals(d, vi.readDouble(), Math.abs(d / 1000), msg);
           break;
         case 'S':
           extractInt(cs);
@@ -351,7 +340,7 @@ public class TestValidatingIO {
             p++;
           } else {
             String s = (String) values[p++];
-            assertEquals(msg, new Utf8(s), vi.readString(null));
+            Assertions.assertEquals(new Utf8(s), vi.readString(null), msg);
           }
           break;
         case 'K':
@@ -361,7 +350,7 @@ public class TestValidatingIO {
             p++;
           } else {
             String s = (String) values[p++];
-            assertEquals(msg, new Utf8(s), vi.readString(null));
+            Assertions.assertEquals(new Utf8(s), vi.readString(null), msg);
           }
           break;
         case 'b':
@@ -374,7 +363,7 @@ public class TestValidatingIO {
             ByteBuffer bb2 = vi.readBytes(null);
             byte[] actBytes = new byte[bb2.remaining()];
             System.arraycopy(bb2.array(), bb2.position(), actBytes, 0, bb2.remaining());
-            assertArrayEquals(msg, bb, actBytes);
+            Assertions.assertArrayEquals(bb, actBytes, msg);
           }
           break;
         case 'f': {
@@ -386,7 +375,7 @@ public class TestValidatingIO {
             byte[] bb = (byte[]) values[p++];
             byte[] actBytes = new byte[len];
             vi.readFixed(actBytes);
-            assertArrayEquals(msg, bb, actBytes);
+            Assertions.assertArrayEquals(bb, actBytes, msg);
           }
         }
           break;
@@ -395,7 +384,7 @@ public class TestValidatingIO {
           if (level == skipLevel) {
             vi.readEnum();
           } else {
-            assertEquals(msg, e, vi.readEnum());
+            Assertions.assertEquals(e, vi.readEnum(), msg);
           }
         }
           break;
@@ -422,16 +411,16 @@ public class TestValidatingIO {
             continue;
           }
         case ']':
-          assertEquals(msg, 0, counts[level]);
+          Assertions.assertEquals(0, counts[level], msg);
           if (!isEmpty[level]) {
-            assertEquals(msg, 0, vi.arrayNext());
+            Assertions.assertEquals(0, vi.arrayNext(), msg);
           }
           level--;
           break;
         case '}':
-          assertEquals(0, counts[level]);
+          Assertions.assertEquals(0, counts[level]);
           if (!isEmpty[level]) {
-            assertEquals(msg, 0, vi.mapNext());
+            Assertions.assertEquals(0, vi.mapNext(), msg);
           }
           level--;
           break;
@@ -450,28 +439,28 @@ public class TestValidatingIO {
           continue;
         case 'U': {
           int idx = extractInt(cs);
-          assertEquals(msg, idx, vi.readIndex());
+          Assertions.assertEquals(idx, vi.readIndex(), msg);
           continue;
         }
         case 'R':
           ((ResolvingDecoder) vi).readFieldOrder();
           continue;
         default:
-          fail(msg);
+          Assertions.fail(msg);
         }
       } catch (RuntimeException e) {
         throw new RuntimeException(msg, e);
       }
     }
-    assertEquals(msg, values.length, p);
+    Assertions.assertEquals(values.length, p, msg);
   }
 
   private static int skip(String msg, InputScanner cs, Decoder vi, boolean isArray) throws IOException {
     final char end = isArray ? ']' : '}';
     if (isArray) {
-      assertEquals(msg, 0, vi.skipArray());
+      Assertions.assertEquals(0, vi.skipArray(), msg);
     } else if (end == '}') {
-      assertEquals(msg, 0, vi.skipMap());
+      Assertions.assertEquals(0, vi.skipMap(), msg);
     }
     int level = 0;
     int p = 0;
@@ -507,9 +496,8 @@ public class TestValidatingIO {
     throw new RuntimeException("Don't know how to skip");
   }
 
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(convertTo2dArray(encodings, skipLevels, testSchemas()));
+  public static Stream<Arguments> data() {
+    return convertTo2dStream(encodings, skipLevels, testSchemas());
   }
 
   private static Object[][] encodings = new Object[][] { { Encoding.BINARY }, { Encoding.BLOCKING_BINARY },
@@ -517,19 +505,11 @@ public class TestValidatingIO {
 
   private static Object[][] skipLevels = new Object[][] { { -1 }, { 0 }, { 1 }, { 2 }, };
 
-  public static Object[][] convertTo2dArray(final Object[][]... values) {
-    ArrayList<Object[]> ret = new ArrayList<>();
-
+  public static Stream<Arguments> convertTo2dStream(final Object[][]... values) {
     Iterator<Object[]> iter = cartesian(values);
-    while (iter.hasNext()) {
-      Object[] objects = iter.next();
-      ret.add(objects);
-    }
-    Object[][] retArrays = new Object[ret.size()][];
-    for (int i = 0; i < ret.size(); i++) {
-      retArrays[i] = ret.get(i);
-    }
-    return retArrays;
+    Stream<Object[]> stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED),
+        false);
+    return stream.map(Arguments::of);
   }
 
   /**
