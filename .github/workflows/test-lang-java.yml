@@ -46,7 +46,7 @@ jobs:
         - '18'
         - '19'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
@@ -87,7 +87,7 @@ jobs:
         - '11'
         - '17'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
