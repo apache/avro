@@ -41,7 +41,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -87,7 +87,7 @@ jobs:
         perl:
         - '5.32'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: shogo82148/actions-setup-perl@v1
         with:
