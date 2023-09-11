@@ -432,6 +432,7 @@ fn main() -> Result<(), Error> {
 1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 1. Timestamp (milli and micro) as `i64`
+1. Local timestamp (milli and micro) as `i64`
 1. Duration as a custom type with `months`, `days` and `millis` accessor methods each of which returns an `i32`
 
 Note that the on-disk representation is identical to the underlying primitive/complex type.
@@ -500,6 +501,16 @@ fn main() -> Result<(), Error> {
           "logicalType": "timestamp-micros"
         },
         {
+          "name": "local_timestamp_millis",
+          "type": "long",
+          "logicalType": "local-timestamp-millis"
+        },
+        {
+          "name": "local_timestamp_micros",
+          "type": "long",
+          "logicalType": "local-timestamp-micros"
+        },
+        {
           "name": "duration",
           "type": {
             "type": "fixed",
@@ -527,6 +538,8 @@ fn main() -> Result<(), Error> {
     record.put("time_micros", Value::TimeMicros(3));
     record.put("timestamp_millis", Value::TimestampMillis(4));
     record.put("timestamp_micros", Value::TimestampMicros(5));
+    record.put("local_timestamp_millis", Value::LocalTimestampMillis(4));
+    record.put("local_timestamp_micros", Value::LocalTimestampMicros(5));
     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 
     writer.append(record)?;

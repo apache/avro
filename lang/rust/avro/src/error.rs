@@ -151,6 +151,12 @@ pub enum Error {
     #[error("TimestampMicros expected, got {0:?}")]
     GetTimestampMicros(ValueKind),
 
+    #[error("LocalTimestampMillis expected, got {0:?}")]
+    GetLocalTimestampMillis(ValueKind),
+
+    #[error("LocalTimestampMicros expected, got {0:?}")]
+    GetLocalTimestampMicros(ValueKind),
+
     #[error("Null expected, got {0:?}")]
     GetNull(ValueKind),
 

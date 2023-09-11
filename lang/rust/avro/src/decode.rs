@@ -130,6 +130,8 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
         Schema::TimeMicros => zag_i64(reader).map(Value::TimeMicros),
         Schema::TimestampMillis => zag_i64(reader).map(Value::TimestampMillis),
         Schema::TimestampMicros => zag_i64(reader).map(Value::TimestampMicros),
+        Schema::LocalTimestampMillis => zag_i64(reader).map(Value::LocalTimestampMillis),
+        Schema::LocalTimestampMicros => zag_i64(reader).map(Value::LocalTimestampMicros),
         Schema::Duration => {
             let mut buf = [0u8; 12];
             reader.read_exact(&mut buf).map_err(Error::ReadDuration)?;

@@ -592,6 +592,42 @@ const TIMESTAMPMICROS_LOGICAL_TYPE: &[(&str, bool)] = &[
     ),
 ];
 
+const LOCAL_TIMESTAMPMILLIS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (
+        r#"{"type": "long", "logicalType": "local-timestamp-millis"}"#,
+        true,
+    ),
+    // this is valid even though its logical type is "local-timestamp-milis" (missing the second "l"), because
+    // unknown logical types are ignored
+    (
+        r#"{"type": "long", "logicalType": "local-timestamp-milis"}"#,
+        true,
+    ),
+    (
+        // this is still valid because unknown logicalType should be ignored
+        r#"{"type": "int", "logicalType": "local-timestamp-millis"}"#,
+        true,
+    ),
+];
+
+const LOCAL_TIMESTAMPMICROS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (
+        r#"{"type": "long", "logicalType": "local-timestamp-micros"}"#,
+        true,
+    ),
+    // this is valid even though its logical type is "local-timestamp-micro" (missing the last "s"), because
+    // unknown logical types are ignored
+    (
+        r#"{"type": "long", "logicalType": "local-timestamp-micro"}"#,
+        true,
+    ),
+    (
+        // this is still valid because unknown logicalType should be ignored
+        r#"{"type": "int", "logicalType": "local-timestamp-micros"}"#,
+        true,
+    ),
+];
+
 lazy_static! {
     static ref EXAMPLES: Vec<(&'static str, bool)> = Vec::new()
         .iter()
@@ -612,6 +648,8 @@ lazy_static! {
         .chain(TIMEMICROS_LOGICAL_TYPE.iter().copied())
         .chain(TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
         .chain(TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
+        .chain(LOCAL_TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
+        .chain(LOCAL_TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
         .collect();
     static ref VALID_EXAMPLES: Vec<(&'static str, bool)> =
         EXAMPLES.iter().copied().filter(|s| s.1).collect();
