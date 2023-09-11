@@ -32,9 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 
 import org.apache.avro.protobuf.noopt.Test.Foo;
 import org.apache.avro.protobuf.noopt.Test.A;
+import org.apache.avro.protobuf.noopt.Test.Bar.BarInner;
 import org.apache.avro.protobuf.noopt.Test.M.N;
 
 public class TestProtobuf {
@@ -120,6 +122,30 @@ public class TestProtobuf {
   void nestedClassNamespace() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
     assertEquals(org.apache.avro.protobuf.noopt.Test.class.getName(), s.getNamespace());
+  }
+
+  @Test
+  void nestedClassWithDollarSymbol() throws Exception {
+    BarInner.Builder builder = BarInner.newBuilder();
+    builder.setA(1);
+    BarInner record = builder.build();
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    ProtobufDatumWriter<BarInner> w = new ProtobufDatumWriter<>(BarInner.class);
+    Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
+    w.write(record, e);
+    e.flush();
+
+    Object o = new ProtobufDatumReader<>(BarInner.class).read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
+    assertEquals(record, o);
+
+    Schema schema = ProtobufData.get().getSchema(BarInner.class);
+    assertEquals("org.apache.avro.protobuf.noopt.Test__dollar__Bar", schema.getNamespace());
+
+    // Ensure aliases accept "$" and no exception is thrown for backward
+    // compatibility.
+    schema.addAlias("org.apache.avro.protobuf.noopt.Test$Bar.BarInner");
   }
 
   @Test

@@ -807,10 +807,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
         space = name.substring(0, lastDot); // get space from name
         this.name = validateName(name.substring(lastDot + 1));
       }
-      if ("".equals(space))
-        space = null;
-      this.space = space;
+      this.space = space == null || space.isEmpty() ? null : validateSpace(space);
       this.full = (this.space == null) ? this.name : this.space + "." + this.name;
+    }
+
+    protected String validateSpace(String space) {
+      return Schema.validateSpace(space);
     }
 
     @Override
@@ -873,6 +875,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   }
 
+  static class Alias extends Name {
+
+    public Alias(String name, String space) {
+      super(name, space);
+    }
+
+    @Override
+    protected String validateSpace(String space) {
+      return space;
+    }
+  }
+
   private static abstract class NamedSchema extends Schema {
     final Name name;
     final String doc;
@@ -918,7 +932,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         this.aliases = new LinkedHashSet<>();
       if (space == null)
         space = this.name.space;
-      aliases.add(new Name(name, space));
+      aliases.add(new Alias(name, space));
     }
 
     @Override
@@ -1771,6 +1785,13 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new SchemaParseException("Illegal character in: " + name);
     }
     return name;
+  }
+
+  private static String validateSpace(String space) {
+    for (String part : space.split("\\.")) {
+      validateName(part);
+    }
+    return space;
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);

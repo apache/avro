@@ -64,3 +64,10 @@ message M {
     A = 1;
   }
 }
+
+// a nested message
+message Bar {
+  message BarInner {
+    required int32 a = 1;
+  }
+}
