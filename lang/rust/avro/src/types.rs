@@ -798,7 +798,9 @@ impl Value {
 
     fn resolve_local_timestamp_millis(self) -> Result<Self, Error> {
         match self {
-            Value::LocalTimestampMillis(ts) | Value::Long(ts) => Ok(Value::LocalTimestampMillis(ts)),
+            Value::LocalTimestampMillis(ts) | Value::Long(ts) => {
+                Ok(Value::LocalTimestampMillis(ts))
+            }
             Value::Int(ts) => Ok(Value::LocalTimestampMillis(i64::from(ts))),
             other => Err(Error::GetLocalTimestampMillis(other.into())),
         }
@@ -806,7 +808,9 @@ impl Value {
 
     fn resolve_local_timestamp_micros(self) -> Result<Self, Error> {
         match self {
-            Value::LocalTimestampMicros(ts) | Value::Long(ts) => Ok(Value::LocalTimestampMicros(ts)),
+            Value::LocalTimestampMicros(ts) | Value::Long(ts) => {
+                Ok(Value::LocalTimestampMicros(ts))
+            }
             Value::Int(ts) => Ok(Value::LocalTimestampMicros(i64::from(ts))),
             other => Err(Error::GetLocalTimestampMicros(other.into())),
         }
