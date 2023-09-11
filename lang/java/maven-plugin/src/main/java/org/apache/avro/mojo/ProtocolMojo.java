@@ -18,15 +18,10 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.generic.GenericData.StringType;
+import org.apache.avro.Protocol;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from Avro protocol files (.avpr)
@@ -59,27 +54,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     final File src = new File(sourceDirectory, filename);
     final Protocol protocol = Protocol.parse(src);
-    final SpecificCompiler compiler = new SpecificCompiler(protocol);
-    compiler.setTemplateDir(templateDirectory);
-    compiler.setStringType(StringType.valueOf(stringType));
-    compiler.setFieldVisibility(getFieldVisibility());
-    compiler.setCreateOptionalGetters(createOptionalGetters);
-    compiler.setGettersReturnOptional(gettersReturnOptional);
-    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-    compiler.setCreateSetters(createSetters);
-    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-    final URLClassLoader classLoader;
-    try {
-      classLoader = createClassLoader();
-      for (String customConversion : customConversions) {
-        compiler.addCustomConversion(classLoader.loadClass(customConversion));
-      }
-    } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
-      throw new IOException(e);
-    }
-    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.compileToDestination(src, outputDirectory);
+    doCompile(src, protocol, outputDirectory);
   }
 
   @Override

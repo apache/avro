@@ -73,6 +73,7 @@
   <modules>
     <module>android</module>
     <module>avro</module>
+    <module>idl</module>
     <module>compiler</module>
     <module>maven-plugin</module>
     <module>ipc</module>

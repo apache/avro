@@ -178,8 +178,14 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
+    this(Collections.singleton(schema));
+  }
+
+  public SpecificCompiler(Collection<Schema> schemas) {
     this();
-    enqueue(schema);
+    for (Schema schema : schemas) {
+      enqueue(schema);
+    }
     this.protocol = null;
   }
 

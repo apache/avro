@@ -33,6 +33,9 @@
   <name>Simple Avro Ordering Service</name>
 
   <properties>
+    <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
+    <maven.compiler.target>${maven.compiler.target}</maven.compiler.target>
+    <project.build.sourceEncoding>${project.build.sourceEncoding}</project.build.sourceEncoding>
     <avro.version>${project.version}</avro.version>
     <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.target}</maven.compiler.target>
