@@ -77,6 +77,8 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
         Value::Long(i)
         | Value::TimestampMillis(i)
         | Value::TimestampMicros(i)
+        | Value::LocalTimestampMillis(i)
+        | Value::LocalTimestampMicros(i)
         | Value::TimeMicros(i) => encode_long(*i, buffer),
         Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
