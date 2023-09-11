@@ -88,7 +88,10 @@ import org.apache.commons.text.StringEscapeUtils;
  *
  * Note: each instance is not thread-safe, but multiple separate
  * instances are safely independent.
+ *
+ * @deprecated Use the new org.apache.avro.idl.IdlReader from avro-idl instead.
  */
+@Deprecated
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
   private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";

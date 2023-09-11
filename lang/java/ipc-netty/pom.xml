@@ -24,7 +24,7 @@
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.12.0-SNAPSHOT</version>
-    <relativePath>../</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>avro-ipc-netty</artifactId>

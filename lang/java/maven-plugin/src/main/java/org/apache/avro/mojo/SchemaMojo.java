@@ -18,21 +18,16 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
-import org.apache.avro.generic.GenericData.StringType;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Generate Java classes from Avro schema files (.avsc)
@@ -67,71 +62,30 @@ public class SchemaMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
-  /**
-   * generated record schema classes will extend this class.
-   */
-  private String recordSpecificClass = "org.apache.avro.specific.SpecificRecordBase";
-
-  /**
-   * generated error schema classes will extend this class.
-   */
-  private String errorSpecificClass = "org.apache.avro.specific.SpecificExceptionBase";
-
   @Override
-  protected void doCompile(String[] filesName, File sourceDirectory, File outputDirectory)
+  protected void doCompile(String[] fileNames, File sourceDirectory, File outputDirectory)
       throws MojoExecutionException {
-    final List<File> sourceFiles = Arrays.stream(filesName)
+    final List<File> sourceFiles = Arrays.stream(fileNames)
         .map((String filename) -> new File(sourceDirectory, filename)).collect(Collectors.toList());
+    final File sourceFileForModificationDetection = sourceFiles.stream().filter(file -> file.lastModified() > 0)
+        .max(Comparator.comparing(File::lastModified)).orElse(null);
     final List<Schema> schemas;
 
-    // This is necessary to maintain backward-compatibility. If there are
-    // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so reuse and sharing of schema
-    // is possible.
     try {
+      // This is necessary to maintain backward-compatibility. If there are
+      // no imported files then isolate the schemas from each other, otherwise
+      // allow them to share a single schema so reuse and sharing of schema
+      // is possible.
       if (imports == null) {
         schemas = new Schema.Parser().parse(sourceFiles);
       } else {
         schemas = schemaParser.parse(sourceFiles);
       }
+
+      doCompile(sourceFileForModificationDetection, schemas, outputDirectory);
     } catch (IOException | SchemaParseException ex) {
-      throw new MojoExecutionException("Error compiling one file of " + sourceDirectory + " to " + outputDirectory, ex);
+      throw new MojoExecutionException("Error compiling a file in " + sourceDirectory + " to " + outputDirectory, ex);
     }
-
-    final SpecificCompiler compiler = new SpecificCompiler(schemas);
-    compiler.setTemplateDir(templateDirectory);
-    compiler.setStringType(StringType.valueOf(stringType));
-    compiler.setFieldVisibility(getFieldVisibility());
-    compiler.setCreateOptionalGetters(createOptionalGetters);
-    compiler.setGettersReturnOptional(gettersReturnOptional);
-    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-    compiler.setCreateSetters(createSetters);
-    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-    try {
-      final URLClassLoader classLoader = createClassLoader();
-      for (String customConversion : customConversions) {
-        compiler.addCustomConversion(classLoader.loadClass(customConversion));
-      }
-    } catch (ClassNotFoundException | DependencyResolutionRequiredException | MalformedURLException e) {
-      throw new MojoExecutionException("Compilation error: Can't add custom conversion", e);
-    }
-    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-    compiler.setRecordSpecificClass(this.recordSpecificClass);
-    compiler.setErrorSpecificClass(this.errorSpecificClass);
-    for (File src : sourceFiles) {
-      try {
-        compiler.compileToDestination(src, outputDirectory);
-      } catch (IOException ex) {
-        throw new MojoExecutionException("Compilation error with file " + src + " to " + outputDirectory, ex);
-      }
-    }
-  }
-
-  @Override
-  protected void doCompile(final String filename, final File sourceDirectory, final File outputDirectory)
-      throws IOException {
-    // Not call.
   }
 
   @Override
