@@ -546,7 +546,7 @@ public class Protocol extends JsonProperties {
 
     }
     for (JsonNode type : defs) {
-      Schema.parseFieldsOnly(type, types, types.space());
+      Schema.parseCompleteSchema(type, types, types.space());
     }
   }
 
