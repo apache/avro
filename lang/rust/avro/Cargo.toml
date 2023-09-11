@@ -64,7 +64,7 @@ log = { default-features = false, version = "0.4.20" }
 num-bigint = { default-features = false, version = "0.4.4" }
 regex-lite = { default-features = false, version = "0.1.0", features = ["std", "string"] }
 serde = { default-features = false, version = "1.0.188", features = ["derive"] }
-serde_json = { default-features = false, version = "1.0.105", features = ["std"] }
+serde_json = { default-features = false, version = "1.0.106", features = ["std"] }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.25.0" }
 strum_macros = { default-features = false, version = "0.25.2" }
