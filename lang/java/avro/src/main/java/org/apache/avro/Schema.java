@@ -1584,7 +1584,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     private Schema runParser(JsonParser parser, ParseFunction f) throws IOException {
-      boolean saved = validateNames.get();
+      NameValidator saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
         validateNames.set(validate);
@@ -1680,7 +1680,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   @Deprecated
   public static Schema parse(String jsonSchema, boolean validate) {
-    return new Parser().setValidate(validate).parse(jsonSchema);
+    final NameValidator validator = validate ? NameValidator.UTF_VALIDATOR : NameValidator.NO_VALIDATION;
+    return new Parser(validator).parse(jsonSchema);
   }
 
   static final Map<String, Type> PRIMITIVES = new HashMap<>();
