@@ -174,7 +174,6 @@ public class Protocol extends JsonProperties {
     public String getDoc() {
       return doc;
     }
-
   }
 
   private class TwoWayMessage extends Message {
@@ -466,7 +465,9 @@ public class Protocol extends JsonProperties {
 
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
-    return parse(Schema.FACTORY.createParser(file));
+    try (JsonParser jsonParser = Schema.FACTORY.createParser(file)) {
+      return parse(jsonParser);
+    }
   }
 
   /** Read a protocol from a Json stream. */
@@ -537,10 +538,15 @@ public class Protocol extends JsonProperties {
       return; // no types defined
     if (!defs.isArray())
       throw new SchemaParseException("Types not an array: " + defs);
+
     for (JsonNode type : defs) {
       if (!type.isObject())
         throw new SchemaParseException("Type not an object: " + type);
-      Schema.parse(type, types);
+      Schema.parseNamesDeclared(type, types, types.space());
+
+    }
+    for (JsonNode type : defs) {
+      Schema.parseCompleteSchema(type, types, types.space());
     }
   }
 

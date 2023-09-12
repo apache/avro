@@ -17,12 +17,85 @@
  */
 package org.apache.avro;
 
-import org.junit.jupiter.api.Test;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+
+import org.junit.jupiter.api.Test;
+
 public class TestProtocol {
+
+  @Test
+  public void parse() throws IOException {
+    File fic = new File("../../../share/test/schemas/namespace.avpr");
+    Protocol protocol = Protocol.parse(fic);
+    assertNotNull(protocol);
+    assertEquals("TestNamespace", protocol.getName());
+  }
+
+  /**
+   * record type 'User' contains a field of type 'Status', which contains a field
+   * of type 'User'.
+   */
+  @Test
+  public void crossProtocol() {
+    String userStatus = "{ \"protocol\" : \"p1\", " + "\"types\": ["
+        + "{\"name\": \"User\", \"type\": \"record\", \"fields\": [{\"name\": \"current_status\", \"type\": \"Status\"}]},\n"
+        + "\n"
+        + "{\"name\": \"Status\", \"type\": \"record\", \"fields\": [{\"name\": \"author\", \"type\": \"User\"}]}"
+        + "]}";
+
+    Protocol protocol = Protocol.parse(userStatus);
+    Schema userSchema = protocol.getType("User");
+    Schema statusSchema = protocol.getType("Status");
+    assertSame(statusSchema, userSchema.getField("current_status").schema());
+    assertSame(userSchema, statusSchema.getField("author").schema());
+
+    String parsingFormUser = SchemaNormalization.toParsingForm(userSchema);
+    assertEquals(
+        "{\"name\":\"User\",\"type\":\"record\",\"fields\":[{\"name\":\"current_status\",\"type\":{\"name\":\"Status\",\"type\":\"record\",\"fields\":[{\"name\":\"author\",\"type\":\"User\"}]}}]}",
+        parsingFormUser);
+
+    String parsingFormStatus = SchemaNormalization.toParsingForm(statusSchema);
+    assertEquals(
+        "{\"name\":\"Status\",\"type\":\"record\",\"fields\":[{\"name\":\"author\",\"type\":{\"name\":\"User\",\"type\":\"record\",\"fields\":[{\"name\":\"current_status\",\"type\":\"Status\"}]}}]}",
+        parsingFormStatus);
+  }
+
+  /**
+   * When one schema with a type used before it is defined, test normalization
+   * defined schema before it is used.
+   */
+  @Test
+  void normalization() {
+    final String schema = "{\n" + " \"type\":\"record\",  \"name\": \"Main\", " + " \"fields\":[\n"
+        + "    {  \"name\":\"f1\", \"type\":\"Sub\"  },\n" // use Sub
+        + "    {  \"name\":\"f2\", " + "       \"type\":{\n" + "         \"type\":\"enum\",  \"name\":\"Sub\",\n" // define
+                                                                                                                  // Sub
+        + "         \"symbols\":[\"OPEN\",\"CLOSE\"]\n" + "        }\n" + "    }\n" + " ]\n" + "}";
+    Schema s = new Schema.Parser().parse(schema);
+    assertNotNull(s);
+
+    String parsingForm = SchemaNormalization.toParsingForm(s);
+    assertEquals(
+        "{\"name\":\"Main\",\"type\":\"record\",\"fields\":[{\"name\":\"f1\",\"type\":{\"name\":\"Sub\",\"type\":\"enum\",\"symbols\":[\"OPEN\",\"CLOSE\"]}},{\"name\":\"f2\",\"type\":\"Sub\"}]}",
+        parsingForm);
+  }
 
   @Test
   void namespaceAndNameRules() {
