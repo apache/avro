@@ -38,6 +38,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -873,5 +875,26 @@ public class TestSchemaBuilder {
     Schema a2 = new Schema.Parser().parse(a1.toString());
 
     assertEquals(a2, a1);
+  }
+
+  @Test
+  void namesAcceptAll() throws InterruptedException {
+    // Ensure that Schema.setNameValidator won't interfere with others unit tests.
+    Runnable r = () -> {
+      Schema.setNameValidator(Schema.NameValidator.NO_VALIDATION);
+      final Schema schema = SchemaBuilder.record("7name").fields().name("123").type(Schema.create(Schema.Type.INT))
+          .noDefault().endRecord();
+      Assertions.assertNotNull(schema);
+      Assertions.assertEquals("7name", schema.getName());
+      final Schema.Field field = schema.getField("123");
+      Assertions.assertEquals("123", field.name());
+    };
+
+    final Throwable[] exception = new Throwable[] { null };
+    Thread t = new Thread(r);
+    t.setUncaughtExceptionHandler((Thread th, Throwable e) -> exception[0] = e);
+    t.start();
+    t.join();
+    Assertions.assertNull(exception[0], () -> exception[0].getMessage());
   }
 }

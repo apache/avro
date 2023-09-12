@@ -990,8 +990,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocalWithInitial.of(HashSet::new);
-  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocalWithInitial.of(IdentityHashMap::new);
+  private static final ThreadLocal<Set<SeenPair>> SEEN_EQUALS = ThreadLocalWithInitial.of(HashSet::new);
+  private static final ThreadLocal<Map<Schema, Schema>> SEEN_HASHCODE = ThreadLocalWithInitial.of(IdentityHashMap::new);
 
   @SuppressWarnings(value = "unchecked")
   private static class RecordSchema extends NamedSchema {
@@ -1087,7 +1087,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     int computeHash() {
-      Map seen = SEEN_HASHCODE.get();
+      Map<Schema, Schema> seen = SEEN_HASHCODE.get();
       if (seen.containsKey(this))
         return 0; // prevent stack overflow
       boolean first = seen.isEmpty();
@@ -1109,8 +1109,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
       gen.writeStringField("type", isError ? "error" : "record");
       writeName(names, gen);
       names.space = name.space; // set default namespace
-      if (getDoc() != null)
-        gen.writeStringField("doc", getDoc());
+      if (this.getDoc() != null)
+        gen.writeStringField("doc", this.getDoc());
 
       if (fields != null) {
         gen.writeFieldName("fields");
@@ -1480,8 +1480,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   public static class Parser {
     private Names names = new Names();
-    private boolean validate = true;
+    private final Schema.NameValidator validate;
     private boolean validateDefaults = true;
+
+    public Parser() {
+      this(NameValidator.UTF_VALIDATOR);
+    }
+
+    public Parser(final NameValidator validate) {
+      this.validate = validate;
+    }
 
     /**
      * Adds the provided types to the set of defined, named types known to this
@@ -1508,17 +1516,6 @@ public abstract class Schema extends JsonProperties implements Serializable {
       for (Schema s : names.values())
         result.put(s.getFullName(), s);
       return result;
-    }
-
-    /** Enable or disable name validation. */
-    public Parser setValidate(boolean validate) {
-      this.validate = validate;
-      return this;
-    }
-
-    /** True iff names are validated. True by default. */
-    public boolean getValidate() {
-      return this.validate;
     }
 
     /** Enable or disable default value validation. */
@@ -1587,7 +1584,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
 
     private Schema runParser(JsonParser parser, ParseFunction f) throws IOException {
-      boolean saved = validateNames.get();
+      NameValidator saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
       try {
         validateNames.set(validate);
@@ -1683,7 +1680,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
    */
   @Deprecated
   public static Schema parse(String jsonSchema, boolean validate) {
-    return new Parser().setValidate(validate).parse(jsonSchema);
+    final NameValidator validator = validate ? NameValidator.UTF_VALIDATOR : NameValidator.NO_VALIDATION;
+    return new Parser(validator).parse(jsonSchema);
   }
 
   static final Map<String, Type> PRIMITIVES = new HashMap<>();
@@ -1752,25 +1750,19 @@ public abstract class Schema extends JsonProperties implements Serializable {
     }
   }
 
-  private static ThreadLocal<Boolean> validateNames = ThreadLocalWithInitial.of(() -> true);
+  private static ThreadLocal<Schema.NameValidator> validateNames = ThreadLocalWithInitial
+      .of(() -> NameValidator.UTF_VALIDATOR);
 
   private static String validateName(String name) {
-    if (!validateNames.get())
-      return name; // not validating names
-    if (name == null)
-      throw new SchemaParseException("Null name");
-    int length = name.length();
-    if (length == 0)
-      throw new SchemaParseException("Empty name");
-    char first = name.charAt(0);
-    if (!(Character.isLetter(first) || first == '_'))
-      throw new SchemaParseException("Illegal initial character: " + name);
-    for (int i = 1; i < length; i++) {
-      char c = name.charAt(i);
-      if (!(Character.isLetterOrDigit(c) || c == '_'))
-        throw new SchemaParseException("Illegal character in: " + name);
+    NameValidator.Result result = validateNames.get().validate(name);
+    if (!result.isOK()) {
+      throw new SchemaParseException(result.errors);
     }
     return name;
+  }
+
+  public static void setNameValidator(final Schema.NameValidator validator) {
+    Schema.validateNames.set(validator);
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
@@ -2297,6 +2289,84 @@ public abstract class Schema extends JsonProperties implements Serializable {
     if (alias == null)
       return field;
     return alias;
+  }
+
+  public interface NameValidator {
+
+    class Result {
+      private final String errors;
+
+      public Result(final String errors) {
+        this.errors = errors;
+      }
+
+      public boolean isOK() {
+        return this == NameValidator.OK;
+      }
+
+      public String getErrors() {
+        return errors;
+      }
+    }
+
+    Result OK = new Result(null);
+
+    default Result validate(String name) {
+      return OK;
+    }
+
+    NameValidator NO_VALIDATION = new NameValidator() {
+    };
+
+    NameValidator UTF_VALIDATOR = new NameValidator() {
+      @Override
+      public Result validate(final String name) {
+        if (name == null)
+          return new Result("Null name");
+        int length = name.length();
+        if (length == 0)
+          return new Result("Empty name");
+        char first = name.charAt(0);
+        if (!(Character.isLetter(first) || first == '_'))
+          return new Result("Illegal initial character: " + name);
+        for (int i = 1; i < length; i++) {
+          char c = name.charAt(i);
+          if (!(Character.isLetterOrDigit(c) || c == '_'))
+            return new Result("Illegal character in: " + name);
+        }
+        return OK;
+      }
+    };
+
+    NameValidator STRICT_VALIDATOR = new NameValidator() {
+      @Override
+      public Result validate(final String name) {
+        if (name == null)
+          return new Result("Null name");
+        int length = name.length();
+        if (length == 0)
+          return new Result("Empty name");
+        char first = name.charAt(0);
+        if (!(isLetter(first) || first == '_'))
+          return new Result("Illegal initial character: " + name);
+        for (int i = 1; i < length; i++) {
+          char c = name.charAt(i);
+          if (!(isLetter(c) || isDigit(c) || c == '_'))
+            return new Result("Illegal character in: " + name);
+        }
+        return OK;
+      }
+
+      private boolean isLetter(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+      }
+
+      private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+      }
+
+    };
+
   }
 
   /**
