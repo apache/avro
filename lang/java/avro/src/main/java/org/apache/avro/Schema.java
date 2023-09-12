@@ -1865,7 +1865,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param currentNameSpace : current working name space.
    * @return schema.
    */
-  private static Schema parseNamesDeclared(JsonNode schema, Names names, String currentNameSpace) {
+  static Schema parseNamesDeclared(JsonNode schema, Names names, String currentNameSpace) {
     if (schema == null) {
       return null;
     }

@@ -977,7 +977,8 @@ public class TestReflect {
   void forwardReference() {
     ReflectData data = ReflectData.get();
     Protocol reflected = data.getProtocol(C.class);
-    Protocol reparsed = Protocol.parse(reflected.toString());
+    String ref = reflected.toString();
+    Protocol reparsed = Protocol.parse(ref);
     assertEquals(reflected, reparsed);
     assert (reparsed.getTypes().contains(data.getSchema(A.class)));
     assert (reparsed.getTypes().contains(data.getSchema(B1.class)));
