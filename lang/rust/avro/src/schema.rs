@@ -723,7 +723,6 @@ impl RecordField {
                 }
                 _ => {
                     let resolved = avro_value
-                        .to_owned()
                         .resolve_internal(field_schema, names, &field_schema.namespace(), &None)
                         .is_ok();
 
@@ -1635,7 +1634,6 @@ impl Parser {
 
         if let Some(ref value) = default {
             let resolved = types::Value::from(value.clone())
-                .to_owned()
                 .resolve_enum(&symbols, &Some(value.to_string()), &None)
                 .is_ok();
             if !resolved {
