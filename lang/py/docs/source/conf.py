@@ -29,7 +29,7 @@ sys.path.append("..")
 project = "Apache Avro"
 copyright = "2023, Apache"
 author = "Apache"
-release = "1.12.0"
+release = "1.11.3"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
