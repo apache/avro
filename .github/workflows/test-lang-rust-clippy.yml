@@ -52,7 +52,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          rust-version: ${{ matrix.rust }}
           toolchain: ${{ matrix.rust }}
           components: clippy
       - run: cargo clippy --all-features --all-targets -- -Dclippy::all -Dunused_imports
