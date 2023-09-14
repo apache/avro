@@ -5149,7 +5149,6 @@ mod tests {
         Ok(())
     }
 
-
     #[test]
     fn test_avro_3779_bigdecimal_schema() -> TestResult {
         let schema = json!(
@@ -5605,7 +5604,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""int""#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5648,7 +5647,7 @@ mod tests {
             r#"{"name":"ns.record2","type":"record","fields":[{"name":"f1_1","type":"int"}]}"#
                 .to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5685,7 +5684,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.enum1","type":"enum","symbols":["a","b","c"]}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5722,7 +5721,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"name":"ns.fixed1","type":"fixed","size":3}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5756,7 +5755,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"array","items":"int"}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5790,7 +5789,7 @@ mod tests {
             "ns.record1".to_string(),
             r#"{"type":"map","values":"string"}"#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5835,7 +5834,7 @@ mod tests {
             "ns.record1".to_string(),
             r#""ns.record2""#.to_string(),
         )
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5880,7 +5879,7 @@ mod tests {
             symbol: "d".to_string(),
             symbols: vec!["a".to_string(), "b".to_string(), "c".to_string()],
         }
-            .to_string();
+        .to_string();
         let result = Schema::parse_str(schema_str);
         assert!(result.is_err());
         let err = result
@@ -5891,5 +5890,4 @@ mod tests {
 
         Ok(())
     }
-
 }
