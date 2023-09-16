@@ -180,10 +180,16 @@ do
       cp "lang/perl/Avro-$VERSION.tar.gz" dist/perl/
 
       # build docs
+      git submodule update --init --recursive
       cp -r doc/ build/staging-web/
       find build/staging-web/ -type f -print0 | xargs -0 sed -r -i "s#\+\+version\+\+#${VERSION,,}#g"
       mv build/staging-web/content/en/docs/++version++ build/staging-web/content/en/docs/"${VERSION,,}"
-      read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+
+      if type -p build_doc; then
+        build_doc
+      else
+        read -n 1 -s -r -p "Build build/staging-web/ manually now. Press a key to continue..."
+      fi
       # If it was a SNAPSHOT, it was lowercased during the build.
       cp -R build/staging-web/public/docs/"${VERSION,,}"/* "build/$DOC_DIR/"
       cp -R "build/$DOC_DIR/api" build/staging-web/public/docs/"${VERSION,,}"/
@@ -305,7 +311,7 @@ do
       } > Dockerfile
       # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | DOCKER_BUILDKIT=1 docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
@@ -343,6 +349,10 @@ do
       tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
         DOCKER_BUILDKIT=1 docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
+      ;;
+
+    docker-dist)
+      DOCKER_RUN_XTRA_ARGS="--rm" DOCKER_RUN_ENTRYPOINT="share/docker/make-dist.sh" exec ./build.sh docker
       ;;
 
     *)
