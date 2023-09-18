@@ -26,8 +26,8 @@ cd "$(dirname "$0")" # If being called from another folder, cd into the director
 source ../../share/build-helper.sh "C#"
 
 CSHARP_CODEC_LIBS="Avro.File.Snappy Avro.File.BZip2 Avro.File.XZ Avro.File.Zstandard"
-SUPPORTED_SDKS="3.1 5.0 6.0"
-DEFAULT_FRAMEWORK="net6.0"
+SUPPORTED_SDKS="3.1 5.0 6.0 7.0"
+DEFAULT_FRAMEWORK="net7.0"
 CONFIGURATION="Release"
 
 function command_lint()
@@ -74,7 +74,7 @@ function command_dist()
   # build the tarball
   execute mkdir -p "${BUILD_ROOT}/dist/csharp"
   execute pushd build
-  execute tar czf "${BUILD_ROOT}/../dist/csharp/avro-csharp-${BUILD_VERSION}.tar.gz" main codegen LICENSE NOTICE
+  execute tar czf "${BUILD_ROOT}/../dist/csharp/avro-csharp-${BUILD_VERSION}.tar.gz" main codegen codec LICENSE NOTICE
   execute popd
 
   # build documentation
@@ -96,7 +96,7 @@ function command_release()
     ask "Push $package to nuget.org" && execute dotnet nuget push "$package" -k "$NUGET_KEY" -s "$NUGET_SOURCE"
   done
 }
-    
+
 function command_verify-release()
 {
   for sdk_ver in $SUPPORTED_SDKS
@@ -129,7 +129,8 @@ function command_interop-data-test()
 
 function command_clean()
 {
-  execute rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
+  execute rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf,benchmark}/{obj,bin}
+  execute rm -rf src/apache/codec/Avro.File.*{,.Test}/{obj,bin}
   execute rm -rf build
   execute rm -f  TestResult.xml
 }

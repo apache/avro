@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TestAvroKeyInputFormat {
   /**
@@ -39,7 +39,7 @@ public class TestAvroKeyInputFormat {
    * types are as expected.
    */
   @Test
-  public void testCreateRecordReader() throws IOException, InterruptedException {
+  void createRecordReader() throws IOException, InterruptedException {
     // Set up the job configuration.
     Job job = Job.getInstance();
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.STRING));

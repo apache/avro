@@ -21,8 +21,8 @@
 
 package ${package}.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -30,9 +30,9 @@ import java.util.List;
 
 import ${package}.transport.SimpleOrderServiceEndpoint;
 import ${package}.transport.SimpleOrderServiceClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import ${package}.service.Confirmation;
 import ${package}.service.Item;
@@ -42,13 +42,13 @@ import ${package}.service.Order;
  * <code>SimpleOrderServiceIntegrationTest</code> runs as part of the Integration phase of the build and is
  * meant for end to end service testing.
  */
-public class SimpleOrderServiceIntegrationTest {
+class SimpleOrderServiceIntegrationTest {
 
   private static SimpleOrderServiceEndpoint service;
   private static SimpleOrderServiceClient client;
 
   @Test
-  public void simpleRoundTripTest() throws Exception {
+  void simpleRoundTripTest() throws Exception {
     Order simpleOrder = createOrder();
     Confirmation c = client.submitOrder(simpleOrder);
 
@@ -57,7 +57,7 @@ public class SimpleOrderServiceIntegrationTest {
     assertTrue(c.getEstimatedCompletion() > 0);
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void setupTransport() throws Exception {
     InetSocketAddress endpointAddress = new InetSocketAddress("0.0.0.0", 12345);
     service = new SimpleOrderServiceEndpoint(endpointAddress);
@@ -67,7 +67,7 @@ public class SimpleOrderServiceIntegrationTest {
     client.start();
   }
 
-  @AfterClass
+  @AfterAll
   public static void shutdownTransport() throws Exception {
     client.stop();
     service.stop();

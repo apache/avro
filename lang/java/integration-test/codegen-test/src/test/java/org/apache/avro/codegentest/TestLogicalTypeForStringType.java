@@ -20,7 +20,7 @@ package org.apache.avro.codegentest;
 
 import org.apache.avro.codegentest.testdata.StringLogicalType;
 import org.apache.avro.generic.GenericData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
@@ -35,7 +35,7 @@ public class TestLogicalTypeForStringType {
    * ignored for field
    */
   @Test
-  public void shouldUseUUIDAsType() {
+  void shouldUseUUIDAsType() {
     StringLogicalType stringLogicalType = new StringLogicalType();
     stringLogicalType.setSomeIdentifier(UUID.randomUUID());
     assertThat(stringLogicalType.getSomeIdentifier(), instanceOf(UUID.class));

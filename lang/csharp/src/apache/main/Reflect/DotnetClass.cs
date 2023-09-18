@@ -52,14 +52,14 @@ namespace Avro.Reflect
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, avroAttr.Converter, cache));
+                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
                         break;
                     }
                 }
 
                 if (!hasAttribute)
                 {
-                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, cache));
+                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, cache));
                 }
             }
         }

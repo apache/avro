@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "name": "unionfields",
+  "fields": [{
+      "name": "data1",
+      "type": ["string", "int"]
+    },
+    {
+      "name": "data2",
+      "type": [
+        {"type": "record", "name": "inner",  "fields": [{
+          "name": "d1",  "type": ["string", "int", "boolean", "null"]
+        }]
+        },
+        "null"]
+    }]
+}

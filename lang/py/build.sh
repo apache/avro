@@ -53,6 +53,15 @@ function command_dist()
   execute "$virtualenv/bin/python3" -m build --outdir "$destination"
 }
 
+function command_doc() {
+  local doc_dir
+  [[ -s VERSION.txt ]] || cp "$BUILD_ROOT/share/VERSION.txt" .
+  doc_dir="$BUILD_ROOT/build/avro-doc-$(<VERSION.txt)/api/py"
+  execute python3 -m tox -e docs
+  execute mkdir -p "$doc_dir"
+  execute cp -a docs/build/* "$doc_dir"
+}
+
 function command_interop-data-generate()
 {
   execute ./setup.py generate_interop_data

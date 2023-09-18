@@ -18,6 +18,10 @@
 
 package org.apache.avro.mapreduce;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,14 +48,12 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroMultipleOutputs {
-  @Rule
-  public TemporaryFolder DIR = new TemporaryFolder();
+  @TempDir
+  public File DIR;
 
   public static final Schema STATS_SCHEMA = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
       + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"}," + "{\"name\":\"name\",\"type\":\"string\"}]}");
@@ -179,7 +181,7 @@ public class TestAvroMultipleOutputs {
   }
 
   @Test
-  public void testAvroGenericOutput() throws Exception {
+  void avroGenericOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -196,16 +198,16 @@ public class TestAvroMultipleOutputs {
     AvroMultipleOutputs.addNamedOutput(job, "myavro1", AvroKeyOutputFormat.class, STATS_SCHEMA_2);
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
 
-    Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroGenericOutput");
+    Path outputPath = new Path(DIR.getPath() + "/testAvroGenericOutput");
     outputPath.getFileSystem(job.getConfiguration()).delete(outputPath, true);
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro-r-00000.avro"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
 
     Map<String, Integer> counts = new HashMap<>();
 
@@ -216,12 +218,12 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro1-r-00000.avro"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA_2))) {
@@ -230,12 +232,12 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite-r-00000.avro"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA))) {
@@ -244,12 +246,12 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testnewwrite2-r-00000.avro"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA_2))) {
@@ -257,12 +259,12 @@ public class TestAvroMultipleOutputs {
         counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
       }
     }
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
 
     outputFiles = fileSystem.globStatus(outputPath.suffix("/testwritenonschema-r-00000.avro"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA))) {
@@ -271,13 +273,13 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroSpecificOutput() throws Exception {
+  void avroSpecificOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -293,14 +295,14 @@ public class TestAvroMultipleOutputs {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroSpecificOutput");
+    Path outputPath = new Path(DIR.getPath() + "/testAvroSpecificOutput");
     outputPath.getFileSystem(job.getConfiguration()).delete(outputPath, true);
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro3-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
@@ -309,13 +311,13 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroInput() throws Exception {
+  void avroInput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -332,15 +334,15 @@ public class TestAvroMultipleOutputs {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroInput");
+    Path outputPath = new Path(DIR.getPath() + "/testAvroInput");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/myavro3-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
@@ -349,13 +351,13 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 
   @Test
-  public void testAvroMapOutput() throws Exception {
+  void avroMapOutput() throws Exception {
     Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job,
@@ -371,15 +373,15 @@ public class TestAvroMultipleOutputs {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroMapOutput");
+    Path outputPath = new Path(DIR.getPath() + "/testAvroMapOutput");
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    Assert.assertTrue(job.waitForCompletion(true));
+    assertTrue(job.waitForCompletion(true));
 
     // Check that the results from the MapReduce were as expected.
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
-    Assert.assertEquals(1, outputFiles.length);
+    assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
@@ -388,8 +390,8 @@ public class TestAvroMultipleOutputs {
       }
     }
 
-    Assert.assertEquals(3, counts.get("apple").intValue());
-    Assert.assertEquals(2, counts.get("banana").intValue());
-    Assert.assertEquals(1, counts.get("carrot").intValue());
+    assertEquals(3, counts.get("apple").intValue());
+    assertEquals(2, counts.get("banana").intValue());
+    assertEquals(1, counts.get("carrot").intValue());
   }
 }

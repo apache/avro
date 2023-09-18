@@ -26,6 +26,12 @@ on:
       - .github/workflows/test-lang-rust-ci.yml
       - lang/rust/**
 
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
 defaults:
   run:
     working-directory: lang/rust
@@ -40,24 +46,27 @@ jobs:
     strategy:
       matrix:
         rust:
-          - stable
-          - beta
-          - nightly
-          - 1.51.0  # MSRV
+          - 'stable'
+          - 'beta'
+          - 'nightly'
+          - '1.65.0'  # MSRV
+        target:
+          - x86_64-unknown-linux-gnu
+          - wasm32-unknown-unknown
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Cache Cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
           path: ~/.cargo
           key: cargo-cache1-
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.
@@ -65,61 +74,53 @@ jobs:
           key: ${{ runner.os }}-target-cache1-${{ matrix.rust }}-
 
       - name: Rust Toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
           components: rustfmt
+          targets: ${{ matrix.target }}
 
       - name: Rust Format
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --manifest-path lang/rust/Cargo.toml --all -- --check
+        if: matrix.target != 'wasm32-unknown-unknown'
+        run: cargo fmt --all -- --check
 
       - name: Rust Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
+        run: cargo build --all-features --all-targets
 
       - name: Rust Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path lang/rust/Cargo.toml --all-features --all-targets
+        if: matrix.target != 'wasm32-unknown-unknown'
+        run: cargo test --all-features --target ${{ matrix.target }}
+
+      - name: Rust Test AVRO-3549
+        if: matrix.target != 'wasm32-unknown-unknown'
+        run: cargo test --target ${{ matrix.target }} test_avro_3549_read_not_enabled_codec
 
       # because of https://github.com/rust-lang/cargo/issues/6669
       - name: Rust Test docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path lang/rust/Cargo.toml --doc
+        if: matrix.target != 'wasm32-unknown-unknown'
+        run: cargo test --doc
 
   interop:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Rust Toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          profile: minimal
           toolchain: stable
-          override: true
 
       - name: Cache Cargo
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # these represent dependencies downloaded by cargo
           # and thus do not depend on the OS, arch nor rust version.
           path: ~/.cargo
           key: cargo-cache1-
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # these represent compiled steps of both dependencies and avro
           # and thus are specific for a particular OS, arch and rust version.
@@ -127,7 +128,7 @@ jobs:
           key: ${{ runner.os }}-target-cache1-stable-
 
       - name: Cache Local Maven Repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -182,3 +183,41 @@ jobs:
       - name: Perl reads interop files created by Java and Rust
         working-directory: lang/perl
         run: ./build.sh interop-data-test
+
+  web-assembly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rust Toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: ~/target
+          key: ${{ runner.os }}-target-cache1-stable-
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build the Web Assembly demo app
+        run: wasm-pack build wasm-demo
+
+      - name: Test the Web Assembly demo app
+        run: RUST_BACKTRACE=1 wasm-pack test --headless --firefox wasm-demo

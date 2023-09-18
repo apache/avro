@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.avro.AvroRuntimeException;
@@ -153,6 +154,8 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
         entryList.add(new MapEntry(e.getKey(), e.getValue()));
       }
       datum = entryList;
+    } else if (datum instanceof Optional) {
+      datum = ((Optional) datum).orElse(null);
     }
     try {
       super.write(schema, datum, out);

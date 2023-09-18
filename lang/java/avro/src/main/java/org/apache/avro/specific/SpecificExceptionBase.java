@@ -62,7 +62,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException implemen
       return false; // not a record
     if (this.getClass() != that.getClass())
       return false; // not same schema
-    return SpecificData.get().compare(this, that, this.getSchema()) == 0;
+    return this.getSpecificData().compare(this, that, this.getSchema()) == 0;
   }
 
   @Override
@@ -76,4 +76,9 @@ public abstract class SpecificExceptionBase extends AvroRemoteException implemen
   @Override
   public abstract void readExternal(ObjectInput in) throws IOException;
 
+  public SpecificData getSpecificData() {
+    // Default implementation for backwards compatibility, overridden in generated
+    // code
+    return SpecificData.get();
+  }
 }

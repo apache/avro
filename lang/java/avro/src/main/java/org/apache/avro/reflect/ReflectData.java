@@ -71,6 +71,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  /**
+   * Always false since custom coders are not available for {@link ReflectData}.
+   */
   @Override
   public boolean useCustomCoders() {
     return false;
@@ -753,7 +756,7 @@ public class ReflectData extends SpecificData {
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
               for (AvroMeta meta : metadata) {
-                if (recordField.getObjectProps().containsKey(meta.key())) {
+                if (recordField.propsContainsKey(meta.key())) {
                   throw new AvroTypeException("Duplicate field prop key: " + meta.key());
                 }
                 recordField.addProp(meta.key(), meta.value());
@@ -772,7 +775,7 @@ public class ReflectData extends SpecificData {
           schema.setFields(fields);
           AvroMeta[] metadata = c.getAnnotationsByType(AvroMeta.class);
           for (AvroMeta meta : metadata) {
-            if (schema.getObjectProps().containsKey(meta.key())) {
+            if (schema.propsContainsKey(meta.key())) {
               throw new AvroTypeException("Duplicate type prop key: " + meta.key());
             }
             schema.addProp(meta.key(), meta.value());

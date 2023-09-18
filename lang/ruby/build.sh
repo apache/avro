@@ -24,15 +24,10 @@ source ../../share/build-helper.sh "Ruby"
 
 # maintain our gems here
 export GEM_HOME="$PWD/.gem/"
-export PATH="/usr/local/rbenv/shims:$GEM_HOME/bin:$PATH"
+export PATH="$GEM_HOME/bin:$PATH"
 
 function prepare_bundle()
 {
-  # bootstrap bundler
-  execute gem install --no-document -v 1.17.3 bundler
-
-  # rbenv is used by the Dockerfile but not the Github action in CI
-  execute rbenv rehash 2>/dev/null || echo "Not using rbenv"
   execute bundle install
 }
 

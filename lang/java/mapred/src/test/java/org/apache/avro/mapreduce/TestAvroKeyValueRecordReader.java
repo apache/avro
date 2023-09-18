@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapreduce;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.File;
@@ -36,20 +36,19 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAvroKeyValueRecordReader {
   /** A temporary directory for test data. */
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
+  @TempDir
+  public File mTempDir;
 
   /**
    * Verifies that avro records can be read and progress is reported correctly.
    */
   @Test
-  public void testReadRecords() throws IOException, InterruptedException {
+  void readRecords() throws IOException, InterruptedException {
     // Create the test avro file input with two records:
     // 1. <"firstkey", 1>
     // 2. <"second", 2>
@@ -63,9 +62,8 @@ public class TestAvroKeyValueRecordReader {
     secondInputRecord.setKey("second");
     secondInputRecord.setValue(2);
 
-    final SeekableInput avroFileInput = new SeekableFileInput(
-        AvroFiles.createFile(new File(mTempDir.getRoot(), "myInputFile.avro"), keyValueSchema, firstInputRecord.get(),
-            secondInputRecord.get()));
+    final SeekableInput avroFileInput = new SeekableFileInput(AvroFiles.createFile(
+        new File(mTempDir, "myInputFile.avro"), keyValueSchema, firstInputRecord.get(), secondInputRecord.get()));
 
     // Create the record reader over the avro input file.
     RecordReader<AvroKey<CharSequence>, AvroValue<Integer>> recordReader = new AvroKeyValueRecordReader<CharSequence, Integer>(
@@ -92,42 +90,41 @@ public class TestAvroKeyValueRecordReader {
     // Initialize the record reader.
     recordReader.initialize(inputSplit, context);
 
-    assertEquals("Progress should be zero before any records are read", 0.0f, recordReader.getProgress(), 0.0f);
+    assertEquals(0.0f, recordReader.getProgress(), 0.0f, "Progress should be zero before any records are read");
 
     // Some variables to hold the records.
     AvroKey<CharSequence> key;
     AvroValue<Integer> value;
 
     // Read the first record.
-    assertTrue("Expected at least one record", recordReader.nextKeyValue());
+    assertTrue(recordReader.nextKeyValue(), "Expected at least one record");
     key = recordReader.getCurrentKey();
     value = recordReader.getCurrentValue();
 
-    assertNotNull("First record had null key", key);
-    assertNotNull("First record had null value", value);
+    assertNotNull(key, "First record had null key");
+    assertNotNull(value, "First record had null value");
 
     assertEquals("first", key.datum().toString());
     assertEquals(1, value.datum().intValue());
 
-    assertTrue("getCurrentKey() returned different keys for the same record", key == recordReader.getCurrentKey());
-    assertTrue("getCurrentValue() returned different values for the same record",
-        value == recordReader.getCurrentValue());
+    assertEquals(key, recordReader.getCurrentKey());
+    assertEquals(value, recordReader.getCurrentValue());
 
     // Read the second record.
-    assertTrue("Expected to read a second record", recordReader.nextKeyValue());
+    assertTrue(recordReader.nextKeyValue(), "Expected to read a second record");
     key = recordReader.getCurrentKey();
     value = recordReader.getCurrentValue();
 
-    assertNotNull("Second record had null key", key);
-    assertNotNull("Second record had null value", value);
+    assertNotNull(key, "Second record had null key");
+    assertNotNull(value, "Second record had null value");
 
     assertEquals("second", key.datum().toString());
     assertEquals(2, value.datum().intValue());
 
-    assertEquals("Progress should be complete (2 out of 2 records processed)", 1.0f, recordReader.getProgress(), 0.0f);
+    assertEquals(1.0f, recordReader.getProgress(), 0.0f, "Progress should be complete (2 out of 2 records processed)");
 
     // There should be no more records.
-    assertFalse("Expected only 2 records", recordReader.nextKeyValue());
+    assertFalse(recordReader.nextKeyValue(), "Expected only 2 records");
 
     // Close the record reader.
     recordReader.close();

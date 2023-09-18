@@ -88,7 +88,10 @@ import org.apache.commons.text.StringEscapeUtils;
  *
  * Note: each instance is not thread-safe, but multiple separate
  * instances are safely independent.
+ *
+ * @deprecated Use the new org.apache.avro.idl.IdlReader from avro-idl instead.
  */
+@Deprecated
 public class Idl implements Closeable {
   static JsonNodeFactory FACTORY = JsonNodeFactory.instance;
   private static final String OPTIONAL_NULLABLE_TYPE_PROPERTY = "org.apache.avro.compiler.idl.Idl.NullableType.optional";
@@ -174,7 +177,7 @@ public class Idl implements Closeable {
     File file = "file".equals(uri.getScheme()) ? new File(uri.getPath()) : null;
     URL result = null;
     if (file != null && file.exists())
-      result = file.toURI().toURL();
+      result = new URL("file:" + file.getPath());
     else if (this.resourceLoader != null)
       if ("classpath".equals(uri.getScheme()))
         result = this.resourceLoader.getResource(uri.getPath().substring(1));
@@ -1284,7 +1287,7 @@ Schema ImportSchema() : {
     {
       try (InputStream stream=findFile(importFile).openStream()){
         Parser parser = new Schema.Parser();
-        parser.addTypes(names);                   // inherit names
+        parser.addTypes(names.values());          // inherit names
         Schema value = parser.parse(stream);
         names = parser.getTypes();                // update names
         return value;

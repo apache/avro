@@ -157,6 +157,24 @@ namespace Avro.test.Generic
             Assert.AreEqual(expectedValue, str);
         }
 
+
+        [Test]
+        public void TestFieldNames()
+        {
+            string schemaWithNames = "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+            "[{\"name\":\"歳以上\",\"type\":\"int\"}]}";
+
+            RecordSchema testSchema = Schema.Parse(schemaWithNames) as RecordSchema;
+            GenericRecord genericRecord = new GenericRecord(testSchema);
+            genericRecord.Add("歳以上", 1);
+
+            string str = genericRecord.ToString();
+            string expectedValue = "Schema: {\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                            "[{\"name\":\"歳以上\",\"type\":\"int\"}]}, contents: { 歳以上: 1, }";
+
+            Assert.AreEqual(expectedValue, str);
+        }
+
         [Test]
         public void TestTryGetValue()
         {
