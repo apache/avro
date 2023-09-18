@@ -78,6 +78,12 @@ function command_dist()
   execute popd
 
   # build documentation
+  command_doc
+}
+
+function command_doc()
+{
+  # build documentation
   execute doxygen Avro.dox
   execute mkdir -p "${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp"
   execute cp -pr build/doc/* "${BUILD_ROOT}/build/avro-doc-${BUILD_VERSION}/api/csharp"
@@ -129,6 +135,8 @@ function command_interop-data-test()
 
 function command_clean()
 {
+  # Alternatively all the steps below can be replaced with `git clean -dXf`
+
   execute rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf,benchmark}/{obj,bin}
   execute rm -rf src/apache/codec/Avro.File.*{,.Test}/{obj,bin}
   execute rm -rf build
