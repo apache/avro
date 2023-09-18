@@ -85,7 +85,8 @@ do
       ;;
 
     clean)
-      rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
+      rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf,benchmark}/{obj,bin}
+      rm -rf src/apache/codec/Avro.File.{BZip2,Snappy,XZ,ZStandard}{,.Test}/{obj,bin}
       rm -rf build
       rm -f  TestResult.xml
       ;;
