@@ -211,7 +211,13 @@ do
         \! -name '*.asc' \! -name '*.txt' );
       do
         (cd "${f%/*}" && shasum -a 512 "${f##*/}") > "$f.sha512"
-        gpg --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+
+        if [ -z "$GPG_LOCAL_USER" ]; then
+          gpg --pinentry-mode loopback --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        else
+          gpg --pinentry-mode loopback --local-user="$GPG_LOCAL_USER" --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        fi
+        
       done
 
       set -x
