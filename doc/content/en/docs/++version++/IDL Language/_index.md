@@ -34,7 +34,7 @@ This document defines Avro IDL, a higher-level language for authoring Avro schem
 The aim of the Avro IDL language is to enable developers to author schemata in a way that feels more similar to common programming languages like Java, C++, or Python. Additionally, the Avro IDL language may feel more familiar for those users who have previously used the interface description languages (IDLs) in other frameworks like Thrift, Protocol Buffers, or CORBA.
 
 ### Usage
-Each Avro IDL file defines a single Avro Protocol, and thus generates as its output a JSON-format Avro Protocol file with extension .avpr.
+Each Avro IDL file defines either a single Avro Protocol, or an Avro Schema with supporting named schemata in a namespace. When parsed, it thus yields either a Protocol or a Schema. These can be respectively written to JSON-format Avro Protocol files with extension .avpr or JSON-format Avro Schema files with extension .avsc.
 
 To convert a _.avdl_ file into a _.avpr_ file, it may be processed by the `idl` tool. For example:
 ```shell
@@ -43,6 +43,16 @@ $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",
   "namespace" : "avro.test.protocol",
+```
+To convert a _.avdl_ file into a _.avsc_ file, it may be processed by the `idl` tool too. For example:
+```shell
+$ java -jar avro-tools.jar idl src/test/idl/input/schema_syntax_schema.avdl /tmp/schema_syntax.avsc
+$ head /tmp/schema_syntax.avsc
+{
+  "type": "array",
+  "items": {
+    "type": "record",
+    "name": "StatusUpdate",
 ```
 The `idl` tool can also process input to and from _stdin_ and _stdout_. See `idl --help` for full usage information.
 
@@ -56,7 +66,7 @@ A Maven plugin is also provided to compile .avdl files. To use it, add something
       <executions>
         <execution>
           <goals>
-            <goal>idl-protocol</goal>
+            <goal>idl</goal>
           </goals>
         </execution>
       </executions>
@@ -64,6 +74,48 @@ A Maven plugin is also provided to compile .avdl files. To use it, add something
   </plugins>
 </build>
 ```
+
+## Defining a Schema in Avro IDL
+An Avro IDL file consists of exactly one (main) schema definition. The minimal schema is defined by the following code:
+```java
+schema int;
+```
+This is equivalent to (and generates) the following JSON schema definition:
+```json
+{
+  "type": "int"
+}
+```
+More complex schemata can also be defined, for example by adding named schemata like this:
+```java
+namespace default.namespace.for.named.schemata;
+schema Message;
+
+record Message {
+    string? title = null;
+    string message;
+}
+```
+This is equivalent to (and generates) the following JSON schema definition:
+```json
+{
+  "type" : "record",
+  "name" : "Message",
+  "namespace" : "default.namespace.for.named.schemata",
+  "fields" : [ {
+    "name" : "title",
+    "type" : [ "null", "string" ],
+    "default": null
+  }, {
+    "name" : "message",
+    "type" : "string"
+  } ]
+}
+```
+Schemata in Avro IDL can contain the following items:
+
+* Imports of external protocol and schema files (only named schemata are imported).
+* Definitions of named schemata, including records, errors, enums, and fixeds.
 
 ## Defining a Protocol in Avro IDL
 An Avro IDL file consists of exactly one protocol definition. The minimal protocol is defined by the following code:
@@ -109,7 +161,7 @@ Files may be imported in one of three formats:
 
   `import schema "foo.avsc";`
 
-Messages and types in the imported file are added to this file's protocol.
+When importing into an IDL schema file, only (named) types are imported into this file. When importing into an IDL protocol, messages are imported into the protocol as well.
 
 Imported file names are resolved relative to the current IDL file.
 
@@ -135,7 +187,7 @@ Fixed fields are defined using the following syntax:
 ```
 fixed MD5(16);
 ```
-This example defines a fixed-length type called MD5 which contains 16 bytes.
+This example defines a fixed-length type called MD5, which contains 16 bytes.
 
 ## Defining Records and Errors
 Records are defined in Avro IDL using a syntax similar to a struct definition in C:
@@ -161,19 +213,20 @@ A type reference in Avro IDL must be one of:
 
 * A primitive type
 * A logical type
-* A named schema defined prior to this usage in the same Protocol
+* A named schema (either defined or imported)
 * A complex type (array, map, or union)
 
 ### Primitive Types
 The primitive types supported by Avro IDL are the same as those supported by Avro's JSON format. This list includes _int_, _long_, _string_, _boolean_, _float_, _double_, _null_, and _bytes_.
 
 ### Logical Types
-Some of the logical types supported by Avro's JSON format are also supported by Avro IDL. The currently supported types are:
+Some of the logical types supported by Avro's JSON format are directly supported by Avro IDL. The currently supported types are:
 
 * _decimal_ (logical type [decimal]({{< relref "specification#decimal" >}}))
 * _date_ (logical type [date]({{< relref "specification#date" >}}))
 * _time_ms_ (logical type [time-millis]({{< relref "specification#time-millisecond-precision" >}}))
 * _timestamp_ms_ (logical type [timestamp-millis]({{< relref "specification#timestamp-millisecond-precision" >}}))
+* _local_timestamp_ms_ (logical type [local-timestamp-millis]({{< relref "specification#local_timestamp_ms" >}}))
 * _uuid_ (logical type [uuid]({{< relref "specification#uuid" >}}))
 
 For example:
@@ -226,23 +279,25 @@ record RecordWithUnion {
   union { decimal(12, 6), float } number;
 }
 ```
-Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the JSON format; namely, a record may not contain multiple elements of the same type. Also, fields/parameters that use the union type and have a default parameter must specify a default value of the same type as the **first** union type.
+Note that the same restrictions apply to Avro IDL unions as apply to unions defined in the JSON format; namely, a union may not contain multiple elements of the same type. Also, fields/parameters that use the union type and have a default parameter must specify a default value of the same type as the **first** union type.
 
-Because it occurs so often, there is a special shorthand to denote a union of `null` with another type. In the following snippet, the first three fields have identical types:
+Because it occurs so often, there is a special shorthand to denote a union of `null` with one other schema. The first three fields in the following snippet have identical schemata, as do the last two fields:
 
 ```java
 record RecordWithUnion {
   union { null, string } optionalString1 = null;
   string? optionalString2 = null;
   string? optionalString3; // No default value
-  string? optionalString4 = "something";
+
+  union { string, null } optionalString4 = "something";
+  string? optionalString5 = "something else";
 }
 ```
 
-Note that unlike explicit unions, the position of the `null` type is fluid; it will be the first or last type depending on the default value (if any). So in the example above, all fields are valid.
+Note that unlike explicit unions, the position of the `null` type is fluid; it will be the first or last type depending on the default value (if any). So all fields are valid in the example above.
 
 ## Defining RPC Messages
-The syntax to define an RPC message within a Avro IDL protocol is similar to the syntax for a method declaration within a C header file or a Java interface. To define an RPC message add which takes two arguments named _foo_ and _bar_, returning an _int_, simply include the following definition within the protocol:
+The syntax to define an RPC message within a Avro IDL protocol is similar to the syntax for a method declaration within a C header file or a Java interface. To define an RPC message _add_ which takes two arguments named _foo_ and _bar_, returning an _int_, simply include the following definition within the protocol:
 ```java
 int add(int foo, int bar = 0);
 ```
@@ -252,7 +307,7 @@ To define a message with no response, you may use the alias _void_, equivalent t
 ```java
 void logMessage(string message);
 ```
-If you have previously defined an error type within the same protocol, you may declare that a message can throw this error using the syntax:
+If you have defined or imported an error type within the same protocol, you may declare that a message can throw this error using the syntax:
 ```java
 void goKaboom() throws Kaboom;
 ```
@@ -263,20 +318,22 @@ void fireAndForget(string message) oneway;
 
 ## Other Language Features
 
-### Comments
+### Comments and documentation
 All Java-style comments are supported within a Avro IDL file. Any text following _//_ on a line is ignored, as is any text between _/*_ and _*/_, possibly spanning multiple lines.
 
 Comments that begin with _/**_ are used as the documentation string for the type or field definition that follows the comment.
 
 ### Escaping Identifiers
-Occasionally, one will need to use a reserved language keyword as an identifier. In order to do so, backticks (`) may be used to escape the identifier. For example, to define a message with the literal name error, you may write:
+Occasionally, one may want to distinguish between identifiers and languages keywords. In order to do so, backticks (`) may be used to escape
+the identifier. For example, to define a message with the literal name error, you may write:
 ```java
 void `error`();
 ```
 This syntax is allowed anywhere an identifier is expected.
 
 ### Annotations for Ordering and Namespaces
-Java-style annotations may be used to add additional properties to types and fields throughout Avro IDL.
+Java-style annotations may be used to add additional properties to types and fields throughout Avro IDL. These can be custom properties, or
+special properties as used in the JSON-format Avro Schema and Protocol files.
 
 For example, to specify the sort order of a field within a record, one may use the `@order` annotation before the field name as follows:
 ```java
@@ -319,46 +376,64 @@ record MyRecord {
   string @aliases(["oldField", "ancientField"]) myNewField;
 }
 ```
-Some annotations like those listed above are handled specially. All other annotations are added as properties to the protocol, message, schema or field.
+Some annotations like those listed above are handled specially. All other annotations are added as properties to the protocol, message, schema or field. You can use any identifier or series of identifiers separated by dots and/or dashes as property name.
 
 ## Complete Example
-The following is an example of an Avro IDL file that shows most of the above features:
+The following is an example of two Avro IDL files that together show most of the above features:
+
+### schema.avdl
 ```java
 /*
-* Header with license information.
-*/
+ * Header with license information.
+ */
+// Optional default namespace (if absent, the default namespace is the null namespace).
+namespace org.apache.avro.test;
+// Optional main schema definition; if used, the IDL file is equivalent to a .avsc file.
+schema TestRecord;
+
+/** Documentation for the enum type Kind */
+@aliases(["org.foo.KindOf"])
+enum Kind {
+  FOO,
+  BAR, // the bar enum value
+  BAZ
+} = FOO; // For schema evolution purposes, unmatched values do not throw an error, but are resolved to FOO.
+
+/** MD5 hash; good enough to avoid most collisions, and smaller than (for example) SHA256. */
+fixed MD5(16);
+
+record TestRecord {
+  /** Record name; has no intrinsic order */
+  string @order("ignore") name;
+
+  Kind @order("descending") kind;
+
+  MD5 hash;
+
+  /*
+  Note that 'null' is the first union type. Just like .avsc / .avpr files, the default value must be of the first union type.
+  */
+  union { null, MD5 } /** Optional field */ @aliases(["hash"]) nullableHash = null;
+  // Shorthand syntax; the null in this union is placed based on the default value (or first is there's no default).
+  MD5? anotherNullableHash = null;
+
+  array<long> arrayOfLongs;
+}
+```
+
+### protocol.avdl
+```java
+/*
+ * Header with license information.
+ */
 
 /**
  * An example protocol in Avro IDL
  */
 @namespace("org.apache.avro.test")
 protocol Simple {
-  /** Documentation for the enum type Kind */
-  @aliases(["org.foo.KindOf"])
-  enum Kind {
-    FOO,
-    BAR, // the bar enum value
-    BAZ
-  } = FOO; // For schema evolution purposes, unmatched values do not throw an error, but are resolved to FOO.
-
-  /** MD5 hash; good enough to avoid most collisions, and smaller than (for example) SHA256. */
-  fixed MD5(16);
-
-  record TestRecord {
-    /** Record name; has no intrinsic order */
-    string @order("ignore") name;
-
-    Kind @order("descending") kind;
-
-    MD5 hash;
-
-    /*
-    Note that 'null' is the first union type. Just like .avsc / .avpr files, the default value must be of the first union type.
-    */
-    union { null, MD5 } /** Optional field */ @aliases(["hash"]) nullableHash = null;
-
-    array<long> arrayOfLongs;
-  }
+  // Import the example file above
+  import idl "schema.avdl";
 
   /** Errors are records that can be thrown from a method */
   error TestError {
@@ -375,6 +450,7 @@ protocol Simple {
   void ping() oneway;
 }
 ```
+
 Additional examples may be found in the Avro source tree under the `src/test/idl/input` directory.
 
 ## IDE support

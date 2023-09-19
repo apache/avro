@@ -100,6 +100,23 @@ public class IdlReaderTest {
     assertNotNull(idlFile.getNamedSchema("Message"));
 
     assertNotNull(idlFile.getProtocol());
+    assertNull(idlFile.getMainSchema());
+  }
+
+  @Test
+  public void validateSchemaParsingResult() throws IOException {
+    // runTests already tests the actual parsing; this tests the result object.
+    IdlFile idlFile = parseExtraIdlFile("schemaSyntax.avdl");
+
+    assertEquals(1, idlFile.getNamedSchemas().size());
+    idlFile.getNamedSchemas().keySet().forEach(System.out::println);
+    assertNotNull(idlFile.getNamedSchema("communication.Message"));
+    assertNotNull(idlFile.getNamedSchema("Message"));
+
+    assertNull(idlFile.getProtocol());
+    Schema mainSchema = idlFile.getMainSchema();
+    assertEquals(Schema.Type.ARRAY, mainSchema.getType());
+    assertEquals(idlFile.getNamedSchema("Message"), mainSchema.getElementType());
   }
 
   @Test
