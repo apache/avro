@@ -1332,6 +1332,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
       }
     }
 
+    /**
+     * Checks if a JSON value matches the schema.
+     *
+     * @param jsonValue a value to check against the schema
+     * @return true if the value is valid according to this schema
+     */
+    public boolean isValidDefault(JsonNode jsonValue) {
+      return this.types.stream().anyMatch((Schema s) -> s.isValidDefault(jsonValue));
+    }
+
     @Override
     public List<Schema> getTypes() {
       return types;
@@ -1768,11 +1778,21 @@ public abstract class Schema extends JsonProperties implements Serializable {
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS = ThreadLocalWithInitial.of(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema, JsonNode defaultValue) {
-    if (VALIDATE_DEFAULTS.get() && (defaultValue != null) && !isValidDefault(schema, defaultValue)) { // invalid default
+    if (VALIDATE_DEFAULTS.get() && (defaultValue != null) && !schema.isValidDefault(defaultValue)) { // invalid default
       String message = "Invalid default for field " + fieldName + ": " + defaultValue + " not a " + schema;
       throw new AvroTypeException(message); // throw exception
     }
     return defaultValue;
+  }
+
+  /**
+   * Checks if a JSON value matches the schema.
+   *
+   * @param jsonValue a value to check against the schema
+   * @return true if the value is valid according to this schema
+   */
+  public boolean isValidDefault(JsonNode jsonValue) {
+    return isValidDefault(this, jsonValue);
   }
 
   private static boolean isValidDefault(Schema schema, JsonNode defaultValue) {
@@ -1809,8 +1829,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (!isValidDefault(schema.getValueType(), value))
           return false;
       return true;
-    case UNION: // union default: first branch
-      return isValidDefault(schema.getTypes().get(0), defaultValue);
+    case UNION: // union default: any branch
+      return schema.getTypes().stream().anyMatch((Schema s) -> isValidValue(s, defaultValue));
     case RECORD:
       if (!defaultValue.isObject())
         return false;

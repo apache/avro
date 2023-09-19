@@ -77,7 +77,7 @@ Records use the type name "record" and support the following attributes:
   * _type_: a [schema]({{< ref "#schema-declaration" >}} "Schema declaration"), as defined above
   * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
   * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
-  * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
+  * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema that matches in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
 
 *field default values*
 
@@ -160,7 +160,7 @@ For example, a map from string to long is declared with:
 ### Unions
 Unions, as mentioned above, are represented using JSON arrays. For example, `["null", "string"]` declares a schema which may be either a null or string.
 
-(Note that when a [default value]({{< ref "#schema-record" >}} "Schema record") is specified for a record field whose type is a union, the type of the default value must match the first element of the union. Thus, for unions containing "null", the "null" is usually listed first, since the default value of such unions is typically null.)
+(Note that when a [default value]({{< ref "#schema-record" >}} "Schema record") is specified for a record field whose type is a union, the type of the default value must match with one element of the union.
 
 Unions may not contain more than one schema with the same type, except for the named types record, fixed and enum. For example, unions containing two array types or two map types are not permitted, but two types with different names are permitted. (Names permit efficient resolution when reading and writing unions.)
 

@@ -617,11 +617,8 @@ public class ReflectData extends SpecificData {
     AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
     defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
-    if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
-      Schema defaultType = fieldSchema.getTypes().get(0);
-      if (defaultType.getType() == Schema.Type.NULL) {
-        defaultValue = JsonProperties.NULL_VALUE;
-      }
+    if (defaultValue == null && fieldSchema.isNullable()) {
+      defaultValue = JsonProperties.NULL_VALUE;
     }
     return defaultValue;
   }
