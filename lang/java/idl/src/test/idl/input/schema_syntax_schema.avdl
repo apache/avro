@@ -15,12 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace test;
 
-import idl "avro/User.avdl";
+/*
+ * NOTE: the correct extension for this new syntax is also '.avdl'. The test
+ * files end with '_schema.avdl' only to distinguish them from .avdl files using
+ * the protocol syntax, because the result is a schema file instead of a protocol file.
+ */
+namespace monitoring;
+schema array<StatusUpdate>;
 
-/** Ignored Doc Comment */
-/** IDL User */
-record IdlUserWrapper {
-  union { null, test.IdlUser } wrapped;
+record StatusUpdate {
+  /**
+   * The moment of the status change.
+   */
+  timestamp_ms timestamp;
+  /**
+   * The process whose status changed.
+   */
+  string processName;
+  /**
+   * The new status of the process.
+   */
+  Status newStatus;
+  /**
+   * A description why this status change occurred (optional).
+   */
+  string? description;
 }
+
+import idl "status_schema.avdl";
+import schema "foo.avsc";
+import protocol "bar.avpr";

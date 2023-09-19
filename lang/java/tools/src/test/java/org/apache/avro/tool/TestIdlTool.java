@@ -34,6 +34,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TestIdlTool {
+  @Test
+  public void testWriteIdlAsSchema() throws Exception {
+    String idl = "src/test/idl/schema.avdl";
+    String protocol = "src/test/idl/schema.avsc";
+    String outfile = "target/test-schema.avsc";
+
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    List<String> arglist = Arrays.asList(idl, outfile);
+    new IdlTool().run(null, null, new PrintStream(buffer), arglist);
+
+    assertEquals(readFileAsString(protocol), readFileAsString(outfile));
+
+    String warnings = readPrintStreamBuffer(buffer);
+    assertEquals("Warning: Line 1, char 1: Ignoring out-of-place documentation comment."
+        + "\nDid you mean to use a multiline comment ( /* ... */ ) instead?", warnings);
+  }
 
   @Test
   void writeIdlAsProtocol() throws Exception {
