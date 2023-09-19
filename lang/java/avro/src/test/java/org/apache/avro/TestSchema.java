@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -38,6 +39,11 @@ import java.util.Set;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -424,59 +430,47 @@ public class TestSchema {
   void validValue() {
     // Valid null value
     final Schema nullSchema = Schema.create(Type.NULL);
-    assertTrue(nullSchema.isValidValue(null));
-    assertTrue(nullSchema.isValidValue(JsonProperties.NULL_VALUE));
-    assertTrue(nullSchema.isValidValue(NullNode.getInstance()));
-
-    assertFalse(nullSchema.isValidValue(12));
+    assertTrue(nullSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
 
     // Valid int value
     final Schema intSchema = Schema.create(Type.INT);
-    assertTrue(intSchema.isValidValue(11));
-    assertTrue(intSchema.isValidValue(new IntNode(12)));
-
-    assertFalse(intSchema.isValidValue("12"));
+    assertTrue(intSchema.isValidDefault(JsonNodeFactory.instance.numberNode(12)));
 
     // Valid Text value
     final Schema strSchema = Schema.create(Type.STRING);
-    assertTrue(strSchema.isValidValue("text"));
-    assertTrue(strSchema.isValidValue(new TextNode("textNode")));
-
-    assertFalse(strSchema.isValidValue(false));
+    assertTrue(strSchema.isValidDefault(new TextNode("textNode")));
 
     // Valid Array value
     final Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
     final ArrayNode arrayValue = JsonNodeFactory.instance.arrayNode();
-    assertTrue(arraySchema.isValidValue(arrayValue)); // empty array
+    assertTrue(arraySchema.isValidDefault(arrayValue)); // empty array
 
     arrayValue.add("Hello");
     arrayValue.add("World");
-    assertTrue(arraySchema.isValidValue(arrayValue));
+    assertTrue(arraySchema.isValidDefault(arrayValue));
 
     arrayValue.add(5);
-    assertFalse(arraySchema.isValidValue(arrayValue));
+    assertFalse(arraySchema.isValidDefault(arrayValue));
 
     // Valid Union type
     final Schema unionSchema = Schema.createUnion(strSchema, intSchema, nullSchema);
-    assertTrue(unionSchema.isValidValue("Hello"));
-    assertTrue(unionSchema.isValidValue(12));
-    assertTrue(unionSchema.isValidValue(null));
-    assertTrue(unionSchema.isValidValue(new IntNode(23)));
-    assertTrue(unionSchema.isValidValue(NullNode.getInstance()));
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertTrue(unionSchema.isValidDefault(new IntNode(23)));
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
 
-    assertFalse(unionSchema.isValidValue(arrayValue));
+    assertFalse(unionSchema.isValidDefault(arrayValue));
 
     // Array of union
     final Schema arrayUnion = Schema.createArray(unionSchema);
     final ArrayNode arrayUnionValue = JsonNodeFactory.instance.arrayNode();
     arrayUnionValue.add("Hello");
     arrayUnionValue.add(NullNode.getInstance());
-    assertTrue(arrayUnion.isValidValue(arrayUnionValue));
+    assertTrue(arrayUnion.isValidDefault(arrayUnionValue));
 
     // Union String, bytes
     final Schema unionStrBytes = Schema.createUnion(strSchema, Schema.create(Type.BYTES));
-    assertTrue(unionStrBytes.isValidValue("Hello"));
-    assertFalse(unionStrBytes.isValidValue(123));
+    assertTrue(unionStrBytes.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertFalse(unionStrBytes.isValidDefault(JsonNodeFactory.instance.numberNode(123)));
   }
 
   @Test
