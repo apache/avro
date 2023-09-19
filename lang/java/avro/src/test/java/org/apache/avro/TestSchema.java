@@ -39,6 +39,11 @@ import java.util.Set;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -419,6 +424,53 @@ public class TestSchema {
 
     final Schema.Name nameInt = new Schema.Name("Int", "space");
     assertEquals("Int", nameInt.getQualified("space"));
+  }
+
+  @Test
+  void validValue() {
+    // Valid null value
+    final Schema nullSchema = Schema.create(Type.NULL);
+    assertTrue(nullSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
+
+    // Valid int value
+    final Schema intSchema = Schema.create(Type.INT);
+    assertTrue(intSchema.isValidDefault(JsonNodeFactory.instance.numberNode(12)));
+
+    // Valid Text value
+    final Schema strSchema = Schema.create(Type.STRING);
+    assertTrue(strSchema.isValidDefault(new TextNode("textNode")));
+
+    // Valid Array value
+    final Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
+    final ArrayNode arrayValue = JsonNodeFactory.instance.arrayNode();
+    assertTrue(arraySchema.isValidDefault(arrayValue)); // empty array
+
+    arrayValue.add("Hello");
+    arrayValue.add("World");
+    assertTrue(arraySchema.isValidDefault(arrayValue));
+
+    arrayValue.add(5);
+    assertFalse(arraySchema.isValidDefault(arrayValue));
+
+    // Valid Union type
+    final Schema unionSchema = Schema.createUnion(strSchema, intSchema, nullSchema);
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertTrue(unionSchema.isValidDefault(new IntNode(23)));
+    assertTrue(unionSchema.isValidDefault(JsonNodeFactory.instance.nullNode()));
+
+    assertFalse(unionSchema.isValidDefault(arrayValue));
+
+    // Array of union
+    final Schema arrayUnion = Schema.createArray(unionSchema);
+    final ArrayNode arrayUnionValue = JsonNodeFactory.instance.arrayNode();
+    arrayUnionValue.add("Hello");
+    arrayUnionValue.add(NullNode.getInstance());
+    assertTrue(arrayUnion.isValidDefault(arrayUnionValue));
+
+    // Union String, bytes
+    final Schema unionStrBytes = Schema.createUnion(strSchema, Schema.create(Type.BYTES));
+    assertTrue(unionStrBytes.isValidDefault(JsonNodeFactory.instance.textNode("Hello")));
+    assertFalse(unionStrBytes.isValidDefault(JsonNodeFactory.instance.numberNode(123)));
   }
 
   @Test

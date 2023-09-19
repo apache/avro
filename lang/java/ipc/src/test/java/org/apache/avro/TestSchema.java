@@ -302,26 +302,20 @@ public class TestSchema {
   void union(TestInfo testInfo) throws Exception {
     check(new File(DIR, testInfo.getTestMethod().get().getName()), "[\"string\", \"long\"]", false);
     checkDefault("[\"double\", \"long\"]", "1.1", 1.1);
+    checkDefault("[\"double\", \"string\"]", "\"TheString\"", new Utf8("TheString"));
 
     // test that erroneous default values cause errors
     for (String type : new String[] { "int", "long", "float", "double", "string", "bytes", "boolean" }) {
-      checkValidateDefaults("[\"" + type + "\", \"null\"]", "null"); // schema parse time
-      boolean error = false;
-      try {
-        checkDefault("[\"" + type + "\", \"null\"]", "null", 0); // read time
-      } catch (AvroTypeException e) {
-        error = true;
-      }
-      assertTrue(error);
-      checkValidateDefaults("[\"null\", \"" + type + "\"]", "0"); // schema parse time
-      error = false;
-      try {
-        checkDefault("[\"null\", \"" + type + "\"]", "0", null); // read time
-      } catch (AvroTypeException e) {
-        error = true;
-      }
-      assertTrue(error);
+//      checkValidateDefaults("[\"" + type + "\", \"null\"]", "null"); // schema parse time
+      checkDefault("[\"" + type + "\", \"null\"]", "null", null); // read time
     }
+    checkDefault("[\"null\", \"int\"]", "0", 0);
+    checkDefault("[\"null\", \"long\"]", "0", 0l);
+    checkDefault("[\"null\", \"float\"]", "0.0", 0.0f);
+    checkDefault("[\"null\", \"double\"]", "0.0", 0.0d);
+    checkDefault("[\"null\", \"string\"]", "\"Hi\"", new Utf8("Hi"));
+    checkDefault("[\"null\", \"bytes\"]", "\"01\"", ByteBuffer.wrap("01".getBytes(StandardCharsets.UTF_8)));
+    checkDefault("[\"null\", \"boolean\"]", "true", true);
 
     // check union json
     String record = "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":[]}";
