@@ -91,6 +91,7 @@ public class TestDataFileReader {
         .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
     File f = Files.createTempFile("testThrottledInputStream", ".avro").toFile();
+    f.deleteOnExit();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -150,6 +151,7 @@ public class TestDataFileReader {
           .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
               + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
       File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
+      f.deleteOnExit();
       try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
         w.create(legacySchema, f);
         w.flush();
@@ -201,6 +203,7 @@ public class TestDataFileReader {
 
     // Create a file with the legacy schema.
     File f = Files.createTempFile("testIgnoreSchemaValidationOnRead", ".avro").toFile();
+    f.deleteOnExit();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -215,6 +218,7 @@ public class TestDataFileReader {
   @Test
   void invalidMagicLength() throws IOException {
     File f = Files.createTempFile("testInvalidMagicLength", ".avro").toFile();
+    f.deleteOnExit();
     try (FileWriter w = new FileWriter(f)) {
       w.write("-");
     }
@@ -227,6 +231,7 @@ public class TestDataFileReader {
   @Test
   void invalidMagicBytes() throws IOException {
     File f = Files.createTempFile("testInvalidMagicBytes", ".avro").toFile();
+    f.deleteOnExit();
     try (FileWriter w = new FileWriter(f)) {
       w.write("invalid");
     }

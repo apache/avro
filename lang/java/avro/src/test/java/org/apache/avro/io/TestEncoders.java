@@ -262,6 +262,7 @@ public class TestEncoders {
   @Test
   void mappedByteBuffer() throws IOException {
     Path file = Paths.get(DIR.getPath() + "testMappedByteBuffer.avro");
+    file.toFile().deleteOnExit();
     Files.write(file, someBytes(EXAMPLE_DATA_SIZE));
     MappedByteBuffer buffer = FileChannel.open(file, StandardOpenOption.READ).map(FileChannel.MapMode.READ_ONLY, 0,
         EXAMPLE_DATA_SIZE);

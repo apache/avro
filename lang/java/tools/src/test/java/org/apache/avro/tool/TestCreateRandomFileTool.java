@@ -34,6 +34,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.util.RandomData;
 import org.apache.trevni.TestUtil;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,11 @@ public class TestCreateRandomFileTool {
   public void after() throws Exception {
     out.close();
     err.close();
+  }
+
+  @AfterAll
+  public static void afterAll() throws Exception {
+    OUT_FILE.delete();
   }
 
   private int run(List<String> args) throws Exception {

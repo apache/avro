@@ -30,6 +30,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.RandomData;
 import org.apache.trevni.avro.AvroColumnReader;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 public class TestToTrevniTool {
@@ -40,6 +41,11 @@ public class TestToTrevniTool {
   private static final File AVRO_FILE = new File(DIR, "random.avro");
   private static final File TREVNI_FILE = new File(DIR, "random.trv");
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
+
+  @AfterAll
+  public static void afterAll() throws Exception {
+    AVRO_FILE.delete();
+  }
 
   private String run(String... args) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
