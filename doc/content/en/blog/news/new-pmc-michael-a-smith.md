@@ -1,6 +1,6 @@
 ---
-title: "New committer: Michael A. Smith"
-linkTitle: "New committer: Michael A. Smith"
+title: "New PMC member: Michael A. Smith"
+linkTitle: "New PMC member: Michael A. Smith"
 date: 2023-08-09
 ---
 
