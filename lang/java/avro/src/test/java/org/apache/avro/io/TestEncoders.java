@@ -57,7 +57,7 @@ public class TestEncoders {
   private static EncoderFactory factory = EncoderFactory.get();
 
   @TempDir
-  public File DIR;
+  public Path DIR;
 
   @Test
   void binaryEncoderInit() throws IOException {
@@ -261,8 +261,7 @@ public class TestEncoders {
 
   @Test
   void mappedByteBuffer() throws IOException {
-    Path file = Paths.get(DIR.getPath() + "testMappedByteBuffer.avro");
-    file.toFile().deleteOnExit();
+    Path file = DIR.resolve("testMappedByteBuffer.avro");
     Files.write(file, someBytes(EXAMPLE_DATA_SIZE));
     MappedByteBuffer buffer = FileChannel.open(file, StandardOpenOption.READ).map(FileChannel.MapMode.READ_ONLY, 0,
         EXAMPLE_DATA_SIZE);

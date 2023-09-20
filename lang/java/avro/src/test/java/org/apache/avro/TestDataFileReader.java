@@ -38,9 +38,12 @@ import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
+  @TempDir
+  public Path DATA_DIR;
 
   // regression test for bug AVRO-2286
   @Test
@@ -90,8 +93,7 @@ public class TestDataFileReader {
     Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
         .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-    File f = Files.createTempFile("testThrottledInputStream", ".avro").toFile();
-    f.deleteOnExit();
+    File f = DATA_DIR.resolve("testThrottledInputStream.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -150,8 +152,7 @@ public class TestDataFileReader {
       Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
           .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
               + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-      File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
-      f.deleteOnExit();
+      File f = DATA_DIR.resolve("testInputStreamEOF.avro").toFile();
       try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
         w.create(legacySchema, f);
         w.flush();
@@ -202,8 +203,7 @@ public class TestDataFileReader {
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
 
     // Create a file with the legacy schema.
-    File f = Files.createTempFile("testIgnoreSchemaValidationOnRead", ".avro").toFile();
-    f.deleteOnExit();
+    File f = DATA_DIR.resolve("testIgnoreSchemaValidationOnRead.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -217,8 +217,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicLength() throws IOException {
-    File f = Files.createTempFile("testInvalidMagicLength", ".avro").toFile();
-    f.deleteOnExit();
+    File f = DATA_DIR.resolve("testInvalidMagicLength.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("-");
     }
@@ -230,8 +229,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicBytes() throws IOException {
-    File f = Files.createTempFile("testInvalidMagicBytes", ".avro").toFile();
-    f.deleteOnExit();
+    File f = DATA_DIR.resolve("testInvalidMagicBytes.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("invalid");
     }
