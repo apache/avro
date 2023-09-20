@@ -440,10 +440,10 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /**
-   * If this writer was instantiated using a {@linkplain File}, {@linkplain FileOutputStream} or
-   * {@linkplain Syncable} instance, this method flushes all buffers for this
-   * writer to disk. In other cases, this method behaves exactly like
-   * {@linkplain #flush()}.
+   * If this writer was instantiated using a {@linkplain File},
+   * {@linkplain FileOutputStream} or {@linkplain Syncable} instance, this method
+   * flushes all buffers for this writer to disk. In other cases, this method
+   * behaves exactly like {@linkplain #flush()}.
    *
    * @throws IOException
    */
