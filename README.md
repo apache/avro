@@ -70,3 +70,9 @@ To contribute to Avro, please read:
 [codeql java img]:       https://github.com/apache/avro/actions/workflows/codeql-java-analysis.yml/badge.svg
 [codeql javascript img]: https://github.com/apache/avro/actions/workflows/codeql-js-analysis.yml/badge.svg
 [codeql python img]:     https://github.com/apache/avro/actions/workflows/codeql-py-analysis.yml/badge.svg
+
+You can use devcontainers to develop Avro:
+
+* [![Open in Visual Studio Code](https://img.shields.io/static/v1?label=&message=Open%20in%20Visual%20Studio%20Code&color=blue&logo=visualstudiocode&style=flat)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/apache/avro)
+* [![Open in Github Codespaces](https://img.shields.io/static/v1?label=&message=Open%20in%20Github%20Codespaces&color=2f362d&logo=github)](https://codespaces.new/apache/avro?quickstart=1&hide_repo_select=true)
+
