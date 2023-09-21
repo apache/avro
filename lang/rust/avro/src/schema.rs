@@ -5924,7 +5924,7 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let expected = vec![Alias::new("ns1.en1")?, Alias::new("ns2.en2")?];
         match schema.aliases() {
-            Some(s) => assert_eq!(s, &expected),
+            Some(aliases) => assert_eq!(aliases, &expected),
             None => panic!("Expected Some({:?}), got None", expected),
         }
 
