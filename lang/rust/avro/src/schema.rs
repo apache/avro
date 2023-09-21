@@ -6000,7 +6000,7 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let expected = "Record Document";
         match schema.doc() {
-            Some(aliases) => assert_eq!(aliases, expected),
+            Some(doc) => assert_eq!(doc, expected),
             None => panic!("Expected Some({:?}), got None", expected),
         }
 
@@ -6032,7 +6032,7 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let expected = "Enum Document";
         match schema.doc() {
-            Some(aliases) => assert_eq!(aliases, expected),
+            Some(doc) => assert_eq!(doc, expected),
             None => panic!("Expected Some({:?}), got None", expected),
         }
 
@@ -6061,7 +6061,7 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let expected = "Fixed Document";
         match schema.doc() {
-            Some(aliases) => assert_eq!(aliases, expected),
+            Some(doc) => assert_eq!(doc, expected),
             None => panic!("Expected Some({:?}), got None", expected),
         }
 
