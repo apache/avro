@@ -1071,10 +1071,10 @@ impl Schema {
     /// Returns the name of the schema if it has one.
     pub fn name(&self) -> Option<&Name> {
         match self {
-            Schema::Ref { ref name, .. }
-            | Schema::Record(RecordSchema { ref name, .. })
-            | Schema::Enum(EnumSchema { ref name, .. })
-            | Schema::Fixed(FixedSchema { ref name, .. }) => Some(name),
+            Schema::Ref { name, .. }
+            | Schema::Record(RecordSchema { name, .. })
+            | Schema::Enum(EnumSchema { name, .. })
+            | Schema::Fixed(FixedSchema { name, .. }) => Some(name),
             _ => None,
         }
     }
@@ -1082,6 +1082,26 @@ impl Schema {
     /// Returns the namespace of the schema if it has one.
     pub fn namespace(&self) -> Namespace {
         self.name().and_then(|n| n.namespace.clone())
+    }
+
+    /// Returns the aliases of the schema if it has ones.
+    pub fn aliases(&self) -> Option<&Vec<Alias>> {
+        match self {
+            Schema::Record(RecordSchema { aliases, .. })
+            | Schema::Enum(EnumSchema { aliases, .. })
+            | Schema::Fixed(FixedSchema { aliases, .. }) => aliases.as_ref(),
+            _ => None,
+        }
+    }
+
+    /// Returns the doc of the schema if it has one.
+    pub fn doc(&self) -> Option<&String> {
+        match self {
+            Schema::Record(RecordSchema { doc, .. })
+            | Schema::Enum(EnumSchema { doc, .. })
+            | Schema::Fixed(FixedSchema { doc, .. }) => doc.as_ref(),
+            _ => None,
+        }
     }
 }
 
@@ -5848,6 +5868,222 @@ mod tests {
             .err()
             .unwrap_or_else(|| "unexpected".to_string());
         assert_eq!(expected, err);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3862_get_aliases() -> TestResult {
+        // Test for Record
+        let schema_str = r#"
+        {
+            "name": "record1",
+            "namespace": "ns1",
+            "type": "record",
+            "aliases": ["r1", "ns2.r2"],
+            "fields": [
+                { "name": "f1", "type": "int" },
+                { "name": "f2", "type": "string" }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = vec![Alias::new("ns1.r1")?, Alias::new("ns2.r2")?];
+        match schema.aliases() {
+            Some(aliases) => assert_eq!(aliases, &expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "record1",
+            "namespace": "ns1",
+            "type": "record",
+            "fields": [
+                { "name": "f1", "type": "int" },
+                { "name": "f2", "type": "string" }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.aliases() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for Enum
+        let schema_str = r#"
+        {
+            "name": "enum1",
+            "namespace": "ns1",
+            "type": "enum",
+            "aliases": ["en1", "ns2.en2"],
+            "symbols": ["a", "b", "c"]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = vec![Alias::new("ns1.en1")?, Alias::new("ns2.en2")?];
+        match schema.aliases() {
+            Some(aliases) => assert_eq!(aliases, &expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "enum1",
+            "namespace": "ns1",
+            "type": "enum",
+            "symbols": ["a", "b", "c"]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.aliases() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for Fixed
+        let schema_str = r#"
+        {
+            "name": "fixed1",
+            "namespace": "ns1",
+            "type": "fixed",
+            "aliases": ["fx1", "ns2.fx2"],
+            "size": 10
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = vec![Alias::new("ns1.fx1")?, Alias::new("ns2.fx2")?];
+        match schema.aliases() {
+            Some(aliases) => assert_eq!(aliases, &expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "fixed1",
+            "namespace": "ns1",
+            "type": "fixed",
+            "size": 10
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.aliases() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for non-named type
+        let schema = Schema::Int;
+        match schema.aliases() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3862_get_doc() -> TestResult {
+        // Test for Record
+        let schema_str = r#"
+        {
+            "name": "record1",
+            "type": "record",
+            "doc": "Record Document",
+            "fields": [
+                { "name": "f1", "type": "int" },
+                { "name": "f2", "type": "string" }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = "Record Document";
+        match schema.doc() {
+            Some(doc) => assert_eq!(doc, expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "record1",
+            "type": "record",
+            "fields": [
+                { "name": "f1", "type": "int" },
+                { "name": "f2", "type": "string" }
+            ]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.doc() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for Enum
+        let schema_str = r#"
+        {
+            "name": "enum1",
+            "type": "enum",
+            "doc": "Enum Document",
+            "symbols": ["a", "b", "c"]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = "Enum Document";
+        match schema.doc() {
+            Some(doc) => assert_eq!(doc, expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "enum1",
+            "type": "enum",
+            "symbols": ["a", "b", "c"]
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.doc() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for Fixed
+        let schema_str = r#"
+        {
+            "name": "fixed1",
+            "type": "fixed",
+            "doc": "Fixed Document",
+            "size": 10
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        let expected = "Fixed Document";
+        match schema.doc() {
+            Some(doc) => assert_eq!(doc, expected),
+            None => panic!("Expected Some({:?}), got None", expected),
+        }
+
+        let schema_str = r#"
+        {
+            "name": "fixed1",
+            "type": "fixed",
+            "size": 10
+        }
+        "#;
+        let schema = Schema::parse_str(schema_str)?;
+        match schema.doc() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
+
+        // Test for non-named type
+        let schema = Schema::Int;
+        match schema.doc() {
+            None => (),
+            some => panic!("Expected None, got {some:?}"),
+        }
 
         Ok(())
     }
