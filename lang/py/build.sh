@@ -27,7 +27,6 @@ clean() {
                  '*.avsc' \
                  '*.egg-info' \
                  '*.py[co]' \
-                 'VERSION.txt' \
                  '__pycache__' \
                  '.tox' \
                  'avro/test/interop' \
@@ -53,8 +52,8 @@ dist() (
 
 doc() {
   local doc_dir
-  [[ -s VERSION.txt ]] || cp ../../share/VERSION.txt .
-  doc_dir="../../build/avro-doc-$(<VERSION.txt)/api/py"
+  local version=$(cat ../../share/VERSION.txt)
+  doc_dir="../../build/avro-doc-$version/api/py"
   python3 -m tox -e docs
   mkdir -p "$doc_dir"
   cp -a docs/build/* "$doc_dir"
