@@ -85,7 +85,7 @@ anyhow = { default-features = false, version = "1.0.75", features = ["std"] }
 apache-avro-test-helper = { default-features = false, version = "0.16.0", path = "../avro_test_helper" }
 criterion = { default-features = false, version = "0.5.1" }
 hex-literal = { default-features = false, version = "0.4.1" }
-md-5 = { default-features = false, version = "0.10.5" }
+md-5 = { default-features = false, version = "0.10.6" }
 pretty_assertions = { default-features = false, version = "1.4.0", features = ["std"] }
 serial_test = "2.0.0"
 sha2 = { default-features = false, version = "0.10.7" }
