@@ -43,7 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
   @TempDir
-  public Path DATA_DIR;
+  public Path dataDir;
 
   // regression test for bug AVRO-2286
   @Test
@@ -93,7 +93,7 @@ public class TestDataFileReader {
     Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
         .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-    File f = DATA_DIR.resolve("testThrottledInputStream.avro").toFile();
+    File f = dataDir.resolve("testThrottledInputStream.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -152,7 +152,7 @@ public class TestDataFileReader {
       Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
           .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
               + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
-      File f = DATA_DIR.resolve("testInputStreamEOF.avro").toFile();
+      File f = dataDir.resolve("testInputStreamEOF.avro").toFile();
       try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
         w.create(legacySchema, f);
         w.flush();
@@ -203,7 +203,7 @@ public class TestDataFileReader {
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
 
     // Create a file with the legacy schema.
-    File f = DATA_DIR.resolve("testIgnoreSchemaValidationOnRead.avro").toFile();
+    File f = dataDir.resolve("testIgnoreSchemaValidationOnRead.avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
       w.flush();
@@ -217,7 +217,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicLength() throws IOException {
-    File f = DATA_DIR.resolve("testInvalidMagicLength.avro").toFile();
+    File f = dataDir.resolve("testInvalidMagicLength.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("-");
     }
@@ -229,7 +229,7 @@ public class TestDataFileReader {
 
   @Test
   void invalidMagicBytes() throws IOException {
-    File f = DATA_DIR.resolve("testInvalidMagicBytes.avro").toFile();
+    File f = dataDir.resolve("testInvalidMagicBytes.avro").toFile();
     try (FileWriter w = new FileWriter(f)) {
       w.write("invalid");
     }

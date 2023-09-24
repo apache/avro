@@ -47,7 +47,7 @@ public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
 
   @TempDir
-  private Path DIR;
+  private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private final Schema.Parser schemaParser = new Schema.Parser();
@@ -86,7 +86,7 @@ public class TestCreateRandomFileTool {
 
   private void check(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    File outFile = DIR.resolve("random.avro").toFile();
+    File outFile = dataDir.resolve("random.avro").toFile();
     args.addAll(Arrays.asList(outFile.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
         Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
@@ -103,7 +103,7 @@ public class TestCreateRandomFileTool {
 
   private void checkMissingCount(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    File outFile = DIR.resolve("random.avro").toFile();
+    File outFile = dataDir.resolve("random.avro").toFile();
     args.addAll(
         Arrays.asList(outFile.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));

@@ -40,7 +40,7 @@ public class TestToTrevniTool {
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
 
   @TempDir
-  private Path DIR;
+  private Path dataDir;
   private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private String run(String... args) throws Exception {
@@ -55,13 +55,13 @@ public class TestToTrevniTool {
     Schema schema = new Schema.Parser().parse(SCHEMA_FILE);
 
     DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
-    File avroFile = DIR.resolve("random.avro").toFile();
+    File avroFile = dataDir.resolve("random.avro").toFile();
     writer.create(schema, avroFile);
     for (Object datum : new RandomData(schema, COUNT, SEED))
       writer.append(datum);
     writer.close();
 
-    File trevniFile = DIR.resolve("random.trv").toFile();
+    File trevniFile = dataDir.resolve("random.trv").toFile();
     run(avroFile.toString(), trevniFile.toString());
 
     AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(trevniFile));
