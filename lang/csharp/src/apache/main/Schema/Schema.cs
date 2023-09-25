@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -243,11 +244,27 @@ namespace Avro
             Schema sc = PrimitiveSchema.NewInstance(json);
             if (null != sc) return sc;
 
+            // Refer to https://github.com/JamesNK/Newtonsoft.Json/pull/2904
+            // Newtonsoft author advised to use JObject.Load/JArray.Load instead of JObject.Parse()/JArray.Parse()
+            // The reason is we can set the MaxDepth property on the JsonReader.
+            JsonReader reader = new JsonTextReader(new StringReader(json));
+            // Another issue discovered is JsonReader.Push(JsonContainerType value) method overcounting the depth
+            // level of Avro schema.  Here are the observation of over-counting depth level in Newtonsoft's JsonReader:
+            // Avro Schema Depth	JsonReader Depth Level Count
+            // 4	                11
+            // 16                   44
+            // 32	                92
+            // 64	                188
+            // So, roughly speaking, the depth level count is about 2.75 times of Avro schema depth.
+            // Below is the hard-coded value to compensate over-counting of depth level in Newtonsoft
+            // to support Avro schema depth level to 64 slightly beyond.
+            reader.MaxDepth = 192;
+
             try
             {
                 bool IsArray = json.StartsWith("[", StringComparison.Ordinal)
                     && json.EndsWith("]", StringComparison.Ordinal);
-                JContainer j = IsArray ? (JContainer)JArray.Parse(json) : (JContainer)JObject.Parse(json);
+                JContainer j = IsArray ? (JContainer)JArray.Load(reader) : (JContainer)JObject.Load(reader);
 
                 return ParseJson(j, names, encspace);
             }

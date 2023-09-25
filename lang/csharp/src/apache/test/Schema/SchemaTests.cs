@@ -690,6 +690,1018 @@ namespace Avro.Test
             Assert.AreEqual(schema.ToString(), expectedSchemaJson);
         }
 
+        [TestCase]
+        public void Parse16DepthLevelSchemaTest()
+        {
+            var json = @"
+{
+  ""type"": ""record"",
+  ""name"": ""Level1"",
+  ""fields"": [
+    {
+      ""name"": ""level2"",
+      ""type"": {
+        ""type"": ""record"",
+        ""name"": ""Level2"",
+        ""fields"": [
+          {
+            ""name"": ""level3"",
+            ""type"": {
+              ""type"": ""record"",
+              ""name"": ""Level3"",
+              ""fields"": [
+                {
+                  ""name"": ""level4"",
+                  ""type"": {
+                    ""type"": ""record"",
+                    ""name"": ""Level4"",
+                    ""fields"": [
+                      {
+                        ""name"": ""level5"",
+                        ""type"": {
+                          ""type"": ""record"",
+                          ""name"": ""Level5"",
+                          ""fields"": [
+                            {
+                              ""name"": ""level6"",
+                              ""type"": {
+                                ""type"": ""record"",
+                                ""name"": ""Level6"",
+                                ""fields"": [
+                                  {
+                                    ""name"": ""level7"",
+                                    ""type"": {
+                                      ""type"": ""record"",
+                                      ""name"": ""Level7"",
+                                      ""fields"": [
+                                        {
+                                          ""name"": ""level8"",
+                                          ""type"": {
+                                            ""type"": ""record"",
+                                            ""name"": ""Level8"",
+                                            ""fields"": [
+                                              {
+                                                ""name"": ""level9"",
+                                                ""type"": {
+                                                  ""type"": ""record"",
+                                                  ""name"": ""Level9"",
+                                                  ""fields"": [
+                                                    {
+                                                      ""name"": ""level10"",
+                                                      ""type"": {
+                                                        ""type"": ""record"",
+                                                        ""name"": ""Level10"",
+                                                        ""fields"": [
+                                                          {
+                                                            ""name"": ""level11"",
+                                                            ""type"": {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Level11"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""level12"",
+                                                                  ""type"": {
+                                                                    ""type"": ""record"",
+                                                                    ""name"": ""Level12"",
+                                                                    ""fields"": [
+                                                                      {
+                                                                        ""name"": ""level13"",
+                                                                        ""type"": {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Level13"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""level14"",
+                                                                              ""type"": {
+                                                                                ""type"": ""record"",
+                                                                                ""name"": ""Level14"",
+                                                                                ""fields"": [
+                                                                                  {
+                                                                                    ""name"": ""level15"",
+                                                                                    ""type"": {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""Level15"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""level16"",
+                                                                                          ""type"": ""string""
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          }
+                                                        ]
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+";
+
+            var schema = Schema.Parse(json);
+
+        }
+
+        [TestCase]
+        public void Parse32DepthLevelSchemaTest()
+        {
+            var json = @"
+{
+  ""type"": ""record"",
+  ""name"": ""Level1"",
+  ""fields"": [
+    {
+      ""name"": ""level2"",
+      ""type"": {
+        ""type"": ""record"",
+        ""name"": ""Level2"",
+        ""fields"": [
+          {
+            ""name"": ""level3"",
+            ""type"": {
+              ""type"": ""record"",
+              ""name"": ""Level3"",
+              ""fields"": [
+                {
+                  ""name"": ""level4"",
+                  ""type"": {
+                    ""type"": ""record"",
+                    ""name"": ""Level4"",
+                    ""fields"": [
+                      {
+                        ""name"": ""level5"",
+                        ""type"": {
+                          ""type"": ""record"",
+                          ""name"": ""Level5"",
+                          ""fields"": [
+                            {
+                              ""name"": ""level6"",
+                              ""type"": {
+                                ""type"": ""record"",
+                                ""name"": ""Level6"",
+                                ""fields"": [
+                                  {
+                                    ""name"": ""level7"",
+                                    ""type"": {
+                                      ""type"": ""record"",
+                                      ""name"": ""Level7"",
+                                      ""fields"": [
+                                        {
+                                          ""name"": ""level8"",
+                                          ""type"": {
+                                            ""type"": ""record"",
+                                            ""name"": ""Level8"",
+                                            ""fields"": [
+                                              {
+                                                ""name"": ""level9"",
+                                                ""type"": {
+                                                  ""type"": ""record"",
+                                                  ""name"": ""Level9"",
+                                                  ""fields"": [
+                                                    {
+                                                      ""name"": ""level10"",
+                                                      ""type"": {
+                                                        ""type"": ""record"",
+                                                        ""name"": ""Level10"",
+                                                        ""fields"": [
+                                                          {
+                                                            ""name"": ""level11"",
+                                                            ""type"": {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Level11"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""level12"",
+                                                                  ""type"": {
+                                                                    ""type"": ""record"",
+                                                                    ""name"": ""Level12"",
+                                                                    ""fields"": [
+                                                                      {
+                                                                        ""name"": ""level13"",
+                                                                        ""type"": {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Level13"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""level14"",
+                                                                              ""type"": {
+                                                                                ""type"": ""record"",
+                                                                                ""name"": ""Level14"",
+                                                                                ""fields"": [
+                                                                                  {
+                                                                                    ""name"": ""level15"",
+                                                                                    ""type"": {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""Level15"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""level16"",
+                                                                                          ""type"": {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""Level16"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""level17"",
+                                                                                                ""type"": {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""Level17"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""level18"",
+                                                                                                      ""type"": {
+                                                                                                        ""type"": ""record"",
+                                                                                                        ""name"": ""Level18"",
+                                                                                                        ""fields"": [
+                                                                                                          {
+                                                                                                            ""name"": ""level19"",
+                                                                                                            ""type"": {
+                                                                                                              ""type"": ""record"",
+                                                                                                              ""name"": ""Level19"",
+                                                                                                              ""fields"": [
+                                                                                                                {
+                                                                                                                  ""name"": ""level20"",
+                                                                                                                  ""type"": {
+                                                                                                                    ""type"": ""record"",
+                                                                                                                    ""name"": ""Level20"",
+                                                                                                                    ""fields"": [
+                                                                                                                      {
+                                                                                                                        ""name"": ""level21"",
+                                                                                                                        ""type"": {
+                                                                                                                          ""type"": ""record"",
+                                                                                                                          ""name"": ""Level21"",
+                                                                                                                          ""fields"": [
+                                                                                                                            {
+                                                                                                                              ""name"": ""level22"",
+                                                                                                                              ""type"": {
+                                                                                                                                ""type"": ""record"",
+                                                                                                                                ""name"": ""Level22"",
+                                                                                                                                ""fields"": [
+                                                                                                                                  {
+                                                                                                                                    ""name"": ""level23"",
+                                                                                                                                    ""type"": {
+                                                                                                                                      ""type"": ""record"",
+                                                                                                                                      ""name"": ""Level23"",
+                                                                                                                                      ""fields"": [
+                                                                                                                                        {
+                                                                                                                                          ""name"": ""level24"",
+                                                                                                                                          ""type"": {
+                                                                                                                                            ""type"": ""record"",
+                                                                                                                                            ""name"": ""Level24"",
+                                                                                                                                            ""fields"": [
+                                                                                                                                              {
+                                                                                                                                                ""name"": ""level25"",
+                                                                                                                                                ""type"": {
+                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                  ""name"": ""Level25"",
+                                                                                                                                                  ""fields"": [
+                                                                                                                                                    {
+                                                                                                                                                      ""name"": ""level26"",
+                                                                                                                                                      ""type"": {
+                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                        ""name"": ""Level26"",
+                                                                                                                                                        ""fields"": [
+                                                                                                                                                          {
+                                                                                                                                                            ""name"": ""level27"",
+                                                                                                                                                            ""type"": {
+                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                              ""name"": ""Level27"",
+                                                                                                                                                              ""fields"": [
+                                                                                                                                                                {
+                                                                                                                                                                  ""name"": ""level28"",
+                                                                                                                                                                  ""type"": {
+                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                    ""name"": ""Level28"",
+                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                      {
+                                                                                                                                                                        ""name"": ""level29"",
+                                                                                                                                                                        ""type"": {
+                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                          ""name"": ""Level29"",
+                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                            {
+                                                                                                                                                                              ""name"": ""level30"",
+                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                ""name"": ""Level30"",
+                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                  {
+                                                                                                                                                                                    ""name"": ""level31"",
+                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                      ""name"": ""Level31"",
+                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                        {
+                                                                                                                                                                                          ""name"": ""level32"",
+                                                                                                                                                                                          ""type"": ""string""
+                                                                                                                                                                                        }
+                                                                                                                                                                                      ]
+                                                                                                                                                                                    }
+                                                                                                                                                                                  }
+                                                                                                                                                                                ]
+                                                                                                                                                                              }
+                                                                                                                                                                            }
+                                                                                                                                                                          ]
+                                                                                                                                                                        }
+                                                                                                                                                                      }
+                                                                                                                                                                    ]
+                                                                                                                                                                  }
+                                                                                                                                                                }
+                                                                                                                                                              ]
+                                                                                                                                                            }
+                                                                                                                                                          }
+                                                                                                                                                        ]
+                                                                                                                                                      }
+                                                                                                                                                    }
+                                                                                                                                                  ]
+                                                                                                                                                }
+                                                                                                                                              }
+                                                                                                                                            ]
+                                                                                                                                          }
+                                                                                                                                        }
+                                                                                                                                      ]
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                ]
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          ]
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    ]
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              ]
+                                                                                                            }
+                                                                                                          }
+                                                                                                        ]
+                                                                                                      }
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          }
+                                                        ]
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+";
+            var schema = Schema.Parse(json);
+        }
+
+        [TestCase]
+        public void Parse64DepthLevelSchemaTest()
+        {
+            var json = @"
+{
+  ""type"": ""record"",
+  ""name"": ""Level1"",
+  ""fields"": [
+    {
+      ""name"": ""level2"",
+      ""type"": {
+        ""type"": ""record"",
+        ""name"": ""Level2"",
+        ""fields"": [
+          {
+            ""name"": ""level3"",
+            ""type"": {
+              ""type"": ""record"",
+              ""name"": ""Level3"",
+              ""fields"": [
+                {
+                  ""name"": ""level4"",
+                  ""type"": {
+                    ""type"": ""record"",
+                    ""name"": ""Level4"",
+                    ""fields"": [
+                      {
+                        ""name"": ""level5"",
+                        ""type"": {
+                          ""type"": ""record"",
+                          ""name"": ""Level5"",
+                          ""fields"": [
+                            {
+                              ""name"": ""level6"",
+                              ""type"": {
+                                ""type"": ""record"",
+                                ""name"": ""Level6"",
+                                ""fields"": [
+                                  {
+                                    ""name"": ""level7"",
+                                    ""type"": {
+                                      ""type"": ""record"",
+                                      ""name"": ""Level7"",
+                                      ""fields"": [
+                                        {
+                                          ""name"": ""level8"",
+                                          ""type"": {
+                                            ""type"": ""record"",
+                                            ""name"": ""Level8"",
+                                            ""fields"": [
+                                              {
+                                                ""name"": ""level9"",
+                                                ""type"": {
+                                                  ""type"": ""record"",
+                                                  ""name"": ""Level9"",
+                                                  ""fields"": [
+                                                    {
+                                                      ""name"": ""level10"",
+                                                      ""type"": {
+                                                        ""type"": ""record"",
+                                                        ""name"": ""Level10"",
+                                                        ""fields"": [
+                                                          {
+                                                            ""name"": ""level11"",
+                                                            ""type"": {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Level11"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""level12"",
+                                                                  ""type"": {
+                                                                    ""type"": ""record"",
+                                                                    ""name"": ""Level12"",
+                                                                    ""fields"": [
+                                                                      {
+                                                                        ""name"": ""level13"",
+                                                                        ""type"": {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Level13"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""level14"",
+                                                                              ""type"": {
+                                                                                ""type"": ""record"",
+                                                                                ""name"": ""Level14"",
+                                                                                ""fields"": [
+                                                                                  {
+                                                                                    ""name"": ""level15"",
+                                                                                    ""type"": {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""Level15"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""level16"",
+                                                                                          ""type"": {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""Level16"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""level17"",
+                                                                                                ""type"": {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""Level17"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""level18"",
+                                                                                                      ""type"": {
+                                                                                                        ""type"": ""record"",
+                                                                                                        ""name"": ""Level18"",
+                                                                                                        ""fields"": [
+                                                                                                          {
+                                                                                                            ""name"": ""level19"",
+                                                                                                            ""type"": {
+                                                                                                              ""type"": ""record"",
+                                                                                                              ""name"": ""Level19"",
+                                                                                                              ""fields"": [
+                                                                                                                {
+                                                                                                                  ""name"": ""level20"",
+                                                                                                                  ""type"": {
+                                                                                                                    ""type"": ""record"",
+                                                                                                                    ""name"": ""Level20"",
+                                                                                                                    ""fields"": [
+                                                                                                                      {
+                                                                                                                        ""name"": ""level21"",
+                                                                                                                        ""type"": {
+                                                                                                                          ""type"": ""record"",
+                                                                                                                          ""name"": ""Level21"",
+                                                                                                                          ""fields"": [
+                                                                                                                            {
+                                                                                                                              ""name"": ""level22"",
+                                                                                                                              ""type"": {
+                                                                                                                                ""type"": ""record"",
+                                                                                                                                ""name"": ""Level22"",
+                                                                                                                                ""fields"": [
+                                                                                                                                  {
+                                                                                                                                    ""name"": ""level23"",
+                                                                                                                                    ""type"": {
+                                                                                                                                      ""type"": ""record"",
+                                                                                                                                      ""name"": ""Level23"",
+                                                                                                                                      ""fields"": [
+                                                                                                                                        {
+                                                                                                                                          ""name"": ""level24"",
+                                                                                                                                          ""type"": {
+                                                                                                                                            ""type"": ""record"",
+                                                                                                                                            ""name"": ""Level24"",
+                                                                                                                                            ""fields"": [
+                                                                                                                                              {
+                                                                                                                                                ""name"": ""level25"",
+                                                                                                                                                ""type"": {
+                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                  ""name"": ""Level25"",
+                                                                                                                                                  ""fields"": [
+                                                                                                                                                    {
+                                                                                                                                                      ""name"": ""level26"",
+                                                                                                                                                      ""type"": {
+                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                        ""name"": ""Level26"",
+                                                                                                                                                        ""fields"": [
+                                                                                                                                                          {
+                                                                                                                                                            ""name"": ""level27"",
+                                                                                                                                                            ""type"": {
+                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                              ""name"": ""Level27"",
+                                                                                                                                                              ""fields"": [
+                                                                                                                                                                {
+                                                                                                                                                                  ""name"": ""level28"",
+                                                                                                                                                                  ""type"": {
+                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                    ""name"": ""Level28"",
+                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                      {
+                                                                                                                                                                        ""name"": ""level29"",
+                                                                                                                                                                        ""type"": {
+                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                          ""name"": ""Level29"",
+                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                            {
+                                                                                                                                                                              ""name"": ""level30"",
+                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                ""name"": ""Level30"",
+                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                  {
+                                                                                                                                                                                    ""name"": ""level31"",
+                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                      ""name"": ""Level31"",
+                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                        {
+                                                                                                                                                                                          ""name"": ""level32"",
+                                                                                                                                                                                          ""type"": {
+                                                                                                                                                                                            ""type"": ""record"",
+                                                                                                                                                                                            ""name"": ""Level32"",
+                                                                                                                                                                                            ""fields"": [
+                                                                                                                                                                                              {
+                                                                                                                                                                                                ""name"": ""level33"",
+                                                                                                                                                                                                ""type"": {
+                                                                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                                                                  ""name"": ""Level33"",
+                                                                                                                                                                                                  ""fields"": [
+                                                                                                                                                                                                    {
+                                                                                                                                                                                                      ""name"": ""level34"",
+                                                                                                                                                                                                      ""type"": {
+                                                                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                                                                        ""name"": ""Level34"",
+                                                                                                                                                                                                        ""fields"": [
+                                                                                                                                                                                                          {
+                                                                                                                                                                                                            ""name"": ""level35"",
+                                                                                                                                                                                                            ""type"": {
+                                                                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                                                                              ""name"": ""Level35"",
+                                                                                                                                                                                                              ""fields"": [
+                                                                                                                                                                                                                {
+                                                                                                                                                                                                                  ""name"": ""level36"",
+                                                                                                                                                                                                                  ""type"": {
+                                                                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                                                                    ""name"": ""Level36"",
+                                                                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                                                                      {
+                                                                                                                                                                                                                        ""name"": ""level37"",
+                                                                                                                                                                                                                        ""type"": {
+                                                                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                                                                          ""name"": ""Level37"",
+                                                                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                              ""name"": ""level38"",
+                                                                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                                                                ""name"": ""Level38"",
+                                                                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                                                                  {
+                                                                                                                                                                                                                                    ""name"": ""level39"",
+                                                                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                                                                      ""name"": ""Level39"",
+                                                                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                          ""name"": ""level40"",
+                                                                                                                                                                                                                                          ""type"": {
+                                                                                                                                                                                                                                            ""type"": ""record"",
+                                                                                                                                                                                                                                            ""name"": ""Level40"",
+                                                                                                                                                                                                                                            ""fields"": [
+                                                                                                                                                                                                                                              {
+                                                                                                                                                                                                                                                ""name"": ""level41"",
+                                                                                                                                                                                                                                                ""type"": {
+                                                                                                                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                                                                                                                  ""name"": ""Level41"",
+                                                                                                                                                                                                                                                  ""fields"": [
+                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                      ""name"": ""level42"",
+                                                                                                                                                                                                                                                      ""type"": {
+                                                                                                                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                                                                                                                        ""name"": ""Level42"",
+                                                                                                                                                                                                                                                        ""fields"": [
+                                                                                                                                                                                                                                                          {
+                                                                                                                                                                                                                                                            ""name"": ""level43"",
+                                                                                                                                                                                                                                                            ""type"": {
+                                                                                                                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                                                                                                                              ""name"": ""Level43"",
+                                                                                                                                                                                                                                                              ""fields"": [
+                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                  ""name"": ""level44"",
+                                                                                                                                                                                                                                                                  ""type"": {
+                                                                                                                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                                                                                                                    ""name"": ""Level44"",
+                                                                                                                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                                                                                                                      {
+                                                                                                                                                                                                                                                                        ""name"": ""level45"",
+                                                                                                                                                                                                                                                                        ""type"": {
+                                                                                                                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                                                                                                                          ""name"": ""Level45"",
+                                                                                                                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                                              ""name"": ""level46"",
+                                                                                                                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                                                                                                                ""name"": ""Level46"",
+                                                                                                                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                                                                                                                  {
+                                                                                                                                                                                                                                                                                    ""name"": ""level47"",
+                                                                                                                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                                                                                                                      ""name"": ""Level47"",
+                                                                                                                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                          ""name"": ""level48"",
+                                                                                                                                                                                                                                                                                          ""type"": {
+                                                                                                                                                                                                                                                                                            ""type"": ""record"",
+                                                                                                                                                                                                                                                                                            ""name"": ""Level48"",
+                                                                                                                                                                                                                                                                                            ""fields"": [
+                                                                                                                                                                                                                                                                                              {
+                                                                                                                                                                                                                                                                                                ""name"": ""level49"",
+                                                                                                                                                                                                                                                                                                ""type"": {
+                                                                                                                                                                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                  ""name"": ""Level49"",
+                                                                                                                                                                                                                                                                                                  ""fields"": [
+                                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                                      ""name"": ""level50"",
+                                                                                                                                                                                                                                                                                                      ""type"": {
+                                                                                                                                                                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                        ""name"": ""Level50"",
+                                                                                                                                                                                                                                                                                                        ""fields"": [
+                                                                                                                                                                                                                                                                                                          {
+                                                                                                                                                                                                                                                                                                            ""name"": ""level51"",
+                                                                                                                                                                                                                                                                                                            ""type"": {
+                                                                                                                                                                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                              ""name"": ""Level51"",
+                                                                                                                                                                                                                                                                                                              ""fields"": [
+                                                                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                                                                  ""name"": ""level52"",
+                                                                                                                                                                                                                                                                                                                  ""type"": {
+                                                                                                                                                                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                    ""name"": ""Level52"",
+                                                                                                                                                                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                                                                                                                                                                      {
+                                                                                                                                                                                                                                                                                                                        ""name"": ""level53"",
+                                                                                                                                                                                                                                                                                                                        ""type"": {
+                                                                                                                                                                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                          ""name"": ""Level53"",
+                                                                                                                                                                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                                                                                              ""name"": ""level54"",
+                                                                                                                                                                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                ""name"": ""Level54"",
+                                                                                                                                                                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                                                                                                                                                                  {
+                                                                                                                                                                                                                                                                                                                                    ""name"": ""level55"",
+                                                                                                                                                                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                      ""name"": ""Level55"",
+                                                                                                                                                                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                                                          ""name"": ""level56"",
+                                                                                                                                                                                                                                                                                                                                          ""type"": {
+                                                                                                                                                                                                                                                                                                                                            ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                            ""name"": ""Level56"",
+                                                                                                                                                                                                                                                                                                                                            ""fields"": [
+                                                                                                                                                                                                                                                                                                                                              {
+                                                                                                                                                                                                                                                                                                                                                ""name"": ""level57"",
+                                                                                                                                                                                                                                                                                                                                                ""type"": {
+                                                                                                                                                                                                                                                                                                                                                  ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                  ""name"": ""Level57"",
+                                                                                                                                                                                                                                                                                                                                                  ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                                                                                      ""name"": ""level58"",
+                                                                                                                                                                                                                                                                                                                                                      ""type"": {
+                                                                                                                                                                                                                                                                                                                                                        ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                        ""name"": ""Level58"",
+                                                                                                                                                                                                                                                                                                                                                        ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                          {
+                                                                                                                                                                                                                                                                                                                                                            ""name"": ""level59"",
+                                                                                                                                                                                                                                                                                                                                                            ""type"": {
+                                                                                                                                                                                                                                                                                                                                                              ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                              ""name"": ""Level59"",
+                                                                                                                                                                                                                                                                                                                                                              ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                                                                                                                                                  ""name"": ""level60"",
+                                                                                                                                                                                                                                                                                                                                                                  ""type"": {
+                                                                                                                                                                                                                                                                                                                                                                    ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                                    ""name"": ""Level60"",
+                                                                                                                                                                                                                                                                                                                                                                    ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                                      {
+                                                                                                                                                                                                                                                                                                                                                                        ""name"": ""level61"",
+                                                                                                                                                                                                                                                                                                                                                                        ""type"": {
+                                                                                                                                                                                                                                                                                                                                                                          ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                                          ""name"": ""Level61"",
+                                                                                                                                                                                                                                                                                                                                                                          ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                                            {
+                                                                                                                                                                                                                                                                                                                                                                              ""name"": ""level62"",
+                                                                                                                                                                                                                                                                                                                                                                              ""type"": {
+                                                                                                                                                                                                                                                                                                                                                                                ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                                                ""name"": ""Level62"",
+                                                                                                                                                                                                                                                                                                                                                                                ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                                                  {
+                                                                                                                                                                                                                                                                                                                                                                                    ""name"": ""level63"",
+                                                                                                                                                                                                                                                                                                                                                                                    ""type"": {
+                                                                                                                                                                                                                                                                                                                                                                                      ""type"": ""record"",
+                                                                                                                                                                                                                                                                                                                                                                                      ""name"": ""Level63"",
+                                                                                                                                                                                                                                                                                                                                                                                      ""fields"": [
+                                                                                                                                                                                                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                                                                                                          ""name"": ""level64"",
+                                                                                                                                                                                                                                                                                                                                                                                          ""type"": ""string""
+                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                      ]
+                                                                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                                                                                                                ]
+                                                                                                                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                                          ]
+                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                                                                                    ]
+                                                                                                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                                                              ]
+                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                                                                                        ]
+                                                                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                                  ]
+                                                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                                                                                            ]
+                                                                                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                      ]
+                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                                                                ]
+                                                                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                          ]
+                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                                    ]
+                                                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                              ]
+                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                                        ]
+                                                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                  ]
+                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                                            ]
+                                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                      ]
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                                ]
+                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                          ]
+                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                    ]
+                                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                              ]
+                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                        ]
+                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                  ]
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                            ]
+                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                      ]
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                ]
+                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                          ]
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                    ]
+                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                              ]
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                          }
+                                                                                                                                                                                                        ]
+                                                                                                                                                                                                      }
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                  ]
+                                                                                                                                                                                                }
+                                                                                                                                                                                              }
+                                                                                                                                                                                            ]
+                                                                                                                                                                                          }
+                                                                                                                                                                                        }
+                                                                                                                                                                                      ]
+                                                                                                                                                                                    }
+                                                                                                                                                                                  }
+                                                                                                                                                                                ]
+                                                                                                                                                                              }
+                                                                                                                                                                            }
+                                                                                                                                                                          ]
+                                                                                                                                                                        }
+                                                                                                                                                                      }
+                                                                                                                                                                    ]
+                                                                                                                                                                  }
+                                                                                                                                                                }
+                                                                                                                                                              ]
+                                                                                                                                                            }
+                                                                                                                                                          }
+                                                                                                                                                        ]
+                                                                                                                                                      }
+                                                                                                                                                    }
+                                                                                                                                                  ]
+                                                                                                                                                }
+                                                                                                                                              }
+                                                                                                                                            ]
+                                                                                                                                          }
+                                                                                                                                        }
+                                                                                                                                      ]
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                ]
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          ]
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    ]
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              ]
+                                                                                                            }
+                                                                                                          }
+                                                                                                        ]
+                                                                                                      }
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          }
+                                                        ]
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+";
+
+            var schema = Schema.Parse(json);
+        }
+
+
         [TestFixture]
         public class SchemaTypeExtensionsTests
         {
