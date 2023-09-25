@@ -194,8 +194,8 @@ public class TestBinaryEncoderFidelity {
 
     generateComplexData(e);
     byte[] result2 = baos.toByteArray();
-    // blocking will cause different length, should be four bytes larger
-    assertEquals(complexdata.length + 4, result2.length);
+    // blocking will cause different length, should be two bytes larger
+    assertEquals(complexdata.length + 2, result2.length);
     // the first byte is the array start, with the count of items negative
     assertEquals(complexdata[0] >>> 1, result2[0]);
     baos.reset();
@@ -207,10 +207,10 @@ public class TestBinaryEncoderFidelity {
     e.writeArrayEnd();
 
     // 1: 1 element in the array
-    // 2: 2 bytes for the int
-    // 2-3: data
+    // 2: 1 byte for the int
+    // 3: zigzag encoded int
     // 4: 0 elements in the next block
-    assertArrayEquals(baos.toByteArray(), new byte[] { 1, 2, 2, 2, 0 });
+    assertArrayEquals(baos.toByteArray(), new byte[] { 1, 2, 2, 0 });
     baos.reset();
 
     e.writeArrayStart();
