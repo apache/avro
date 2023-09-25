@@ -45,9 +45,12 @@
     latest and greatest of a particularly dependency.
     !!! ONLY UPDATE IF FUNCTIONALITY REQUIRES IT !!!
     See https://github.com/apache/avro/pull/1126 & https://github.com/apache/avro/pull/981 for more details
+    NOTE:
+       1. Newtonsoft versions prior to 13.0.1 have severe vulnerability issues.
+          See https://github.com/advisories/GHSA-5crp-9r3c-p9vr for more details
   -->
   <PropertyGroup Label="Minimum Package Versions">
-    <NewtonsoftJsonMinimumVersion>10.0.3</NewtonsoftJsonMinimumVersion>
+    <NewtonsoftJsonMinimumVersion>13.0.1</NewtonsoftJsonMinimumVersion>
   </PropertyGroup>
 
   <!--
