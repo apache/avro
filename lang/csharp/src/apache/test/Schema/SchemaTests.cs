@@ -1701,6 +1701,5362 @@ namespace Avro.Test
             var schema = Schema.Parse(json);
         }
 
+       [TestCase]
+        public void ParseRealWorldSchemaTest()
+        {
+            var json = @"
+{
+  ""type"": ""record"",
+  ""name"": ""IcaInstructionSchema"",
+  ""namespace"": ""com.capgroup.casa"",
+  ""fields"": [
+    {
+      ""name"": ""ICAINSTRUCTIONDOWNLOAD"",
+      ""type"": [
+        ""null"",
+        {
+          ""type"": ""record"",
+          ""name"": ""ICAINSTRUCTIONDOWNLOAD"",
+          ""fields"": [
+            {
+              ""name"": ""Header"",
+              ""type"": [
+                ""null"",
+                {
+                  ""type"": ""record"",
+                  ""name"": ""Header"",
+                  ""fields"": [
+                    {
+                      ""name"": ""FileName"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""CreationDate"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""Reference"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""VersionNo"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""MessageType"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""NoOfRecords"",
+                      ""type"": [
+                        ""null"",
+                        ""int""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""StatusIndicator"",
+                      ""type"": [
+                        ""null"",
+                        ""int""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""RelatedRef"",
+                      ""type"": [
+                        ""null"",
+                        ""int""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""To"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""From"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""FromIndicator"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""Direction"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    }
+                  ]
+                }
+              ],
+              ""default"": null
+            },
+            {
+              ""name"": ""CorporateAction"",
+              ""type"": [
+                ""null"",
+                {
+                  ""type"": ""record"",
+                  ""name"": ""CorporateAction"",
+                  ""fields"": [
+                    {
+                      ""name"": ""TotalBlockNo"",
+                      ""type"": [
+                        ""null"",
+                        ""long""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""BlockNo"",
+                      ""type"": [
+                        ""null"",
+                        ""long""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""FIBic"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""CorporateActionId"",
+                      ""type"": [
+                        ""null"",
+                        ""long""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""ActionType"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""ActionIndicator"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""CAStatusCd"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""EffectiveDate"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""ClientEntitlementBasisDate"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""MarketEntitlementBasisDate"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""Dates"",
+                      ""type"": [
+                        ""null"",
+                        {
+                          ""type"": ""record"",
+                          ""name"": ""Dates"",
+                          ""namespace"": ""com.capgroup.dates"",
+                          ""fields"": [
+                            {
+                              ""name"": ""Date"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""array"",
+                                  ""items"": [
+                                    ""null"",
+                                    {
+                                      ""type"": ""record"",
+                                      ""name"": ""Date"",
+                                      ""fields"": [
+                                        {
+                                          ""name"": ""DateQualifierCd"",
+                                          ""type"": [
+                                            ""null"",
+                                            ""string""
+                                          ],
+                                          ""default"": null
+                                        },
+                                        {
+                                          ""name"": ""DateValue"",
+                                          ""type"": [
+                                            ""null"",
+                                            ""double""
+                                          ],
+                                          ""default"": null
+                                        },
+                                        {
+                                          ""name"": ""DateCd"",
+                                          ""type"": [
+                                            ""null"",
+                                            ""string""
+                                          ],
+                                          ""default"": null
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            }
+                          ]
+                        }
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""CouponNumber"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""ExpectedSettlementDate"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""PriceFactorCurrencyCd"",
+                      ""type"": [
+                        ""null"",
+                        ""string""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""PriceFactor"",
+                      ""type"": [
+                        ""null"",
+                        ""double""
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""SecurityDetails"",
+                      ""type"": [
+                        ""null"",
+                        {
+                          ""type"": ""record"",
+                          ""name"": ""SecurityDetails"",
+                          ""fields"": [
+                            {
+                              ""name"": ""IssueCountryCd"",
+                              ""type"": [
+                                ""null"",
+                                ""string""
+                              ],
+                              ""default"": null
+                            },
+                            {
+                              ""name"": ""IssueCurrencyCd"",
+                              ""type"": [
+                                ""null"",
+                                ""string""
+                              ],
+                              ""default"": null
+                            },
+                            {
+                              ""name"": ""SecurityExternalReferences"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""record"",
+                                  ""name"": ""SecurityExternalReferences"",
+                                  ""fields"": [
+                                    {
+                                      ""name"": ""SecurityExternalReference"",
+                                      ""type"": {
+                                        ""type"": ""array"",
+                                        ""items"": {
+                                          ""type"": ""record"",
+                                          ""name"": ""SecurityExternalReference"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""SecurityIdentifierTypeCd"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""SecurityIdentifierValue"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            },
+                            {
+                              ""name"": ""ReportingClassificationGroups"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""record"",
+                                  ""name"": ""ReportingClassificationGroups"",
+                                  ""fields"": [
+                                    {
+                                      ""name"": ""ReportingClassificationGroup"",
+                                      ""type"": {
+                                        ""type"": ""array"",
+                                        ""items"": {
+                                          ""type"": ""record"",
+                                          ""name"": ""ReportingClassificationGroup"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""ReportingClassificationGroupId"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""long""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""ReportingClassificationGroupName"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""ValueId"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""long""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""ValueName"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""ValueCode"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            },
+                                            {
+                                              ""name"": ""ValueSequence"",
+                                              ""type"": [
+                                                ""null"",
+                                                ""string""
+                                              ],
+                                              ""default"": null
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            }
+                          ]
+                        }
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""Options"",
+                      ""type"": [
+                        ""null"",
+                        {
+                          ""type"": ""record"",
+                          ""name"": ""Options"",
+                          ""fields"": [
+                            {
+                              ""name"": ""Option"",
+                              ""type"": {
+                                ""type"": ""array"",
+                                ""items"": {
+                                  ""type"": ""record"",
+                                  ""name"": ""Option"",
+                                  ""fields"": [
+                                    {
+                                      ""name"": ""OptionId"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""long""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""OptionNumber"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""string""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""OptionCd"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""string""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""OptionTemplateId"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""int""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""LotLevelProcessingFlag"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""int""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""AccountingMethodBasedFlag"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""int""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""ParentLineBookcostPercentage"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""string""
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""Rates"",
+                                      ""type"": [
+                                        ""null"",
+                                        {
+                                          ""type"": ""record"",
+                                          ""name"": ""Rates"",
+                                          ""namespace"": ""com.capgroup.option.rates"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""Rate"",
+                                              ""type"": {
+                                                ""type"": ""array"",
+                                                ""items"": {
+                                                  ""type"": ""record"",
+                                                  ""name"": ""Rate"",
+                                                  ""fields"": [
+                                                    {
+                                                      ""name"": ""RateQualifierCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""RateValue"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""double""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""RateTypeCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""CurrencyCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""Amount1"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""double""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""RateStatusCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""Dates"",
+                                      ""type"": [
+                                        ""null"",
+                                        {
+                                          ""type"": ""record"",
+                                          ""name"": ""Dates"",
+                                          ""namespace"": ""com.capgroup.option.dates"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""Date"",
+                                              ""type"": {
+                                                ""type"": ""array"",
+                                                ""items"": {
+                                                  ""type"": ""record"",
+                                                  ""name"": ""Date"",
+                                                  ""fields"": [
+                                                    {
+                                                      ""name"": ""DateQualifierCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""DateValue"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""double""
+                                                      ],
+                                                      ""default"": null
+                                                    },
+                                                    {
+                                                      ""name"": ""DateCd"",
+                                                      ""type"": [
+                                                        ""null"",
+                                                        ""string""
+                                                      ],
+                                                      ""default"": null
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""CashMovements"",
+                                      ""type"": [
+                                        ""null"",
+                                        {
+                                          ""type"": ""record"",
+                                          ""name"": ""CashMovements"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""CashMovement"",
+                                              ""type"": [
+                                                ""null"",
+                                                {
+                                                  ""type"": ""array"",
+                                                  ""items"": [
+                                                    ""null"",
+                                                    {
+                                                      ""type"": ""record"",
+                                                      ""name"": ""CashMovement"",
+                                                      ""fields"": [
+                                                        {
+                                                          ""name"": ""CashMovementId"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""long""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Rates"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Rates"",
+                                                              ""namespace"": ""com.capgroup.option.cashmove.rates"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Rate"",
+                                                                  ""type"": {
+                                                                    ""type"": ""array"",
+                                                                    ""items"": {
+                                                                      ""type"": ""record"",
+                                                                      ""name"": ""Rate"",
+                                                                      ""fields"": [
+                                                                        {
+                                                                          ""name"": ""RateQualifierCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""RateValue"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""double""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""RateTypeCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""CurrencyCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""Amount1"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""double""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""RateStatusCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Places"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Places"",
+                                                              ""namespace"": ""com.capgroup.option.cashmove.place"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Place"",
+                                                                  ""type"": {
+                                                                    ""type"": ""array"",
+                                                                    ""items"": {
+                                                                      ""type"": ""record"",
+                                                                      ""name"": ""Place"",
+                                                                      ""fields"": [
+                                                                        {
+                                                                          ""name"": ""PlaceQualifierCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""PlaceValue"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Dates"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Dates"",
+                                                              ""namespace"": ""com.capgroup.option.cashmove.dates"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Date"",
+                                                                  ""type"": {
+                                                                    ""type"": ""array"",
+                                                                    ""items"": {
+                                                                      ""type"": ""record"",
+                                                                      ""name"": ""Date"",
+                                                                      ""fields"": [
+                                                                        {
+                                                                          ""name"": ""DateQualifierCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""DateValue"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""double""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        },
+                                                                        {
+                                                                          ""name"": ""DateCd"",
+                                                                          ""type"": [
+                                                                            ""null"",
+                                                                            ""string""
+                                                                          ],
+                                                                          ""default"": null
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              ""default"": null
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      ""default"": null
+                                    },
+                                    {
+                                      ""name"": ""SecurityMovements"",
+                                      ""type"": [
+                                        ""null"",
+                                        {
+                                          ""type"": ""record"",
+                                          ""name"": ""SecurityMovements"",
+                                          ""namespace"": ""com.capgroup.security.movement"",
+                                          ""fields"": [
+                                            {
+                                              ""name"": ""SecurityMovement"",
+                                              ""type"": [
+                                                ""null"",
+                                                {
+                                                  ""type"": ""array"",
+                                                  ""items"": [
+                                                    ""null"",
+                                                    {
+                                                      ""type"": ""record"",
+                                                      ""name"": ""SecurityMovement"",
+                                                      ""fields"": [
+                                                        {
+                                                          ""name"": ""SecurityMovementId"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""long""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""SecurityDetails"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""SecurityDetails"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""IssueCountryCd"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    ""string""
+                                                                  ],
+                                                                  ""default"": null
+                                                                },
+                                                                {
+                                                                  ""name"": ""IssueCurrencyCd"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    ""string""
+                                                                  ],
+                                                                  ""default"": null
+                                                                },
+                                                                {
+                                                                  ""name"": ""SecurityExternalReferences"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    {
+                                                                      ""type"": ""record"",
+                                                                      ""name"": ""SecurityExternalReferences"",
+                                                                      ""fields"": [
+                                                                        {
+                                                                          ""name"": ""SecurityExternalReference"",
+                                                                          ""type"": {
+                                                                            ""type"": ""array"",
+                                                                            ""items"": {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""SecurityExternalReference"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""SecurityIdentifierTypeCd"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""SecurityIdentifierValue"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ],
+                                                                  ""default"": null
+                                                                },
+                                                                {
+                                                                  ""name"": ""ReportingClassificationGroups"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    {
+                                                                      ""type"": ""record"",
+                                                                      ""name"": ""ReportingClassificationGroups"",
+                                                                      ""namespace"": ""com.capgroup.option.secmove.ReportingClassificationGroups"",
+                                                                      ""fields"": [
+                                                                        {
+                                                                          ""name"": ""ReportingClassificationGroup"",
+                                                                          ""type"": {
+                                                                            ""type"": ""array"",
+                                                                            ""items"": {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""ReportingClassificationGroup"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""ReportingClassificationGroupId"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""long""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ReportingClassificationGroupName"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ValueId"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""long""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ValueName"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ValueCode"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ValueSequence"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ],
+                                                                  ""default"": null
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Rates"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Rates"",
+                                                              ""namespace"": ""com.capgroup.option.secmove.rates"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Rate"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    {
+                                                                      ""type"": ""array"",
+                                                                      ""items"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Rate"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""RateQualifierCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""Description"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""RateValue"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""ExchangeFromCurrencyCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""ExchangeToCurrencyCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""RateTypeCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""CurrencyCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""Amount1"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""Amount2"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""RateStatusCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""Quantity1"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""Quantity2"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""CurrencyCd1"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""CurrencyCd2"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""IndexPoint"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ],
+                                                                  ""default"": null
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Places"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Places"",
+                                                              ""namespace"": ""com.capgroup.option.secmove.places"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Place"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    {
+                                                                      ""type"": ""array"",
+                                                                      ""items"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Place"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""PlaceQualifierCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""PlaceValue"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ],
+                                                                  ""default"": null
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""StockDirectionInd"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""string""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""PDEFPrerefundedSecurityFlag"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""string""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""CostBasisAllocationPercentage"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""double""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""Dates"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            {
+                                                              ""type"": ""record"",
+                                                              ""name"": ""Dates"",
+                                                              ""namespace"": ""com.capgroup.option.secmove.dates"",
+                                                              ""fields"": [
+                                                                {
+                                                                  ""name"": ""Date"",
+                                                                  ""type"": [
+                                                                    ""null"",
+                                                                    {
+                                                                      ""type"": ""array"",
+                                                                      ""items"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Date"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""DateQualifierCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""DateValue"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""double""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            },
+                                                                            {
+                                                                              ""name"": ""DateCd"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                ""string""
+                                                                              ],
+                                                                              ""default"": null
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ],
+                                                                  ""default"": null
+                                                                }
+                                                              ]
+                                                            }
+                                                          ],
+                                                          ""default"": null
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              ""default"": null
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      ""default"": null
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""IcaInstructions"",
+                      ""type"": [
+                        ""null"",
+                        {
+                          ""type"": ""record"",
+                          ""name"": ""IcaInstructions"",
+                          ""namespace"": ""com.capgroup.ica.instructions"",
+                          ""fields"": [
+                            {
+                              ""name"": ""IcaInstruction"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""array"",
+                                  ""items"": [
+                                    ""null"",
+                                    {
+                                      ""type"": ""record"",
+                                      ""name"": ""IcaInstruction"",
+                                      ""fields"": [
+                                        {
+                                          ""name"": ""CustodyAccount"",
+                                          ""type"": [
+                                            ""null"",
+                                            {
+                                              ""type"": ""record"",
+                                              ""name"": ""CustodyAccount"",
+                                              ""fields"": [
+                                                {
+                                                  ""name"": ""AccountExternalReference"",
+                                                  ""type"": [
+                                                    ""null"",
+                                                    {
+                                                      ""type"": ""record"",
+                                                      ""name"": ""AccountExternalReference"",
+                                                      ""fields"": [
+                                                        {
+                                                          ""name"": ""ExternalRefType"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""string""
+                                                          ],
+                                                          ""default"": null
+                                                        },
+                                                        {
+                                                          ""name"": ""ExternalRefValue"",
+                                                          ""type"": [
+                                                            ""null"",
+                                                            ""string""
+                                                          ],
+                                                          ""default"": null
+                                                        }
+                                                      ]
+                                                    }
+                                                  ],
+                                                  ""default"": null
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          ""default"": null
+                                        },
+                                        {
+                                          ""name"": ""Option"",
+                                          ""type"": [
+                                            {
+                                              ""type"": ""array"",
+                                              ""items"": {
+                                                ""type"": ""record"",
+                                                ""name"": ""Option"",
+                                                ""fields"": [
+                                                  {
+                                                    ""name"": ""OptionId"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      ""long""
+                                                    ],
+                                                    ""default"": null
+                                                  },
+                                                  {
+                                                    ""name"": ""OptionNumber"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      ""string""
+                                                    ],
+                                                    ""default"": null
+                                                  },
+                                                  {
+                                                    ""name"": ""OptionCd"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      ""string""
+                                                    ],
+                                                    ""default"": null
+                                                  },
+                                                  {
+                                                    ""name"": ""OptionTemplateId"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      ""string""
+                                                    ],
+                                                    ""default"": null
+                                                  },
+                                                  {
+                                                    ""name"": ""CustodyAccountIcaInstruction"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      {
+                                                        ""type"": ""record"",
+                                                        ""name"": ""CustodyAccountIcaInstruction"",
+                                                        ""fields"": [
+                                                          {
+                                                            ""name"": ""CashAccount"",
+                                                            ""type"": [
+                                                              ""null"",
+                                                              {
+                                                                ""type"": ""array"",
+                                                                ""items"": [
+                                                                  ""null"",
+                                                                  {
+                                                                    ""type"": ""record"",
+                                                                    ""name"": ""CashAccount"",
+                                                                    ""namespace"": ""com.capgroup.custInst.cashaccount"",
+                                                                    ""fields"": [
+                                                                      {
+                                                                        ""name"": ""AccountExternalReference"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          {
+                                                                            ""type"": ""record"",
+                                                                            ""name"": ""AccountExternalReference"",
+                                                                            ""fields"": [
+                                                                              {
+                                                                                ""name"": ""ExternalRefType"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  ""string""
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""ExternalRefValue"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  ""string""
+                                                                                ],
+                                                                                ""default"": null
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ],
+                                                                        ""default"": null
+                                                                      },
+                                                                      {
+                                                                        ""name"": ""CashAccountType"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          ""string""
+                                                                        ],
+                                                                        ""default"": null
+                                                                      },
+                                                                      {
+                                                                        ""name"": ""CashAccountCurrencyCd"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          ""string""
+                                                                        ],
+                                                                        ""default"": null
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ],
+                                                            ""default"": null
+                                                          },
+                                                          {
+                                                            ""name"": ""Allocation"",
+                                                            ""type"": [
+                                                              {
+                                                                ""type"": ""array"",
+                                                                ""items"": {
+                                                                  ""type"": ""record"",
+                                                                  ""name"": ""Allocation"",
+                                                                  ""fields"": [
+                                                                    {
+                                                                      ""name"": ""AllocationReferences"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""AllocationReferences"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""AllocationReference"",
+                                                                              ""type"": [
+                                                                                {
+                                                                                  ""type"": ""array"",
+                                                                                  ""items"": {
+                                                                                    ""type"": ""record"",
+                                                                                    ""name"": ""AllocationReference"",
+                                                                                    ""fields"": [
+                                                                                      {
+                                                                                        ""name"": ""ReferenceTypeCd"",
+                                                                                        ""type"": [
+                                                                                          ""null"",
+                                                                                          ""string""
+                                                                                        ],
+                                                                                        ""default"": null
+                                                                                      },
+                                                                                      {
+                                                                                        ""name"": ""ReferenceValue"",
+                                                                                        ""type"": [
+                                                                                          ""null"",
+                                                                                          ""string""
+                                                                                        ],
+                                                                                        ""default"": null
+                                                                                      }
+                                                                                    ]
+                                                                                  }
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""SequenceNumber"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""long""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""AllocationStatusCd"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""Source"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""AllocationKeyValues"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""AllocationKeyValues"",
+                                                                          ""namespace"": ""com.capgroup.allocation.keyvalue"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""AllocationKeyValue"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                {
+                                                                                  ""type"": ""array"",
+                                                                                  ""items"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""AllocationKeyValue"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""Key"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""Value"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""Value2"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""Value3"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                }
+                                                                              ],
+                                                                              ""default"": null
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ContractualCashSettlementFlag"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ContractualStockSettlementFlag"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""TransactionTypeCd"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ExpectedSettlementDate"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""OverrideSettlementDate"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ElectionId"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""long""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ElectionDetails"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""ElectionDetails"",
+                                                                          ""namespace"": ""com.capgroup.allocation.electiondetails"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""ElectionDetail"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                {
+                                                                                  ""type"": ""array"",
+                                                                                  ""items"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""ElectionDetail"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""ElectionDetailId"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""long""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ElectionQuantity"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                }
+                                                                              ],
+                                                                              ""default"": null
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""BlockingPositionId"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""long""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""FXRequestId"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""long""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ApportionedPosition"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""double""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""PositionType"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""double""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""ClaimAssociation"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        ""string""
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""TradeReference"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""TradeReference"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""ReferenceTypeCd"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ReferenceValue"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""Counterparty"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""Counterparty"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""ExternalRefType"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ExternalRefValue"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""CashMovement"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""CashMovement"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""CashMovementId"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""long""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""Rate"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CreditDebitIndicator"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CashAmounts"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""CashAmounts"",
+                                                                                      ""namespace"": ""com.capgroup.custaccount.cashmove.cashmmounts"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""TradeAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""TradeAmount"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""CustodianNetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""NetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""GrossAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""Currency"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""TradeToSettlementFxRate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""CustodianPaymentAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""array"",
+                                                                                              ""items"": [
+                                                                                                ""null"",
+                                                                                                {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""CustodianPaymentAmount"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentCurrency"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""string""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""SettlementAmountInCustodianCurrency"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""string""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentToSettlementFxRate"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""string""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentToTradeFxRate"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""string""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""SettlementAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""SettlementAmount"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""NetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""AggregatedSettledAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""RemainingSettlementAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""Currency"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""SettlementAmountDifference"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ],
+                                                                          ""default"": null
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""SecurityMovement"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""SecurityMovement"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""SecurityMovementId"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""long""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""StockDirectionInd"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""SecurityQuantity"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""AggregatedSettledSecurityQuantity"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""RemainingSettlementSecurityQuantity"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CostPriceSecurityCurrency"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""PriceInTradeCurrency"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""SecurityDetails"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""array"",
+                                                                                      ""items"": [
+                                                                                        ""null"",
+                                                                                        {
+                                                                                          ""type"": ""record"",
+                                                                                          ""name"": ""SecurityDetails"",
+                                                                                          ""fields"": [
+                                                                                            {
+                                                                                              ""name"": ""IssueCountryCd"",
+                                                                                              ""type"": [
+                                                                                                ""null"",
+                                                                                                ""string""
+                                                                                              ],
+                                                                                              ""default"": null
+                                                                                            },
+                                                                                            {
+                                                                                              ""name"": ""IssueCurrencyCd"",
+                                                                                              ""type"": [
+                                                                                                ""null"",
+                                                                                                ""string""
+                                                                                              ],
+                                                                                              ""default"": null
+                                                                                            },
+                                                                                            {
+                                                                                              ""name"": ""SecurityExternalReferences"",
+                                                                                              ""type"": [
+                                                                                                ""null"",
+                                                                                                {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""SecurityExternalReferences"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""SecurityExternalReference"",
+                                                                                                      ""type"": [
+                                                                                                        {
+                                                                                                          ""type"": ""array"",
+                                                                                                          ""items"": {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""SecurityExternalReference"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""SecurityIdentifierTypeCd"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""SecurityIdentifierValue"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        }
+                                                                                                      ]
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ],
+                                                                                              ""default"": null
+                                                                                            },
+                                                                                            {
+                                                                                              ""name"": ""ReportingClassificationGroups"",
+                                                                                              ""type"": [
+                                                                                                ""null"",
+                                                                                                {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""ReportingClassificationGroups"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""ReportingClassificationGroup"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        {
+                                                                                                          ""type"": ""array"",
+                                                                                                          ""items"": [
+                                                                                                            {
+                                                                                                              ""type"": ""record"",
+                                                                                                              ""name"": ""ReportingClassificationGroup"",
+                                                                                                              ""fields"": [
+                                                                                                                {
+                                                                                                                  ""name"": ""ReportingClassificationGroupId"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""long""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                },
+                                                                                                                {
+                                                                                                                  ""name"": ""ReportingClassificationGroupName"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""string""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                },
+                                                                                                                {
+                                                                                                                  ""name"": ""ValueId"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""long""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                },
+                                                                                                                {
+                                                                                                                  ""name"": ""ValueName"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""string""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                },
+                                                                                                                {
+                                                                                                                  ""name"": ""ValueCode"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""string""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                },
+                                                                                                                {
+                                                                                                                  ""name"": ""ValueSequence"",
+                                                                                                                  ""type"": [
+                                                                                                                    ""null"",
+                                                                                                                    ""string""
+                                                                                                                  ],
+                                                                                                                  ""default"": null
+                                                                                                                }
+                                                                                                              ]
+                                                                                                            }
+                                                                                                          ]
+                                                                                                        }
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ],
+                                                                                              ""default"": null
+                                                                                            }
+                                                                                          ]
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CashAmounts"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""CashAmounts"",
+                                                                                      ""namespace"": ""com.capgroup.custaccount.secmove.cashmmounts"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""TradeAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""TradeAmount"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""CustodianNetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""NetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""GrossAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""Currency"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""TradeToSettlementFxRate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""CustodianPaymentAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""array"",
+                                                                                              ""items"": [
+                                                                                                ""null"",
+                                                                                                {
+                                                                                                  ""type"": ""record"",
+                                                                                                  ""name"": ""CustodianPaymentAmount"",
+                                                                                                  ""namespace"": ""com.capgroup.custaccount.custpayamount"",
+                                                                                                  ""fields"": [
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentCurrency"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""string""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""SettlementAmountInCustodianCurrency"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""double""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentToSettlementFxRate"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""double""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    },
+                                                                                                    {
+                                                                                                      ""name"": ""CustodianPaymentToTradeFxRate"",
+                                                                                                      ""type"": [
+                                                                                                        ""null"",
+                                                                                                        ""double""
+                                                                                                      ],
+                                                                                                      ""default"": null
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""SettlementAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""SettlementAmount"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""NetAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""AggregatedSettledAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""RemainingSettlementAmount"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""double""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""Currency"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""SettlementAmountDifference"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""BookCost"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""BookCost"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""BookCostIsEstimateFlag"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CleanBookCostInBaseCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CleanBookCostInSecCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""DirtyBookCostInBaseCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""DirtyBookCostInSecCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""TradeToSecFxRate"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""TradeToBaseFxRate"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""ClientBaseCurrency"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""BookCostCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""DirtyBookCostInBookCostCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CleanBookCostInBookCostCurr"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""double""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""Charges"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""Charges"",
+                                                                          ""namespace"": ""com.capgroup.option.Charges"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""Charge"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                {
+                                                                                  ""type"": ""array"",
+                                                                                  ""items"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""Charge"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""ChargeId"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""long""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeClassificationType"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeCategoryCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeableQuantity"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeCurrencyCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeableAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""RateCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeRateTypeCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeRate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""VatRate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""VatTypeCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""VatAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""GrossChargeAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeSourceCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeOriginCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ApplyChargeAsCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""EstimateFlag"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ReportableOnly"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ReclaimFlag"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ReclaimChargeRate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ChargeReference"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""QualifierCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""SettlementDetails"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""record"",
+                                                                          ""name"": ""SettlementDetails"",
+                                                                          ""fields"": [
+                                                                            {
+                                                                              ""name"": ""SettlementDetail"",
+                                                                              ""type"": [
+                                                                                ""null"",
+                                                                                {
+                                                                                  ""type"": ""array"",
+                                                                                  ""items"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""SettlementDetail"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""CreationDate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""StatusId"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""long""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""AllocationStatusCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""StatusActionCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""CashValueDate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""CashPostingDate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""SettlementAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""AggregatedSettledAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""RemainingSettlementAmount"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""StockValueDate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""StockPostingDate"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""SettlementSecurityQuantity"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""AggregatedSettledSecurityQuantity"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""RemainingSettlementSecurityQuantity"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""Charges"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""Charges"",
+                                                                                              ""namespace"": ""com.capgroup.option.settlement.charges"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""Charge"",
+                                                                                                  ""type"": [
+                                                                                                    {
+                                                                                                      ""type"": ""array"",
+                                                                                                      ""items"": {
+                                                                                                        ""type"": ""record"",
+                                                                                                        ""name"": ""Charge"",
+                                                                                                        ""fields"": [
+                                                                                                          {
+                                                                                                            ""name"": ""ChargeId"",
+                                                                                                            ""type"": [
+                                                                                                              ""null"",
+                                                                                                              ""long""
+                                                                                                            ],
+                                                                                                            ""default"": null
+                                                                                                          },
+                                                                                                          {
+                                                                                                            ""name"": ""SettlementChargeAmount"",
+                                                                                                            ""type"": [
+                                                                                                              ""null"",
+                                                                                                              ""double""
+                                                                                                            ],
+                                                                                                            ""default"": null
+                                                                                                          }
+                                                                                                        ]
+                                                                                                      }
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ReasonCd"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""double""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""Comments"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    },
+                                                                    {
+                                                                      ""name"": ""CashAccount"",
+                                                                      ""type"": [
+                                                                        ""null"",
+                                                                        {
+                                                                          ""type"": ""array"",
+                                                                          ""items"": [
+                                                                            ""null"",
+                                                                            {
+                                                                              ""type"": ""record"",
+                                                                              ""name"": ""CashAccount"",
+                                                                              ""namespace"": ""com.capgroup.custInst.alloc.cashaccount"",
+                                                                              ""fields"": [
+                                                                                {
+                                                                                  ""name"": ""AccountExternalReference"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    {
+                                                                                      ""type"": ""record"",
+                                                                                      ""name"": ""AccountExternalReference"",
+                                                                                      ""fields"": [
+                                                                                        {
+                                                                                          ""name"": ""ExternalRefType"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        },
+                                                                                        {
+                                                                                          ""name"": ""ExternalRefValue"",
+                                                                                          ""type"": [
+                                                                                            ""null"",
+                                                                                            ""string""
+                                                                                          ],
+                                                                                          ""default"": null
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CashAccountType"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                },
+                                                                                {
+                                                                                  ""name"": ""CashAccountCurrencyCd"",
+                                                                                  ""type"": [
+                                                                                    ""null"",
+                                                                                    ""string""
+                                                                                  ],
+                                                                                  ""default"": null
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ],
+                                                                      ""default"": null
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ],
+                                                    ""default"": null
+                                                  },
+                                                  {
+                                                    ""name"": ""InvestmentAccountIcaInstructions"",
+                                                    ""type"": [
+                                                      ""null"",
+                                                      {
+                                                        ""type"": ""record"",
+                                                        ""name"": ""InvestmentAccountIcaInstructions"",
+                                                        ""namespace"": ""com.capgroup.inica.instructions.investment.account"",
+                                                        ""fields"": [
+                                                          {
+                                                            ""name"": ""InvestmentAccountIcaInstruction"",
+                                                            ""type"": [
+                                                              ""null"",
+                                                              {
+                                                                ""type"": ""array"",
+                                                                ""items"": [
+                                                                  ""null"",
+                                                                  {
+                                                                    ""type"": ""record"",
+                                                                    ""name"": ""InvestmentAccountIcaInstruction"",
+                                                                    ""fields"": [
+                                                                      {
+                                                                        ""name"": ""InvestmentAccount"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          {
+                                                                            ""type"": ""record"",
+                                                                            ""name"": ""InvestmentAccount"",
+                                                                            ""fields"": [
+                                                                              {
+                                                                                ""name"": ""AccountExternalReference"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  {
+                                                                                    ""type"": ""record"",
+                                                                                    ""name"": ""AccountExternalReference"",
+                                                                                    ""fields"": [
+                                                                                      {
+                                                                                        ""name"": ""ExternalRefType"",
+                                                                                        ""type"": [
+                                                                                          ""null"",
+                                                                                          ""string""
+                                                                                        ],
+                                                                                        ""default"": null
+                                                                                      },
+                                                                                      {
+                                                                                        ""name"": ""ExternalRefValue"",
+                                                                                        ""type"": [
+                                                                                          ""null"",
+                                                                                          ""string""
+                                                                                        ],
+                                                                                        ""default"": null
+                                                                                      }
+                                                                                    ]
+                                                                                  }
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""InvestmentAccountType"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  ""string""
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""TaxResidencies"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  {
+                                                                                    ""type"": ""record"",
+                                                                                    ""name"": ""TaxResidencies"",
+                                                                                    ""namespace"": ""com.capgroup.option.taxresidencies"",
+                                                                                    ""fields"": [
+                                                                                      {
+                                                                                        ""name"": ""TaxResidency"",
+                                                                                        ""type"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""array"",
+                                                                                            ""items"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""record"",
+                                                                                                ""name"": ""TaxResidency"",
+                                                                                                ""fields"": [
+                                                                                                  {
+                                                                                                    ""name"": ""TaxResidencyCd"",
+                                                                                                    ""type"": [
+                                                                                                      ""null"",
+                                                                                                      ""string""
+                                                                                                    ],
+                                                                                                    ""default"": null
+                                                                                                  },
+                                                                                                  {
+                                                                                                    ""name"": ""TaxResidencyEffectiveDate"",
+                                                                                                    ""type"": [
+                                                                                                      ""null"",
+                                                                                                      ""string""
+                                                                                                    ],
+                                                                                                    ""default"": null
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ]
+                                                                                  }
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""ClassificationGroups"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  {
+                                                                                    ""type"": ""record"",
+                                                                                    ""name"": ""ClassificationGroups"",
+                                                                                    ""fields"": [
+                                                                                      {
+                                                                                        ""name"": ""ClassificationGroup"",
+                                                                                        ""type"": [
+                                                                                          {
+                                                                                            ""type"": ""array"",
+                                                                                            ""items"": {
+                                                                                              ""type"": ""record"",
+                                                                                              ""name"": ""ClassificationGroup"",
+                                                                                              ""fields"": [
+                                                                                                {
+                                                                                                  ""name"": ""ClassificationGroupId"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""long""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""ClassificationGroupName"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""ClassificationValueId"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""int""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                },
+                                                                                                {
+                                                                                                  ""name"": ""ClassificationValue"",
+                                                                                                  ""type"": [
+                                                                                                    ""null"",
+                                                                                                    ""string""
+                                                                                                  ],
+                                                                                                  ""default"": null
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ]
+                                                                                  }
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""EligibleBalance"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  ""double""
+                                                                                ],
+                                                                                ""default"": null
+                                                                              },
+                                                                              {
+                                                                                ""name"": ""TotalPosition"",
+                                                                                ""type"": [
+                                                                                  ""null"",
+                                                                                  ""double""
+                                                                                ],
+                                                                                ""default"": null
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ],
+                                                                        ""default"": null
+                                                                      },
+                                                                      {
+                                                                        ""name"": ""CashAccount"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          {
+                                                                            ""type"": ""array"",
+                                                                            ""items"": [
+                                                                              ""null"",
+                                                                              {
+                                                                                ""type"": ""record"",
+                                                                                ""name"": ""CashAccount"",
+                                                                                ""namespace"": ""com.capgroup.invinst.allocation.cashaccount"",
+                                                                                ""fields"": [
+                                                                                  {
+                                                                                    ""name"": ""AccountExternalReference"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""AccountExternalReference"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""ExternalRefType"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              ""string""
+                                                                                            ],
+                                                                                            ""default"": null
+                                                                                          },
+                                                                                          {
+                                                                                            ""name"": ""ExternalRefValue"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              ""string""
+                                                                                            ],
+                                                                                            ""default"": null
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""CashAccountType"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""CashAccountCurrencyCd"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ],
+                                                                        ""default"": null
+                                                                      },
+                                                                      {
+                                                                        ""name"": ""Allocation"",
+                                                                        ""type"": [
+                                                                          ""null"",
+                                                                          {
+                                                                            ""type"": ""array"",
+                                                                            ""items"": [
+                                                                              ""null"",
+                                                                              {
+                                                                                ""type"": ""record"",
+                                                                                ""name"": ""Allocation"",
+                                                                                ""fields"": [
+                                                                                  {
+                                                                                    ""name"": ""AllocationReferences"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""AllocationReferences"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""AllocationReference"",
+                                                                                            ""type"": {
+                                                                                              ""type"": ""array"",
+                                                                                              ""items"": {
+                                                                                                ""type"": ""record"",
+                                                                                                ""name"": ""AllocationReference"",
+                                                                                                ""fields"": [
+                                                                                                  {
+                                                                                                    ""name"": ""ReferenceTypeCd"",
+                                                                                                    ""type"": [
+                                                                                                      ""null"",
+                                                                                                      ""string""
+                                                                                                    ],
+                                                                                                    ""default"": null
+                                                                                                  },
+                                                                                                  {
+                                                                                                    ""name"": ""ReferenceValue"",
+                                                                                                    ""type"": [
+                                                                                                      ""null"",
+                                                                                                      ""string""
+                                                                                                    ],
+                                                                                                    ""default"": null
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""SequenceNumber"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""long""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""AllocationStatusCd"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""Source"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""AllocationKeyValues"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""AllocationKeyValues"",
+                                                                                        ""namespace"": ""com.capgroup.inavacc.allocation.keyvalue"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""AllocationKeyValue"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""AllocationKeyValue"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""Key"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Value"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Value2"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Value3"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ContractualCashSettlementFlag"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ContractualStockSettlementFlag"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""TransactionTypeCd"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ExpectedSettlementDate"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""OverrideSettlementDate"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ElectionId"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""long""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ElectionDetails"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""ElectionDetails"",
+                                                                                        ""namespace"": ""com.capgroup.inavacc.allocation.electiondetails"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""ElectionDetail"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""ElectionDetail"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""ElectionDetailId"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""long""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ElectionQuantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""BlockingPositionId"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""long""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""FXRequestId"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""long""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ApportionedPosition"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""double""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""PositionType"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""ClaimAssociation"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""TradeReference"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""TradeReference"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""ReferenceTypeCd"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""ReferenceValue"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""Counterparty"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""Counterparty"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""ExternalRefType"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""ExternalRefValue"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""IPExternalReferences"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""IPExternalReferences"",
+                                                                                        ""namespace"": ""com.capgroup.option.ipexternalreferences"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""ExternalReference"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""ExternalReference"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""ExternalReferenceType"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ExternalReferenceValue"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""RoleTypeCd"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      ""string""
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""CashMovement"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""CashMovement"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""CashMovementId"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""long""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""Rate"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CreditDebitIndicator"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CashAmounts"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""CashAmounts"",
+                                                                                                    ""namespace"": ""com.capgroup.invaccount.cashmove.cashmmounts"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""TradeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""TradeAmount"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""CustodianNetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""NetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""GrossAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""Currency"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""TradeToSettlementFxRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""CustodianPaymentAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""array"",
+                                                                                                            ""items"": [
+                                                                                                              ""null"",
+                                                                                                              {
+                                                                                                                ""type"": ""record"",
+                                                                                                                ""name"": ""CustodianPaymentAmount"",
+                                                                                                                ""namespace"": ""com.capgroup.invaccount.custpayamount"",
+                                                                                                                ""fields"": [
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentCurrency"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""string""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""SettlementAmountInCustodianCurrency"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""double""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentToSettlementFxRate"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""double""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentToTradeFxRate"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""double""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SettlementAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""SettlementAmount"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""NetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""AggregatedSettledAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""RemainingSettlementAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""Currency"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""SecurityMovement"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""SecurityMovement"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""SecurityMovementId"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""long""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""StockDirectionInd"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""SecurityQuantity"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""AggregatedSettledSecurityQuantity"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""RemainingSettlementSecurityQuantity"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CostPriceSecurityCurrency"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""PriceInTradeCurrency"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""SecurityDetails"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""SecurityDetails"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""IssueCountryCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""IssueCurrencyCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SecurityExternalReferences"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""SecurityExternalReferences"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""SecurityExternalReference"",
+                                                                                                                ""type"": [
+                                                                                                                  {
+                                                                                                                    ""type"": ""array"",
+                                                                                                                    ""items"": {
+                                                                                                                      ""type"": ""record"",
+                                                                                                                      ""name"": ""SecurityExternalReference"",
+                                                                                                                      ""fields"": [
+                                                                                                                        {
+                                                                                                                          ""name"": ""SecurityIdentifierTypeCd"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""SecurityIdentifierValue"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        }
+                                                                                                                      ]
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReportingClassificationGroups"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""ReportingClassificationGroups"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""ReportingClassificationGroup"",
+                                                                                                                ""type"": [
+                                                                                                                  {
+                                                                                                                    ""type"": ""array"",
+                                                                                                                    ""items"": {
+                                                                                                                      ""type"": ""record"",
+                                                                                                                      ""name"": ""ReportingClassificationGroup"",
+                                                                                                                      ""fields"": [
+                                                                                                                        {
+                                                                                                                          ""name"": ""ReportingClassificationGroupId"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""long""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""ReportingClassificationGroupName"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""ValueId"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""long""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""ValueName"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""ValueCode"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""ValueSequence"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""string""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        }
+                                                                                                                      ]
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CashAmounts"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""CashAmounts"",
+                                                                                                    ""namespace"": ""com.capgroup.custaccount.cashmmounts"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""TradeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""TradeAmount"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""CustodianNetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""NetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""GrossAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""Currency"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""TradeToSettlementFxRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""CustodianPaymentAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""array"",
+                                                                                                            ""items"": [
+                                                                                                              ""null"",
+                                                                                                              {
+                                                                                                                ""type"": ""record"",
+                                                                                                                ""name"": ""CustodianPaymentAmount"",
+                                                                                                                ""fields"": [
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentCurrency"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""string""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""SettlementAmountInCustodianCurrency"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""string""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentToSettlementFxRate"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""string""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                    ""name"": ""CustodianPaymentToTradeFxRate"",
+                                                                                                                    ""type"": [
+                                                                                                                      ""null"",
+                                                                                                                      ""string""
+                                                                                                                    ],
+                                                                                                                    ""default"": null
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SettlementAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""SettlementAmount"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""NetAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""AggregatedSettledAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""RemainingSettlementAmount"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""Currency"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""string""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              },
+                                                                                                              {
+                                                                                                                ""name"": ""SettlementAmountDifference"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  ""double""
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""BookCost"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""BookCost"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""BookCostIsEstimateFlag"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CleanBookCostInBaseCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CleanBookCostInSecCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""DirtyBookCostInBaseCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""DirtyBookCostInSecCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""TradeToSecFxRate"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""TradeToBaseFxRate"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""ClientBaseCurrency"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""BookCostCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""DirtyBookCostInBookCostCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CleanBookCostInBookCostCurr"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""Charges"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""Charges"",
+                                                                                        ""namespace"": ""com.capgroup.invacc.Charges"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""Charge"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""Charge"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeId"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""long""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeClassificationType"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeCategoryCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeableQuantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeCurrencyCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeableAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""RateCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeRateTypeCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""VatRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""VatTypeCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""VatAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""GrossChargeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeSourceCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeOriginCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ApplyChargeAsCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""EstimateFlag"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReportableOnly"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReclaimFlag"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReclaimChargeRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ChargeReference"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""QualifierCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""NationalCurrencyCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""NationalChargeableAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""NationalChargeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""TradeToNationalFxRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReclaimableChargeRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""NonReclaimableChargeRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""AppliedNetRate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReclaimableChargeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""NonReclaimableChargeAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""SettlementDetails"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""SettlementDetails"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""SettlementDetail"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""SettlementDetail"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""CreationDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""StatusId"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""long""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""AllocationStatusCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""StatusActionCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""CashValueDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""CashPostingDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SettlementAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""AggregatedSettledAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""RemainingSettlementAmount"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""StockValueDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""StockPostingDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SettlementSecurityQuantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""AggregatedSettledSecurityQuantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""RemainingSettlementSecurityQuantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Charges"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""Charges"",
+                                                                                                            ""namespace"": ""com.capgroup.option.settlements.charges"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""Charge"",
+                                                                                                                ""type"": [
+                                                                                                                  {
+                                                                                                                    ""type"": ""array"",
+                                                                                                                    ""items"": {
+                                                                                                                      ""type"": ""record"",
+                                                                                                                      ""name"": ""Charge"",
+                                                                                                                      ""fields"": [
+                                                                                                                        {
+                                                                                                                          ""name"": ""ChargeId"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""long""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          ""name"": ""SettlementChargeAmount"",
+                                                                                                                          ""type"": [
+                                                                                                                            ""null"",
+                                                                                                                            ""double""
+                                                                                                                          ],
+                                                                                                                          ""default"": null
+                                                                                                                        }
+                                                                                                                      ]
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ReasonCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Comments"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""CashAccount"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""CashAccount"",
+                                                                                            ""namespace"": ""com.capgroup.invinst.cashaccount"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""AccountExternalReference"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""AccountExternalReference"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""ExternalRefType"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""ExternalRefValue"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CashAccountType"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""CashAccountCurrencyCd"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""BeneficialOwnerDetail"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""array"",
+                                                                                        ""items"": [
+                                                                                          ""null"",
+                                                                                          {
+                                                                                            ""type"": ""record"",
+                                                                                            ""name"": ""BeneficialOwnerDetail"",
+                                                                                            ""fields"": [
+                                                                                              {
+                                                                                                ""name"": ""BeneficialOwnerId"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""long""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""QuantityOfSecuritiesHeld"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""TaxResidency"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""TaxRate"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""double""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""ClientReference"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              },
+                                                                                              {
+                                                                                                ""name"": ""ClaimTypeCd"",
+                                                                                                ""type"": [
+                                                                                                  ""null"",
+                                                                                                  ""string""
+                                                                                                ],
+                                                                                                ""default"": null
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  },
+                                                                                  {
+                                                                                    ""name"": ""SubPosAdjustments"",
+                                                                                    ""type"": [
+                                                                                      ""null"",
+                                                                                      {
+                                                                                        ""type"": ""record"",
+                                                                                        ""name"": ""SubPosAdjustments"",
+                                                                                        ""namespace"": ""com.capgroup.option.subposadjustments"",
+                                                                                        ""fields"": [
+                                                                                          {
+                                                                                            ""name"": ""SubPosAdjustment"",
+                                                                                            ""type"": [
+                                                                                              ""null"",
+                                                                                              {
+                                                                                                ""type"": ""array"",
+                                                                                                ""items"": [
+                                                                                                  ""null"",
+                                                                                                  {
+                                                                                                    ""type"": ""record"",
+                                                                                                    ""name"": ""SubPosAdjustment"",
+                                                                                                    ""fields"": [
+                                                                                                      {
+                                                                                                        ""name"": ""AdjustmentReferences"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""AdjustmentReferences"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""AdjustmentReference"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  {
+                                                                                                                    ""type"": ""array"",
+                                                                                                                    ""items"": [
+                                                                                                                      ""null"",
+                                                                                                                      {
+                                                                                                                        ""type"": ""record"",
+                                                                                                                        ""name"": ""AdjustmentReference"",
+                                                                                                                        ""fields"": [
+                                                                                                                          {
+                                                                                                                            ""name"": ""ExternalReferenceType"",
+                                                                                                                            ""type"": [
+                                                                                                                              ""null"",
+                                                                                                                              ""string""
+                                                                                                                            ],
+                                                                                                                            ""default"": null
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                            ""name"": ""ExternalReferenceValue"",
+                                                                                                                            ""type"": [
+                                                                                                                              ""null"",
+                                                                                                                              ""string""
+                                                                                                                            ],
+                                                                                                                            ""default"": null
+                                                                                                                          }
+                                                                                                                        ]
+                                                                                                                      }
+                                                                                                                    ]
+                                                                                                                  }
+                                                                                                                ]
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""InterestedPartyDetails"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          {
+                                                                                                            ""type"": ""record"",
+                                                                                                            ""name"": ""InterestedPartyDetails"",
+                                                                                                            ""fields"": [
+                                                                                                              {
+                                                                                                                ""name"": ""ExternalReferences"",
+                                                                                                                ""type"": [
+                                                                                                                  ""null"",
+                                                                                                                  {
+                                                                                                                    ""type"": ""record"",
+                                                                                                                    ""name"": ""ExternalReferences"",
+                                                                                                                    ""fields"": [
+                                                                                                                      {
+                                                                                                                        ""name"": ""ExternalReference"",
+                                                                                                                        ""type"": {
+                                                                                                                          ""type"": ""array"",
+                                                                                                                          ""items"": {
+                                                                                                                            ""type"": ""record"",
+                                                                                                                            ""name"": ""ExternalReference"",
+                                                                                                                            ""fields"": [
+                                                                                                                              {
+                                                                                                                                ""name"": ""ExternalReferenceType"",
+                                                                                                                                ""type"": [
+                                                                                                                                  ""null"",
+                                                                                                                                  ""long""
+                                                                                                                                ],
+                                                                                                                                ""default"": null
+                                                                                                                              },
+                                                                                                                              {
+                                                                                                                                ""name"": ""ExternalReferenceValue"",
+                                                                                                                                ""type"": [
+                                                                                                                                  ""null"",
+                                                                                                                                  ""double""
+                                                                                                                                ],
+                                                                                                                                ""default"": null
+                                                                                                                              }
+                                                                                                                            ]
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    ]
+                                                                                                                  }
+                                                                                                                ],
+                                                                                                                ""default"": null
+                                                                                                              }
+                                                                                                            ]
+                                                                                                          }
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""RoleTypeCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""SubPositionTypeCd"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""Quantity"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""double""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""CreditDebitIndicator"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      },
+                                                                                                      {
+                                                                                                        ""name"": ""EndDate"",
+                                                                                                        ""type"": [
+                                                                                                          ""null"",
+                                                                                                          ""string""
+                                                                                                        ],
+                                                                                                        ""default"": null
+                                                                                                      }
+                                                                                                    ]
+                                                                                                  }
+                                                                                                ]
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ],
+                                                                                    ""default"": null
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ]
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ],
+                                                    ""default"": null
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            }
+                          ]
+                        }
+                      ],
+                      ""default"": null
+                    },
+                    {
+                      ""name"": ""OwnerDetails"",
+                      ""type"": [
+                        ""null"",
+                        {
+                          ""type"": ""record"",
+                          ""name"": ""OwnerDetails"",
+                          ""fields"": [
+                            {
+                              ""name"": ""Team"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""record"",
+                                  ""name"": ""Team"",
+                                  ""fields"": [
+                                    {
+                                      ""name"": ""TeamName"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""string""
+                                      ],
+                                      ""default"": null
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            },
+                            {
+                              ""name"": ""Executive"",
+                              ""type"": [
+                                ""null"",
+                                {
+                                  ""type"": ""record"",
+                                  ""name"": ""Executive"",
+                                  ""fields"": [
+                                    {
+                                      ""name"": ""LoginName"",
+                                      ""type"": [
+                                        ""null"",
+                                        ""string""
+                                      ],
+                                      ""default"": null
+                                    }
+                                  ]
+                                }
+                              ],
+                              ""default"": null
+                            }
+                          ]
+                        }
+                      ],
+                      ""default"": null
+                    }
+                  ]
+                }
+              ],
+              ""default"": null
+            }
+          ]
+        }
+      ],
+      ""default"": null
+    }
+  ]
+}
+";
+
+            var schema = Schema.Parse(json);
+        }
 
         [TestFixture]
         public class SchemaTypeExtensionsTests
