@@ -82,8 +82,6 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
-                use byteorder::ByteOrder;
-
                 let mut encoded: Vec<u8> = vec![0; snap::raw::max_compress_len(stream.len())];
                 let compressed_size = snap::raw::Encoder::new()
                     .compress(&stream[..], &mut encoded[..])
@@ -92,8 +90,10 @@ impl Codec {
                 let mut hasher = Hasher::new();
                 hasher.update(&stream[..]);
                 let checksum = hasher.finalize();
-                byteorder::BigEndian::write_u32(&mut encoded[compressed_size..], checksum);
-                encoded.truncate(compressed_size + 4);
+                let checksum_as_bytes = checksum.to_be_bytes();
+                let checksum_len = checksum_as_bytes.len();
+                encoded.truncate(compressed_size + checksum_len);
+                encoded[compressed_size..].copy_from_slice(&checksum_as_bytes);
 
                 *stream = encoded;
             }
@@ -137,8 +137,6 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
-                use byteorder::ByteOrder;
-
                 let decompressed_size = snap::raw::decompress_len(&stream[..stream.len() - 4])
                     .map_err(Error::GetSnappyDecompressLen)?;
                 let mut decoded = vec![0; decompressed_size];
@@ -146,7 +144,10 @@ impl Codec {
                     .decompress(&stream[..stream.len() - 4], &mut decoded[..])
                     .map_err(Error::SnappyDecompress)?;
 
-                let expected = byteorder::BigEndian::read_u32(&stream[stream.len() - 4..]);
+                let mut last_four: [u8; 4] = [0; 4];
+                last_four.copy_from_slice(&stream[(stream.len() - 4)..]);
+                let expected: u32 = u32::from_be_bytes(last_four);
+
                 let mut hasher = Hasher::new();
                 hasher.update(&decoded);
                 let actual = hasher.finalize();
@@ -185,56 +186,59 @@ impl Codec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use apache_avro_test_helper::TestResult;
     use pretty_assertions::{assert_eq, assert_ne};
 
     const INPUT: &[u8] = b"theanswertolifetheuniverseandeverythingis42theanswertolifetheuniverseandeverythingis4theanswertolifetheuniverseandeverythingis2";
 
     #[test]
-    fn null_compress_and_decompress() {
+    fn null_compress_and_decompress() -> TestResult {
         let codec = Codec::Null;
         let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
+        codec.compress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
-        codec.decompress(&mut stream).unwrap();
+        codec.decompress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
+        Ok(())
     }
 
     #[test]
-    fn deflate_compress_and_decompress() {
-        compress_and_decompress(Codec::Deflate);
+    fn deflate_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Deflate)
     }
 
     #[cfg(feature = "snappy")]
     #[test]
-    fn snappy_compress_and_decompress() {
-        compress_and_decompress(Codec::Snappy);
+    fn snappy_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Snappy)
     }
 
     #[cfg(feature = "zstandard")]
     #[test]
-    fn zstd_compress_and_decompress() {
-        compress_and_decompress(Codec::Zstandard);
+    fn zstd_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Zstandard)
     }
 
     #[cfg(feature = "bzip")]
     #[test]
-    fn bzip_compress_and_decompress() {
-        compress_and_decompress(Codec::Bzip2);
+    fn bzip_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Bzip2)
     }
 
     #[cfg(feature = "xz")]
     #[test]
-    fn xz_compress_and_decompress() {
-        compress_and_decompress(Codec::Xz);
+    fn xz_compress_and_decompress() -> TestResult {
+        compress_and_decompress(Codec::Xz)
     }
 
-    fn compress_and_decompress(codec: Codec) {
+    fn compress_and_decompress(codec: Codec) -> TestResult {
         let mut stream = INPUT.to_vec();
-        codec.compress(&mut stream).unwrap();
+        codec.compress(&mut stream)?;
         assert_ne!(INPUT, stream.as_slice());
         assert!(INPUT.len() > stream.len());
-        codec.decompress(&mut stream).unwrap();
+        codec.decompress(&mut stream)?;
         assert_eq!(INPUT, stream.as_slice());
+        Ok(())
     }
 
     #[test]

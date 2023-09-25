@@ -157,9 +157,8 @@ public class TestGenericData {
   }
 
   @Test
-  public void testMapKeyEquals() {
-    Schema mapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\"}");
-    Field myMapField = new Field("my_map", Schema.createMap(mapSchema), null, null);
+  public void testMapKeyEqualsStringAndUtf8Compatibility() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(myMapField));
     GenericRecord r0 = new GenericData.Record(schema);
@@ -178,9 +177,8 @@ public class TestGenericData {
   }
 
   @Test
-  public void testMapValuesEquals() {
-    Schema mapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\"}");
-    Field myMapField = new Field("my_map", Schema.createMap(mapSchema), null, null);
+  public void testMapValuesEqualsStringAndUtf8Compatibility() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(myMapField));
     GenericRecord r0 = new GenericData.Record(schema);
@@ -193,6 +191,117 @@ public class TestGenericData {
     HashMap<CharSequence, CharSequence> pair2 = new HashMap<>();
     pair2.put("keyOne", new Utf8("valueOne"));
     r1.put("my_map", pair2);
+
+    assertEquals(r0, r1);
+    assertEquals(r1, r0);
+  }
+
+  @Test
+  public void testEqualsEmptyMaps() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+
+    GenericRecord r0 = new GenericData.Record(schema);
+    r0.put("my_map", new HashMap<>());
+    GenericRecord r1 = new GenericData.Record(schema);
+    r1.put("my_map", new HashMap<>());
+
+    assertEquals(r0, r1);
+    assertEquals(r1, r0);
+  }
+
+  @Test
+  public void testEqualsEmptyMapAndNonEmptyMap() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+
+    GenericRecord r0 = new GenericData.Record(schema);
+    r0.put("my_map", new HashMap<>());
+    GenericRecord r1 = new GenericData.Record(schema);
+    HashMap<CharSequence, CharSequence> pair1 = new HashMap<>();
+    pair1.put("keyOne", "valueOne");
+    r1.put("my_map", pair1);
+
+    assertNotEquals(r0, r1);
+    assertNotEquals(r1, r0);
+  }
+
+  @Test
+  public void testEqualsMapAndSubset() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+
+    GenericRecord r0 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m1 = new HashMap<>();
+    m1.put("keyOne", "valueOne");
+    m1.put("keyTwo", "valueTwo");
+    r0.put("my_map", m1);
+
+    GenericRecord r1 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m2 = new HashMap<>();
+    m2.put("keyOne", "valueOne");
+    r1.put("my_map", m2);
+
+    assertNotEquals(r0, r1);
+    assertNotEquals(r1, r0);
+  }
+
+  @Test
+  public void testEqualsMapAndSameSizeMapWithDifferentKeys() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+
+    GenericRecord r0 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m1 = new HashMap<>();
+    m1.put("keyOne", "valueOne");
+    r0.put("my_map", m1);
+
+    GenericRecord r1 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m2 = new HashMap<>();
+    m2.put("keyTwo", "valueTwo");
+    r1.put("my_map", m2);
+
+    assertNotEquals(r0, r1);
+    assertNotEquals(r1, r0);
+  }
+
+  @Test
+  public void testEqualsMapAndSameSizeMapWithDifferentValues() {
+    Field myMapField = new Field("my_map", Schema.createMap(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+
+    GenericRecord r0 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m1 = new HashMap<>();
+    m1.put("keyOne", "valueOne");
+    r0.put("my_map", m1);
+
+    GenericRecord r1 = new GenericData.Record(schema);
+    HashMap<CharSequence, String> m2 = new HashMap<>();
+    m2.put("keyOne", "valueTwo");
+    r1.put("my_map", m2);
+
+    assertNotEquals(r0, r1);
+    assertNotEquals(r1, r0);
+  }
+
+  @Test
+  public void testArrayValuesEqualsStringAndUtf8Compatibility() {
+    Field myArrayField = new Field("my_array", Schema.createArray(Schema.create(Schema.Type.STRING)), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myArrayField));
+    GenericRecord r0 = new GenericData.Record(schema);
+    GenericRecord r1 = new GenericData.Record(schema);
+
+    List<CharSequence> array1 = Arrays.asList("valueOne");
+    r0.put("my_array", array1);
+
+    List<CharSequence> array2 = Arrays.asList(new Utf8("valueOne"));
+    r1.put("my_array", array2);
 
     assertEquals(r0, r1);
     assertEquals(r1, r0);

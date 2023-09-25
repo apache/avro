@@ -174,7 +174,6 @@ public class Protocol extends JsonProperties {
     public String getDoc() {
       return doc;
     }
-
   }
 
   private class TwoWayMessage extends Message {
@@ -274,13 +273,27 @@ public class Protocol extends JsonProperties {
 
   public Protocol(String name, String doc, String namespace) {
     super(PROTOCOL_RESERVED);
-    this.name = name;
+    setName(name, namespace);
     this.doc = doc;
-    this.namespace = namespace;
   }
 
   public Protocol(String name, String namespace) {
     this(name, null, namespace);
+  }
+
+  private void setName(String name, String namespace) {
+    int lastDot = name.lastIndexOf('.');
+    if (lastDot < 0) {
+      this.name = name;
+      this.namespace = namespace;
+    } else {
+      this.name = name.substring(lastDot + 1);
+      this.namespace = name.substring(0, lastDot);
+    }
+    if (this.namespace != null && this.namespace.isEmpty()) {
+      this.namespace = null;
+    }
+    types.space(this.namespace);
   }
 
   /** The name of this protocol. */
@@ -452,7 +465,9 @@ public class Protocol extends JsonProperties {
 
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
-    return parse(Schema.FACTORY.createParser(file));
+    try (JsonParser jsonParser = Schema.FACTORY.createParser(file)) {
+      return parse(jsonParser);
+    }
   }
 
   /** Read a protocol from a Json stream. */
@@ -488,20 +503,22 @@ public class Protocol extends JsonProperties {
   }
 
   private void parse(JsonNode json) {
-    parseNamespace(json);
-    parseName(json);
+    parseNameAndNamespace(json);
     parseTypes(json);
     parseMessages(json);
     parseDoc(json);
     parseProps(json);
   }
 
-  private void parseNamespace(JsonNode json) {
-    JsonNode nameNode = json.get("namespace");
-    if (nameNode == null)
-      return; // no namespace defined
-    this.namespace = nameNode.textValue();
-    types.space(this.namespace);
+  private void parseNameAndNamespace(JsonNode json) {
+    JsonNode nameNode = json.get("protocol");
+    if (nameNode == null) {
+      throw new SchemaParseException("No protocol name specified: " + json);
+    }
+    JsonNode namespaceNode = json.get("namespace");
+    String namespace = namespaceNode == null ? null : namespaceNode.textValue();
+
+    setName(nameNode.textValue(), namespace);
   }
 
   private void parseDoc(JsonNode json) {
@@ -515,23 +532,21 @@ public class Protocol extends JsonProperties {
     return nameNode.textValue();
   }
 
-  private void parseName(JsonNode json) {
-    JsonNode nameNode = json.get("protocol");
-    if (nameNode == null)
-      throw new SchemaParseException("No protocol name specified: " + json);
-    this.name = nameNode.textValue();
-  }
-
   private void parseTypes(JsonNode json) {
     JsonNode defs = json.get("types");
     if (defs == null)
       return; // no types defined
     if (!defs.isArray())
       throw new SchemaParseException("Types not an array: " + defs);
+
     for (JsonNode type : defs) {
       if (!type.isObject())
         throw new SchemaParseException("Type not an object: " + type);
-      Schema.parse(type, types);
+      Schema.parseNamesDeclared(type, types, types.space());
+
+    }
+    for (JsonNode type : defs) {
+      Schema.parseCompleteSchema(type, types, types.space());
     }
   }
 

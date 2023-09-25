@@ -77,26 +77,40 @@ class BaseRequestor:
         self._send_protocol = None
 
     # read-only properties
-    local_protocol = property(lambda self: self._local_protocol)
-    transceiver = property(lambda self: self._transceiver)
+    @property
+    def local_protocol(self):
+        return self._local_protocol
+
+    @property
+    def transceiver(self):
+        return self._transceiver
 
     # read/write properties
-    def set_remote_protocol(self, new_remote_protocol):
+    @property
+    def remote_protocol(self):
+        return self._remote_protocol
+
+    @remote_protocol.setter
+    def remote_protocol(self, new_remote_protocol):
         self._remote_protocol = new_remote_protocol
         REMOTE_PROTOCOLS[self.transceiver.remote_name] = self.remote_protocol
 
-    remote_protocol = property(lambda self: self._remote_protocol, set_remote_protocol)
+    @property
+    def remote_hash(self):
+        return self._remote_hash
 
-    def set_remote_hash(self, new_remote_hash):
+    @remote_hash.setter
+    def remote_hash(self, new_remote_hash):
         self._remote_hash = new_remote_hash
         REMOTE_HASHES[self.transceiver.remote_name] = self.remote_hash
 
-    remote_hash = property(lambda self: self._remote_hash, set_remote_hash)
+    @property
+    def send_protocol(self):
+        return self._send_protocol
 
-    def set_send_protocol(self, new_send_protocol):
+    @send_protocol.setter
+    def send_protocol(self, new_send_protocol):
         self._send_protocol = new_send_protocol
-
-    send_protocol = property(lambda self: self._send_protocol, set_send_protocol)
 
     def request(self, message_name, request_datum):
         """
@@ -185,7 +199,7 @@ class BaseRequestor:
               the error, serialized per the message's error union schema.
         """
         # response metadata
-        response_metadata = META_READER.read(decoder)
+        META_READER.read(decoder)
 
         # remote response schema
         remote_message_schema = self.remote_protocol.messages.get(message_name)
@@ -236,9 +250,17 @@ class Responder:
         self.set_protocol_cache(self.local_hash, self.local_protocol)
 
     # read-only properties
-    local_protocol = property(lambda self: self._local_protocol)
-    local_hash = property(lambda self: self._local_hash)
-    protocol_cache = property(lambda self: self._protocol_cache)
+    @property
+    def local_protocol(self):
+        return self._local_protocol
+
+    @property
+    def local_hash(self):
+        return self._local_hash
+
+    @property
+    def protocol_cache(self):
+        return self._protocol_cache
 
     # utility functions to manipulate protocol cache
     def get_protocol_cache(self, hash):
@@ -266,7 +288,7 @@ class Responder:
                 return buffer_writer.getvalue()
 
             # read request using remote protocol
-            request_metadata = META_READER.read(buffer_decoder)
+            META_READER.read(buffer_decoder)
             remote_message_name = buffer_decoder.read_utf8()
 
             # get remote and local request schemas so we can do
@@ -342,9 +364,8 @@ class Responder:
 
     def invoke(self, local_message, request):
         """
-        Aactual work done by server: cf. handler in thrift.
+        Actual work done by server: cf. handler in thrift.
         """
-        pass
 
     def read_request(self, writers_schema, readers_schema, decoder):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
@@ -371,7 +392,9 @@ class FramedReader:
         self._reader = reader
 
     # read-only properties
-    reader = property(lambda self: self._reader)
+    @property
+    def reader(self):
+        return self._reader
 
     def read_framed_message(self):
         message = []
@@ -401,7 +424,9 @@ class FramedWriter:
         self._writer = writer
 
     # read-only properties
-    writer = property(lambda self: self._writer)
+    @property
+    def writer(self):
+        return self._writer
 
     def write_framed_message(self, message):
         message_length = len(message)

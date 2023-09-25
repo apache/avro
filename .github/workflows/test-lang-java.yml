@@ -43,9 +43,9 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '19'
+        - '21-ea'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v3
@@ -56,19 +56,10 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Setup Temurin JDK
-        if: matrix.java == '8' || matrix.java == '11' || matrix.java == '17'
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-
-      - name: Setup Oracle JDK
-        if: matrix.java == '18' || matrix.java == '19'
-        uses: oracle-actions/setup-java@v1
-        with:
-          website: jdk.java.net
-          release: ${{ matrix.java }}
-          version: latest
 
       - name: Lint
         run: ./build.sh lint
@@ -85,8 +76,9 @@ jobs:
         - '8'
         - '11'
         - '17'
+        - '21-ea'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v3

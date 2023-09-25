@@ -24,7 +24,7 @@
 //!
 //! All data in Avro is schematized, as in the following example:
 //!
-//! ```text
+//! ```json
 //! {
 //!     "type": "record",
 //!     "name": "test",
@@ -62,10 +62,34 @@
 //! features = ["snappy"]
 //! ```
 //!
+//! Or in case you want to leverage the **Zstandard** codec:
+//!
+//! ```toml
+//! [dependencies.apache-avro]
+//! version = "x.y"
+//! features = ["zstandard"]
+//! ```
+//!
+//! Or in case you want to leverage the **Bzip2** codec:
+//!
+//! ```toml
+//! [dependencies.apache-avro]
+//! version = "x.y"
+//! features = ["bzip"]
+//! ```
+//!
+//! Or in case you want to leverage the **Xz** codec:
+//!
+//! ```toml
+//! [dependencies.apache-avro]
+//! version = "x.y"
+//! features = ["xz"]
+//! ```
+//!
 //! # Upgrading to a newer minor version
 //!
 //! The library is still in beta, so there might be backward-incompatible changes between minor
-//! versions. If you have troubles upgrading, check the [version upgrade guide](migration_guide.md).
+//! versions. If you have troubles upgrading, check the [version upgrade guide](https://github.com/apache/avro/blob/master/lang/rust/migration_guide.md).
 //!
 //! # Defining a schema
 //!
@@ -260,6 +284,12 @@
 //! * **Snappy**: uses Google's [Snappy](http://google.github.io/snappy/) compression library. Each
 //! compressed block is followed by the 4-byte, big-endianCRC32 checksum of the uncompressed data in
 //! the block. You must enable the `snappy` feature to use this codec.
+//! * **Zstandard**: uses Facebook's [Zstandard](https://facebook.github.io/zstd/) compression library.
+//! You must enable the `zstandard` feature to use this codec.
+//! * **Bzip2**: uses [BZip2](https://sourceware.org/bzip2/) compression library.
+//! You must enable the `bzip` feature to use this codec.
+//! * **Xz**: uses [xz2](https://github.com/alexcrichton/xz2-rs) compression library.
+//!   You must enable the `xz` feature to use this codec.
 //!
 //! To specify a codec to use to compress data, just specify it while creating a `Writer`:
 //! ```
@@ -515,6 +545,7 @@
 //! 1. UUID using the [`uuid`](https://docs.rs/uuid/1.0.0/uuid) crate
 //! 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
 //! 1. Timestamp (milli and micro) as `i64`
+//! 1. Local timestamp (milli and micro) as `i64`
 //! 1. Duration as a custom type with `months`, `days` and `millis` accessor methods each of which returns an `i32`
 //!
 //! Note that the on-disk representation is identical to the underlying primitive/complex type.
@@ -583,6 +614,16 @@
 //!           "logicalType": "timestamp-micros"
 //!         },
 //!         {
+//!           "name": "local_timestamp_millis",
+//!           "type": "long",
+//!           "logicalType": "local-timestamp-millis"
+//!         },
+//!         {
+//!           "name": "local_timestamp_micros",
+//!           "type": "long",
+//!           "logicalType": "local-timestamp-micros"
+//!         },
+//!         {
 //!           "name": "duration",
 //!           "type": {
 //!             "type": "fixed",
@@ -610,6 +651,8 @@
 //!     record.put("time_micros", Value::TimeMicros(3));
 //!     record.put("timestamp_millis", Value::TimestampMillis(4));
 //!     record.put("timestamp_micros", Value::TimestampMicros(5));
+//!     record.put("local_timestamp_millis", Value::LocalTimestampMillis(4));
+//!     record.put("local_timestamp_micros", Value::LocalTimestampMicros(5));
 //!     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 //!
 //!     writer.append(record)?;
@@ -748,7 +791,7 @@ pub use reader::{
 };
 pub use schema::{AvroSchema, Schema};
 pub use ser::to_value;
-pub use util::max_allocation_bytes;
+pub use util::{max_allocation_bytes, set_serde_human_readable};
 pub use writer::{
     to_avro_datum, to_avro_datum_schemata, GenericSingleObjectWriter, SpecificSingleObjectWriter,
     Writer,
@@ -863,61 +906,6 @@ mod tests {
                 ("c".to_string(), Value::Enum(2, "clubs".to_string())),
             ])
         );
-        assert!(reader.next().is_none());
-    }
-
-    //TODO: move where it fits better
-    #[test]
-    fn test_enum_resolution() {
-        let writer_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "clubs", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let reader_raw_schema = r#"
-            {
-                "type": "record",
-                "name": "test",
-                "fields": [
-                    {"name": "a", "type": "long", "default": 42},
-                    {"name": "b", "type": "string"},
-                    {
-                        "name": "c",
-                        "type": {
-                            "type": "enum",
-                            "name": "suit",
-                            "symbols": ["diamonds", "spades", "ninja", "hearts"]
-                        },
-                        "default": "spades"
-                    }
-                ]
-            }
-        "#;
-        let writer_schema = Schema::parse_str(writer_raw_schema).unwrap();
-        let reader_schema = Schema::parse_str(reader_raw_schema).unwrap();
-        let mut writer = Writer::with_codec(&writer_schema, Vec::new(), Codec::Null);
-        let mut record = Record::new(writer.schema()).unwrap();
-        record.put("a", 27i64);
-        record.put("b", "foo");
-        record.put("c", "clubs");
-        writer.append(record).unwrap();
-        let input = writer.into_inner().unwrap();
-        let mut reader = Reader::with_schema(&reader_schema, &input[..]).unwrap();
-        assert!(reader.next().unwrap().is_err());
         assert!(reader.next().is_none());
     }
 

@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
@@ -117,11 +118,23 @@ public class GenericData {
   /** For subclasses. GenericData does not use a ClassLoader. */
   public GenericData(ClassLoader classLoader) {
     this.classLoader = (classLoader != null) ? classLoader : getClass().getClassLoader();
+    loadConversions();
   }
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() {
     return classLoader;
+  }
+
+  /**
+   * Use the Java 6 ServiceLoader to load conversions.
+   *
+   * @see #addLogicalTypeConversion(Conversion)
+   */
+  private void loadConversions() {
+    for (Conversion<?> conversion : ServiceLoader.load(Conversion.class, classLoader)) {
+      addLogicalTypeConversion(conversion);
+    }
   }
 
   private Map<String, Conversion<?>> conversions = new HashMap<>();
@@ -134,19 +147,17 @@ public class GenericData {
 
   /**
    * Registers the given conversion to be used when reading and writing with this
-   * data model.
+   * data model. Conversions can also be registered automatically, as documented
+   * on the class {@link Conversion Conversion&lt;T&gt;}.
    *
    * @param conversion a logical type Conversion.
    */
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    Map<String, Conversion<?>> conversions = conversionsByClass.get(type);
-    if (conversions == null) {
-      conversions = new LinkedHashMap<>();
-      conversionsByClass.put(type, conversions);
-    }
-    conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversionsForClass = conversionsByClass.computeIfAbsent(type,
+        k -> new LinkedHashMap<>());
+    conversionsForClass.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
@@ -187,11 +198,11 @@ public class GenericData {
    * @return the conversion for the logical type, or null
    */
   @SuppressWarnings("unchecked")
-  public Conversion<Object> getConversionFor(LogicalType logicalType) {
+  public <T> Conversion<T> getConversionFor(LogicalType logicalType) {
     if (logicalType == null) {
       return null;
     }
-    return (Conversion<Object>) conversions.get(logicalType.getName());
+    return (Conversion<T>) conversions.get(logicalType.getName());
   }
 
   public static final String FAST_READER_PROP = "org.apache.avro.fastread";
@@ -306,30 +317,16 @@ public class GenericData {
     }
   }
 
-  /** Default implementation of an array. */
-  @SuppressWarnings(value = "unchecked")
-  public static class Array<T> extends AbstractList<T> implements GenericArray<T>, Comparable<GenericArray<T>> {
-    private static final Object[] EMPTY = new Object[0];
+  public static abstract class AbstractArray<T> extends AbstractList<T>
+      implements GenericArray<T>, Comparable<GenericArray<T>> {
     private final Schema schema;
-    private int size;
-    private Object[] elements = EMPTY;
 
-    public Array(int capacity, Schema schema) {
+    protected int size = 0;
+
+    public AbstractArray(Schema schema) {
       if (schema == null || !Type.ARRAY.equals(schema.getType()))
         throw new AvroRuntimeException("Not an array schema: " + schema);
       this.schema = schema;
-      if (capacity != 0)
-        elements = new Object[capacity];
-    }
-
-    public Array(Schema schema, Collection<T> c) {
-      if (schema == null || !Type.ARRAY.equals(schema.getType()))
-        throw new AvroRuntimeException("Not an array schema: " + schema);
-      this.schema = schema;
-      if (c != null) {
-        elements = new Object[c.size()];
-        addAll(c);
-      }
     }
 
     @Override
@@ -343,22 +340,26 @@ public class GenericData {
     }
 
     @Override
-    public void clear() {
-      // Let GC do its work
-      Arrays.fill(elements, 0, size, null);
-      size = 0;
-    }
-
-    @Override
     public void reset() {
       size = 0;
     }
 
     @Override
-    public void prune() {
-      if (size < elements.length) {
-        Arrays.fill(elements, size, elements.length, null);
+    public int compareTo(GenericArray<T> that) {
+      return GenericData.get().compare(this, that, this.getSchema());
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+      if (!(o instanceof Collection)) {
+        return false;
       }
+      return GenericData.get().compare(this, o, this.getSchema()) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+      return super.hashCode();
     }
 
     @Override
@@ -373,7 +374,7 @@ public class GenericData {
 
         @Override
         public T next() {
-          return (T) elements[position++];
+          return AbstractArray.this.get(position++);
         }
 
         @Override
@@ -381,6 +382,57 @@ public class GenericData {
           throw new UnsupportedOperationException();
         }
       };
+    }
+
+    @Override
+    public void reverse() {
+      int left = 0;
+      int right = size - 1;
+
+      while (left < right) {
+        this.swap(left, right);
+
+        left++;
+        right--;
+      }
+    }
+
+    protected abstract void swap(int index1, int index2);
+  }
+
+  /** Default implementation of an array. */
+  @SuppressWarnings(value = "unchecked")
+  public static class Array<T> extends AbstractArray<T> {
+    private static final Object[] EMPTY = new Object[0];
+
+    private Object[] elements = EMPTY;
+
+    public Array(int capacity, Schema schema) {
+      super(schema);
+      if (capacity != 0)
+        elements = new Object[capacity];
+    }
+
+    public Array(Schema schema, Collection<T> c) {
+      super(schema);
+      if (c != null) {
+        elements = new Object[c.size()];
+        addAll(c);
+      }
+    }
+
+    @Override
+    public void clear() {
+      // Let GC do its work
+      Arrays.fill(elements, 0, size, null);
+      size = 0;
+    }
+
+    @Override
+    public void prune() {
+      if (size < elements.length) {
+        Arrays.fill(elements, size, elements.length, null);
+      }
     }
 
     @Override
@@ -431,23 +483,10 @@ public class GenericData {
     }
 
     @Override
-    public int compareTo(GenericArray<T> that) {
-      return GenericData.get().compare(this, that, this.getSchema());
-    }
-
-    @Override
-    public void reverse() {
-      int left = 0;
-      int right = elements.length - 1;
-
-      while (left < right) {
-        Object tmp = elements[left];
-        elements[left] = elements[right];
-        elements[right] = tmp;
-
-        left++;
-        right--;
-      }
+    protected void swap(final int index1, final int index2) {
+      Object tmp = elements[index1];
+      elements[index1] = elements[index2];
+      elements[index2] = tmp;
     }
   }
 
@@ -1167,7 +1206,11 @@ public class GenericData {
       return 0;
     }
 
-    if (m2.size() != m2.size()) {
+    if (m1.isEmpty() && m2.isEmpty()) {
+      return 0;
+    }
+
+    if (m1.size() != m2.size()) {
       return 1;
     }
 
@@ -1484,8 +1527,24 @@ public class GenericData {
     } else if (old instanceof Collection) {
       ((Collection<?>) old).clear();
       return old;
-    } else
+    } else {
+      if (schema.getElementType().getType() == Type.INT) {
+        return new PrimitivesArrays.IntArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.BOOLEAN) {
+        return new PrimitivesArrays.BooleanArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.LONG) {
+        return new PrimitivesArrays.LongArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.FLOAT) {
+        return new PrimitivesArrays.FloatArray(size, schema);
+      }
+      if (schema.getElementType().getType() == Type.DOUBLE) {
+        return new PrimitivesArrays.DoubleArray(size, schema);
+      }
       return new GenericData.Array<Object>(size, schema);
+    }
   }
 
   /**

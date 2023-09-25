@@ -56,6 +56,9 @@ DOCKER_BUILD_XTRA_ARGS=${DOCKER_BUILD_XTRA_ARGS-}
 # Override the docker image name used.
 DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME-}
 
+# When building a docker container, these are the files that will sent and available.
+DOCKER_EXTRA_CONTEXT="lang/ruby/Gemfile lang/ruby/avro.gemspec lang/ruby/Manifest share/VERSION.txt"
+
 usage() {
   echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
@@ -208,7 +211,13 @@ do
         \! -name '*.asc' \! -name '*.txt' );
       do
         (cd "${f%/*}" && shasum -a 512 "${f##*/}") > "$f.sha512"
-        gpg --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+
+        if [ -z "$GPG_LOCAL_USER" ]; then
+          gpg --pinentry-mode loopback --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        else
+          gpg --pinentry-mode loopback --local-user="$GPG_LOCAL_USER" --passphrase "$password" --armor --output "$f.asc" --detach-sig "$f"
+        fi
+        
       done
 
       set -x
@@ -300,8 +309,9 @@ do
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
       } > Dockerfile
+      # Include the ruby gemspec for preinstallation.
       # shellcheck disable=SC2086
-      tar -cf- lang/ruby/Gemfile Dockerfile | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
+      tar -cf- Dockerfile $DOCKER_EXTRA_CONTEXT | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
@@ -336,8 +346,8 @@ do
       ;;
 
     docker-test)
-      tar -cf- share/docker/Dockerfile lang/ruby/Gemfile |
-        docker build -t avro-test -f share/docker/Dockerfile -
+      tar -cf- share/docker/Dockerfile $DOCKER_EXTRA_CONTEXT |
+        DOCKER_BUILDKIT=1 docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v "${PWD}:/avro${DOCKER_MOUNT_FLAG}" --env "JAVA=${JAVA:-8}" avro-test /avro/share/docker/run-tests.sh
       ;;
 

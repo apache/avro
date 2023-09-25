@@ -29,7 +29,8 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestSpecificRecordWithUnion {
   @Test
-  public void testUnionLogicalDecimalConversion() throws IOException {
+  void unionLogicalDecimalConversion() throws IOException {
     final TestUnionRecord record = TestUnionRecord.newBuilder().setAmount(BigDecimal.ZERO).build();
     final Schema schema = SchemaBuilder.unionOf().nullType().and().type(record.getSchema()).endUnion();
 

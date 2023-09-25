@@ -16,6 +16,7 @@
 // under the License.
 
 use apache_avro::{types::Value, Codec, Reader, Schema, Writer};
+use apache_avro_test_helper::TestResult;
 use std::{
     fmt,
     fs::{DirEntry, File, ReadDir},
@@ -27,8 +28,14 @@ use std::{
 const ROOT_DIRECTORY: &str = "../../../share/test/data/schemas";
 
 #[test]
-fn test_schema() {
-    let directory: ReadDir = scan_shared_folder();
+fn test_schema() -> TestResult {
+    let directory: ReadDir = match std::fs::read_dir(ROOT_DIRECTORY) {
+        Ok(root_folder) => root_folder,
+        Err(err) => {
+            log::warn!("Can't read the root folder: {err}");
+            return Ok(());
+        }
+    };
     let mut result: Result<(), ErrorsDesc> = Ok(());
     for f in directory {
         let entry: DirEntry = match f {
@@ -54,6 +61,7 @@ fn test_schema() {
     if let Err(e) = result {
         core::panic!("{}", e)
     }
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -140,8 +148,4 @@ fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
         }
     }
     result
-}
-
-fn scan_shared_folder() -> ReadDir {
-    std::fs::read_dir(ROOT_DIRECTORY).expect("Can't read root folder")
 }

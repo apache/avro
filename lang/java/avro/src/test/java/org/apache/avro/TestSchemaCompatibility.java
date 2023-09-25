@@ -120,7 +120,7 @@ public class TestSchemaCompatibility {
   @Test
   void validateSchemaPairMissingField() {
     final List<Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -132,7 +132,7 @@ public class TestSchemaCompatibility {
   @Test
   void validateSchemaPairMissingSecondField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -145,7 +145,7 @@ public class TestSchemaCompatibility {
   void validateSchemaPairAllFields() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -158,7 +158,7 @@ public class TestSchemaCompatibility {
   void validateSchemaNewFieldWithDefault() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, 42));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), reader, WRITER_SCHEMA,
         SchemaCompatibility.READER_WRITER_COMPATIBLE_MESSAGE);
@@ -171,7 +171,7 @@ public class TestSchemaCompatibility {
   void validateSchemaNewField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
-    final Schema reader = Schema.createRecord(readerFields);
+    final Schema reader = Schema.createRecord(null, null, null, false, readerFields);
     SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(reader, WRITER_SCHEMA);
 
     // Test new field without default value.
@@ -233,6 +233,22 @@ public class TestSchemaCompatibility {
     final Schema unionReader = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA));
     final SchemaPairCompatibility result = checkReaderWriterCompatibility(unionReader, unionWriter);
     assertEquals(SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+    assertEquals("/2", result.getResult().getIncompatibilities().get(0).getLocation());
+  }
+
+  @Test
+  void unionWriterSimpleReaderIncompatibility() {
+    Schema mandatorySchema = SchemaBuilder.record("Account").fields().name("age").type().intType().noDefault()
+        .endRecord();
+    Schema optionalSchema = SchemaBuilder.record("Account").fields().optionalInt("age").endRecord();
+
+    SchemaPairCompatibility compatibility = checkReaderWriterCompatibility(mandatorySchema, optionalSchema);
+
+    assertEquals(SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
+
+    Incompatibility incompatibility = compatibility.getResult().getIncompatibilities().get(0);
+    assertEquals("reader type: INT not compatible with writer type: NULL", incompatibility.getMessage());
+    assertEquals("/fields/0/type/0", incompatibility.getLocation());
   }
 
   // -----------------------------------------------------------------------------------------------

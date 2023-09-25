@@ -292,8 +292,16 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeMapEnd();
       break;
     case UNION:
-      e.writeIndex(0);
-      encode(e, s.getTypes().get(0), n);
+      int correctIndex = 0;
+      List<Schema> innerTypes = s.getTypes();
+      while (correctIndex < innerTypes.size() && !isCompatible(innerTypes.get(correctIndex).getType(), n)) {
+        correctIndex++;
+      }
+      if (correctIndex >= innerTypes.size()) {
+        throw new AvroTypeException("Not compatible default value for union: " + n);
+      }
+      e.writeIndex(correctIndex);
+      encode(e, innerTypes.get(correctIndex), n);
       break;
     case FIXED:
       if (!n.isTextual())
@@ -345,5 +353,30 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeNull();
       break;
     }
+  }
+
+  private static boolean isCompatible(Schema.Type stype, JsonNode value) {
+    switch (stype) {
+    case RECORD:
+    case ENUM:
+    case ARRAY:
+    case MAP:
+    case UNION:
+      return true;
+    case FIXED:
+    case STRING:
+    case BYTES:
+      return value.isTextual();
+    case INT:
+    case LONG:
+    case FLOAT:
+    case DOUBLE:
+      return value.isNumber();
+    case BOOLEAN:
+      return value.isBoolean();
+    case NULL:
+      return value.isNull();
+    }
+    return true;
   }
 }

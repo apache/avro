@@ -1,0 +1,9 @@
+@namespace("communication")
+protocol Parrot {
+	record Message {
+		string? title;
+		string message;
+	}
+
+	Message echo(Message message);
+}

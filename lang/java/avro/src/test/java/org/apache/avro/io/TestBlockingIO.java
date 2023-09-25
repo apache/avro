@@ -17,7 +17,12 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.Assert.*;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,27 +30,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(Parameterized.class)
 public class TestBlockingIO {
-
-  private final int iSize;
-  private final int iDepth;
-  private final String sInput;
-
-  public TestBlockingIO(int sz, int dp, String inp) {
-    this.iSize = sz;
-    this.iDepth = dp;
-    this.sInput = inp;
-  }
 
   private static class Tests {
     private final JsonParser parser;
@@ -206,25 +197,29 @@ public class TestBlockingIO {
     }
   }
 
-  @Test
-  public void testScan() throws IOException {
-    Tests t = new Tests(iSize, iDepth, sInput);
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testScan(int size, int depth, String input) throws IOException {
+    Tests t = new Tests(size, depth, input);
     t.scan();
   }
 
-  @Test
-  public void testSkip1() throws IOException {
-    testSkip(iSize, iDepth, sInput, 0);
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testSkip1(int size, int depth, String input) throws IOException {
+    testSkip(size, depth, input, 0);
   }
 
-  @Test
-  public void testSkip2() throws IOException {
-    testSkip(iSize, iDepth, sInput, 1);
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testSkip2(int size, int depth, String input) throws IOException {
+    testSkip(size, depth, input, 1);
   }
 
-  @Test
-  public void testSkip3() throws IOException {
-    testSkip(iSize, iDepth, sInput, 2);
+  @ParameterizedTest
+  @MethodSource("data")
+  public void testSkip3(int size, int depth, String input) throws IOException {
+    testSkip(size, depth, input, 2);
   }
 
   private void testSkip(int bufferSize, int depth, String input, int skipLevel) throws IOException {
@@ -323,9 +318,8 @@ public class TestBlockingIO {
     }
   }
 
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { 64, 0, "" }, { 64, 0, jss(0, 'a') }, { 64, 0, jss(3, 'a') },
+  public static Stream<Arguments> data() {
+    return Stream.of(new Object[][] { { 64, 0, "" }, { 64, 0, jss(0, 'a') }, { 64, 0, jss(3, 'a') },
         { 64, 0, jss(64, 'a') }, { 64, 0, jss(65, 'a') }, { 64, 0, jss(100, 'a') }, { 64, 1, "[]" },
         { 64, 1, "[" + jss(0, 'a') + "]" }, { 64, 1, "[" + jss(3, 'a') + "]" }, { 64, 1, "[" + jss(61, 'a') + "]" },
         { 64, 1, "[" + jss(62, 'a') + "]" }, { 64, 1, "[" + jss(64, 'a') + "]" }, { 64, 1, "[" + jss(65, 'a') + "]" },
@@ -387,7 +381,8 @@ public class TestBlockingIO {
         { 100, 2, "[[\"pqr\", \"ab\", \"mnopqrstuvwx\"]]" }, { 64, 2, "[[[\"pqr\"]], [[\"ab\"], [\"mnopqrstuvwx\"]]]" },
 
         { 64, 1, "{}" }, { 64, 1, "{\"n\": \"v\"}" }, { 64, 1, "{\"n1\": \"v\", \"n2\": []}" },
-        { 100, 1, "{\"n1\": \"v\", \"n2\": []}" }, { 100, 1, "{\"n1\": \"v\", \"n2\": [\"abc\"]}" }, });
+        { 100, 1, "{\"n1\": \"v\", \"n2\": []}" }, { 100, 1, "{\"n1\": \"v\", \"n2\": [\"abc\"]}" }, })
+        .map(Arguments::of);
   }
 
   /**

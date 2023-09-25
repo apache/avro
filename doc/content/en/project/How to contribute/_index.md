@@ -1,7 +1,7 @@
 ---
 title: "How to contribute"
 linkTitle: "How to contribute"
-weight: 3
+weight: 5
 ---
 
 <!--
@@ -34,7 +34,6 @@ The easiest way is to clone or fork the GitHub mirror:
 ```shell
 git clone https://github.com/apache/avro.git -o github
 ```
-
 
 ## Making Changes
 
@@ -276,7 +275,114 @@ Please refrain from editing descriptions and comments if possible, as edits spam
 
 Contributors should join the Avro mailing lists. In particular, the commit list (to see changes as they are made), the dev list (to join discussions of changes) and the user list (to help others).
 
+## Workflow
+
+Building and running the site locally requires a recent extended version of Hugo. Install [Hugo](https://gohugo.io/installation/) for your environment. Once you've made your working copy of the site repo, from the repo root folder, run:
+
+```shell
+hugo server --navigateToChanged
+```
+Edit .md and .html files in content/ folder
+
+Once satisfied with the changes, commit them:
+```shell
+git commit -a
+```
+Generate the HTML file stop hugo server --navigateToChanged (with Ctrl+C) and run
+```shell
+hugo
+```
+This will generate the HTMLs in public/ folder and this is actually what is being deployed
+
+Add the modified HTML files to Git
+
+```shell
+git add .
+git rm offline-search-index.<<OLD-HASH>>.json
+git commit -a
+git push
+```
+This way even when the PR modifies a lot of files we can review only the first commit, the meaningful one, with the modified files in content/ folder
+
+
+## Running a container locally
+You can also run avro-website inside a Docker container, the container runs with a volume bound to the avro-website folder. This approach doesn't require you to install any dependencies other than Docker Desktop on Windows and Mac, and Docker Compose on Linux.
+
+Build the docker image
+
+```shell
+docker-compose build
+```
+Run the built image
+ ```shell
+docker-compose up
+```
+NOTE: You can run both commands at once with docker-compose up --build.
+
+Verify that the service is working.
+
+Open your web browser and type http://localhost:1313 in your navigation bar, This opens a local instance of the docsy-example homepage. You can now make changes to the docsy example and those changes will immediately show up in your browser after you save.
+
+**Cleanup**
+
+To stop Docker Compose, on your terminal window, press Ctrl + C.
+
+To remove the produced images run:
+ ```shell
+docker-compose rm
+```
+
+## Troubleshooting
+As you run the website locally, you may run into the following error:
+ ```shell
+➜ hugo server
+
+INFO 2021/01/21 21:07:55 Using config file: 
+Building sites … INFO 2021/01/21 21:07:55 syncing static files to /
+Built in 288 ms
+Error: Error building site: TOCSS: failed to transform "scss/main.scss" (text/x-scss): resource "scss/scss/main.scss_9fadf33d895a46083cdd64396b57ef68" not found in file cache
+ ```
+This error occurs if you have not installed the extended version of Hugo. See our user guide for instructions on how to install Hugo.
+
+## Edit content
+The website content is in content/en folder. It contains .md (Markdown) and .html (HTML) files.
+
+**Layouts**
+
+To change the layout of any page edit layouts/<page>/**.html. If there is no layout for a given page at that location then copy the one provided by the theme and edit it:
+ ```shell
+ cp themes/docsy/layouts/<xyz> layouts/<xyz>
+  ```
+**Avro version**
+
+When a new version of Apache Avro is released:
+
+Change the value of params.avroversion in config.toml
+Add a new entry to the Releases pages in the Blog section, for example:
+ ```shell
+cp content/en/blog/releases/avro-1.10.2-released.md content/en/blog/releases/avro-1.11.0-released.md
+ ```
+**API documentation for C/C++/C# modules**
+
+The API documentations for C/C++/C# are built by their respective build.sh dist implementations. The final HTML should be copied to the external folder, for example:
+ ```shell
+cp ../avro/build/avro-doc-1.12.0-SNAPSHOT/api/c/* content/en/docs/external/c/
+ ```
+
+## JIRA conventions
+
+Issue types: JIRA issues are categorized into different types such as bugs, improvements, new features, etc. Each issue type has a unique icon and a set of fields that are specific to that type.  
+
+Workflow: JIRA issues follow a predefined workflow that defines the steps that an issue goes through from creation to resolution. Each step in the workflow can have its own set of conditions and actions.
+
+Priority: JIRA allows users to set priorities for issues to help determine the order in which they should be addressed. The priority can be set to one of five levels: Blocker, Critical, Major, Minor, and Trivial. Blocker is the highest priority and Trivial is the lowest priority.
+
+Labels: Labels are used to tag issues with keywords or phrases that can help with searching and filtering.
+
+Components: Components are used to group related issues together. For example, a software project might have components for the user interface, database, and networking.
+
 ## See Also
 
 - [Apache contributor documentation](http://www.apache.org/dev/contributors.html)
 - [Apache voting documentation](http://www.apache.org/foundation/voting.html)
+

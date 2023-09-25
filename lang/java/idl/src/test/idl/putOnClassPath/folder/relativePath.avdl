@@ -15,16 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro;
 
-public class DummyLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
-  @Override
-  public LogicalType fromSchema(Schema schema) {
-    return LogicalTypes.date();
-  }
-
-  @Override
-  public String getTypeName() {
-    return "service-example";
-  }
+@namespace("org.on.the.classpath")
+protocol OnTheClasspathDependency {
+	import idl "../nestedtypes.avdl";
 }

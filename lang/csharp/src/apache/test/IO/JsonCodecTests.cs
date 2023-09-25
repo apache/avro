@@ -17,12 +17,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Avro.Generic;
 using Avro.IO;
+using Avro.Specific;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -235,7 +237,6 @@ namespace Avro.Test
         public void TestJsonUnionWithRecord(String value)
         {
             Schema schema = Schema.Parse(
-
                 "[\"null\",\n" +
                 "    { \"type\": \"int\", \"logicalType\": \"date\" },\n" +
                 "    {\"type\":\"record\",\"name\":\"myrecord\", \"namespace\":\"com\"," +
@@ -285,6 +286,30 @@ namespace Avro.Test
             decoder.SkipArray();
         }
 
+        [Test]
+        public void TestJsonDecoderSpecificWithArray()
+        {
+            Root data = new Root();
+            Item item = new Item { id = 123456 };
+            data.myarray = new List<Item> { item };
+
+            DatumWriter<Root> writer = new SpecificDatumWriter<Root>(data.Schema);
+
+            ByteBufferOutputStream bbos = new ByteBufferOutputStream();
+
+            Encoder encoder = new JsonEncoder(data.Schema, bbos);
+            writer.Write(data, encoder);
+            encoder.Flush();
+
+            List<MemoryStream> listStreams = bbos.GetBufferList();
+
+            using (StreamReader reader = new StreamReader(listStreams[0]))
+            {
+                String output = reader.ReadToEnd();
+                Assert.AreEqual("{\"myarray\":[{\"id\":123456}]}", output);
+            }
+        }
+
         private byte[] fromJsonToAvro(string json, Schema schema)
         {
             DatumReader<object> reader = new GenericDatumReader<object>(schema, schema);
@@ -324,6 +349,87 @@ namespace Avro.Test
             output.Flush();
 
             return Encoding.UTF8.GetString(output.ToArray());
+        }
+    }
+
+    public partial class Root : global::Avro.Specific.ISpecificRecord
+    {
+        public static global::Avro.Schema _SCHEMA = global::Avro.Schema.Parse(
+            "{\"type\":\"record\",\"name\":\"Root\",\"namespace\":\"Avro.Test\",\"fields\":[{\"name\":\"myarray" +
+            "\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Item\",\"namespace\":\"Avr" +
+            "o.Test\",\"fields\":[{\"name\":\"id\",\"type\":\"long\"}]}}}]}");
+
+        private IList<Avro.Test.Item> _myarray;
+
+        public virtual global::Avro.Schema Schema
+        {
+            get { return Root._SCHEMA; }
+        }
+
+        public IList<Avro.Test.Item> myarray
+        {
+            get { return this._myarray; }
+            set { this._myarray = value; }
+        }
+
+        public virtual object Get(int fieldPos)
+        {
+            switch (fieldPos)
+            {
+                case 0: return this.myarray;
+                default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Get()");
+            }
+        }
+
+        public virtual void Put(int fieldPos, object fieldValue)
+        {
+            switch (fieldPos)
+            {
+                case 0:
+                    this.myarray = (IList<Avro.Test.Item>)fieldValue;
+                    break;
+                default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
+            }
+        }
+    }
+
+    public partial class Item : global::Avro.Specific.ISpecificRecord
+    {
+        public static global::Avro.Schema _SCHEMA = global::Avro.Schema.Parse(
+            "{\"type\":\"record\",\"name\":\"Item\",\"namespace\":\"Avro.Test\",\"fields\":[{\"name\":\"id\",\"ty" +
+            "pe\":\"long\"}]}");
+
+        private long _id;
+
+        public virtual global::Avro.Schema Schema
+        {
+            get { return Item._SCHEMA; }
+        }
+
+        public long id
+        {
+            get { return this._id; }
+            set { this._id = value; }
+        }
+
+        public virtual object Get(int fieldPos)
+        {
+            switch (fieldPos)
+            {
+                case 0: return this.id;
+                default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Get()");
+            }
+        }
+
+        public virtual void Put(int fieldPos, object fieldValue)
+        {
+            switch (fieldPos)
+            {
+                case 0:
+                    this.id = (System.Int64)fieldValue;
+                    break;
+                default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
+            }
         }
     }
 }

@@ -16,7 +16,10 @@
 // under the License.
 
 use crate::{
-    schema::{Name, Namespace, ResolvedSchema, Schema, SchemaKind},
+    schema::{
+        DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
+        Schema, SchemaKind,
+    },
     types::{Value, ValueKind},
     util::{zig_i32, zig_i64},
     AvroResult, Error,
@@ -74,12 +77,14 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
         Value::Long(i)
         | Value::TimestampMillis(i)
         | Value::TimestampMicros(i)
+        | Value::LocalTimestampMillis(i)
+        | Value::LocalTimestampMicros(i)
         | Value::TimeMicros(i) => encode_long(*i, buffer),
         Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Decimal(decimal) => match schema {
-            Schema::Decimal { inner, .. } => match *inner.clone() {
-                Schema::Fixed { size, .. } => {
+            Schema::Decimal(DecimalSchema { inner, .. }) => match *inner.clone() {
+                Schema::Fixed(FixedSchema { size, .. }) => {
                     let bytes = decimal.to_sign_extended_bytes_with_len(size).unwrap();
                     let num_bytes = bytes.len();
                     if num_bytes != size {
@@ -125,7 +130,7 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             Schema::String | Schema::Uuid => {
                 encode_bytes(s, buffer);
             }
-            Schema::Enum { ref symbols, .. } => {
+            Schema::Enum(EnumSchema { ref symbols, .. }) => {
                 if let Some(index) = symbols.iter().position(|item| item == s) {
                     encode_int(index as i32, buffer);
                 } else {
@@ -193,33 +198,39 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                 });
             }
         }
-        Value::Record(fields) => {
-            if let Schema::Record {
+        Value::Record(value_fields) => {
+            if let Schema::Record(RecordSchema {
                 ref name,
                 fields: ref schema_fields,
-                ref lookup,
                 ..
-            } = *schema
+            }) = *schema
             {
                 let record_namespace = name.fully_qualified_name(enclosing_namespace).namespace;
-                for (name, value) in fields.iter() {
-                    match lookup.get(name) {
-                        Some(idx) => {
-                            encode_internal(
-                                value,
-                                &schema_fields[*idx].schema,
-                                names,
-                                &record_namespace,
-                                buffer,
-                            )?;
-                        }
+
+                let mut lookup = HashMap::new();
+                value_fields.iter().for_each(|(name, field)| {
+                    lookup.insert(name, field);
+                });
+
+                for schema_field in schema_fields.iter() {
+                    let name = &schema_field.name;
+                    let value = match lookup.get(name) {
+                        Some(value) => value,
                         None => {
                             return Err(Error::NoEntryInLookupTable(
                                 name.clone(),
                                 format!("{lookup:?}"),
                             ));
                         }
-                    }
+                    };
+
+                    encode_internal(
+                        value,
+                        &schema_field.schema,
+                        names,
+                        &record_namespace,
+                        buffer,
+                    )?;
                 }
             } else {
                 error!("invalid schema type for Record: {:?}", schema);

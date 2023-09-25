@@ -42,16 +42,27 @@ import abc
 import collections
 import datetime
 import decimal
+import hashlib
 import json
 import math
 import uuid
 import warnings
+from functools import reduce
 from pathlib import Path
-from typing import List, Mapping, MutableMapping, Optional, Sequence, Union, cast
+from typing import (
+    Callable,
+    FrozenSet,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 
 import avro.constants
 import avro.errors
-from avro.constants import NAMED_TYPES, PRIMITIVE_TYPES, VALID_TYPES
 from avro.name import Name, Names, validate_basename
 
 #
@@ -104,6 +115,50 @@ def _is_timezone_aware_datetime(dt: datetime.datetime) -> bool:
     return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
 
 
+# Fingerprint Constants
+_EMPTY64_FINGERPRINT: int = 0xC15D213AA4D7A795
+_FINGERPRINT_TABLE: tuple = tuple(reduce(lambda fp, _: (fp >> 1) ^ (_EMPTY64_FINGERPRINT & -(fp & 1)), range(8), i) for i in range(256))
+
+
+# All algorithms guaranteed by hashlib are supported:
+#     - 'blake2b',
+#     - 'blake2s',
+#     - 'md5',
+#     - 'sha1',
+#     - 'sha224',
+#     - 'sha256',
+#     - 'sha384',
+#     - 'sha3_224',
+#     - 'sha3_256',
+#     - 'sha3_384',
+#     - 'sha3_512',
+#     - 'sha512',
+#     - 'shake_128',
+#     - 'shake_256'
+SUPPORTED_ALGORITHMS: FrozenSet[str] = frozenset({"CRC-64-AVRO"} | hashlib.algorithms_guaranteed)
+
+
+def _crc_64_fingerprint(data: bytes) -> bytes:
+    """The 64-bit Rabin Fingerprint.
+
+    As described in the Avro specification.
+
+    Args:
+        data: A bytes object containing the UTF-8 encoded parsing canonical
+        form of an Avro schema.
+    Returns:
+        A bytes object with a length of eight in little-endian format.
+    """
+    result = _EMPTY64_FINGERPRINT
+
+    for b in data:
+        result = (result >> 8) ^ _FINGERPRINT_TABLE[(result ^ b) & 0xFF]
+
+    # Although not mentioned in the Avro specification, the Java
+    # implementation gives fingerprint bytes in little-endian order
+    return result.to_bytes(length=8, byteorder="little", signed=False)
+
+
 #
 # Base Classes
 #
@@ -142,8 +197,10 @@ class PropertiesMixin:
         return get_other_props(self.props, self._reserved_properties)
 
 
-class EqualByJsonMixin:
+class EqualByJsonMixin(collections.abc.Hashable):
     """A mixin that defines equality as equal if the json deserializations are equal."""
+
+    fingerprint: Callable[..., bytes]
 
     def __eq__(self, that: object) -> bool:
         try:
@@ -152,12 +209,28 @@ class EqualByJsonMixin:
             return False
         return cast(bool, json.loads(str(self)) == that_obj)
 
+    def __hash__(self) -> int:
+        """Make it so a schema can be in a set or a key in a dictionary.
 
-class EqualByPropsMixin(PropertiesMixin):
+        NB: Python has special rules for this method being defined in the same class as __eq__.
+        """
+        return hash(self.fingerprint())
+
+
+class EqualByPropsMixin(collections.abc.Hashable, PropertiesMixin):
     """A mixin that defines equality as equal if the props are equal."""
+
+    fingerprint: Callable[..., bytes]
 
     def __eq__(self, that: object) -> bool:
         return hasattr(that, "props") and self.props == getattr(that, "props")
+
+    def __hash__(self) -> int:
+        """Make it so a schema can be in a set or a key in a dictionary.
+
+        NB: Python has special rules for this method being defined in the same class as __eq__.
+        """
+        return hash(self.fingerprint())
 
 
 class CanonicalPropertiesMixin(PropertiesMixin):
@@ -177,7 +250,7 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
     def __init__(self, type_: str, other_props: Optional[Mapping[str, object]] = None, validate_names: bool = True) -> None:
         if not isinstance(type_, str):
             raise avro.errors.SchemaParseException("Schema type must be a string.")
-        if type_ not in VALID_TYPES:
+        if type_ not in avro.constants.VALID_TYPES:
             raise avro.errors.SchemaParseException(f"{type_} is not a valid type.")
         self.set_prop("type", type_)
         self.type = type_
@@ -240,6 +313,30 @@ class Schema(abc.ABC, CanonicalPropertiesMixin):
         Consider the mixins EqualByPropsMixin and EqualByJsonMixin
         """
 
+    def fingerprint(self, algorithm="CRC-64-AVRO") -> bytes:
+        """
+        Generate fingerprint for supplied algorithm.
+
+        'CRC-64-AVRO' will be used as the algorithm by default, but any
+        algorithm supported by hashlib (as can be referenced with
+        `hashlib.algorithms_guaranteed`) can be specified.
+
+        `algorithm` param is used as an algorithm name, and NoSuchAlgorithmException
+        will be thrown if the algorithm is not among supported.
+        """
+        schema = self.canonical_form.encode("utf-8")
+
+        if algorithm == "CRC-64-AVRO":
+            return _crc_64_fingerprint(schema)
+
+        if algorithm not in SUPPORTED_ALGORITHMS:
+            raise avro.errors.UnknownFingerprintAlgorithmException(f"Unknown Fingerprint Algorithm: {algorithm}")
+
+        # Generate digests with hashlib for all other algorithms
+        # Lowercase algorithm to support algorithm strings sent by other languages like Java
+        h = hashlib.new(algorithm.lower(), schema)
+        return h.digest()
+
 
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
@@ -276,9 +373,17 @@ class NamedSchema(Schema):
         return self.name if self.namespace == names.default_namespace else self.fullname
 
     # read-only properties
-    name = property(lambda self: self.get_prop("name"))
-    namespace = property(lambda self: self.get_prop("namespace"))
-    fullname = property(lambda self: self._fullname)
+    @property
+    def name(self):
+        return self.get_prop("name")
+
+    @property
+    def namespace(self):
+        return self.get_prop("namespace")
+
+    @property
+    def fullname(self):
+        return self._fullname
 
 
 #
@@ -347,10 +452,21 @@ class Field(CanonicalPropertiesMixin, EqualByJsonMixin):
             self.set_prop("doc", doc)
 
     # read-only properties
-    default = property(lambda self: self.get_prop("default"))
-    has_default = property(lambda self: self._has_default)
-    order = property(lambda self: self.get_prop("order"))
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def default(self):
+        return self.get_prop("default")
+
+    @property
+    def has_default(self):
+        return self._has_default
+
+    @property
+    def order(self):
+        return self.get_prop("order")
+
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     def __str__(self):
         return json.dumps(self.to_json())
@@ -393,7 +509,7 @@ class PrimitiveSchema(EqualByPropsMixin, Schema):
 
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
-        if type not in PRIMITIVE_TYPES:
+        if type not in avro.constants.PRIMITIVE_TYPES:
             raise avro.errors.AvroException(f"{type} is not a valid primitive type.")
 
         # Call parent ctor
@@ -449,8 +565,13 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
         self.set_prop("scale", scale)
 
     # read-only properties
-    precision = property(lambda self: self.get_prop("precision"))
-    scale = property(lambda self: self.get_prop("scale"))
+    @property
+    def precision(self):
+        return self.get_prop("precision")
+
+    @property
+    def scale(self):
+        return self.get_prop("scale")
 
     def to_json(self, names=None):
         return self.props
@@ -477,7 +598,9 @@ class FixedSchema(EqualByPropsMixin, NamedSchema):
         self.set_prop("size", size)
 
     # read-only properties
-    size = property(lambda self: self.get_prop("size"))
+    @property
+    def size(self):
+        return self.get_prop("size")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -531,8 +654,13 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
         self.set_prop("scale", scale)
 
     # read-only properties
-    precision = property(lambda self: self.get_prop("precision"))
-    scale = property(lambda self: self.get_prop("scale"))
+    @property
+    def precision(self):
+        return self.get_prop("precision")
+
+    @property
+    def scale(self):
+        return self.get_prop("scale")
 
     def to_json(self, names=None):
         return self.props
@@ -587,7 +715,9 @@ class EnumSchema(EqualByPropsMixin, NamedSchema):
             return symbols
         raise Exception
 
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -645,7 +775,9 @@ class ArraySchema(EqualByJsonMixin, Schema):
         self.set_prop("items", items_schema)
 
     # read-only properties
-    items = property(lambda self: self.get_prop("items"))
+    @property
+    def items(self):
+        return self.get_prop("items")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -697,7 +829,9 @@ class MapSchema(EqualByJsonMixin, Schema):
         self.set_prop("values", values_schema)
 
     # read-only properties
-    values = property(lambda self: self.get_prop("values"))
+    @property
+    def values(self):
+        return self.get_prop("values")
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -754,8 +888,8 @@ class UnionSchema(EqualByJsonMixin, Schema):
                     raise avro.errors.SchemaParseException(f"Union item must be a valid Avro schema: {e}")
             # check the new schema
             if (
-                new_schema.type in VALID_TYPES
-                and new_schema.type not in NAMED_TYPES
+                new_schema.type in avro.constants.VALID_TYPES
+                and new_schema.type not in avro.constants.NAMED_TYPES
                 and new_schema.type in [schema.type for schema in schema_objects]
             ):
                 raise avro.errors.SchemaParseException(f"{new_schema.type} type already in Union")
@@ -766,7 +900,9 @@ class UnionSchema(EqualByJsonMixin, Schema):
         self._schemas = schema_objects
 
     # read-only properties
-    schemas = property(lambda self: self._schemas)
+    @property
+    def schemas(self):
+        return self._schemas
 
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
@@ -792,9 +928,7 @@ class UnionSchema(EqualByJsonMixin, Schema):
 
     def validate(self, datum):
         """Return the first branch schema of which datum is a valid example, else None."""
-        for branch in self.schemas:
-            if branch.validate(datum) is not None:
-                return branch
+        return next((branch for branch in self.schemas if branch.validate(datum) is not None), None)
 
 
 class ErrorUnionSchema(UnionSchema):
@@ -890,8 +1024,13 @@ class RecordSchema(EqualByJsonMixin, NamedSchema):
             names.default_namespace = old_default
 
     # read-only properties
-    fields = property(lambda self: self.get_prop("fields"))
-    doc = property(lambda self: self.get_prop("doc"))
+    @property
+    def fields(self):
+        return self.get_prop("fields")
+
+    @property
+    def doc(self):
+        return self.get_prop("doc")
 
     @property
     def fields_dict(self):
@@ -1042,10 +1181,8 @@ class UUIDSchema(LogicalSchema, PrimitiveSchema):
 
     def validate(self, datum):
         try:
-            val = uuid.UUID(datum)
-        except ValueError:
-            # If it's a value error, then the string
-            # is not a valid hex code for a UUID.
+            uuid.UUID(datum)
+        except (ValueError, TypeError):
             return None
 
         return self
@@ -1122,7 +1259,7 @@ def make_avsc_object(
             if logical_schema is not None:
                 return cast(Schema, logical_schema)
 
-        if type_ in NAMED_TYPES:
+        if type_ in avro.constants.NAMED_TYPES:
             name = json_data.get("name")
             if not isinstance(name, str):
                 raise avro.errors.SchemaParseException(f"Name {name} must be a string, but it is {type(name)}.")
@@ -1152,10 +1289,10 @@ def make_avsc_object(
                 return RecordSchema(name, namespace, fields, names, type_, doc, other_props, validate_names)
             raise avro.errors.SchemaParseException(f"Unknown Named Type: {type_}")
 
-        if type_ in PRIMITIVE_TYPES:
+        if type_ in avro.constants.PRIMITIVE_TYPES:
             return PrimitiveSchema(type_, other_props)
 
-        if type_ in VALID_TYPES:
+        if type_ in avro.constants.VALID_TYPES:
             if type_ == "array":
                 items = json_data.get("items")
                 return ArraySchema(items, names, other_props, validate_names)
@@ -1175,7 +1312,7 @@ def make_avsc_object(
     elif isinstance(json_data, list):
         return UnionSchema(json_data, names, validate_names=validate_names)
     # JSON string (primitive)
-    elif json_data in PRIMITIVE_TYPES:
+    elif json_data in avro.constants.PRIMITIVE_TYPES:
         return PrimitiveSchema(json_data)
     # not for us!
     fail_msg = f"Could not make an Avro Schema object from {json_data}"

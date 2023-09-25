@@ -18,63 +18,37 @@
 package org.apache.avro.tool;
 
 import org.apache.avro.Protocol;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  *
  */
-@RunWith(Parameterized.class)
 public class TestRpcProtocolTool {
 
-  @Parameterized.Parameters(/* name = "{0}" */)
-  public static List<Object[]> data() {
-    return Arrays.asList(new Object[] { "http" }, new Object[] { "avro" });
-  }
+  @ParameterizedTest
+  @ValueSource(strings = { "http", "avro" })
+  void rpcProtocol(String uriScheme) throws Exception {
 
-  private RpcReceiveTool receive;
-  private Protocol simpleProtocol;
-
-  private String uriScheme;
-
-  public TestRpcProtocolTool(String uriScheme) {
-    this.uriScheme = uriScheme;
-  }
-
-  @Before
-  public void setUp() throws Exception {
     String protocolFile = System.getProperty("share.dir", "../../../share") + "/test/schemas/simple.avpr";
 
-    simpleProtocol = Protocol.parse(new File(protocolFile));
+    Protocol simpleProtocol = Protocol.parse(new File(protocolFile));
 
     // start a simple server
     ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
     PrintStream p1 = new PrintStream(baos1);
-    receive = new RpcReceiveTool();
+    RpcReceiveTool receive = new RpcReceiveTool();
+
     receive.run1(null, p1, System.err,
         Arrays.asList(uriScheme + "://0.0.0.0:0/", protocolFile, "hello", "-data", "\"Hello!\""));
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    if (receive != null)
-      receive.server.close(); // force the server to finish
-  }
-
-  @Test
-  public void testRpcProtocol() throws Exception {
 
     // run the actual test
     ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
@@ -86,8 +60,9 @@ public class TestRpcProtocolTool {
 
     p2.flush();
 
-    assertEquals("Expected the simple.avpr protocol to be echoed to standout", simpleProtocol,
-        Protocol.parse(baos2.toString("UTF-8")));
+    Assertions.assertEquals(simpleProtocol, Protocol.parse(baos2.toString("UTF-8")),
+        "Expected the simple.avpr protocol to be echoed to standout");
 
+    receive.server.close(); // force the server to finish
   }
 }

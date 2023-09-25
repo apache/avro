@@ -3,6 +3,7 @@
     {"name": "name", "type": "string"},
     {"name": "nullable_name",  "type": ["string", "null"]},
     {"name": "favorite_number",  "type": ["int"]},
-    {"name": "nullable_favorite_number", "type": ["int", "null"]}
+    {"name": "nullable_favorite_number", "type": ["int", "null"]},
+    {"name": "nullable_array", "type": [{ "type": "array",  "items": "string" }, "null"]}
   ]
 }

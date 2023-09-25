@@ -190,14 +190,14 @@ fn get_data_struct_schema_def(
             .iter()
             .map(|field| (field.name.to_owned(), field.position))
             .collect();
-        apache_avro::schema::Schema::Record {
+        apache_avro::schema::Schema::Record(apache_avro::schema::RecordSchema {
             name,
             aliases: #record_aliases,
             doc: #record_doc,
             fields: schema_fields,
             lookup,
             attributes: Default::default(),
-        }
+        })
     })
 }
 
@@ -217,13 +217,14 @@ fn get_data_enum_schema_def(
             .map(|variant| variant.ident.to_string())
             .collect();
         Ok(quote! {
-            apache_avro::schema::Schema::Enum {
+            apache_avro::schema::Schema::Enum(apache_avro::schema::EnumSchema {
                 name: apache_avro::schema::Name::new(#full_schema_name).expect(&format!("Unable to parse enum name for schema {}", #full_schema_name)[..]),
                 aliases: #enum_aliases,
                 doc: #doc,
                 symbols: vec![#(#symbols.to_owned()),*],
+                default: None,
                 attributes: Default::default(),
-            }
+            })
         })
     } else {
         Err(vec![syn::Error::new(
@@ -293,17 +294,19 @@ fn to_compile_errors(errors: Vec<syn::Error>) -> proc_macro2::TokenStream {
 fn extract_outer_doc(attributes: &[Attribute]) -> Option<String> {
     let doc = attributes
         .iter()
-        .filter(|attr| attr.style == AttrStyle::Outer && attr.path.is_ident("doc"))
-        .map(|attr| {
-            let mut tokens = attr.tokens.clone().into_iter();
-            tokens.next(); // skip the Punct
-            let to_trim: &[char] = &['"', ' '];
-            tokens
-                .next() // use the Literal
-                .unwrap()
-                .to_string()
-                .trim_matches(to_trim)
-                .to_string()
+        .filter(|attr| attr.style == AttrStyle::Outer && attr.path().is_ident("doc"))
+        .filter_map(|attr| {
+            let name_value = attr.meta.require_name_value();
+            match name_value {
+                Ok(name_value) => match &name_value.value {
+                    syn::Expr::Lit(expr_lit) => match expr_lit.lit {
+                        syn::Lit::Str(ref lit_str) => Some(lit_str.value().trim().to_string()),
+                        _ => None,
+                    },
+                    _ => None,
+                },
+                Err(_) => None,
+            }
         })
         .collect::<Vec<String>>()
         .join("\n");

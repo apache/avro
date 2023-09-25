@@ -75,7 +75,9 @@ Records use the type name "record" and support the following attributes:
   * _name_: a JSON string providing the name of the field (required), and
   * _doc_: a JSON string describing this field for users (optional).
   * _type_: a [schema]({{< ref "#schema-declaration" >}} "Schema declaration"), as defined above
-  * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
+  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
+  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
+  * _default_: A default value for this field, only used when reading instances that lack the field for schema evolution purposes. The presence of a default value does not make the field optional at encoding time. Permitted values depend on the field's schema type, according to the table below. Default values for union fields correspond to the first schema that matches in the union. Default values for bytes and fixed fields are JSON strings, where Unicode code points 0-255 are mapped to unsigned 8-bit byte values 0-255. Avro encodes a field even if its value is equal to its default.
 
 *field default values*
 
@@ -92,9 +94,6 @@ Records use the type name "record" and support the following attributes:
 | array         | array          | `[1]`       |
 | map           | object         | `{"a": 1}`  |
 | fixed         | string         | `"\u00ff"`  |
-
-  * _order_: specifies how this field impacts sort ordering of this record (optional). Valid values are "ascending" (the default), "descending", or "ignore". For more details on how this is used, see the sort order section below.
-  * _aliases_: a JSON array of strings, providing alternate names for this field (optional).
 
 For example, a linked-list of 64-bit values may be defined with:
 ```jsonc
@@ -161,7 +160,7 @@ For example, a map from string to long is declared with:
 ### Unions
 Unions, as mentioned above, are represented using JSON arrays. For example, `["null", "string"]` declares a schema which may be either a null or string.
 
-(Note that when a [default value]({{< ref "#schema-record" >}} "Schema record") is specified for a record field whose type is a union, the type of the default value must match the first element of the union. Thus, for unions containing "null", the "null" is usually listed first, since the default value of such unions is typically null.)
+(Note that when a [default value]({{< ref "#schema-record" >}} "Schema record") is specified for a record field whose type is a union, the type of the default value must match with one element of the union.
 
 Unions may not contain more than one schema with the same type, except for the named types record, fixed and enum. For example, unions containing two array types or two map types are not permitted, but two types with different names are permitted. (Names permit efficient resolution when reading and writing unions.)
 
@@ -394,12 +393,12 @@ For example, the union schema `["null","string","Foo"]`, where Foo is a record n
 
 Note that the original schema is still required to correctly process JSON-encoded data. For example, the JSON encoding does not distinguish between _int_ and _long_, _float_ and _double_, records and maps, enums and strings, etc.
 
-#### Single-object encoding
+### Single-object encoding
 In some situations a single Avro serialized object is to be stored for a longer period of time. One very common example is storing Avro records for several weeks in an [Apache Kafka](https://kafka.apache.org/) topic.
 
 In the period after a schema change this persistence system will contain records that have been written with different schemas. So the need arises to know which schema was used to write a record to support schema evolution correctly. In most cases the schema itself is too large to include in the message, so this binary wrapper format supports the use case more effectively.
 
-##### Single object encoding specification
+#### Single object encoding specification
 Single Avro objects are encoded as follows:
 
 1. A two-byte marker, `C3 01`, to show that the message is Avro and uses this single-record format (version 1).
@@ -813,7 +812,7 @@ The following schema represents a date:
 }
 ```
 
-### Time (millisecond precision)
+### Time (millisecond precision) {#time_ms}
 The `time-millis` logical type represents a time of day, with no reference to a particular calendar, time zone or date, with a precision of one millisecond.
 
 A `time-millis` logical type annotates an Avro `int`, where the int stores the number of milliseconds after midnight, 00:00:00.000.
@@ -823,7 +822,7 @@ The `time-micros` logical type represents a time of day, with no reference to a 
 
 A `time-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds after midnight, 00:00:00.000000.
 
-### Timestamp (millisecond precision)
+### Timestamp (millisecond precision) {#timestamp_ms}
 The `timestamp-millis` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
 A `timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
@@ -833,7 +832,7 @@ The `timestamp-micros` logical type represents an instant on the global timeline
 
 A `timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
 
-### Local timestamp (millisecond precision)
+### Local timestamp (millisecond precision) {#local_timestamp_ms}
 The `local-timestamp-millis` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
 
 A `local-timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
