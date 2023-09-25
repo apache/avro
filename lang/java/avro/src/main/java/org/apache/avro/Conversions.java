@@ -18,15 +18,18 @@
 
 package org.apache.avro;
 
-import java.math.RoundingMode;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.util.TimePeriod;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -127,7 +130,7 @@ public class Conversions {
           scaleAdjusted = true;
         } catch (ArithmeticException aex) {
           throw new AvroTypeException(
-              "Cannot encode decimal with scale " + valueScale + " as scale " + scale + " without rounding");
+            "Cannot encode decimal with scale " + valueScale + " as scale " + scale + " without rounding");
         }
       }
 
@@ -136,14 +139,51 @@ public class Conversions {
       if (valuePrecision > precision) {
         if (scaleAdjusted) {
           throw new AvroTypeException("Cannot encode decimal with precision " + valuePrecision + " as max precision "
-              + precision + ". This is after safely adjusting scale from " + valueScale + " to required " + scale);
+                                      + precision + ". This is after safely adjusting scale from " + valueScale + " to required " + scale);
         } else {
           throw new AvroTypeException(
-              "Cannot encode decimal with precision " + valuePrecision + " as max precision " + precision);
+            "Cannot encode decimal with precision " + valuePrecision + " as max precision " + precision);
         }
       }
 
       return value;
+    }
+  }
+
+  public static class DurationConversion extends Conversion<TimePeriod> {
+    @Override
+    public Class<TimePeriod> getConvertedType() {
+      return TimePeriod.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "duration";
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.duration().addToSchema(Schema.createFixed("time.Duration",
+          "A 12-byte byte array encoding a duration in months, days and milliseconds.", null, 12));
+    }
+
+    @Override
+    public TimePeriod fromFixed(GenericFixed value, Schema schema, LogicalType type) {
+      IntBuffer buffer = ByteBuffer.wrap(value.bytes()).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer();
+      long months = Integer.toUnsignedLong(buffer.get());
+      long days = Integer.toUnsignedLong(buffer.get());
+      long millis = Integer.toUnsignedLong(buffer.get());
+      return TimePeriod.of(months, days, millis);
+    }
+
+    @Override
+    public GenericFixed toFixed(TimePeriod value, Schema schema, LogicalType type) {
+      ByteBuffer buffer = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN);
+      IntBuffer intBuffer = buffer.asIntBuffer();
+      intBuffer.put((int) value.getMonths());
+      intBuffer.put((int) value.getDays());
+      intBuffer.put((int) value.getMillis());
+      return new GenericData.Fixed(schema, buffer.array());
     }
   }
 
@@ -158,7 +198,7 @@ public class Conversions {
    * @param conversion The tool used to finish the conversion. Cannot be null if
    *                   datum is not null.
    * @return The result object, which is a high level object of the logical type.
-   *         The null datum always converts to a null value.
+   * The null datum always converts to a null value.
    * @throws IllegalArgumentException if datum is not null, but schema, type or
    *                                  conversion is.
    */
@@ -169,40 +209,40 @@ public class Conversions {
 
     if (schema == null || type == null || conversion == null) {
       throw new IllegalArgumentException("Parameters cannot be null! Parameter values:"
-          + Arrays.deepToString(new Object[] { datum, schema, type, conversion }));
+                                         + Arrays.deepToString(new Object[]{datum, schema, type, conversion}));
     }
 
     try {
       switch (schema.getType()) {
-      case RECORD:
-        return conversion.fromRecord((IndexedRecord) datum, schema, type);
-      case ENUM:
-        return conversion.fromEnumSymbol((GenericEnumSymbol<?>) datum, schema, type);
-      case ARRAY:
-        return conversion.fromArray((Collection<?>) datum, schema, type);
-      case MAP:
-        return conversion.fromMap((Map<?, ?>) datum, schema, type);
-      case FIXED:
-        return conversion.fromFixed((GenericFixed) datum, schema, type);
-      case STRING:
-        return conversion.fromCharSequence((CharSequence) datum, schema, type);
-      case BYTES:
-        return conversion.fromBytes((ByteBuffer) datum, schema, type);
-      case INT:
-        return conversion.fromInt((Integer) datum, schema, type);
-      case LONG:
-        return conversion.fromLong((Long) datum, schema, type);
-      case FLOAT:
-        return conversion.fromFloat((Float) datum, schema, type);
-      case DOUBLE:
-        return conversion.fromDouble((Double) datum, schema, type);
-      case BOOLEAN:
-        return conversion.fromBoolean((Boolean) datum, schema, type);
+        case RECORD:
+          return conversion.fromRecord((IndexedRecord) datum, schema, type);
+        case ENUM:
+          return conversion.fromEnumSymbol((GenericEnumSymbol<?>) datum, schema, type);
+        case ARRAY:
+          return conversion.fromArray((Collection<?>) datum, schema, type);
+        case MAP:
+          return conversion.fromMap((Map<?, ?>) datum, schema, type);
+        case FIXED:
+          return conversion.fromFixed((GenericFixed) datum, schema, type);
+        case STRING:
+          return conversion.fromCharSequence((CharSequence) datum, schema, type);
+        case BYTES:
+          return conversion.fromBytes((ByteBuffer) datum, schema, type);
+        case INT:
+          return conversion.fromInt((Integer) datum, schema, type);
+        case LONG:
+          return conversion.fromLong((Long) datum, schema, type);
+        case FLOAT:
+          return conversion.fromFloat((Float) datum, schema, type);
+        case DOUBLE:
+          return conversion.fromDouble((Double) datum, schema, type);
+        case BOOLEAN:
+          return conversion.fromBoolean((Boolean) datum, schema, type);
       }
       return datum;
     } catch (ClassCastException e) {
       throw new AvroRuntimeException(
-          "Cannot convert " + datum + ':' + datum.getClass().getSimpleName() + ": expected generic type", e);
+        "Cannot convert " + datum + ':' + datum.getClass().getSimpleName() + ": expected generic type", e);
     }
   }
 
@@ -217,8 +257,8 @@ public class Conversions {
    * @param conversion The tool used to finish the conversion. Cannot be null if
    *                   datum is not null.
    * @return The result object, which is an underlying representation object of
-   *         the logical type. If the input param datum is null, a null value will
-   *         be returned.
+   * the logical type. If the input param datum is null, a null value will
+   * be returned.
    * @throws IllegalArgumentException if datum is not null, but schema, type or
    *                                  conversion is.
    */
@@ -229,41 +269,41 @@ public class Conversions {
 
     if (schema == null || type == null || conversion == null) {
       throw new IllegalArgumentException("Parameters cannot be null! Parameter values:"
-          + Arrays.deepToString(new Object[] { datum, schema, type, conversion }));
+                                         + Arrays.deepToString(new Object[]{datum, schema, type, conversion}));
     }
 
     try {
       Class<T> fromClass = conversion.getConvertedType();
       switch (schema.getType()) {
-      case RECORD:
-        return conversion.toRecord(fromClass.cast(datum), schema, type);
-      case ENUM:
-        return conversion.toEnumSymbol(fromClass.cast(datum), schema, type);
-      case ARRAY:
-        return conversion.toArray(fromClass.cast(datum), schema, type);
-      case MAP:
-        return conversion.toMap(fromClass.cast(datum), schema, type);
-      case FIXED:
-        return conversion.toFixed(fromClass.cast(datum), schema, type);
-      case STRING:
-        return conversion.toCharSequence(fromClass.cast(datum), schema, type);
-      case BYTES:
-        return conversion.toBytes(fromClass.cast(datum), schema, type);
-      case INT:
-        return conversion.toInt(fromClass.cast(datum), schema, type);
-      case LONG:
-        return conversion.toLong(fromClass.cast(datum), schema, type);
-      case FLOAT:
-        return conversion.toFloat(fromClass.cast(datum), schema, type);
-      case DOUBLE:
-        return conversion.toDouble(fromClass.cast(datum), schema, type);
-      case BOOLEAN:
-        return conversion.toBoolean(fromClass.cast(datum), schema, type);
+        case RECORD:
+          return conversion.toRecord(fromClass.cast(datum), schema, type);
+        case ENUM:
+          return conversion.toEnumSymbol(fromClass.cast(datum), schema, type);
+        case ARRAY:
+          return conversion.toArray(fromClass.cast(datum), schema, type);
+        case MAP:
+          return conversion.toMap(fromClass.cast(datum), schema, type);
+        case FIXED:
+          return conversion.toFixed(fromClass.cast(datum), schema, type);
+        case STRING:
+          return conversion.toCharSequence(fromClass.cast(datum), schema, type);
+        case BYTES:
+          return conversion.toBytes(fromClass.cast(datum), schema, type);
+        case INT:
+          return conversion.toInt(fromClass.cast(datum), schema, type);
+        case LONG:
+          return conversion.toLong(fromClass.cast(datum), schema, type);
+        case FLOAT:
+          return conversion.toFloat(fromClass.cast(datum), schema, type);
+        case DOUBLE:
+          return conversion.toDouble(fromClass.cast(datum), schema, type);
+        case BOOLEAN:
+          return conversion.toBoolean(fromClass.cast(datum), schema, type);
       }
       return datum;
     } catch (ClassCastException e) {
       throw new AvroRuntimeException(
-          "Cannot convert " + datum + ':' + datum.getClass().getSimpleName() + ": expected logical type", e);
+        "Cannot convert " + datum + ':' + datum.getClass().getSimpleName() + ": expected logical type", e);
     }
   }
 
