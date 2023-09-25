@@ -244,6 +244,7 @@ namespace Avro
             Schema sc = PrimitiveSchema.NewInstance(json);
             if (null != sc) return sc;
 
+            // Refer to https://issues.apache.org/jira/browse/AVRO-3856
             // Refer to https://github.com/JamesNK/Newtonsoft.Json/pull/2904
             // Newtonsoft author advised to use JObject.Load/JArray.Load instead of JObject.Parse()/JArray.Parse()
             // The reason is we can set the MaxDepth property on the JsonReader.
