@@ -49,6 +49,7 @@
     <Copyright>Copyright © 2019 The Apache Software Foundation.</Copyright>
     <PackageIcon>logo.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://avro.apache.org/</PackageProjectUrl>
     <PackageTags>Avro;Apache;Serialization;Binary;Json;Schema</PackageTags>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/apache/avro.git</RepositoryUrl>
@@ -56,6 +57,7 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)\LICENSE" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="$(MSBuildThisFileDirectory)\README.md" Pack="true" Visible="false" PackagePath=""/>
     <None Include="$(MSBuildThisFileDirectory)\..\..\doc\assets\icons\logo.png" Pack="true" Visible="false" PackagePath=""/>
   </ItemGroup>
 
