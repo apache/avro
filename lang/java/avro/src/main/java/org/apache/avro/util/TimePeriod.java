@@ -64,13 +64,6 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  * <p>
- * Given the time span of what we do,
- * </p>
- * supporting a little less than 358 million years), and cannot support negative
- * time periods.
- * </p>
- *
- * <p>
  * Comparison with the regular {@code java.time} classes:
  * </p>
  *
