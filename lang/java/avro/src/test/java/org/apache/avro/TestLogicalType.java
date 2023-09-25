@@ -18,16 +18,21 @@
 
 package org.apache.avro;
 
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-
 import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestLogicalType {
 
@@ -59,13 +64,13 @@ public class TestLogicalType {
   void decimalWithNonByteArrayTypes() {
     final LogicalType decimal = LogicalTypes.decimal(5, 2);
     // test simple types
-    Schema[] nonBytes = new Schema[] { Schema.createRecord("Record", null, null, false),
+    Schema[] nonBytes = new Schema[]{Schema.createRecord("Record", null, null, false),
         Schema.createArray(Schema.create(Schema.Type.BYTES)), Schema.createMap(Schema.create(Schema.Type.BYTES)),
         Schema.createEnum("Enum", null, null, Arrays.asList("a", "b")),
         Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.BYTES), Schema.createFixed("fixed", null, null, 4))),
         Schema.create(Schema.Type.BOOLEAN), Schema.create(Schema.Type.INT), Schema.create(Schema.Type.LONG),
         Schema.create(Schema.Type.FLOAT), Schema.create(Schema.Type.DOUBLE), Schema.create(Schema.Type.NULL),
-        Schema.create(Schema.Type.STRING) };
+        Schema.create(Schema.Type.STRING)};
     for (final Schema schema : nonBytes) {
       assertThrows("Should reject type: " + schema.getType(), IllegalArgumentException.class,
           "Logical type decimal must be backed by fixed or bytes", () -> {
@@ -198,6 +203,30 @@ public class TestLogicalType {
   }
 
   @Test
+  void uuidExtendsString() {
+    Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
+    assertEquals(LogicalTypes.uuid(), uuidSchema.getLogicalType());
+
+    assertThrows("UUID requires a string", IllegalArgumentException.class,
+        "Uuid can only be used with an underlying string type",
+        () -> LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.INT)));
+  }
+
+  @Test
+  void durationExtendsFixed12() {
+    Schema durationSchema = LogicalTypes.duration().addToSchema(Schema.createFixed("f", null, null, 12));
+    assertEquals(LogicalTypes.duration(), durationSchema.getLogicalType());
+
+    assertThrows("Duration requires a fixed(12)", IllegalArgumentException.class,
+        "Duration can only be used with an underlying fixed type of size 12.",
+        () -> LogicalTypes.duration().addToSchema(Schema.create(Schema.Type.INT)));
+
+    assertThrows("Duration requires a fixed(12)", IllegalArgumentException.class,
+        "Duration can only be used with an underlying fixed type of size 12.",
+        () -> LogicalTypes.duration().addToSchema(Schema.createFixed("wrong", null, null, 42)));
+  }
+
+  @Test
   void logicalTypeEquals() {
     LogicalTypes.Decimal decimal90 = LogicalTypes.decimal(9);
     LogicalTypes.Decimal decimal80 = LogicalTypes.decimal(8);
@@ -308,12 +337,11 @@ public class TestLogicalType {
    *
    * @param message            A String message to describe this assertion
    * @param expected           An Exception class that the Runnable should throw
-   * @param containedInMessage A String that should be contained by the thrown
-   *                           exception's message
+   * @param containedInMessage A String that should be contained by the thrown exception's message
    * @param callable           A Callable that is expected to throw the exception
    */
   public static void assertThrows(String message, Class<? extends Exception> expected, String containedInMessage,
-      Callable<?> callable) {
+                                  Callable<?> callable) {
     try {
       callable.call();
       fail("No exception was thrown (" + message + "), expected: " + expected.getName());
