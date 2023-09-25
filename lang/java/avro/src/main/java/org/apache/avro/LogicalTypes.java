@@ -271,7 +271,9 @@ public class LogicalTypes {
     }
   }
 
-  /** Duration represents a duration, consisting on months, days and milliseconds */
+  /**
+   * Duration represents a duration, consisting on months, days and milliseconds
+   */
   public static class Duration extends LogicalType {
     private Duration() {
       super(DURATION);

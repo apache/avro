@@ -39,54 +39,71 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 /**
- * <p>A temporal amount to model an
- * {@link org.apache.avro.LogicalTypes.Duration Avro duration} (the logical type).
+ * <p>
+ * A temporal amount to model an {@link org.apache.avro.LogicalTypes.Duration
+ * Avro duration} (the logical type).
  * </p>
  *
- * <p>It consists of a number of months, days and milliseconds, all modelled as an
- * unsigned integer.</p>
+ * <p>
+ * It consists of a number of months, days and milliseconds, all modelled as an
+ * unsigned integer.
+ * </p>
  *
- * <p>Compared to {@link Period java.time.Period}, this class has a smaller range
- * ('only' supporting a little less than 358 million years), and cannot support negative time periods.</p>
+ * <p>
+ * Compared to {@link Period java.time.Period}, this class has a smaller range
+ * ('only' supporting a little less than 358 million years), and cannot support
+ * negative time periods.
+ * </p>
  *
- * <p>Compared to {@link Duration java.time.Duration}, this class has less
- * precision (milliseconds compared to nanoseconds), cannot support negative durations, and has a much smaller range.
- * Where {@code java.time.Duration} supports fixed ranges up to about 68 years, {@code TimePeriod} can only handle about
- * 49 days.</p>
+ * <p>
+ * Compared to {@link Duration java.time.Duration}, this class has less
+ * precision (milliseconds compared to nanoseconds), cannot support negative
+ * durations, and has a much smaller range. Where {@code java.time.Duration}
+ * supports fixed ranges up to about 68 years, {@code TimePeriod} can only
+ * handle about 49 days.
+ * </p>
  *
- * <p>Given the time span of what we do, </p>
- * supporting a little less than 358 million years), and cannot support negative time periods.</p>
+ * <p>
+ * Given the time span of what we do,
+ * </p>
+ * supporting a little less than 358 million years), and cannot support negative
+ * time periods.
+ * </p>
  *
- * <p>Comparison with the regular {@code java.time} classes:</p>
+ * <p>
+ * Comparison with the regular {@code java.time} classes:
+ * </p>
  *
  * <table>
- *   <tr>
- *     <th></th>
- *     <th>TimePeriod</th>
- *     <th>{@link Period}</th>
- *     <th>{@link Duration}</th>
- *   </tr>
- *   <tr>
- *     <td>Precision</td>
- *     <td>milliseconds</td>
- *     <td>days</td>
- *     <td>nanoseconds</td>
- *   </tr>
- *   <tr>
- *     <td>Time range (approx.)</td>
- *     <td>0 - 49 days</td>
- *     <td>unsupported</td>
- *     <td>-68 - 68 years</td>
- *   </tr>
- *   <tr>
- *     <td>Date range (approx.)</td>
- *     <td>0 to 370 million years</td>
- *     <td>-2.3 to 2.3 billion years</td>
- *     <td>unsupported</td>
- *   </tr>
+ * <tr>
+ * <th></th>
+ * <th>TimePeriod</th>
+ * <th>{@link Period}</th>
+ * <th>{@link Duration}</th>
+ * </tr>
+ * <tr>
+ * <td>Precision</td>
+ * <td>milliseconds</td>
+ * <td>days</td>
+ * <td>nanoseconds</td>
+ * </tr>
+ * <tr>
+ * <td>Time range (approx.)</td>
+ * <td>0 - 49 days</td>
+ * <td>unsupported</td>
+ * <td>-68 - 68 years</td>
+ * </tr>
+ * <tr>
+ * <td>Date range (approx.)</td>
+ * <td>0 to 370 million years</td>
+ * <td>-2.3 to 2.3 billion years</td>
+ * <td>unsupported</td>
+ * </tr>
  * </table>
  *
- * @see <a href="https://avro.apache.org/docs/1.11.1/specification/#duration">Avro 1.11 specification on duration</a>
+ * @see <a href=
+ *      "https://avro.apache.org/docs/1.11.1/specification/#duration">Avro 1.11
+ *      specification on duration</a>
  */
 public final class TimePeriod implements TemporalAmount, Serializable {
   private static final long MAX_UNSIGNED_INT = 0xffffffffL;
@@ -106,7 +123,8 @@ public final class TimePeriod implements TemporalAmount, Serializable {
   private final long millis;
 
   /**
-   * Create a TimePeriod from another TemporalAmount, such as a {@link Period} or a {@link Duration}.
+   * Create a TimePeriod from another TemporalAmount, such as a {@link Period} or
+   * a {@link Duration}.
    *
    * @param amount a temporal amount
    * @return the corresponding TimePeriod
@@ -197,7 +215,8 @@ public final class TimePeriod implements TemporalAmount, Serializable {
    * @param days   a number of days
    * @param millis a number of milliseconds
    * @return the corresponding TimePeriod
-   * @throws ArithmeticException if any of the parameters does not fit an unsigned long (0..4294967296)
+   * @throws ArithmeticException if any of the parameters does not fit an unsigned
+   *                             long (0..4294967296)
    */
   public static TimePeriod of(long months, long days, long millis) {
     return new TimePeriod(unsignedInt(months), unsignedInt(days), unsignedInt(millis));
@@ -230,8 +249,7 @@ public final class TimePeriod implements TemporalAmount, Serializable {
       int monthsAsInt = (int) (months % MONTHS_PER_YEAR);
       int daysAsInt = (int) days;
       if (days != daysAsInt) {
-        throw new DateTimeException(
-            "Too many days: a Period can contain at most " + Integer.MAX_VALUE + " days.");
+        throw new DateTimeException("Too many days: a Period can contain at most " + Integer.MAX_VALUE + " days.");
       }
       return Period.ofYears(yearsAsInt).withMonths(monthsAsInt).withDays(daysAsInt);
     }
@@ -239,7 +257,8 @@ public final class TimePeriod implements TemporalAmount, Serializable {
   }
 
   /**
-   * Determines if the TimePeriod is date based (i.e., if its milliseconds component is 0).
+   * Determines if the TimePeriod is date based (i.e., if its milliseconds
+   * component is 0).
    *
    * @return {@code true} iff the TimePeriod is date based
    */
@@ -248,7 +267,8 @@ public final class TimePeriod implements TemporalAmount, Serializable {
   }
 
   /**
-   * Determines if the TimePeriod is time based (i.e., if its months and days components are 0).
+   * Determines if the TimePeriod is time based (i.e., if its months and days
+   * components are 0).
    *
    * @return {@code true} iff the TimePeriod is time based
    */

@@ -61,7 +61,7 @@ class TimePeriodTest {
     assertSame(timePeriod, TimePeriod.from(timePeriod));
     assertComponents(12, 34, 56, timePeriod);
 
-    assertComponents(14, 3, 0, TimePeriod.from(IsoChronology.INSTANCE.period(1,2,3)));
+    assertComponents(14, 3, 0, TimePeriod.from(IsoChronology.INSTANCE.period(1, 2, 3)));
 
     assertComponents(36_000, 0, 0, TimePeriod.from(TimeAmount.of(ChronoUnit.MILLENNIA, 3)));
     assertComponents(3_600, 0, 0, TimePeriod.from(TimeAmount.of(ChronoUnit.CENTURIES, 3)));
@@ -84,9 +84,10 @@ class TimePeriodTest {
     // Micros and nanos must be a multiple of milliseconds
     assertThrows(DateTimeException.class, () -> TimePeriod.from(TimeAmount.of(ChronoUnit.MICROS, 3)));
     assertThrows(DateTimeException.class, () -> TimePeriod.from(TimeAmount.of(ChronoUnit.NANOS, 3)));
-    // Unsupported cases (null, non-ISO chronology, unknown temporal unit, non-ChronoUnit)
+    // Unsupported cases (null, non-ISO chronology, unknown temporal unit,
+    // non-ChronoUnit)
     assertThrows(NullPointerException.class, () -> TimePeriod.from(null));
-    assertThrows(DateTimeException.class, () -> TimePeriod.from(JapaneseChronology.INSTANCE.period(1,2,3)));
+    assertThrows(DateTimeException.class, () -> TimePeriod.from(JapaneseChronology.INSTANCE.period(1, 2, 3)));
     assertThrows(UnsupportedTemporalTypeException.class, () -> TimePeriod.from(TimeAmount.of(ChronoUnit.ERAS, 1)));
     assertThrows(UnsupportedTemporalTypeException.class, () -> TimePeriod.from(TimeAmount.of(DummyUnit.INSTANCE, 3)));
     // Arguments are long, but must fit an unsigned long
@@ -96,7 +97,7 @@ class TimePeriodTest {
 
     // Odd one out: querying an unsupported temporal unit
     // (assertComponents handles all valid cases)
-    assertThrows(UnsupportedTemporalTypeException.class, () -> TimePeriod.of(1,1,1).get(ERAS));
+    assertThrows(UnsupportedTemporalTypeException.class, () -> TimePeriod.of(1, 1, 1).get(ERAS));
   }
 
   @Test
@@ -181,13 +182,13 @@ class TimePeriodTest {
     TimePeriod timePeriod3 = TimePeriod.of(1, 9, 9);
     TimePeriod timePeriod4 = TimePeriod.of(1, 2, 9);
 
-    //noinspection EqualsWithItself
+    // noinspection EqualsWithItself
     assertEquals(timePeriod1a, timePeriod1a);
     assertEquals(timePeriod1a, timePeriod1b);
     assertEquals(timePeriod1a.hashCode(), timePeriod1b.hashCode());
 
     assertNotEquals(timePeriod1a, null);
-    //noinspection AssertBetweenInconvertibleTypes
+    // noinspection AssertBetweenInconvertibleTypes
     assertNotEquals(timePeriod1a, "not equal");
     assertNotEquals(timePeriod1a, timePeriod2);
     assertNotEquals(timePeriod1a.hashCode(), timePeriod2.hashCode());
@@ -199,20 +200,20 @@ class TimePeriodTest {
 
   @Test
   void checkStringRepresentation() {
-    assertEquals("P0", TimePeriod.of(0,0,0).toString());
-    assertEquals("P1Y", TimePeriod.of(12,0,0).toString());
-    assertEquals("P2M", TimePeriod.of(2,0,0).toString());
-    assertEquals("P3", TimePeriod.of(0,3,0).toString());
-    assertEquals("P1Y2M3", TimePeriod.of(14,3,0).toString());
-    assertEquals("PT04", TimePeriod.of(0,0, 14400000).toString());
-    assertEquals("PT00:05", TimePeriod.of(0,0, 300000).toString());
-    assertEquals("PT00:00:06", TimePeriod.of(0,0, 6000).toString());
-    assertEquals("PT00:00:00.007", TimePeriod.of(0,0, 7).toString());
-    assertEquals("P1Y2M3T04:05:06.007", TimePeriod.of(14,3, 14706007).toString());
+    assertEquals("P0", TimePeriod.of(0, 0, 0).toString());
+    assertEquals("P1Y", TimePeriod.of(12, 0, 0).toString());
+    assertEquals("P2M", TimePeriod.of(2, 0, 0).toString());
+    assertEquals("P3", TimePeriod.of(0, 3, 0).toString());
+    assertEquals("P1Y2M3", TimePeriod.of(14, 3, 0).toString());
+    assertEquals("PT04", TimePeriod.of(0, 0, 14400000).toString());
+    assertEquals("PT00:05", TimePeriod.of(0, 0, 300000).toString());
+    assertEquals("PT00:00:06", TimePeriod.of(0, 0, 6000).toString());
+    assertEquals("PT00:00:00.007", TimePeriod.of(0, 0, 7).toString());
+    assertEquals("P1Y2M3T04:05:06.007", TimePeriod.of(14, 3, 14706007).toString());
 
     // Days and millis will never overflow to months/days, to respect differences
     // in months and days (daylight saving).
-    assertEquals("P123T1193:02:47.295", TimePeriod.of(0,123, 4294967295L).toString());
+    assertEquals("P123T1193:02:47.295", TimePeriod.of(0, 123, 4294967295L).toString());
   }
 
   private void assertComponents(long months, long days, long millis, TimePeriod timePeriod) {
@@ -271,6 +272,7 @@ class TimePeriodTest {
 
   private static class DummyUnit implements TemporalUnit {
     private static final DummyUnit INSTANCE = new DummyUnit();
+
     @Override
     public Duration getDuration() {
       return null;

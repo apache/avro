@@ -132,20 +132,22 @@ public class TestGenericLogicalTypes {
 
     Random rng = new Random();
     TimePeriod d1 = TimePeriod.of(rng.nextInt(1000), rng.nextInt(1000), rng.nextInt(1000));
-    ByteBuffer b1 = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN)
-        .putInt((int) d1.getMonths()).putInt((int) d1.getDays()).putInt((int) d1.getMillis());
+    ByteBuffer b1 = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN).putInt((int) d1.getMonths())
+        .putInt((int) d1.getDays()).putInt((int) d1.getMillis());
     GenericFixed f1 = new GenericData.Fixed(fixedSchema, b1.array());
 
     TimePeriod d2 = TimePeriod.of(rng.nextInt(1000), rng.nextInt(1000), rng.nextInt(1000));
-    ByteBuffer b2 = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN)
-        .putInt((int) d2.getMonths()).putInt((int) d2.getDays()).putInt((int) d2.getMillis());
+    ByteBuffer b2 = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN).putInt((int) d2.getMonths())
+        .putInt((int) d2.getDays()).putInt((int) d2.getMillis());
     GenericFixed f2 = new GenericData.Fixed(fixedSchema, b2.array());
 
     File test = write(fixedSchema, f1, f2);
-    assertEquals(Arrays.asList(d1, d2), read(GENERIC.createDatumReader(durationSchema), test), "Should convert fixed bytes to durations");
+    assertEquals(Arrays.asList(d1, d2), read(GENERIC.createDatumReader(durationSchema), test),
+        "Should convert fixed bytes to durations");
 
     test = write(GENERIC, durationSchema, d2, d1);
-    assertEquals(Arrays.asList(f2, f1), read(GenericData.get().createDatumReader(fixedSchema), test), "Should convert durations to fixed bytes");
+    assertEquals(Arrays.asList(f2, f1), read(GenericData.get().createDatumReader(fixedSchema), test),
+        "Should convert durations to fixed bytes");
   }
 
   @Test
