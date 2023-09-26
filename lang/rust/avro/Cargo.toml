@@ -18,10 +18,10 @@
 [package]
 name = "apache-avro"
 description = "A library for working with Apache Avro in Rust"
+readme = "README.md"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
-readme.workspace = true
 repository.workspace = true
 edition.workspace = true
 rust-version.workspace = true
