@@ -63,7 +63,7 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
 name = "apache-avro"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "anyhow",
  "apache-avro-derive",
@@ -98,7 +98,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-derive"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "apache-avro",
  "darling",
@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "apache-avro-test-helper"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "anyhow",
  "color-backtrace",
