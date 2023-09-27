@@ -266,7 +266,7 @@ Aliases function by re-writing the writer's schema using aliases from the reader
 
 A type alias may be specified either as a fully namespace-qualified, or relative to the namespace of the name it is an alias for. For example, if a type named "a.b" has aliases of "c" and "x.y", then the fully qualified names of its aliases are "a.c" and "x.y".
 
-Aliases are alternative names, and thus subject to the same uniqueness constraints as names. Aliases should be valid names, but this is not required: any string is accepted as an alias. This allows schema evolution to correct illegal names in old schemata.
+Aliases are alternative names, and thus subject to the same uniqueness constraints as names. Aliases should be valid names, but this is not required: any string is accepted as an alias. When aliases are used "to map a writer's schema to the reader's" (see above), this allows schema evolution to correct illegal names in old schemata.
 
 ## Fixing an invalid, but previously accepted, schema
 Over time, rules and validations on schemas have changed. It is therefore possible that a schema used to work with an older version of Avro, but now fails to parse.
