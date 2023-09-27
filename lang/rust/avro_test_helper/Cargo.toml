@@ -23,11 +23,11 @@ rust-version.workspace = true
 description = "Apache Avro tests helper."
 authors.workspace = true
 license.workspace = true
-readme.workspace = true
 repository.workspace = true
 keywords = ["avro", "data", "serialization", "test"]
 categories.workspace = true
 documentation = "https://docs.rs/apache-avro-test-helper"
+readme = "README.md"
 
 
 [dependencies]
