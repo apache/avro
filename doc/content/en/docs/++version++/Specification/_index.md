@@ -179,10 +179,10 @@ For example, 16-byte quantity may be declared with:
 {"type": "fixed", "size": 16, "name": "md5"}
 ```
 
-### Names {#names}
-Record, enums and fixed are named types. Each has a fullname that is composed of two parts; a name and a namespace, separated by a dot. Equality of names is defined on the fullname.
+### Names
+Record, enums and fixed are named types. Each has a fullname that is composed of two parts: a name and a namespace, separated by a dot. Equality of names is defined on the fullname &ndash; it is an error to specify two different types with the same name.
 
-Record fields and enum symbols have names as well (but no namespace). Equality of fields and enum symbols is defined on the name of the field/symbol within its scope (the record/enum that defines it). Fields and enum symbols across scopes are never equal.
+Record fields and enum symbols have names as well (but no namespace). Equality of field names and enum symbols is defined within their scope (the record/enum that defines them). It is an error to define multiple fields or enum symbols with the same name in a single type. Fields and enum symbols across scopes are never equal, so field names and enum symbols can be reused in a different type.
 
 The name portion of the fullname of named types, record field names, and enum symbols must:
 
@@ -265,6 +265,22 @@ Named types and fields may have aliases. An implementation may optionally use al
 Aliases function by re-writing the writer's schema using aliases from the reader's schema. For example, if the writer's schema was named "Foo" and the reader's schema is named "Bar" and has an alias of "Foo", then the implementation would act as though "Foo" were named "Bar" when reading. Similarly, if data was written as a record with a field named "x" and is read as a record with a field named "y" with alias "x", then the implementation would act as though "x" were named "y" when reading.
 
 A type alias may be specified either as a fully namespace-qualified, or relative to the namespace of the name it is an alias for. For example, if a type named "a.b" has aliases of "c" and "x.y", then the fully qualified names of its aliases are "a.c" and "x.y".
+
+Aliases are alternative names, and thus subject to the same uniqueness constraints as names. Aliases should be valid names, but this is not required: any string is accepted as an alias. When aliases are used "to map a writer's schema to the reader's" (see above), this allows schema evolution to correct illegal names in old schemata.
+
+## Fixing an invalid, but previously accepted, schema
+Over time, rules and validations on schemas have changed. It is therefore possible that a schema used to work with an older version of Avro, but now fails to parse.
+
+This can have several reasons, as listed below. Each reason also describes a fix, which can be applied using [schema resolution]({{< ref "#schema-resolution" >}}): you fix the problems in the schema in a way that is compatible, and then you can use the new schema to read the old data.
+
+### Invalid names
+Invalid names of types and fields can be corrected by renaming (using an [alias]({{< ref "#aliases" >}})). This works for simple names, namespaces and fullnames.
+
+This fix is twofold: first, you add the invalid name as an alias to the type/field. Then, you change the name to any valid name.
+
+### Invalid defaults
+Default values are only used to fill in missing data when reading. Invalid defaults create invalid values in these cases. The fix is to correct the default values.
+
 
 ## Data Serialization and Deserialization
 Binary encoded Avro data does not include type information or field names. The benefit is that the serialized data is small, but as a result a schema must always be used in order to read Avro data correctly. The best way to ensure that the schema is structurally identical to the one used to write the data is to use the exact same schema.
