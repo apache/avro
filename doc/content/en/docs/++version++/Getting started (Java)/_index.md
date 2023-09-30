@@ -50,16 +50,16 @@ As well as the Avro Maven plugin (for performing code generation):
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-maven-plugin</artifactId>
   <version>{{< avro_version >}}</version>
+  <configuration>
+    <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+    <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
+  </configuration>
   <executions>
     <execution>
       <phase>generate-sources</phase>
       <goals>
         <goal>schema</goal>
       </goals>
-      <configuration>
-        <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-        <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-      </configuration>
     </execution>
   </executions>
 </plugin>
