@@ -28,7 +28,7 @@
   <name>mr-example</name>
 
   <properties>
-    <avro.version>1.11.0</avro.version>
+    <avro.version>1.11.3</avro.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
