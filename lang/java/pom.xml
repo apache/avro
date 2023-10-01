@@ -59,7 +59,7 @@
     <thrift.version>0.16.0</thrift.version>
     <tukaani.version>1.9</tukaani.version>
     <velocity.version>2.3</velocity.version>
-    <zstd-jni.version>1.5.5-5</zstd-jni.version>
+    <zstd-jni.version>1.5.5-6</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.8</bundle-plugin-version>
