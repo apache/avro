@@ -145,7 +145,7 @@ public class JacksonUtils {
         }
       } else if (jsonNode.isDouble()) {
         return jsonNode.doubleValue();
-      } else if (jsonNode.isFloat()) {
+      } else {
         return jsonNode.floatValue();
       }
     } else if (jsonNode.isBinary()) {

@@ -216,10 +216,10 @@ public class TestSchemaBuilder {
     assertEquals(true, iter.next());
     assertEquals(Integer.MAX_VALUE, iter.next());
     assertEquals(Long.MAX_VALUE, iter.next());
-    // float converts to double
+
     assertEquals(1.0f, iter.next());
     assertEquals(Double.MAX_VALUE, iter.next());
-    // byte[] converts to string
+
     assertArrayEquals(new byte[] { 0x41, 0x42, 0x43 }, (byte[]) iter.next());
     assertEquals("abc", iter.next());
   }
@@ -249,12 +249,12 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-    // float converts to double
+
     assertTrue(valueMap.get("floatKey") instanceof Float);
     assertEquals(1.0f, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-    // byte[] converts to string
+
     assertTrue(valueMap.get("byteKey") instanceof byte[]);
     assertArrayEquals("ABC".getBytes(StandardCharsets.UTF_8), (byte[]) valueMap.get("byteKey"));
     assertTrue(valueMap.get("stringKey") instanceof String);
@@ -289,12 +289,12 @@ public class TestSchemaBuilder {
     assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
     assertTrue(valueMap.get("longKey") instanceof Long);
     assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
-    // float converts to double
+
     assertTrue(valueMap.get("floatKey") instanceof Float);
     assertEquals(1.0f, valueMap.get("floatKey"));
     assertTrue(valueMap.get("doubleKey") instanceof Double);
     assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
-    // byte[] converts to string
+
     assertTrue(valueMap.get("byteKey") instanceof byte[]);
     assertEquals("ABC", new String((byte[]) valueMap.get("byteKey")));
     assertTrue(valueMap.get("stringKey") instanceof String);
