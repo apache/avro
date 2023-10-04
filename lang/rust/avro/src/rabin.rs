@@ -133,7 +133,7 @@ mod tests {
     use digest::Digest;
     use pretty_assertions::assert_eq;
 
-    // See: https://github.com/apache/avro/blob/master/share/test/data/schema-tests.txt
+    // See: https://github.com/apache/avro/blob/main/share/test/data/schema-tests.txt
     #[test]
     fn test1() -> TestResult {
         let data: &[(&str, i64)] = &[
