@@ -1,0 +1,300 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: CI on Linux ARM64
+
+on:
+  push:
+    branches: 
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  java:
+    name: Java on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/java
+          export MAVEN_VERSION="3.9.4"
+          wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+          tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+          export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+          export PATH="$M2_HOME/bin:$PATH"
+          java -version
+          mvn -version
+          #MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
+          ./build.sh clean test
+            
+  c:
+    name: C on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y cmake liblzma-dev libsnappy-dev libjansson-dev zlib1g-dev pkg-config
+
+      - name: Build
+        run: |
+          set -x  
+          cd lang/c
+          ./build.sh clean test
+
+  cplusplus:
+    name: C++ on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y gcc g++ libboost-all-dev cmake
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/c++
+          ./build.sh clean test
+
+  csharp:
+    name: C# on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Nuget
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget libzstd-dev libicu-dev
+          wget https://dot.net/v1/dotnet-install.sh
+          bash ./dotnet-install.sh --channel "3.1" --install-dir "$HOME/.dotnet" # 3.1
+          bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
+          bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
+          bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet" # 7.0
+          
+      - name: Build
+        run: |
+          set -x
+          export PATH=$HOME/.dotnet:$PATH
+          dotnet --list-sdks
+          cd lang/csharp
+          ./build.sh clean test
+
+  python:
+    name: Python on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y python3 python3-dev python3-pip git libbz2-dev libjansson-dev liblzma-dev libsnappy-dev libzstd-dev
+          python3 -m pip install --upgrade pip setuptools tox
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/py
+          ./build.sh clean test
+
+  ruby:
+    name: Ruby on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache gems
+        uses: actions/cache@v3
+        with:
+          path: .gem
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y ruby-dev bundler libsnappy-dev libyaml-dev
+
+      - name: Build
+        run: |
+            set -x
+            cd lang/ruby
+            ./build.sh clean test
+
+  rust:
+    name: Rust on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          # these represent dependencies downloaded by cargo
+          # and thus do not depend on the OS, arch nor rust version.
+          path: ~/.cargo
+          key: cargo-cache1-
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          # these represent compiled steps of both dependencies and avro
+          # and thus are specific for a particular OS, arch and rust version.
+          path: lang/rust/target
+          key: ${{ runner.os }}-target-cache1-stable-
+
+      - name: Rust Toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: stable
+          components: rustfmt
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/rust
+          ./build.sh test
+
+  perl:
+    name: Perl on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y libjansson-dev libcompress-raw-zlib-perl libcpan-uploader-perl libencode-perl libio-string-perl libjson-xs-perl libmodule-install-perl libmodule-install-readmefrompod-perl libobject-tiny-perl libperl-critic-perl libsnappy-dev libtest-exception-perl libtest-pod-perl cpanminus make gcc wget
+          cpanm Error::Simple
+          cpanm Regexp::Common
+          cpanm Try::Tiny
+          cpanm Compress::Zstd
+          cpanm Module::Install::Repository
+          cpanm inc::Module::Install
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/perl
+          ./build.sh clean test
+
+  php:
+    name: PHP on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget php php-xml php-mbstring php-curl php-gmp php-bz2 unzip libtidy-dev libpq5
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php -r "if (hash_file('sha384', 'composer-setup.php') === file_get_contents('https://composer.github.io/installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+          php composer-setup.php --version=2.2.5
+          php -r "unlink('composer-setup.php');"
+          sudo mv composer.phar /usr/local/bin/composer
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/php
+          composer --version
+          ./build.sh clean test
+
+  javascript:
+    name: JavaScript on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y wget tar xz-utils
+
+      - name: Build
+        run: |
+          set -x
+          cd lang/js
+          #export PATH=/node-v${{ env.NODE_VERSION }}-linux-arm64/bin:$PATH
+          ./build.sh clean test
