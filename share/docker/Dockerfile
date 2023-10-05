@@ -90,7 +90,7 @@ RUN apt-get -qqy install --no-install-recommends libzstd-dev \
                                                  php-dev
 
 # Install a maven release  -------------------------------------------
-# Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
+# Inspired from https://github.com/apache/accumulo-docker/blob/bbb9892e165d40fb35fa19f38929effc5d0c709b/Dockerfile#L30
 ENV MAVEN_VERSION 3.8.6
 ENV APACHE_DIST_URLS \
   https://www.apache.org/dyn/closer.cgi?action=download&filename= \

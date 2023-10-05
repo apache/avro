@@ -17,9 +17,9 @@ name: 'Test Perl'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-perl.yml
     - lang/perl/**

@@ -17,9 +17,9 @@ name: 'Test Java'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths:
     - .github/workflows/test-lang-java.yml
     - lang/java/**

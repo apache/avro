@@ -506,6 +506,6 @@ and [GitHub](https://github.com/jonesetc/atom-language-avro)
 
 A `.avdl` detecting plugin by Gurpreet Atwal on [GitHub](https://github.com/gurpreetatwal/vim-avro) (Last change in December 2016)
 
-[avro-idl.vim](https://github.com/apache/avro/blob/master/share/editors/avro-idl.vim) in the Avro repository `share/editors` directory (last change in September 2010)
+[avro-idl.vim](https://github.com/apache/avro/blob/main/share/editors/avro-idl.vim) in the Avro repository `share/editors` directory (last change in September 2010)
 
 Both provide syntax highlighting.

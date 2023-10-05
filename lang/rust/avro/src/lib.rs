@@ -89,7 +89,7 @@
 //! # Upgrading to a newer minor version
 //!
 //! The library is still in beta, so there might be backward-incompatible changes between minor
-//! versions. If you have troubles upgrading, check the [version upgrade guide](https://github.com/apache/avro/blob/master/lang/rust/migration_guide.md).
+//! versions. If you have troubles upgrading, check the [version upgrade guide](https://github.com/apache/avro/blob/main/lang/rust/migration_guide.md).
 //!
 //! # Defining a schema
 //!
