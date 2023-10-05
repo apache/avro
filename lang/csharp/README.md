@@ -1,4 +1,4 @@
-# Avro C# [![Build Status](https://travis-ci.org/apache/avro.svg?branch=master)](https://travis-ci.org/apache/avro) [![NuGet Package](https://img.shields.io/nuget/v/Apache.Avro.svg)](https://www.nuget.org/packages/Apache.Avro)
+# Avro C# [![Test C#](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml/badge.svg)](https://github.com/apache/avro/actions/workflows/test-lang-csharp.yml) [![NuGet Package](https://img.shields.io/nuget/v/Apache.Avro.svg)](https://www.nuget.org/packages/Apache.Avro)
 
  [![Avro](https://avro.apache.org/images/avro-logo.png)](http://avro.apache.org/)
 

@@ -64,7 +64,7 @@ But take care about the following points
 
 ## Code Style (Autoformatting)
 
-For Java code we use [Spotless](https://github.com/diffplug/spotless/) to format the code to comply with Avro's code style conventions (see above). Automatic formatting relies on [Avro's Eclipse JDT formatter definition](https://github.com/apache/avro/blob/master/lang/java/eclipse-java-formatter.xml). You can use the same definition to auto format from Eclipse or from IntelliJ configuring the Eclipse formatter plugin.
+For Java code we use [Spotless](https://github.com/diffplug/spotless/) to format the code to comply with Avro's code style conventions (see above). Automatic formatting relies on [Avro's Eclipse JDT formatter definition](https://github.com/apache/avro/blob/main/lang/java/eclipse-java-formatter.xml). You can use the same definition to auto format from Eclipse or from IntelliJ configuring the Eclipse formatter plugin.
 
 If you use maven code styles issues are checked at the compile phase. If your code breaks because of bad formatting, you can format it automatically by running the command:
 ```shell
@@ -257,7 +257,7 @@ Committers: for non-trivial changes, it is best to get another committer to revi
 
 Apply the patch uploaded by the user or check out their pull request. Edit the CHANGES.txt file, adding a description of the change, including the bug number it fixes. Add it to the appropriate section - BUGFIXES, IMPROVEMENTS, NEW FEATURES. Please follow the format in CHANGES.txt file. While adding an entry please add it to the end of a section. Use the same entry for the first line of the git commit message.
 
-Changes are normally committed to master first, then, if they're backward-compatible, cherry-picked to a branch.
+Changes are normally committed to the main branch first, then, if they're backward-compatible, cherry-picked to a branch.
 
 When you commit a change, resolve the issue in Jira. When resolving, always set the fix version and assign the issue. Set the fix version to either to the next minor release if the change is compatible and will be merged to that branch, or to the next major release if the change is incompatible and will only be committed to trunk. Assign the issue to the primary author of the patch. If the author is not in the list of project contributors, edit their Jira roles and make them an Avro contributor.
 </details>

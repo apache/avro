@@ -1,4 +1,4 @@
-|[![AVRO](https://raw.githubusercontent.com/apache/avro/master/doc/src/resources/images/avro-logo.png)](https://github.com/apache/avro) | [![AVRO](https://raw.githubusercontent.com/apache/avro/master/doc/src/resources/images/apache_feather.gif)](https://github.com/apac<he/avro)|
+|[![AVRO](https://raw.githubusercontent.com/apache/avro/main/doc/src/resources/images/avro-logo.png)](https://github.com/apache/avro) | [![AVRO](https://raw.githubusercontent.com/apache/avro/main/doc/src/resources/images/apache_feather.gif)](https://github.com/apac<he/avro)|
 |:-----|-----:|
 
 What the Avro PHP library is
@@ -28,7 +28,7 @@ your project's `composer.json` configuration file, and run `composer install`:
 ```json
 {
     "require-dev": {
-        "apache/avro": "dev-master"
+        "apache/avro": "dev-main"
     }
 }
 ```

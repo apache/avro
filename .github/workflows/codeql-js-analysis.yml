@@ -23,11 +23,11 @@ name: "CodeQL JavaScript"
 on:
   push:
     branches:
-    - master
+    - main
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
-    - master
+    - main
     paths:
     - .github/workflows/codeql-js-analysis.yml
     - lang/js/**

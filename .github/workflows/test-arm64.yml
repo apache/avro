@@ -18,10 +18,10 @@ name: CI on Linux ARM64
 on:
   push:
     branches: 
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   java:
