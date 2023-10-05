@@ -18,15 +18,18 @@
 
 package org.apache.avro;
 
-import java.math.RoundingMode;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
+import org.apache.avro.util.TimePeriod;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -144,6 +147,43 @@ public class Conversions {
       }
 
       return value;
+    }
+  }
+
+  public static class DurationConversion extends Conversion<TimePeriod> {
+    @Override
+    public Class<TimePeriod> getConvertedType() {
+      return TimePeriod.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "duration";
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.duration().addToSchema(Schema.createFixed("time.Duration",
+          "A 12-byte byte array encoding a duration in months, days and milliseconds.", null, 12));
+    }
+
+    @Override
+    public TimePeriod fromFixed(GenericFixed value, Schema schema, LogicalType type) {
+      IntBuffer buffer = ByteBuffer.wrap(value.bytes()).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer();
+      long months = Integer.toUnsignedLong(buffer.get());
+      long days = Integer.toUnsignedLong(buffer.get());
+      long millis = Integer.toUnsignedLong(buffer.get());
+      return TimePeriod.of(months, days, millis);
+    }
+
+    @Override
+    public GenericFixed toFixed(TimePeriod value, Schema schema, LogicalType type) {
+      ByteBuffer buffer = ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN);
+      IntBuffer intBuffer = buffer.asIntBuffer();
+      intBuffer.put((int) value.getMonths());
+      intBuffer.put((int) value.getDays());
+      intBuffer.put((int) value.getMillis());
+      return new GenericData.Fixed(schema, buffer.array());
     }
   }
 
