@@ -215,7 +215,6 @@ public class LogicalTypes {
 
   private static final LogicalType UUID_TYPE = new Uuid();
 
-
   public static LogicalType uuid() {
     return UUID_TYPE;
   }
