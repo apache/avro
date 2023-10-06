@@ -185,4 +185,18 @@ public class TestSpecificData {
 
     assertEquals("db.public$.table.AnyName", SpecificData.getClassName(schema));
   }
+
+  @Test
+  void classNameIsContextualKeyword() {
+    final Schema schema = Schema.createRecord("record", null, "div.all", false);
+
+    assertEquals("div.all.record$", SpecificData.getClassName(schema));
+  }
+
+  @Test
+  void classNameIsReservedKeyword() {
+    final Schema schema = Schema.createRecord("class", null, "div.all", false);
+
+    assertEquals("div.all.class$", SpecificData.getClassName(schema));
+  }
 }

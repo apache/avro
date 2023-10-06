@@ -111,6 +111,12 @@ public class SpecificData extends GenericData {
       // Class names used internally by the avro code generator
       "Builder"));
 
+  public static final Set<String> CONTEXTUAL_KEYWORDS = new HashSet<>(Arrays.asList(
+      // Contextual keywords form Section 3.9 cannot be used as identifiers, although
+      // they can be package names
+      "exports", "opens", "requires", "uses", "yield", "module", "permits", "sealed", "var", "non-sealed", "provides",
+      "to", "when", "open", "record", "transitive", "with"));
+
   /**
    * Read/write some common builtin classes as strings. Representing these as
    * strings isn't always best, as they aren't always ordered ideally, but at
@@ -349,6 +355,9 @@ public class SpecificData extends GenericData {
     }
 
     classNameBuilder.append(name);
+    if (CONTEXTUAL_KEYWORDS.contains(name) || RESERVED_WORDS.contains(name)) {
+      classNameBuilder.append(RESERVED_WORD_ESCAPE_CHAR);
+    }
 
     return classNameBuilder.toString();
   }
