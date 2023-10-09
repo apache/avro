@@ -15,6 +15,7 @@ public interface FooOrBuilder extends
    * <code>required int32 int32 = 1;</code>
    */
   boolean hasInt32();
+
   /**
    * <pre>
    * all the primitive types
@@ -28,6 +29,7 @@ public interface FooOrBuilder extends
    * <code>optional int64 int64 = 2;</code>
    */
   boolean hasInt64();
+
   /**
    * <code>optional int64 int64 = 2;</code>
    */
@@ -37,6 +39,7 @@ public interface FooOrBuilder extends
    * <code>optional uint32 uint32 = 3;</code>
    */
   boolean hasUint32();
+
   /**
    * <code>optional uint32 uint32 = 3;</code>
    */
@@ -46,6 +49,7 @@ public interface FooOrBuilder extends
    * <code>optional uint64 uint64 = 4;</code>
    */
   boolean hasUint64();
+
   /**
    * <code>optional uint64 uint64 = 4;</code>
    */
@@ -55,6 +59,7 @@ public interface FooOrBuilder extends
    * <code>optional sint32 sint32 = 5;</code>
    */
   boolean hasSint32();
+
   /**
    * <code>optional sint32 sint32 = 5;</code>
    */
@@ -64,6 +69,7 @@ public interface FooOrBuilder extends
    * <code>optional sint64 sint64 = 6;</code>
    */
   boolean hasSint64();
+
   /**
    * <code>optional sint64 sint64 = 6;</code>
    */
@@ -73,6 +79,7 @@ public interface FooOrBuilder extends
    * <code>optional fixed32 fixed32 = 7;</code>
    */
   boolean hasFixed32();
+
   /**
    * <code>optional fixed32 fixed32 = 7;</code>
    */
@@ -82,6 +89,7 @@ public interface FooOrBuilder extends
    * <code>optional fixed64 fixed64 = 8;</code>
    */
   boolean hasFixed64();
+
   /**
    * <code>optional fixed64 fixed64 = 8;</code>
    */
@@ -91,6 +99,7 @@ public interface FooOrBuilder extends
    * <code>optional sfixed32 sfixed32 = 9;</code>
    */
   boolean hasSfixed32();
+
   /**
    * <code>optional sfixed32 sfixed32 = 9;</code>
    */
@@ -100,6 +109,7 @@ public interface FooOrBuilder extends
    * <code>optional sfixed64 sfixed64 = 10;</code>
    */
   boolean hasSfixed64();
+
   /**
    * <code>optional sfixed64 sfixed64 = 10;</code>
    */
@@ -109,6 +119,7 @@ public interface FooOrBuilder extends
    * <code>optional float float = 11;</code>
    */
   boolean hasFloat();
+
   /**
    * <code>optional float float = 11;</code>
    */
@@ -118,6 +129,7 @@ public interface FooOrBuilder extends
    * <code>optional double double = 12;</code>
    */
   boolean hasDouble();
+
   /**
    * <code>optional double double = 12;</code>
    */
@@ -127,6 +139,7 @@ public interface FooOrBuilder extends
    * <code>optional bool bool = 13;</code>
    */
   boolean hasBool();
+
   /**
    * <code>optional bool bool = 13;</code>
    */
@@ -136,20 +149,22 @@ public interface FooOrBuilder extends
    * <code>optional string string = 14;</code>
    */
   boolean hasString();
+
   /**
    * <code>optional string string = 14;</code>
    */
   java.lang.String getString();
+
   /**
    * <code>optional string string = 14;</code>
    */
-  com.google.protobuf.ByteString
-      getStringBytes();
+  com.google.protobuf.ByteString getStringBytes();
 
   /**
    * <code>optional bytes bytes = 15;</code>
    */
   boolean hasBytes();
+
   /**
    * <code>optional bytes bytes = 15;</code>
    */
@@ -159,6 +174,7 @@ public interface FooOrBuilder extends
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
    */
   boolean hasEnum();
+
   /**
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
    */
@@ -172,6 +188,7 @@ public interface FooOrBuilder extends
    * <code>repeated int32 intArray = 17;</code>
    */
   java.util.List<java.lang.Integer> getIntArrayList();
+
   /**
    * <pre>
    * some repeated types
@@ -180,6 +197,7 @@ public interface FooOrBuilder extends
    * <code>repeated int32 intArray = 17;</code>
    */
   int getIntArrayCount();
+
   /**
    * <pre>
    * some repeated types
@@ -192,35 +210,38 @@ public interface FooOrBuilder extends
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
-  java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> 
-      getFooArrayList();
+  java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> getFooArrayList();
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
   org.apache.avro.protobuf.multiplefiles.Foo getFooArray(int index);
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
   int getFooArrayCount();
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
-  java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> 
-      getFooArrayOrBuilderList();
+  java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayOrBuilderList();
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
-  org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(
-      int index);
+  org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(int index);
 
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
   java.util.List<org.apache.avro.protobuf.multiplefiles.A> getSymsList();
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
   int getSymsCount();
+
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
@@ -234,6 +255,7 @@ public interface FooOrBuilder extends
    * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
    */
   boolean hasFoo();
+
   /**
    * <pre>
    * a recursive type
@@ -242,6 +264,7 @@ public interface FooOrBuilder extends
    * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
    */
   org.apache.avro.protobuf.multiplefiles.Foo getFoo();
+
   /**
    * <pre>
    * a recursive type
@@ -259,6 +282,7 @@ public interface FooOrBuilder extends
    * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
    */
   boolean hasTimestamp();
+
   /**
    * <pre>
    * a predefined message type
@@ -267,6 +291,7 @@ public interface FooOrBuilder extends
    * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
    */
   com.google.protobuf.Timestamp getTimestamp();
+
   /**
    * <pre>
    * a predefined message type
