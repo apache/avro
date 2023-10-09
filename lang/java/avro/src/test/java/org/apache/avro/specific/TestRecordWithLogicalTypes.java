@@ -5,6 +5,7 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.Conversions;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
@@ -16,7 +17,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = 3313339903648295220L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
-      "{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
+      "{\"type\":\"record\",\"name\":\"TestRecordWithLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}},{\"name\":\"bd\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"big-decimal\"}}]}");
 
   public static org.apache.avro.Schema getClassSchema() {
     return SCHEMA$;
@@ -77,6 +78,8 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   public java.time.Instant ts;
   @Deprecated
   public java.math.BigDecimal dec;
+  @Deprecated
+  public java.math.BigDecimal bd;
 
   /**
    * Default constructor. Note that this does not initialize fields to their
@@ -99,10 +102,11 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
    * @param t   The new value for t
    * @param ts  The new value for ts
    * @param dec The new value for dec
+   * @param bd  The new value for bd
    */
   public TestRecordWithLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64, java.lang.Float f32,
       java.lang.Double f64, java.lang.CharSequence s, java.time.LocalDate d, java.time.LocalTime t,
-      java.time.Instant ts, java.math.BigDecimal dec) {
+      java.time.Instant ts, java.math.BigDecimal dec, java.math.BigDecimal bd) {
     this.b = b;
     this.i32 = i32;
     this.i64 = i64;
@@ -113,6 +117,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.t = t;
     this.ts = ts;
     this.dec = dec;
+    this.bd = bd;
   }
 
   @Override
@@ -144,18 +149,24 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       return ts;
     case 9:
       return dec;
+    case 10:
+      return bd;
     default:
-      throw new org.apache.avro.AvroRuntimeException("Bad index");
+      throw new org.apache.avro.AvroRuntimeException("Bad index " + field$);
     }
   }
 
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
+
+  protected static final Conversions.BigDecimalConversion BIG_DECIMAL_CONVERSION = new org.apache.avro.Conversions.BigDecimalConversion();
+
   protected static final TimeConversions.DateConversion DATE_CONVERSION = new TimeConversions.DateConversion();
   protected static final TimeConversions.TimeMillisConversion TIME_CONVERSION = new TimeConversions.TimeMillisConversion();
   protected static final TimeConversions.TimestampMillisConversion TIMESTAMP_CONVERSION = new TimeConversions.TimestampMillisConversion();
 
   private static final org.apache.avro.Conversion<?>[] conversions = new org.apache.avro.Conversion<?>[] { null, null,
-      null, null, null, null, DATE_CONVERSION, TIME_CONVERSION, TIMESTAMP_CONVERSION, DECIMAL_CONVERSION, null };
+      null, null, null, null, DATE_CONVERSION, TIME_CONVERSION, TIMESTAMP_CONVERSION, DECIMAL_CONVERSION,
+      BIG_DECIMAL_CONVERSION };
 
   @Override
   public org.apache.avro.Conversion<?> getConversion(int field) {
@@ -196,6 +207,9 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       break;
     case 9:
       dec = (java.math.BigDecimal) value$;
+      break;
+    case 10:
+      bd = (java.math.BigDecimal) value$;
       break;
     default:
       throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -438,6 +452,8 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     private java.time.Instant ts;
     private java.math.BigDecimal dec;
 
+    private java.math.BigDecimal bd;
+
     /** Creates a new Builder */
     private Builder() {
       super(SCHEMA$);
@@ -490,6 +506,10 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
         this.dec = data().deepCopy(fields()[9].schema(), other.dec);
         fieldSetFlags()[9] = other.fieldSetFlags()[9];
       }
+      if (isValidValue(fields()[10], other.bd)) {
+        this.bd = data().deepCopy(fields()[10].schema(), other.bd);
+        fieldSetFlags()[10] = other.fieldSetFlags()[10];
+      }
     }
 
     /**
@@ -538,6 +558,10 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       if (isValidValue(fields()[9], other.dec)) {
         this.dec = data().deepCopy(fields()[9].schema(), other.dec);
         fieldSetFlags()[9] = true;
+      }
+      if (isValidValue(fields()[10], other.bd)) {
+        this.bd = data().deepCopy(fields()[10].schema(), other.bd);
+        fieldSetFlags()[10] = true;
       }
     }
 
@@ -968,6 +992,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
         record.t = fieldSetFlags()[7] ? this.t : (java.time.LocalTime) defaultValue(fields()[7]);
         record.ts = fieldSetFlags()[8] ? this.ts : (java.time.Instant) defaultValue(fields()[8]);
         record.dec = fieldSetFlags()[9] ? this.dec : (java.math.BigDecimal) defaultValue(fields()[9]);
+        record.bd = fieldSetFlags()[10] ? this.dec : (java.math.BigDecimal) defaultValue(fields()[10]);
         return record;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

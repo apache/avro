@@ -137,6 +137,9 @@ public class LogicalTypes {
       case DECIMAL:
         logicalType = new Decimal(schema);
         break;
+      case BIG_DECIMAL:
+        logicalType = BIG_DECIMAL_TYPE;
+        break;
       case UUID:
         logicalType = UUID_TYPE;
         break;
@@ -182,6 +185,7 @@ public class LogicalTypes {
   }
 
   private static final String DECIMAL = "decimal";
+  private static final String BIG_DECIMAL = "big-decimal";
   private static final String UUID = "uuid";
   private static final String DATE = "date";
   private static final String TIME_MILLIS = "time-millis";
@@ -202,6 +206,13 @@ public class LogicalTypes {
   }
 
   private static final LogicalType UUID_TYPE = new LogicalType("uuid");
+
+  private static final BigDecimal BIG_DECIMAL_TYPE = new BigDecimal();
+
+  /** Create a Big Decimal LogicalType that can accept any precision and scale */
+  public static BigDecimal bigDecimal() {
+    return BIG_DECIMAL_TYPE;
+  }
 
   public static LogicalType uuid() {
     return UUID_TYPE;
@@ -360,6 +371,20 @@ public class LogicalTypes {
       int result = precision;
       result = 31 * result + scale;
       return result;
+    }
+  }
+
+  public static class BigDecimal extends LogicalType {
+    private BigDecimal() {
+      super(BIG_DECIMAL);
+    }
+
+    @Override
+    public void validate(final Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.BYTES) {
+        throw new IllegalArgumentException("BigDecimal can only be used with an underlying bytes type");
+      }
     }
   }
 

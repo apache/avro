@@ -24,6 +24,13 @@ import org.apache.avro.generic.GenericEnumSymbol;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -144,6 +151,65 @@ public class Conversions {
       }
 
       return value;
+    }
+  }
+
+  public static class BigDecimalConversion extends Conversion<BigDecimal> {
+
+    @Override
+    public Class<BigDecimal> getConvertedType() {
+      return BigDecimal.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "big-decimal";
+    }
+
+    @Override
+    public BigDecimal fromBytes(final ByteBuffer value, final Schema schema, final LogicalType type) {
+      BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(value.array(), null);
+
+      try {
+        BigInteger bg = null;
+        ByteBuffer buffer = decoder.readBytes(null);
+        byte[] array = buffer.array();
+        if (array != null && array.length > 0) {
+          bg = new BigInteger(array);
+        }
+
+        int scale = decoder.readInt();
+        return new BigDecimal(bg, scale);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public ByteBuffer toBytes(final BigDecimal value, final Schema schema, final LogicalType type) {
+      try {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+
+        BigInteger unscaledValue = value.unscaledValue();
+        if (unscaledValue != null) {
+          encoder.writeBytes(unscaledValue.toByteArray());
+        } else {
+          encoder.writeBytes(new byte[] {});
+        }
+        encoder.writeInt(value.scale());
+        encoder.flush();
+        return ByteBuffer.wrap(out.toByteArray());
+
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.bigDecimal().addToSchema(Schema.create(Schema.Type.BYTES));
     }
   }
 
