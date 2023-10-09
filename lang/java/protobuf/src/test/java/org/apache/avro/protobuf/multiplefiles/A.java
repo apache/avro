@@ -10,7 +10,8 @@ package org.apache.avro.protobuf.multiplefiles;
  *
  * Protobuf enum {@code org.apache.avro.protobuf.multiplefiles.A}
  */
-public enum A implements com.google.protobuf.ProtocolMessageEnum {
+public enum A
+    implements com.google.protobuf.ProtocolMessageEnum {
   /**
    * <code>X = 1;</code>
    */
@@ -22,7 +23,8 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
   /**
    * <code>Z = 3;</code>
    */
-  Z(3),;
+  Z(3),
+  ;
 
   /**
    * <code>X = 1;</code>
@@ -36,6 +38,7 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
    * <code>Z = 3;</code>
    */
   public static final int Z_VALUE = 3;
+
 
   public final int getNumber() {
     return value;
@@ -51,44 +54,45 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
 
   public static A forNumber(int value) {
     switch (value) {
-    case 1:
-      return X;
-    case 2:
-      return Y;
-    case 3:
-      return Z;
-    default:
-      return null;
+      case 1: return X;
+      case 2: return Y;
+      case 3: return Z;
+      default: return null;
     }
   }
 
-  public static com.google.protobuf.Internal.EnumLiteMap<A> internalGetValueMap() {
+  public static com.google.protobuf.Internal.EnumLiteMap<A>
+      internalGetValueMap() {
     return internalValueMap;
   }
+  private static final com.google.protobuf.Internal.EnumLiteMap<
+      A> internalValueMap =
+        new com.google.protobuf.Internal.EnumLiteMap<A>() {
+          public A findValueByNumber(int number) {
+            return A.forNumber(number);
+          }
+        };
 
-  private static final com.google.protobuf.Internal.EnumLiteMap<A> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<A>() {
-    public A findValueByNumber(int number) {
-      return A.forNumber(number);
-    }
-  };
-
-  public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+  public final com.google.protobuf.Descriptors.EnumValueDescriptor
+      getValueDescriptor() {
     return getDescriptor().getValues().get(ordinal());
   }
-
-  public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+  public final com.google.protobuf.Descriptors.EnumDescriptor
+      getDescriptorForType() {
     return getDescriptor();
   }
-
-  public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+  public static final com.google.protobuf.Descriptors.EnumDescriptor
+      getDescriptor() {
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.getDescriptor().getEnumTypes().get(0);
   }
 
   private static final A[] VALUES = values();
 
-  public static A valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+  public static A valueOf(
+      com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
     if (desc.getType() != getDescriptor()) {
-      throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+      throw new java.lang.IllegalArgumentException(
+        "EnumValueDescriptor is not for this type.");
     }
     return VALUES[desc.getIndex()];
   }
@@ -101,3 +105,4 @@ public enum A implements com.google.protobuf.ProtocolMessageEnum {
 
   // @@protoc_insertion_point(enum_scope:org.apache.avro.protobuf.multiplefiles.A)
 }
+

@@ -6,16 +6,15 @@ package org.apache.avro.protobuf.multiplefiles;
 /**
  * Protobuf type {@code org.apache.avro.protobuf.multiplefiles.Foo}
  */
-public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
+public  final class Foo extends
+    com.google.protobuf.GeneratedMessageV3 implements
     // @@protoc_insertion_point(message_implements:org.apache.avro.protobuf.multiplefiles.Foo)
     FooOrBuilder {
-  private static final long serialVersionUID = 0L;
-
+private static final long serialVersionUID = 0L;
   // Use Foo.newBuilder() to construct.
   private Foo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-
   private Foo() {
     int32_ = 0;
     int64_ = 0L;
@@ -39,172 +38,154 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   }
 
   @java.lang.Override
-  public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+  public final com.google.protobuf.UnknownFieldSet
+  getUnknownFields() {
     return this.unknownFields;
   }
-
-  private Foo(com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+  private Foo(
+      com.google.protobuf.CodedInputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
     int mutable_bitField0_ = 0;
-    com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
+    com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+        com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
       while (!done) {
         int tag = input.readTag();
         switch (tag) {
-        case 0:
-          done = true;
-          break;
-        default: {
-          if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+          case 0:
             done = true;
+            break;
+          case 8: {
+            bitField0_ |= 0x00000001;
+            int32_ = input.readInt32();
+            break;
           }
-          break;
-        }
-        case 8: {
-          bitField0_ |= 0x00000001;
-          int32_ = input.readInt32();
-          break;
-        }
-        case 16: {
-          bitField0_ |= 0x00000002;
-          int64_ = input.readInt64();
-          break;
-        }
-        case 24: {
-          bitField0_ |= 0x00000004;
-          uint32_ = input.readUInt32();
-          break;
-        }
-        case 32: {
-          bitField0_ |= 0x00000008;
-          uint64_ = input.readUInt64();
-          break;
-        }
-        case 40: {
-          bitField0_ |= 0x00000010;
-          sint32_ = input.readSInt32();
-          break;
-        }
-        case 48: {
-          bitField0_ |= 0x00000020;
-          sint64_ = input.readSInt64();
-          break;
-        }
-        case 61: {
-          bitField0_ |= 0x00000040;
-          fixed32_ = input.readFixed32();
-          break;
-        }
-        case 65: {
-          bitField0_ |= 0x00000080;
-          fixed64_ = input.readFixed64();
-          break;
-        }
-        case 77: {
-          bitField0_ |= 0x00000100;
-          sfixed32_ = input.readSFixed32();
-          break;
-        }
-        case 81: {
-          bitField0_ |= 0x00000200;
-          sfixed64_ = input.readSFixed64();
-          break;
-        }
-        case 93: {
-          bitField0_ |= 0x00000400;
-          float_ = input.readFloat();
-          break;
-        }
-        case 97: {
-          bitField0_ |= 0x00000800;
-          double_ = input.readDouble();
-          break;
-        }
-        case 104: {
-          bitField0_ |= 0x00001000;
-          bool_ = input.readBool();
-          break;
-        }
-        case 114: {
-          com.google.protobuf.ByteString bs = input.readBytes();
-          bitField0_ |= 0x00002000;
-          string_ = bs;
-          break;
-        }
-        case 122: {
-          bitField0_ |= 0x00004000;
-          bytes_ = input.readBytes();
-          break;
-        }
-        case 128: {
-          int rawValue = input.readEnum();
-          org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
-          if (value == null) {
-            unknownFields.mergeVarintField(16, rawValue);
-          } else {
-            bitField0_ |= 0x00008000;
-            enum_ = rawValue;
+          case 16: {
+            bitField0_ |= 0x00000002;
+            int64_ = input.readInt64();
+            break;
           }
-          break;
-        }
-        case 136: {
-          if (!((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
-            intArray_ = new java.util.ArrayList<java.lang.Integer>();
-            mutable_bitField0_ |= 0x00010000;
+          case 24: {
+            bitField0_ |= 0x00000004;
+            uint32_ = input.readUInt32();
+            break;
           }
-          intArray_.add(input.readInt32());
-          break;
-        }
-        case 138: {
-          int length = input.readRawVarint32();
-          int limit = input.pushLimit(length);
-          if (!((mutable_bitField0_ & 0x00010000) == 0x00010000) && input.getBytesUntilLimit() > 0) {
-            intArray_ = new java.util.ArrayList<java.lang.Integer>();
-            mutable_bitField0_ |= 0x00010000;
+          case 32: {
+            bitField0_ |= 0x00000008;
+            uint64_ = input.readUInt64();
+            break;
           }
-          while (input.getBytesUntilLimit() > 0) {
-            intArray_.add(input.readInt32());
+          case 40: {
+            bitField0_ |= 0x00000010;
+            sint32_ = input.readSInt32();
+            break;
           }
-          input.popLimit(limit);
-          break;
-        }
-        case 146: {
-          org.apache.avro.protobuf.multiplefiles.Foo.Builder subBuilder = null;
-          if (((bitField0_ & 0x00010000) == 0x00010000)) {
-            subBuilder = foo_.toBuilder();
+          case 48: {
+            bitField0_ |= 0x00000020;
+            sint64_ = input.readSInt64();
+            break;
           }
-          foo_ = input.readMessage(org.apache.avro.protobuf.multiplefiles.Foo.PARSER, extensionRegistry);
-          if (subBuilder != null) {
-            subBuilder.mergeFrom(foo_);
-            foo_ = subBuilder.buildPartial();
+          case 61: {
+            bitField0_ |= 0x00000040;
+            fixed32_ = input.readFixed32();
+            break;
           }
-          bitField0_ |= 0x00010000;
-          break;
-        }
-        case 152: {
-          int rawValue = input.readEnum();
-          org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
-          if (value == null) {
-            unknownFields.mergeVarintField(19, rawValue);
-          } else {
-            if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
-              syms_ = new java.util.ArrayList<java.lang.Integer>();
-              mutable_bitField0_ |= 0x00040000;
-            }
-            syms_.add(rawValue);
+          case 65: {
+            bitField0_ |= 0x00000080;
+            fixed64_ = input.readFixed64();
+            break;
           }
-          break;
-        }
-        case 154: {
-          int length = input.readRawVarint32();
-          int oldLimit = input.pushLimit(length);
-          while (input.getBytesUntilLimit() > 0) {
+          case 77: {
+            bitField0_ |= 0x00000100;
+            sfixed32_ = input.readSFixed32();
+            break;
+          }
+          case 81: {
+            bitField0_ |= 0x00000200;
+            sfixed64_ = input.readSFixed64();
+            break;
+          }
+          case 93: {
+            bitField0_ |= 0x00000400;
+            float_ = input.readFloat();
+            break;
+          }
+          case 97: {
+            bitField0_ |= 0x00000800;
+            double_ = input.readDouble();
+            break;
+          }
+          case 104: {
+            bitField0_ |= 0x00001000;
+            bool_ = input.readBool();
+            break;
+          }
+          case 114: {
+            com.google.protobuf.ByteString bs = input.readBytes();
+            bitField0_ |= 0x00002000;
+            string_ = bs;
+            break;
+          }
+          case 122: {
+            bitField0_ |= 0x00004000;
+            bytes_ = input.readBytes();
+            break;
+          }
+          case 128: {
             int rawValue = input.readEnum();
+              @SuppressWarnings("deprecation")
+            org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
+            if (value == null) {
+              unknownFields.mergeVarintField(16, rawValue);
+            } else {
+              bitField0_ |= 0x00008000;
+              enum_ = rawValue;
+            }
+            break;
+          }
+          case 136: {
+            if (!((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
+              intArray_ = new java.util.ArrayList<java.lang.Integer>();
+              mutable_bitField0_ |= 0x00010000;
+            }
+            intArray_.add(input.readInt32());
+            break;
+          }
+          case 138: {
+            int length = input.readRawVarint32();
+            int limit = input.pushLimit(length);
+            if (!((mutable_bitField0_ & 0x00010000) == 0x00010000) && input.getBytesUntilLimit() > 0) {
+              intArray_ = new java.util.ArrayList<java.lang.Integer>();
+              mutable_bitField0_ |= 0x00010000;
+            }
+            while (input.getBytesUntilLimit() > 0) {
+              intArray_.add(input.readInt32());
+            }
+            input.popLimit(limit);
+            break;
+          }
+          case 146: {
+            org.apache.avro.protobuf.multiplefiles.Foo.Builder subBuilder = null;
+            if (((bitField0_ & 0x00010000) == 0x00010000)) {
+              subBuilder = foo_.toBuilder();
+            }
+            foo_ = input.readMessage(org.apache.avro.protobuf.multiplefiles.Foo.PARSER, extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(foo_);
+              foo_ = subBuilder.buildPartial();
+            }
+            bitField0_ |= 0x00010000;
+            break;
+          }
+          case 152: {
+            int rawValue = input.readEnum();
+            @SuppressWarnings("deprecation")
             org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
             if (value == null) {
               unknownFields.mergeVarintField(19, rawValue);
@@ -215,37 +196,64 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
               }
               syms_.add(rawValue);
             }
+            break;
           }
-          input.popLimit(oldLimit);
-          break;
-        }
-        case 162: {
-          if (!((mutable_bitField0_ & 0x00020000) == 0x00020000)) {
-            fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.multiplefiles.Foo>();
-            mutable_bitField0_ |= 0x00020000;
+          case 154: {
+            int length = input.readRawVarint32();
+            int oldLimit = input.pushLimit(length);
+            while(input.getBytesUntilLimit() > 0) {
+              int rawValue = input.readEnum();
+              @SuppressWarnings("deprecation")
+              org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(19, rawValue);
+              } else {
+                if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
+                  syms_ = new java.util.ArrayList<java.lang.Integer>();
+                  mutable_bitField0_ |= 0x00040000;
+                }
+                syms_.add(rawValue);
+              }
+            }
+            input.popLimit(oldLimit);
+            break;
           }
-          fooArray_.add(input.readMessage(org.apache.avro.protobuf.multiplefiles.Foo.PARSER, extensionRegistry));
-          break;
-        }
-        case 170: {
-          com.google.protobuf.Timestamp.Builder subBuilder = null;
-          if (((bitField0_ & 0x00020000) == 0x00020000)) {
-            subBuilder = timestamp_.toBuilder();
+          case 162: {
+            if (!((mutable_bitField0_ & 0x00020000) == 0x00020000)) {
+              fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.multiplefiles.Foo>();
+              mutable_bitField0_ |= 0x00020000;
+            }
+            fooArray_.add(
+                input.readMessage(org.apache.avro.protobuf.multiplefiles.Foo.PARSER, extensionRegistry));
+            break;
           }
-          timestamp_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
-          if (subBuilder != null) {
-            subBuilder.mergeFrom(timestamp_);
-            timestamp_ = subBuilder.buildPartial();
+          case 170: {
+            com.google.protobuf.Timestamp.Builder subBuilder = null;
+            if (((bitField0_ & 0x00020000) == 0x00020000)) {
+              subBuilder = timestamp_.toBuilder();
+            }
+            timestamp_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(timestamp_);
+              timestamp_ = subBuilder.buildPartial();
+            }
+            bitField0_ |= 0x00020000;
+            break;
           }
-          bitField0_ |= 0x00020000;
-          break;
-        }
+          default: {
+            if (!parseUnknownField(
+                input, unknownFields, extensionRegistry, tag)) {
+              done = true;
+            }
+            break;
+          }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
       throw e.setUnfinishedMessage(this);
     } catch (java.io.IOException e) {
-      throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      throw new com.google.protobuf.InvalidProtocolBufferException(
+          e).setUnfinishedMessage(this);
     } finally {
       if (((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
         intArray_ = java.util.Collections.unmodifiableList(intArray_);
@@ -260,21 +268,22 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       makeExtensionsImmutable();
     }
   }
-
-  public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+  public static final com.google.protobuf.Descriptors.Descriptor
+      getDescriptor() {
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
   }
 
-  protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+  @java.lang.Override
+  protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internalGetFieldAccessorTable() {
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
-        .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
-            org.apache.avro.protobuf.multiplefiles.Foo.Builder.class);
+        .ensureFieldAccessorsInitialized(
+            org.apache.avro.protobuf.multiplefiles.Foo.class, org.apache.avro.protobuf.multiplefiles.Foo.Builder.class);
   }
 
   private int bitField0_;
   public static final int INT32_FIELD_NUMBER = 1;
   private int int32_;
-
   /**
    * <pre>
    * all the primitive types
@@ -285,7 +294,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public boolean hasInt32() {
     return ((bitField0_ & 0x00000001) == 0x00000001);
   }
-
   /**
    * <pre>
    * all the primitive types
@@ -299,14 +307,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int INT64_FIELD_NUMBER = 2;
   private long int64_;
-
   /**
    * <code>optional int64 int64 = 2;</code>
    */
   public boolean hasInt64() {
     return ((bitField0_ & 0x00000002) == 0x00000002);
   }
-
   /**
    * <code>optional int64 int64 = 2;</code>
    */
@@ -316,14 +322,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int UINT32_FIELD_NUMBER = 3;
   private int uint32_;
-
   /**
    * <code>optional uint32 uint32 = 3;</code>
    */
   public boolean hasUint32() {
     return ((bitField0_ & 0x00000004) == 0x00000004);
   }
-
   /**
    * <code>optional uint32 uint32 = 3;</code>
    */
@@ -333,14 +337,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int UINT64_FIELD_NUMBER = 4;
   private long uint64_;
-
   /**
    * <code>optional uint64 uint64 = 4;</code>
    */
   public boolean hasUint64() {
     return ((bitField0_ & 0x00000008) == 0x00000008);
   }
-
   /**
    * <code>optional uint64 uint64 = 4;</code>
    */
@@ -350,14 +352,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int SINT32_FIELD_NUMBER = 5;
   private int sint32_;
-
   /**
    * <code>optional sint32 sint32 = 5;</code>
    */
   public boolean hasSint32() {
     return ((bitField0_ & 0x00000010) == 0x00000010);
   }
-
   /**
    * <code>optional sint32 sint32 = 5;</code>
    */
@@ -367,14 +367,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int SINT64_FIELD_NUMBER = 6;
   private long sint64_;
-
   /**
    * <code>optional sint64 sint64 = 6;</code>
    */
   public boolean hasSint64() {
     return ((bitField0_ & 0x00000020) == 0x00000020);
   }
-
   /**
    * <code>optional sint64 sint64 = 6;</code>
    */
@@ -384,14 +382,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int FIXED32_FIELD_NUMBER = 7;
   private int fixed32_;
-
   /**
    * <code>optional fixed32 fixed32 = 7;</code>
    */
   public boolean hasFixed32() {
     return ((bitField0_ & 0x00000040) == 0x00000040);
   }
-
   /**
    * <code>optional fixed32 fixed32 = 7;</code>
    */
@@ -401,14 +397,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int FIXED64_FIELD_NUMBER = 8;
   private long fixed64_;
-
   /**
    * <code>optional fixed64 fixed64 = 8;</code>
    */
   public boolean hasFixed64() {
     return ((bitField0_ & 0x00000080) == 0x00000080);
   }
-
   /**
    * <code>optional fixed64 fixed64 = 8;</code>
    */
@@ -418,14 +412,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int SFIXED32_FIELD_NUMBER = 9;
   private int sfixed32_;
-
   /**
    * <code>optional sfixed32 sfixed32 = 9;</code>
    */
   public boolean hasSfixed32() {
     return ((bitField0_ & 0x00000100) == 0x00000100);
   }
-
   /**
    * <code>optional sfixed32 sfixed32 = 9;</code>
    */
@@ -435,14 +427,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int SFIXED64_FIELD_NUMBER = 10;
   private long sfixed64_;
-
   /**
    * <code>optional sfixed64 sfixed64 = 10;</code>
    */
   public boolean hasSfixed64() {
     return ((bitField0_ & 0x00000200) == 0x00000200);
   }
-
   /**
    * <code>optional sfixed64 sfixed64 = 10;</code>
    */
@@ -452,14 +442,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int FLOAT_FIELD_NUMBER = 11;
   private float float_;
-
   /**
    * <code>optional float float = 11;</code>
    */
   public boolean hasFloat() {
     return ((bitField0_ & 0x00000400) == 0x00000400);
   }
-
   /**
    * <code>optional float float = 11;</code>
    */
@@ -469,14 +457,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int DOUBLE_FIELD_NUMBER = 12;
   private double double_;
-
   /**
    * <code>optional double double = 12;</code>
    */
   public boolean hasDouble() {
     return ((bitField0_ & 0x00000800) == 0x00000800);
   }
-
   /**
    * <code>optional double double = 12;</code>
    */
@@ -486,14 +472,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int BOOL_FIELD_NUMBER = 13;
   private boolean bool_;
-
   /**
    * <code>optional bool bool = 13;</code>
    */
   public boolean hasBool() {
     return ((bitField0_ & 0x00001000) == 0x00001000);
   }
-
   /**
    * <code>optional bool bool = 13;</code>
    */
@@ -503,14 +487,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int STRING_FIELD_NUMBER = 14;
   private volatile java.lang.Object string_;
-
   /**
    * <code>optional string string = 14;</code>
    */
   public boolean hasString() {
     return ((bitField0_ & 0x00002000) == 0x00002000);
   }
-
   /**
    * <code>optional string string = 14;</code>
    */
@@ -519,7 +501,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
       if (bs.isValidUtf8()) {
         string_ = s;
@@ -527,14 +510,16 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return s;
     }
   }
-
   /**
    * <code>optional string string = 14;</code>
    */
-  public com.google.protobuf.ByteString getStringBytes() {
+  public com.google.protobuf.ByteString
+      getStringBytes() {
     java.lang.Object ref = string_;
     if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
       string_ = b;
       return b;
     } else {
@@ -544,14 +529,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int BYTES_FIELD_NUMBER = 15;
   private com.google.protobuf.ByteString bytes_;
-
   /**
    * <code>optional bytes bytes = 15;</code>
    */
   public boolean hasBytes() {
     return ((bitField0_ & 0x00004000) == 0x00004000);
   }
-
   /**
    * <code>optional bytes bytes = 15;</code>
    */
@@ -561,25 +544,23 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int ENUM_FIELD_NUMBER = 16;
   private int enum_;
-
   /**
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
    */
   public boolean hasEnum() {
     return ((bitField0_ & 0x00008000) == 0x00008000);
   }
-
   /**
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
    */
   public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+    @SuppressWarnings("deprecation")
     org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
     return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
   }
 
   public static final int INTARRAY_FIELD_NUMBER = 17;
   private java.util.List<java.lang.Integer> intArray_;
-
   /**
    * <pre>
    * some repeated types
@@ -587,10 +568,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    *
    * <code>repeated int32 intArray = 17;</code>
    */
-  public java.util.List<java.lang.Integer> getIntArrayList() {
+  public java.util.List<java.lang.Integer>
+      getIntArrayList() {
     return intArray_;
   }
-
   /**
    * <pre>
    * some repeated types
@@ -601,7 +582,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public int getIntArrayCount() {
     return intArray_.size();
   }
-
   /**
    * <pre>
    * some repeated types
@@ -615,66 +595,64 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int FOOARRAY_FIELD_NUMBER = 20;
   private java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> fooArray_;
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
   public java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> getFooArrayList() {
     return fooArray_;
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
-  public java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayOrBuilderList() {
+  public java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> 
+      getFooArrayOrBuilderList() {
     return fooArray_;
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
   public int getFooArrayCount() {
     return fooArray_.size();
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
   public org.apache.avro.protobuf.multiplefiles.Foo getFooArray(int index) {
     return fooArray_.get(index);
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
-  public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(int index) {
+  public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(
+      int index) {
     return fooArray_.get(index);
   }
 
   public static final int SYMS_FIELD_NUMBER = 19;
   private java.util.List<java.lang.Integer> syms_;
-  private static final com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A> syms_converter_ = new com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>() {
-    public org.apache.avro.protobuf.multiplefiles.A convert(java.lang.Integer from) {
-      org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(from);
-      return result == null ? org.apache.avro.protobuf.multiplefiles.A.X : result;
-    }
-  };
-
+  private static final com.google.protobuf.Internal.ListAdapter.Converter<
+      java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A> syms_converter_ =
+          new com.google.protobuf.Internal.ListAdapter.Converter<
+              java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>() {
+            public org.apache.avro.protobuf.multiplefiles.A convert(java.lang.Integer from) {
+              @SuppressWarnings("deprecation")
+              org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(from);
+              return result == null ? org.apache.avro.protobuf.multiplefiles.A.X : result;
+            }
+          };
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
   public java.util.List<org.apache.avro.protobuf.multiplefiles.A> getSymsList() {
-    return new com.google.protobuf.Internal.ListAdapter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(
-        syms_, syms_converter_);
+    return new com.google.protobuf.Internal.ListAdapter<
+        java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(syms_, syms_converter_);
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
   public int getSymsCount() {
     return syms_.size();
   }
-
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
    */
@@ -684,7 +662,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int FOO_FIELD_NUMBER = 18;
   private org.apache.avro.protobuf.multiplefiles.Foo foo_;
-
   /**
    * <pre>
    * a recursive type
@@ -695,7 +672,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public boolean hasFoo() {
     return ((bitField0_ & 0x00010000) == 0x00010000);
   }
-
   /**
    * <pre>
    * a recursive type
@@ -706,7 +682,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public org.apache.avro.protobuf.multiplefiles.Foo getFoo() {
     return foo_ == null ? org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance() : foo_;
   }
-
   /**
    * <pre>
    * a recursive type
@@ -720,7 +695,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   public static final int TIMESTAMP_FIELD_NUMBER = 21;
   private com.google.protobuf.Timestamp timestamp_;
-
   /**
    * <pre>
    * a predefined message type
@@ -731,7 +705,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public boolean hasTimestamp() {
     return ((bitField0_ & 0x00020000) == 0x00020000);
   }
-
   /**
    * <pre>
    * a predefined message type
@@ -742,7 +715,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   public com.google.protobuf.Timestamp getTimestamp() {
     return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
   }
-
   /**
    * <pre>
    * a predefined message type
@@ -755,13 +727,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   }
 
   private byte memoizedIsInitialized = -1;
-
+  @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
-    if (isInitialized == 1)
-      return true;
-    if (isInitialized == 0)
-      return false;
+    if (isInitialized == 1) return true;
+    if (isInitialized == 0) return false;
 
     if (!hasInt32()) {
       memoizedIsInitialized = 0;
@@ -783,7 +753,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return true;
   }
 
-  public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+  @java.lang.Override
+  public void writeTo(com.google.protobuf.CodedOutputStream output)
+                      throws java.io.IOException {
     if (((bitField0_ & 0x00000001) == 0x00000001)) {
       output.writeInt32(1, int32_);
     }
@@ -850,84 +822,104 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     unknownFields.writeTo(output);
   }
 
+  @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
-    if (size != -1)
-      return size;
+    if (size != -1) return size;
 
     size = 0;
     if (((bitField0_ & 0x00000001) == 0x00000001)) {
-      size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, int32_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt32Size(1, int32_);
     }
     if (((bitField0_ & 0x00000002) == 0x00000002)) {
-      size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, int64_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(2, int64_);
     }
     if (((bitField0_ & 0x00000004) == 0x00000004)) {
-      size += com.google.protobuf.CodedOutputStream.computeUInt32Size(3, uint32_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt32Size(3, uint32_);
     }
     if (((bitField0_ & 0x00000008) == 0x00000008)) {
-      size += com.google.protobuf.CodedOutputStream.computeUInt64Size(4, uint64_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(4, uint64_);
     }
     if (((bitField0_ & 0x00000010) == 0x00000010)) {
-      size += com.google.protobuf.CodedOutputStream.computeSInt32Size(5, sint32_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeSInt32Size(5, sint32_);
     }
     if (((bitField0_ & 0x00000020) == 0x00000020)) {
-      size += com.google.protobuf.CodedOutputStream.computeSInt64Size(6, sint64_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeSInt64Size(6, sint64_);
     }
     if (((bitField0_ & 0x00000040) == 0x00000040)) {
-      size += com.google.protobuf.CodedOutputStream.computeFixed32Size(7, fixed32_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeFixed32Size(7, fixed32_);
     }
     if (((bitField0_ & 0x00000080) == 0x00000080)) {
-      size += com.google.protobuf.CodedOutputStream.computeFixed64Size(8, fixed64_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeFixed64Size(8, fixed64_);
     }
     if (((bitField0_ & 0x00000100) == 0x00000100)) {
-      size += com.google.protobuf.CodedOutputStream.computeSFixed32Size(9, sfixed32_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeSFixed32Size(9, sfixed32_);
     }
     if (((bitField0_ & 0x00000200) == 0x00000200)) {
-      size += com.google.protobuf.CodedOutputStream.computeSFixed64Size(10, sfixed64_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeSFixed64Size(10, sfixed64_);
     }
     if (((bitField0_ & 0x00000400) == 0x00000400)) {
-      size += com.google.protobuf.CodedOutputStream.computeFloatSize(11, float_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeFloatSize(11, float_);
     }
     if (((bitField0_ & 0x00000800) == 0x00000800)) {
-      size += com.google.protobuf.CodedOutputStream.computeDoubleSize(12, double_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeDoubleSize(12, double_);
     }
     if (((bitField0_ & 0x00001000) == 0x00001000)) {
-      size += com.google.protobuf.CodedOutputStream.computeBoolSize(13, bool_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(13, bool_);
     }
     if (((bitField0_ & 0x00002000) == 0x00002000)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, string_);
     }
     if (((bitField0_ & 0x00004000) == 0x00004000)) {
-      size += com.google.protobuf.CodedOutputStream.computeBytesSize(15, bytes_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeBytesSize(15, bytes_);
     }
     if (((bitField0_ & 0x00008000) == 0x00008000)) {
-      size += com.google.protobuf.CodedOutputStream.computeEnumSize(16, enum_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeEnumSize(16, enum_);
     }
     {
       int dataSize = 0;
       for (int i = 0; i < intArray_.size(); i++) {
-        dataSize += com.google.protobuf.CodedOutputStream.computeInt32SizeNoTag(intArray_.get(i));
+        dataSize += com.google.protobuf.CodedOutputStream
+          .computeInt32SizeNoTag(intArray_.get(i));
       }
       size += dataSize;
       size += 2 * getIntArrayList().size();
     }
     if (((bitField0_ & 0x00010000) == 0x00010000)) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(18, getFoo());
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(18, getFoo());
     }
     {
       int dataSize = 0;
       for (int i = 0; i < syms_.size(); i++) {
-        dataSize += com.google.protobuf.CodedOutputStream.computeEnumSizeNoTag(syms_.get(i));
+        dataSize += com.google.protobuf.CodedOutputStream
+          .computeEnumSizeNoTag(syms_.get(i));
       }
       size += dataSize;
       size += 2 * syms_.size();
     }
     for (int i = 0; i < fooArray_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(20, fooArray_.get(i));
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(20, fooArray_.get(i));
     }
     if (((bitField0_ & 0x00020000) == 0x00020000)) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(21, getTimestamp());
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(21, getTimestamp());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -937,7 +929,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   @java.lang.Override
   public boolean equals(final java.lang.Object obj) {
     if (obj == this) {
-      return true;
+     return true;
     }
     if (!(obj instanceof org.apache.avro.protobuf.multiplefiles.Foo)) {
       return super.equals(obj);
@@ -947,80 +939,101 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     boolean result = true;
     result = result && (hasInt32() == other.hasInt32());
     if (hasInt32()) {
-      result = result && (getInt32() == other.getInt32());
+      result = result && (getInt32()
+          == other.getInt32());
     }
     result = result && (hasInt64() == other.hasInt64());
     if (hasInt64()) {
-      result = result && (getInt64() == other.getInt64());
+      result = result && (getInt64()
+          == other.getInt64());
     }
     result = result && (hasUint32() == other.hasUint32());
     if (hasUint32()) {
-      result = result && (getUint32() == other.getUint32());
+      result = result && (getUint32()
+          == other.getUint32());
     }
     result = result && (hasUint64() == other.hasUint64());
     if (hasUint64()) {
-      result = result && (getUint64() == other.getUint64());
+      result = result && (getUint64()
+          == other.getUint64());
     }
     result = result && (hasSint32() == other.hasSint32());
     if (hasSint32()) {
-      result = result && (getSint32() == other.getSint32());
+      result = result && (getSint32()
+          == other.getSint32());
     }
     result = result && (hasSint64() == other.hasSint64());
     if (hasSint64()) {
-      result = result && (getSint64() == other.getSint64());
+      result = result && (getSint64()
+          == other.getSint64());
     }
     result = result && (hasFixed32() == other.hasFixed32());
     if (hasFixed32()) {
-      result = result && (getFixed32() == other.getFixed32());
+      result = result && (getFixed32()
+          == other.getFixed32());
     }
     result = result && (hasFixed64() == other.hasFixed64());
     if (hasFixed64()) {
-      result = result && (getFixed64() == other.getFixed64());
+      result = result && (getFixed64()
+          == other.getFixed64());
     }
     result = result && (hasSfixed32() == other.hasSfixed32());
     if (hasSfixed32()) {
-      result = result && (getSfixed32() == other.getSfixed32());
+      result = result && (getSfixed32()
+          == other.getSfixed32());
     }
     result = result && (hasSfixed64() == other.hasSfixed64());
     if (hasSfixed64()) {
-      result = result && (getSfixed64() == other.getSfixed64());
+      result = result && (getSfixed64()
+          == other.getSfixed64());
     }
     result = result && (hasFloat() == other.hasFloat());
     if (hasFloat()) {
-      result = result
-          && (java.lang.Float.floatToIntBits(getFloat()) == java.lang.Float.floatToIntBits(other.getFloat()));
+      result = result && (
+          java.lang.Float.floatToIntBits(getFloat())
+          == java.lang.Float.floatToIntBits(
+              other.getFloat()));
     }
     result = result && (hasDouble() == other.hasDouble());
     if (hasDouble()) {
-      result = result
-          && (java.lang.Double.doubleToLongBits(getDouble()) == java.lang.Double.doubleToLongBits(other.getDouble()));
+      result = result && (
+          java.lang.Double.doubleToLongBits(getDouble())
+          == java.lang.Double.doubleToLongBits(
+              other.getDouble()));
     }
     result = result && (hasBool() == other.hasBool());
     if (hasBool()) {
-      result = result && (getBool() == other.getBool());
+      result = result && (getBool()
+          == other.getBool());
     }
     result = result && (hasString() == other.hasString());
     if (hasString()) {
-      result = result && getString().equals(other.getString());
+      result = result && getString()
+          .equals(other.getString());
     }
     result = result && (hasBytes() == other.hasBytes());
     if (hasBytes()) {
-      result = result && getBytes().equals(other.getBytes());
+      result = result && getBytes()
+          .equals(other.getBytes());
     }
     result = result && (hasEnum() == other.hasEnum());
     if (hasEnum()) {
       result = result && enum_ == other.enum_;
     }
-    result = result && getIntArrayList().equals(other.getIntArrayList());
-    result = result && getFooArrayList().equals(other.getFooArrayList());
+    result = result && getIntArrayList()
+        .equals(other.getIntArrayList());
+    result = result && getFooArrayList()
+        .equals(other.getFooArrayList());
     result = result && syms_.equals(other.syms_);
     result = result && (hasFoo() == other.hasFoo());
     if (hasFoo()) {
-      result = result && getFoo().equals(other.getFoo());
+      result = result && getFoo()
+          .equals(other.getFoo());
     }
     result = result && (hasTimestamp() == other.hasTimestamp());
     if (hasTimestamp()) {
-      result = result && getTimestamp().equals(other.getTimestamp());
+      result = result && getTimestamp()
+          .equals(other.getTimestamp());
     }
     result = result && unknownFields.equals(other.unknownFields);
     return result;
@@ -1039,7 +1052,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     if (hasInt64()) {
       hash = (37 * hash) + INT64_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getInt64());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getInt64());
     }
     if (hasUint32()) {
       hash = (37 * hash) + UINT32_FIELD_NUMBER;
@@ -1047,7 +1061,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     if (hasUint64()) {
       hash = (37 * hash) + UINT64_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getUint64());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getUint64());
     }
     if (hasSint32()) {
       hash = (37 * hash) + SINT32_FIELD_NUMBER;
@@ -1055,7 +1070,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     if (hasSint64()) {
       hash = (37 * hash) + SINT64_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getSint64());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getSint64());
     }
     if (hasFixed32()) {
       hash = (37 * hash) + FIXED32_FIELD_NUMBER;
@@ -1063,7 +1079,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     if (hasFixed64()) {
       hash = (37 * hash) + FIXED64_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getFixed64());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getFixed64());
     }
     if (hasSfixed32()) {
       hash = (37 * hash) + SFIXED32_FIELD_NUMBER;
@@ -1071,19 +1088,23 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     if (hasSfixed64()) {
       hash = (37 * hash) + SFIXED64_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getSfixed64());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getSfixed64());
     }
     if (hasFloat()) {
       hash = (37 * hash) + FLOAT_FIELD_NUMBER;
-      hash = (53 * hash) + java.lang.Float.floatToIntBits(getFloat());
+      hash = (53 * hash) + java.lang.Float.floatToIntBits(
+          getFloat());
     }
     if (hasDouble()) {
       hash = (37 * hash) + DOUBLE_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(java.lang.Double.doubleToLongBits(getDouble()));
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          java.lang.Double.doubleToLongBits(getDouble()));
     }
     if (hasBool()) {
       hash = (37 * hash) + BOOL_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getBool());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getBool());
     }
     if (hasString()) {
       hash = (37 * hash) + STRING_FIELD_NUMBER;
@@ -1122,105 +1143,114 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return hash;
   }
 
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(java.nio.ByteBuffer data)
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(java.nio.ByteBuffer data,
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(com.google.protobuf.ByteString data)
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(com.google.protobuf.ByteString data,
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-
   public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(byte[] data,
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-
   public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(java.io.InputStream input)
       throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(java.io.InputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      java.io.InputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input, extensionRegistry);
   }
-
   public static org.apache.avro.protobuf.multiplefiles.Foo parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseDelimitedWithIOException(PARSER, input);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseDelimitedFrom(java.io.InputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-  }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(com.google.protobuf.CodedInputStream input)
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseDelimitedFrom(
+      java.io.InputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-
-  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(com.google.protobuf.CodedInputStream input,
-      com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-    return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      com.google.protobuf.CodedInputStream input)
+      throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input);
   }
-
-  public Builder newBuilderForType() {
-    return newBuilder();
-  }
-
-  public static Builder newBuilder() {
-    return DEFAULT_INSTANCE.toBuilder();
-  }
-
-  public static Builder newBuilder(org.apache.avro.protobuf.multiplefiles.Foo prototype) {
-    return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-  }
-
-  public Builder toBuilder() {
-    return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+  public static org.apache.avro.protobuf.multiplefiles.Foo parseFrom(
+      com.google.protobuf.CodedInputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      throws java.io.IOException {
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input, extensionRegistry);
   }
 
   @java.lang.Override
-  protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+  public Builder newBuilderForType() { return newBuilder(); }
+  public static Builder newBuilder() {
+    return DEFAULT_INSTANCE.toBuilder();
+  }
+  public static Builder newBuilder(org.apache.avro.protobuf.multiplefiles.Foo prototype) {
+    return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+  }
+  @java.lang.Override
+  public Builder toBuilder() {
+    return this == DEFAULT_INSTANCE
+        ? new Builder() : new Builder().mergeFrom(this);
+  }
+
+  @java.lang.Override
+  protected Builder newBuilderForType(
+      com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /**
    * Protobuf type {@code org.apache.avro.protobuf.multiplefiles.Foo}
    */
-  public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+  public static final class Builder extends
+      com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
       // @@protoc_insertion_point(builder_implements:org.apache.avro.protobuf.multiplefiles.Foo)
       org.apache.avro.protobuf.multiplefiles.FooOrBuilder {
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
-              org.apache.avro.protobuf.multiplefiles.Foo.Builder.class);
+          .ensureFieldAccessorsInitialized(
+              org.apache.avro.protobuf.multiplefiles.Foo.class, org.apache.avro.protobuf.multiplefiles.Foo.Builder.class);
     }
 
     // Construct using org.apache.avro.protobuf.multiplefiles.Foo.newBuilder()
@@ -1228,19 +1258,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       maybeForceBuilderInitialization();
     }
 
-    private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+    private Builder(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       super(parent);
       maybeForceBuilderInitialization();
     }
-
     private void maybeForceBuilderInitialization() {
-      if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+      if (com.google.protobuf.GeneratedMessageV3
+              .alwaysUseFieldBuilders) {
         getFooArrayFieldBuilder();
         getFooFieldBuilder();
         getTimestampFieldBuilder();
       }
     }
-
+    @java.lang.Override
     public Builder clear() {
       super.clear();
       int32_ = 0;
@@ -1300,14 +1331,18 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+    @java.lang.Override
+    public com.google.protobuf.Descriptors.Descriptor
+        getDescriptorForType() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
       return org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance();
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo build() {
       org.apache.avro.protobuf.multiplefiles.Foo result = buildPartial();
       if (!result.isInitialized()) {
@@ -1316,6 +1351,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return result;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo buildPartial() {
       org.apache.avro.protobuf.multiplefiles.Foo result = new org.apache.avro.protobuf.multiplefiles.Foo(this);
       int from_bitField0_ = bitField0_;
@@ -1424,34 +1460,42 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return result;
     }
 
+    @java.lang.Override
     public Builder clone() {
       return (Builder) super.clone();
     }
-
-    public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+    @java.lang.Override
+    public Builder setField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        java.lang.Object value) {
       return (Builder) super.setField(field, value);
     }
-
-    public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+    @java.lang.Override
+    public Builder clearField(
+        com.google.protobuf.Descriptors.FieldDescriptor field) {
       return (Builder) super.clearField(field);
     }
-
-    public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+    @java.lang.Override
+    public Builder clearOneof(
+        com.google.protobuf.Descriptors.OneofDescriptor oneof) {
       return (Builder) super.clearOneof(oneof);
     }
-
-    public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
-        java.lang.Object value) {
+    @java.lang.Override
+    public Builder setRepeatedField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        int index, java.lang.Object value) {
       return (Builder) super.setRepeatedField(field, index, value);
     }
-
-    public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+    @java.lang.Override
+    public Builder addRepeatedField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        java.lang.Object value) {
       return (Builder) super.addRepeatedField(field, value);
     }
-
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof org.apache.avro.protobuf.multiplefiles.Foo) {
-        return mergeFrom((org.apache.avro.protobuf.multiplefiles.Foo) other);
+        return mergeFrom((org.apache.avro.protobuf.multiplefiles.Foo)other);
       } else {
         super.mergeFrom(other);
         return this;
@@ -1459,8 +1503,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
 
     public Builder mergeFrom(org.apache.avro.protobuf.multiplefiles.Foo other) {
-      if (other == org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance())
-        return this;
+      if (other == org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance()) return this;
       if (other.hasInt32()) {
         setInt32(other.getInt32());
       }
@@ -1539,8 +1582,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
             fooArrayBuilder_ = null;
             fooArray_ = other.fooArray_;
             bitField0_ = (bitField0_ & ~0x00020000);
-            fooArrayBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getFooArrayFieldBuilder()
-                : null;
+            fooArrayBuilder_ = 
+              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                 getFooArrayFieldBuilder() : null;
           } else {
             fooArrayBuilder_.addAllMessages(other.fooArray_);
           }
@@ -1567,6 +1611,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
+    @java.lang.Override
     public final boolean isInitialized() {
       if (!hasInt32()) {
         return false;
@@ -1584,8 +1629,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return true;
     }
 
-    public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
+    @java.lang.Override
+    public Builder mergeFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
       org.apache.avro.protobuf.multiplefiles.Foo parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
@@ -1599,11 +1647,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     private int bitField0_;
 
-    private int int32_;
-
+    private int int32_ ;
     /**
      * <pre>
      * all the primitive types
@@ -1614,7 +1660,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public boolean hasInt32() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
-
     /**
      * <pre>
      * all the primitive types
@@ -1625,7 +1670,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public int getInt32() {
       return int32_;
     }
-
     /**
      * <pre>
      * all the primitive types
@@ -1639,7 +1683,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <pre>
      * all the primitive types
@@ -1654,22 +1697,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private long int64_;
-
+    private long int64_ ;
     /**
      * <code>optional int64 int64 = 2;</code>
      */
     public boolean hasInt64() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
-
     /**
      * <code>optional int64 int64 = 2;</code>
      */
     public long getInt64() {
       return int64_;
     }
-
     /**
      * <code>optional int64 int64 = 2;</code>
      */
@@ -1679,7 +1719,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional int64 int64 = 2;</code>
      */
@@ -1690,22 +1729,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private int uint32_;
-
+    private int uint32_ ;
     /**
      * <code>optional uint32 uint32 = 3;</code>
      */
     public boolean hasUint32() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
-
     /**
      * <code>optional uint32 uint32 = 3;</code>
      */
     public int getUint32() {
       return uint32_;
     }
-
     /**
      * <code>optional uint32 uint32 = 3;</code>
      */
@@ -1715,7 +1751,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional uint32 uint32 = 3;</code>
      */
@@ -1726,22 +1761,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private long uint64_;
-
+    private long uint64_ ;
     /**
      * <code>optional uint64 uint64 = 4;</code>
      */
     public boolean hasUint64() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
-
     /**
      * <code>optional uint64 uint64 = 4;</code>
      */
     public long getUint64() {
       return uint64_;
     }
-
     /**
      * <code>optional uint64 uint64 = 4;</code>
      */
@@ -1751,7 +1783,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional uint64 uint64 = 4;</code>
      */
@@ -1762,22 +1793,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private int sint32_;
-
+    private int sint32_ ;
     /**
      * <code>optional sint32 sint32 = 5;</code>
      */
     public boolean hasSint32() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
     }
-
     /**
      * <code>optional sint32 sint32 = 5;</code>
      */
     public int getSint32() {
       return sint32_;
     }
-
     /**
      * <code>optional sint32 sint32 = 5;</code>
      */
@@ -1787,7 +1815,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional sint32 sint32 = 5;</code>
      */
@@ -1798,22 +1825,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private long sint64_;
-
+    private long sint64_ ;
     /**
      * <code>optional sint64 sint64 = 6;</code>
      */
     public boolean hasSint64() {
       return ((bitField0_ & 0x00000020) == 0x00000020);
     }
-
     /**
      * <code>optional sint64 sint64 = 6;</code>
      */
     public long getSint64() {
       return sint64_;
     }
-
     /**
      * <code>optional sint64 sint64 = 6;</code>
      */
@@ -1823,7 +1847,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional sint64 sint64 = 6;</code>
      */
@@ -1834,22 +1857,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private int fixed32_;
-
+    private int fixed32_ ;
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
      */
     public boolean hasFixed32() {
       return ((bitField0_ & 0x00000040) == 0x00000040);
     }
-
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
      */
     public int getFixed32() {
       return fixed32_;
     }
-
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
      */
@@ -1859,7 +1879,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
      */
@@ -1870,22 +1889,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private long fixed64_;
-
+    private long fixed64_ ;
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
      */
     public boolean hasFixed64() {
       return ((bitField0_ & 0x00000080) == 0x00000080);
     }
-
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
      */
     public long getFixed64() {
       return fixed64_;
     }
-
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
      */
@@ -1895,7 +1911,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
      */
@@ -1906,22 +1921,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private int sfixed32_;
-
+    private int sfixed32_ ;
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
      */
     public boolean hasSfixed32() {
       return ((bitField0_ & 0x00000100) == 0x00000100);
     }
-
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
      */
     public int getSfixed32() {
       return sfixed32_;
     }
-
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
      */
@@ -1931,7 +1943,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
      */
@@ -1942,22 +1953,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private long sfixed64_;
-
+    private long sfixed64_ ;
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
      */
     public boolean hasSfixed64() {
       return ((bitField0_ & 0x00000200) == 0x00000200);
     }
-
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
      */
     public long getSfixed64() {
       return sfixed64_;
     }
-
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
      */
@@ -1967,7 +1975,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
      */
@@ -1978,22 +1985,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private float float_;
-
+    private float float_ ;
     /**
      * <code>optional float float = 11;</code>
      */
     public boolean hasFloat() {
       return ((bitField0_ & 0x00000400) == 0x00000400);
     }
-
     /**
      * <code>optional float float = 11;</code>
      */
     public float getFloat() {
       return float_;
     }
-
     /**
      * <code>optional float float = 11;</code>
      */
@@ -2003,7 +2007,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional float float = 11;</code>
      */
@@ -2014,22 +2017,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private double double_;
-
+    private double double_ ;
     /**
      * <code>optional double double = 12;</code>
      */
     public boolean hasDouble() {
       return ((bitField0_ & 0x00000800) == 0x00000800);
     }
-
     /**
      * <code>optional double double = 12;</code>
      */
     public double getDouble() {
       return double_;
     }
-
     /**
      * <code>optional double double = 12;</code>
      */
@@ -2039,7 +2039,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional double double = 12;</code>
      */
@@ -2050,22 +2049,19 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private boolean bool_;
-
+    private boolean bool_ ;
     /**
      * <code>optional bool bool = 13;</code>
      */
     public boolean hasBool() {
       return ((bitField0_ & 0x00001000) == 0x00001000);
     }
-
     /**
      * <code>optional bool bool = 13;</code>
      */
     public boolean getBool() {
       return bool_;
     }
-
     /**
      * <code>optional bool bool = 13;</code>
      */
@@ -2075,7 +2071,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional bool bool = 13;</code>
      */
@@ -2087,21 +2082,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
 
     private java.lang.Object string_ = "";
-
     /**
      * <code>optional string string = 14;</code>
      */
     public boolean hasString() {
       return ((bitField0_ & 0x00002000) == 0x00002000);
     }
-
     /**
      * <code>optional string string = 14;</code>
      */
     public java.lang.String getString() {
       java.lang.Object ref = string_;
       if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
           string_ = s;
@@ -2111,34 +2105,35 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return (java.lang.String) ref;
       }
     }
-
     /**
      * <code>optional string string = 14;</code>
      */
-    public com.google.protobuf.ByteString getStringBytes() {
+    public com.google.protobuf.ByteString
+        getStringBytes() {
       java.lang.Object ref = string_;
       if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
         string_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /**
      * <code>optional string string = 14;</code>
      */
-    public Builder setString(java.lang.String value) {
+    public Builder setString(
+        java.lang.String value) {
       if (value == null) {
-        throw new NullPointerException();
-      }
-      bitField0_ |= 0x00002000;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
       string_ = value;
       onChanged();
       return this;
     }
-
     /**
      * <code>optional string string = 14;</code>
      */
@@ -2148,49 +2143,45 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional string string = 14;</code>
      */
-    public Builder setStringBytes(com.google.protobuf.ByteString value) {
+    public Builder setStringBytes(
+        com.google.protobuf.ByteString value) {
       if (value == null) {
-        throw new NullPointerException();
-      }
-      bitField0_ |= 0x00002000;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00002000;
       string_ = value;
       onChanged();
       return this;
     }
 
     private com.google.protobuf.ByteString bytes_ = com.google.protobuf.ByteString.EMPTY;
-
     /**
      * <code>optional bytes bytes = 15;</code>
      */
     public boolean hasBytes() {
       return ((bitField0_ & 0x00004000) == 0x00004000);
     }
-
     /**
      * <code>optional bytes bytes = 15;</code>
      */
     public com.google.protobuf.ByteString getBytes() {
       return bytes_;
     }
-
     /**
      * <code>optional bytes bytes = 15;</code>
      */
     public Builder setBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
-        throw new NullPointerException();
-      }
-      bitField0_ |= 0x00004000;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00004000;
       bytes_ = value;
       onChanged();
       return this;
     }
-
     /**
      * <code>optional bytes bytes = 15;</code>
      */
@@ -2202,22 +2193,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
 
     private int enum_ = 3;
-
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
      */
     public boolean hasEnum() {
       return ((bitField0_ & 0x00008000) == 0x00008000);
     }
-
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
      */
     public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+      @SuppressWarnings("deprecation")
       org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
       return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
     }
-
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
      */
@@ -2230,7 +2219,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
      */
@@ -2242,14 +2230,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
 
     private java.util.List<java.lang.Integer> intArray_ = java.util.Collections.emptyList();
-
     private void ensureIntArrayIsMutable() {
       if (!((bitField0_ & 0x00010000) == 0x00010000)) {
         intArray_ = new java.util.ArrayList<java.lang.Integer>(intArray_);
         bitField0_ |= 0x00010000;
-      }
+       }
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2257,10 +2243,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>repeated int32 intArray = 17;</code>
      */
-    public java.util.List<java.lang.Integer> getIntArrayList() {
+    public java.util.List<java.lang.Integer>
+        getIntArrayList() {
       return java.util.Collections.unmodifiableList(intArray_);
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2271,7 +2257,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public int getIntArrayCount() {
       return intArray_.size();
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2282,7 +2267,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public int getIntArray(int index) {
       return intArray_.get(index);
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2290,13 +2274,13 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>repeated int32 intArray = 17;</code>
      */
-    public Builder setIntArray(int index, int value) {
+    public Builder setIntArray(
+        int index, int value) {
       ensureIntArrayIsMutable();
       intArray_.set(index, value);
       onChanged();
       return this;
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2310,7 +2294,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2318,13 +2301,14 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>repeated int32 intArray = 17;</code>
      */
-    public Builder addAllIntArray(java.lang.Iterable<? extends java.lang.Integer> values) {
+    public Builder addAllIntArray(
+        java.lang.Iterable<? extends java.lang.Integer> values) {
       ensureIntArrayIsMutable();
-      com.google.protobuf.AbstractMessageLite.Builder.addAll(values, intArray_);
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, intArray_);
       onChanged();
       return this;
     }
-
     /**
      * <pre>
      * some repeated types
@@ -2339,16 +2323,17 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> fooArray_ = java.util.Collections.emptyList();
-
+    private java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> fooArray_ =
+      java.util.Collections.emptyList();
     private void ensureFooArrayIsMutable() {
       if (!((bitField0_ & 0x00020000) == 0x00020000)) {
         fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.multiplefiles.Foo>(fooArray_);
         bitField0_ |= 0x00020000;
-      }
+       }
     }
 
-    private com.google.protobuf.RepeatedFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> fooArrayBuilder_;
+    private com.google.protobuf.RepeatedFieldBuilderV3<
+        org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> fooArrayBuilder_;
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
@@ -2360,7 +2345,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return fooArrayBuilder_.getMessageList();
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
@@ -2371,7 +2355,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return fooArrayBuilder_.getCount();
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
@@ -2382,11 +2365,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return fooArrayBuilder_.getMessage(index);
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder setFooArray(int index, org.apache.avro.protobuf.multiplefiles.Foo value) {
+    public Builder setFooArray(
+        int index, org.apache.avro.protobuf.multiplefiles.Foo value) {
       if (fooArrayBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -2399,11 +2382,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder setFooArray(int index, org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
+    public Builder setFooArray(
+        int index, org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
       if (fooArrayBuilder_ == null) {
         ensureFooArrayIsMutable();
         fooArray_.set(index, builderForValue.build());
@@ -2413,7 +2396,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
@@ -2430,11 +2412,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder addFooArray(int index, org.apache.avro.protobuf.multiplefiles.Foo value) {
+    public Builder addFooArray(
+        int index, org.apache.avro.protobuf.multiplefiles.Foo value) {
       if (fooArrayBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -2447,11 +2429,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder addFooArray(org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
+    public Builder addFooArray(
+        org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
       if (fooArrayBuilder_ == null) {
         ensureFooArrayIsMutable();
         fooArray_.add(builderForValue.build());
@@ -2461,11 +2443,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder addFooArray(int index, org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
+    public Builder addFooArray(
+        int index, org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
       if (fooArrayBuilder_ == null) {
         ensureFooArrayIsMutable();
         fooArray_.add(index, builderForValue.build());
@@ -2475,21 +2457,21 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public Builder addAllFooArray(java.lang.Iterable<? extends org.apache.avro.protobuf.multiplefiles.Foo> values) {
+    public Builder addAllFooArray(
+        java.lang.Iterable<? extends org.apache.avro.protobuf.multiplefiles.Foo> values) {
       if (fooArrayBuilder_ == null) {
         ensureFooArrayIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, fooArray_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, fooArray_);
         onChanged();
       } else {
         fooArrayBuilder_.addAllMessages(values);
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
@@ -2503,7 +2485,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
@@ -2517,102 +2498,103 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public org.apache.avro.protobuf.multiplefiles.Foo.Builder getFooArrayBuilder(int index) {
+    public org.apache.avro.protobuf.multiplefiles.Foo.Builder getFooArrayBuilder(
+        int index) {
       return getFooArrayFieldBuilder().getBuilder(index);
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(int index) {
+    public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(
+        int index) {
       if (fooArrayBuilder_ == null) {
-        return fooArray_.get(index);
-      } else {
+        return fooArray_.get(index);  } else {
         return fooArrayBuilder_.getMessageOrBuilder(index);
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayOrBuilderList() {
+    public java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> 
+         getFooArrayOrBuilderList() {
       if (fooArrayBuilder_ != null) {
         return fooArrayBuilder_.getMessageOrBuilderList();
       } else {
         return java.util.Collections.unmodifiableList(fooArray_);
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
     public org.apache.avro.protobuf.multiplefiles.Foo.Builder addFooArrayBuilder() {
-      return getFooArrayFieldBuilder().addBuilder(org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance());
-    }
-
-    /**
-     * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
-     */
-    public org.apache.avro.protobuf.multiplefiles.Foo.Builder addFooArrayBuilder(int index) {
-      return getFooArrayFieldBuilder().addBuilder(index,
+      return getFooArrayFieldBuilder().addBuilder(
           org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance());
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
      */
-    public java.util.List<org.apache.avro.protobuf.multiplefiles.Foo.Builder> getFooArrayBuilderList() {
+    public org.apache.avro.protobuf.multiplefiles.Foo.Builder addFooArrayBuilder(
+        int index) {
+      return getFooArrayFieldBuilder().addBuilder(
+          index, org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
+     */
+    public java.util.List<org.apache.avro.protobuf.multiplefiles.Foo.Builder> 
+         getFooArrayBuilderList() {
       return getFooArrayFieldBuilder().getBuilderList();
     }
-
-    private com.google.protobuf.RepeatedFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayFieldBuilder() {
+    private com.google.protobuf.RepeatedFieldBuilderV3<
+        org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> 
+        getFooArrayFieldBuilder() {
       if (fooArrayBuilder_ == null) {
-        fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder>(
-            fooArray_, ((bitField0_ & 0x00020000) == 0x00020000), getParentForChildren(), isClean());
+        fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+            org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder>(
+                fooArray_,
+                ((bitField0_ & 0x00020000) == 0x00020000),
+                getParentForChildren(),
+                isClean());
         fooArray_ = null;
       }
       return fooArrayBuilder_;
     }
 
-    private java.util.List<java.lang.Integer> syms_ = java.util.Collections.emptyList();
-
+    private java.util.List<java.lang.Integer> syms_ =
+      java.util.Collections.emptyList();
     private void ensureSymsIsMutable() {
       if (!((bitField0_ & 0x00040000) == 0x00040000)) {
         syms_ = new java.util.ArrayList<java.lang.Integer>(syms_);
         bitField0_ |= 0x00040000;
       }
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
     public java.util.List<org.apache.avro.protobuf.multiplefiles.A> getSymsList() {
-      return new com.google.protobuf.Internal.ListAdapter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(
-          syms_, syms_converter_);
+      return new com.google.protobuf.Internal.ListAdapter<
+          java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(syms_, syms_converter_);
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
     public int getSymsCount() {
       return syms_.size();
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
     public org.apache.avro.protobuf.multiplefiles.A getSyms(int index) {
       return syms_converter_.convert(syms_.get(index));
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
-    public Builder setSyms(int index, org.apache.avro.protobuf.multiplefiles.A value) {
+    public Builder setSyms(
+        int index, org.apache.avro.protobuf.multiplefiles.A value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -2621,7 +2603,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
@@ -2634,11 +2615,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
-    public Builder addAllSyms(java.lang.Iterable<? extends org.apache.avro.protobuf.multiplefiles.A> values) {
+    public Builder addAllSyms(
+        java.lang.Iterable<? extends org.apache.avro.protobuf.multiplefiles.A> values) {
       ensureSymsIsMutable();
       for (org.apache.avro.protobuf.multiplefiles.A value : values) {
         syms_.add(value.getNumber());
@@ -2646,7 +2627,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return this;
     }
-
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
      */
@@ -2658,8 +2638,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
 
     private org.apache.avro.protobuf.multiplefiles.Foo foo_ = null;
-    private com.google.protobuf.SingleFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> fooBuilder_;
-
+    private com.google.protobuf.SingleFieldBuilderV3<
+        org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> fooBuilder_;
     /**
      * <pre>
      * a recursive type
@@ -2670,7 +2650,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public boolean hasFoo() {
       return ((bitField0_ & 0x00080000) == 0x00080000);
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2685,7 +2664,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return fooBuilder_.getMessage();
       }
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2706,7 +2684,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00080000;
       return this;
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2714,7 +2691,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
      */
-    public Builder setFoo(org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
+    public Builder setFoo(
+        org.apache.avro.protobuf.multiplefiles.Foo.Builder builderForValue) {
       if (fooBuilder_ == null) {
         foo_ = builderForValue.build();
         onChanged();
@@ -2724,7 +2702,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00080000;
       return this;
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2734,9 +2711,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      */
     public Builder mergeFoo(org.apache.avro.protobuf.multiplefiles.Foo value) {
       if (fooBuilder_ == null) {
-        if (((bitField0_ & 0x00080000) == 0x00080000) && foo_ != null
-            && foo_ != org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance()) {
-          foo_ = org.apache.avro.protobuf.multiplefiles.Foo.newBuilder(foo_).mergeFrom(value).buildPartial();
+        if (((bitField0_ & 0x00080000) == 0x00080000) &&
+            foo_ != null &&
+            foo_ != org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance()) {
+          foo_ =
+            org.apache.avro.protobuf.multiplefiles.Foo.newBuilder(foo_).mergeFrom(value).buildPartial();
         } else {
           foo_ = value;
         }
@@ -2747,7 +2726,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00080000;
       return this;
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2765,7 +2743,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ = (bitField0_ & ~0x00080000);
       return this;
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2778,7 +2755,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return getFooFieldBuilder().getBuilder();
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2790,10 +2766,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       if (fooBuilder_ != null) {
         return fooBuilder_.getMessageOrBuilder();
       } else {
-        return foo_ == null ? org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance() : foo_;
+        return foo_ == null ?
+            org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance() : foo_;
       }
     }
-
     /**
      * <pre>
      * a recursive type
@@ -2801,18 +2777,23 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooFieldBuilder() {
+    private com.google.protobuf.SingleFieldBuilderV3<
+        org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> 
+        getFooFieldBuilder() {
       if (fooBuilder_ == null) {
-        fooBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder>(
-            getFoo(), getParentForChildren(), isClean());
+        fooBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder>(
+                getFoo(),
+                getParentForChildren(),
+                isClean());
         foo_ = null;
       }
       return fooBuilder_;
     }
 
     private com.google.protobuf.Timestamp timestamp_ = null;
-    private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
-
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
     /**
      * <pre>
      * a predefined message type
@@ -2823,7 +2804,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     public boolean hasTimestamp() {
       return ((bitField0_ & 0x00100000) == 0x00100000);
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2838,7 +2818,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         return timestampBuilder_.getMessage();
       }
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2859,7 +2838,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00100000;
       return this;
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2867,7 +2845,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
      */
-    public Builder setTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
+    public Builder setTimestamp(
+        com.google.protobuf.Timestamp.Builder builderForValue) {
       if (timestampBuilder_ == null) {
         timestamp_ = builderForValue.build();
         onChanged();
@@ -2877,7 +2856,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00100000;
       return this;
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2887,9 +2865,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      */
     public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
-        if (((bitField0_ & 0x00100000) == 0x00100000) && timestamp_ != null
-            && timestamp_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
-          timestamp_ = com.google.protobuf.Timestamp.newBuilder(timestamp_).mergeFrom(value).buildPartial();
+        if (((bitField0_ & 0x00100000) == 0x00100000) &&
+            timestamp_ != null &&
+            timestamp_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
+          timestamp_ =
+            com.google.protobuf.Timestamp.newBuilder(timestamp_).mergeFrom(value).buildPartial();
         } else {
           timestamp_ = value;
         }
@@ -2900,7 +2880,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ |= 0x00100000;
       return this;
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2918,7 +2897,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ = (bitField0_ & ~0x00100000);
       return this;
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2931,7 +2909,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       onChanged();
       return getTimestampFieldBuilder().getBuilder();
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2943,10 +2920,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       if (timestampBuilder_ != null) {
         return timestampBuilder_.getMessageOrBuilder();
       } else {
-        return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+        return timestamp_ == null ?
+            com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
       }
     }
-
     /**
      * <pre>
      * a predefined message type
@@ -2954,22 +2931,31 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      *
      * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> getTimestampFieldBuilder() {
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> 
+        getTimestampFieldBuilder() {
       if (timestampBuilder_ == null) {
-        timestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
-            getTimestamp(), getParentForChildren(), isClean());
+        timestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
+                getTimestamp(),
+                getParentForChildren(),
+                isClean());
         timestamp_ = null;
       }
       return timestampBuilder_;
     }
-
-    public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+    @java.lang.Override
+    public final Builder setUnknownFields(
+        final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.setUnknownFields(unknownFields);
     }
 
-    public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+    @java.lang.Override
+    public final Builder mergeUnknownFields(
+        final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.mergeUnknownFields(unknownFields);
     }
+
 
     // @@protoc_insertion_point(builder_scope:org.apache.avro.protobuf.multiplefiles.Foo)
   }
@@ -2984,9 +2970,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return DEFAULT_INSTANCE;
   }
 
-  @java.lang.Deprecated
-  public static final com.google.protobuf.Parser<Foo> PARSER = new com.google.protobuf.AbstractParser<Foo>() {
-    public Foo parsePartialFrom(com.google.protobuf.CodedInputStream input,
+  @java.lang.Deprecated public static final com.google.protobuf.Parser<Foo>
+      PARSER = new com.google.protobuf.AbstractParser<Foo>() {
+    @java.lang.Override
+    public Foo parsePartialFrom(
+        com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return new Foo(input, extensionRegistry);
@@ -3002,8 +2990,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return PARSER;
   }
 
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 
 }
+
