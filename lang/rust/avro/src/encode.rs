@@ -16,6 +16,7 @@
 // under the License.
 
 use crate::{
+    decimal::serialize_big_decimal,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
         Schema, SchemaKind,
@@ -40,13 +41,13 @@ pub fn encode(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) -> AvroResul
     encode_internal(value, schema, rs.get_names(), &None, buffer)
 }
 
-fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
+pub(crate) fn encode_bytes<B: AsRef<[u8]> + ?Sized>(s: &B, buffer: &mut Vec<u8>) {
     let bytes = s.as_ref();
     encode_long(bytes.len() as i64, buffer);
     buffer.extend_from_slice(bytes);
 }
 
-fn encode_long(i: i64, buffer: &mut Vec<u8>) {
+pub(crate) fn encode_long(i: i64, buffer: &mut Vec<u8>) {
     zig_i64(i, buffer)
 }
 
@@ -116,6 +117,10 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             &uuid.to_string(),
             buffer,
         ),
+        Value::BigDecimal(bg) => {
+            let mut buf: Vec<u8> = serialize_big_decimal(bg);
+            buffer.append(&mut buf);
+        }
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
             Schema::Fixed { .. } => buffer.extend(bytes),
