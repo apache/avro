@@ -17,7 +17,7 @@
 
 //! Logic handling the intermediate representation of Avro values.
 use crate::{
-    decimal::Decimal,
+    decimal::{deserialize_big_decimal, serialize_big_decimal, Decimal},
     duration::Duration,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, Precision, RecordField,
@@ -25,6 +25,7 @@ use crate::{
     },
     AvroResult, Error,
 };
+use bigdecimal::BigDecimal;
 use serde_json::{Number, Value as JsonValue};
 use std::{
     borrow::Borrow,
@@ -100,6 +101,8 @@ pub enum Value {
     Date(i32),
     /// An Avro Decimal value. Bytes are in big-endian order, per the Avro spec.
     Decimal(Decimal),
+    /// An Avro Decimal value.
+    BigDecimal(BigDecimal),
     /// Time in milliseconds.
     TimeMillis(i32),
     /// Time in microseconds.
@@ -154,6 +157,7 @@ to_value!(String, Value::String);
 to_value!(Vec<u8>, Value::Bytes);
 to_value!(uuid::Uuid, Value::Uuid);
 to_value!(Decimal, Value::Decimal);
+to_value!(BigDecimal, Value::BigDecimal);
 to_value!(Duration, Value::Duration);
 
 impl From<()> for Value {
@@ -327,6 +331,10 @@ impl TryFrom<Value> for JsonValue {
             Value::Date(d) => Ok(Self::Number(d.into())),
             Value::Decimal(ref d) => <Vec<u8>>::try_from(d)
                 .map(|vec| Self::Array(vec.into_iter().map(|v| v.into()).collect())),
+            Value::BigDecimal(ref bg) => {
+                let vec1: Vec<u8> = serialize_big_decimal(bg);
+                Ok(Self::Array(vec1.into_iter().map(|b| b.into()).collect()))
+            }
             Value::TimeMillis(t) => Ok(Self::Number(t.into())),
             Value::TimeMicros(t) => Ok(Self::Number(t.into())),
             Value::TimestampMillis(t) => Ok(Self::Number(t.into())),
@@ -425,6 +433,7 @@ impl Value {
             (&Value::TimeMillis(_), &Schema::TimeMillis) => None,
             (&Value::Date(_), &Schema::Date) => None,
             (&Value::Decimal(_), &Schema::Decimal { .. }) => None,
+            (&Value::BigDecimal(_), &Schema::BigDecimal) => None,
             (&Value::Duration(_), &Schema::Duration) => None,
             (&Value::Uuid(_), &Schema::Uuid) => None,
             (&Value::Float(_), &Schema::Float) => None,
@@ -634,7 +643,6 @@ impl Value {
             };
             self = v;
         }
-
         match *schema {
             Schema::Ref { ref name } => {
                 let name = name.fully_qualified_name(enclosing_namespace);
@@ -674,6 +682,7 @@ impl Value {
                 precision,
                 ref inner,
             }) => self.resolve_decimal(precision, scale, inner),
+            Schema::BigDecimal => self.resolve_bigdecimal(),
             Schema::Date => self.resolve_date(),
             Schema::TimeMillis => self.resolve_time_millis(),
             Schema::TimeMicros => self.resolve_time_micros(),
@@ -693,6 +702,14 @@ impl Value {
                 Value::Uuid(Uuid::from_str(string).map_err(Error::ConvertStrToUuid)?)
             }
             other => return Err(Error::GetUuid(other.into())),
+        })
+    }
+
+    fn resolve_bigdecimal(self) -> Result<Self, Error> {
+        Ok(match self {
+            bg @ Value::BigDecimal(_) => bg,
+            Value::Bytes(b) => Value::BigDecimal(deserialize_big_decimal(&b).unwrap()),
+            other => return Err(Error::GetBigdecimal(other.into())),
         })
     }
 
@@ -2918,6 +2935,22 @@ Field with name '"b"' is not a member of the map items"#,
         ));
         let schema = Schema::parse_str(schema)?;
         let resolve_result = avro_value.resolve(&schema);
+        assert!(
+            resolve_result.is_ok(),
+            "resolve result must be ok, got: {resolve_result:?}"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3779_bigdecimal_resolving() -> TestResult {
+        let schema =
+            r#"{"name": "bigDecimalSchema", "logicalType": "big-decimal", "type": "bytes" }"#;
+
+        let avro_value = Value::BigDecimal(BigDecimal::from(12345678u32));
+        let schema = Schema::parse_str(schema)?;
+        let resolve_result: AvroResult<Value> = avro_value.resolve(&schema);
         assert!(
             resolve_result.is_ok(),
             "resolve result must be ok, got: {resolve_result:?}"

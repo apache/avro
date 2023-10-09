@@ -115,6 +115,9 @@ pub enum Error {
     #[error("expected UUID, got: {0:?}")]
     GetUuid(ValueKind),
 
+    #[error("expected BigDecimal, got: {0:?}")]
+    GetBigdecimal(ValueKind),
+
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
 
@@ -288,6 +291,15 @@ pub enum Error {
 
     #[error("The decimal precision ({precision}) must be a positive number")]
     DecimalPrecisionMuBePositive { precision: usize },
+
+    #[error("Unreadable decimal sign")]
+    BigDecimalSign,
+
+    #[error("Unreadable length for decimal inner bytes")]
+    BigDecimalLen,
+
+    #[error("Unreadable decimal scale")]
+    BigDecimalScale,
 
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),

@@ -112,6 +112,9 @@ pub enum Schema {
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     Decimal(DecimalSchema),
+    /// Logical type which represents `Decimal` values without predefined scale.
+    /// The underlying type is serialized and deserialized as `Schema::Bytes`
+    BigDecimal,
     /// A universally unique identifier, annotating a string.
     Uuid,
     /// Logical type which represents the number of days since the unix epoch.
@@ -189,6 +192,7 @@ impl From<&types::Value> for SchemaKind {
             Value::Enum(_, _) => Self::Enum,
             Value::Fixed(_, _) => Self::Fixed,
             Value::Decimal { .. } => Self::Decimal,
+            Value::BigDecimal(_) => Self::BigDecimal,
             Value::Uuid(_) => Self::Uuid,
             Value::Date(_) => Self::Date,
             Value::TimeMillis(_) => Self::TimeMillis,
@@ -1359,6 +1363,10 @@ impl Parser {
                         inner,
                     }));
                 }
+                "big-decimal" => {
+                    logical_verify_type(complex, &[SchemaKind::Bytes], self, enclosing_namespace)?;
+                    return Ok(Schema::BigDecimal);
+                }
                 "uuid" => {
                     logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
                     return Ok(Schema::Uuid);
@@ -1907,6 +1915,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "decimal")?;
                 map.serialize_entry("scale", scale)?;
                 map.serialize_entry("precision", precision)?;
+                map.end()
+            }
+            Schema::BigDecimal => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "bytes")?;
+                map.serialize_entry("logicalType", "big-decimal")?;
                 map.end()
             }
             Schema::Uuid => {
@@ -5151,6 +5165,31 @@ mod tests {
         let schema = Schema::parse_str(schema_str)?;
         let canonical_form = schema.canonical_form();
         assert_eq!(canonical_form, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3779_bigdecimal_schema() -> TestResult {
+        let schema = json!(
+        {
+          "type": "record",
+          "name": "recordWithDecimal",
+          "fields": [
+            {
+                "name": "decimal",
+                "type": "bytes",
+                "logicalType": "big-decimal"
+            }
+          ]
+        });
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
+        );
 
         Ok(())
     }

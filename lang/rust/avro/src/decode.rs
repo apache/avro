@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    decimal::Decimal,
+    decimal::{deserialize_big_decimal, Decimal},
     duration::Duration,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
@@ -36,7 +36,7 @@ use std::{
 use uuid::Uuid;
 
 #[inline]
-fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
+pub(crate) fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {
     zag_i64(reader).map(Value::Long)
 }
 
@@ -46,7 +46,7 @@ fn decode_int<R: Read>(reader: &mut R) -> AvroResult<Value> {
 }
 
 #[inline]
-fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
+pub(crate) fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
     let len = zag_i64(reader)?;
     safe_len(usize::try_from(len).map_err(|e| Error::ConvertI64ToUsize(e, len))?)
 }
@@ -114,6 +114,12 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             },
             schema => Err(Error::ResolveDecimalSchema(schema.into())),
         },
+        Schema::BigDecimal => {
+            match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
+                Value::Bytes(bytes) => deserialize_big_decimal(&bytes).map(Value::BigDecimal),
+                value => Err(Error::BytesValue(value.into())),
+            }
+        }
         Schema::Uuid => Ok(Value::Uuid(
             Uuid::from_str(
                 match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {
