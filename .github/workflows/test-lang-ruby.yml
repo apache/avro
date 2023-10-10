@@ -113,6 +113,8 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B install -DskipTests
 
       - name: Create Interop Data Directory

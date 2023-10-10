@@ -62,4 +62,6 @@ jobs:
           maven-version: 4.0.0-alpha-4
 
       - name: Test
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn clean package

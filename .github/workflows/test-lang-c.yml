@@ -57,6 +57,8 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B install -DskipTests
 
       - name: Create Interop Data Directory
@@ -65,6 +67,8 @@ jobs:
 
       - name: Generate Interop Resources
         working-directory: lang/java/avro
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B -P interop-data-generate generate-resources
 
       - name: Generate Interop Data
@@ -104,6 +108,8 @@ jobs:
 
       - name: Generate Interop Resources
         working-directory: lang/java/avro
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B -P interop-data-generate generate-resources
 
       - name: Generate Interop Data

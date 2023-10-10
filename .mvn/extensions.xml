@@ -22,4 +22,14 @@
         <artifactId>maven-build-cache-extension</artifactId>
         <version>1.0.0</version>
     </extension>
+    <extension>
+      <groupId>com.gradle</groupId>
+      <artifactId>gradle-enterprise-maven-extension</artifactId>
+      <version>1.19.2</version>
+    </extension>
+    <extension>
+      <groupId>com.gradle</groupId>
+      <artifactId>common-custom-user-data-maven-extension</artifactId>
+      <version>1.12.4</version>
+    </extension>
 </extensions>

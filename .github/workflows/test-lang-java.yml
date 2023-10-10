@@ -62,9 +62,13 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Lint
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: ./build.sh lint
 
       - name: Test
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: ./build.sh test
 
   interop:
@@ -120,6 +124,8 @@ jobs:
 
       - name: Install Java Avro for Interop Test
         working-directory: .
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B install -DskipTests
 
       - name: Create Interop Data Directory
@@ -128,6 +134,8 @@ jobs:
 
       - name: Generate Interop Resources
         working-directory: lang/java/avro
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B -P interop-data-generate generate-resources
 
       - name: Generate Interop Data using Python
@@ -140,10 +148,14 @@ jobs:
 
       - name: Run Interop Tests
         working-directory: lang/java/ipc
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn -B test -P interop-data-test
 
       - name: Test Reproducible Build
         working-directory: .
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
         run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare
 
   arm64:
