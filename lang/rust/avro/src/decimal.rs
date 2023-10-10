@@ -126,7 +126,7 @@ pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Err
     let mut bytes: &[u8] = bytes.as_slice();
     let mut big_decimal_buffer = match decode_len(&mut bytes) {
         Ok(size) => vec![0u8; size],
-        Err(_err) => return Err(Error::BigDecimalLen),
+        Err(err) => return Err(Error::BigDecimalLen(Box::new(err))),
     };
 
     bytes
