@@ -31,6 +31,7 @@ clean() {
                  '.tox' \
                  'avro/test/interop' \
                  'dist' \
+                 'docs/build' \
                  'userlogs'
 }
 
