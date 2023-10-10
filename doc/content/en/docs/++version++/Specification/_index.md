@@ -794,11 +794,19 @@ Scale must be zero or a positive integer less than or equal to the precision.
 
 For the purposes of schema resolution, two schemas that are `decimal` logical types _match_ if their scales and precisions match.
 
+<<<<<<< HEAD
 **alternative**
 
 As it's not always possible to fix scale and precision in advance for a decimal field, `big-decimal` is another `decimal` logical type restrict to Avro _bytes_.
 
 _only available in Java_
+=======
+
+
+As it's not always possible to fix scale and precision in advance for a decimal field, `big-decimal` is another `decimal` logical type restrict to Avro _bytes_.
+
+_Currently only available in Java and Rust_.
+>>>>>>> 802f5471d (AVRO-3779: doc for bg in rust)
 
 ```json
 {
@@ -808,6 +816,10 @@ _only available in Java_
 ```
 Here, as scale property is stored in value itself it needs more bytes than preceding `decimal` type, but it allows more flexibility.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 802f5471d (AVRO-3779: doc for bg in rust)
 ### UUID
 The `uuid` logical type represents a random generated universally unique identifier (UUID).
 
