@@ -1142,7 +1142,7 @@ mod tests {
     }
 
     #[test]
-    fn test_empty_body() -> TestResult {
+    fn test_avro_3881_metadata_empty_body() -> TestResult {
         let schema = Schema::parse_str(SCHEMA)?;
         let mut writer = Writer::new(&schema, Vec::new());
         writer.add_user_metadata("a".to_string(), "b")?;
