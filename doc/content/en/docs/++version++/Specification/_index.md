@@ -814,7 +814,7 @@ For the purposes of schema resolution, two schemas that are `decimal` logical ty
 
 As it's not always possible to fix scale and precision in advance for a decimal field, `big-decimal` is another `decimal` logical type restrict to Avro _bytes_.
 
-_currently only available in Java and Rust_
+_Currently only available in Java and Rust_.
 
 ```json
 {
