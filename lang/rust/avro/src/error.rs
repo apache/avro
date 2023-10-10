@@ -292,13 +292,13 @@ pub enum Error {
     #[error("The decimal precision ({precision}) must be a positive number")]
     DecimalPrecisionMuBePositive { precision: usize },
 
-    #[error("Unreadable decimal sign")]
+    #[error("Unreadable big decimal sign")]
     BigDecimalSign,
 
-    #[error("Unreadable length for decimal inner bytes")]
-    BigDecimalLen,
+    #[error("Unreadable length for big decimal inner bytes: {0}")]
+    BigDecimalLen(#[source] Box<Error>),
 
-    #[error("Unreadable decimal scale")]
+    #[error("Unreadable big decimal scale")]
     BigDecimalScale,
 
     #[error("Unexpected `type` {0} variant for `logicalType`")]
