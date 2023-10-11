@@ -140,3 +140,27 @@ jobs:
 
       - name: Run Interop Tests
         run: ./build.sh interop-data-test
+
+  arm64:
+    name: Perl on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y libjansson-dev libcompress-raw-zlib-perl libcpan-uploader-perl libencode-perl libio-string-perl libjson-xs-perl libmodule-install-perl libmodule-install-readmefrompod-perl libobject-tiny-perl libperl-critic-perl libsnappy-dev libtest-exception-perl libtest-pod-perl cpanminus make gcc wget
+          cpanm Error::Simple
+          cpanm Regexp::Common
+          cpanm Try::Tiny
+          cpanm Compress::Zstd
+          cpanm Module::Install::Repository
+          cpanm inc::Module::Install
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test

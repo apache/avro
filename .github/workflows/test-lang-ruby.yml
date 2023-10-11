@@ -142,3 +142,29 @@ jobs:
           export GEM_HOME="$PWD/.gem/"
           export PATH="$GEM_HOME/bin:$PATH"
           bundle exec rake --trace interop
+
+  arm64:
+    name: Ruby on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache gems
+        uses: actions/cache@v3
+        with:
+          path: .gem
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y ruby-dev bundler libsnappy-dev libyaml-dev
+
+      - name: Build
+        run: |
+            set -x
+            ./build.sh clean test
