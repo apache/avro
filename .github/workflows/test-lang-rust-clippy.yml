@@ -19,9 +19,9 @@ name: Rust Clippy Check
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
   pull_request:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
     paths:
       - .github/workflows/test-lang-rust-clippy.yml
       - lang/rust/**

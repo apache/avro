@@ -23,10 +23,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
+    - branch-1.11
   pull_request:
     branches:
-    - master
+    - branch-1.11
     paths:
     - .github/workflows/codeql-java-analysis.yml
     - lang/java/**

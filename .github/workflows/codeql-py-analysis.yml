@@ -23,11 +23,11 @@ name: "CodeQL Python"
 on:
   push:
     branches:
-    - master
+    - branch-1.11
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
-    - master
+    - branch-1.11
     paths:
     - .github/workflows/codeql-py-analysis.yml
     - lang/py/**

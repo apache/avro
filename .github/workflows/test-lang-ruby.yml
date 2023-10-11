@@ -17,9 +17,9 @@ name: 'Test Ruby'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
   pull_request:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
     paths:
     - .github/workflows/test-lang-ruby.yml
     - lang/ruby/**

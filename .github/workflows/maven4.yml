@@ -17,9 +17,9 @@ name: 'Maven 4'
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
   pull_request:
-    branches: [ master ]
+    branches: [ branch-1.11 ]
     paths:
     - .github/workflows/maven4.yml
     - lang/java/**
