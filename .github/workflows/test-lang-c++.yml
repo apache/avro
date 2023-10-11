@@ -55,3 +55,21 @@ jobs:
           mkdir -p build
           cd build
           cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+
+  arm64:
+    name: C++ on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y gcc g++ libboost-all-dev cmake
+
+      - name: Build
+        run: |
+          set -x
+          ./build.sh clean test
