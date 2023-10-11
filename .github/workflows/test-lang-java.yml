@@ -145,3 +145,38 @@ jobs:
       - name: Test Reproducible Build
         working-directory: .
         run: mvn clean verify -DskipTests -Dcyclonedx.skip artifact:compare
+
+  arm64:
+    name: Java on Linux ARM64
+    runs-on: ["self-hosted", "asf-arm"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Temurin JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build
+        run: |
+          set -x
+          export MAVEN_VERSION="3.9.4"
+          wget https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+          tar zxvf apache-maven-$MAVEN_VERSION-bin.tar.gz
+          export M2_HOME=$PWD/apache-maven-$MAVEN_VERSION
+          export PATH="$M2_HOME/bin:$PATH"
+          java -version
+          mvn -version
+          #MAVEN_OPTS="-Dsurefire.excludes=*TestCustomCodec*,*TestAllCodecs*,*TestNettyServer*" ./build.sh clean test
+          ./build.sh clean test
