@@ -257,7 +257,7 @@ url = "http://www.apache.org/security/"
   desc = "Chat with other project developers at #avro channel"
 [[params.links.developer]]
   name = "Developer mailing list"
-  url = "mailto:dev@avro.apache.org"
+  url = "https://lists.apache.org/list.html?dev@avro.apache.org"
   icon = "fa fa-envelope"
   desc = "Discuss development issues around the project"
 
