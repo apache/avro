@@ -865,7 +865,7 @@ A `timestamp-micros` logical type annotates an Avro `long`, where the long store
 ### Timestamp (nanosecond precision)
 The `timestamp-nanos` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one nanosecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
-A `timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+A `timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds from the unix epoch, 1 January 1970 00:00:00.000000000 UTC.
 
 ### Local timestamp (millisecond precision) {#local_timestamp_ms}
 The `local-timestamp-millis` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
