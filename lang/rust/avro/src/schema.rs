@@ -6138,6 +6138,17 @@ mod tests {
 
     #[test]
     fn avro_3886_serialize_attributes() -> TestResult {
+        let attributes = BTreeMap::from([
+            ("string_key".into(), "value".into()),
+            ("number_key".into(), 1.23.into()),
+            ("null_key".into(), Value::Null),
+            (
+                "array_key".into(),
+                Value::Array(vec![1.into(), 2.into(), 3.into()]),
+            ),
+            ("object_key".into(), Value::Object(Map::default())),
+        ]);
+
         // Test serialize enum attributes
         let schema = Schema::Enum(EnumSchema {
             name: Name::new("a")?,
@@ -6145,11 +6156,11 @@ mod tests {
             doc: None,
             symbols: vec![],
             default: None,
-            attributes: BTreeMap::from([("logicalType".into(), "time-millis".into())]),
+            attributes: attributes.clone(),
         });
         let serialized = serde_json::to_string(&schema)?;
         assert_eq!(
-            r#"{"type":"enum","name":"a","symbols":[],"logicalType":"time-millis"}"#,
+            r#"{"type":"enum","name":"a","symbols":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
             &serialized
         );
 
@@ -6159,11 +6170,11 @@ mod tests {
             aliases: None,
             doc: None,
             size: 1,
-            attributes: BTreeMap::from([("logicalType".into(), "time-millis".into())]),
+            attributes: attributes.clone(),
         });
         let serialized = serde_json::to_string(&schema)?;
         assert_eq!(
-            r#"{"type":"fixed","name":"a","size":1,"logicalType":"time-millis"}"#,
+            r#"{"type":"fixed","name":"a","size":1,"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
             &serialized
         );
 
@@ -6174,11 +6185,11 @@ mod tests {
             doc: None,
             fields: vec![],
             lookup: BTreeMap::new(),
-            attributes: BTreeMap::from([("logicalType".into(), "time-millis".into())]),
+            attributes,
         });
         let serialized = serde_json::to_string(&schema)?;
         assert_eq!(
-            r#"{"type":"record","name":"a","fields":[],"logicalType":"time-millis"}"#,
+            r#"{"type":"record","name":"a","fields":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
             &serialized
         );
 
