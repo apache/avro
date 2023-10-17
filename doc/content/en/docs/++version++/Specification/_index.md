@@ -852,35 +852,25 @@ The `time-micros` logical type represents a time of day, with no reference to a 
 
 A `time-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds after midnight, 00:00:00.000000.
 
-### Timestamp (millisecond precision) {#timestamp_ms}
-The `timestamp-millis` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
+### Timestamps {#timestamps}
 
-A `timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
+The `timestamp-{millis,micros,nanos}` logical type represents an instant on the global timeline, independent of a particular time zone or calendar. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
 
-### Timestamp (microsecond precision)
-The `timestamp-micros` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
+- `timestamp-millis`: logical type annotates an Avro `long`, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000.
+- `timestamp-micros`: logical type annotates an Avro `long`, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000.
+- `timestamp-nanos`: logical type annotates an Avro `long`, where the long stores the number of nanoseconds from the unix epoch, 1 January 1970 00:00:00.000000000.
 
-A `timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2). The timestamp is first shifted to UTC 2000-01-01T10:00:00 and that is then converted to Avro long 946720800000 (milliseconds) and written.
 
-### Timestamp (nanosecond precision)
-The `timestamp-nanos` logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one nanosecond. Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation. In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
+### Local Timestamps {#local_timestamp}
 
-A `timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds from the unix epoch, 1 January 1970 00:00:00.000000000 UTC.
+The `local-timestamp-{millis,micros,nanos}` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local.
 
-### Local timestamp (millisecond precision) {#local_timestamp_ms}
-The `local-timestamp-millis` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
+- `local-timestamp-millis`: logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
+- `local-timestamp-micros`: logical type annotates an Avro `long`, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
+- `local-timestamp-nanos`: logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000000.
 
-A `local-timestamp-millis` logical type annotates an Avro `long`, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
-
-### Local timestamp (microsecond precision)
-The `local-timestamp-micros` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
-
-A `local-timestamp-micros` logical type annotates an Avro `long`, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
-
-### Local timestamp (nanosecond precision)
-The `local-timestamp-nanos` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one nanosecond.
-
-A `local-timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000000.
+Example: Given an event at noon local time (12:00) on January 1, 2000, in Helsinki where the local time was two hours east of UTC (UTC+2), and then converted to Avro long 946684800000 (milliseconds) and then written.
 
 ### Duration
 The `duration` logical type represents an amount of time defined by a number of months, days and milliseconds. This is not equivalent to a number of milliseconds, because, depending on the moment in time from which the duration is measured, the number of days in the month and number of milliseconds in a day may differ. Other standard periods such as years, quarters, hours and minutes can be expressed through these basic periods.
