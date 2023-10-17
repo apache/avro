@@ -880,7 +880,7 @@ A `local-timestamp-micros` logical type annotates an Avro `long`, where the long
 ### Local timestamp (nanosecond precision)
 The `local-timestamp-nanos` logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one nanosecond.
 
-A `local-timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000.
+A `local-timestamp-nanos` logical type annotates an Avro `long`, where the long stores the number of nanoseconds, from 1 January 1970 00:00:00.000000000.
 
 ### Duration
 The `duration` logical type represents an amount of time defined by a number of months, days and milliseconds. This is not equivalent to a number of milliseconds, because, depending on the moment in time from which the duration is measured, the number of days in the month and number of milliseconds in a day may differ. Other standard periods such as years, quarters, hours and minutes can be expressed through these basic periods.
