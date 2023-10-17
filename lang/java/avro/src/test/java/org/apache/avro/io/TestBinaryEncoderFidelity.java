@@ -221,8 +221,6 @@ public class TestBinaryEncoderFidelity {
     // 0: 0 elements in the block
     assertArrayEquals(baos.toByteArray(), new byte[] { 0 });
     baos.reset();
-
-    baos.reset();
   }
 
   @Test

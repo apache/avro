@@ -48,7 +48,7 @@ public abstract class BinaryEncoder extends Encoder {
 
   @Override
   public void writeString(String string) throws IOException {
-    if (string.isEmpty()) {
+    if (0 == string.length()) {
       writeZero();
       return;
     }

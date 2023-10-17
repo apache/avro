@@ -25,15 +25,20 @@ import java.nio.ByteBuffer;
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
  * <p/>
- * This encoder does not buffer writes, and as a result is slower than
- * {@link BufferedBinaryEncoder}. However, it is lighter-weight and useful when
- * the buffering in BufferedBinaryEncoder is not desired and/or the Encoder is
- * very short-lived.
+ * This encoder does not buffer writes in contrast to
+ * {@link BufferedBinaryEncoder}. However, it is lighter-weight and useful when:
+ * The buffering in BufferedBinaryEncoder is not desired because you buffer a
+ * different level or the Encoder is very short-lived.
+ * </p>
+ * The BlockingDirectBinaryEncoder will encode the number of bytes of the Map
+ * and Array blocks. This will allow to postpone the decoding, or skip over it
+ * at all.
  * <p/>
  * To construct, use
  * {@link EncoderFactory#blockingDirectBinaryEncoder(OutputStream, BinaryEncoder)}
  * <p/>
- * BlockingDirectBinaryEncoder is not thread-safe
+ * {@link BlockingDirectBinaryEncoder} instances returned by this method are not
+ * thread-safe
  *
  * @see BinaryEncoder
  * @see EncoderFactory
@@ -41,7 +46,7 @@ import java.nio.ByteBuffer;
  * @see Decoder
  */
 public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
-  private static final ThreadLocal<BufferOutputStream> BUFFER = ThreadLocal.withInitial(BufferOutputStream::new);
+  private final BufferOutputStream buffer;
 
   private OutputStream originalStream;
 
@@ -57,6 +62,7 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
    */
   public BlockingDirectBinaryEncoder(OutputStream out) {
     super(out);
+    this.buffer = new BufferOutputStream();
   }
 
   private void startBlock() {
@@ -64,9 +70,8 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
       throw new RuntimeException("Nested Maps/Arrays are not supported by the BlockingDirectBinaryEncoder");
     }
     originalStream = out;
-    BufferOutputStream buf = BUFFER.get();
-    buf.reset();
-    out = buf;
+    buffer.reset();
+    out = buffer;
     inBlock = true;
   }
 
@@ -74,20 +79,19 @@ public class BlockingDirectBinaryEncoder extends DirectBinaryEncoder {
     if (!inBlock) {
       throw new RuntimeException("Called endBlock, while not buffering a block");
     }
-    BufferOutputStream buf = (BufferOutputStream) out;
     out = originalStream;
     if (blockItemCount > 0) {
       try {
         // Make it negative, so the reader knows that the number of bytes is coming
         writeLong(-blockItemCount);
-        writeLong(buf.size());
-        writeFixed(buf.toBufferWithoutCopy());
+        writeLong(buffer.size());
+        writeFixed(buffer.toBufferWithoutCopy());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
     inBlock = false;
-    buf.reset();
+    buffer.reset();
   }
 
   @Override
