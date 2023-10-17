@@ -751,7 +751,6 @@ impl RecordField {
                 "type" | "name" | "doc" | "default" | "order" | "position" => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
-            custom_attributes.insert(key.to_string(), value.clone());
         }
         custom_attributes
     }
