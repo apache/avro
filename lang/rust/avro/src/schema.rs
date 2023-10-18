@@ -1620,9 +1620,8 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
@@ -1753,9 +1752,8 @@ impl Parser {
             None => Err(Error::GetFixedSizeField),
         }?;
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let schema = Schema::Fixed(FixedSchema {
             name: fully_qualified_name.clone(),
@@ -1845,6 +1843,7 @@ impl Serialize for Schema {
                 ref aliases,
                 ref doc,
                 ref fields,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1860,12 +1859,16 @@ impl Serialize for Schema {
                     map.serialize_entry("aliases", aliases)?;
                 }
                 map.serialize_entry("fields", fields)?;
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Enum(EnumSchema {
                 ref name,
                 ref symbols,
                 ref aliases,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1879,6 +1882,9 @@ impl Serialize for Schema {
                 if let Some(ref aliases) = aliases {
                     map.serialize_entry("aliases", aliases)?;
                 }
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Fixed(FixedSchema {
@@ -1886,7 +1892,7 @@ impl Serialize for Schema {
                 ref doc,
                 ref size,
                 ref aliases,
-                ..
+                ref attributes,
             }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
@@ -1901,6 +1907,10 @@ impl Serialize for Schema {
 
                 if let Some(ref aliases) = aliases {
                     map.serialize_entry("aliases", aliases)?;
+                }
+
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
                 }
                 map.end()
             }
@@ -6122,6 +6132,66 @@ mod tests {
             None => (),
             some => panic!("Expected None, got {some:?}"),
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3886_serialize_attributes() -> TestResult {
+        let attributes = BTreeMap::from([
+            ("string_key".into(), "value".into()),
+            ("number_key".into(), 1.23.into()),
+            ("null_key".into(), Value::Null),
+            (
+                "array_key".into(),
+                Value::Array(vec![1.into(), 2.into(), 3.into()]),
+            ),
+            ("object_key".into(), Value::Object(Map::default())),
+        ]);
+
+        // Test serialize enum attributes
+        let schema = Schema::Enum(EnumSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            symbols: vec![],
+            default: None,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"enum","name":"a","symbols":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize fixed custom_attributes
+        let schema = Schema::Fixed(FixedSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            size: 1,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"fixed","name":"a","size":1,"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize record custom_attributes
+        let schema = Schema::Record(RecordSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            fields: vec![],
+            lookup: BTreeMap::new(),
+            attributes,
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"record","name":"a","fields":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
 
         Ok(())
     }
