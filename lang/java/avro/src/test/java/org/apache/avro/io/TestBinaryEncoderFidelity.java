@@ -180,6 +180,48 @@ public class TestBinaryEncoderFidelity {
   }
 
   @Test
+  public void testBlockingDirectBinaryEncoder() throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    BinaryEncoder e = factory.blockingDirectBinaryEncoder(baos, null);
+    generateData(e, true);
+
+    byte[] result = baos.toByteArray();
+    Assert.assertEquals(legacydata.length, result.length);
+    Assert.assertArrayEquals(legacydata, result);
+    baos.reset();
+
+    generateComplexData(e);
+    byte[] result2 = baos.toByteArray();
+    // blocking will cause different length, should be two bytes larger
+    Assert.assertEquals(complexdata.length + 2, result2.length);
+    // the first byte is the array start, with the count of items negative
+    Assert.assertEquals(complexdata[0] >>> 1, result2[0]);
+    baos.reset();
+
+    e.writeArrayStart();
+    e.setItemCount(1);
+    e.startItem();
+    e.writeInt(1);
+    e.writeArrayEnd();
+
+    // 1: 1 element in the array
+    // 2: 1 byte for the int
+    // 3: zigzag encoded int
+    // 4: 0 elements in the next block
+    Assert.assertArrayEquals(baos.toByteArray(), new byte[] { 1, 2, 2, 0 });
+    baos.reset();
+
+    e.writeArrayStart();
+    e.setItemCount(0);
+    e.writeArrayEnd();
+
+    // This is correct
+    // 0: 0 elements in the block
+    Assert.assertArrayEquals(baos.toByteArray(), new byte[] { 0 });
+    baos.reset();
+  }
+
+  @Test
   public void testBlockingBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     BinaryEncoder e = factory.blockingBinaryEncoder(baos, null);
