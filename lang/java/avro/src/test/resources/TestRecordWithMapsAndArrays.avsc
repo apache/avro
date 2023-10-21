@@ -1,0 +1,23 @@
+{
+    "type": "record",
+    "name": "TestRecordWithMapsAndArrays",
+    "namespace": "org.apache.avro.specific",
+    "fields": [
+        {
+            "name": "arr",
+            "type": {
+                "type": "array",
+                "items": "string",
+                "default": []
+            }
+        },
+        {
+            "name": "map",
+            "type": {
+                "type": "map",
+                "values": "long",
+                "default": {}
+            }
+        }
+    ]
+}
