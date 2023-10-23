@@ -43,7 +43,8 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '21-ea'
+        - '21'
+        - '22-ea'
     steps:
       - uses: actions/checkout@v4
 
@@ -76,7 +77,8 @@ jobs:
         - '8'
         - '11'
         - '17'
-        - '21-ea'
+        - '21'
+        - '22-ea'
     steps:
       - uses: actions/checkout@v4
 
