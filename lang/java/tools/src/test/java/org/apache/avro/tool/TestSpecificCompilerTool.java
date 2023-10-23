@@ -58,6 +58,8 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Position.java");
   private static final File TEST_EXPECTED_STRING_PLAYER = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/Player.java");
+  private static final File TEST_EXPECTED_STRING_NULL_SAFE_ANNOTATIONS_TEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
+      "avro/examples/baseball/NullSafeAnnotationsFieldsTest.java");
   private static final File TEST_EXPECTED_STRING_FIELDTEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/FieldTest.java");
   private static final File TEST_EXPECTED_STRING_PROTO = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
@@ -83,6 +85,8 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Position.java");
   private static final File TEST_OUTPUT_STRING_FIELDTEST = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/FieldTest.java");
+  private static final File TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST = new File(TEST_OUTPUT_STRING_DIR,
+      "avro/examples/baseball/NullSafeAnnotationsFieldsTest.java");
   private static final File TEST_OUTPUT_STRING_PROTO = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/Proto.java");
 
@@ -107,6 +111,15 @@ public class TestSpecificCompilerTool {
     doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "only_nullable_fields", "schema",
         TEST_INPUT_DIR.toString() + "/optionalgettersnullablefieldstest.avsc", TEST_OUTPUT_DIR.getPath() });
     assertFileMatch(TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS, TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS);
+  }
+
+  @Test
+  void compileSchemaWithNullSafeAnnotationsFields() throws Exception {
+
+    TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-nullSafeAnnotations", "-string", "schema",
+        TEST_INPUT_DIR.toString() + "/nullsafeannotationsfieldstest.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_NULL_SAFE_ANNOTATIONS_TEST, TEST_OUTPUT_STRING_NULL_SAFE_ANNOTATIONS_TEST);
   }
 
   @Test

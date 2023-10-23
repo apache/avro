@@ -183,6 +183,19 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
+   * The createNullSafeAnnotations parameter adds JetBrains {@literal @}Nullable
+   * and {@literal @}NotNull annotations for fhe fields of the record. The default
+   * is to not include annotations.
+   *
+   * @parameter property="createNullSafeAnnotations"
+   *
+   * @see <a href=
+   *      "https://www.jetbrains.com/help/idea/annotating-source-code.html#nullability-annotations">
+   *      JetBrains nullability annotations</a>
+   */
+  protected boolean createNullSafeAnnotations = false;
+
+  /**
    * A set of fully qualified class names of custom
    * {@link org.apache.avro.Conversion} implementations to add to the compiler.
    * The classes must be on the classpath at compile time and whenever the Java
@@ -391,6 +404,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
+    compiler.setCreateNullSafeAnnotations(createNullSafeAnnotations);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {
       for (String customConversion : customConversions) {
