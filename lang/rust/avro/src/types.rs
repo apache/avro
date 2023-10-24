@@ -921,10 +921,7 @@ impl Value {
                 if s.len() == size {
                     Ok(Value::Fixed(size, s))
                 } else {
-                    Err(Error::CompareFixedSizes {
-                        size,
-                        n: s.len() as usize,
-                    })
+                    Err(Error::CompareFixedSizes { size, n: s.len() })
                 }
             }
             other => Err(Error::GetStringForFixed(other.into())),
