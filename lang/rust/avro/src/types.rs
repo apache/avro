@@ -112,10 +112,14 @@ pub enum Value {
     TimestampMillis(i64),
     /// Timestamp in microseconds.
     TimestampMicros(i64),
+    /// Timestamp in nanoseconds.
+    TimestampNanos(i64),
     /// Local timestamp in milliseconds.
     LocalTimestampMillis(i64),
     /// Local timestamp in microseconds.
     LocalTimestampMicros(i64),
+    /// Local timestamp in nanoseconds.
+    LocalTimestampNanos(i64),
     /// Avro Duration. An amount of time defined by months, days and milliseconds.
     Duration(Duration),
     /// Universally unique identifier.
@@ -340,8 +344,10 @@ impl TryFrom<Value> for JsonValue {
             Value::TimeMicros(t) => Ok(Self::Number(t.into())),
             Value::TimestampMillis(t) => Ok(Self::Number(t.into())),
             Value::TimestampMicros(t) => Ok(Self::Number(t.into())),
+            Value::TimestampNanos(t) => Ok(Self::Number(t.into())),
             Value::LocalTimestampMillis(t) => Ok(Self::Number(t.into())),
             Value::LocalTimestampMicros(t) => Ok(Self::Number(t.into())),
+            Value::LocalTimestampNanos(t) => Ok(Self::Number(t.into())),
             Value::Duration(d) => Ok(Self::Array(
                 <[u8; 12]>::from(d).iter().map(|&v| v.into()).collect(),
             )),
@@ -428,8 +434,10 @@ impl Value {
             (&Value::Long(_), &Schema::LocalTimestampMicros) => None,
             (&Value::TimestampMicros(_), &Schema::TimestampMicros) => None,
             (&Value::TimestampMillis(_), &Schema::TimestampMillis) => None,
+            (&Value::TimestampNanos(_), &Schema::TimestampNanos) => None,
             (&Value::LocalTimestampMicros(_), &Schema::LocalTimestampMicros) => None,
             (&Value::LocalTimestampMillis(_), &Schema::LocalTimestampMillis) => None,
+            (&Value::LocalTimestampNanos(_), &Schema::LocalTimestampNanos) => None,
             (&Value::TimeMicros(_), &Schema::TimeMicros) => None,
             (&Value::TimeMillis(_), &Schema::TimeMillis) => None,
             (&Value::Date(_), &Schema::Date) => None,
@@ -689,8 +697,10 @@ impl Value {
             Schema::TimeMicros => self.resolve_time_micros(),
             Schema::TimestampMillis => self.resolve_timestamp_millis(),
             Schema::TimestampMicros => self.resolve_timestamp_micros(),
+            Schema::TimestampNanos => self.resolve_timestamp_nanos(),
             Schema::LocalTimestampMillis => self.resolve_local_timestamp_millis(),
             Schema::LocalTimestampMicros => self.resolve_local_timestamp_micros(),
+            Schema::LocalTimestampNanos => self.resolve_local_timestamp_nanos(),
             Schema::Duration => self.resolve_duration(),
             Schema::Uuid => self.resolve_uuid(),
         }
@@ -814,6 +824,14 @@ impl Value {
         }
     }
 
+    fn resolve_timestamp_nanos(self) -> Result<Self, Error> {
+        match self {
+            Value::TimestampNanos(ts) | Value::Long(ts) => Ok(Value::TimestampNanos(ts)),
+            Value::Int(ts) => Ok(Value::TimestampNanos(i64::from(ts))),
+            other => Err(Error::GetTimestampNanos(other.into())),
+        }
+    }
+
     fn resolve_local_timestamp_millis(self) -> Result<Self, Error> {
         match self {
             Value::LocalTimestampMillis(ts) | Value::Long(ts) => {
@@ -831,6 +849,14 @@ impl Value {
             }
             Value::Int(ts) => Ok(Value::LocalTimestampMicros(i64::from(ts))),
             other => Err(Error::GetLocalTimestampMicros(other.into())),
+        }
+    }
+
+    fn resolve_local_timestamp_nanos(self) -> Result<Self, Error> {
+        match self {
+            Value::LocalTimestampNanos(ts) | Value::Long(ts) => Ok(Value::LocalTimestampNanos(ts)),
+            Value::Int(ts) => Ok(Value::LocalTimestampNanos(i64::from(ts))),
+            other => Err(Error::GetLocalTimestampNanos(other.into())),
         }
     }
 
@@ -1739,6 +1765,16 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
+    fn test_avro_3914_resolve_timestamp_nanos() {
+        let value = Value::TimestampNanos(10);
+        assert!(value.clone().resolve(&Schema::TimestampNanos).is_ok());
+        assert!(value.resolve(&Schema::Int).is_err());
+
+        let value = Value::Double(10.0);
+        assert!(value.resolve(&Schema::TimestampNanos).is_err());
+    }
+
+    #[test]
     fn test_avro_3853_resolve_timestamp_millis() {
         let value = Value::LocalTimestampMillis(10);
         assert!(value.clone().resolve(&Schema::LocalTimestampMillis).is_ok());
@@ -1756,6 +1792,16 @@ Field with name '"b"' is not a member of the map items"#,
 
         let value = Value::Double(10.0);
         assert!(value.resolve(&Schema::LocalTimestampMicros).is_err());
+    }
+
+    #[test]
+    fn test_avro_3916_resolve_timestamp_nanos() {
+        let value = Value::LocalTimestampNanos(10);
+        assert!(value.clone().resolve(&Schema::LocalTimestampNanos).is_ok());
+        assert!(value.resolve(&Schema::Int).is_err());
+
+        let value = Value::Double(10.0);
+        assert!(value.resolve(&Schema::LocalTimestampNanos).is_err());
     }
 
     #[test]
@@ -1964,11 +2010,19 @@ Field with name '"b"' is not a member of the map items"#,
             JsonValue::Number(1.into())
         );
         assert_eq!(
+            JsonValue::try_from(Value::TimestampNanos(1))?,
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
             JsonValue::try_from(Value::LocalTimestampMillis(1))?,
             JsonValue::Number(1.into())
         );
         assert_eq!(
             JsonValue::try_from(Value::LocalTimestampMicros(1))?,
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::LocalTimestampNanos(1))?,
             JsonValue::Number(1.into())
         );
         assert_eq!(

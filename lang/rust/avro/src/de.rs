@@ -245,8 +245,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             | Value::TimeMicros(i)
             | Value::TimestampMillis(i)
             | Value::TimestampMicros(i)
+            | Value::TimestampNanos(i)
             | Value::LocalTimestampMillis(i)
-            | Value::LocalTimestampMicros(i) => visitor.visit_i64(*i),
+            | Value::LocalTimestampMicros(i)
+            | Value::LocalTimestampNanos(i) => visitor.visit_i64(*i),
             &Value::Float(f) => visitor.visit_f32(f),
             &Value::Double(d) => visitor.visit_f64(d),
             Value::Union(_i, u) => match **u {
@@ -257,8 +259,10 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 | Value::TimeMicros(i)
                 | Value::TimestampMillis(i)
                 | Value::TimestampMicros(i)
+                | Value::TimestampNanos(i)
                 | Value::LocalTimestampMillis(i)
-                | Value::LocalTimestampMicros(i) => visitor.visit_i64(i),
+                | Value::LocalTimestampMicros(i)
+                | Value::LocalTimestampNanos(i) => visitor.visit_i64(i),
                 Value::Float(f) => visitor.visit_f32(f),
                 Value::Double(d) => visitor.visit_f64(d),
                 Value::Record(ref fields) => visitor.visit_map(RecordDeserializer::new(fields)),
@@ -1080,7 +1084,16 @@ mod tests {
     fn test_timestamp_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::TimestampMicros(raw_value);
-        let result = crate::from_value::<i64>(&value)?;
+        let result = from_value::<i64>(&value)?;
+        assert_eq!(result, raw_value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3916_timestamp_nanos() -> TestResult {
+        let raw_value = 1;
+        let value = Value::TimestampNanos(raw_value);
+        let result = from_value::<i64>(&value)?;
         assert_eq!(result, raw_value);
         Ok(())
     }
@@ -1089,7 +1102,7 @@ mod tests {
     fn test_avro_3853_local_timestamp_millis() -> TestResult {
         let raw_value = 1;
         let value = Value::LocalTimestampMillis(raw_value);
-        let result = crate::from_value::<i64>(&value)?;
+        let result = from_value::<i64>(&value)?;
         assert_eq!(result, raw_value);
         Ok(())
     }
@@ -1098,6 +1111,15 @@ mod tests {
     fn test_avro_3853_local_timestamp_micros() -> TestResult {
         let raw_value = 1;
         let value = Value::LocalTimestampMicros(raw_value);
+        let result = crate::from_value::<i64>(&value)?;
+        assert_eq!(result, raw_value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3916_local_timestamp_nanos() -> TestResult {
+        let raw_value = 1;
+        let value = Value::LocalTimestampNanos(raw_value);
         let result = crate::from_value::<i64>(&value)?;
         assert_eq!(result, raw_value);
         Ok(())
@@ -1146,8 +1168,10 @@ mod tests {
             ("time_micros_a".to_string(), 123),
             ("timestamp_millis_b".to_string(), 234),
             ("timestamp_micros_c".to_string(), 345),
+            ("timestamp_nanos_d".to_string(), 345_001),
             ("local_timestamp_millis_d".to_string(), 678),
             ("local_timestamp_micros_e".to_string(), 789),
+            ("local_timestamp_nanos_f".to_string(), 345_002),
         ]
         .iter()
         .cloned()
@@ -1164,11 +1188,17 @@ mod tests {
                 key if key.starts_with("timestamp_micros_") => {
                     (k.clone(), Value::TimestampMicros(*v))
                 }
+                key if key.starts_with("timestamp_nanos_") => {
+                    (k.clone(), Value::TimestampNanos(*v))
+                }
                 key if key.starts_with("local_timestamp_millis_") => {
                     (k.clone(), Value::LocalTimestampMillis(*v))
                 }
                 key if key.starts_with("local_timestamp_micros_") => {
                     (k.clone(), Value::LocalTimestampMicros(*v))
+                }
+                key if key.starts_with("local_timestamp_nanos_") => {
+                    (k.clone(), Value::LocalTimestampNanos(*v))
                 }
                 _ => unreachable!("unexpected key: {:?}", k),
             })
@@ -1220,6 +1250,14 @@ mod tests {
                 Value::Union(0, Box::new(Value::TimestampMicros(-345))),
             ),
             (
+                "a_timestamp_nanos".to_string(),
+                Value::Union(0, Box::new(Value::TimestampNanos(345))),
+            ),
+            (
+                "a_non_existing_timestamp_nanos".to_string(),
+                Value::Union(0, Box::new(Value::TimestampNanos(-345))),
+            ),
+            (
                 "a_local_timestamp_millis".to_string(),
                 Value::Union(0, Box::new(Value::LocalTimestampMillis(678))),
             ),
@@ -1234,6 +1272,14 @@ mod tests {
             (
                 "a_non_existing_local_timestamp_micros".to_string(),
                 Value::Union(0, Box::new(Value::LocalTimestampMicros(-789))),
+            ),
+            (
+                "a_local_timestamp_nanos".to_string(),
+                Value::Union(0, Box::new(Value::LocalTimestampNanos(789))),
+            ),
+            (
+                "a_non_existing_local_timestamp_nanos".to_string(),
+                Value::Union(0, Box::new(Value::LocalTimestampNanos(-789))),
             ),
             (
                 "a_record".to_string(),
