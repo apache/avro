@@ -266,6 +266,8 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::String(ref s) => visitor.visit_borrowed_str(s),
                 Value::Uuid(uuid) => visitor.visit_str(&uuid.to_string()),
                 Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
+                Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
+                Value::Decimal(ref d) => visitor.visit_bytes(&d.to_vec()?),
                 _ => Err(de::Error::custom(format!(
                     "unsupported union: {:?}",
                     self.input
@@ -276,6 +278,8 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::String(ref s) => visitor.visit_borrowed_str(s),
             Value::Uuid(uuid) => visitor.visit_str(&uuid.to_string()),
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
+            Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
+            Value::Decimal(ref d) => visitor.visit_bytes(&d.to_vec()?),
             value => Err(de::Error::custom(format!(
                 "incorrect value of type: {:?}",
                 crate::schema::SchemaKind::from(value)
@@ -350,6 +354,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
             Value::Uuid(ref u) => visitor.visit_bytes(u.as_bytes()),
+            Value::Decimal(ref d) => visitor.visit_bytes(&d.to_vec()?),
             _ => Err(de::Error::custom(format!(
                 "Expected a String|Bytes|Fixed|Uuid, but got {:?}",
                 self.input
