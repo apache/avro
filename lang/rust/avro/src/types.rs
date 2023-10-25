@@ -2967,7 +2967,7 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn resolve_fixed_from_bytes() -> TestResult {
+    fn test_avro_3892_resolve_fixed_from_bytes() -> TestResult {
         let value = Value::Bytes(vec![97, 98, 99]);
         assert_eq!(
             value.resolve(&Schema::Fixed(FixedSchema {
