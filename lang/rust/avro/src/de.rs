@@ -1104,7 +1104,7 @@ mod tests {
     fn test_from_value_uuid_str() -> TestResult {
         let raw_value = "9ec535ff-3e2a-45bd-91d3-0a01321b5a49";
         let value = Value::Uuid(Uuid::parse_str(raw_value)?);
-        let result = crate::from_value::<Uuid>(&value)?;
+        let result = from_value::<Uuid>(&value)?;
         assert_eq!(result.to_string(), raw_value);
         Ok(())
     }
@@ -1318,6 +1318,24 @@ mod tests {
 
         assert!(deser.is_human_readable());
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_deserialize_string_from_bytes() -> TestResult {
+        let raw_value = vec![1, 2, 3, 4];
+        let value = Value::Bytes(raw_value.clone());
+        let result = from_value::<String>(&value)?;
+        assert_eq!(result, String::from_utf8(raw_value)?);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_deserialize_str_from_bytes() -> TestResult {
+        let raw_value = &[1, 2, 3, 4];
+        let value = Value::Bytes(raw_value.to_vec());
+        let result = from_value::<&str>(&value)?;
+        assert_eq!(result, std::str::from_utf8(raw_value)?);
         Ok(())
     }
 }
