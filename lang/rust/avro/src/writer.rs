@@ -1343,4 +1343,37 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn avro_3894_take_aliases_into_account_when_serializing() -> TestResult {
+        const SCHEMA: &str = r#"
+  {
+      "type": "record",
+      "name": "Conference",
+      "fields": [
+          {"type": "string", "name": "name"},
+          {"type": ["null", "long"], "name": "date", "aliases" : [ "time2", "time" ]}
+      ]
+  }"#;
+
+        #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+        pub struct Conference {
+            pub name: String,
+            pub time: Option<i64>,
+        }
+
+        let conf = Conference {
+            name: "RustConf".to_string(),
+            time: Some(1234567890),
+        };
+
+        let schema = Schema::parse_str(SCHEMA)?;
+        let mut writer = Writer::new(&schema, Vec::new());
+
+        let bytes = writer.append_ser(conf)?;
+
+        assert_eq!(198, bytes);
+
+        Ok(())
+    }
 }

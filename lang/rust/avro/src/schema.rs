@@ -748,7 +748,7 @@ impl RecordField {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
         for (key, value) in field {
             match key.as_str() {
-                "type" | "name" | "doc" | "default" | "order" | "position" => continue,
+                "type" | "name" | "doc" | "default" | "order" | "position" | "aliases" => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
         }
