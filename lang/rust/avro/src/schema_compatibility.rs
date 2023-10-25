@@ -1038,4 +1038,49 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn avro_3894_take_aliases_into_account_when_serializing_for_schema_compatibility() -> TestResult
+    {
+        use serde::{Deserialize, Serialize};
+
+        const RAW_SCHEMA_V1: &str = r#"
+        {
+            "type": "record",
+            "name": "Conference",
+            "namespace": "advdaba",
+            "fields": [
+                {"type": "string", "name": "name"},
+                {"type": "long", "name": "date"}
+            ]
+        }"#;
+        const RAW_SCHEMA_V2: &str = r#"
+        {
+            "type": "record",
+            "name": "Conference",
+            "namespace": "advdaba",
+            "fields": [
+                {"type": "string", "name": "name"},
+                {"type": "long", "name": "date", "aliases" : [ "time" ]}
+            ]
+        }"#;
+
+        #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
+        pub struct Conference {
+            pub name: String,
+            pub date: i64,
+        }
+        #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
+        pub struct ConferenceV2 {
+            pub name: String,
+            pub time: i64,
+        }
+
+        let schema_v1 = Schema::parse_str(RAW_SCHEMA_V1)?;
+        let schema_v2 = Schema::parse_str(RAW_SCHEMA_V2)?;
+
+        assert!(SchemaCompatibility::can_read(&schema_v1, &schema_v2));
+
+        Ok(())
+    }
 }
