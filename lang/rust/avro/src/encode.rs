@@ -219,23 +219,28 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
 
                 for schema_field in schema_fields.iter() {
                     let name = &schema_field.name;
-                    let value = match lookup.get(name) {
-                        Some(value) => value,
-                        None => {
-                            return Err(Error::NoEntryInLookupTable(
-                                name.clone(),
-                                format!("{lookup:?}"),
-                            ));
+                    let value_opt = lookup.get(name).or_else(|| {
+                        if let Some(aliases) = &schema_field.aliases {
+                            aliases.iter().find_map(|alias| lookup.get(alias))
+                        } else {
+                            None
                         }
-                    };
+                    });
 
-                    encode_internal(
-                        value,
-                        &schema_field.schema,
-                        names,
-                        &record_namespace,
-                        buffer,
-                    )?;
+                    if let Some(value) = value_opt {
+                        encode_internal(
+                            value,
+                            &schema_field.schema,
+                            names,
+                            &record_namespace,
+                            buffer,
+                        )?;
+                    } else {
+                        return Err(Error::NoEntryInLookupTable(
+                            name.clone(),
+                            format!("{lookup:?}"),
+                        ));
+                    }
                 }
             } else {
                 error!("invalid schema type for Record: {:?}", schema);
