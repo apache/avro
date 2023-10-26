@@ -29,10 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.Set;
 
 /**
  * Avro schema parser for text-based formats like JSON, IDL, etc.
@@ -55,7 +53,7 @@ import java.util.Set;
  * @see UtfTextUtils
  */
 public class SchemaParser {
-  private final Set<Schema> knownSchemata;
+  private final ParseContext parseContext;
   private final Collection<FormattedSchemaParser> formattedSchemaParsers;
 
   /**
@@ -63,7 +61,7 @@ public class SchemaParser {
    * empty.
    */
   public SchemaParser() {
-    this.knownSchemata = new LinkedHashSet<>();
+    this.parseContext = new ParseContext();
     this.formattedSchemaParsers = new ArrayList<>();
     for (FormattedSchemaParser formattedSchemaParser : ServiceLoader.load(FormattedSchemaParser.class)) {
       formattedSchemaParsers.add(formattedSchemaParser);
@@ -226,14 +224,14 @@ public class SchemaParser {
     List<SchemaParseException> parseExceptions = new ArrayList<>();
     for (FormattedSchemaParser formattedSchemaParser : formattedSchemaParsers) {
       try {
-        // Ensure we're only changing (adding to) the known types when a parser succeeds
-        Set<Schema> schemaSet = new LinkedHashSet<>(knownSchemata);
-        Schema schema = formattedSchemaParser.parse(schemaSet, baseUri, formattedSchema);
-        if (schema != null) {
-          knownSchemata.addAll(schemaSet);
+        Schema schema = formattedSchemaParser.parse(parseContext, baseUri, formattedSchema);
+        if (parseContext.hasNewSchemas()) {
+          // Parsing succeeded: return the result.
+          parseContext.commit();
           return schema;
         }
       } catch (SchemaParseException e) {
+        parseContext.rollback();
         parseExceptions.add(e);
       }
     }

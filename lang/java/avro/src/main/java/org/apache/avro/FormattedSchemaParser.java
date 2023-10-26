@@ -19,7 +19,6 @@ package org.apache.avro;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
 
 /**
  * Schema parser for a specific schema format.
@@ -29,46 +28,50 @@ import java.util.Collection;
  * schema sources.
  * </p>
  *
- * <h2>Note to implementers:</h2>
- *
  * <p>
- * Implementations are located using a {@link java.util.ServiceLoader}. See that
- * class for details.
- * </p>
- *
- * <p>
- * You can expect that schemas being read are invalid, so you are encouraged to
- * return {@code null} upon parsing failure where the input clearly doesn't make
- * sense (e.g., reading "/**" when expecting JSON). If the input is likely in
- * the correct format, but invalid, throw a {@link SchemaParseException}
- * instead.
- * </p>
- *
- * <p>
- * Note that throwing anything other than a {@code SchemaParseException} will
- * abort the parsing process, so reserve that for rethrowing exceptions.
+ * Implementations are located using a {@link java.util.ServiceLoader} and must
+ * therefore be threadsafe. See the {@code ServiceLoader} class for details on
+ * loading your implementation.
  * </p>
  *
  * @see java.util.ServiceLoader
  */
 public interface FormattedSchemaParser {
   /**
-   * Parse a schema from a text based source. Can use the base location of the
-   * schema (e.g., the directory where the schema file lives) if available.
-   *
    * <p>
-   * Implementations should add all named schemas they parse to the collection.
+   * Parse schema definitions from a text based source.
    * </p>
    *
-   * @param types           a mutable collection of known types; parsed named
-   *                        schemata will be added
+   * <h2>Notes for implementers:</h2>
+   *
+   * <ul>
+   * <li>Schema definitions are expected not to be in the format the parser
+   * expects. So when the input clearly doesn't make sense (e.g., reading "/**"
+   * when expecting JSON), it is a good idea not to do anything (especially
+   * calling methods on the @code ParseContext}).</li>
+   * <li>The parameter {@code parseContext} is not thread-safe.</li>
+   * <li>When parsing, all parsed schema definitions should be added to the
+   * provided {@link ParseContext}.</li>
+   * <li>Optionally, you may return a "main" schema. Some schema definitions have
+   * one, for example the schema defined by the root of the JSON document in a
+   * <a href="https://avro.apache.org/docs/current/specification/">standard schema
+   * definition</a>. If unsure, return {@code null}.</li>
+   * <li>If parsing fails, throw a {@link SchemaParseException}. This will let the
+   * parsing process recover and continue.</li>
+   * <li>Throwing anything other than a {@code SchemaParseException} will abort
+   * the parsing process, so reserve that for rethrowing exceptions.</li>
+   * </ul>
+   *
+   * @param parseContext    the current parse context: all parsed schemata should
+   *                        be added here to resolve names with; contains all
+   *                        previously known types
    * @param baseUri         the base location of the schema, or {@code null} if
    *                        not known
-   * @param formattedSchema the schema as text
-   * @return the parsed schema, or {@code null} if the format is not supported
+   * @param formattedSchema the text of the schema definition(s) to parse
+   * @return the main schema, if any
    * @throws IOException          when the schema cannot be read
    * @throws SchemaParseException when the schema cannot be parsed
    */
-  Schema parse(Collection<Schema> types, URI baseUri, CharSequence formattedSchema)
+  Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException;
 }

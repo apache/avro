@@ -18,20 +18,19 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.GenericData;
-
-import org.apache.avro.idl.IdlFile;
-import org.apache.avro.idl.IdlReader;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
@@ -89,6 +88,7 @@ public class IDLMojo extends AbstractAvroMojo {
         for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
+        idlFile = parser.resolve(idlFile);
         final SpecificCompiler compiler;
         final Protocol protocol = idlFile.getProtocol();
         if (protocol != null) {

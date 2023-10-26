@@ -18,34 +18,27 @@
 package org.apache.avro.idl;
 
 import org.apache.avro.FormattedSchemaParser;
+import org.apache.avro.ParseContext;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
 import java.util.regex.Pattern;
 
 public class IdlSchemaParser implements FormattedSchemaParser {
 
   @Override
-  public Schema parse(Collection<Schema> existingSchemata, URI baseUri, CharSequence formattedSchema)
+  public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
     boolean valid = Pattern.compile("^\\A*!" + // Initial whitespace
         "(?:/\\*(?:[^*]|\\*[^/])*!\\*/\\s*!|//(!=\\R)*!\\R\\s*!)*!" + // Comments
         "(?:namespace|schema|protocol|record|enum|fixed|import)\\s", // First keyword
         Pattern.UNICODE_CHARACTER_CLASS | Pattern.MULTILINE).matcher(formattedSchema).find();
     if (valid) {
-      IdlReader idlReader = new IdlReader();
-      idlReader.addTypes(existingSchemata);
+      IdlReader idlReader = new IdlReader(parseContext);
       IdlFile idlFile = idlReader.parse(baseUri, formattedSchema);
-      Schema mainSchema = idlFile.getMainSchema();
-      if (mainSchema != null) {
-        return mainSchema;
-      }
-      if (!idlFile.getNamedSchemas().isEmpty()) {
-        return idlFile.getNamedSchemas().values().iterator().next();
-      }
+      return idlFile.getMainSchema();
     }
     return null;
   }

@@ -19,8 +19,6 @@ package org.apache.avro;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Schema parser for JSON formatted schemata. This initial implementation simply
@@ -59,32 +57,26 @@ public class JsonSchemaParser implements FormattedSchemaParser {
     for (String fragment : fragments) {
       buffer.append(fragment);
     }
-    return new JsonSchemaParser().parse(new ArrayList<>(), buffer, true);
+    return new JsonSchemaParser().parse(new ParseContext(NameValidator.NO_VALIDATION), buffer, null);
   }
 
   @Override
-  public Schema parse(Collection<Schema> schemas, URI baseUri, CharSequence formattedSchema)
+  public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
-    return parse(schemas, formattedSchema, false);
+    return parse(parseContext, formattedSchema, parseContext.nameValidator);
   }
 
-  private Schema parse(Collection<Schema> schemas, CharSequence formattedSchema, boolean skipValidation)
+  private Schema parse(ParseContext parseContext, CharSequence formattedSchema, NameValidator nameValidator)
       throws SchemaParseException {
-    // TODO: refactor JSON parsing out of the Schema class
-    Schema.Parser parser;
-    if (skipValidation) {
-      parser = new Schema.Parser(Schema.NameValidator.NO_VALIDATION);
+    Schema.Parser parser = new Schema.Parser(nameValidator);
+    if (nameValidator == NameValidator.NO_VALIDATION) {
       parser.setValidateDefaults(false);
     } else {
-      parser = new Schema.Parser();
+      parser = new Schema.Parser(nameValidator);
     }
-    if (schemas != null) {
-      parser.addTypes(schemas);
-    }
+    parser.addTypes(parseContext.typesByName().values());
     Schema schema = parser.parse(formattedSchema.toString());
-    if (schemas != null) {
-      schemas.addAll(parser.getTypes().values());
-    }
+    parser.getTypes().values().forEach(parseContext::put);
     return schema;
   }
 }

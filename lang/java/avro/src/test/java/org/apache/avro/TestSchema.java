@@ -553,14 +553,14 @@ public class TestSchema {
 
   @Test
   void testContentAfterAvsc() {
-    Schema.Parser parser = new Schema.Parser(Schema.NameValidator.UTF_VALIDATOR);
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
     parser.setValidateDefaults(true);
     assertThrows(SchemaParseException.class, () -> parser.parse("{\"type\": \"string\"}; DROP TABLE STUDENTS"));
   }
 
   @Test
   void testContentAfterAvscInInputStream() throws Exception {
-    Schema.Parser parser = new Schema.Parser(Schema.NameValidator.UTF_VALIDATOR);
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
     parser.setValidateDefaults(true);
     String avsc = "{\"type\": \"string\"}; DROP TABLE STUDENTS";
     ByteArrayInputStream is = new ByteArrayInputStream(avsc.getBytes(StandardCharsets.UTF_8));
@@ -576,7 +576,7 @@ public class TestSchema {
       writer.flush();
     }
 
-    Schema.Parser parser = new Schema.Parser(Schema.NameValidator.UTF_VALIDATOR);
+    Schema.Parser parser = new Schema.Parser(NameValidator.UTF_VALIDATOR);
     parser.setValidateDefaults(true);
     assertThrows(SchemaParseException.class, () -> parser.parse(avscFile));
   }

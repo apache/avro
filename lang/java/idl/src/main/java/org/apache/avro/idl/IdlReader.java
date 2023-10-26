@@ -38,6 +38,8 @@ import org.apache.avro.JsonProperties;
 import org.apache.avro.JsonSchemaParser;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
+import org.apache.avro.NameValidator;
+import org.apache.avro.ParseContext;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -69,6 +71,7 @@ import org.apache.avro.idl.IdlParser.ResultTypeContext;
 import org.apache.avro.idl.IdlParser.SchemaPropertyContext;
 import org.apache.avro.idl.IdlParser.UnionTypeContext;
 import org.apache.avro.idl.IdlParser.VariableDeclarationContext;
+import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.UtfTextUtils;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.commons.text.StringEscapeUtils;
@@ -85,7 +88,6 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
@@ -102,7 +104,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.singleton;
-import static java.util.Collections.unmodifiableMap;
 
 public class IdlReader {
   /**
@@ -146,42 +147,38 @@ public class IdlReader {
   private static final String CLASSPATH_SCHEME = "classpath";
 
   private final Set<URI> readLocations;
-  private final Map<String, Schema> names;
+  private final ParseContext parseContext;
 
   public IdlReader() {
-    readLocations = new HashSet<>();
-    names = new LinkedHashMap<>();
+    this(new ParseContext());
   }
 
-  public Map<String, Schema> getTypes() {
-    return unmodifiableMap(names);
+  public IdlReader(NameValidator nameValidator) {
+    this(new ParseContext(nameValidator));
+  }
+
+  public IdlReader(ParseContext parseContext) {
+    readLocations = new HashSet<>();
+    this.parseContext = parseContext;
   }
 
   private Schema namedSchemaOrUnresolved(String fullName) {
-    Schema schema = names.get(fullName);
-    if (schema == null) {
-      schema = SchemaResolver.unresolvedSchema(fullName);
-    }
-    return schema;
-  }
-
-  private void setTypes(Collection<Schema> types) {
-    names.clear();
-    addTypes(types);
-  }
-
-  public void addTypes(Collection<Schema> types) {
-    for (Schema schema : types) {
-      addSchema(schema);
-    }
+    return parseContext.resolve(fullName);
   }
 
   private void addSchema(Schema schema) {
-    String fullName = schema.getFullName();
-    if (names.containsKey(fullName)) {
-      throw new SchemaParseException("Can't redefine: " + fullName);
+    parseContext.put(schema);
+  }
+
+  public IdlFile resolve(IdlFile unresolved) {
+    Protocol protocol = unresolved.getProtocol();
+    if (protocol == null) {
+      Schema mainSchema = SchemaResolver.resolve(parseContext, unresolved.getMainSchema());
+      Iterable<Schema> namedSchemas = SchemaResolver.resolve(parseContext, unresolved.getNamedSchemas().values());
+      return new IdlFile(mainSchema, namedSchemas, unresolved.getWarnings());
+    } else {
+      return new IdlFile(SchemaResolver.resolve(parseContext, protocol), unresolved.getWarnings());
     }
-    names.put(fullName, schema);
   }
 
   public IdlFile parse(Path location) throws IOException {
@@ -366,13 +363,11 @@ public class IdlReader {
 
     @Override
     public void exitIdlFile(IdlFileContext ctx) {
-      IdlFile unresolved;
       if (protocol == null) {
-        unresolved = new IdlFile(currentNamespace(), mainSchema, getTypes().values(), warnings);
+        result = new IdlFile(mainSchema, parseContext.typesByName().values(), warnings);
       } else {
-        unresolved = new IdlFile(protocol, warnings);
+        result = new IdlFile(protocol, warnings);
       }
-      result = SchemaResolver.resolve(unresolved, OPTIONAL_NULLABLE_TYPE_PROPERTY);
     }
 
     @Override
@@ -396,7 +391,7 @@ public class IdlReader {
     @Override
     public void exitProtocolDeclaration(ProtocolDeclarationContext ctx) {
       if (protocol != null)
-        protocol.setTypes(getTypes().values());
+        protocol.setTypes(parseContext.typesByName().values());
       if (!namespaces.isEmpty())
         popNamespace();
     }
@@ -459,10 +454,7 @@ public class IdlReader {
         case IdlParser.Schema:
           try (InputStream stream = importLocation.toURL().openStream()) {
             JsonSchemaParser parser = new JsonSchemaParser();
-            Collection<Schema> types = new ArrayList<>(names.values());
-            parser.parse(types, importLocation.resolve("."), UtfTextUtils.readAllBytes(stream, null));
-            // Ensure we're only changing (adding to) the known types when a parser succeeds
-            types.forEach(IdlReader.this::addSchema);
+            parser.parse(parseContext, importLocation.resolve("."), UtfTextUtils.readAllBytes(stream, null));
           }
           break;
         }
@@ -690,18 +682,22 @@ public class IdlReader {
      */
     private Schema fixOptionalSchema(Schema schema, JsonNode defaultValue) {
       Object optionalType = schema.getObjectProp(OPTIONAL_NULLABLE_TYPE_PROPERTY);
-      if (optionalType != null) {
-        // The schema is a union schema with 2 types: "null" and a non-"null" schema
-        Schema nullSchema = schema.getTypes().get(0);
-        Schema nonNullSchema = schema.getTypes().get(1);
-        boolean nonNullDefault = defaultValue != null && !defaultValue.isNull();
-
-        // Note: the resolving visitor we'll use later drops the marker property.
-        if (nonNullDefault) {
-          return Schema.createUnion(nonNullSchema, nullSchema);
-        }
+      if (optionalType == null) {
+        return schema;
       }
-      return schema;
+
+      // The schema is a union schema with 2 types: "null" and a non-"null"
+      // schema. The result of this method must not have the property
+      // OPTIONAL_NULLABLE_TYPE_PROPERTY.
+      Schema nullSchema = schema.getTypes().get(0);
+      Schema nonNullSchema = schema.getTypes().get(1);
+      boolean nonNullDefault = defaultValue != null && !defaultValue.isNull();
+
+      if (nonNullDefault) {
+        return Schema.createUnion(nonNullSchema, nullSchema);
+      } else {
+        return Schema.createUnion(nullSchema, nonNullSchema);
+      }
     }
 
     @Override

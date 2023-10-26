@@ -97,7 +97,6 @@ public class IdlReaderTest {
     assertEquals(1, idlFile.getNamedSchemas().size());
     idlFile.getNamedSchemas().keySet().forEach(System.out::println);
     assertNotNull(idlFile.getNamedSchema("communication.Message"));
-    assertNotNull(idlFile.getNamedSchema("Message"));
 
     assertNotNull(idlFile.getProtocol());
     assertNull(idlFile.getMainSchema());
@@ -111,12 +110,11 @@ public class IdlReaderTest {
     assertEquals(1, idlFile.getNamedSchemas().size());
     idlFile.getNamedSchemas().keySet().forEach(System.out::println);
     assertNotNull(idlFile.getNamedSchema("communication.Message"));
-    assertNotNull(idlFile.getNamedSchema("Message"));
 
     assertNull(idlFile.getProtocol());
     Schema mainSchema = idlFile.getMainSchema();
     assertEquals(Schema.Type.ARRAY, mainSchema.getType());
-    assertEquals(idlFile.getNamedSchema("Message"), mainSchema.getElementType());
+    assertEquals(idlFile.getNamedSchema("communication.Message"), mainSchema.getElementType());
   }
 
   @Test

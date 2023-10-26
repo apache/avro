@@ -17,22 +17,30 @@
  */
 package org.apache.avro;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
 
 public class DummySchemaParser implements FormattedSchemaParser {
+  /**
+   * Logger for this class.
+   */
+  private static final Logger LOGGER = LoggerFactory.getLogger(DummySchemaParser.class);
   public static final String SCHEMA_TEXT_ONE = "one";
   public static final Schema FIXED_SCHEMA = Schema.createFixed("DummyOne", null, "tests", 42);
   public static final String SCHEMA_TEXT_ERROR = "error";
-  public static final String SCHEMA_TEXT_IO_ERROR = "ioerror";
+  public static final String SCHEMA_TEXT_IO_ERROR = "io-error";
   public static final String ERROR_MESSAGE = "Syntax error";
   public static final String IO_ERROR_MESSAGE = "I/O error";
 
   @Override
-  public Schema parse(Collection<Schema> schemata, URI baseUri, CharSequence formattedSchema)
+  public Schema parse(ParseContext parseContext, URI baseUri, CharSequence formattedSchema)
       throws IOException, SchemaParseException {
+    LOGGER.info("Using DummySchemaParser for {}", formattedSchema);
     if (SCHEMA_TEXT_ONE.contentEquals(formattedSchema)) {
+      parseContext.put(FIXED_SCHEMA);
       return FIXED_SCHEMA;
     } else if (SCHEMA_TEXT_ERROR.contentEquals(formattedSchema)) {
       throw new SchemaParseException(ERROR_MESSAGE);

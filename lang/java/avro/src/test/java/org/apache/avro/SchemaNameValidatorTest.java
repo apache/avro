@@ -28,32 +28,32 @@ class SchemaNameValidatorTest {
 
   @ParameterizedTest
   @MethodSource("data")
-  void validator(Schema.NameValidator validator, String input, boolean expectedResult) {
-    Schema.NameValidator.Result result = validator.validate(input);
+  void validator(NameValidator validator, String input, boolean expectedResult) {
+    NameValidator.Result result = validator.validate(input);
     Assertions.assertEquals(expectedResult, result.isOK(), result.getErrors());
   }
 
   static Stream<Arguments> data() {
-    return Stream.of(Arguments.of(Schema.NameValidator.UTF_VALIDATOR, null, false), // null not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, null, false), // null not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "", false), // empty not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "", false), // empty not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "Hello world", false), // space not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "Hello world", false), // space not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "H&", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "H&", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "H=", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "H=", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "H]", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "H]", false), // non letter or digit not accepted
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "Hello_world", true),
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "Hello_world", true),
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "éàçô", true), // Accept accent
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "éàçô", false), // Not Accept accent
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "5éàçô", false), // can't start with number
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "5éàçô", false), // can't start with number
-        Arguments.of(Schema.NameValidator.UTF_VALIDATOR, "_Hello_world", true),
-        Arguments.of(Schema.NameValidator.STRICT_VALIDATOR, "_Hello_world", true));
+    return Stream.of(Arguments.of(NameValidator.UTF_VALIDATOR, null, false), // null not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, null, false), // null not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "", false), // empty not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "", false), // empty not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "Hello world", false), // space not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "Hello world", false), // space not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "H&", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "H&", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "H=", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "H=", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "H]", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "H]", false), // non letter or digit not accepted
+        Arguments.of(NameValidator.UTF_VALIDATOR, "Hello_world", true),
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "Hello_world", true),
+        Arguments.of(NameValidator.UTF_VALIDATOR, "éàçô", true), // Accept accent
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "éàçô", false), // Not Accept accent
+        Arguments.of(NameValidator.UTF_VALIDATOR, "5éàçô", false), // can't start with number
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "5éàçô", false), // can't start with number
+        Arguments.of(NameValidator.UTF_VALIDATOR, "_Hello_world", true),
+        Arguments.of(NameValidator.STRICT_VALIDATOR, "_Hello_world", true));
   }
 
 }
