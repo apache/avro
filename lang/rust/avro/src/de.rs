@@ -1342,6 +1342,7 @@ mod tests {
         Ok(())
     }
 
+    #[derive(Debug)]
     struct Bytes(Vec<u8>);
 
     impl<'de> Deserialize<'de> for Bytes {
@@ -1370,10 +1371,14 @@ mod tests {
 
     #[test]
     fn test_avro_3892_deserialize_bytes_from_decimal() -> TestResult {
-        let expeced_bytes = BigInt::from(123456789).to_signed_bytes_be();
-        let value = Value::Decimal(Decimal::from(&expeced_bytes));
+        let expected_bytes = BigInt::from(123456789).to_signed_bytes_be();
+        let value = Value::Decimal(Decimal::from(&expected_bytes));
         let raw_bytes = from_value::<Bytes>(&value)?;
-        assert_eq!(raw_bytes.0, expeced_bytes);
+        assert_eq!(raw_bytes.0, expected_bytes);
+
+        let value = Value::Union(0, Box::new(Value::Decimal(Decimal::from(&expected_bytes))));
+        let raw_bytes = from_value::<Option<Bytes>>(&value)?;
+        assert_eq!(raw_bytes.unwrap().0, expected_bytes);
         Ok(())
     }
 
@@ -1384,6 +1389,36 @@ mod tests {
         let value = Value::Uuid(Uuid::parse_str(uuid_str)?);
         let raw_bytes = from_value::<Bytes>(&value)?;
         assert_eq!(raw_bytes.0, expected_bytes);
+
+        let value = Value::Union(0, Box::new(Value::Uuid(Uuid::parse_str(uuid_str)?)));
+        let raw_bytes = from_value::<Option<Bytes>>(&value)?;
+        assert_eq!(raw_bytes.unwrap().0, expected_bytes);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_deserialize_bytes_from_fixed() -> TestResult {
+        let expected_bytes = vec![1, 2, 3, 4];
+        let value = Value::Fixed(4, expected_bytes.clone());
+        let raw_bytes = from_value::<Bytes>(&value)?;
+        assert_eq!(raw_bytes.0, expected_bytes);
+
+        let value = Value::Union(0, Box::new(Value::Fixed(4, expected_bytes.clone())));
+        let raw_bytes = from_value::<Option<Bytes>>(&value)?;
+        assert_eq!(raw_bytes.unwrap().0, expected_bytes);
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_deserialize_bytes_from_bytes() -> TestResult {
+        let expected_bytes = vec![1, 2, 3, 4];
+        let value = Value::Bytes(expected_bytes.clone());
+        let raw_bytes = from_value::<Bytes>(&value)?;
+        assert_eq!(raw_bytes.0, expected_bytes);
+
+        let value = Value::Union(0, Box::new(Value::Bytes(expected_bytes.clone())));
+        let raw_bytes = from_value::<Option<Bytes>>(&value)?;
+        assert_eq!(raw_bytes.unwrap().0, expected_bytes);
         Ok(())
     }
 }
