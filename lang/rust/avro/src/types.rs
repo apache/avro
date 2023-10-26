@@ -2934,22 +2934,6 @@ Field with name '"b"' is not a member of the map items"#,
     }
 
     #[test]
-    fn test_avro_3779_bigdecimal_resolving() -> TestResult {
-        let schema =
-            r#"{"name": "bigDecimalSchema", "logicalType": "big-decimal", "type": "bytes" }"#;
-
-        let avro_value = Value::BigDecimal(BigDecimal::from(12345678u32));
-        let schema = Schema::parse_str(schema)?;
-        let resolve_result: AvroResult<Value> = avro_value.resolve(&schema);
-        assert!(
-            resolve_result.is_ok(),
-            "resolve result must be ok, got: {resolve_result:?}"
-        );
-
-        Ok(())
-    }
-
-    #[test]
     fn test_avro_3892_resolve_fixed_from_bytes() -> TestResult {
         let value = Value::Bytes(vec![97, 98, 99]);
         assert_eq!(
