@@ -60,7 +60,7 @@ fn benchmark(
 
         let start = Instant::now();
         let mut writer = Writer::new(schema, BufWriter::new(Vec::new()));
-        writer.extend(records.into_iter())?;
+        writer.extend(records)?;
 
         let duration = Instant::now().duration_since(start);
         durations.push(duration);
