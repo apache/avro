@@ -917,6 +917,13 @@ impl Value {
                 }
             }
             Value::String(s) => Ok(Value::Fixed(s.len(), s.into_bytes())),
+            Value::Bytes(s) => {
+                if s.len() == size {
+                    Ok(Value::Fixed(size, s))
+                } else {
+                    Err(Error::CompareFixedSizes { size, n: s.len() })
+                }
+            }
             other => Err(Error::GetStringForFixed(other.into())),
         }
     }
@@ -2955,6 +2962,45 @@ Field with name '"b"' is not a member of the map items"#,
             resolve_result.is_ok(),
             "resolve result must be ok, got: {resolve_result:?}"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3892_resolve_fixed_from_bytes() -> TestResult {
+        let value = Value::Bytes(vec![97, 98, 99]);
+        assert_eq!(
+            value.resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                attributes: Default::default()
+            }))?,
+            Value::Fixed(3, vec![97, 98, 99])
+        );
+
+        let value = Value::Bytes(vec![97, 99]);
+        assert!(value
+            .resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                attributes: Default::default()
+            }))
+            .is_err(),);
+
+        let value = Value::Bytes(vec![97, 98, 99, 100]);
+        assert!(value
+            .resolve(&Schema::Fixed(FixedSchema {
+                name: "test".into(),
+                aliases: None,
+                doc: None,
+                size: 3,
+                attributes: Default::default()
+            }))
+            .is_err(),);
 
         Ok(())
     }

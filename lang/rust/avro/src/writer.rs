@@ -895,7 +895,7 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend(records.into_iter())?;
+        let n1 = writer.extend(records)?;
         let n2 = writer.flush()?;
         let result = writer.into_inner()?;
 
@@ -970,7 +970,7 @@ mod tests {
         let record_copy = record.clone();
         let records = vec![record, record_copy];
 
-        let n1 = writer.extend_ser(records.into_iter())?;
+        let n1 = writer.extend_ser(records)?;
         let n2 = writer.flush()?;
         let result = writer.into_inner()?;
 
