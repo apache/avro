@@ -1272,177 +1272,140 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        fn logical_verify_type(
+        fn parse_schema(
             complex: &Map<String, Value>,
-            kinds: &[SchemaKind],
             parser: &mut Parser,
             enclosing_namespace: &Namespace,
         ) -> AvroResult<Schema> {
             match complex.get("type") {
-                Some(value) => {
-                    let ty = match value {
-                        Value::String(s) if s == "fixed" => {
-                            parser.parse_fixed(complex, enclosing_namespace)?
-                        }
-                        _ => parser.parse(value, enclosing_namespace)?,
-                    };
-
-                    if kinds
-                        .iter()
-                        .any(|&kind| SchemaKind::from(ty.clone()) == kind)
-                    {
-                        Ok(ty)
-                    } else {
-                        match get_type_rec(value.clone()) {
-                            Ok(v) => Err(Error::GetLogicalTypeVariant(v)),
-                            Err(err) => Err(err),
-                        }
+                Some(value) => match value {
+                    Value::String(s) if s == "fixed" => {
+                        parser.parse_fixed(complex, enclosing_namespace)
                     }
-                }
+                    _ => parser.parse(value, enclosing_namespace),
+                },
                 None => Err(Error::GetLogicalTypeField),
             }
         }
 
-        fn get_type_rec(json_value: Value) -> AvroResult<Value> {
-            match json_value {
-                typ @ Value::String(_) => Ok(typ),
-                Value::Object(ref complex) => match complex.get("type") {
-                    Some(v) => get_type_rec(v.clone()),
-                    None => Err(Error::GetComplexTypeField),
-                },
-                _ => Err(Error::GetComplexTypeField),
-            }
-        }
-
-        // checks whether the logicalType is supported by the type
-        fn try_logical_type(
+        // Try to convert this logical type to internal representation. If it can't, record warn log and return the schema directly.
+        fn try_convert_to_internal<F>(
             logical_type: &str,
-            complex: &Map<String, Value>,
-            kinds: &[SchemaKind],
-            ok_schema: Schema,
-            parser: &mut Parser,
-            enclosing_namespace: &Namespace,
-        ) -> AvroResult<Schema> {
-            match logical_verify_type(complex, kinds, parser, enclosing_namespace) {
-                // type and logicalType match!
-                Ok(_) => Ok(ok_schema),
-                // the logicalType is not expected for this type!
-                Err(Error::GetLogicalTypeVariant(json_value)) => match json_value {
-                    Value::String(_) => match parser.parse(&json_value, enclosing_namespace) {
-                        Ok(schema) => {
-                            warn!(
-                                "Ignoring invalid logical type '{}' for schema of type: {:?}!",
-                                logical_type, schema
-                            );
-                            Ok(schema)
-                        }
-                        Err(parse_err) => Err(parse_err),
-                    },
-                    _ => Err(Error::GetLogicalTypeVariant(json_value)),
-                },
-                err => err,
+            schema: Schema,
+            supported_kinds: &[SchemaKind],
+            convert: F,
+        ) -> AvroResult<Schema>
+        where
+            F: Fn(Schema) -> AvroResult<Schema>,
+        {
+            let kind = SchemaKind::from(schema.clone());
+            if supported_kinds.contains(&kind) {
+                convert(schema)
+            } else {
+                warn!(
+                    "Ignoring invalid logical type '{}' for schema of type: {:?}!",
+                    logical_type, schema
+                );
+                Ok(schema)
             }
         }
 
         match complex.get("logicalType") {
             Some(Value::String(t)) => match t.as_str() {
                 "decimal" => {
-                    let inner = Box::new(logical_verify_type(
-                        complex,
+                    return try_convert_to_internal(
+                        "decimal",
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
-                        self,
-                        enclosing_namespace,
-                    )?);
-
-                    let (precision, scale) = Self::parse_precision_and_scale(complex)?;
-
-                    return Ok(Schema::Decimal(DecimalSchema {
-                        precision,
-                        scale,
-                        inner,
-                    }));
+                        |inner| -> AvroResult<Schema> {
+                            let (precision, scale) = Self::parse_precision_and_scale(complex)?;
+                            Ok(Schema::Decimal(DecimalSchema {
+                                precision,
+                                scale,
+                                inner: Box::new(inner),
+                            }))
+                        },
+                    );
                 }
                 "big-decimal" => {
-                    logical_verify_type(complex, &[SchemaKind::Bytes], self, enclosing_namespace)?;
-                    return Ok(Schema::BigDecimal);
+                    return try_convert_to_internal(
+                        "big-decimal",
+                        parse_schema(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Bytes],
+                        |_| -> AvroResult<Schema> { Ok(Schema::BigDecimal) },
+                    );
                 }
                 "uuid" => {
-                    logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
-                    return Ok(Schema::Uuid);
+                    return try_convert_to_internal(
+                        "uuid",
+                        parse_schema(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::String],
+                        |_| -> AvroResult<Schema> { Ok(Schema::Uuid) },
+                    );
                 }
                 "date" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "date",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
-                        Schema::Date,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::Date) },
                     );
                 }
                 "time-millis" => {
-                    return try_logical_type(
-                        "time-millis",
-                        complex,
+                    return try_convert_to_internal(
+                        "date",
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
-                        Schema::TimeMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimeMillis) },
                     );
                 }
                 "time-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "time-micros",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimeMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimeMicros) },
                     );
                 }
                 "timestamp-millis" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "timestamp-millis",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimestampMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimestampMillis) },
                     );
                 }
                 "timestamp-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "timestamp-micros",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::TimestampMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::TimestampMicros) },
                     );
                 }
                 "local-timestamp-millis" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "local-timestamp-millis",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::LocalTimestampMillis,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMillis) },
                     );
                 }
                 "local-timestamp-micros" => {
-                    return try_logical_type(
+                    return try_convert_to_internal(
                         "local-timestamp-micros",
-                        complex,
+                        parse_schema(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
-                        Schema::LocalTimestampMicros,
-                        self,
-                        enclosing_namespace,
+                        |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMicros) },
                     );
                 }
                 "duration" => {
-                    logical_verify_type(complex, &[SchemaKind::Fixed], self, enclosing_namespace)?;
-                    return Ok(Schema::Duration);
+                    return try_convert_to_internal(
+                        "duration",
+                        parse_schema(complex, self, enclosing_namespace)?,
+                        &[SchemaKind::Fixed],
+                        |_| -> AvroResult<Schema> { Ok(Schema::Duration) },
+                    );
                 }
                 // In this case, of an unknown logical type, we just pass through to the underlying
                 // type.
