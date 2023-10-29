@@ -42,7 +42,7 @@ lazy_static! {
 
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
-        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
+        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 
     static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
 
@@ -6192,6 +6192,31 @@ mod tests {
             r#"{"type":"record","name":"a","fields":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
             &serialized
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3897_disallow_invalid_namespaces_in_fully_qualified_name() -> TestResult {
+        let name = Name::new("ns.0.record1");
+        assert!(name.is_err());
+        let expected = Error::InvalidSchemaName("ns.0.record1".to_string(), SCHEMA_NAME_R.as_str())
+            .to_string();
+        let err = name
+            .map_err(|e| e.to_string())
+            .err()
+            .unwrap_or_else(|| "unexpected".to_string());
+        assert_eq!(expected, err);
+
+        let name = Name::new("ns..record1");
+        assert!(name.is_err());
+        let expected =
+            Error::InvalidSchemaName("ns..record1".to_string(), SCHEMA_NAME_R.as_str()).to_string();
+        let err = name
+            .map_err(|e| e.to_string())
+            .err()
+            .unwrap_or_else(|| "unexpected".to_string());
+        assert_eq!(expected, err);
 
         Ok(())
     }
