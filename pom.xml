@@ -471,6 +471,7 @@
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>
+                <exclude>lang/py/docs/build/**</exclude>
                 <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
