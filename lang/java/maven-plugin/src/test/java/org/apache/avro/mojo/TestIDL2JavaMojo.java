@@ -17,30 +17,28 @@
  */
 package org.apache.avro.mojo;
 
+import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.codehaus.plexus.util.FileUtils;
-import org.junit.Test;
 
 import static java.util.Arrays.asList;
 
 /**
  * Test the IDL Protocol Mojo.
  */
-public class TestIDLMojo extends AbstractAvroMojoTest {
+public class TestIDL2JavaMojo extends AbstractAvroMojoTest {
 
-  private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom.xml");
+  private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-idl2java.xml");
   private File injectingVelocityToolsTestPom = new File(getBasedir(),
-      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
-  private File generatingSchemaTestPom = new File(getBasedir(),
-      "src/test/resources/unit/idl/pom-generating-schema.xml");
+      "src/test/resources/unit/idl/pom-idl2java-injecting-velocity-tools.xml");
 
   @Test
   public void testIdlProtocolMojo() throws Exception {
-    final IDLMojo mojo = (IDLMojo) lookupMojo("idl", testPom);
+    final IDL2JavaMojo mojo = (IDL2JavaMojo) lookupMojo("idl", testPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
 
@@ -76,30 +74,6 @@ public class TestIDLMojo extends AbstractAvroMojoTest {
 
     final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(schemaUserContent.contains("It works!"));
-
-    // The previous test already verifies the warnings.
-    assertFalse(log.getLogEntries().isEmpty());
-  }
-
-  @Test
-  public void testGenerateSchemaTools() throws Exception {
-    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", generatingSchemaTestPom);
-    final TestLog log = new TestLog();
-    mojo.setLog(log);
-
-    assertNotNull(mojo);
-    mojo.execute();
-
-    final File outputDir = new File(getBasedir(), "target/test-harness/idl-generating/test");
-    final Set<String> generatedFiles = new HashSet<>(
-        asList("IdlPrivacy.avsc", "IdlTest.avpr", "IdlUser.avsc", "IdlUserWrapper.avsc"));
-
-    assertFilesExist(outputDir, generatedFiles);
-
-    final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.avsc"));
-    assertTrue(schemaUserContent.contains("IdlUser document"));
-    assertTrue(schemaUserContent.contains("Private"));
-    assertTrue(schemaUserContent.contains("pii"));
 
     // The previous test already verifies the warnings.
     assertFalse(log.getLogEntries().isEmpty());

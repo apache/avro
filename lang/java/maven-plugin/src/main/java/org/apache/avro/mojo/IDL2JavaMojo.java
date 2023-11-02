@@ -18,27 +18,19 @@
 
 package org.apache.avro.mojo;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
-
 import org.apache.avro.idl.IdlFile;
 import org.apache.avro.idl.IdlReader;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
-import static org.apache.avro.compiler.specific.SpecificCompiler.mangle;
-import static org.apache.avro.compiler.specific.SpecificCompiler.mangleTypeIdentifier;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
@@ -48,7 +40,7 @@ import static org.apache.avro.compiler.specific.SpecificCompiler.mangleTypeIdent
  * @phase generate-sources
  * @threadSafe
  */
-public class IDLMojo extends AbstractAvroMojo {
+public class IDL2JavaMojo extends AbstractAvroMojo {
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern <code>**&#47;*.avdl</code>
@@ -141,24 +133,7 @@ public class IDLMojo extends AbstractAvroMojo {
         }
         compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
 
-        if (generateJava) {
-          compiler.compileToDestination(null, outputDirectory);
-        }
-        if (generateProtocol && protocol != null) {
-          printProtocol(protocol, outputDirectory, true);
-        }
-        if (generateSchema) {
-          Collection<Schema> schemas;
-          if (protocol != null) {
-            schemas = protocol.getTypes();
-          } else {
-            schemas = idlFile.getNamedSchemas().values();
-          }
-
-          for (Schema schema : schemas) {
-            printSchema(schema, outputDirectory, true);
-          }
-        }
+        compiler.compileToDestination(null, outputDirectory);
       } finally {
         Thread.currentThread().setContextClassLoader(contextClassLoader);
       }
@@ -175,35 +150,5 @@ public class IDLMojo extends AbstractAvroMojo {
   @Override
   protected String[] getTestIncludes() {
     return testIncludes;
-  }
-
-  private String makePath(String name, String space, String suffix) {
-    if (space == null || space.isEmpty()) {
-      return name + suffix;
-    } else {
-      return space.replace('.', File.separatorChar) + File.separatorChar + name + suffix;
-    }
-  }
-
-  private void printProtocol(Protocol protocol, File outputDirectory, boolean pretty) throws IOException {
-    String name = mangleTypeIdentifier(protocol.getName());
-    String protocolPath = makePath(name, mangle(protocol.getNamespace()), ".avpr");
-    String filePath = outputDirectory.getAbsolutePath() + "/" + protocolPath;
-    printJson(protocol.toString(pretty), filePath);
-  }
-
-  private void printSchema(Schema schema, File outputDirectory, boolean pretty) throws IOException {
-    String name = mangleTypeIdentifier(schema.getName());
-    String schemaPath = makePath(name, mangle(schema.getNamespace()), ".avsc");
-    String filePath = outputDirectory.getAbsolutePath() + "/" + schemaPath;
-    printJson(schema.toString(pretty), filePath);
-  }
-
-  private void printJson(String jsonString, String filePath) throws IOException {
-    new File(filePath).getParentFile().mkdirs();
-    FileOutputStream fileOutputStream = new FileOutputStream(filePath);
-    PrintStream printStream = new PrintStream(fileOutputStream);
-    printStream.println(jsonString);
-    printStream.close();
   }
 }
