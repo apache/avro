@@ -23,7 +23,7 @@
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.12.0-SNAPSHOT</version>
-    <relativePath>../../../../../../../../../</relativePath>
+    <relativePath>../../../../../../../../../pom.xml</relativePath>
   </parent>
 
   <artifactId>avro-maven-plugin-test</artifactId>
@@ -39,20 +39,14 @@
           <execution>
             <id>idl</id>
             <goals>
-              <goal>idl2java</goal>
+              <goal>idl-protocol</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/idl2java-inject</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/idl-protocol</outputDirectory>
           <stringType>String</stringType>
-          <templateDirectory>
-            ${basedir}/src/test/resources/templates/
-          </templateDirectory>
-          <velocityToolsClassesNames>
-            <param>java.lang.String</param>
-          </velocityToolsClassesNames>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>

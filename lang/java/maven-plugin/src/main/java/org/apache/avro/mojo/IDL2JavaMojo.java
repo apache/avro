@@ -18,137 +18,49 @@
 
 package org.apache.avro.mojo;
 
-import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.idl.IdlFile;
-import org.apache.avro.idl.IdlReader;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
  *
- * @goal idl
+ * @goal idl2java
  * @requiresDependencyResolution runtime
  * @phase generate-sources
  * @threadSafe
  */
-public class IDL2JavaMojo extends AbstractAvroMojo {
-  /**
-   * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern <code>**&#47;*.avdl</code>
-   * is used to select IDL files.
-   *
-   * @parameter
-   */
-  private String[] includes = new String[] { "**/*.avdl" };
-
-  /**
-   * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern <code>**&#47;*.avdl</code>
-   * is used to select IDL files.
-   *
-   * @parameter
-   */
-  private String[] testIncludes = new String[] { "**/*.avdl" };
-
-  /**
-   * The generateJava parameter determines whether to generate Java class files
-   * (*.java)
-   *
-   * @parameter property="generateJava" default-value=true
-   */
-  protected boolean generateJava = true;
-
-  /**
-   * The generateProtocol parameter determines whether to generate Avro Protocol
-   * files (*.avpr)
-   *
-   * @parameter property="generateProtocol" default-value=false
-   */
-  protected boolean generateProtocol = false;
-
-  /**
-   * The generateSchema parameter determines whether to generate Avro Protocol
-   * files (*.avsc)
-   *
-   * @parameter property="generateSchema" default-value=false
-   */
-  protected boolean generateSchema = false;
-
+public class IDL2JavaMojo extends AbstractIDLMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     try {
-      @SuppressWarnings("rawtypes")
-      List runtimeClasspathElements = project.getRuntimeClasspathElements();
-
-      List<URL> runtimeUrls = new ArrayList<>();
-
-      // Add the source directory of avro files to the classpath so that
-      // imports can refer to other idl files as classpath resources
-      runtimeUrls.add(sourceDirectory.toURI().toURL());
-
-      // If runtimeClasspathElements is not empty values add its values to Idl path.
-      if (runtimeClasspathElements != null && !runtimeClasspathElements.isEmpty()) {
-        for (Object runtimeClasspathElement : runtimeClasspathElements) {
-          String element = (String) runtimeClasspathElement;
-          runtimeUrls.add(new File(element).toURI().toURL());
-        }
+      final IdlFile idlFile = parseIdlFile(filename, sourceDirectory);
+      final SpecificCompiler compiler;
+      if (idlFile.getProtocol() != null) {
+        compiler = new SpecificCompiler(idlFile.getProtocol());
+      } else {
+        compiler = new SpecificCompiler(idlFile.getNamedSchemas().values());
       }
 
-      final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-      URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]), contextClassLoader);
-      Thread.currentThread().setContextClassLoader(projPathLoader);
-      try {
-        IdlReader parser = new IdlReader();
-        IdlFile idlFile = parser.parse(sourceDirectory.toPath().resolve(filename));
-        for (String warning : idlFile.getWarnings()) {
-          getLog().warn(warning);
-        }
-        final SpecificCompiler compiler;
-        final Protocol protocol = idlFile.getProtocol();
-        if (protocol != null) {
-          compiler = new SpecificCompiler(protocol);
-        } else {
-          compiler = new SpecificCompiler(idlFile.getNamedSchemas().values());
-        }
-        compiler.setStringType(GenericData.StringType.valueOf(stringType));
-        compiler.setTemplateDir(templateDirectory);
-        compiler.setFieldVisibility(getFieldVisibility());
-        compiler.setCreateOptionalGetters(createOptionalGetters);
-        compiler.setGettersReturnOptional(gettersReturnOptional);
-        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-        compiler.setCreateSetters(createSetters);
-        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-        for (String customConversion : customConversions) {
-          compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
-        }
-        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-
-        compiler.compileToDestination(null, outputDirectory);
-      } finally {
-        Thread.currentThread().setContextClassLoader(contextClassLoader);
+      compiler.setStringType(GenericData.StringType.valueOf(stringType));
+      compiler.setTemplateDir(templateDirectory);
+      compiler.setFieldVisibility(getFieldVisibility());
+      compiler.setCreateOptionalGetters(createOptionalGetters);
+      compiler.setGettersReturnOptional(gettersReturnOptional);
+      compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
+      compiler.setCreateSetters(createSetters);
+      compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
+      compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+      for (String customConversion : customConversions) {
+        compiler.addCustomConversion(Thread.currentThread().getContextClassLoader().loadClass(customConversion));
       }
-    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
+      compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+      compiler.compileToDestination(null, outputDirectory);
+    } catch (ClassNotFoundException e) {
       throw new IOException(e);
     }
-  }
-
-  @Override
-  protected String[] getIncludes() {
-    return includes;
-  }
-
-  @Override
-  protected String[] getTestIncludes() {
-    return testIncludes;
   }
 }
