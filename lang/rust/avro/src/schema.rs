@@ -6216,4 +6216,16 @@ mod tests {
 
         Ok(())
     }
+
+    /// A test cases showing that names and namespaces can be constructed
+    /// entirely by underscores.
+    #[test]
+    fn test_avro_3897_funny_valid_names_and_namespaces() -> TestResult {
+        for funny_name in ["_", "_._", "__._", "_.__", "_._._"] {
+            let name = Name::new(funny_name);
+            assert!(name.is_ok());
+        }
+
+        Ok(())
+    }
 }
