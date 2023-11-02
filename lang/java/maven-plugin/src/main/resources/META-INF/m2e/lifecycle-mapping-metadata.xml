@@ -24,6 +24,7 @@
                     <goal>idl-protocol</goal>
                     <goal>idl2java</goal>
                     <goal>idl2protocol</goal>
+                    <goal>idl2schema</goal>
                     <goal>protocol</goal>
                     <goal>schema</goal>
                 </goals>

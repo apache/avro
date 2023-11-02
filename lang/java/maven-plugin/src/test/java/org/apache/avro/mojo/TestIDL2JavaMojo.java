@@ -31,7 +31,6 @@ import static java.util.Arrays.asList;
  * Test the IDL Protocol Mojo.
  */
 public class TestIDL2JavaMojo extends AbstractAvroMojoTest {
-
   private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-idl2java.xml");
   private File injectingVelocityToolsTestPom = new File(getBasedir(),
       "src/test/resources/unit/idl/pom-idl2java-injecting-velocity-tools.xml");
