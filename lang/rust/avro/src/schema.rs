@@ -6198,24 +6198,20 @@ mod tests {
 
     #[test]
     fn test_avro_3897_disallow_invalid_namespaces_in_fully_qualified_name() -> TestResult {
-        let name = Name::new("ns.0.record1");
-        assert!(name.is_err());
-        let expected = Error::InvalidSchemaName("ns.0.record1".to_string(), SCHEMA_NAME_R.as_str())
-            .to_string();
-        let err = name
-            .map_err(|e| e.to_string())
-            .err()
-            .unwrap_or_else(|| "unexpected".to_string());
-        assert_eq!(expected, err);
-
-        let name = Name::new("ns..record1");
+        let full_name = "ns.0.record1";
+        let name = Name::new(full_name);
         assert!(name.is_err());
         let expected =
-            Error::InvalidSchemaName("ns..record1".to_string(), SCHEMA_NAME_R.as_str()).to_string();
-        let err = name
-            .map_err(|e| e.to_string())
-            .err()
-            .unwrap_or_else(|| "unexpected".to_string());
+            Error::InvalidSchemaName(full_name.to_string(), SCHEMA_NAME_R.as_str()).to_string();
+        let err = name.map_err(|e| e.to_string()).err().unwrap();
+        assert_eq!(expected, err);
+
+        let full_name = "ns..record1";
+        let name = Name::new(full_name);
+        assert!(name.is_err());
+        let expected =
+            Error::InvalidSchemaName(full_name.to_string(), SCHEMA_NAME_R.as_str()).to_string();
+        let err = name.map_err(|e| e.to_string()).err().unwrap();
         assert_eq!(expected, err);
 
         Ok(())
