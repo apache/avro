@@ -68,6 +68,7 @@ dependencies = [
  "anyhow",
  "apache-avro-derive",
  "apache-avro-test-helper",
+ "bigdecimal",
  "bzip2",
  "crc32fast",
  "criterion",
@@ -153,6 +154,19 @@ dependencies = [
  "miniz_oxide",
  "object",
  "rustc-demangle",
+]
+
+[[package]]
+name = "bigdecimal"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "454bca3db10617b88b566f205ed190aedb0e0e6dd4cad61d3988a72e8c5594cb"
+dependencies = [
+ "autocfg",
+ "libm",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
 ]
 
 [[package]]

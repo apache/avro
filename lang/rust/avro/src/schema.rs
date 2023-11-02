@@ -42,7 +42,7 @@ lazy_static! {
 
     // An optional namespace (with optional dots) followed by a name without any dots in it.
     static ref SCHEMA_NAME_R: Regex =
-        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
+        Regex::new(r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$").unwrap();
 
     static ref FIELD_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
 
@@ -112,6 +112,9 @@ pub enum Schema {
     /// Logical type which represents `Decimal` values. The underlying type is serialized and
     /// deserialized as `Schema::Bytes` or `Schema::Fixed`.
     Decimal(DecimalSchema),
+    /// Logical type which represents `Decimal` values without predefined scale.
+    /// The underlying type is serialized and deserialized as `Schema::Bytes`
+    BigDecimal,
     /// A universally unique identifier, annotating a string.
     Uuid,
     /// Logical type which represents the number of days since the unix epoch.
@@ -189,6 +192,7 @@ impl From<&types::Value> for SchemaKind {
             Value::Enum(_, _) => Self::Enum,
             Value::Fixed(_, _) => Self::Fixed,
             Value::Decimal { .. } => Self::Decimal,
+            Value::BigDecimal(_) => Self::BigDecimal,
             Value::Uuid(_) => Self::Uuid,
             Value::Date(_) => Self::Date,
             Value::TimeMillis(_) => Self::TimeMillis,
@@ -744,10 +748,9 @@ impl RecordField {
         let mut custom_attributes: BTreeMap<String, Value> = BTreeMap::new();
         for (key, value) in field {
             match key.as_str() {
-                "type" | "name" | "doc" | "default" | "order" | "position" => continue,
+                "type" | "name" | "doc" | "default" | "order" | "position" | "aliases" => continue,
                 _ => custom_attributes.insert(key.clone(), value.clone()),
             };
-            custom_attributes.insert(key.to_string(), value.clone());
         }
         custom_attributes
     }
@@ -1359,6 +1362,10 @@ impl Parser {
                         inner,
                     }));
                 }
+                "big-decimal" => {
+                    logical_verify_type(complex, &[SchemaKind::Bytes], self, enclosing_namespace)?;
+                    return Ok(Schema::BigDecimal);
+                }
                 "uuid" => {
                     logical_verify_type(complex, &[SchemaKind::String], self, enclosing_namespace)?;
                     return Ok(Schema::Uuid);
@@ -1613,9 +1620,8 @@ impl Parser {
             }
         }
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let symbols: Vec<String> = symbols_opt
             .and_then(|v| v.as_array())
@@ -1746,9 +1752,8 @@ impl Parser {
             None => Err(Error::GetFixedSizeField),
         }?;
 
-        let name = Name::parse(complex, enclosing_namespace)?;
-        let fully_qualified_name = name.clone();
-        let aliases = fix_aliases_namespace(complex.aliases(), &name.namespace);
+        let fully_qualified_name = Name::parse(complex, enclosing_namespace)?;
+        let aliases = fix_aliases_namespace(complex.aliases(), &fully_qualified_name.namespace);
 
         let schema = Schema::Fixed(FixedSchema {
             name: fully_qualified_name.clone(),
@@ -1838,6 +1843,7 @@ impl Serialize for Schema {
                 ref aliases,
                 ref doc,
                 ref fields,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1853,12 +1859,16 @@ impl Serialize for Schema {
                     map.serialize_entry("aliases", aliases)?;
                 }
                 map.serialize_entry("fields", fields)?;
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Enum(EnumSchema {
                 ref name,
                 ref symbols,
                 ref aliases,
+                ref attributes,
                 ..
             }) => {
                 let mut map = serializer.serialize_map(None)?;
@@ -1872,6 +1882,9 @@ impl Serialize for Schema {
                 if let Some(ref aliases) = aliases {
                     map.serialize_entry("aliases", aliases)?;
                 }
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Fixed(FixedSchema {
@@ -1879,7 +1892,7 @@ impl Serialize for Schema {
                 ref doc,
                 ref size,
                 ref aliases,
-                ..
+                ref attributes,
             }) => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "fixed")?;
@@ -1895,6 +1908,10 @@ impl Serialize for Schema {
                 if let Some(ref aliases) = aliases {
                     map.serialize_entry("aliases", aliases)?;
                 }
+
+                for attr in attributes {
+                    map.serialize_entry(attr.0, attr.1)?;
+                }
                 map.end()
             }
             Schema::Decimal(DecimalSchema {
@@ -1907,6 +1924,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "decimal")?;
                 map.serialize_entry("scale", scale)?;
                 map.serialize_entry("precision", precision)?;
+                map.end()
+            }
+            Schema::BigDecimal => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "bytes")?;
+                map.serialize_entry("logicalType", "big-decimal")?;
                 map.end()
             }
             Schema::Uuid => {
@@ -5156,6 +5179,31 @@ mod tests {
     }
 
     #[test]
+    fn test_avro_3779_bigdecimal_schema() -> TestResult {
+        let schema = json!(
+        {
+          "type": "record",
+          "name": "recordWithDecimal",
+          "fields": [
+            {
+                "name": "decimal",
+                "type": "bytes",
+                "logicalType": "big-decimal"
+            }
+          ]
+        });
+
+        let parse_result = Schema::parse(&schema);
+        assert!(
+            parse_result.is_ok(),
+            "parse result must be ok, got: {:?}",
+            parse_result
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn test_avro_3820_deny_invalid_field_names() -> TestResult {
         let schema_str = r#"
         {
@@ -6083,6 +6131,99 @@ mod tests {
         match schema.doc() {
             None => (),
             some => panic!("Expected None, got {some:?}"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn avro_3886_serialize_attributes() -> TestResult {
+        let attributes = BTreeMap::from([
+            ("string_key".into(), "value".into()),
+            ("number_key".into(), 1.23.into()),
+            ("null_key".into(), Value::Null),
+            (
+                "array_key".into(),
+                Value::Array(vec![1.into(), 2.into(), 3.into()]),
+            ),
+            ("object_key".into(), Value::Object(Map::default())),
+        ]);
+
+        // Test serialize enum attributes
+        let schema = Schema::Enum(EnumSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            symbols: vec![],
+            default: None,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"enum","name":"a","symbols":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize fixed custom_attributes
+        let schema = Schema::Fixed(FixedSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            size: 1,
+            attributes: attributes.clone(),
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"fixed","name":"a","size":1,"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        // Test serialize record custom_attributes
+        let schema = Schema::Record(RecordSchema {
+            name: Name::new("a")?,
+            aliases: None,
+            doc: None,
+            fields: vec![],
+            lookup: BTreeMap::new(),
+            attributes,
+        });
+        let serialized = serde_json::to_string(&schema)?;
+        assert_eq!(
+            r#"{"type":"record","name":"a","fields":[],"array_key":[1,2,3],"null_key":null,"number_key":1.23,"object_key":{},"string_key":"value"}"#,
+            &serialized
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3897_disallow_invalid_namespaces_in_fully_qualified_name() -> TestResult {
+        let full_name = "ns.0.record1";
+        let name = Name::new(full_name);
+        assert!(name.is_err());
+        let expected =
+            Error::InvalidSchemaName(full_name.to_string(), SCHEMA_NAME_R.as_str()).to_string();
+        let err = name.map_err(|e| e.to_string()).err().unwrap();
+        assert_eq!(expected, err);
+
+        let full_name = "ns..record1";
+        let name = Name::new(full_name);
+        assert!(name.is_err());
+        let expected =
+            Error::InvalidSchemaName(full_name.to_string(), SCHEMA_NAME_R.as_str()).to_string();
+        let err = name.map_err(|e| e.to_string()).err().unwrap();
+        assert_eq!(expected, err);
+
+        Ok(())
+    }
+
+    /// A test cases showing that names and namespaces can be constructed
+    /// entirely by underscores.
+    #[test]
+    fn test_avro_3897_funny_valid_names_and_namespaces() -> TestResult {
+        for funny_name in ["_", "_._", "__._", "_.__", "_._._"] {
+            let name = Name::new(funny_name);
+            assert!(name.is_ok());
         }
 
         Ok(())

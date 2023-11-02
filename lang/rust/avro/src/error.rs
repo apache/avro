@@ -115,6 +115,9 @@ pub enum Error {
     #[error("expected UUID, got: {0:?}")]
     GetUuid(ValueKind),
 
+    #[error("expected BigDecimal, got: {0:?}")]
+    GetBigdecimal(ValueKind),
+
     #[error("Fixed bytes of size 12 expected, got Fixed of size {0}")]
     GetDecimalFixedBytes(usize),
 
@@ -289,6 +292,15 @@ pub enum Error {
     #[error("The decimal precision ({precision}) must be a positive number")]
     DecimalPrecisionMuBePositive { precision: usize },
 
+    #[error("Unreadable big decimal sign")]
+    BigDecimalSign,
+
+    #[error("Unreadable length for big decimal inner bytes: {0}")]
+    BigDecimalLen(#[source] Box<Error>),
+
+    #[error("Unreadable big decimal scale")]
+    BigDecimalScale,
+
     #[error("Unexpected `type` {0} variant for `logicalType`")]
     GetLogicalTypeVariant(serde_json::Value),
 
@@ -448,7 +460,7 @@ pub enum Error {
     #[error("Signed decimal bytes length {0} not equal to fixed schema size {1}.")]
     EncodeDecimalAsFixedError(usize, usize),
 
-    #[error("There is no entry for {0} in the lookup table: {1}.")]
+    #[error("There is no entry for '{0}' in the lookup table: {1}.")]
     NoEntryInLookupTable(String, String),
 
     #[error("Can only encode value type {value_kind:?} as one of {supported_schema:?}")]
