@@ -221,7 +221,7 @@ impl SchemaCompatibility {
                 SchemaKind::Record => {
                     if let Schema::Record(RecordSchema { name: w_name, .. }) = writers_schema {
                         if let Schema::Record(RecordSchema { name: r_name, .. }) = readers_schema {
-                            return w_name.fullname(None) == r_name.fullname(None);
+                            return w_name.name == r_name.name;
                         } else {
                             unreachable!("readers_schema should have been Schema::Record")
                         }
@@ -246,8 +246,7 @@ impl SchemaCompatibility {
                             attributes: _,
                         }) = readers_schema
                         {
-                            return w_name.fullname(None) == r_name.fullname(None)
-                                && w_size == r_size;
+                            return w_name.name == r_name.name && w_size == r_size;
                         } else {
                             unreachable!("readers_schema should have been Schema::Fixed")
                         }
@@ -258,7 +257,7 @@ impl SchemaCompatibility {
                 SchemaKind::Enum => {
                     if let Schema::Enum(EnumSchema { name: w_name, .. }) = writers_schema {
                         if let Schema::Enum(EnumSchema { name: r_name, .. }) = readers_schema {
-                            return w_name.fullname(None) == r_name.fullname(None);
+                            return w_name.name == r_name.name;
                         } else {
                             unreachable!("readers_schema should have been Schema::Enum")
                         }
@@ -1080,6 +1079,82 @@ mod tests {
         let schema_v2 = Schema::parse_str(RAW_SCHEMA_V2)?;
 
         assert!(SchemaCompatibility::can_read(&schema_v1, &schema_v2));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3898_record_schemas_match_by_unqualified_name() -> TestResult {
+        let schemas = [
+            // Record schemas
+            (
+                Schema::parse_str(
+                    r#"{
+              "type": "record",
+              "name": "Statistics",
+              "fields": [
+                { "name": "success", "type": "int" },
+                { "name": "fail", "type": "int" },
+                { "name": "time", "type": "string" },
+                { "name": "max", "type": "int", "default": 0 }
+              ]
+            }"#,
+                )?,
+                Schema::parse_str(
+                    r#"{
+              "type": "record",
+              "name": "Statistics",
+              "namespace": "my.namespace",
+              "fields": [
+                { "name": "success", "type": "int" },
+                { "name": "fail", "type": "int" },
+                { "name": "time", "type": "string" },
+                { "name": "average", "type": "int", "default": 0}
+              ]
+            }"#,
+                )?,
+            ),
+            // Enum schemas
+            (
+                Schema::parse_str(
+                    r#"{
+                    "type": "enum",
+                    "name": "Suit",
+                    "symbols": ["diamonds", "spades", "clubs"]
+                }"#,
+                )?,
+                Schema::parse_str(
+                    r#"{
+                    "type": "enum",
+                    "name": "Suit",
+                    "namespace": "my.namespace",
+                    "symbols": ["diamonds", "spades", "clubs", "hearts"]
+                }"#,
+                )?,
+            ),
+            // Fixed schemas
+            (
+                Schema::parse_str(
+                    r#"{
+                    "type": "fixed",
+                    "name": "EmployeeId",
+                    "size": 16
+                }"#,
+                )?,
+                Schema::parse_str(
+                    r#"{
+                    "type": "fixed",
+                    "name": "EmployeeId",
+                    "namespace": "my.namespace",
+                    "size": 16
+                }"#,
+                )?,
+            ),
+        ];
+
+        for (schema_1, schema_2) in schemas {
+            assert!(SchemaCompatibility::can_read(&schema_1, &schema_2));
+        }
 
         Ok(())
     }
