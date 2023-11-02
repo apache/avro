@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Generate Java classes and interfaces from AvroIDL files (.avdl)
+ * Generate Java classes and interfaces (.java) from AvroIDL files (.avdl)
  *
  * @goal idl2java
  * @requiresDependencyResolution runtime

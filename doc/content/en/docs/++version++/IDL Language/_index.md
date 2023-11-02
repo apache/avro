@@ -66,19 +66,18 @@ A Maven plugin is also provided to generate _.java_, _.avpr_ and _.avsc_ files f
       <executions>
         <execution>
           <goals>
-            <goal>idl</goal>
+            <goal>idl2java</goal>
           </goals>
         </execution>
       </executions>
-      <configuration>
-        <generateJava>true</generateJava>
-        <generateProtocol>false</generateProtocol>
-        <generateSchema>true</generateSchema>
-      </configuration>
     </plugin>
   </plugins>
 </build>
 ```
+goals:
+- `idl2java`: Generate Java classes and interfaces (.java) from AvroIDL files (.avdl)
+- `idl2protocol`: Generate JSON Avro protocol files (.avpr) from AvroIDL files (.avdl)
+- `idl2schema`: Generate JSON Avro schema files (.avsc) from AvroIDL files (.avdl)
 
 ## Defining a Schema in Avro IDL
 An Avro IDL file consists of exactly one (main) schema definition. The minimal schema is defined by the following code:

@@ -28,7 +28,7 @@ import static org.apache.avro.compiler.specific.SpecificCompiler.mangle;
 import static org.apache.avro.compiler.specific.SpecificCompiler.mangleTypeIdentifier;
 
 /**
- * Generate Java classes and interfaces from AvroIDL files (.avdl)
+ * Generate JSON Avro protocol files (.avpr) from AvroIDL files (.avdl)
  *
  * @goal idl2protocol
  * @requiresDependencyResolution runtime
