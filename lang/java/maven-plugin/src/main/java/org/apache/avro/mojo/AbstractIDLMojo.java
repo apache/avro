@@ -114,4 +114,20 @@ public abstract class AbstractIDLMojo extends AbstractAvroMojo {
   protected String[] getTestIncludes() {
     return testIncludes;
   }
+
+  protected String makePath(String name, String space, String suffix) {
+    if (space == null || space.isEmpty()) {
+      return name + suffix;
+    } else {
+      return space.replace('.', File.separatorChar) + File.separatorChar + name + suffix;
+    }
+  }
+
+  protected void printJson(String jsonString, String filePath) throws IOException {
+    new File(filePath).getParentFile().mkdirs();
+    FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+    PrintStream printStream = new PrintStream(fileOutputStream);
+    printStream.println(jsonString);
+    printStream.close();
+  }
 }
