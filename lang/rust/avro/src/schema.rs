@@ -1324,12 +1324,17 @@ impl Parser {
                         parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
                         |inner| -> AvroResult<Schema> {
-                            let (precision, scale) = Self::parse_precision_and_scale(complex)?;
-                            Ok(Schema::Decimal(DecimalSchema {
-                                precision,
-                                scale,
-                                inner: Box::new(inner),
-                            }))
+                            match Self::parse_precision_and_scale(complex) {
+                                Ok((precision, scale)) => Ok(Schema::Decimal(DecimalSchema {
+                                    precision,
+                                    scale,
+                                    inner: Box::new(inner),
+                                })),
+                                Err(err) => {
+                                    warn!("Ignoring invalid decimal logical type: {}", err);
+                                    Ok(inner)
+                                }
+                            }
                         },
                     );
                 }
@@ -6308,6 +6313,53 @@ mod tests {
         let parse_result = Schema::parse(&schema)?;
         assert_eq!(parse_result, Schema::Bytes);
         assert_eq!(parse_result.custom_attributes(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3899_parse_decimal_type() -> TestResult {
+        use apache_avro_test_helper::logger::{assert_logged, assert_not_logged};
+
+        let schema = Schema::parse_str(
+            r#"{
+             "name": "InvalidDecimal",
+             "type": "fixed",
+             "size": 16,
+             "logicalType": "decimal",
+             "precision": 2,
+             "scale": 3
+         }"#,
+        )?;
+        match schema {
+            Schema::Fixed(fixed_schema) => {
+                let attrs = fixed_schema.attributes;
+                let precision = attrs
+                    .get("precision")
+                    .expect("The 'precision' attribute is missing");
+                let scale = attrs
+                    .get("scale")
+                    .expect("The 'scale' attribute is missing");
+                assert_logged(&format!("Ignoring invalid decimal logical type: The decimal precision ({}) must be bigger or equal to the scale ({})", precision, scale));
+            }
+            _ => unreachable!("Expected Schema::Fixed, got {:?}", schema),
+        }
+
+        let schema = Schema::parse_str(
+            r#"{
+            "name": "ValidDecimal",
+             "type": "bytes",
+             "logicalType": "decimal",
+             "precision": 3,
+             "scale": 2
+         }"#,
+        )?;
+        match schema {
+            Schema::Decimal(_) => {
+                assert_not_logged("Ignoring invalid decimal logical type: The decimal precision (2) must be bigger or equal to the scale (3)");
+            }
+            _ => unreachable!("Expected Schema::Decimal, got {:?}", schema),
+        }
 
         Ok(())
     }
