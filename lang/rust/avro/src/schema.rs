@@ -1272,7 +1272,8 @@ impl Parser {
         complex: &Map<String, Value>,
         enclosing_namespace: &Namespace,
     ) -> AvroResult<Schema> {
-        fn parse_schema(
+        // Try to parse this as a native complex type.
+        fn parse_as_native_complex(
             complex: &Map<String, Value>,
             parser: &mut Parser,
             enclosing_namespace: &Namespace,
@@ -1288,18 +1289,21 @@ impl Parser {
             }
         }
 
-        // Try to convert this logical type to internal representation. If it can't, record warn log and return the schema directly.
-        fn try_convert_to_internal<F>(
+        // This crate support some logical types natively, and this function tries to convert a native complex type with a logical type attribute to these logical type.
+        // This function:
+        // 1. Check whether the native complex type in supported kinds.
+        // 2. If it is, using the convert function to convert the native complex type to logical type.
+        fn try_convert_to_logical_type<F>(
             logical_type: &str,
             schema: Schema,
-            supported_kinds: &[SchemaKind],
+            expected_native_complexs_type: &[SchemaKind],
             convert: F,
         ) -> AvroResult<Schema>
         where
             F: Fn(Schema) -> AvroResult<Schema>,
         {
             let kind = SchemaKind::from(schema.clone());
-            if supported_kinds.contains(&kind) {
+            if expected_native_complexs_type.contains(&kind) {
                 convert(schema)
             } else {
                 warn!(
@@ -1313,9 +1317,9 @@ impl Parser {
         match complex.get("logicalType") {
             Some(Value::String(t)) => match t.as_str() {
                 "decimal" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "decimal",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
                         |inner| -> AvroResult<Schema> {
                             let (precision, scale) = Self::parse_precision_and_scale(complex)?;
@@ -1328,81 +1332,81 @@ impl Parser {
                     );
                 }
                 "big-decimal" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "big-decimal",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Bytes],
                         |_| -> AvroResult<Schema> { Ok(Schema::BigDecimal) },
                     );
                 }
                 "uuid" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "uuid",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::String],
                         |_| -> AvroResult<Schema> { Ok(Schema::Uuid) },
                     );
                 }
                 "date" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "date",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
                         |_| -> AvroResult<Schema> { Ok(Schema::Date) },
                     );
                 }
                 "time-millis" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "date",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Int],
                         |_| -> AvroResult<Schema> { Ok(Schema::TimeMillis) },
                     );
                 }
                 "time-micros" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "time-micros",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::TimeMicros) },
                     );
                 }
                 "timestamp-millis" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "timestamp-millis",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::TimestampMillis) },
                     );
                 }
                 "timestamp-micros" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "timestamp-micros",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::TimestampMicros) },
                     );
                 }
                 "local-timestamp-millis" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "local-timestamp-millis",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMillis) },
                     );
                 }
                 "local-timestamp-micros" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "local-timestamp-micros",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Long],
                         |_| -> AvroResult<Schema> { Ok(Schema::LocalTimestampMicros) },
                     );
                 }
                 "duration" => {
-                    return try_convert_to_internal(
+                    return try_convert_to_logical_type(
                         "duration",
-                        parse_schema(complex, self, enclosing_namespace)?,
+                        parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed],
                         |_| -> AvroResult<Schema> { Ok(Schema::Duration) },
                     );
@@ -6176,7 +6180,6 @@ mod tests {
             Error::InvalidSchemaName(full_name.to_string(), SCHEMA_NAME_R.as_str()).to_string();
         let err = name.map_err(|e| e.to_string()).err().unwrap();
         assert_eq!(expected, err);
-
         Ok(())
     }
 
@@ -6188,6 +6191,109 @@ mod tests {
             let name = Name::new(funny_name);
             assert!(name.is_ok());
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_decimal_schema() -> TestResult {
+        // bytes decimal, represented as native logical type.
+        let schema = json!(
+        {
+          "type": "bytes",
+          "name": "BytesDecimal",
+          "logicalType": "decimal",
+          "size": 38,
+          "precision": 9,
+          "scale": 2
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(
+            parse_result,
+            Schema::Decimal(DecimalSchema {
+                precision: 9,
+                scale: 2,
+                ..
+            })
+        ));
+
+        // long decimal, represents as native complex type.
+        let schema = json!(
+        {
+          "type": "long",
+          "name": "LongDecimal",
+          "logicalType": "decimal"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(parse_result, Schema::Long));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_uuid_schema() -> TestResult {
+        // string uuid, represents as native logical type.
+        let schema = json!(
+        {
+          "type": "string",
+          "name": "StringUUID",
+          "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(parse_result, Schema::Uuid));
+
+        // fixed uuid, represents as native complex type.
+        let schema = json!(
+        {
+            "type": "fixed",
+            "name": "FixedUUID",
+            "size": 16,
+            "logicalType": "uuid"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(
+            parse_result,
+            Schema::Fixed(FixedSchema { size: 16, .. })
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_timestamp_millis_schema() -> TestResult {
+        // long timestamp-millis, represents as native logical type.
+        let schema = json!(
+        {
+          "type": "long",
+          "name": "LongTimestampMillis",
+          "logicalType": "timestamp-millis"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(parse_result, Schema::TimestampMillis));
+
+        // int timestamp-millis, represents as native complex type.
+        let schema = json!(
+        {
+            "type": "int",
+            "name": "IntTimestampMillis",
+            "logicalType": "timestamp-millis"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(parse_result, Schema::Int));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3896_more_custom_schema() -> TestResult {
+        // log type, represents as complex type.
+        let schema = json!(
+        {
+            "type": "bytes",
+            "name": "BytesLog",
+            "logicalType": "custom"
+        });
+        let parse_result = Schema::parse(&schema)?;
+        assert!(matches!(parse_result, Schema::Bytes));
 
         Ok(())
     }
