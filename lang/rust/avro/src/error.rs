@@ -307,8 +307,8 @@ pub enum Error {
     #[error("No `type` field found for `logicalType`")]
     GetLogicalTypeField,
 
-    #[error("logicalType must be a string")]
-    GetLogicalTypeFieldType,
+    #[error("logicalType must be a string, but is {0:?}")]
+    GetLogicalTypeFieldType(serde_json::Value),
 
     #[error("Unknown complex type: {0}")]
     GetComplexType(serde_json::Value),

@@ -1289,25 +1289,27 @@ impl Parser {
             }
         }
 
-        // This crate support some logical types natively, and this function tries to convert a native complex type with a logical type attribute to these logical type.
+        // This crate support some logical types natively, and this function tries to convert
+        // a native complex type with a logical type attribute to these logical types.
         // This function:
-        // 1. Check whether the native complex type in supported kinds.
-        // 2. If it is, using the convert function to convert the native complex type to logical type.
+        // 1. Checks whether the native complex type is in the supported kinds.
+        // 2. If it is, using the convert function to convert the native complex type to
+        // a logical type.
         fn try_convert_to_logical_type<F>(
             logical_type: &str,
             schema: Schema,
-            expected_native_complexs_type: &[SchemaKind],
+            supported_schema_kinds: &[SchemaKind],
             convert: F,
         ) -> AvroResult<Schema>
         where
             F: Fn(Schema) -> AvroResult<Schema>,
         {
             let kind = SchemaKind::from(schema.clone());
-            if expected_native_complexs_type.contains(&kind) {
+            if supported_schema_kinds.contains(&kind) {
                 convert(schema)
             } else {
                 warn!(
-                    "Ignoring invalid logical type '{}' for schema of type: {:?}!",
+                    "Ignoring unknown logical type '{}' for schema of type: {:?}!",
                     logical_type, schema
                 );
                 Ok(schema)
@@ -1411,14 +1413,14 @@ impl Parser {
                         |_| -> AvroResult<Schema> { Ok(Schema::Duration) },
                     );
                 }
-                // In this case, of an unknown logical type, we just pass through to the underlying
+                // In this case, of an unknown logical type, we just pass through the underlying
                 // type.
                 _ => {}
             },
-            // The spec says to ignore invalid logical types and just continue through to the
-            // underlying type - It is unclear whether that applies to this case or not, where the
+            // The spec says to ignore invalid logical types and just pass through the
+            // underlying type. It is unclear whether that applies to this case or not, where the
             // `logicalType` is not a string.
-            Some(_) => return Err(Error::GetLogicalTypeFieldType),
+            Some(value) => return Err(Error::GetLogicalTypeFieldType(value.clone())),
             _ => {}
         }
         match complex.get("type") {
@@ -6224,7 +6226,8 @@ mod tests {
           "logicalType": "decimal"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(parse_result, Schema::Long));
+        // assert!(matches!(parse_result, Schema::Long));
+        assert_eq!(parse_result, Schema::Long);
 
         Ok(())
     }
@@ -6239,9 +6242,10 @@ mod tests {
           "logicalType": "uuid"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(parse_result, Schema::Uuid));
+        assert_eq!(parse_result, Schema::Uuid);
 
-        // fixed uuid, represents as native complex type.
+        // uuid logical type is not supported for SchemaKind::Fixed, so it is parsed as Schema::Fixed
+        // and the `logicalType` is preserved as an attribute.
         let schema = json!(
         {
             "type": "fixed",
@@ -6250,10 +6254,19 @@ mod tests {
             "logicalType": "uuid"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(
+        assert_eq!(
             parse_result,
-            Schema::Fixed(FixedSchema { size: 16, .. })
-        ));
+            Schema::Fixed(FixedSchema {
+                name: Name::new("FixedUUID")?,
+                doc: None,
+                aliases: None,
+                size: 16,
+                attributes: BTreeMap::from([(
+                    "logicalType".to_string(),
+                    Value::String(String::from("uuid")),
+                )]),
+            })
+        );
 
         Ok(())
     }
@@ -6268,7 +6281,7 @@ mod tests {
           "logicalType": "timestamp-millis"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(parse_result, Schema::TimestampMillis));
+        assert_eq!(parse_result, Schema::TimestampMillis);
 
         // int timestamp-millis, represents as native complex type.
         let schema = json!(
@@ -6278,13 +6291,13 @@ mod tests {
             "logicalType": "timestamp-millis"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(parse_result, Schema::Int));
+        assert_eq!(parse_result, Schema::Int);
 
         Ok(())
     }
 
     #[test]
-    fn test_avro_3896_more_custom_schema() -> TestResult {
+    fn test_avro_3896_custom_bytes_schema() -> TestResult {
         // log type, represents as complex type.
         let schema = json!(
         {
@@ -6293,7 +6306,8 @@ mod tests {
             "logicalType": "custom"
         });
         let parse_result = Schema::parse(&schema)?;
-        assert!(matches!(parse_result, Schema::Bytes));
+        assert_eq!(parse_result, Schema::Bytes);
+        assert_eq!(parse_result.custom_attributes(), None);
 
         Ok(())
     }
