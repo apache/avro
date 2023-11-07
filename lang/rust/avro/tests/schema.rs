@@ -431,7 +431,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
             "logicalType": "decimal",
             "precision": 0
         }"#,
-        false,
+        true,
     ),
     (
         r#"{
@@ -449,7 +449,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "precision": 2,
              "scale": -2
          }"#,
-        false,
+        true,
     ),
     (
         r#"{
@@ -458,7 +458,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "precision": -2,
              "scale": 2
          }"#,
-        false,
+        true,
     ),
     (
         r#"{
@@ -467,7 +467,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "precision": 2,
              "scale": 3
          }"#,
-        false,
+        true,
     ),
     (
         r#"{
@@ -478,7 +478,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "scale": 2,
              "size": 5
          }"#,
-        false,
+        true,
     ),
     (
         r#"{
@@ -489,7 +489,7 @@ const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
              "scale": 3,
              "size": 2
          }"#,
-        false,
+        true,
     ),
     (
         r#"{
