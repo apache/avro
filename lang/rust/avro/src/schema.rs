@@ -1324,12 +1324,17 @@ impl Parser {
                         parse_as_native_complex(complex, self, enclosing_namespace)?,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
                         |inner| -> AvroResult<Schema> {
-                            let (precision, scale) = Self::parse_precision_and_scale(complex)?;
-                            Ok(Schema::Decimal(DecimalSchema {
-                                precision,
-                                scale,
-                                inner: Box::new(inner),
-                            }))
+                            match Self::parse_precision_and_scale(complex) {
+                                Ok((precision, scale)) => Ok(Schema::Decimal(DecimalSchema {
+                                    precision,
+                                    scale,
+                                    inner: Box::new(inner),
+                                })),
+                                Err(err) => {
+                                    warn!("Ignoring invalid decimal logical type: {}", err);
+                                    Ok(inner)
+                                }
+                            }
                         },
                     );
                 }
