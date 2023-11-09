@@ -71,6 +71,8 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
+  private static final boolean ORDER_REFLECT_FIELDS =
+      Boolean.parseBoolean(System.getProperty("org.apache.avro.reflect.fields.order", "true"));
   /**
    * Always false since custom coders are not available for {@link ReflectData}.
    */
@@ -858,7 +860,9 @@ public class ReflectData extends SpecificData {
       if (excludeJava && c.getPackage() != null && c.getPackage().getName().startsWith("java."))
         break; // skip java built-in classes
       Field[] declaredFields = c.getDeclaredFields();
-      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+      if (ORDER_REFLECT_FIELDS) {
+        Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+      }
       for (Field field : declaredFields)
         if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0)
           if (fields.put(field.getName(), field) != null)

@@ -18,6 +18,9 @@
 
 package org.apache.avro.reflect;
 
+import com.sun.org.apache.xml.internal.security.signature.reference.ReferenceData;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -76,6 +79,34 @@ public class TestReflectData {
     assertThat(existsArgument.schema(), equalTo(Schema.create(Schema.Type.STRING)));
   }
 
+  @Test
+  void fieldsOrder() throws Exception {
+    Schema schema = ReflectData.get().getSchema(Meta.class);
+    List<Schema.Field> fields = schema.getFields();
+    assertEquals(fields.size(), 4);
+    assertEquals(fields.get(0).name(), "f1");
+    assertEquals(fields.get(1).name(), "f2");
+    assertEquals(fields.get(2).name(), "f3");
+    assertEquals(fields.get(3).name(), "f4");
+
+    Field orderReflectFields = ReflectData.class.getDeclaredField("ORDER_REFLECT_FIELDS");
+    Field modifiersField = Field.class.getDeclaredField("modifiers");
+    modifiersField.setAccessible(true);
+    modifiersField.set(orderReflectFields, orderReflectFields.getModifiers() & ~Modifier.FINAL);
+    orderReflectFields.setAccessible(true);
+    orderReflectFields.set(null, false);
+
+    schema = ReflectData.get().getSchema(Meta1.class);
+    fields = schema.getFields();
+    assertEquals(fields.size(), 4);
+    assertEquals(fields.get(0).name(), "f1");
+    assertEquals(fields.get(1).name(), "f4");
+    assertEquals(fields.get(2).name(), "f2");
+    assertEquals(fields.get(3).name(), "f3");
+
+    orderReflectFields.set(null, true);
+  }
+
   private interface CrudProtocol<R, I> extends OtherProtocol<I> {
     void store(R record);
 
@@ -100,6 +131,14 @@ public class TestReflectData {
   }
 
   static class Meta {
+    public int f1 = 55;
+    public int f4;
+    public String f2 = "a-string";
+    public List<String> f3 = Arrays.asList("one", "two", "three");
+    // public User usr = new User();
+  }
+
+  static class Meta1 {
     public int f1 = 55;
     public int f4;
     public String f2 = "a-string";
