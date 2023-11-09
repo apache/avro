@@ -25,9 +25,9 @@ import org.apache.avro.idl.IdlFile;
 import org.apache.avro.idl.IdlReader;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -56,8 +56,9 @@ public class IdlTool implements Tool {
     File outputFile = "-".equals(outputName) ? null : new File(outputName);
 
     Schema m = null;
-    Protocol p = null;
+    Protocol p;
     if (useJavaCC) {
+      // noinspection deprecation
       try (Idl parser = new Idl(inputFile)) {
         p = parser.CompilationUnit();
         for (String warning : parser.getWarningsAfterParsing()) {
@@ -77,7 +78,7 @@ public class IdlTool implements Tool {
 
     PrintStream parseOut = out;
     if (outputFile != null) {
-      parseOut = new PrintStream(new FileOutputStream(outputFile));
+      parseOut = new PrintStream(Files.newOutputStream(outputFile.toPath()));
     }
 
     if (m == null && p == null) {
