@@ -71,8 +71,9 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
-  private static final boolean ORDER_REFLECT_FIELDS =
-      Boolean.parseBoolean(System.getProperty("org.apache.avro.reflect.fields.order", "true"));
+  private static final boolean ORDER_REFLECT_FIELDS = Boolean
+      .parseBoolean(System.getProperty("org.apache.avro.reflect.fields.order", "true"));
+
   /**
    * Always false since custom coders are not available for {@link ReflectData}.
    */
