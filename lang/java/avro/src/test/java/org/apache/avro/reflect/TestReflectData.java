@@ -18,7 +18,6 @@
 
 package org.apache.avro.reflect;
 
-import com.sun.org.apache.xml.internal.security.signature.reference.ReferenceData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import org.apache.avro.AvroTypeException;
