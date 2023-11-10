@@ -71,9 +71,6 @@ public class ReflectData extends SpecificData {
 
   private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
-  private static final boolean ORDER_REFLECT_FIELDS = Boolean
-      .parseBoolean(System.getProperty("org.apache.avro.reflect.fields.order", "true"));
-
   /**
    * Always false since custom coders are not available for {@link ReflectData}.
    */
@@ -109,13 +106,27 @@ public class ReflectData extends SpecificData {
 
   private static final ReflectData INSTANCE = new ReflectData();
 
+  private final boolean fieldsOrder;
+
   /** For subclasses. Applications normally use {@link ReflectData#get()}. */
   public ReflectData() {
+    this(true);
+  }
+
+  /** Control whether to order the reflection fields. */
+  public ReflectData(boolean fieldsOrder) {
+    this.fieldsOrder = fieldsOrder;
   }
 
   /** Construct with a particular classloader. */
   public ReflectData(ClassLoader classLoader) {
+    this(classLoader, true);
+  }
+
+  /** Control whether to order the reflection fields. */
+  public ReflectData(ClassLoader classLoader, boolean fieldsOrder) {
     super(classLoader);
+    this.fieldsOrder = fieldsOrder;
   }
 
   /** Return the singleton instance. */
@@ -368,7 +379,7 @@ public class ReflectData extends SpecificData {
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
-      for (Field f : getFields(c, false)) {
+      for (Field f : getFields(c, false, true)) {
         if (f.isAnnotationPresent(AvroIgnore.class)) {
           continue;
         }
@@ -738,7 +749,7 @@ public class ReflectData extends SpecificData {
           schema = Schema.createRecord(name, doc, space, error);
           consumeAvroAliasAnnotation(c, schema);
           names.put(c.getName(), schema);
-          for (Field field : getCachedFields(c))
+          for (Field field : getCachedFields(c, fieldsOrder))
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0
                 && !field.isAnnotationPresent(AvroIgnore.class)) {
               Schema fieldSchema = createFieldSchema(field, names);
@@ -848,12 +859,15 @@ public class ReflectData extends SpecificData {
 
   private static final ConcurrentMap<Class<?>, Field[]> FIELDS_CACHE = new ConcurrentHashMap<>();
 
+  private static final ConcurrentMap<Class<?>, Field[]> NATIVE_FIELDS_CACHE = new ConcurrentHashMap<>();
+
   // Return of this class and its superclasses to serialize.
-  private static Field[] getCachedFields(Class<?> recordClass) {
-    return MapUtil.computeIfAbsent(FIELDS_CACHE, recordClass, rc -> getFields(rc, true));
+  private static Field[] getCachedFields(Class<?> recordClass, boolean orderBy) {
+    return MapUtil.computeIfAbsent(orderBy ? FIELDS_CACHE : NATIVE_FIELDS_CACHE, recordClass,
+        rc -> getFields(rc, true, orderBy));
   }
 
-  private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
+  private static Field[] getFields(Class<?> recordClass, boolean excludeJava, boolean orderBy) {
     Field[] fieldsList;
     Map<String, Field> fields = new LinkedHashMap<>();
     Class<?> c = recordClass;
@@ -861,7 +875,7 @@ public class ReflectData extends SpecificData {
       if (excludeJava && c.getPackage() != null && c.getPackage().getName().startsWith("java."))
         break; // skip java built-in classes
       Field[] declaredFields = c.getDeclaredFields();
-      if (ORDER_REFLECT_FIELDS) {
+      if (orderBy) {
         Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
       }
       for (Field field : declaredFields)

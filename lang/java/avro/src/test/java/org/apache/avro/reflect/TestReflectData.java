@@ -79,7 +79,7 @@ public class TestReflectData {
   }
 
   @Test
-  void fieldsOrder() throws Exception {
+  void fieldsOrder() {
     Schema schema = ReflectData.get().getSchema(Meta.class);
     List<Schema.Field> fields = schema.getFields();
     assertEquals(fields.size(), 4);
@@ -88,22 +88,13 @@ public class TestReflectData {
     assertEquals(fields.get(2).name(), "f3");
     assertEquals(fields.get(3).name(), "f4");
 
-    Field orderReflectFields = ReflectData.class.getDeclaredField("ORDER_REFLECT_FIELDS");
-    Field modifiersField = Field.class.getDeclaredField("modifiers");
-    modifiersField.setAccessible(true);
-    modifiersField.set(orderReflectFields, orderReflectFields.getModifiers() & ~Modifier.FINAL);
-    orderReflectFields.setAccessible(true);
-    orderReflectFields.set(null, false);
-
-    schema = ReflectData.get().getSchema(Meta1.class);
+    schema = new ReflectData(false).getSchema(Meta.class);
     fields = schema.getFields();
     assertEquals(fields.size(), 4);
     assertEquals(fields.get(0).name(), "f1");
     assertEquals(fields.get(1).name(), "f4");
     assertEquals(fields.get(2).name(), "f2");
     assertEquals(fields.get(3).name(), "f3");
-
-    orderReflectFields.set(null, true);
   }
 
   private interface CrudProtocol<R, I> extends OtherProtocol<I> {
@@ -130,14 +121,6 @@ public class TestReflectData {
   }
 
   static class Meta {
-    public int f1 = 55;
-    public int f4;
-    public String f2 = "a-string";
-    public List<String> f3 = Arrays.asList("one", "two", "three");
-    // public User usr = new User();
-  }
-
-  static class Meta1 {
     public int f1 = 55;
     public int f4;
     public String f2 = "a-string";
