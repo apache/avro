@@ -41,16 +41,8 @@ public final class TestMultipleFiles {
         + "obuf.multiplefiles.Foo\022-\n\ttimestamp\030\025 \001("
         + "\0132\032.google.protobuf.Timestamp\"\017\n\001M\"\n\n\001N\022"
         + "\005\n\001A\020\001*\030\n\001A\022\005\n\001X\020\001\022\005\n\001Y\020\002\022\005\n\001Z\020\003B\002P\001" };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-      public com.google.protobuf.ExtensionRegistry assignDescriptors(
-          com.google.protobuf.Descriptors.FileDescriptor root) {
-        descriptor = root;
-        return null;
-      }
-    };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] { com.google.protobuf.TimestampProto.getDescriptor(), },
-        assigner);
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] { com.google.protobuf.TimestampProto.getDescriptor(), });
     internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor,

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+syntax = "proto2";
 package org.apache.avro.protobuf.noopt;
 
 import "google/protobuf/timestamp.proto";
@@ -63,4 +63,5 @@ message M {
   enum N {
     A = 1;
   }
+  optional N enumN = 1;
 }

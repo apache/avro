@@ -35,6 +35,7 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -87,15 +88,11 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected void setField(Object record, String name, int position, Object value, Object state) {
-    Builder b = (Builder) record;
-    FieldDescriptor f = ((FieldDescriptor[]) state)[position];
-    switch (f.getType()) {
-    case MESSAGE:
-      if (value == null) {
-        b.clearField(f);
-        break;
-      }
-    default:
+    final Builder b = (Builder) record;
+    final FieldDescriptor f = ((FieldDescriptor[]) state)[position];
+    if (value == null) {
+      b.clearField(f);
+    } else {
       b.setField(f, value);
     }
   }
@@ -104,11 +101,9 @@ public class ProtobufData extends GenericData {
   protected Object getField(Object record, String name, int pos, Object state) {
     Message m = (Message) record;
     FieldDescriptor f = ((FieldDescriptor[]) state)[pos];
-    switch (f.getType()) {
-    case MESSAGE:
-      if (!f.isRepeated() && !m.hasField(f))
-        return null;
-    default:
+    if (!f.isRepeated() && !m.hasField(f) && !f.hasDefaultValue()) {
+      return null;
+    } else {
       return m.getField(f);
     }
   }
@@ -134,6 +129,11 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
+  protected boolean isEnum(final Object datum) {
+    return datum instanceof EnumValueDescriptor;
+  }
+
+  @Override
   public Object newRecord(Object old, Schema schema) {
     try {
       Class c = SpecificData.get().getClass(schema);
@@ -146,6 +146,11 @@ public class ProtobufData extends GenericData {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  protected Schema getEnumSchema(final Object enumObj) {
+    return getSchema(((EnumValueDescriptor) enumObj).getType());
   }
 
   @Override
@@ -274,43 +279,54 @@ public class ProtobufData extends GenericData {
   }
 
   private Schema getNonRepeatedSchema(FieldDescriptor f) {
-    Schema result;
     switch (f.getType()) {
     case BOOL:
-      return Schema.create(Schema.Type.BOOLEAN);
+      return getSchema(Schema.create(Schema.Type.BOOLEAN), f);
     case FLOAT:
-      return Schema.create(Schema.Type.FLOAT);
+      return getSchema(Schema.create(Schema.Type.FLOAT), f);
     case DOUBLE:
-      return Schema.create(Schema.Type.DOUBLE);
+      return getSchema(Schema.create(Schema.Type.DOUBLE), f);
     case STRING:
       Schema s = Schema.create(Schema.Type.STRING);
       GenericData.setStringType(s, GenericData.StringType.String);
-      return s;
+      return getSchema(s, f);
     case BYTES:
-      return Schema.create(Schema.Type.BYTES);
+      return getSchema(Schema.create(Schema.Type.BYTES), f);
     case INT32:
     case UINT32:
     case SINT32:
     case FIXED32:
     case SFIXED32:
-      return Schema.create(Schema.Type.INT);
+      return getSchema(Schema.create(Schema.Type.INT), f);
     case INT64:
     case UINT64:
     case SINT64:
     case FIXED64:
     case SFIXED64:
-      return Schema.create(Schema.Type.LONG);
+      return getSchema(Schema.create(Schema.Type.LONG), f);
     case ENUM:
-      return getSchema(f.getEnumType());
+      return getSchema(getSchema(f.getEnumType()), f);
     case MESSAGE:
-      result = getSchema(f.getMessageType());
-      if (f.isOptional())
-        // wrap optional record fields in a union with null
-        result = Schema.createUnion(Arrays.asList(NULL, result));
-      return result;
+      return getSchema(getSchema(f.getMessageType()), f);
     case GROUP: // groups are deprecated
     default:
       throw new RuntimeException("Unexpected type: " + f.getType());
+    }
+  }
+
+  private Schema getSchema(Schema schema, FieldDescriptor f) {
+    if (f.isOptional() && !f.hasDefaultValue()) {
+      // wrap optional record fields in a union with null
+      JsonNode defaultValue = this.getDefault(f);
+      final List<Schema> subSchemas;
+      if (defaultValue == NullNode.getInstance()) {
+        subSchemas = Arrays.asList(NULL, schema);
+      } else {
+        subSchemas = Arrays.asList(schema, NULL);
+      }
+      return Schema.createUnion(subSchemas);
+    } else {
+      return schema;
     }
   }
 

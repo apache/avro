@@ -17,25 +17,18 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   }
 
   private Foo() {
-    int32_ = 0;
-    int64_ = 0L;
-    uint32_ = 0;
-    uint64_ = 0L;
-    sint32_ = 0;
-    sint64_ = 0L;
-    fixed32_ = 0;
-    fixed64_ = 0L;
-    sfixed32_ = 0;
-    sfixed64_ = 0L;
-    float_ = 0F;
-    double_ = 0D;
-    bool_ = false;
     string_ = "";
     bytes_ = com.google.protobuf.ByteString.EMPTY;
     enum_ = 3;
-    intArray_ = java.util.Collections.emptyList();
+    intArray_ = emptyIntList();
     fooArray_ = java.util.Collections.emptyList();
     syms_ = java.util.Collections.emptyList();
+  }
+
+  @java.lang.Override
+  @SuppressWarnings({ "unused" })
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Foo();
   }
 
   @java.lang.Override
@@ -59,12 +52,6 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         case 0:
           done = true;
           break;
-        default: {
-          if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-            done = true;
-          }
-          break;
-        }
         case 8: {
           bitField0_ |= 0x00000001;
           int32_ = input.readInt32();
@@ -143,6 +130,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         }
         case 128: {
           int rawValue = input.readEnum();
+          @SuppressWarnings("deprecation")
           org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
           if (value == null) {
             unknownFields.mergeVarintField(16, rawValue);
@@ -153,29 +141,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           break;
         }
         case 136: {
-          if (!((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
-            intArray_ = new java.util.ArrayList<java.lang.Integer>();
+          if (!((mutable_bitField0_ & 0x00010000) != 0)) {
+            intArray_ = newIntList();
             mutable_bitField0_ |= 0x00010000;
           }
-          intArray_.add(input.readInt32());
+          intArray_.addInt(input.readInt32());
           break;
         }
         case 138: {
           int length = input.readRawVarint32();
           int limit = input.pushLimit(length);
-          if (!((mutable_bitField0_ & 0x00010000) == 0x00010000) && input.getBytesUntilLimit() > 0) {
-            intArray_ = new java.util.ArrayList<java.lang.Integer>();
+          if (!((mutable_bitField0_ & 0x00010000) != 0) && input.getBytesUntilLimit() > 0) {
+            intArray_ = newIntList();
             mutable_bitField0_ |= 0x00010000;
           }
           while (input.getBytesUntilLimit() > 0) {
-            intArray_.add(input.readInt32());
+            intArray_.addInt(input.readInt32());
           }
           input.popLimit(limit);
           break;
         }
         case 146: {
           org.apache.avro.protobuf.multiplefiles.Foo.Builder subBuilder = null;
-          if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          if (((bitField0_ & 0x00010000) != 0)) {
             subBuilder = foo_.toBuilder();
           }
           foo_ = input.readMessage(org.apache.avro.protobuf.multiplefiles.Foo.PARSER, extensionRegistry);
@@ -188,11 +176,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         }
         case 152: {
           int rawValue = input.readEnum();
+          @SuppressWarnings("deprecation")
           org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
           if (value == null) {
             unknownFields.mergeVarintField(19, rawValue);
           } else {
-            if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
+            if (!((mutable_bitField0_ & 0x00040000) != 0)) {
               syms_ = new java.util.ArrayList<java.lang.Integer>();
               mutable_bitField0_ |= 0x00040000;
             }
@@ -205,11 +194,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           int oldLimit = input.pushLimit(length);
           while (input.getBytesUntilLimit() > 0) {
             int rawValue = input.readEnum();
+            @SuppressWarnings("deprecation")
             org.apache.avro.protobuf.multiplefiles.A value = org.apache.avro.protobuf.multiplefiles.A.valueOf(rawValue);
             if (value == null) {
               unknownFields.mergeVarintField(19, rawValue);
             } else {
-              if (!((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
+              if (!((mutable_bitField0_ & 0x00040000) != 0)) {
                 syms_ = new java.util.ArrayList<java.lang.Integer>();
                 mutable_bitField0_ |= 0x00040000;
               }
@@ -220,7 +210,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           break;
         }
         case 162: {
-          if (!((mutable_bitField0_ & 0x00020000) == 0x00020000)) {
+          if (!((mutable_bitField0_ & 0x00020000) != 0)) {
             fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.multiplefiles.Foo>();
             mutable_bitField0_ |= 0x00020000;
           }
@@ -229,7 +219,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
         }
         case 170: {
           com.google.protobuf.Timestamp.Builder subBuilder = null;
-          if (((bitField0_ & 0x00020000) == 0x00020000)) {
+          if (((bitField0_ & 0x00020000) != 0)) {
             subBuilder = timestamp_.toBuilder();
           }
           timestamp_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
@@ -240,6 +230,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
           bitField0_ |= 0x00020000;
           break;
         }
+        default: {
+          if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+            done = true;
+          }
+          break;
+        }
         }
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -247,13 +243,13 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
-        intArray_ = java.util.Collections.unmodifiableList(intArray_);
+      if (((mutable_bitField0_ & 0x00010000) != 0)) {
+        intArray_.makeImmutable(); // C
       }
-      if (((mutable_bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((mutable_bitField0_ & 0x00040000) != 0)) {
         syms_ = java.util.Collections.unmodifiableList(syms_);
       }
-      if (((mutable_bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((mutable_bitField0_ & 0x00020000) != 0)) {
         fooArray_ = java.util.Collections.unmodifiableList(fooArray_);
       }
       this.unknownFields = unknownFields.build();
@@ -265,6 +261,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
   }
 
+  @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
     return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
         .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
@@ -281,9 +278,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>required int32 int32 = 1;</code>
+   * 
+   * @return Whether the int32 field is set.
    */
+  @java.lang.Override
   public boolean hasInt32() {
-    return ((bitField0_ & 0x00000001) == 0x00000001);
+    return ((bitField0_ & 0x00000001) != 0);
   }
 
   /**
@@ -292,7 +292,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>required int32 int32 = 1;</code>
+   * 
+   * @return The int32.
    */
+  @java.lang.Override
   public int getInt32() {
     return int32_;
   }
@@ -302,14 +305,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional int64 int64 = 2;</code>
+   * 
+   * @return Whether the int64 field is set.
    */
+  @java.lang.Override
   public boolean hasInt64() {
-    return ((bitField0_ & 0x00000002) == 0x00000002);
+    return ((bitField0_ & 0x00000002) != 0);
   }
 
   /**
    * <code>optional int64 int64 = 2;</code>
+   * 
+   * @return The int64.
    */
+  @java.lang.Override
   public long getInt64() {
     return int64_;
   }
@@ -319,14 +328,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional uint32 uint32 = 3;</code>
+   * 
+   * @return Whether the uint32 field is set.
    */
+  @java.lang.Override
   public boolean hasUint32() {
-    return ((bitField0_ & 0x00000004) == 0x00000004);
+    return ((bitField0_ & 0x00000004) != 0);
   }
 
   /**
    * <code>optional uint32 uint32 = 3;</code>
+   * 
+   * @return The uint32.
    */
+  @java.lang.Override
   public int getUint32() {
     return uint32_;
   }
@@ -336,14 +351,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional uint64 uint64 = 4;</code>
+   * 
+   * @return Whether the uint64 field is set.
    */
+  @java.lang.Override
   public boolean hasUint64() {
-    return ((bitField0_ & 0x00000008) == 0x00000008);
+    return ((bitField0_ & 0x00000008) != 0);
   }
 
   /**
    * <code>optional uint64 uint64 = 4;</code>
+   * 
+   * @return The uint64.
    */
+  @java.lang.Override
   public long getUint64() {
     return uint64_;
   }
@@ -353,14 +374,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional sint32 sint32 = 5;</code>
+   * 
+   * @return Whether the sint32 field is set.
    */
+  @java.lang.Override
   public boolean hasSint32() {
-    return ((bitField0_ & 0x00000010) == 0x00000010);
+    return ((bitField0_ & 0x00000010) != 0);
   }
 
   /**
    * <code>optional sint32 sint32 = 5;</code>
+   * 
+   * @return The sint32.
    */
+  @java.lang.Override
   public int getSint32() {
     return sint32_;
   }
@@ -370,14 +397,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional sint64 sint64 = 6;</code>
+   * 
+   * @return Whether the sint64 field is set.
    */
+  @java.lang.Override
   public boolean hasSint64() {
-    return ((bitField0_ & 0x00000020) == 0x00000020);
+    return ((bitField0_ & 0x00000020) != 0);
   }
 
   /**
    * <code>optional sint64 sint64 = 6;</code>
+   * 
+   * @return The sint64.
    */
+  @java.lang.Override
   public long getSint64() {
     return sint64_;
   }
@@ -387,14 +420,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional fixed32 fixed32 = 7;</code>
+   * 
+   * @return Whether the fixed32 field is set.
    */
+  @java.lang.Override
   public boolean hasFixed32() {
-    return ((bitField0_ & 0x00000040) == 0x00000040);
+    return ((bitField0_ & 0x00000040) != 0);
   }
 
   /**
    * <code>optional fixed32 fixed32 = 7;</code>
+   * 
+   * @return The fixed32.
    */
+  @java.lang.Override
   public int getFixed32() {
     return fixed32_;
   }
@@ -404,14 +443,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional fixed64 fixed64 = 8;</code>
+   * 
+   * @return Whether the fixed64 field is set.
    */
+  @java.lang.Override
   public boolean hasFixed64() {
-    return ((bitField0_ & 0x00000080) == 0x00000080);
+    return ((bitField0_ & 0x00000080) != 0);
   }
 
   /**
    * <code>optional fixed64 fixed64 = 8;</code>
+   * 
+   * @return The fixed64.
    */
+  @java.lang.Override
   public long getFixed64() {
     return fixed64_;
   }
@@ -421,14 +466,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional sfixed32 sfixed32 = 9;</code>
+   * 
+   * @return Whether the sfixed32 field is set.
    */
+  @java.lang.Override
   public boolean hasSfixed32() {
-    return ((bitField0_ & 0x00000100) == 0x00000100);
+    return ((bitField0_ & 0x00000100) != 0);
   }
 
   /**
    * <code>optional sfixed32 sfixed32 = 9;</code>
+   * 
+   * @return The sfixed32.
    */
+  @java.lang.Override
   public int getSfixed32() {
     return sfixed32_;
   }
@@ -438,14 +489,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional sfixed64 sfixed64 = 10;</code>
+   * 
+   * @return Whether the sfixed64 field is set.
    */
+  @java.lang.Override
   public boolean hasSfixed64() {
-    return ((bitField0_ & 0x00000200) == 0x00000200);
+    return ((bitField0_ & 0x00000200) != 0);
   }
 
   /**
    * <code>optional sfixed64 sfixed64 = 10;</code>
+   * 
+   * @return The sfixed64.
    */
+  @java.lang.Override
   public long getSfixed64() {
     return sfixed64_;
   }
@@ -455,14 +512,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional float float = 11;</code>
+   * 
+   * @return Whether the float field is set.
    */
+  @java.lang.Override
   public boolean hasFloat() {
-    return ((bitField0_ & 0x00000400) == 0x00000400);
+    return ((bitField0_ & 0x00000400) != 0);
   }
 
   /**
    * <code>optional float float = 11;</code>
+   * 
+   * @return The float.
    */
+  @java.lang.Override
   public float getFloat() {
     return float_;
   }
@@ -472,14 +535,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional double double = 12;</code>
+   * 
+   * @return Whether the double field is set.
    */
+  @java.lang.Override
   public boolean hasDouble() {
-    return ((bitField0_ & 0x00000800) == 0x00000800);
+    return ((bitField0_ & 0x00000800) != 0);
   }
 
   /**
    * <code>optional double double = 12;</code>
+   * 
+   * @return The double.
    */
+  @java.lang.Override
   public double getDouble() {
     return double_;
   }
@@ -489,14 +558,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional bool bool = 13;</code>
+   * 
+   * @return Whether the bool field is set.
    */
+  @java.lang.Override
   public boolean hasBool() {
-    return ((bitField0_ & 0x00001000) == 0x00001000);
+    return ((bitField0_ & 0x00001000) != 0);
   }
 
   /**
    * <code>optional bool bool = 13;</code>
+   * 
+   * @return The bool.
    */
+  @java.lang.Override
   public boolean getBool() {
     return bool_;
   }
@@ -506,14 +581,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional string string = 14;</code>
+   * 
+   * @return Whether the string field is set.
    */
+  @java.lang.Override
   public boolean hasString() {
-    return ((bitField0_ & 0x00002000) == 0x00002000);
+    return ((bitField0_ & 0x00002000) != 0);
   }
 
   /**
    * <code>optional string string = 14;</code>
+   * 
+   * @return The string.
    */
+  @java.lang.Override
   public java.lang.String getString() {
     java.lang.Object ref = string_;
     if (ref instanceof java.lang.String) {
@@ -530,7 +611,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional string string = 14;</code>
+   * 
+   * @return The bytes for string.
    */
+  @java.lang.Override
   public com.google.protobuf.ByteString getStringBytes() {
     java.lang.Object ref = string_;
     if (ref instanceof java.lang.String) {
@@ -547,14 +631,20 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional bytes bytes = 15;</code>
+   * 
+   * @return Whether the bytes field is set.
    */
+  @java.lang.Override
   public boolean hasBytes() {
-    return ((bitField0_ & 0x00004000) == 0x00004000);
+    return ((bitField0_ & 0x00004000) != 0);
   }
 
   /**
    * <code>optional bytes bytes = 15;</code>
+   * 
+   * @return The bytes.
    */
+  @java.lang.Override
   public com.google.protobuf.ByteString getBytes() {
     return bytes_;
   }
@@ -564,21 +654,28 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+   * 
+   * @return Whether the enum field is set.
    */
+  @java.lang.Override
   public boolean hasEnum() {
-    return ((bitField0_ & 0x00008000) == 0x00008000);
+    return ((bitField0_ & 0x00008000) != 0);
   }
 
   /**
    * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+   * 
+   * @return The enum.
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+    @SuppressWarnings("deprecation")
     org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
     return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
   }
 
   public static final int INTARRAY_FIELD_NUMBER = 17;
-  private java.util.List<java.lang.Integer> intArray_;
+  private com.google.protobuf.Internal.IntList intArray_;
 
   /**
    * <pre>
@@ -586,7 +683,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>repeated int32 intArray = 17;</code>
+   * 
+   * @return A list containing the intArray.
    */
+  @java.lang.Override
   public java.util.List<java.lang.Integer> getIntArrayList() {
     return intArray_;
   }
@@ -597,6 +697,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>repeated int32 intArray = 17;</code>
+   * 
+   * @return The count of intArray.
    */
   public int getIntArrayCount() {
     return intArray_.size();
@@ -608,9 +710,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>repeated int32 intArray = 17;</code>
+   * 
+   * @param index The index of the element to return.
+   * @return The intArray at the given index.
    */
   public int getIntArray(int index) {
-    return intArray_.get(index);
+    return intArray_.getInt(index);
   }
 
   public static final int FOOARRAY_FIELD_NUMBER = 20;
@@ -619,6 +724,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
+  @java.lang.Override
   public java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> getFooArrayList() {
     return fooArray_;
   }
@@ -626,6 +732,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
+  @java.lang.Override
   public java.util.List<? extends org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayOrBuilderList() {
     return fooArray_;
   }
@@ -633,6 +740,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
+  @java.lang.Override
   public int getFooArrayCount() {
     return fooArray_.size();
   }
@@ -640,6 +748,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.Foo getFooArray(int index) {
     return fooArray_.get(index);
   }
@@ -647,6 +756,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.Foo fooArray = 20;</code>
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooArrayOrBuilder(int index) {
     return fooArray_.get(index);
   }
@@ -655,6 +765,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
   private java.util.List<java.lang.Integer> syms_;
   private static final com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A> syms_converter_ = new com.google.protobuf.Internal.ListAdapter.Converter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>() {
     public org.apache.avro.protobuf.multiplefiles.A convert(java.lang.Integer from) {
+      @SuppressWarnings("deprecation")
       org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(from);
       return result == null ? org.apache.avro.protobuf.multiplefiles.A.X : result;
     }
@@ -662,7 +773,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+   * 
+   * @return A list containing the syms.
    */
+  @java.lang.Override
   public java.util.List<org.apache.avro.protobuf.multiplefiles.A> getSymsList() {
     return new com.google.protobuf.Internal.ListAdapter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(
         syms_, syms_converter_);
@@ -670,14 +784,21 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+   * 
+   * @return The count of syms.
    */
+  @java.lang.Override
   public int getSymsCount() {
     return syms_.size();
   }
 
   /**
    * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+   * 
+   * @param index The index of the element to return.
+   * @return The syms at the given index.
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.A getSyms(int index) {
     return syms_converter_.convert(syms_.get(index));
   }
@@ -691,9 +812,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
+   * 
+   * @return Whether the foo field is set.
    */
+  @java.lang.Override
   public boolean hasFoo() {
-    return ((bitField0_ & 0x00010000) == 0x00010000);
+    return ((bitField0_ & 0x00010000) != 0);
   }
 
   /**
@@ -702,7 +826,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
+   * 
+   * @return The foo.
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.Foo getFoo() {
     return foo_ == null ? org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance() : foo_;
   }
@@ -714,6 +841,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    *
    * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
    */
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.FooOrBuilder getFooOrBuilder() {
     return foo_ == null ? org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance() : foo_;
   }
@@ -727,9 +855,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+   * 
+   * @return Whether the timestamp field is set.
    */
+  @java.lang.Override
   public boolean hasTimestamp() {
-    return ((bitField0_ & 0x00020000) == 0x00020000);
+    return ((bitField0_ & 0x00020000) != 0);
   }
 
   /**
@@ -738,7 +869,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    * </pre>
    *
    * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+   * 
+   * @return The timestamp.
    */
+  @java.lang.Override
   public com.google.protobuf.Timestamp getTimestamp() {
     return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
   }
@@ -750,12 +884,14 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
    *
    * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
    */
+  @java.lang.Override
   public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
     return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
   }
 
   private byte memoizedIsInitialized = -1;
 
+  @java.lang.Override
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
     if (isInitialized == 1)
@@ -783,59 +919,60 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return true;
   }
 
+  @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (((bitField0_ & 0x00000001) == 0x00000001)) {
+    if (((bitField0_ & 0x00000001) != 0)) {
       output.writeInt32(1, int32_);
     }
-    if (((bitField0_ & 0x00000002) == 0x00000002)) {
+    if (((bitField0_ & 0x00000002) != 0)) {
       output.writeInt64(2, int64_);
     }
-    if (((bitField0_ & 0x00000004) == 0x00000004)) {
+    if (((bitField0_ & 0x00000004) != 0)) {
       output.writeUInt32(3, uint32_);
     }
-    if (((bitField0_ & 0x00000008) == 0x00000008)) {
+    if (((bitField0_ & 0x00000008) != 0)) {
       output.writeUInt64(4, uint64_);
     }
-    if (((bitField0_ & 0x00000010) == 0x00000010)) {
+    if (((bitField0_ & 0x00000010) != 0)) {
       output.writeSInt32(5, sint32_);
     }
-    if (((bitField0_ & 0x00000020) == 0x00000020)) {
+    if (((bitField0_ & 0x00000020) != 0)) {
       output.writeSInt64(6, sint64_);
     }
-    if (((bitField0_ & 0x00000040) == 0x00000040)) {
+    if (((bitField0_ & 0x00000040) != 0)) {
       output.writeFixed32(7, fixed32_);
     }
-    if (((bitField0_ & 0x00000080) == 0x00000080)) {
+    if (((bitField0_ & 0x00000080) != 0)) {
       output.writeFixed64(8, fixed64_);
     }
-    if (((bitField0_ & 0x00000100) == 0x00000100)) {
+    if (((bitField0_ & 0x00000100) != 0)) {
       output.writeSFixed32(9, sfixed32_);
     }
-    if (((bitField0_ & 0x00000200) == 0x00000200)) {
+    if (((bitField0_ & 0x00000200) != 0)) {
       output.writeSFixed64(10, sfixed64_);
     }
-    if (((bitField0_ & 0x00000400) == 0x00000400)) {
+    if (((bitField0_ & 0x00000400) != 0)) {
       output.writeFloat(11, float_);
     }
-    if (((bitField0_ & 0x00000800) == 0x00000800)) {
+    if (((bitField0_ & 0x00000800) != 0)) {
       output.writeDouble(12, double_);
     }
-    if (((bitField0_ & 0x00001000) == 0x00001000)) {
+    if (((bitField0_ & 0x00001000) != 0)) {
       output.writeBool(13, bool_);
     }
-    if (((bitField0_ & 0x00002000) == 0x00002000)) {
+    if (((bitField0_ & 0x00002000) != 0)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 14, string_);
     }
-    if (((bitField0_ & 0x00004000) == 0x00004000)) {
+    if (((bitField0_ & 0x00004000) != 0)) {
       output.writeBytes(15, bytes_);
     }
-    if (((bitField0_ & 0x00008000) == 0x00008000)) {
+    if (((bitField0_ & 0x00008000) != 0)) {
       output.writeEnum(16, enum_);
     }
     for (int i = 0; i < intArray_.size(); i++) {
-      output.writeInt32(17, intArray_.get(i));
+      output.writeInt32(17, intArray_.getInt(i));
     }
-    if (((bitField0_ & 0x00010000) == 0x00010000)) {
+    if (((bitField0_ & 0x00010000) != 0)) {
       output.writeMessage(18, getFoo());
     }
     for (int i = 0; i < syms_.size(); i++) {
@@ -844,75 +981,76 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     for (int i = 0; i < fooArray_.size(); i++) {
       output.writeMessage(20, fooArray_.get(i));
     }
-    if (((bitField0_ & 0x00020000) == 0x00020000)) {
+    if (((bitField0_ & 0x00020000) != 0)) {
       output.writeMessage(21, getTimestamp());
     }
     unknownFields.writeTo(output);
   }
 
+  @java.lang.Override
   public int getSerializedSize() {
     int size = memoizedSize;
     if (size != -1)
       return size;
 
     size = 0;
-    if (((bitField0_ & 0x00000001) == 0x00000001)) {
+    if (((bitField0_ & 0x00000001) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, int32_);
     }
-    if (((bitField0_ & 0x00000002) == 0x00000002)) {
+    if (((bitField0_ & 0x00000002) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, int64_);
     }
-    if (((bitField0_ & 0x00000004) == 0x00000004)) {
+    if (((bitField0_ & 0x00000004) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeUInt32Size(3, uint32_);
     }
-    if (((bitField0_ & 0x00000008) == 0x00000008)) {
+    if (((bitField0_ & 0x00000008) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeUInt64Size(4, uint64_);
     }
-    if (((bitField0_ & 0x00000010) == 0x00000010)) {
+    if (((bitField0_ & 0x00000010) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeSInt32Size(5, sint32_);
     }
-    if (((bitField0_ & 0x00000020) == 0x00000020)) {
+    if (((bitField0_ & 0x00000020) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeSInt64Size(6, sint64_);
     }
-    if (((bitField0_ & 0x00000040) == 0x00000040)) {
+    if (((bitField0_ & 0x00000040) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeFixed32Size(7, fixed32_);
     }
-    if (((bitField0_ & 0x00000080) == 0x00000080)) {
+    if (((bitField0_ & 0x00000080) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeFixed64Size(8, fixed64_);
     }
-    if (((bitField0_ & 0x00000100) == 0x00000100)) {
+    if (((bitField0_ & 0x00000100) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeSFixed32Size(9, sfixed32_);
     }
-    if (((bitField0_ & 0x00000200) == 0x00000200)) {
+    if (((bitField0_ & 0x00000200) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeSFixed64Size(10, sfixed64_);
     }
-    if (((bitField0_ & 0x00000400) == 0x00000400)) {
+    if (((bitField0_ & 0x00000400) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeFloatSize(11, float_);
     }
-    if (((bitField0_ & 0x00000800) == 0x00000800)) {
+    if (((bitField0_ & 0x00000800) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeDoubleSize(12, double_);
     }
-    if (((bitField0_ & 0x00001000) == 0x00001000)) {
+    if (((bitField0_ & 0x00001000) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeBoolSize(13, bool_);
     }
-    if (((bitField0_ & 0x00002000) == 0x00002000)) {
+    if (((bitField0_ & 0x00002000) != 0)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, string_);
     }
-    if (((bitField0_ & 0x00004000) == 0x00004000)) {
+    if (((bitField0_ & 0x00004000) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeBytesSize(15, bytes_);
     }
-    if (((bitField0_ & 0x00008000) == 0x00008000)) {
+    if (((bitField0_ & 0x00008000) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(16, enum_);
     }
     {
       int dataSize = 0;
       for (int i = 0; i < intArray_.size(); i++) {
-        dataSize += com.google.protobuf.CodedOutputStream.computeInt32SizeNoTag(intArray_.get(i));
+        dataSize += com.google.protobuf.CodedOutputStream.computeInt32SizeNoTag(intArray_.getInt(i));
       }
       size += dataSize;
       size += 2 * getIntArrayList().size();
     }
-    if (((bitField0_ & 0x00010000) == 0x00010000)) {
+    if (((bitField0_ & 0x00010000) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(18, getFoo());
     }
     {
@@ -926,7 +1064,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     for (int i = 0; i < fooArray_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(20, fooArray_.get(i));
     }
-    if (((bitField0_ & 0x00020000) == 0x00020000)) {
+    if (((bitField0_ & 0x00020000) != 0)) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(21, getTimestamp());
     }
     size += unknownFields.getSerializedSize();
@@ -944,86 +1082,123 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     }
     org.apache.avro.protobuf.multiplefiles.Foo other = (org.apache.avro.protobuf.multiplefiles.Foo) obj;
 
-    boolean result = true;
-    result = result && (hasInt32() == other.hasInt32());
+    if (hasInt32() != other.hasInt32())
+      return false;
     if (hasInt32()) {
-      result = result && (getInt32() == other.getInt32());
+      if (getInt32() != other.getInt32())
+        return false;
     }
-    result = result && (hasInt64() == other.hasInt64());
+    if (hasInt64() != other.hasInt64())
+      return false;
     if (hasInt64()) {
-      result = result && (getInt64() == other.getInt64());
+      if (getInt64() != other.getInt64())
+        return false;
     }
-    result = result && (hasUint32() == other.hasUint32());
+    if (hasUint32() != other.hasUint32())
+      return false;
     if (hasUint32()) {
-      result = result && (getUint32() == other.getUint32());
+      if (getUint32() != other.getUint32())
+        return false;
     }
-    result = result && (hasUint64() == other.hasUint64());
+    if (hasUint64() != other.hasUint64())
+      return false;
     if (hasUint64()) {
-      result = result && (getUint64() == other.getUint64());
+      if (getUint64() != other.getUint64())
+        return false;
     }
-    result = result && (hasSint32() == other.hasSint32());
+    if (hasSint32() != other.hasSint32())
+      return false;
     if (hasSint32()) {
-      result = result && (getSint32() == other.getSint32());
+      if (getSint32() != other.getSint32())
+        return false;
     }
-    result = result && (hasSint64() == other.hasSint64());
+    if (hasSint64() != other.hasSint64())
+      return false;
     if (hasSint64()) {
-      result = result && (getSint64() == other.getSint64());
+      if (getSint64() != other.getSint64())
+        return false;
     }
-    result = result && (hasFixed32() == other.hasFixed32());
+    if (hasFixed32() != other.hasFixed32())
+      return false;
     if (hasFixed32()) {
-      result = result && (getFixed32() == other.getFixed32());
+      if (getFixed32() != other.getFixed32())
+        return false;
     }
-    result = result && (hasFixed64() == other.hasFixed64());
+    if (hasFixed64() != other.hasFixed64())
+      return false;
     if (hasFixed64()) {
-      result = result && (getFixed64() == other.getFixed64());
+      if (getFixed64() != other.getFixed64())
+        return false;
     }
-    result = result && (hasSfixed32() == other.hasSfixed32());
+    if (hasSfixed32() != other.hasSfixed32())
+      return false;
     if (hasSfixed32()) {
-      result = result && (getSfixed32() == other.getSfixed32());
+      if (getSfixed32() != other.getSfixed32())
+        return false;
     }
-    result = result && (hasSfixed64() == other.hasSfixed64());
+    if (hasSfixed64() != other.hasSfixed64())
+      return false;
     if (hasSfixed64()) {
-      result = result && (getSfixed64() == other.getSfixed64());
+      if (getSfixed64() != other.getSfixed64())
+        return false;
     }
-    result = result && (hasFloat() == other.hasFloat());
+    if (hasFloat() != other.hasFloat())
+      return false;
     if (hasFloat()) {
-      result = result
-          && (java.lang.Float.floatToIntBits(getFloat()) == java.lang.Float.floatToIntBits(other.getFloat()));
+      if (java.lang.Float.floatToIntBits(getFloat()) != java.lang.Float.floatToIntBits(other.getFloat()))
+        return false;
     }
-    result = result && (hasDouble() == other.hasDouble());
+    if (hasDouble() != other.hasDouble())
+      return false;
     if (hasDouble()) {
-      result = result
-          && (java.lang.Double.doubleToLongBits(getDouble()) == java.lang.Double.doubleToLongBits(other.getDouble()));
+      if (java.lang.Double.doubleToLongBits(getDouble()) != java.lang.Double.doubleToLongBits(other.getDouble()))
+        return false;
     }
-    result = result && (hasBool() == other.hasBool());
+    if (hasBool() != other.hasBool())
+      return false;
     if (hasBool()) {
-      result = result && (getBool() == other.getBool());
+      if (getBool() != other.getBool())
+        return false;
     }
-    result = result && (hasString() == other.hasString());
+    if (hasString() != other.hasString())
+      return false;
     if (hasString()) {
-      result = result && getString().equals(other.getString());
+      if (!getString().equals(other.getString()))
+        return false;
     }
-    result = result && (hasBytes() == other.hasBytes());
+    if (hasBytes() != other.hasBytes())
+      return false;
     if (hasBytes()) {
-      result = result && getBytes().equals(other.getBytes());
+      if (!getBytes().equals(other.getBytes()))
+        return false;
     }
-    result = result && (hasEnum() == other.hasEnum());
+    if (hasEnum() != other.hasEnum())
+      return false;
     if (hasEnum()) {
-      result = result && enum_ == other.enum_;
+      if (enum_ != other.enum_)
+        return false;
     }
-    result = result && getIntArrayList().equals(other.getIntArrayList());
-    result = result && getFooArrayList().equals(other.getFooArrayList());
-    result = result && syms_.equals(other.syms_);
-    result = result && (hasFoo() == other.hasFoo());
+    if (!getIntArrayList().equals(other.getIntArrayList()))
+      return false;
+    if (!getFooArrayList().equals(other.getFooArrayList()))
+      return false;
+    if (!syms_.equals(other.syms_))
+      return false;
+    if (hasFoo() != other.hasFoo())
+      return false;
     if (hasFoo()) {
-      result = result && getFoo().equals(other.getFoo());
+      if (!getFoo().equals(other.getFoo()))
+        return false;
     }
-    result = result && (hasTimestamp() == other.hasTimestamp());
+    if (hasTimestamp() != other.hasTimestamp())
+      return false;
     if (hasTimestamp()) {
-      result = result && getTimestamp().equals(other.getTimestamp());
+      if (!getTimestamp().equals(other.getTimestamp()))
+        return false;
     }
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (!unknownFields.equals(other.unknownFields))
+      return false;
+    return true;
   }
 
   @java.lang.Override
@@ -1185,6 +1360,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
 
+  @java.lang.Override
   public Builder newBuilderForType() {
     return newBuilder();
   }
@@ -1197,6 +1373,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
 
+  @java.lang.Override
   public Builder toBuilder() {
     return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
   }
@@ -1217,6 +1394,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_fieldAccessorTable
           .ensureFieldAccessorsInitialized(org.apache.avro.protobuf.multiplefiles.Foo.class,
@@ -1241,6 +1419,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       }
     }
 
+    @java.lang.Override
     public Builder clear() {
       super.clear();
       int32_ = 0;
@@ -1275,7 +1454,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       bitField0_ = (bitField0_ & ~0x00004000);
       enum_ = 3;
       bitField0_ = (bitField0_ & ~0x00008000);
-      intArray_ = java.util.Collections.emptyList();
+      intArray_ = emptyIntList();
       bitField0_ = (bitField0_ & ~0x00010000);
       if (fooArrayBuilder_ == null) {
         fooArray_ = java.util.Collections.emptyList();
@@ -1300,14 +1479,17 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
+    @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return org.apache.avro.protobuf.multiplefiles.TestMultipleFiles.internal_static_org_apache_avro_protobuf_multiplefiles_Foo_descriptor;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
       return org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance();
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo build() {
       org.apache.avro.protobuf.multiplefiles.Foo result = buildPartial();
       if (!result.isInitialized()) {
@@ -1316,81 +1498,82 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return result;
     }
 
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.Foo buildPartial() {
       org.apache.avro.protobuf.multiplefiles.Foo result = new org.apache.avro.protobuf.multiplefiles.Foo(this);
       int from_bitField0_ = bitField0_;
       int to_bitField0_ = 0;
-      if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((from_bitField0_ & 0x00000001) != 0)) {
+        result.int32_ = int32_;
         to_bitField0_ |= 0x00000001;
       }
-      result.int32_ = int32_;
-      if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((from_bitField0_ & 0x00000002) != 0)) {
+        result.int64_ = int64_;
         to_bitField0_ |= 0x00000002;
       }
-      result.int64_ = int64_;
-      if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((from_bitField0_ & 0x00000004) != 0)) {
+        result.uint32_ = uint32_;
         to_bitField0_ |= 0x00000004;
       }
-      result.uint32_ = uint32_;
-      if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((from_bitField0_ & 0x00000008) != 0)) {
+        result.uint64_ = uint64_;
         to_bitField0_ |= 0x00000008;
       }
-      result.uint64_ = uint64_;
-      if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((from_bitField0_ & 0x00000010) != 0)) {
+        result.sint32_ = sint32_;
         to_bitField0_ |= 0x00000010;
       }
-      result.sint32_ = sint32_;
-      if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((from_bitField0_ & 0x00000020) != 0)) {
+        result.sint64_ = sint64_;
         to_bitField0_ |= 0x00000020;
       }
-      result.sint64_ = sint64_;
-      if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((from_bitField0_ & 0x00000040) != 0)) {
+        result.fixed32_ = fixed32_;
         to_bitField0_ |= 0x00000040;
       }
-      result.fixed32_ = fixed32_;
-      if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((from_bitField0_ & 0x00000080) != 0)) {
+        result.fixed64_ = fixed64_;
         to_bitField0_ |= 0x00000080;
       }
-      result.fixed64_ = fixed64_;
-      if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((from_bitField0_ & 0x00000100) != 0)) {
+        result.sfixed32_ = sfixed32_;
         to_bitField0_ |= 0x00000100;
       }
-      result.sfixed32_ = sfixed32_;
-      if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((from_bitField0_ & 0x00000200) != 0)) {
+        result.sfixed64_ = sfixed64_;
         to_bitField0_ |= 0x00000200;
       }
-      result.sfixed64_ = sfixed64_;
-      if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((from_bitField0_ & 0x00000400) != 0)) {
+        result.float_ = float_;
         to_bitField0_ |= 0x00000400;
       }
-      result.float_ = float_;
-      if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((from_bitField0_ & 0x00000800) != 0)) {
+        result.double_ = double_;
         to_bitField0_ |= 0x00000800;
       }
-      result.double_ = double_;
-      if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((from_bitField0_ & 0x00001000) != 0)) {
+        result.bool_ = bool_;
         to_bitField0_ |= 0x00001000;
       }
-      result.bool_ = bool_;
-      if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((from_bitField0_ & 0x00002000) != 0)) {
         to_bitField0_ |= 0x00002000;
       }
       result.string_ = string_;
-      if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((from_bitField0_ & 0x00004000) != 0)) {
         to_bitField0_ |= 0x00004000;
       }
       result.bytes_ = bytes_;
-      if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((from_bitField0_ & 0x00008000) != 0)) {
         to_bitField0_ |= 0x00008000;
       }
       result.enum_ = enum_;
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
-        intArray_ = java.util.Collections.unmodifiableList(intArray_);
+      if (((bitField0_ & 0x00010000) != 0)) {
+        intArray_.makeImmutable();
         bitField0_ = (bitField0_ & ~0x00010000);
       }
       result.intArray_ = intArray_;
       if (fooArrayBuilder_ == null) {
-        if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        if (((bitField0_ & 0x00020000) != 0)) {
           fooArray_ = java.util.Collections.unmodifiableList(fooArray_);
           bitField0_ = (bitField0_ & ~0x00020000);
         }
@@ -1398,57 +1581,64 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       } else {
         result.fooArray_ = fooArrayBuilder_.build();
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00040000) != 0)) {
         syms_ = java.util.Collections.unmodifiableList(syms_);
         bitField0_ = (bitField0_ & ~0x00040000);
       }
       result.syms_ = syms_;
-      if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((from_bitField0_ & 0x00080000) != 0)) {
+        if (fooBuilder_ == null) {
+          result.foo_ = foo_;
+        } else {
+          result.foo_ = fooBuilder_.build();
+        }
         to_bitField0_ |= 0x00010000;
       }
-      if (fooBuilder_ == null) {
-        result.foo_ = foo_;
-      } else {
-        result.foo_ = fooBuilder_.build();
-      }
-      if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((from_bitField0_ & 0x00100000) != 0)) {
+        if (timestampBuilder_ == null) {
+          result.timestamp_ = timestamp_;
+        } else {
+          result.timestamp_ = timestampBuilder_.build();
+        }
         to_bitField0_ |= 0x00020000;
-      }
-      if (timestampBuilder_ == null) {
-        result.timestamp_ = timestamp_;
-      } else {
-        result.timestamp_ = timestampBuilder_.build();
       }
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
 
+    @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
 
+    @java.lang.Override
     public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
 
+    @java.lang.Override
     public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
 
+    @java.lang.Override
     public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
 
+    @java.lang.Override
     public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
         java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
 
+    @java.lang.Override
     public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof org.apache.avro.protobuf.multiplefiles.Foo) {
         return mergeFrom((org.apache.avro.protobuf.multiplefiles.Foo) other);
@@ -1567,6 +1757,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
+    @java.lang.Override
     public final boolean isInitialized() {
       if (!hasInt32()) {
         return false;
@@ -1584,6 +1775,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return true;
     }
 
+    @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
       org.apache.avro.protobuf.multiplefiles.Foo parsedMessage = null;
@@ -1610,9 +1802,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>required int32 int32 = 1;</code>
+     * 
+     * @return Whether the int32 field is set.
      */
+    @java.lang.Override
     public boolean hasInt32() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
 
     /**
@@ -1621,7 +1816,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>required int32 int32 = 1;</code>
+     * 
+     * @return The int32.
      */
+    @java.lang.Override
     public int getInt32() {
       return int32_;
     }
@@ -1632,6 +1830,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>required int32 int32 = 1;</code>
+     * 
+     * @param value The int32 to set.
+     * @return This builder for chaining.
      */
     public Builder setInt32(int value) {
       bitField0_ |= 0x00000001;
@@ -1646,6 +1847,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>required int32 int32 = 1;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearInt32() {
       bitField0_ = (bitField0_ & ~0x00000001);
@@ -1658,20 +1861,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional int64 int64 = 2;</code>
+     * 
+     * @return Whether the int64 field is set.
      */
+    @java.lang.Override
     public boolean hasInt64() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
 
     /**
      * <code>optional int64 int64 = 2;</code>
+     * 
+     * @return The int64.
      */
+    @java.lang.Override
     public long getInt64() {
       return int64_;
     }
 
     /**
      * <code>optional int64 int64 = 2;</code>
+     * 
+     * @param value The int64 to set.
+     * @return This builder for chaining.
      */
     public Builder setInt64(long value) {
       bitField0_ |= 0x00000002;
@@ -1682,6 +1894,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional int64 int64 = 2;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearInt64() {
       bitField0_ = (bitField0_ & ~0x00000002);
@@ -1694,20 +1908,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional uint32 uint32 = 3;</code>
+     * 
+     * @return Whether the uint32 field is set.
      */
+    @java.lang.Override
     public boolean hasUint32() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
 
     /**
      * <code>optional uint32 uint32 = 3;</code>
+     * 
+     * @return The uint32.
      */
+    @java.lang.Override
     public int getUint32() {
       return uint32_;
     }
 
     /**
      * <code>optional uint32 uint32 = 3;</code>
+     * 
+     * @param value The uint32 to set.
+     * @return This builder for chaining.
      */
     public Builder setUint32(int value) {
       bitField0_ |= 0x00000004;
@@ -1718,6 +1941,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional uint32 uint32 = 3;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearUint32() {
       bitField0_ = (bitField0_ & ~0x00000004);
@@ -1730,20 +1955,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional uint64 uint64 = 4;</code>
+     * 
+     * @return Whether the uint64 field is set.
      */
+    @java.lang.Override
     public boolean hasUint64() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000008) != 0);
     }
 
     /**
      * <code>optional uint64 uint64 = 4;</code>
+     * 
+     * @return The uint64.
      */
+    @java.lang.Override
     public long getUint64() {
       return uint64_;
     }
 
     /**
      * <code>optional uint64 uint64 = 4;</code>
+     * 
+     * @param value The uint64 to set.
+     * @return This builder for chaining.
      */
     public Builder setUint64(long value) {
       bitField0_ |= 0x00000008;
@@ -1754,6 +1988,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional uint64 uint64 = 4;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearUint64() {
       bitField0_ = (bitField0_ & ~0x00000008);
@@ -1766,20 +2002,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sint32 sint32 = 5;</code>
+     * 
+     * @return Whether the sint32 field is set.
      */
+    @java.lang.Override
     public boolean hasSint32() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000010) != 0);
     }
 
     /**
      * <code>optional sint32 sint32 = 5;</code>
+     * 
+     * @return The sint32.
      */
+    @java.lang.Override
     public int getSint32() {
       return sint32_;
     }
 
     /**
      * <code>optional sint32 sint32 = 5;</code>
+     * 
+     * @param value The sint32 to set.
+     * @return This builder for chaining.
      */
     public Builder setSint32(int value) {
       bitField0_ |= 0x00000010;
@@ -1790,6 +2035,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sint32 sint32 = 5;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearSint32() {
       bitField0_ = (bitField0_ & ~0x00000010);
@@ -1802,20 +2049,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sint64 sint64 = 6;</code>
+     * 
+     * @return Whether the sint64 field is set.
      */
+    @java.lang.Override
     public boolean hasSint64() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000020) != 0);
     }
 
     /**
      * <code>optional sint64 sint64 = 6;</code>
+     * 
+     * @return The sint64.
      */
+    @java.lang.Override
     public long getSint64() {
       return sint64_;
     }
 
     /**
      * <code>optional sint64 sint64 = 6;</code>
+     * 
+     * @param value The sint64 to set.
+     * @return This builder for chaining.
      */
     public Builder setSint64(long value) {
       bitField0_ |= 0x00000020;
@@ -1826,6 +2082,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sint64 sint64 = 6;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearSint64() {
       bitField0_ = (bitField0_ & ~0x00000020);
@@ -1838,20 +2096,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
+     * 
+     * @return Whether the fixed32 field is set.
      */
+    @java.lang.Override
     public boolean hasFixed32() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000040) != 0);
     }
 
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
+     * 
+     * @return The fixed32.
      */
+    @java.lang.Override
     public int getFixed32() {
       return fixed32_;
     }
 
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
+     * 
+     * @param value The fixed32 to set.
+     * @return This builder for chaining.
      */
     public Builder setFixed32(int value) {
       bitField0_ |= 0x00000040;
@@ -1862,6 +2129,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional fixed32 fixed32 = 7;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearFixed32() {
       bitField0_ = (bitField0_ & ~0x00000040);
@@ -1874,20 +2143,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
+     * 
+     * @return Whether the fixed64 field is set.
      */
+    @java.lang.Override
     public boolean hasFixed64() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000080) != 0);
     }
 
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
+     * 
+     * @return The fixed64.
      */
+    @java.lang.Override
     public long getFixed64() {
       return fixed64_;
     }
 
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
+     * 
+     * @param value The fixed64 to set.
+     * @return This builder for chaining.
      */
     public Builder setFixed64(long value) {
       bitField0_ |= 0x00000080;
@@ -1898,6 +2176,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional fixed64 fixed64 = 8;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearFixed64() {
       bitField0_ = (bitField0_ & ~0x00000080);
@@ -1910,20 +2190,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
+     * 
+     * @return Whether the sfixed32 field is set.
      */
+    @java.lang.Override
     public boolean hasSfixed32() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000100) != 0);
     }
 
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
+     * 
+     * @return The sfixed32.
      */
+    @java.lang.Override
     public int getSfixed32() {
       return sfixed32_;
     }
 
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
+     * 
+     * @param value The sfixed32 to set.
+     * @return This builder for chaining.
      */
     public Builder setSfixed32(int value) {
       bitField0_ |= 0x00000100;
@@ -1934,6 +2223,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sfixed32 sfixed32 = 9;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearSfixed32() {
       bitField0_ = (bitField0_ & ~0x00000100);
@@ -1946,20 +2237,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
+     * 
+     * @return Whether the sfixed64 field is set.
      */
+    @java.lang.Override
     public boolean hasSfixed64() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000200) != 0);
     }
 
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
+     * 
+     * @return The sfixed64.
      */
+    @java.lang.Override
     public long getSfixed64() {
       return sfixed64_;
     }
 
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
+     * 
+     * @param value The sfixed64 to set.
+     * @return This builder for chaining.
      */
     public Builder setSfixed64(long value) {
       bitField0_ |= 0x00000200;
@@ -1970,6 +2270,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional sfixed64 sfixed64 = 10;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearSfixed64() {
       bitField0_ = (bitField0_ & ~0x00000200);
@@ -1982,20 +2284,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional float float = 11;</code>
+     * 
+     * @return Whether the float field is set.
      */
+    @java.lang.Override
     public boolean hasFloat() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000400) != 0);
     }
 
     /**
      * <code>optional float float = 11;</code>
+     * 
+     * @return The float.
      */
+    @java.lang.Override
     public float getFloat() {
       return float_;
     }
 
     /**
      * <code>optional float float = 11;</code>
+     * 
+     * @param value The float to set.
+     * @return This builder for chaining.
      */
     public Builder setFloat(float value) {
       bitField0_ |= 0x00000400;
@@ -2006,6 +2317,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional float float = 11;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearFloat() {
       bitField0_ = (bitField0_ & ~0x00000400);
@@ -2018,20 +2331,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional double double = 12;</code>
+     * 
+     * @return Whether the double field is set.
      */
+    @java.lang.Override
     public boolean hasDouble() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00000800) != 0);
     }
 
     /**
      * <code>optional double double = 12;</code>
+     * 
+     * @return The double.
      */
+    @java.lang.Override
     public double getDouble() {
       return double_;
     }
 
     /**
      * <code>optional double double = 12;</code>
+     * 
+     * @param value The double to set.
+     * @return This builder for chaining.
      */
     public Builder setDouble(double value) {
       bitField0_ |= 0x00000800;
@@ -2042,6 +2364,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional double double = 12;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearDouble() {
       bitField0_ = (bitField0_ & ~0x00000800);
@@ -2054,20 +2378,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional bool bool = 13;</code>
+     * 
+     * @return Whether the bool field is set.
      */
+    @java.lang.Override
     public boolean hasBool() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00001000) != 0);
     }
 
     /**
      * <code>optional bool bool = 13;</code>
+     * 
+     * @return The bool.
      */
+    @java.lang.Override
     public boolean getBool() {
       return bool_;
     }
 
     /**
      * <code>optional bool bool = 13;</code>
+     * 
+     * @param value The bool to set.
+     * @return This builder for chaining.
      */
     public Builder setBool(boolean value) {
       bitField0_ |= 0x00001000;
@@ -2078,6 +2411,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional bool bool = 13;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearBool() {
       bitField0_ = (bitField0_ & ~0x00001000);
@@ -2090,13 +2425,17 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @return Whether the string field is set.
      */
     public boolean hasString() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00002000) != 0);
     }
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @return The string.
      */
     public java.lang.String getString() {
       java.lang.Object ref = string_;
@@ -2114,6 +2453,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @return The bytes for string.
      */
     public com.google.protobuf.ByteString getStringBytes() {
       java.lang.Object ref = string_;
@@ -2128,6 +2469,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @param value The string to set.
+     * @return This builder for chaining.
      */
     public Builder setString(java.lang.String value) {
       if (value == null) {
@@ -2141,6 +2485,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearString() {
       bitField0_ = (bitField0_ & ~0x00002000);
@@ -2151,6 +2497,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional string string = 14;</code>
+     * 
+     * @param value The bytes for string to set.
+     * @return This builder for chaining.
      */
     public Builder setStringBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2166,20 +2515,29 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional bytes bytes = 15;</code>
+     * 
+     * @return Whether the bytes field is set.
      */
+    @java.lang.Override
     public boolean hasBytes() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00004000) != 0);
     }
 
     /**
      * <code>optional bytes bytes = 15;</code>
+     * 
+     * @return The bytes.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getBytes() {
       return bytes_;
     }
 
     /**
      * <code>optional bytes bytes = 15;</code>
+     * 
+     * @param value The bytes to set.
+     * @return This builder for chaining.
      */
     public Builder setBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2193,6 +2551,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional bytes bytes = 15;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearBytes() {
       bitField0_ = (bitField0_ & ~0x00004000);
@@ -2205,21 +2565,31 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+     * 
+     * @return Whether the enum field is set.
      */
+    @java.lang.Override
     public boolean hasEnum() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00008000) != 0);
     }
 
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+     * 
+     * @return The enum.
      */
+    @java.lang.Override
     public org.apache.avro.protobuf.multiplefiles.A getEnum() {
+      @SuppressWarnings("deprecation")
       org.apache.avro.protobuf.multiplefiles.A result = org.apache.avro.protobuf.multiplefiles.A.valueOf(enum_);
       return result == null ? org.apache.avro.protobuf.multiplefiles.A.Z : result;
     }
 
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+     * 
+     * @param value The enum to set.
+     * @return This builder for chaining.
      */
     public Builder setEnum(org.apache.avro.protobuf.multiplefiles.A value) {
       if (value == null) {
@@ -2233,6 +2603,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>optional .org.apache.avro.protobuf.multiplefiles.A enum = 16 [default = Z];</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearEnum() {
       bitField0_ = (bitField0_ & ~0x00008000);
@@ -2241,11 +2613,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private java.util.List<java.lang.Integer> intArray_ = java.util.Collections.emptyList();
+    private com.google.protobuf.Internal.IntList intArray_ = emptyIntList();
 
     private void ensureIntArrayIsMutable() {
-      if (!((bitField0_ & 0x00010000) == 0x00010000)) {
-        intArray_ = new java.util.ArrayList<java.lang.Integer>(intArray_);
+      if (!((bitField0_ & 0x00010000) != 0)) {
+        intArray_ = mutableCopy(intArray_);
         bitField0_ |= 0x00010000;
       }
     }
@@ -2256,9 +2628,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @return A list containing the intArray.
      */
     public java.util.List<java.lang.Integer> getIntArrayList() {
-      return java.util.Collections.unmodifiableList(intArray_);
+      return ((bitField0_ & 0x00010000) != 0) ? java.util.Collections.unmodifiableList(intArray_) : intArray_;
     }
 
     /**
@@ -2267,6 +2641,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @return The count of intArray.
      */
     public int getIntArrayCount() {
       return intArray_.size();
@@ -2278,9 +2654,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @param index The index of the element to return.
+     * @return The intArray at the given index.
      */
     public int getIntArray(int index) {
-      return intArray_.get(index);
+      return intArray_.getInt(index);
     }
 
     /**
@@ -2289,10 +2668,14 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @param index The index to set the value at.
+     * @param value The intArray to set.
+     * @return This builder for chaining.
      */
     public Builder setIntArray(int index, int value) {
       ensureIntArrayIsMutable();
-      intArray_.set(index, value);
+      intArray_.setInt(index, value);
       onChanged();
       return this;
     }
@@ -2303,10 +2686,13 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @param value The intArray to add.
+     * @return This builder for chaining.
      */
     public Builder addIntArray(int value) {
       ensureIntArrayIsMutable();
-      intArray_.add(value);
+      intArray_.addInt(value);
       onChanged();
       return this;
     }
@@ -2317,6 +2703,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @param values The intArray to add.
+     * @return This builder for chaining.
      */
     public Builder addAllIntArray(java.lang.Iterable<? extends java.lang.Integer> values) {
       ensureIntArrayIsMutable();
@@ -2331,9 +2720,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>repeated int32 intArray = 17;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearIntArray() {
-      intArray_ = java.util.Collections.emptyList();
+      intArray_ = emptyIntList();
       bitField0_ = (bitField0_ & ~0x00010000);
       onChanged();
       return this;
@@ -2342,7 +2733,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     private java.util.List<org.apache.avro.protobuf.multiplefiles.Foo> fooArray_ = java.util.Collections.emptyList();
 
     private void ensureFooArrayIsMutable() {
-      if (!((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (!((bitField0_ & 0x00020000) != 0)) {
         fooArray_ = new java.util.ArrayList<org.apache.avro.protobuf.multiplefiles.Foo>(fooArray_);
         bitField0_ |= 0x00020000;
       }
@@ -2572,7 +2963,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     private com.google.protobuf.RepeatedFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> getFooArrayFieldBuilder() {
       if (fooArrayBuilder_ == null) {
         fooArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder>(
-            fooArray_, ((bitField0_ & 0x00020000) == 0x00020000), getParentForChildren(), isClean());
+            fooArray_, ((bitField0_ & 0x00020000) != 0), getParentForChildren(), isClean());
         fooArray_ = null;
       }
       return fooArrayBuilder_;
@@ -2581,7 +2972,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     private java.util.List<java.lang.Integer> syms_ = java.util.Collections.emptyList();
 
     private void ensureSymsIsMutable() {
-      if (!((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (!((bitField0_ & 0x00040000) != 0)) {
         syms_ = new java.util.ArrayList<java.lang.Integer>(syms_);
         bitField0_ |= 0x00040000;
       }
@@ -2589,6 +2980,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @return A list containing the syms.
      */
     public java.util.List<org.apache.avro.protobuf.multiplefiles.A> getSymsList() {
       return new com.google.protobuf.Internal.ListAdapter<java.lang.Integer, org.apache.avro.protobuf.multiplefiles.A>(
@@ -2597,6 +2990,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @return The count of syms.
      */
     public int getSymsCount() {
       return syms_.size();
@@ -2604,6 +2999,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @param index The index of the element to return.
+     * @return The syms at the given index.
      */
     public org.apache.avro.protobuf.multiplefiles.A getSyms(int index) {
       return syms_converter_.convert(syms_.get(index));
@@ -2611,6 +3009,10 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @param index The index to set the value at.
+     * @param value The syms to set.
+     * @return This builder for chaining.
      */
     public Builder setSyms(int index, org.apache.avro.protobuf.multiplefiles.A value) {
       if (value == null) {
@@ -2624,6 +3026,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @param value The syms to add.
+     * @return This builder for chaining.
      */
     public Builder addSyms(org.apache.avro.protobuf.multiplefiles.A value) {
       if (value == null) {
@@ -2637,6 +3042,9 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @param values The syms to add.
+     * @return This builder for chaining.
      */
     public Builder addAllSyms(java.lang.Iterable<? extends org.apache.avro.protobuf.multiplefiles.A> values) {
       ensureSymsIsMutable();
@@ -2649,6 +3057,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
     /**
      * <code>repeated .org.apache.avro.protobuf.multiplefiles.A syms = 19;</code>
+     * 
+     * @return This builder for chaining.
      */
     public Builder clearSyms() {
       syms_ = java.util.Collections.emptyList();
@@ -2657,7 +3067,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return this;
     }
 
-    private org.apache.avro.protobuf.multiplefiles.Foo foo_ = null;
+    private org.apache.avro.protobuf.multiplefiles.Foo foo_;
     private com.google.protobuf.SingleFieldBuilderV3<org.apache.avro.protobuf.multiplefiles.Foo, org.apache.avro.protobuf.multiplefiles.Foo.Builder, org.apache.avro.protobuf.multiplefiles.FooOrBuilder> fooBuilder_;
 
     /**
@@ -2666,9 +3076,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
+     * 
+     * @return Whether the foo field is set.
      */
     public boolean hasFoo() {
-      return ((bitField0_ & 0x00080000) == 0x00080000);
+      return ((bitField0_ & 0x00080000) != 0);
     }
 
     /**
@@ -2677,6 +3089,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>optional .org.apache.avro.protobuf.multiplefiles.Foo foo = 18;</code>
+     * 
+     * @return The foo.
      */
     public org.apache.avro.protobuf.multiplefiles.Foo getFoo() {
       if (fooBuilder_ == null) {
@@ -2734,7 +3148,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      */
     public Builder mergeFoo(org.apache.avro.protobuf.multiplefiles.Foo value) {
       if (fooBuilder_ == null) {
-        if (((bitField0_ & 0x00080000) == 0x00080000) && foo_ != null
+        if (((bitField0_ & 0x00080000) != 0) && foo_ != null
             && foo_ != org.apache.avro.protobuf.multiplefiles.Foo.getDefaultInstance()) {
           foo_ = org.apache.avro.protobuf.multiplefiles.Foo.newBuilder(foo_).mergeFrom(value).buildPartial();
         } else {
@@ -2810,7 +3224,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return fooBuilder_;
     }
 
-    private com.google.protobuf.Timestamp timestamp_ = null;
+    private com.google.protobuf.Timestamp timestamp_;
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
 
     /**
@@ -2819,9 +3233,11 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     * 
+     * @return Whether the timestamp field is set.
      */
     public boolean hasTimestamp() {
-      return ((bitField0_ & 0x00100000) == 0x00100000);
+      return ((bitField0_ & 0x00100000) != 0);
     }
 
     /**
@@ -2830,6 +3246,8 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      * </pre>
      *
      * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     * 
+     * @return The timestamp.
      */
     public com.google.protobuf.Timestamp getTimestamp() {
       if (timestampBuilder_ == null) {
@@ -2887,7 +3305,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
      */
     public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
-        if (((bitField0_ & 0x00100000) == 0x00100000) && timestamp_ != null
+        if (((bitField0_ & 0x00100000) != 0) && timestamp_ != null
             && timestamp_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
           timestamp_ = com.google.protobuf.Timestamp.newBuilder(timestamp_).mergeFrom(value).buildPartial();
         } else {
@@ -2963,10 +3381,12 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
       return timestampBuilder_;
     }
 
+    @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.setUnknownFields(unknownFields);
     }
 
+    @java.lang.Override
     public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
       return super.mergeUnknownFields(unknownFields);
     }
@@ -2986,6 +3406,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
 
   @java.lang.Deprecated
   public static final com.google.protobuf.Parser<Foo> PARSER = new com.google.protobuf.AbstractParser<Foo>() {
+    @java.lang.Override
     public Foo parsePartialFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3002,6 +3423,7 @@ public final class Foo extends com.google.protobuf.GeneratedMessageV3 implements
     return PARSER;
   }
 
+  @java.lang.Override
   public org.apache.avro.protobuf.multiplefiles.Foo getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
