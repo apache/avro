@@ -862,9 +862,9 @@ public class ReflectData extends SpecificData {
   private static final ConcurrentMap<Class<?>, Field[]> NATIVE_FIELDS_CACHE = new ConcurrentHashMap<>();
 
   // Return of this class and its superclasses to serialize.
-  private static Field[] getCachedFields(Class<?> recordClass, boolean orderBy) {
-    return MapUtil.computeIfAbsent(orderBy ? FIELDS_CACHE : NATIVE_FIELDS_CACHE, recordClass,
-        rc -> getFields(rc, true, orderBy));
+  private static Field[] getCachedFields(Class<?> recordClass, boolean useDeterministicFieldOrder) {
+    return MapUtil.computeIfAbsent(useDeterministicFieldOrder ? FIELDS_CACHE : NATIVE_FIELDS_CACHE, recordClass,
+        rc -> getFields(rc, true, useDeterministicFieldOrder));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava, boolean orderBy) {

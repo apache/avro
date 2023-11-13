@@ -91,10 +91,11 @@ public class TestReflectData {
     schema = new ReflectData(false).getSchema(Meta.class);
     fields = schema.getFields();
     assertEquals(fields.size(), 4);
-    assertEquals(fields.get(0).name(), "f1");
-    assertEquals(fields.get(1).name(), "f4");
-    assertEquals(fields.get(2).name(), "f2");
-    assertEquals(fields.get(3).name(), "f3");
+
+    Field[] declaredFields = Meta.class.getDeclaredFields();
+    for (int i = 0; i < declaredFields.length; i++) {
+      assertEquals(fields.get(i).name(), declaredFields[i].getName());
+    }
   }
 
   private interface CrudProtocol<R, I> extends OtherProtocol<I> {
