@@ -19,7 +19,6 @@
 package org.apache.avro.reflect;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
