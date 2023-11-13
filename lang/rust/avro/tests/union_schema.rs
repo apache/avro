@@ -17,7 +17,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
-use apache_avro::{from_value, Schema, Writer, Reader, Codec};
+use apache_avro::{from_value, Schema, Writer, Reader, Codec, AvroResult};
 
 
 static SCHEMA_A_STR: &str = r#"{
@@ -68,32 +68,31 @@ struct C {
     field_c: String
 }
 
-fn encode_decode<T> (input: &T,schema: &Schema,schemata: &Vec<Schema>) -> T
+fn encode_decode<T> (input: &T,schema: &Schema,schemata: &Vec<Schema>) -> AvroResult<T>
     where T: DeserializeOwned + Serialize {
     let mut encoded: Vec<u8> = Vec::new();
     let mut writer = Writer::with_schemata(&schema, schemata.iter().collect(), &mut encoded, Codec::Null);
-    writer.append_ser(input).unwrap();
-    writer.flush().unwrap();
+    writer.append_ser(input)?;
+    writer.flush()?;
 
-    let mut reader = Reader::with_schemata(schema, schemata.iter().collect(), encoded.as_slice()).unwrap();
-    from_value::<T>(&reader.next().unwrap().unwrap()).unwrap()
+    let mut reader = Reader::with_schemata(schema, schemata.iter().collect(), encoded.as_slice())?;
+    from_value::<T>(&reader.next().expect("")?)
 }
 
 
 #[test]
-fn test_avro3901_union_schema_round_trip_no_null()  {
+fn test_avro3901_union_schema_round_trip_no_null() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_C_STR]).expect("parsing schemata");
 
-    {
-        let input = C { field_union: (UnionAB::A(A { field_a: 45.5 })), field_c: "foo".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = C { field_union: (UnionAB::B(B { field_b: 73 })), field_c: "bar".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = C { field_union: (UnionAB::A(A { field_a: 45.5 })), field_c: "foo".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = C { field_union: (UnionAB::B(B { field_b: 73 })), field_c: "bar".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
 
 static SCHEMA_D_STR: &str = r#"{
@@ -120,24 +119,22 @@ struct D {
 }
 
 #[test]
-fn test_avro3901_union_schema_round_trip_null_at_start()  {
+fn test_avro3901_union_schema_round_trip_null_at_start() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_D_STR]).expect("parsing schemata");
 
-    {
-        let input = D { field_union: UnionNoneAB::A(A { field_a: 54.25 }), field_d: "fooy".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = D { field_union: UnionNoneAB::None, field_d: "fooyy".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = D { field_union: UnionNoneAB::B(B { field_b: 103 }), field_d: "foov".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = D { field_union: UnionNoneAB::A(A { field_a: 54.25 }), field_d: "fooy".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = D { field_union: UnionNoneAB::None, field_d: "fooyy".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = D { field_union: UnionNoneAB::B(B { field_b: 103 }), field_d: "foov".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
 
 static SCHEMA_E_STR: &str = r#"{
@@ -164,24 +161,22 @@ struct E {
 }
 
 #[test]
-fn union_schema_round_trip_with_out_of_order_null()  {
+fn test_avro3901_union_schema_round_trip_with_out_of_order_null() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_E_STR]).expect("parsing schemata");
 
-    {
-        let input = E { field_union: UnionANoneB::A(A { field_a: 23.75 }), field_e: "barme".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = E { field_union: UnionANoneB::None, field_e: "barme2".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = E { field_union: UnionANoneB::B(B { field_b: 89 }), field_e: "barme3".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = E { field_union: UnionANoneB::A(A { field_a: 23.75 }), field_e: "barme".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = E { field_union: UnionANoneB::None, field_e: "barme2".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = E { field_union: UnionANoneB::B(B { field_b: 89 }), field_e: "barme3".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
 
 static SCHEMA_F_STR: &str = r#"{
@@ -208,24 +203,22 @@ struct F {
 }
 
 #[test]
-fn union_schema_round_trip_with_end_null()  {
+fn test_avro3901_union_schema_round_trip_with_end_null() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_F_STR]).expect("parsing schemata");
 
-    {
-        let input = F { field_union: UnionABNone::A(A { field_a: 23.75 }), field_f: "aoe".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = F { field_union: UnionABNone::None, field_f: "aoee2".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = F { field_union: UnionABNone::B(B { field_b: 89 }), field_f: "aoe3".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = F { field_union: UnionABNone::A(A { field_a: 23.75 }), field_f: "aoe".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = F { field_union: UnionABNone::None, field_f: "aoee2".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = F { field_union: UnionABNone::B(B { field_b: 89 }), field_f: "aoe3".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
 
 
@@ -251,24 +244,22 @@ struct G {
 
 
 #[test]
-fn union_schema_as_optional()  {
+fn test_avro3901_union_schema_as_optional() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_G_STR]).expect("parsing schemata");
 
-    {
-        let input = G { field_union: Some(UnionAB::A(A { field_a: 32.25 })), field_g: "aj".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = G { field_union: None, field_g: "aja".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = G { field_union: Some(UnionAB::B(B { field_b: 44 })), field_g: "aju".to_string() };
-        let output = encode_decode(&input,&schemata[2],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = G { field_union: Some(UnionAB::A(A { field_a: 32.25 })), field_g: "aj".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = G { field_union: None, field_g: "aja".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = G { field_union: Some(UnionAB::B(B { field_b: 44 })), field_g: "aju".to_string() };
+    let output = encode_decode(&input,&schemata[2],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
 */
 
@@ -291,17 +282,16 @@ struct H {
 
 //Test for regression - this has always worked for simple unions
 #[test]
-fn union_schema_as_optional()  {
+fn test_avro3901_union_schema_as_optional() -> AvroResult<()> {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_H_STR]).expect("parsing schemata");
 
-    {
-        let input = H { field_union: Some(23), field_h: "aaa".to_string() };
-        let output = encode_decode(&input,&schemata[0],&schemata);
-        assert_eq!(input,output);
-    }
-    {
-        let input = H { field_union: None, field_h: "bbb".to_string() };
-        let output = encode_decode(&input,&schemata[0],&schemata);
-        assert_eq!(input,output);
-    }
+    let input = H { field_union: Some(23), field_h: "aaa".to_string() };
+    let output = encode_decode(&input,&schemata[0],&schemata)?;
+    assert_eq!(input,output);
+
+    let input = H { field_union: None, field_h: "bbb".to_string() };
+    let output = encode_decode(&input,&schemata[0],&schemata)?;
+    assert_eq!(input,output);
+
+    Ok(())
 }
