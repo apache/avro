@@ -81,7 +81,7 @@ fn encode_decode<T> (input: &T,schema: &Schema,schemata: &Vec<Schema>) -> T
 
 
 #[test]
-fn union_schema_round_trip_no_null()  {
+fn test_avro3901_union_schema_round_trip_no_null()  {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_C_STR]).expect("parsing schemata");
 
     {
@@ -120,7 +120,7 @@ struct D {
 }
 
 #[test]
-fn union_schema_round_trip_null_at_start()  {
+fn test_avro3901_union_schema_round_trip_null_at_start()  {
     let schemata: Vec<Schema> = Schema::parse_list(&[SCHEMA_A_STR, SCHEMA_B_STR, SCHEMA_D_STR]).expect("parsing schemata");
 
     {
