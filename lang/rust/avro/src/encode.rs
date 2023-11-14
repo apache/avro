@@ -19,7 +19,7 @@ use crate::{
     decimal::serialize_big_decimal,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
-        UnionSchema, Schema, SchemaKind,
+        Schema, SchemaKind, UnionSchema,
     },
     types::{Value, ValueKind},
     util::{zig_i32, zig_i64},
@@ -72,16 +72,18 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
 
     match value {
         Value::Null => {
-            if let Schema::Union(s) = schema {
-                match s.schemas.iter().position(|sch|*sch == Schema::Null) {
-                    None =>
+            if let Schema::Union(union) = schema {
+                match union.schemas.iter().position(|sch| *sch == Schema::Null) {
+                    None => {
                         return Err(Error::EncodeValueAsSchemaError {
                             value_kind: ValueKind::Null,
-                            supported_schema: vec![SchemaKind::Null, SchemaKind::Union], }),
+                            supported_schema: vec![SchemaKind::Null, SchemaKind::Union],
+                        })
+                    }
                     Some(p) => encode_long(p as i64, buffer),
                 }
             } // else {()}
-        },
+        }
         Value::Boolean(b) => buffer.push(u8::from(*b)),
         // Pattern | Pattern here to signify that these _must_ have the same encoding.
         Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
@@ -252,11 +254,11 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
                         ));
                     }
                 }
-            } else if let Schema::Union(UnionSchema{ schemas, .. }) = schema {
+            } else if let Schema::Union(UnionSchema { schemas, .. }) = schema {
                 let original_size = buffer.len();
-                for (index,s) in schemas.iter().enumerate() {
+                for (index, schema) in schemas.iter().enumerate() {
                     encode_long(index as i64, buffer);
-                    match encode_internal(value, s, names, enclosing_namespace, buffer) {
+                    match encode_internal(value, schema, names, enclosing_namespace, buffer) {
                         Ok(_) => return Ok(()),
                         Err(_) => {
                             buffer.truncate(original_size); //undo any partial encoding
