@@ -35,7 +35,7 @@ use std::{
     io::Read,
     str::FromStr,
 };
-use strum_macros::{EnumDiscriminants, EnumString};
+use strum_macros::{Display, EnumDiscriminants, EnumString};
 
 lazy_static! {
     static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
@@ -74,7 +74,7 @@ impl fmt::Display for SchemaFingerprint {
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
 #[derive(Clone, Debug, EnumDiscriminants)]
-#[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
+#[strum_discriminants(name(SchemaKind), derive(Display, Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
     Null,

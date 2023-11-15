@@ -478,6 +478,9 @@ pub enum Error {
 
     #[error("Invalid Avro data! Cannot read codec type from value that is not Value::Bytes.")]
     BadCodecMetadata,
+
+    #[error("Incompatible schemata: {0}.")]
+    IncompatibleSchemata(String),
 }
 
 impl serde::ser::Error for Error {
