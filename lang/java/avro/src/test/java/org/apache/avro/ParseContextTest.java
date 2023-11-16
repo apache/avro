@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.util.SchemaResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -81,40 +82,44 @@ public class ParseContextTest {
   }
 
   @Test
-  public void validateSchemaTests() {
-    assertTrue(fooBarBaz.contains(fooRecord));
-    assertTrue(fooBarBaz.contains(barEnum));
-    assertTrue(fooBarBaz.contains(bazFixed));
-    assertFalse(fooBarBaz.contains(mehRecord));
-
-    assertTrue(fooBarBaz.contains(fooRecord.getFullName()));
-    assertTrue(fooBarBaz.contains(barEnum.getFullName()));
-    assertTrue(fooBarBaz.contains(bazFixed.getFullName()));
-    assertFalse(fooBarBaz.contains(mehRecord.getFullName()));
-  }
-
-  @Test
   public void validateNameResolvingAgainstDefaultNamespace() {
     ParseContext context = new ParseContext("");
-    assertEquals("Bar", context.resolveName("Bar", ""));
-    assertEquals("Bar", context.resolveName("Bar", null));
-    assertEquals("foo.Bar", context.resolveName("Bar", "foo"));
+    assertEquals("Bar", context.fullName("Bar", ""));
+    assertEquals("Bar", context.fullName("Bar", null));
+    assertEquals("foo.Bar", context.fullName("Bar", "foo"));
   }
 
   @Test
   public void validateNameResolvingAgainstSetNamespace() {
     ParseContext context = new ParseContext("ns");
-    assertEquals("ns.Bar", context.resolveName("Bar", ""));
-    assertEquals("ns.Bar", context.resolveName("Bar", null));
-    assertEquals("foo.Bar", context.resolveName("Bar", "foo"));
+    assertEquals("ns.Bar", context.fullName("Bar", ""));
+    assertEquals("ns.Bar", context.fullName("Bar", null));
+    assertEquals("foo.Bar", context.fullName("Bar", "foo"));
+  }
+
+  @Test
+  public void validateNameSimplificationAgainstDefaultNamespace() {
+    ParseContext context = new ParseContext("");
+    assertEquals("Bar", context.simpleName("Bar"));
+    assertEquals("ns.Bar", context.simpleName("ns.Bar"));
+    assertEquals("foo.Bar", context.simpleName("foo.Bar"));
+  }
+
+  @Test
+  public void validateNameSimplificationAgainstSetNamespace() {
+    ParseContext context = new ParseContext("ns");
+    assertEquals("Bar", context.simpleName("Bar"));
+    assertEquals("Bar", context.simpleName("ns.Bar"));
+    assertEquals("foo.Bar", context.simpleName("foo.Bar"));
   }
 
   @Test
   public void validateSchemaRetrievalFailure() {
     Schema unknown = Schema.createFixed("unknown", null, null, 0);
 
-    assertThrows(AvroRuntimeException.class, () -> fooBarBaz.resolve("unknown"));
-    assertSame(unknown, fooBarBaz.resolve("unknown"));
+    Schema unresolved = fooBarBaz.resolve("unknown");
+    assertTrue(SchemaResolver.isUnresolvedSchema(unresolved));
+    assertEquals(unknown.getFullName(), SchemaResolver.getUnresolvedSchemaName(unresolved));
   }
 
   @Test
@@ -130,13 +135,13 @@ public class ParseContextTest {
   @Test
   public void verifyPutIsIdempotent() {
     ParseContext context = new ParseContext();
-    assertFalse(context.contains(fooRecord));
+    assertNotEquals(fooRecord, context.resolve(fooRecord.getFullName()));
 
     context.put(fooRecord);
-    assertTrue(context.contains(fooRecord));
+    assertEquals(fooRecord, context.resolve(fooRecord.getFullName()));
 
     context.put(fooRecord);
-    assertTrue(context.contains(fooRecord));
+    assertEquals(fooRecord, context.resolve(fooRecord.getFullName()));
   }
 
   @Test

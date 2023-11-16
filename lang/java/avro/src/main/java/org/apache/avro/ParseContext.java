@@ -126,19 +126,6 @@ public class ParseContext {
   }
 
   /**
-   * Tell whether this context contains the given schema.
-   *
-   * @param schema a schema
-   * @return {@code true} if the context contains the schema, {@code false}
-   *         otherwise
-   */
-  @Deprecated
-  public boolean contains(Schema schema) {
-    String fullName = schema.getFullName();
-    return schema.equals(oldSchemas.get(fullName)) || schema.equals(newSchemas.get(fullName));
-  }
-
-  /**
    * Tell whether this context contains a schema with the given name.
    *
    * @param name a schema name
@@ -172,7 +159,7 @@ public class ParseContext {
       return Schema.create(type);
     }
 
-    String fullName = resolveName(name, namespace);
+    String fullName = fullName(name, namespace);
     Schema schema = getSchema(fullName);
     if (schema == null) {
       schema = getSchema(name);
@@ -190,7 +177,7 @@ public class ParseContext {
   }
 
   // Visible for testing
-  String resolveName(String name, String space) {
+  String fullName(String name, String space) {
     int lastDot = name.lastIndexOf('.');
     if (lastDot < 0) { // short name
       if (!notEmpty(space)) {
@@ -301,10 +288,5 @@ public class ParseContext {
     result.putAll(oldSchemas);
     result.putAll(newSchemas);
     return result;
-  }
-
-  public Protocol resolveSchemata(Protocol protocol) {
-    protocol.getTypes().forEach(this::put);
-    return SchemaResolver.resolve(this, protocol);
   }
 }
