@@ -68,8 +68,8 @@ mod test_derive {
     {
         assert!(!encoded.is_empty());
         let schema = T::get_schema();
-        let reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
-        for res in reader {
+        let mut reader = Reader::with_schema(&schema, &encoded[..]).unwrap();
+        if let Some(res) = reader.next() {
             match res {
                 Ok(value) => {
                     return from_value::<T>(&value).unwrap();
