@@ -68,6 +68,7 @@ jobs:
           5.0.x
           6.0.x
           7.0.x
+          8.0.x
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
