@@ -64,7 +64,7 @@
     <archetype-plugin.version>3.2.1</archetype-plugin.version>
     <bundle-plugin-version>5.1.8</bundle-plugin-version>
     <cyclonedx-maven-plugin.version>2.7.9</cyclonedx-maven-plugin.version>
-    <exec-plugin.version>3.1.0</exec-plugin.version>
+    <exec-plugin.version>3.1.1</exec-plugin.version>
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
     <javacc.version>7.0.12</javacc.version>
