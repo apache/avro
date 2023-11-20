@@ -289,6 +289,7 @@ TOKEN :
 | < TIME: "time_ms" >
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
+| < BIG_DECIMAL: "big_decimal" >
 | < LOCAL_TIMESTAMP: "local_timestamp_ms" >
 | < UUID: "uuid" >
 }
@@ -1584,6 +1585,7 @@ Schema PrimitiveType():
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" s = DecimalTypeProperties() { return s; }
+| "big_decimal"  { return LogicalTypes.bigDecimal().addToSchema(Schema.create(Type.BYTES)); }
 | "uuid" {return LogicalTypes.uuid().addToSchema(Schema.create(Type.STRING));}
 }
 
@@ -1674,6 +1676,7 @@ Token AnyIdentifier():
    t = <TIMESTAMP> |
    t = <LOCAL_TIMESTAMP> |
    t = <DECIMAL> |
+   t = <BIG_DECIMAL> |
    t = <IDENTIFIER>)
   {
     return t;
