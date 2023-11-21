@@ -5155,17 +5155,12 @@ mod tests {
     #[test]
     fn test_avro_3779_bigdecimal_schema() -> TestResult {
         let schema = json!(
-        {
-          "type": "record",
-          "name": "recordWithDecimal",
-          "fields": [
             {
                 "name": "decimal",
                 "type": "bytes",
                 "logicalType": "big-decimal"
             }
-          ]
-        });
+        );
 
         let parse_result = Schema::parse(&schema);
         assert!(
@@ -5173,6 +5168,10 @@ mod tests {
             "parse result must be ok, got: {:?}",
             parse_result
         );
+        match parse_result? {
+            Schema::BigDecimal => (),
+            other => panic!("Expected Schema::BigDecimal but got: {other:?}"),
+        }
 
         Ok(())
     }
