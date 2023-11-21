@@ -21,3 +21,9 @@
 .td-page-meta--child { display: none !important; }
 .td-page-meta--issue { display: none !important; }
 .td-page-meta--project-issue { display: none !important; }
+
+
+.navbar-brand {
+  @import url('https://fonts.googleapis.com/css2?family=PT+Mono&display=swap');
+  font-family: "PT Mono", monospace;
+}
