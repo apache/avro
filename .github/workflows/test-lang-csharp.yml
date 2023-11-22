@@ -50,6 +50,7 @@ jobs:
             5.0.x
             6.0.x
             7.0.x
+            8.0.x
 
       - uses: actions/cache@v3
         with:
@@ -81,6 +82,7 @@ jobs:
             5.0.x
             6.0.x
             7.0.x
+            8.0.x
 
       - name: Cache Local Maven Repository
         uses: actions/cache@v3
@@ -133,6 +135,7 @@ jobs:
           bash ./dotnet-install.sh --channel "5.0" --install-dir "$HOME/.dotnet" # 5.0
           bash ./dotnet-install.sh --channel "6.0" --install-dir "$HOME/.dotnet" # 6.0
           bash ./dotnet-install.sh --channel "7.0" --install-dir "$HOME/.dotnet" # 7.0
+          bash ./dotnet-install.sh --channel "8.0" --install-dir "$HOME/.dotnet" # 8.0
           
       - name: Build
         run: |

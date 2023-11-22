@@ -227,7 +227,8 @@ RUN cd /opt ; \
     bash ./dotnet-install.sh --channel "3.1" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "5.0" --install-dir "/opt/dotnet" ; \
     bash ./dotnet-install.sh --channel "6.0" --install-dir "/opt/dotnet" ; \
-    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ;
+    bash ./dotnet-install.sh --channel "7.0" --install-dir "/opt/dotnet" ; \
+    bash ./dotnet-install.sh --channel "8.0" --install-dir "/opt/dotnet" ;
     
 ENV PATH $PATH:/opt/dotnet
 
