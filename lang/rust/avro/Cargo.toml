@@ -55,6 +55,7 @@ name = "single"
 
 [dependencies]
 apache-avro-derive = { default-features = false, version = "0.17.0", path = "../avro_derive", optional = true }
+bigdecimal = { default-features = false, version = "0.4.2", features = ["std"] }
 bzip2 = { default-features = false, version = "0.4.4", optional = true }
 crc32fast = { default-features = false, version = "1.3.2", optional = true }
 digest = { default-features = false, version = "0.10.7", features = ["core-api"] }
@@ -73,7 +74,6 @@ typed-builder = { default-features = false, version = "0.16.2" }
 uuid = { default-features = false, version = "1.4.1", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
 zstd = { default-features = false, version = "0.12.4+zstd.1.5.2", optional = true }
-bigdecimal = "0.4"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 quad-rand = { default-features = false, version = "0.2.1" }
