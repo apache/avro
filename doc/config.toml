@@ -226,7 +226,7 @@ url = "http://www.apache.org/security/"
 # End user relevant links. These will show up on left side of footer and in the community page if you have one.
 [[params.links.user]]
   name = "User mailing list"
-  url = "mailto:user@avro.apache.org"
+  url = "https://lists.apache.org/list.html?user@avro.apache.org"
   icon = "fa fa-envelope"
   desc = "Discussion and help from your fellow users"
 [[params.links.user]]
@@ -257,7 +257,7 @@ url = "http://www.apache.org/security/"
   desc = "Chat with other project developers at #avro channel"
 [[params.links.developer]]
   name = "Developer mailing list"
-  url = "mailto:dev@avro.apache.org"
+  url = "https://lists.apache.org/list.html?dev@avro.apache.org"
   icon = "fa fa-envelope"
   desc = "Discuss development issues around the project"
 
