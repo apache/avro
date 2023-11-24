@@ -108,9 +108,13 @@ public class ParseContext {
   }
 
   /**
-   * <p>Resolve a schema by name.</p>
+   * <p>
+   * Resolve a schema by name.
+   * </p>
    *
-   * <p>That is:</p>
+   * <p>
+   * That is:
+   * </p>
    *
    * <ul>
    * <li>If {@code name} is a primitive name, return a (new) schema for it</li>
