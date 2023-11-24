@@ -64,65 +64,36 @@ public class ParseContext {
   private final Map<String, Schema> newSchemas;
   // Visible for use in JsonSchemaParser
   final NameValidator nameValidator;
-  private final String namespace;
 
   /**
    * Create a {@code ParseContext} for the default/{@code null} namespace, using
    * default name validation for new schemata.
    */
   public ParseContext() {
-    this(NameValidator.UTF_VALIDATOR, null);
+    this(NameValidator.UTF_VALIDATOR);
   }
 
   /**
-   * Create a {@code ParseContext} for the specified namespace, using default name
-   * validation for new schemata.
-   */
-  public ParseContext(String namespace) {
-    this(NameValidator.UTF_VALIDATOR, namespace);
-  }
-
-  /**
-   * Create a {@code ParseContext} for the default/{@code null} namespace, using
-   * the specified name validation for new schemata.
+   * Create a {@code ParseContext} using the specified name validation for new
+   * schemata.
    */
   public ParseContext(NameValidator nameValidator) {
-    this(nameValidator, null);
+    this(nameValidator, new LinkedHashMap<>(), new LinkedHashMap<>());
   }
 
-  /**
-   * Create a {@code ParseContext} for the specified namespace, using the
-   * specified name validation for new schemata.
-   */
-  public ParseContext(NameValidator nameValidator, String namespace) {
-    this(nameValidator, new LinkedHashMap<>(), new LinkedHashMap<>(), namespace);
-  }
-
-  private ParseContext(NameValidator nameValidator, Map<String, Schema> oldSchemas, Map<String, Schema> newSchemas,
-      String namespace) {
+  private ParseContext(NameValidator nameValidator, Map<String, Schema> oldSchemas, Map<String, Schema> newSchemas) {
     this.nameValidator = nameValidator;
     this.oldSchemas = oldSchemas;
     this.newSchemas = newSchemas;
-    this.namespace = notEmpty(namespace) ? namespace : null;
   }
 
   /**
    * Create a derived context using a different fallback namespace.
    *
-   * @param namespace the fallback namespace to resolve names with
    * @return a new context
    */
-  public ParseContext namespace(String namespace) {
-    return new ParseContext(nameValidator, oldSchemas, newSchemas, namespace);
-  }
-
-  /**
-   * Return the fallback namespace.
-   *
-   * @return the namespace
-   */
-  public String namespace() {
-    return namespace;
+  public ParseContext namespace() {
+    return new ParseContext(nameValidator, oldSchemas, newSchemas);
   }
 
   /**
@@ -137,7 +108,9 @@ public class ParseContext {
   }
 
   /**
-   * Resolve a schema by name. That is:
+   * <p>Resolve a schema by name.</p>
+   *
+   * <p>That is:</p>
    *
    * <ul>
    * <li>If {@code name} is a primitive name, return a (new) schema for it</li>
@@ -159,7 +132,7 @@ public class ParseContext {
       return Schema.create(type);
     }
 
-    String fullName = fullName(name, namespace);
+    String fullName = fullName(name, null);
     Schema schema = getSchema(fullName);
     if (schema == null) {
       schema = getSchema(name);
@@ -180,37 +153,11 @@ public class ParseContext {
   String fullName(String name, String space) {
     int lastDot = name.lastIndexOf('.');
     if (lastDot < 0) { // short name
-      if (!notEmpty(space)) {
-        space = namespace;
-      }
       if (notEmpty(space)) {
         return space + "." + name;
       }
     }
     return name;
-  }
-
-  /**
-   * Return the simplest name that references the same schema in the current
-   * namespace. Returns the name without any namespace if it is not a primitive,
-   * and the namespace is the current namespace.
-   *
-   * @param fullName the full schema name
-   * @return the simplest name within the current namespace
-   */
-  public String simpleName(String fullName) {
-    int lastDot = fullName.lastIndexOf('.');
-    if (lastDot >= 0) {
-      String name = fullName.substring(lastDot + 1);
-      String space = fullName.substring(0, lastDot);
-      if (!PRIMITIVES.containsKey(name) && space.equals(namespace)) {
-        // The name is a full name in the current namespace, and cannot be
-        // mistaken for a primitive type.
-        return name;
-      }
-    }
-    // The special case of the previous comment does not apply.
-    return fullName;
   }
 
   private boolean notEmpty(String str) {

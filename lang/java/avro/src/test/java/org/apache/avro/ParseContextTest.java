@@ -82,35 +82,11 @@ public class ParseContextTest {
   }
 
   @Test
-  public void validateNameResolvingAgainstDefaultNamespace() {
-    ParseContext context = new ParseContext("");
+  public void validateNameResolving() {
+    ParseContext context = new ParseContext();
     assertEquals("Bar", context.fullName("Bar", ""));
     assertEquals("Bar", context.fullName("Bar", null));
     assertEquals("foo.Bar", context.fullName("Bar", "foo"));
-  }
-
-  @Test
-  public void validateNameResolvingAgainstSetNamespace() {
-    ParseContext context = new ParseContext("ns");
-    assertEquals("ns.Bar", context.fullName("Bar", ""));
-    assertEquals("ns.Bar", context.fullName("Bar", null));
-    assertEquals("foo.Bar", context.fullName("Bar", "foo"));
-  }
-
-  @Test
-  public void validateNameSimplificationAgainstDefaultNamespace() {
-    ParseContext context = new ParseContext("");
-    assertEquals("Bar", context.simpleName("Bar"));
-    assertEquals("ns.Bar", context.simpleName("ns.Bar"));
-    assertEquals("foo.Bar", context.simpleName("foo.Bar"));
-  }
-
-  @Test
-  public void validateNameSimplificationAgainstSetNamespace() {
-    ParseContext context = new ParseContext("ns");
-    assertEquals("Bar", context.simpleName("Bar"));
-    assertEquals("Bar", context.simpleName("ns.Bar"));
-    assertEquals("foo.Bar", context.simpleName("foo.Bar"));
   }
 
   @Test
@@ -125,11 +101,6 @@ public class ParseContextTest {
   @Test
   public void validateSchemaRetrievalByFullName() {
     assertSame(fooRecord, fooBarBaz.resolve(fooRecord.getFullName()));
-  }
-
-  @Test
-  public void validateSchemaRetrievalByNameAndInheritedNamespace() {
-    assertSame(fooRecord, fooBarBaz.namespace(fooRecord.getNamespace()).resolve(fooRecord.getName()));
   }
 
   @Test
