@@ -33,8 +33,8 @@ readme = "README.md"
 [dependencies]
 anyhow = { default-features = false, version = "1.0.75", features = ["std"] }
 better-panic = { default-features = false, version = "0.3.0" }
-ctor = { default-features = false, version = "0.2.4" }
-env_logger = { default-features = false, version = "0.10.0" }
+ctor = { default-features = false, version = "0.2.5" }
+env_logger = { default-features = false, version = "0.10.1" }
 lazy_static = { default-features = false, version = "1.4.0" }
 log = { default-features = false, version = "0.4.20" }
 ref_thread_local = { default-features = false, version = "0.1.1" }
