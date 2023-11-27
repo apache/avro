@@ -63,17 +63,17 @@ lazy_static = { default-features = false, version = "1.4.0" }
 libflate = { default-features = false, version = "2.0.0", features = ["std"] }
 log = { default-features = false, version = "0.4.20" }
 num-bigint = { default-features = false, version = "0.4.4" }
-regex-lite = { default-features = false, version = "0.1.0", features = ["std", "string"] }
-serde = { default-features = false, version = "1.0.188", features = ["derive"] }
-serde_json = { default-features = false, version = "1.0.107", features = ["std"] }
+regex-lite = { default-features = false, version = "0.1.5", features = ["std", "string"] }
+serde = { default-features = false, version = "1.0.193", features = ["derive"] }
+serde_json = { default-features = false, version = "1.0.108", features = ["std"] }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.25.0" }
-strum_macros = { default-features = false, version = "0.25.2" }
-thiserror = { default-features = false, version = "1.0.48" }
-typed-builder = { default-features = false, version = "0.16.2" }
-uuid = { default-features = false, version = "1.4.1", features = ["serde", "std"] }
+strum_macros = { default-features = false, version = "0.25.3" }
+thiserror = { default-features = false, version = "1.0.50" }
+typed-builder = { default-features = false, version = "0.18.0" }
+uuid = { default-features = false, version = "1.6.1", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
-zstd = { default-features = false, version = "0.12.4+zstd.1.5.2", optional = true }
+zstd = { default-features = false, version = "0.13.0", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 quad-rand = { default-features = false, version = "0.2.1" }
