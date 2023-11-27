@@ -21,7 +21,7 @@ version = "0.1.0"
 authors.workspace = true
 description = "A demo project for testing apache_avro in WebAssembly"
 license.workspace = true
-readme.workspace = true
+readme = "README.md"
 repository.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -36,9 +36,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 apache-avro = { path = "../avro" }
-serde = { default-features = false, version = "1.0.188", features = ["derive"] }
-wasm-bindgen = "0.2.87"
+serde = { default-features = false, version = "1.0.193", features = ["derive"] }
+wasm-bindgen = "0.2.88"
 
 [dev-dependencies]
-console_error_panic_hook = { version = "0.1.6" }
-wasm-bindgen-test = "0.3.37"
+console_error_panic_hook = { version = "0.1.7" }
+wasm-bindgen-test = "0.3.38"
