@@ -114,7 +114,7 @@ pub enum Error {
     GetScaleAndPrecision { scale: usize, precision: usize },
 
     #[error(
-        "Fixed type number of bytes {size} is not large enough to hold decimal values of precision {precision}"
+    "Fixed type number of bytes {size} is not large enough to hold decimal values of precision {precision}"
     )]
     GetScaleWithFixedSize { size: usize, precision: usize },
 
@@ -484,7 +484,7 @@ pub enum Error {
         supported_schema: Vec<SchemaKind>,
     },
     #[error(
-        "Internal buffer not drained properly. Re-initialize the single object writer struct!"
+    "Internal buffer not drained properly. Re-initialize the single object writer struct!"
     )]
     IllegalSingleObjectWriterState,
 
@@ -531,7 +531,7 @@ pub enum CompatibilityError {
     },
 
     #[error(
-        "Incompatible schemata! Unknown type for '{0}'. Make sure that the type is a valid one"
+    "Incompatible schemata! Unknown type for '{0}'. Make sure that the type is a valid one"
     )]
     Inconclusive(String),
 }

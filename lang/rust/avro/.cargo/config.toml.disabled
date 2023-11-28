@@ -1,0 +1,32 @@
+[build]
+rustc-wrapper = '/home/martin/.cargo/bin/sccache'
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    '-Clink-arg=-fuse-ld=lld',
+    '-Zshare-generics=y',
+]
+linker = '/usr/bin/clang'
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ['-Zshare-generics=y']
+linker = 'rust-lld.exe'
+
+[target.x86_64-apple-darwin]
+rustflags = [
+    '-C',
+    'link-arg=-fuse-ld=/usr/local/bin/zld',
+    '-Zshare-generics=y',
+    '-Csplit-debuginfo=unpacked',
+]
+[profile.dev]
+opt-level = 0
+debug = 2
+incremental = true
+codegen-units = 512
+
+[profile.release]
+opt-level = 3
+debug = 0
+incremental = false
+codegen-units = 256
+split-debuginfo = '...'
