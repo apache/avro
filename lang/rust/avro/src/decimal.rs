@@ -154,9 +154,9 @@ mod tests {
         ops::{Div, Mul},
     };
 
-    use crate::{Codec, Reader, Schema, Writer};
     use crate::types::Record;
     use crate::types::Value;
+    use crate::{Codec, Reader, Schema, Writer};
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
