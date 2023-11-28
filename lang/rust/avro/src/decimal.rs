@@ -122,20 +122,20 @@ pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Vec<u8> {
     buffer
 }
 
-pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Error> {
-    let mut bytes: &[u8] = bytes.as_slice();
-    let mut big_decimal_buffer = match decode_len(&mut bytes) {
+pub(crate) fn deserialize_big_decimal<R: Read>(reader: &mut R) -> Result<BigDecimal, Error> {
+    let mut big_decimal_buffer = match decode_len(reader) {
         Ok(size) => vec![0u8; size],
         Err(err) => return Err(Error::BigDecimalLen(Box::new(err))),
     };
 
-    bytes
+    reader
         .read_exact(&mut big_decimal_buffer[..])
         .map_err(Error::ReadDouble)?;
 
-    match decode_long(&mut bytes) {
+    let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
+
+    match decode_long(reader) {
         Ok(Value::Long(scale_value)) => {
-            let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
             let decimal = BigDecimal::new(big_int, scale_value);
             Ok(decimal)
         }
@@ -153,6 +153,11 @@ mod tests {
         convert::TryFrom,
         ops::{Div, Mul},
     };
+
+    use crate::{Codec, Reader, Schema, Writer};
+    //use crate::schema::{Name, RecordField, RecordFieldOrder, RecordSchema};
+    use crate::types::Record;
+    use crate::types::Value;
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
@@ -186,7 +191,7 @@ mod tests {
             let result: Vec<u8> = serialize_big_decimal(&current);
 
             let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-                deserialize_big_decimal(&result);
+                deserialize_big_decimal(&mut result.as_slice());
             assert!(
                 deserialize_big_decimal.is_ok(),
                 "can't deserialize for iter {iter}"
@@ -201,7 +206,7 @@ mod tests {
 
         let result: Vec<u8> = serialize_big_decimal(&BigDecimal::zero());
         let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-            deserialize_big_decimal(&result);
+            deserialize_big_decimal(&mut result.as_slice());
         assert!(
             deserialize_big_decimal.is_ok(),
             "can't deserialize for zero"
@@ -211,6 +216,65 @@ mod tests {
             deserialize_big_decimal.unwrap(),
             "not equals for zero"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn other() -> TestResult {
+        let schema_str = r#"
+    {
+      "type": "record",
+      "name": "test",
+      "fields": [
+        {
+          "name": "field_name",
+          "type": "bytes",
+          "logicalType": "big-decimal"
+        }
+      ]
+    }
+    "#;
+        let schema = Schema::parse_str(schema_str)?;
+
+        // build record with big decimal value
+        let mut record = Record::new(&schema).unwrap();
+        let val = BigDecimal::new(BigInt::from(12), 2);
+        record.put("field_name", val.clone());
+
+        // save record in writer
+        let codec = Codec::Null;
+        let mut writer = Writer::builder()
+            .schema(&schema)
+            .codec(codec)
+            .writer(Vec::new())
+            .build();
+
+        let result = writer.append(record.clone());
+        assert!(result.is_ok(), "Append KO  : {}", result.unwrap_err());
+        assert!(writer.flush().is_ok(), "Flush KO");
+
+        // read record
+        let wrote_data = writer.into_inner().unwrap();
+        let mut reader = Reader::new(&wrote_data[..])?;
+
+        let v = reader.next().unwrap();
+        assert!(v.is_ok(), "reader next didn't work : {}", v.unwrap_err());
+        let value = v.unwrap();
+
+        // extract field value
+        let big_decimal_result: Result<&Value, &str> = match value {
+            Value::Record(ref fields) => Ok(&fields[0].1),
+            _ => Err("should be record"),
+        };
+        assert!(big_decimal_result.is_ok());
+        let big_decimal_value = big_decimal_result.unwrap();
+        let x1res: Result<&BigDecimal, &str> = match big_decimal_value {
+            Value::BigDecimal(ref s) => Ok(s),
+            _ => Err("Not bg"),
+        };
+        assert!(x1res.is_ok(), "res is not big decimal");
+        assert_eq!(&val, x1res.unwrap());
 
         Ok(())
     }

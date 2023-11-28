@@ -114,12 +114,7 @@ pub(crate) fn decode_internal<R: Read, S: Borrow<Schema>>(
             },
             schema => Err(Error::ResolveDecimalSchema(schema.into())),
         },
-        Schema::BigDecimal => {
-            match decode_internal(&Schema::Bytes, names, enclosing_namespace, reader)? {
-                Value::Bytes(bytes) => deserialize_big_decimal(&bytes).map(Value::BigDecimal),
-                value => Err(Error::BytesValue(value.into())),
-            }
-        }
+        Schema::BigDecimal => deserialize_big_decimal(reader).map(Value::BigDecimal),
         Schema::Uuid => Ok(Value::Uuid(
             Uuid::from_str(
                 match decode_internal(&Schema::String, names, enclosing_namespace, reader)? {
