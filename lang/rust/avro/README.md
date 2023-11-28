@@ -634,7 +634,7 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
-assert_eq!(true, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_ok());
 ```
 
 2. Incompatible schemas (a long array schema cannot be read by an int array schema)
@@ -647,7 +647,7 @@ use apache_avro::{Schema, schema_compatibility::SchemaCompatibility};
 
 let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
 let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
-assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_err());
 ```
 
 <!-- cargo-rdme end -->
