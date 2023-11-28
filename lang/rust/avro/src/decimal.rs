@@ -155,7 +155,6 @@ mod tests {
     };
 
     use crate::{Codec, Reader, Schema, Writer};
-    //use crate::schema::{Name, RecordField, RecordFieldOrder, RecordSchema};
     use crate::types::Record;
     use crate::types::Value;
 
