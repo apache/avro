@@ -480,6 +480,48 @@ pub enum Error {
     BadCodecMetadata,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum CompatibilityError {
+    #[error("Schemas are not compatible. Writer schema is {writer_schema_type}, but reader schema is {reader_schema_type}")]
+    WrongType {
+        writer_schema_type: String,
+        reader_schema_type: String,
+    },
+
+    #[error("Schemas are not compatible. The {schema_type} should have been {expected_type}")]
+    TypeExpected {
+        schema_type: String,
+        expected_type: String,
+    },
+
+    #[error("Schemas are not compatible. Field '{0}' in reader schema does not match the type in the writer schema")]
+    FieldTypeMismatch(String),
+
+    #[error("Schemas are not compatible. Schemas mismatch")]
+    SchemaMismatch,
+
+    #[error("Schemas are not compatible. Field '{0}' in reader schema must have a default value")]
+    MissingDefaultValue(String),
+
+    #[error("Schemas are not compatible. Reader's symbols must contain all writer's symbols")]
+    MissingSymbols,
+
+    #[error("Schemas are not compatible. All elements in union must match for both schemas")]
+    MissingUnionElements,
+
+    #[error("Schemas are not compatible. Name and size don't match for fixed")]
+    FixedMismatch,
+
+    #[error("Schemas are not compatible. The name must be the same for both schemas. Writer's name {writer_name} and reader's name {reader_name}")]
+    NameMismatch {
+        writer_name: String,
+        reader_name: String,
+    },
+
+    #[error("Schemas are not compatible. Unknown type for '{0}'. Make sure that the type is a valid one")]
+    Inconclusive(String),
+}
+
 impl serde::ser::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Error::SerializeValue(msg.to_string())
