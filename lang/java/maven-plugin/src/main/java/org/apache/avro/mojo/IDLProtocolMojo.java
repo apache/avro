@@ -25,7 +25,8 @@ package org.apache.avro.mojo;
  * @requiresDependencyResolution runtime
  * @phase generate-sources
  * @threadSafe
+ * @deprecated use {@link IDL2JavaMojo} instead.
  */
-public class IDLProtocolMojo extends IDLMojo {
+public class IDLProtocolMojo extends IDL2JavaMojo {
   // Empty; kept for backwards compatibility.
 }

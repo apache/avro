@@ -56,7 +56,7 @@ $ head /tmp/schema_syntax.avsc
 ```
 The `idl` tool can also process input to and from _stdin_ and _stdout_. See `idl --help` for full usage information.
 
-A Maven plugin is also provided to compile .avdl files. To use it, add something like the following to your pom.xml:
+A Maven plugin is also provided to generate _.java_, _.avpr_ and _.avsc_ files from _.avdl_ files. To use it, add something like the following to your pom.xml:
 ```xml
 <build>
   <plugins>
@@ -66,7 +66,7 @@ A Maven plugin is also provided to compile .avdl files. To use it, add something
       <executions>
         <execution>
           <goals>
-            <goal>idl</goal>
+            <goal>idl2java</goal>
           </goals>
         </execution>
       </executions>
@@ -74,6 +74,10 @@ A Maven plugin is also provided to compile .avdl files. To use it, add something
   </plugins>
 </build>
 ```
+goals:
+- `idl2java`: Generate Java classes and interfaces (.java) from AvroIDL files (.avdl)
+- `idl2protocol`: Generate JSON Avro protocol files (.avpr) from AvroIDL files (.avdl)
+- `idl2schema`: Generate JSON Avro schema files (.avsc) from AvroIDL files (.avdl)
 
 ## Defining a Schema in Avro IDL
 An Avro IDL file consists of exactly one (main) schema definition. The minimal schema is defined by the following code:

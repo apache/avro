@@ -22,8 +22,9 @@ protocol IdlTest {
       Public, Private
     }
 
+    /** IdlUser document*/
     record IdlUser {
-      union { null, string } id;
+      union { null, string } @tags(["pii"]) id;
       union { null, long } createdOn;
       timestamp_ms modifiedOn;
       union { null, IdlPrivacy } privacy;

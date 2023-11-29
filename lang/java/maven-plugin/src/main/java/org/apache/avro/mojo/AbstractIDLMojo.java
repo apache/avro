@@ -18,20 +18,18 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.idl.IdlFile;
+import org.apache.avro.idl.IdlReader;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.avro.Protocol;
-import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.generic.GenericData;
-
-import org.apache.avro.idl.IdlFile;
-import org.apache.avro.idl.IdlReader;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
@@ -41,7 +39,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
  * @phase generate-sources
  * @threadSafe
  */
-public class IDLMojo extends AbstractAvroMojo {
+public abstract class AbstractIDLMojo extends AbstractAvroMojo {
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern <code>**&#47;*.avdl</code>
@@ -49,7 +47,7 @@ public class IDLMojo extends AbstractAvroMojo {
    *
    * @parameter
    */
-  private String[] includes = new String[] { "**/*.avdl" };
+  protected String[] includes = new String[] { "**/*.avdl" };
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
@@ -58,10 +56,19 @@ public class IDLMojo extends AbstractAvroMojo {
    *
    * @parameter
    */
-  private String[] testIncludes = new String[] { "**/*.avdl" };
+  protected String[] testIncludes = new String[] { "**/*.avdl" };
 
-  @Override
-  protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
+  /**
+   * @param filename        the IDL file
+   * @param sourceDirectory The source directory of avro files. This directory is
+   *                        added to the classpath at schema compiling time. All
+   *                        files can therefore be referenced as classpath
+   *                        resources following the directory structure under the
+   *                        source directory.
+   * @return IdlFile instance that contains the parsed protocol and schemas
+   * @throws IOException if the IDL file is invalid
+   */
+  protected IdlFile parseIdlFile(String filename, File sourceDirectory) throws IOException {
     try {
       @SuppressWarnings("rawtypes")
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
@@ -81,7 +88,7 @@ public class IDLMojo extends AbstractAvroMojo {
       }
 
       final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-      URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]), contextClassLoader);
+      final URLClassLoader projPathLoader = new URLClassLoader(runtimeUrls.toArray(new URL[0]), contextClassLoader);
       Thread.currentThread().setContextClassLoader(projPathLoader);
       try {
         IdlReader parser = new IdlReader();
@@ -89,31 +96,11 @@ public class IDLMojo extends AbstractAvroMojo {
         for (String warning : idlFile.getWarnings()) {
           getLog().warn(warning);
         }
-        final SpecificCompiler compiler;
-        final Protocol protocol = idlFile.getProtocol();
-        if (protocol != null) {
-          compiler = new SpecificCompiler(protocol);
-        } else {
-          compiler = new SpecificCompiler(idlFile.getNamedSchemas().values());
-        }
-        compiler.setStringType(GenericData.StringType.valueOf(stringType));
-        compiler.setTemplateDir(templateDirectory);
-        compiler.setFieldVisibility(getFieldVisibility());
-        compiler.setCreateOptionalGetters(createOptionalGetters);
-        compiler.setGettersReturnOptional(gettersReturnOptional);
-        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
-        compiler.setCreateSetters(createSetters);
-        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
-        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-        for (String customConversion : customConversions) {
-          compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
-        }
-        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-        compiler.compileToDestination(null, outputDirectory);
+        return idlFile;
       } finally {
         Thread.currentThread().setContextClassLoader(contextClassLoader);
       }
-    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
+    } catch (DependencyResolutionRequiredException e) {
       throw new IOException(e);
     }
   }
@@ -126,5 +113,21 @@ public class IDLMojo extends AbstractAvroMojo {
   @Override
   protected String[] getTestIncludes() {
     return testIncludes;
+  }
+
+  protected String makePath(String name, String space, String suffix) {
+    if (space == null || space.isEmpty()) {
+      return name + suffix;
+    } else {
+      return space.replace('.', File.separatorChar) + File.separatorChar + name + suffix;
+    }
+  }
+
+  protected void printJson(String jsonString, String filePath) throws IOException {
+    new File(filePath).getParentFile().mkdirs();
+    FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+    PrintStream printStream = new PrintStream(fileOutputStream);
+    printStream.println(jsonString);
+    printStream.close();
   }
 }

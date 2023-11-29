@@ -17,36 +17,34 @@
  */
 package org.apache.avro.mojo;
 
+import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
+
 import java.io.File;
-import java.util.Collections;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.codehaus.plexus.util.FileUtils;
-import org.junit.Test;
 
 import static java.util.Arrays.asList;
 
 /**
  * Test the IDL Protocol Mojo.
  */
-public class TestIDLMojo extends AbstractAvroMojoTest {
-
-  private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom.xml");
+public class TestIDL2JavaMojo extends AbstractAvroMojoTest {
+  private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-idl2java.xml");
   private File injectingVelocityToolsTestPom = new File(getBasedir(),
-      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
+      "src/test/resources/unit/idl/pom-idl2java-injecting-velocity-tools.xml");
 
   @Test
-  public void testIdlProtocolMojo() throws Exception {
-    final IDLMojo mojo = (IDLMojo) lookupMojo("idl", testPom);
+  public void testIDL2JavaMojo() throws Exception {
+    final IDL2JavaMojo mojo = (IDL2JavaMojo) lookupMojo("idl2java", testPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl2java/test/");
     final Set<String> generatedFiles = new HashSet<>(
         asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"));
     assertFilesExist(outputDir, generatedFiles);
@@ -60,14 +58,14 @@ public class TestIDLMojo extends AbstractAvroMojoTest {
 
   @Test
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
-    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
+    final IDL2JavaMojo mojo = (IDL2JavaMojo) lookupMojo("idl2java", injectingVelocityToolsTestPom);
     final TestLog log = new TestLog();
     mojo.setLog(log);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl2java-inject/test");
     final Set<String> generatedFiles = new HashSet<>(
         asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"));
 

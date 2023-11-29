@@ -39,13 +39,13 @@
           <execution>
             <id>idl</id>
             <goals>
-              <goal>idl-protocol</goal>
+              <goal>idl2java</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/idl-inject</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/idl2java-inject</outputDirectory>
           <stringType>String</stringType>
           <templateDirectory>
             ${basedir}/src/test/resources/templates/
