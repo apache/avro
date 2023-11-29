@@ -153,12 +153,12 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
-    use std::fs::File;
-    use std::io::BufReader;
-    use std::str::FromStr;
     use std::{
         convert::TryFrom,
+        fs::File,
+        io::BufReader,
         ops::{Div, Mul},
+        str::FromStr,
     };
 
     use crate::types::Record;
