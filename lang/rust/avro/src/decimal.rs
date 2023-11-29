@@ -113,29 +113,33 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
 }
 
 pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Vec<u8> {
+    // encode big decimal, without global size
     let mut buffer: Vec<u8> = Vec::new();
     let (big_int, exponent): (BigInt, i64) = decimal.as_bigint_and_exponent();
     let big_endian_value: Vec<u8> = big_int.to_signed_bytes_be();
     encode_bytes(&big_endian_value, &mut buffer);
     encode_long(exponent, &mut buffer);
 
-    buffer
+    // encode global size and content
+    let mut final_buffer: Vec<u8> = Vec::new();
+    encode_bytes(&buffer, &mut final_buffer);
+    final_buffer
 }
 
-pub(crate) fn deserialize_big_decimal<R: Read>(reader: &mut R) -> Result<BigDecimal, Error> {
-    let mut big_decimal_buffer = match decode_len(reader) {
+pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Error> {
+    let mut bytes: &[u8] = bytes.as_slice();
+    let mut big_decimal_buffer = match decode_len(&mut bytes) {
         Ok(size) => vec![0u8; size],
         Err(err) => return Err(Error::BigDecimalLen(Box::new(err))),
     };
 
-    reader
+    bytes
         .read_exact(&mut big_decimal_buffer[..])
         .map_err(Error::ReadDouble)?;
 
-    let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
-
-    match decode_long(reader) {
+    match decode_long(&mut bytes) {
         Ok(Value::Long(scale_value)) => {
+            let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
             let decimal = BigDecimal::new(big_int, scale_value);
             Ok(decimal)
         }
@@ -187,10 +191,16 @@ mod tests {
         let mut current: bigdecimal::BigDecimal = bigdecimal::BigDecimal::one();
 
         for iter in 1..180 {
-            let result: Vec<u8> = serialize_big_decimal(&current);
+            let buffer: Vec<u8> = serialize_big_decimal(&current);
+
+            let mut as_slice = buffer.as_slice();
+            decode_long(&mut as_slice)?;
+
+            let mut result: Vec<u8> = Vec::new();
+            result.extend_from_slice(as_slice);
 
             let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-                deserialize_big_decimal(&mut result.as_slice());
+                deserialize_big_decimal(&result);
             assert!(
                 deserialize_big_decimal.is_ok(),
                 "can't deserialize for iter {iter}"
@@ -198,14 +208,20 @@ mod tests {
             assert_eq!(
                 current,
                 deserialize_big_decimal.unwrap(),
-                "not equals for ${iter}"
+                "not equals for {iter}"
             );
             current = current.mul(&value);
         }
 
-        let result: Vec<u8> = serialize_big_decimal(&BigDecimal::zero());
+        let buffer: Vec<u8> = serialize_big_decimal(&BigDecimal::zero());
+        let mut as_slice = buffer.as_slice();
+        decode_long(&mut as_slice)?;
+
+        let mut result: Vec<u8> = Vec::new();
+        result.extend_from_slice(as_slice);
+
         let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-            deserialize_big_decimal(&mut result.as_slice());
+            deserialize_big_decimal(&result);
         assert!(
             deserialize_big_decimal.is_ok(),
             "can't deserialize for zero"
@@ -220,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn other() -> TestResult {
+    fn test_avro_3779_record_with_bg() -> TestResult {
         let schema_str = r#"
     {
       "type": "record",
@@ -241,7 +257,7 @@ mod tests {
         let val = BigDecimal::new(BigInt::from(12), 2);
         record.put("field_name", val.clone());
 
-        // save record in writer
+        // write a record
         let codec = Codec::Null;
         let mut writer = Writer::builder()
             .schema(&schema)
@@ -249,9 +265,8 @@ mod tests {
             .writer(Vec::new())
             .build();
 
-        let result = writer.append(record.clone());
-        assert!(result.is_ok(), "Append KO  : {}", result.unwrap_err());
-        assert!(writer.flush().is_ok(), "Flush KO");
+        writer.append(record.clone())?;
+        writer.flush()?;
 
         // read record
         let wrote_data = writer.into_inner().unwrap();

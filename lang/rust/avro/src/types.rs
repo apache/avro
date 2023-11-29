@@ -708,9 +708,7 @@ impl Value {
     fn resolve_bigdecimal(self) -> Result<Self, Error> {
         Ok(match self {
             bg @ Value::BigDecimal(_) => bg,
-            Value::Bytes(b) => {
-                Value::BigDecimal(deserialize_big_decimal(&mut b.as_slice()).unwrap())
-            }
+            Value::Bytes(b) => Value::BigDecimal(deserialize_big_decimal(&b).unwrap()),
             other => return Err(Error::GetBigdecimal(other.into())),
         })
     }
