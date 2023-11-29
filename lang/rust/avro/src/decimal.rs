@@ -150,6 +150,10 @@ pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Err
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        types::{Record, Value},
+        Codec, Reader, Schema, Writer,
+    };
     use apache_avro_test_helper::TestResult;
     use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
@@ -160,10 +164,6 @@ mod tests {
         ops::{Div, Mul},
         str::FromStr,
     };
-
-    use crate::types::Record;
-    use crate::types::Value;
-    use crate::{Codec, Reader, Schema, Writer};
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
