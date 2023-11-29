@@ -153,6 +153,9 @@ mod tests {
     use apache_avro_test_helper::TestResult;
     use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
+    use std::fs::File;
+    use std::io::BufReader;
+    use std::str::FromStr;
     use std::{
         convert::TryFrom,
         ops::{Div, Mul},
@@ -289,6 +292,30 @@ mod tests {
         };
         assert!(x1res.is_ok(), "res is not big decimal");
         assert_eq!(&val, x1res.unwrap());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_avro_3779_from_java_file() -> TestResult {
+        // Open file generated with Java code to ensure compatibility
+        // with Java big decimal logical type.
+        let file: File = File::open("./tests/bigdec.avro")?;
+        let mut reader = Reader::new(BufReader::new(&file))?;
+        let next_element = reader.next();
+        assert!(next_element.is_some());
+        let value = next_element.unwrap()?;
+        let bg = match value {
+            Value::Record(ref fields) => Ok(&fields[0].1),
+            _ => Err("Not a record {value.}"),
+        }?;
+        let value_big_decimal = match bg {
+            Value::BigDecimal(val) => Ok(val),
+            _ => Err("Not a big decimal"),
+        }?;
+
+        let ref_value = BigDecimal::from_str("2.24")?;
+        assert_eq!(&ref_value, value_big_decimal);
 
         Ok(())
     }
