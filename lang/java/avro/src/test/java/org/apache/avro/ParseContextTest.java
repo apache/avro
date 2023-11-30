@@ -82,14 +82,6 @@ public class ParseContextTest {
   }
 
   @Test
-  public void validateNameResolving() {
-    ParseContext context = new ParseContext();
-    assertEquals("Bar", context.fullName("Bar", ""));
-    assertEquals("Bar", context.fullName("Bar", null));
-    assertEquals("foo.Bar", context.fullName("Bar", "foo"));
-  }
-
-  @Test
   public void validateSchemaRetrievalFailure() {
     Schema unknown = Schema.createFixed("unknown", null, null, 0);
 

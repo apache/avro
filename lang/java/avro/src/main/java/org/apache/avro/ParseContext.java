@@ -117,28 +117,30 @@ public class ParseContext {
    * </p>
    *
    * <ul>
-   * <li>If {@code name} is a primitive name, return a (new) schema for it</li>
-   * <li>If {@code name} contains a dot, resolve the schema by full name only</li>
-   * <li>Otherwise: resolve the schema in the current and in the null namespace
-   * (the former takes precedence)</li>
+   * <li>If {@code fullName} is a primitive name, return a (new) schema for
+   * it</li>
+   * <li>Otherwise: resolve the schema in its own namespace and in the null
+   * namespace (the former takes precedence)</li>
    * </ul>
    *
    * Resolving means that the schema is returned if known, and otherwise an
    * unresolved schema (a reference) is returned.
    *
-   * @param name the schema name to resolve
+   * @param fullName the full schema name to resolve
    * @return the schema
    * @throws SchemaParseException when the schema does not exist
    */
-  public Schema resolve(String name) {
-    Schema.Type type = PRIMITIVES.get(name);
+  public Schema resolve(String fullName) {
+    Schema.Type type = PRIMITIVES.get(fullName);
     if (type != null) {
       return Schema.create(type);
     }
 
-    String fullName = fullName(name, null);
     Schema schema = getSchema(fullName);
     if (schema == null) {
+      // Not found; attempt to resolve in the default namespace
+      int lastDot = fullName.lastIndexOf('.');
+      String name = fullName.substring(lastDot + 1);
       schema = getSchema(name);
     }
 
@@ -151,17 +153,6 @@ public class ParseContext {
       schema = newSchemas.get(fullName);
     }
     return schema;
-  }
-
-  // Visible for testing
-  String fullName(String name, String space) {
-    int lastDot = name.lastIndexOf('.');
-    if (lastDot < 0) { // short name
-      if (notEmpty(space)) {
-        return space + "." + name;
-      }
-    }
-    return name;
   }
 
   private boolean notEmpty(String str) {
