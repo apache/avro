@@ -882,7 +882,7 @@ public class TestSchemaBuilder {
   void namesAcceptAll() throws InterruptedException {
     // Ensure that Schema.setNameValidator won't interfere with others unit tests.
     Runnable r = () -> {
-      Schema.setNameValidator(Schema.NameValidator.NO_VALIDATION);
+      Schema.setNameValidator(NameValidator.NO_VALIDATION);
       final Schema schema = SchemaBuilder.record("7name").fields().name("123").type(Schema.create(Schema.Type.INT))
           .noDefault().endRecord();
       Assertions.assertNotNull(schema);
