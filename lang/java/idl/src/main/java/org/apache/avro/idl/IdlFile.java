@@ -34,21 +34,18 @@ import java.util.stream.Collectors;
 public class IdlFile {
   private final Schema mainSchema;
   private final Protocol protocol;
-  private final String namespace;
   private final Map<String, Schema> namedSchemas;
   private final List<String> warnings;
 
   IdlFile(Protocol protocol, List<String> warnings) {
-    this(protocol.getNamespace(), protocol.getTypes(), null, protocol, warnings);
+    this(protocol.getTypes(), null, protocol, warnings);
   }
 
-  IdlFile(String namespace, Schema mainSchema, Iterable<Schema> schemas, List<String> warnings) {
-    this(namespace, schemas, mainSchema, null, warnings);
+  IdlFile(Schema mainSchema, Iterable<Schema> schemas, List<String> warnings) {
+    this(schemas, mainSchema, null, warnings);
   }
 
-  private IdlFile(String namespace, Iterable<Schema> schemas, Schema mainSchema, Protocol protocol,
-      List<String> warnings) {
-    this.namespace = namespace;
+  private IdlFile(Iterable<Schema> schemas, Schema mainSchema, Protocol protocol, List<String> warnings) {
     this.namedSchemas = new LinkedHashMap<>();
     for (Schema namedSchema : schemas) {
       this.namedSchemas.put(namedSchema.getFullName(), namedSchema);
@@ -83,13 +80,6 @@ public class IdlFile {
   }
 
   /**
-   * The default namespace to resolve schema names against.
-   */
-  public String getNamespace() {
-    return namespace;
-  }
-
-  /**
    * The named schemas defined by the IDL file, mapped by their full name.
    */
   public Map<String, Schema> getNamedSchemas() {
@@ -105,14 +95,7 @@ public class IdlFile {
    * @return the schema, or {@code null} if it does not exist
    */
   public Schema getNamedSchema(String name) {
-    Schema result = namedSchemas.get(name);
-    if (result != null) {
-      return result;
-    }
-    if (namespace != null && !name.contains(".")) {
-      result = namedSchemas.get(namespace + '.' + name);
-    }
-    return result;
+    return namedSchemas.get(name);
   }
 
   // Visible for testing

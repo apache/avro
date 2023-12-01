@@ -38,6 +38,7 @@ import java.util.Random;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.JsonProperties;
+import org.apache.avro.NameValidator;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -1260,7 +1261,7 @@ public class TestReflect {
   @Test
   void dollarTerminatedNamespaceCompatibility() {
     ReflectData data = ReflectData.get();
-    Schema s = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).parse(
+    Schema s = new Schema.Parser(NameValidator.NO_VALIDATION).parse(
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
     assertEquals(data.getSchema(data.getClass(s)).toString(),
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
@@ -1270,7 +1271,7 @@ public class TestReflect {
   void dollarTerminatedNestedStaticClassNamespaceCompatibility() {
     ReflectData data = ReflectData.get();
     // Older versions of Avro generated this namespace on nested records.
-    Schema s = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).parse(
+    Schema s = new Schema.Parser(NameValidator.NO_VALIDATION).parse(
         "{\"type\":\"record\",\"name\":\"AnotherSampleRecord\",\"namespace\":\"org.apache.avro.reflect.TestReflect$SampleRecord\",\"fields\":[]}");
     assertThat(data.getSchema(data.getClass(s)).getFullName(),
         is("org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord"));

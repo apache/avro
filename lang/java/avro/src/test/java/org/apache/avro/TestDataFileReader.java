@@ -90,7 +90,7 @@ public class TestDataFileReader {
     // magic header check. This happens with throttled input stream,
     // where we read into buffer less bytes than requested.
 
-    Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
+    Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
         .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
     File f = dataDir.resolve("testThrottledInputStream.avro").toFile();
@@ -149,7 +149,7 @@ public class TestDataFileReader {
       // AVRO-2944 describes hanging/failure in reading Avro file with performing
       // magic header check. This potentially happens with a defective input stream
       // where a -1 value is unexpectedly returned from a read.
-      Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
+      Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
           .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
               + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
       File f = dataDir.resolve("testInputStreamEOF.avro").toFile();
@@ -198,7 +198,7 @@ public class TestDataFileReader {
     // This schema has an accent in the name and the default for the field doesn't
     // match the first type in the union. A Java SDK in the past could create a file
     // containing this schema.
-    Schema legacySchema = new Schema.Parser(Schema.NameValidator.NO_VALIDATION).setValidateDefaults(false)
+    Schema legacySchema = new Schema.Parser(NameValidator.NO_VALIDATION).setValidateDefaults(false)
         .parse("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
             + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
 
