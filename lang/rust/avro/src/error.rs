@@ -362,7 +362,7 @@ pub enum Error {
     DeflateCompress(#[source] std::io::Error),
 
     #[error("Failed to finish flate compressor")]
-    DeflateCompressFinish(std::io::Error),
+    DeflateCompressFinish(#[source] std::io::Error),
 
     #[error("Failed to decompress with flate")]
     DeflateDecompress(#[source] std::io::Error),
@@ -480,45 +480,44 @@ pub enum Error {
     BadCodecMetadata,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, PartialEq)]
 pub enum CompatibilityError {
-    #[error("Schemas are not compatible. Writer schema is {writer_schema_type}, but reader schema is {reader_schema_type}")]
+    #[error("Incompatible schema types! Writer schema is '{writer_schema_type}', but reader schema is '{reader_schema_type}'")]
     WrongType {
         writer_schema_type: String,
         reader_schema_type: String,
     },
 
-    #[error("Schemas are not compatible. The {schema_type} should have been {expected_type}")]
+    #[error("Incompatible schema types! The {schema_type} should have been {expected_type:?}")]
     TypeExpected {
         schema_type: String,
-        expected_type: String,
+        expected_type: &'static [SchemaKind],
     },
 
-    #[error("Schemas are not compatible. Field '{0}' in reader schema does not match the type in the writer schema")]
-    FieldTypeMismatch(String),
+    #[error("Incompatible schemata! Field '{0}' in reader schema does not match the type in the writer schema")]
+    FieldTypeMismatch(String, #[source] Box<CompatibilityError>),
 
-    #[error("Schemas are not compatible. Schemas mismatch")]
-    SchemaMismatch,
-
-    #[error("Schemas are not compatible. Field '{0}' in reader schema must have a default value")]
+    #[error("Incompatible schemata! Field '{0}' in reader schema must have a default value")]
     MissingDefaultValue(String),
 
-    #[error("Schemas are not compatible. Reader's symbols must contain all writer's symbols")]
+    #[error("Incompatible schemata! Reader's symbols must contain all writer's symbols")]
     MissingSymbols,
 
-    #[error("Schemas are not compatible. All elements in union must match for both schemas")]
+    #[error("Incompatible schemata! All elements in union must match for both schemas")]
     MissingUnionElements,
 
-    #[error("Schemas are not compatible. Name and size don't match for fixed")]
+    #[error("Incompatible schemata! Name and size don't match for fixed")]
     FixedMismatch,
 
-    #[error("Schemas are not compatible. The name must be the same for both schemas. Writer's name {writer_name} and reader's name {reader_name}")]
+    #[error("Incompatible schemata! The name must be the same for both schemas. Writer's name {writer_name} and reader's name {reader_name}")]
     NameMismatch {
         writer_name: String,
         reader_name: String,
     },
 
-    #[error("Schemas are not compatible. Unknown type for '{0}'. Make sure that the type is a valid one")]
+    #[error(
+        "Incompatible schemata! Unknown type for '{0}'. Make sure that the type is a valid one"
+    )]
     Inconclusive(String),
 }
 
@@ -535,6 +534,16 @@ impl serde::de::Error for Error {
 }
 
 impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut msg = self.to_string();
+        if let Some(e) = self.source() {
+            msg.extend([": ", &e.to_string()]);
+        }
+        write!(f, "{}", msg)
+    }
+}
+
+impl fmt::Debug for CompatibilityError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut msg = self.to_string();
         if let Some(e) = self.source() {

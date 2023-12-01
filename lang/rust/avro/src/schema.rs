@@ -35,7 +35,7 @@ use std::{
     io::Read,
     str::FromStr,
 };
-use strum_macros::{EnumDiscriminants, EnumString};
+use strum_macros::{Display, EnumDiscriminants, EnumString};
 
 lazy_static! {
     static ref ENUM_SYMBOL_NAME_R: Regex = Regex::new(r"^[A-Za-z_][A-Za-z0-9_]*$").unwrap();
@@ -73,7 +73,7 @@ impl fmt::Display for SchemaFingerprint {
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
-#[derive(Clone, Debug, EnumDiscriminants)]
+#[derive(Clone, Debug, Display, EnumDiscriminants)]
 #[strum_discriminants(name(SchemaKind), derive(Hash, Ord, PartialOrd))]
 pub enum Schema {
     /// A `null` Avro schema.
@@ -202,42 +202,6 @@ impl From<&types::Value> for SchemaKind {
             Value::LocalTimestampMillis(_) => Self::LocalTimestampMillis,
             Value::LocalTimestampMicros(_) => Self::LocalTimestampMicros,
             Value::Duration { .. } => Self::Duration,
-        }
-    }
-}
-
-// Implement `Display` for `SchemaKind`.
-impl fmt::Display for Schema {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Schema::Null => write!(f, "Null"),
-            Schema::Boolean => write!(f, "Boolean"),
-            Schema::Int => write!(f, "Int"),
-            Schema::Long => write!(f, "Long"),
-            Schema::Float => write!(f, "Float"),
-            Schema::Double => write!(f, "Double"),
-            Schema::Bytes => write!(f, "Bytes"),
-            Schema::String => write!(f, "String"),
-            Schema::Array(..) => write!(f, "Array"),
-            Schema::Map(..) => write!(f, "Map"),
-            Schema::Union(..) => write!(f, "Union"),
-            Schema::Record(..) => write!(f, "Record"),
-            Schema::Enum(..) => write!(f, "Enum"),
-            Schema::Fixed(..) => write!(f, "Fixed"),
-            Schema::Decimal(..) => write!(f, "Decimal"),
-            Schema::BigDecimal => write!(f, "BigDecimal"),
-            Schema::Uuid => write!(f, "Uuid"),
-            Schema::Date => write!(f, "Date"),
-            Schema::TimeMillis => write!(f, "TimeMillis"),
-            Schema::TimeMicros => write!(f, "TimeMicros"),
-            Schema::TimestampMillis => write!(f, "TimestampMillis"),
-            Schema::TimestampMicros => write!(f, "TimestampMicros"),
-            Schema::LocalTimestampMillis => write!(f, "LocalTimestampMillis"),
-            Schema::LocalTimestampMicros => write!(f, "LocalTimestampMicros"),
-            Schema::Duration => write!(f, "Duration"),
-            Schema::Ref { name } => {
-                write!(f, "{}", name.name)
-            }
         }
     }
 }
