@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    decimal::serialize_big_decimal,
+    bigdecimal::serialize_big_decimal,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
         Schema, SchemaKind, UnionSchema,
