@@ -189,9 +189,9 @@ mod tests {
 
     #[test]
     fn test_avro_3779_bigdecimal_serial() -> TestResult {
-        let value: bigdecimal::BigDecimal =
+        let value: BigDecimal =
             bigdecimal::BigDecimal::from(-1421).div(bigdecimal::BigDecimal::from(2));
-        let mut current: bigdecimal::BigDecimal = bigdecimal::BigDecimal::one();
+        let mut current: BigDecimal = BigDecimal::one();
 
         for iter in 1..180 {
             let buffer: Vec<u8> = serialize_big_decimal(&current);
@@ -202,17 +202,13 @@ mod tests {
             let mut result: Vec<u8> = Vec::new();
             result.extend_from_slice(as_slice);
 
-            let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
+            let deserialize_big_decimal: Result<BigDecimal, Error> =
                 deserialize_big_decimal(&result);
             assert!(
                 deserialize_big_decimal.is_ok(),
                 "can't deserialize for iter {iter}"
             );
-            assert_eq!(
-                current,
-                deserialize_big_decimal.unwrap(),
-                "not equals for {iter}"
-            );
+            assert_eq!(current, deserialize_big_decimal?, "not equals for {iter}");
             current = current.mul(&value);
         }
 
@@ -223,15 +219,14 @@ mod tests {
         let mut result: Vec<u8> = Vec::new();
         result.extend_from_slice(as_slice);
 
-        let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-            deserialize_big_decimal(&result);
+        let deserialize_big_decimal: Result<BigDecimal, Error> = deserialize_big_decimal(&result);
         assert!(
             deserialize_big_decimal.is_ok(),
             "can't deserialize for zero"
         );
         assert_eq!(
             BigDecimal::zero(),
-            deserialize_big_decimal.unwrap(),
+            deserialize_big_decimal?,
             "not equals for zero"
         );
 
@@ -241,22 +236,23 @@ mod tests {
     #[test]
     fn test_avro_3779_record_with_bg() -> TestResult {
         let schema_str = r#"
-    {
-      "type": "record",
-      "name": "test",
-      "fields": [
         {
-          "name": "field_name",
-          "type": "bytes",
-          "logicalType": "big-decimal"
+          "type": "record",
+          "name": "test",
+          "fields": [
+            {
+              "name": "field_name",
+              "type": "bytes",
+              "logicalType": "big-decimal"
+            }
+          ]
         }
-      ]
-    }
-    "#;
+        "#;
         let schema = Schema::parse_str(schema_str)?;
 
         // build record with big decimal value
-        let mut record = Record::new(&schema).unwrap();
+        let mut record = Record::new(&schema)
+            .expect(format!("Cannot create a Record from {schema_str}").as_str());
         let val = BigDecimal::new(BigInt::from(12), 2);
         record.put("field_name", val.clone());
 
@@ -272,26 +268,22 @@ mod tests {
         writer.flush()?;
 
         // read record
-        let wrote_data = writer.into_inner().unwrap();
+        let wrote_data = writer.into_inner()?;
         let mut reader = Reader::new(&wrote_data[..])?;
 
-        let v = reader.next().unwrap();
-        assert!(v.is_ok(), "reader next didn't work : {}", v.unwrap_err());
-        let value = v.unwrap();
+        let value = reader.next().unwrap()?;
 
         // extract field value
-        let big_decimal_result: Result<&Value, &str> = match value {
+        let big_decimal_value: &Value = match value {
             Value::Record(ref fields) => Ok(&fields[0].1),
-            _ => Err("should be record"),
-        };
-        assert!(big_decimal_result.is_ok());
-        let big_decimal_value = big_decimal_result.unwrap();
-        let x1res: Result<&BigDecimal, &str> = match big_decimal_value {
+            other => Err(format!("Expected a Value::Record, got: {other:?}")),
+        }?;
+
+        let x1res: &BigDecimal = match big_decimal_value {
             Value::BigDecimal(ref s) => Ok(s),
-            _ => Err("Not bg"),
-        };
-        assert!(x1res.is_ok(), "res is not big decimal");
-        assert_eq!(&val, x1res.unwrap());
+            other => Err(format!("Expected Value::BigDecimal, got: {other:?}")),
+        }?;
+        assert_eq!(&val, x1res);
 
         Ok(())
     }
@@ -307,11 +299,11 @@ mod tests {
         let value = next_element.unwrap()?;
         let bg = match value {
             Value::Record(ref fields) => Ok(&fields[0].1),
-            _ => Err("Not a record {value.}"),
+            other => Err(format!("Expected a Value::Record, got: {other:?}")),
         }?;
         let value_big_decimal = match bg {
             Value::BigDecimal(val) => Ok(val),
-            _ => Err("Not a big decimal"),
+            other => Err(format!("Expected a Value::BigDecimal, got: {other:?}")),
         }?;
 
         let ref_value = BigDecimal::from_str("2.24")?;
