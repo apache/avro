@@ -60,7 +60,7 @@
     <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
     <plugin-tools-javadoc.version>3.5.2</plugin-tools-javadoc.version>
-    <spotless-maven-plugin.version>2.27.2</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>2.41.0</spotless-maven-plugin.version>
     <maven-surefire-plugin.version>3.1.0</maven-surefire-plugin.version>
 
     <!-- Pin output timestamp to make the Java build reproducible -->
