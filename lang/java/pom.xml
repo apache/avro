@@ -41,7 +41,7 @@
     <commons-cli.version>1.5.0</commons-cli.version>
     <commons-compress.version>1.24.0</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
-    <grpc.version>1.59.0</grpc.version>
+    <grpc.version>1.59.1</grpc.version>
     <hadoop.version>3.3.5</hadoop.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jackson-bom.version>2.15.3</jackson-bom.version>
