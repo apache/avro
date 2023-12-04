@@ -16,7 +16,8 @@
 // under the License.
 
 use crate::{
-    decimal::{deserialize_big_decimal, Decimal},
+    bigdecimal::deserialize_big_decimal,
+    decimal::Decimal,
     duration::Duration,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
