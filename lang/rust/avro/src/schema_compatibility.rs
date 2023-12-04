@@ -73,14 +73,14 @@ impl Checker {
                     match readers_schema {
                         Schema::Map(r_m) => self.full_match_schemas(w_m, r_m),
                         _ => Err(CompatibilityError::WrongType {
-                            writer_schema_type: format!("{}", writers_schema),
-                            reader_schema_type: format!("{}", readers_schema),
+                            writer_schema_type: format!("{:#?}", writers_schema),
+                            reader_schema_type: format!("{:#?}", readers_schema),
                         }),
                     }
                 } else {
-                    Err(CompatibilityError::WrongType {
-                        writer_schema_type: format!("{}", writers_schema),
-                        reader_schema_type: format!("{}", readers_schema),
+                    Err(CompatibilityError::TypeExpected {
+                        schema_type: String::from("writers_schema"),
+                        expected_type: &[SchemaKind::Record],
                     })
                 }
             }
@@ -89,14 +89,14 @@ impl Checker {
                     match readers_schema {
                         Schema::Array(r_a) => self.full_match_schemas(w_a, r_a),
                         _ => Err(CompatibilityError::WrongType {
-                            writer_schema_type: format!("{}", writers_schema),
-                            reader_schema_type: format!("{}", readers_schema),
+                            writer_schema_type: format!("{:#?}", writers_schema),
+                            reader_schema_type: format!("{:#?}", readers_schema),
                         }),
                     }
                 } else {
-                    Err(CompatibilityError::WrongType {
-                        writer_schema_type: format!("{}", writers_schema),
-                        reader_schema_type: format!("{}", readers_schema),
+                    Err(CompatibilityError::TypeExpected {
+                        schema_type: String::from("writers_schema"),
+                        expected_type: &[SchemaKind::Array],
                     })
                 }
             }
@@ -143,7 +143,7 @@ impl Checker {
         if w_type == SchemaKind::Union {
             return Err(CompatibilityError::TypeExpected {
                 schema_type: String::from("writers_schema"),
-                expected_type: String::from("record"),
+                expected_type: &[SchemaKind::Record],
             });
         }
 
@@ -159,11 +159,13 @@ impl Checker {
             {
                 for field in r_fields.iter() {
                     if let Some(pos) = w_lookup.get(&field.name) {
-                        if self
-                            .full_match_schemas(&w_fields[*pos].schema, &field.schema)
-                            .is_err()
+                        if let Err(err) =
+                            self.full_match_schemas(&w_fields[*pos].schema, &field.schema)
                         {
-                            return Err(CompatibilityError::FieldTypeMismatch(field.name.clone()));
+                            return Err(CompatibilityError::FieldTypeMismatch(
+                                field.name.clone(),
+                                Box::new(err),
+                            ));
                         }
                     } else if field.default.is_none() {
                         return Err(CompatibilityError::MissingDefaultValue(field.name.clone()));
@@ -179,29 +181,18 @@ impl Checker {
         writers_schema: &Schema,
         readers_schema: &Schema,
     ) -> Result<(), CompatibilityError> {
-        // Do not need to check the SchemaKind of reader as this function
-        // is only called when the readers_schema is Union
-        let w_type = SchemaKind::from(writers_schema);
-
-        if w_type == SchemaKind::Union {
-            if let Schema::Union(u) = writers_schema {
-                if u.schemas
-                    .iter()
-                    .all(|schema| self.full_match_schemas(schema, readers_schema).is_ok())
-                {
-                    return Ok(());
-                } else {
-                    return Err(CompatibilityError::MissingUnionElements);
-                }
+        if let Schema::Union(u) = writers_schema {
+            if u.schemas
+                .iter()
+                .all(|schema| self.full_match_schemas(schema, readers_schema).is_ok())
+            {
+                return Ok(());
+            } else {
+                return Err(CompatibilityError::MissingUnionElements);
             }
-            // } else {
-            //     return Err(Error::CompatibilityError(String::from(
-            //         "writers_schema should have been Schema::Union",
-            //     )));
-            // }
         } else if let Schema::Union(u) = readers_schema {
-            // This check is nneded because the writer_schema can be a not union
-            // but the type can be contain in the union of the reeader schema
+            // This check is needed because the writer_schema can be not union
+            // but the type can be contain in the union of the reader schema
             // e.g. writer_schema is string and reader_schema is [string, int]
             if u.schemas
                 .iter()
@@ -210,7 +201,7 @@ impl Checker {
                 return Ok(());
             }
         }
-        Err(CompatibilityError::SchemaMismatch)
+        Err(CompatibilityError::MissingUnionElements)
     }
 
     fn recursion_in_progress(&mut self, writers_schema: &Schema, readers_schema: &Schema) -> bool {
@@ -242,9 +233,12 @@ impl SchemaCompatibility {
 
     /// `mutual_read` performs a full, recursive check that a datum written using either
     /// the writers_schema or the readers_schema can be read using the other schema.
-    pub fn mutual_read(writers_schema: &Schema, readers_schema: &Schema) -> bool {
-        SchemaCompatibility::can_read(writers_schema, readers_schema).is_ok()
-            && SchemaCompatibility::can_read(readers_schema, writers_schema).is_ok()
+    pub fn mutual_read(
+        writers_schema: &Schema,
+        readers_schema: &Schema,
+    ) -> Result<(), CompatibilityError> {
+        SchemaCompatibility::can_read(writers_schema, readers_schema)?;
+        SchemaCompatibility::can_read(readers_schema, writers_schema)
     }
 
     ///  `match_schemas` performs a basic check that a datum written with the
@@ -283,13 +277,13 @@ impl SchemaCompatibility {
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
-                                expected_type: String::from("record"),
+                                expected_type: &[SchemaKind::Record],
                             });
                         }
                     } else {
                         return Err(CompatibilityError::TypeExpected {
                             schema_type: String::from("writers_schema"),
-                            expected_type: String::from("record"),
+                            expected_type: &[SchemaKind::Record],
                         });
                     }
                 }
@@ -316,7 +310,7 @@ impl SchemaCompatibility {
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("writers_schema"),
-                                expected_type: String::from("fFixed"),
+                                expected_type: &[SchemaKind::Fixed],
                             });
                         }
                     }
@@ -335,13 +329,13 @@ impl SchemaCompatibility {
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
-                                expected_type: String::from("enum"),
+                                expected_type: &[SchemaKind::Enum],
                             });
                         }
                     } else {
                         return Err(CompatibilityError::TypeExpected {
                             schema_type: String::from("writers_schema"),
-                            expected_type: String::from("enum"),
+                            expected_type: &[SchemaKind::Enum],
                         });
                     }
                 }
@@ -352,13 +346,13 @@ impl SchemaCompatibility {
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
-                                expected_type: String::from("map"),
+                                expected_type: &[SchemaKind::Map],
                             });
                         }
                     } else {
                         return Err(CompatibilityError::TypeExpected {
                             schema_type: String::from("writers_schema"),
-                            expected_type: String::from("map"),
+                            expected_type: &[SchemaKind::Map],
                         });
                     }
                 }
@@ -369,13 +363,13 @@ impl SchemaCompatibility {
                         } else {
                             return Err(CompatibilityError::TypeExpected {
                                 schema_type: String::from("readers_schema"),
-                                expected_type: String::from("array"),
+                                expected_type: &[SchemaKind::Array],
                             });
                         }
                     } else {
                         return Err(CompatibilityError::TypeExpected {
                             schema_type: String::from("writers_schema"),
-                            expected_type: String::from("array"),
+                            expected_type: &[SchemaKind::Array],
                         });
                     }
                 }
@@ -398,7 +392,7 @@ impl SchemaCompatibility {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("readers_schema"),
-                        expected_type: String::from("long, float or double"),
+                        expected_type: &[SchemaKind::Long, SchemaKind::Float, SchemaKind::Double],
                     })
                 }
             }
@@ -411,7 +405,7 @@ impl SchemaCompatibility {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("readers_schema"),
-                        expected_type: String::from("float or double"),
+                        expected_type: &[SchemaKind::Float, SchemaKind::Double],
                     })
                 }
             }
@@ -424,7 +418,7 @@ impl SchemaCompatibility {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("readers_schema"),
-                        expected_type: String::from("float or double"),
+                        expected_type: &[SchemaKind::Float, SchemaKind::Double],
                     })
                 }
             }
@@ -434,7 +428,7 @@ impl SchemaCompatibility {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("readers_schema"),
-                        expected_type: String::from("bytes"),
+                        expected_type: &[SchemaKind::Bytes],
                     })
                 }
             }
@@ -444,7 +438,7 @@ impl SchemaCompatibility {
                 } else {
                     Err(CompatibilityError::TypeExpected {
                         schema_type: String::from("readers_schema"),
-                        expected_type: String::from("string"),
+                        expected_type: &[SchemaKind::String],
                     })
                 }
             }
@@ -606,10 +600,9 @@ mod tests {
     #[test]
     fn test_broken() {
         assert_eq!(
-            "Schemas are not compatible. All elements in union must match for both schemas",
+            CompatibilityError::MissingUnionElements,
             SchemaCompatibility::can_read(&int_string_union_schema(), &int_union_schema())
                 .unwrap_err()
-                .to_string()
         )
     }
 
@@ -736,10 +729,10 @@ mod tests {
 "#,
         )?;
         assert!(SchemaCompatibility::can_read(&writer_schema(), &reader_schema,).is_ok());
-        assert_eq!("Schemas are not compatible. Field 'oldfield2' in reader schema must have a default value", SchemaCompatibility::can_read(
-            &reader_schema,
-            &writer_schema()
-        ).unwrap_err().to_string());
+        assert_eq!(
+            CompatibilityError::MissingDefaultValue(String::from("oldfield2")),
+            SchemaCompatibility::can_read(&reader_schema, &writer_schema()).unwrap_err()
+        );
 
         Ok(())
     }
@@ -754,10 +747,10 @@ mod tests {
 "#,
         )?;
         assert!(SchemaCompatibility::can_read(&writer_schema(), &reader_schema).is_ok());
-        assert_eq!("Schemas are not compatible. Field 'oldfield1' in reader schema must have a default value", SchemaCompatibility::can_read(
-            &reader_schema,
-            &writer_schema()
-        ).unwrap_err().to_string());
+        assert_eq!(
+            CompatibilityError::MissingDefaultValue(String::from("oldfield1")),
+            SchemaCompatibility::can_read(&reader_schema, &writer_schema()).unwrap_err()
+        );
 
         Ok(())
     }
@@ -789,10 +782,10 @@ mod tests {
 "#,
         )?;
         assert!(SchemaCompatibility::can_read(&writer_schema(), &reader_schema).is_ok());
-        assert_eq!("Schemas are not compatible. Field 'oldfield2' in reader schema must have a default value",SchemaCompatibility::can_read(
-            &reader_schema,
-            &writer_schema()
-        ).unwrap_err().to_string());
+        assert_eq!(
+            CompatibilityError::MissingDefaultValue(String::from("oldfield2")),
+            SchemaCompatibility::can_read(&reader_schema, &writer_schema()).unwrap_err()
+        );
 
         Ok(())
     }
@@ -807,13 +800,14 @@ mod tests {
         ]}
 "#,
         )?;
-        assert_eq!("Schemas are not compatible. Field 'newfield1' in reader schema must have a default value", SchemaCompatibility::can_read(
-            &writer_schema(),
-            &reader_schema).unwrap_err().to_string());
-        assert_eq!("Schemas are not compatible. Field 'oldfield2' in reader schema must have a default value", SchemaCompatibility::can_read(
-            &reader_schema,
-            &writer_schema()
-        ).unwrap_err().to_string());
+        assert_eq!(
+            CompatibilityError::MissingDefaultValue(String::from("newfield1")),
+            SchemaCompatibility::can_read(&writer_schema(), &reader_schema).unwrap_err()
+        );
+        assert_eq!(
+            CompatibilityError::MissingDefaultValue(String::from("oldfield2")),
+            SchemaCompatibility::can_read(&reader_schema, &writer_schema()).unwrap_err()
+        );
 
         Ok(())
     }
@@ -824,10 +818,10 @@ mod tests {
         let invalid_reader = string_map_schema();
 
         assert!(SchemaCompatibility::can_read(&string_array_schema(), &valid_reader).is_ok());
-        assert_eq!("Schemas are not compatible. Unknown type for 'writers_schema'. Make sure that the type is a valid one", SchemaCompatibility::can_read(
-            &string_array_schema(),
-            &invalid_reader
-        ).unwrap_err().to_string());
+        assert_eq!(
+            CompatibilityError::Inconclusive(String::from("writers_schema")),
+            SchemaCompatibility::can_read(&string_array_schema(), &invalid_reader).unwrap_err()
+        );
     }
 
     #[test]
@@ -835,10 +829,11 @@ mod tests {
         let valid_reader = Schema::String;
         assert!(SchemaCompatibility::can_read(&Schema::String, &valid_reader).is_ok());
         assert_eq!(
-            "Schemas are not compatible. The readers_schema should have been long, float or double",
-            SchemaCompatibility::can_read(&Schema::Int, &Schema::String)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::TypeExpected {
+                schema_type: String::from("readers_schema"),
+                expected_type: &[SchemaKind::Long, SchemaKind::Float, SchemaKind::Double],
+            },
+            SchemaCompatibility::can_read(&Schema::Int, &Schema::String).unwrap_err()
         );
     }
 
@@ -849,10 +844,8 @@ mod tests {
         let union_reader = union_schema(vec![Schema::String]);
 
         assert_eq!(
-            "Schemas are not compatible. All elements in union must match for both schemas",
-            SchemaCompatibility::can_read(&union_writer, &union_reader)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingUnionElements,
+            SchemaCompatibility::can_read(&union_writer, &union_reader).unwrap_err()
         );
         assert!(SchemaCompatibility::can_read(&union_reader, &union_writer).is_ok());
     }
@@ -869,15 +862,21 @@ mod tests {
 
         let int_schema = Schema::parse_str(
             r#"
-      {"type":"record", "name":"MyRecord", "namespace":"ns", "fields": [
-        {"name":"field1", "type":"int"}
-      ]}
-"#,
+              {"type":"record", "name":"MyRecord", "namespace":"ns", "fields": [
+                {"name":"field1", "type":"int"}
+              ]}
+        "#,
         )?;
 
         assert_eq!(
-            "Schemas are not compatible. Field 'field1' in reader schema does not match the type in the writer schema",
-            SchemaCompatibility::can_read(&string_schema, &int_schema).unwrap_err().to_string()
+            CompatibilityError::FieldTypeMismatch(
+                "field1".to_owned(),
+                Box::new(CompatibilityError::TypeExpected {
+                    schema_type: "readers_schema".to_owned(),
+                    expected_type: &[SchemaKind::Bytes]
+                })
+            ),
+            SchemaCompatibility::can_read(&string_schema, &int_schema).unwrap_err()
         );
 
         Ok(())
@@ -893,10 +892,8 @@ mod tests {
         let enum_schema2 =
             Schema::parse_str(r#"{"type":"enum", "name":"MyEnum", "symbols":["A","B","C"]}"#)?;
         assert_eq!(
-            "Schemas are not compatible. Reader's symbols must contain all writer's symbols",
-            SchemaCompatibility::can_read(&enum_schema2, &enum_schema1)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingSymbols,
+            SchemaCompatibility::can_read(&enum_schema2, &enum_schema1).unwrap_err()
         );
         assert!(SchemaCompatibility::can_read(&enum_schema1, &enum_schema2).is_ok());
 
@@ -971,10 +968,8 @@ mod tests {
         // short name match, but no structure match
         let read_schema = union_schema(vec![Schema::Null, point_3d_no_default_schema()]);
         assert_eq!(
-            "Schemas are not compatible. Schemas mismatch",
-            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingUnionElements,
+            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema).unwrap_err()
         );
     }
 
@@ -988,10 +983,8 @@ mod tests {
             point_3d_schema(),
         ]);
         assert_eq!(
-            "Schemas are not compatible. Schemas mismatch",
-            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingUnionElements,
+            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema).unwrap_err()
         );
     }
 
@@ -1005,10 +998,8 @@ mod tests {
             point_2d_schema(),
         ]);
         assert_eq!(
-            "Schemas are not compatible. Schemas mismatch",
-            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingUnionElements,
+            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema).unwrap_err()
         );
     }
 
@@ -1022,10 +1013,8 @@ mod tests {
             point_3d_schema(),
         ]);
         assert_eq!(
-            "Schemas are not compatible. Schemas mismatch",
-            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema)
-                .unwrap_err()
-                .to_string()
+            CompatibilityError::MissingUnionElements,
+            SchemaCompatibility::can_read(&point_2d_fullname_schema(), &read_schema).unwrap_err()
         );
     }
 
@@ -1313,7 +1302,7 @@ mod tests {
                         {"name": "success", "type": ["null", {"type": "map", "values": "int"}], "default": null}
                     ]
                 }"#)?,
-                "Schemas are not compatible. Field 'success' in reader schema does not match the type in the writer schema"
+                "Incompatible schemata! Field 'success' in reader schema does not match the type in the writer schema"
             ),
             (
                 Schema::parse_str(
@@ -1332,7 +1321,7 @@ mod tests {
                             {"name": "max_values", "type": ["null", {"type": "array", "items": "int"}], "default": null}
                         ]
                     }"#)?,
-                    "Schemas are not compatible. Field 'max_values' in reader schema does not match the type in the writer schema"
+                    "Incompatible schemata! Field 'max_values' in reader schema does not match the type in the writer schema"
             )
         ];
 
