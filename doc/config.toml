@@ -87,8 +87,8 @@ anchor = "smart"
 
 # Language configuration
 
-[languages]
-[languages.en]
+[languages.params]
+[languages.en.params]
 title = "Apache Avro"
 description = ""
 languageName ="English"
