@@ -763,6 +763,7 @@
 //! assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
 //! ```
 
+mod bigdecimal;
 mod codec;
 mod de;
 mod decimal;

@@ -49,7 +49,7 @@ fn test_schema() -> TestResult {
                     ROOT_DIRECTORY.to_owned() + "/" + entry.file_name().to_str().unwrap();
 
                 let dir_result = test_folder(sub_folder.as_str());
-                if let Result::Err(ed) = dir_result {
+                if let Err(ed) = dir_result {
                     result = match result {
                         Ok(()) => Err(ed),
                         Err(e) => Err(e.merge(&ed)),
@@ -58,9 +58,8 @@ fn test_schema() -> TestResult {
             }
         }
     }
-    if let Err(e) = result {
-        core::panic!("{}", e)
-    }
+    result?;
+
     Ok(())
 }
 
@@ -99,16 +98,16 @@ impl fmt::Display for ErrorsDesc {
 
 fn test_folder(folder: &str) -> Result<(), ErrorsDesc> {
     let file_name = folder.to_owned() + "/schema.json";
-    let content = std::fs::read_to_string(file_name).expect("Unable to find schema.jon file");
+    let content = std::fs::read_to_string(file_name).expect("Unable to find schema.json file");
 
     let schema: Schema = Schema::parse_str(content.as_str()).expect("Can't read schema");
 
     let data_file_name = folder.to_owned() + "/data.avro";
     let data_path: &Path = Path::new(data_file_name.as_str());
-    let mut result = Result::Ok(());
+    let mut result = Ok(());
     if !data_path.exists() {
         log::error!("{}", format!("folder {folder} does not exist"));
-        return Result::Err(ErrorsDesc::new(
+        return Err(ErrorsDesc::new(
             format!("folder {folder} does not exist").as_str(),
         ));
     } else {

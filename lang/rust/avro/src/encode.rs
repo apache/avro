@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::{
-    decimal::serialize_big_decimal,
+    bigdecimal::serialize_big_decimal,
     schema::{
         DecimalSchema, EnumSchema, FixedSchema, Name, Namespace, RecordSchema, ResolvedSchema,
         Schema, SchemaKind, UnionSchema,
@@ -130,8 +130,8 @@ pub(crate) fn encode_internal<S: Borrow<Schema>>(
             buffer,
         ),
         Value::BigDecimal(bg) => {
-            let mut buf: Vec<u8> = serialize_big_decimal(bg);
-            buffer.append(&mut buf);
+            let buf: Vec<u8> = serialize_big_decimal(bg);
+            buffer.extend_from_slice(buf.as_slice());
         }
         Value::Bytes(bytes) => match *schema {
             Schema::Bytes => encode_bytes(bytes, buffer),
