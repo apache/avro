@@ -73,8 +73,8 @@ impl Checker {
                     match readers_schema {
                         Schema::Map(r_m) => self.full_match_schemas(w_m, r_m),
                         _ => Err(CompatibilityError::WrongType {
-                            writer_schema_type: format!("{}", writers_schema),
-                            reader_schema_type: format!("{}", readers_schema),
+                            writer_schema_type: format!("{:#?}", writers_schema),
+                            reader_schema_type: format!("{:#?}", readers_schema),
                         }),
                     }
                 } else {
@@ -89,8 +89,8 @@ impl Checker {
                     match readers_schema {
                         Schema::Array(r_a) => self.full_match_schemas(w_a, r_a),
                         _ => Err(CompatibilityError::WrongType {
-                            writer_schema_type: format!("{}", writers_schema),
-                            reader_schema_type: format!("{}", readers_schema),
+                            writer_schema_type: format!("{:#?}", writers_schema),
+                            reader_schema_type: format!("{:#?}", readers_schema),
                         }),
                     }
                 } else {
