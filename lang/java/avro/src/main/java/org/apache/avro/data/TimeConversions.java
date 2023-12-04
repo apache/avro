@@ -204,6 +204,53 @@ public class TimeConversions {
     }
   }
 
+  public static class TimestampNanosConversion extends Conversion<Instant> {
+    @Override
+    public Class<Instant> getConvertedType() {
+      return Instant.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "timestamp-nanos";
+    }
+
+    @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.NANOS);";
+    }
+
+    @Override
+    public Instant fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      long epochSeconds = microsFromEpoch / 1_000_000_000L;
+      long nanoAdjustment = microsFromEpoch % 1_000_000_000L;
+
+      return Instant.ofEpochSecond(epochSeconds, nanoAdjustment);
+    }
+
+    @Override
+    public Long toLong(Instant instant, Schema schema, LogicalType type) {
+      long seconds = instant.getEpochSecond();
+      int nanos = instant.getNano();
+
+      if (seconds < 0 && nanos > 0) {
+        long micros = Math.multiplyExact(seconds + 1, 1_000_000_000L);
+        long adjustment = nanos - 1_000_000;
+
+        return Math.addExact(micros, adjustment);
+      } else {
+        long micros = Math.multiplyExact(seconds, 1_000_000_000L);
+
+        return Math.addExact(micros, nanos);
+      }
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
   public static class LocalTimestampMillisConversion extends Conversion<LocalDateTime> {
     private final TimestampMillisConversion timestampMillisConversion = new TimestampMillisConversion();
 
@@ -263,6 +310,37 @@ public class TimeConversions {
     @Override
     public Schema getRecommendedSchema() {
       return LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class LocalTimestampNanosConversion extends Conversion<LocalDateTime> {
+    private final TimestampNanosConversion timestampNanosConversion = new TimestampNanosConversion();
+
+    @Override
+    public Class<LocalDateTime> getConvertedType() {
+      return LocalDateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "local-timestamp-nanos";
+    }
+
+    @Override
+    public LocalDateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      Instant instant = timestampNanosConversion.fromLong(microsFromEpoch, schema, type);
+      return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    @Override
+    public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
+      Instant instant = timestamp.toInstant(ZoneOffset.UTC);
+      return timestampNanosConversion.toLong(instant, schema, type);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.localTimestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 }

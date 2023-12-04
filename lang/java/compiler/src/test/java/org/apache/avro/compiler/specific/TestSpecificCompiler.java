@@ -393,6 +393,7 @@ public class TestSpecificCompiler {
     Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampNanosSchema = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     // Date/time types should always use upper level java classes
     assertEquals("java.time.LocalDate", compiler.javaType(dateSchema), "Should use java.time.LocalDate for date type");
@@ -404,6 +405,8 @@ public class TestSpecificCompiler {
         "Should use java.time.LocalTime for time-micros type");
     assertEquals("java.time.Instant", compiler.javaType(timestampMicrosSchema),
         "Should use java.time.Instant for timestamp-micros type");
+    assertEquals("java.time.Instant", compiler.javaType(timestampNanosSchema),
+        "Should use java.time.Instant for timestamp-nanos type");
   }
 
   @Test
@@ -582,15 +585,18 @@ public class TestSpecificCompiler {
     // present or added as converters (AVRO-2481).
     final Schema tsMillis = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     final Schema tsMicros = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    final Schema tsNanos = LogicalTypes.timestampNanos().addToSchema(Schema.create(Schema.Type.LONG));
 
     final Collection<String> conversions = compiler.getUsedConversionClasses(SchemaBuilder.record("WithTimestamps")
         .fields().name("tsMillis").type(tsMillis).noDefault().name("tsMillisOpt").type().unionOf().nullType().and()
         .type(tsMillis).endUnion().noDefault().name("tsMicros").type(tsMicros).noDefault().name("tsMicrosOpt").type()
-        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().endRecord());
+        .unionOf().nullType().and().type(tsMicros).endUnion().noDefault().name("tsNanos").type(tsNanos).noDefault()
+        .name("tsNanosOpt").type().unionOf().nullType().and().type(tsNanos).endUnion().noDefault().endRecord());
 
-    assertEquals(2, conversions.size());
+    assertEquals(3, conversions.size());
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMillisConversion"));
     assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampMicrosConversion"));
+    assertThat(conversions, hasItem("org.apache.avro.data.TimeConversions.TimestampNanosConversion"));
   }
 
   @Test
