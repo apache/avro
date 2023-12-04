@@ -206,42 +206,6 @@ impl From<&types::Value> for SchemaKind {
     }
 }
 
-// Implement `Display` for `SchemaKind`.
-impl fmt::Display for Schema {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Schema::Null => write!(f, "Null"),
-            Schema::Boolean => write!(f, "Boolean"),
-            Schema::Int => write!(f, "Int"),
-            Schema::Long => write!(f, "Long"),
-            Schema::Float => write!(f, "Float"),
-            Schema::Double => write!(f, "Double"),
-            Schema::Bytes => write!(f, "Bytes"),
-            Schema::String => write!(f, "String"),
-            Schema::Array(..) => write!(f, "Array"),
-            Schema::Map(..) => write!(f, "Map"),
-            Schema::Union(..) => write!(f, "Union"),
-            Schema::Record(..) => write!(f, "Record"),
-            Schema::Enum(..) => write!(f, "Enum"),
-            Schema::Fixed(..) => write!(f, "Fixed"),
-            Schema::Decimal(..) => write!(f, "Decimal"),
-            Schema::BigDecimal => write!(f, "BigDecimal"),
-            Schema::Uuid => write!(f, "Uuid"),
-            Schema::Date => write!(f, "Date"),
-            Schema::TimeMillis => write!(f, "TimeMillis"),
-            Schema::TimeMicros => write!(f, "TimeMicros"),
-            Schema::TimestampMillis => write!(f, "TimestampMillis"),
-            Schema::TimestampMicros => write!(f, "TimestampMicros"),
-            Schema::LocalTimestampMillis => write!(f, "LocalTimestampMillis"),
-            Schema::LocalTimestampMicros => write!(f, "LocalTimestampMicros"),
-            Schema::Duration => write!(f, "Duration"),
-            Schema::Ref { name } => {
-                write!(f, "{}", name.name)
-            }
-        }
-    }
-}
-
 /// Represents names for `record`, `enum` and `fixed` Avro schemas.
 ///
 /// Each of these `Schema`s have a `fullname` composed of two parts:
