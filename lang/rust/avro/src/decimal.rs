@@ -15,15 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::{
-    decode::{decode_len, decode_long},
-    encode::{encode_bytes, encode_long},
-    types::Value,
-    AvroResult, Error,
-};
-use bigdecimal::BigDecimal;
+use crate::{AvroResult, Error};
 use num_bigint::{BigInt, Sign};
-use std::io::Read;
 
 #[derive(Debug, Clone)]
 pub struct Decimal {
@@ -112,47 +105,12 @@ impl<T: AsRef<[u8]>> From<T> for Decimal {
     }
 }
 
-pub(crate) fn serialize_big_decimal(decimal: &BigDecimal) -> Vec<u8> {
-    let mut buffer: Vec<u8> = Vec::new();
-    let (big_int, exponent): (BigInt, i64) = decimal.as_bigint_and_exponent();
-    let big_endian_value: Vec<u8> = big_int.to_signed_bytes_be();
-    encode_bytes(&big_endian_value, &mut buffer);
-    encode_long(exponent, &mut buffer);
-
-    buffer
-}
-
-pub(crate) fn deserialize_big_decimal(bytes: &Vec<u8>) -> Result<BigDecimal, Error> {
-    let mut bytes: &[u8] = bytes.as_slice();
-    let mut big_decimal_buffer = match decode_len(&mut bytes) {
-        Ok(size) => vec![0u8; size],
-        Err(err) => return Err(Error::BigDecimalLen(Box::new(err))),
-    };
-
-    bytes
-        .read_exact(&mut big_decimal_buffer[..])
-        .map_err(Error::ReadDouble)?;
-
-    match decode_long(&mut bytes) {
-        Ok(Value::Long(scale_value)) => {
-            let big_int: BigInt = BigInt::from_signed_bytes_be(&big_decimal_buffer);
-            let decimal = BigDecimal::new(big_int, scale_value);
-            Ok(decimal)
-        }
-        _ => Err(Error::BigDecimalScale),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use apache_avro_test_helper::TestResult;
-    use bigdecimal::{One, Zero};
     use pretty_assertions::assert_eq;
-    use std::{
-        convert::TryFrom,
-        ops::{Div, Mul},
-    };
+    use std::convert::TryFrom;
 
     #[test]
     fn test_decimal_from_bytes_from_ref_decimal() -> TestResult {
@@ -172,45 +130,6 @@ mod tests {
 
         let output = <Vec<u8>>::try_from(d)?;
         assert_eq!(output, input);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_avro_3779_bigdecimal_serial() -> TestResult {
-        let value: bigdecimal::BigDecimal =
-            bigdecimal::BigDecimal::from(-1421).div(bigdecimal::BigDecimal::from(2));
-        let mut current: bigdecimal::BigDecimal = bigdecimal::BigDecimal::one();
-
-        for iter in 1..180 {
-            let result: Vec<u8> = serialize_big_decimal(&current);
-
-            let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-                deserialize_big_decimal(&result);
-            assert!(
-                deserialize_big_decimal.is_ok(),
-                "can't deserialize for iter {iter}"
-            );
-            assert_eq!(
-                current,
-                deserialize_big_decimal.unwrap(),
-                "not equals for ${iter}"
-            );
-            current = current.mul(&value);
-        }
-
-        let result: Vec<u8> = serialize_big_decimal(&BigDecimal::zero());
-        let deserialize_big_decimal: Result<bigdecimal::BigDecimal, Error> =
-            deserialize_big_decimal(&result);
-        assert!(
-            deserialize_big_decimal.is_ok(),
-            "can't deserialize for zero"
-        );
-        assert_eq!(
-            BigDecimal::zero(),
-            deserialize_big_decimal.unwrap(),
-            "not equals for zero"
-        );
 
         Ok(())
     }
