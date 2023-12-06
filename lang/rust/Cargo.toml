@@ -39,6 +39,13 @@ keywords = ["avro", "data", "serialization"]
 categories = ["encoding"]
 documentation = "https://docs.rs/apache-avro"
 
+# dependencies used by more than one members
+[workspace.dependencies]
+lazy_static = { default-features = false, version = "1.4.0" }
+log = { default-features = false, version = "0.4.20" }
+serde = { default-features = false, version = "1.0.193", features = ["derive"] }
+serde_json = { default-features = false, version = "1.0.108", features = ["std"] }
+
 [profile.release.package.hello-wasm]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"

@@ -59,13 +59,13 @@ bigdecimal = { default-features = false, version = "0.4.2", features = ["std"] }
 bzip2 = { default-features = false, version = "0.4.4", optional = true }
 crc32fast = { default-features = false, version = "1.3.2", optional = true }
 digest = { default-features = false, version = "0.10.7", features = ["core-api"] }
-lazy_static = { default-features = false, version = "1.4.0" }
+lazy_static = { workspace = true }
 libflate = { default-features = false, version = "2.0.0", features = ["std"] }
-log = { default-features = false, version = "0.4.20" }
+log = { workspace = true }
 num-bigint = { default-features = false, version = "0.4.4" }
 regex-lite = { default-features = false, version = "0.1.5", features = ["std", "string"] }
-serde = { default-features = false, version = "1.0.193", features = ["derive"] }
-serde_json = { default-features = false, version = "1.0.108", features = ["std"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
 snap = { default-features = false, version = "1.1.0", optional = true }
 strum = { default-features = false, version = "0.25.0" }
 strum_macros = { default-features = false, version = "0.25.3" }
@@ -74,6 +74,7 @@ typed-builder = { default-features = false, version = "0.18.0" }
 uuid = { default-features = false, version = "1.6.1", features = ["serde", "std"] }
 xz2 = { default-features = false, version = "0.1.7", optional = true }
 zstd = { default-features = false, version = "0.13.0", optional = true }
+
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 quad-rand = { default-features = false, version = "0.2.1" }
