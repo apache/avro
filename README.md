@@ -81,4 +81,4 @@ You can use devcontainers to develop Avro:
 ### Trademark & logo's
 Apache®, Apache Avro and the Apache Avro airplane logo are trademarks of The Apache Software Foundation.
 
-The Apache Avro airplane logo on this page has been designed by [Emma Kellam](https://www.github.com/emmak3l) for use by this project.
+The Apache Avro airplane logo on this page has been designed by [Emma Kellam](https://github.com/emmak3l) for use by this project.
