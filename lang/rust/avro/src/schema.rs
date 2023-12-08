@@ -130,10 +130,14 @@ pub enum Schema {
     TimestampMillis,
     /// An instant in time represented as the number of microseconds after the UNIX epoch.
     TimestampMicros,
+    /// An instant in time represented as the number of nanoseconds after the UNIX epoch.
+    TimestampNanos,
     /// An instant in localtime represented as the number of milliseconds after the UNIX epoch.
     LocalTimestampMillis,
     /// An instant in local time represented as the number of microseconds after the UNIX epoch.
     LocalTimestampMicros,
+    /// An instant in local time represented as the number of nanoseconds after the UNIX epoch.
+    LocalTimestampNanos,
     /// An amount of time defined by a number of months, days and milliseconds.
     Duration,
     /// A reference to another schema.
@@ -199,8 +203,10 @@ impl From<&types::Value> for SchemaKind {
             Value::TimeMicros(_) => Self::TimeMicros,
             Value::TimestampMillis(_) => Self::TimestampMillis,
             Value::TimestampMicros(_) => Self::TimestampMicros,
+            Value::TimestampNanos(_) => Self::TimestampNanos,
             Value::LocalTimestampMillis(_) => Self::LocalTimestampMillis,
             Value::LocalTimestampMicros(_) => Self::LocalTimestampMicros,
+            Value::LocalTimestampNanos(_) => Self::LocalTimestampNanos,
             Value::Duration { .. } => Self::Duration,
         }
     }
@@ -1942,6 +1948,12 @@ impl Serialize for Schema {
                 map.serialize_entry("logicalType", "timestamp-micros")?;
                 map.end()
             }
+            Schema::TimestampNanos => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "timestamp-nanos")?;
+                map.end()
+            }
             Schema::LocalTimestampMillis => {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "long")?;
@@ -1952,6 +1964,12 @@ impl Serialize for Schema {
                 let mut map = serializer.serialize_map(None)?;
                 map.serialize_entry("type", "long")?;
                 map.serialize_entry("logicalType", "local-timestamp-micros")?;
+                map.end()
+            }
+            Schema::LocalTimestampNanos => {
+                let mut map = serializer.serialize_map(None)?;
+                map.serialize_entry("type", "long")?;
+                map.serialize_entry("logicalType", "local-timestamp-nanos")?;
                 map.end()
             }
             Schema::Duration => {

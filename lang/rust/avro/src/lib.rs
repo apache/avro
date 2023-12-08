@@ -651,8 +651,10 @@
 //!     record.put("time_micros", Value::TimeMicros(3));
 //!     record.put("timestamp_millis", Value::TimestampMillis(4));
 //!     record.put("timestamp_micros", Value::TimestampMicros(5));
+//!     record.put("timestamp_nanos", Value::TimestampNanos(6));
 //!     record.put("local_timestamp_millis", Value::LocalTimestampMillis(4));
 //!     record.put("local_timestamp_micros", Value::LocalTimestampMicros(5));
+//!     record.put("local_timestamp_nanos", Value::LocalTimestampMicros(6));
 //!     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 //!
 //!     writer.append(record)?;
