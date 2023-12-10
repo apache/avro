@@ -39,7 +39,7 @@
     <!-- version properties for dependencies -->
     <ant.version>1.10.14</ant.version>
     <commons-cli.version>1.5.0</commons-cli.version>
-    <commons-compress.version>1.24.0</commons-compress.version>
+    <commons-compress.version>1.25.0</commons-compress.version>
     <commons-text.version>1.10.0</commons-text.version>
     <grpc.version>1.59.0</grpc.version>
     <hadoop.version>3.3.5</hadoop.version>
