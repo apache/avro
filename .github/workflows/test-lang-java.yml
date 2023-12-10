@@ -97,7 +97,7 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Setup Python for Generating Input Data
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
 
       - name: Apt Install Compression Libs Required by Python
         run: |
