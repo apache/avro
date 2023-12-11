@@ -47,7 +47,7 @@ fn schema_name_r() -> &'static Regex {
     static SCHEMA_NAME_ONCE: OnceLock<Regex> = OnceLock::new();
     SCHEMA_NAME_ONCE.get_or_init(|| {
         Regex::new(
-            r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_\.]*)*)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
+            r"^((?P<namespace>([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)?)\.)?(?P<name>[A-Za-z_][A-Za-z0-9_]*)$",
         )
         .unwrap()
     })

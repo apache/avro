@@ -119,7 +119,6 @@ dependencies = [
  "better-panic",
  "ctor",
  "env_logger",
- "lazy_static",
  "log",
  "ref_thread_local",
 ]
