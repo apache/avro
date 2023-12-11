@@ -75,7 +75,6 @@ dependencies = [
  "criterion",
  "digest",
  "hex-literal",
- "lazy_static",
  "libflate",
  "log",
  "md-5",
@@ -120,7 +119,6 @@ dependencies = [
  "better-panic",
  "ctor",
  "env_logger",
- "lazy_static",
  "log",
  "ref_thread_local",
 ]

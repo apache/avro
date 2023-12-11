@@ -656,7 +656,7 @@ assert!(SchemaCompatibility::can_read(&writers_schema, &readers_schema).is_err()
 
 ## Minimal supported Rust version
 
-1.65.0
+1.70.0
 
 ## License
 This project is licensed under [Apache License 2.0](https://github.com/apache/avro/blob/main/LICENSE.txt).
