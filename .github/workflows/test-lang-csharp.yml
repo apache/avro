@@ -43,7 +43,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             3.1.x
@@ -75,7 +75,7 @@ jobs:
         run: sudo apt-get install -y libzstd-dev
 
       - name: Install .NET SDKs
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             3.1.x
