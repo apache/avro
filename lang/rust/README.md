@@ -38,4 +38,3 @@ See [avro_test_helper/README.md](./avro_test_helper/README.md)
 ## WebAssembly demo application
 
 See [wasm-demo/README.md](./wasm-demo/README.md)
-
