@@ -59,7 +59,6 @@ bigdecimal = { default-features = false, version = "0.4.2", features = ["std"] }
 bzip2 = { default-features = false, version = "0.4.4", optional = true }
 crc32fast = { default-features = false, version = "1.3.2", optional = true }
 digest = { default-features = false, version = "0.10.7", features = ["core-api"] }
-lazy_static = { workspace = true }
 libflate = { default-features = false, version = "2.0.0", features = ["std"] }
 log = { workspace = true }
 num-bigint = { default-features = false, version = "0.4.4" }
