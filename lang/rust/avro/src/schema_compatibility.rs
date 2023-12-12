@@ -166,8 +166,8 @@ impl Checker {
                         }
                     }
 
-                    // check whether any of the possible fields names are in the writer schema
-                    // if the field was found, then it must have the exact same name with the writer field,
+                    // Check whether any of the possible fields names are in the writer schema.
+                    // If the field was found, then it must have the exact same name with the writer field,
                     // otherwise we would have a false positive with the writers aliases
                     let mut position = None;
                     for field_name in fields_names {
@@ -1222,7 +1222,7 @@ mod tests {
     }
 
     #[test]
-    fn take_aliases_into_account_for_schema_compatibility() -> TestResult {
+    fn avro_3917_take_aliases_into_account_for_schema_compatibility() -> TestResult {
         let schema_v1 = Schema::parse_str(
             r#"
         {
