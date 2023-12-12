@@ -106,8 +106,10 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampNanosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampNanosConversion());
     specificData.addLogicalTypeConversion(new Conversions.UUIDConversion());
   }
 
