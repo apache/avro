@@ -501,7 +501,6 @@ public class TestSchema {
     assertEquals(child1.hashCode(), child1.hashCode());
   }
 
-
   @Test
   void validValue() {
     // Valid null value
