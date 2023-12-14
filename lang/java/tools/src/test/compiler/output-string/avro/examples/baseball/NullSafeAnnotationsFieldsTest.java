@@ -18,41 +18,67 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   private static final long serialVersionUID = 2020521726426674816L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+  public static org.apache.avro.Schema getClassSchema() { return CODER.SCHEMA$; }
 
-  private static final SpecificData MODEL$ = new SpecificData();
+  public static final class InternalCoders {
 
-  private static final BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> ENCODER =
-      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
+    private final org.apache.avro.Schema SCHEMA$;// = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
 
-  private static final BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> DECODER =
-      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
+    private final SpecificData MODEL$ = new SpecificData();
 
-  /**
-   * Return the BinaryMessageEncoder instance used by this class.
-   * @return the message encoder used by this class
-   */
-  public static BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> getEncoder() {
-    return ENCODER;
+    
+    public InternalCoders() {
+        org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+        org.apache.avro.Schema currentSchema = parser.parse("{\"type\":\"record\",\"name\":\"NullSafeAnnotationsFieldsTest\",\"namespace\":\"avro.examples.baseball\",\"doc\":\"Test that @org.jetbrains.annotations.Nullable and @org.jetbrains.annotations.NotNull annotations are created for all fields\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"nullable_name\",\"type\":[{\"type\":\"string\",\"avro.java.string\":\"String\"},\"null\"]},{\"name\":\"favorite_number\",\"type\":\"int\"},{\"name\":\"nullable_favorite_number\",\"type\":[\"int\",\"null\"]}]}");
+
+        this.SCHEMA$ = currentSchema;
+
+            this.ENCODER = new BinaryMessageEncoder<>(this.MODEL$, this.SCHEMA$);
+        this.DECODER = new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$);
+    }
+
+    private final BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> ENCODER;
+
+    private final BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> DECODER;
+
+    /**
+     * Return the BinaryMessageEncoder instance used by this class.
+     * @return the message encoder used by this class
+     */
+    public BinaryMessageEncoder<NullSafeAnnotationsFieldsTest> getEncoder() {
+      return ENCODER;
+    }
+
+    /**
+     * Return the BinaryMessageDecoder instance used by this class.
+     * @return the message decoder used by this class
+     */
+     public BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> getDecoder() {
+      return DECODER;
+    }
+
+    /**
+     * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+     * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+     * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+     */
+    public BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> createDecoder(SchemaStore resolver) {
+      return new BinaryMessageDecoder<>(this.MODEL$, this.SCHEMA$, resolver);
+    }
+
+    /**
+     * Deserializes a NullSafeAnnotationsFieldsTest from a ByteBuffer.
+     * @param b a byte buffer holding serialized data for an instance of this class
+     * @return a NullSafeAnnotationsFieldsTest instance decoded from the given buffer
+     * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+     */
+    public NullSafeAnnotationsFieldsTest fromByteBuffer(
+        java.nio.ByteBuffer b) throws java.io.IOException {
+      return DECODER.decode(b);
+    }
   }
 
-  /**
-   * Return the BinaryMessageDecoder instance used by this class.
-   * @return the message decoder used by this class
-   */
-  public static BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> getDecoder() {
-    return DECODER;
-  }
-
-  /**
-   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
-   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
-   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
-   */
-  public static BinaryMessageDecoder<NullSafeAnnotationsFieldsTest> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
-  }
+  public static final InternalCoders CODER = new InternalCoders();
 
   /**
    * Serializes this NullSafeAnnotationsFieldsTest to a ByteBuffer.
@@ -60,18 +86,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
    * @throws java.io.IOException if this instance could not be serialized
    */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
-    return ENCODER.encode(this);
-  }
-
-  /**
-   * Deserializes a NullSafeAnnotationsFieldsTest from a ByteBuffer.
-   * @param b a byte buffer holding serialized data for an instance of this class
-   * @return a NullSafeAnnotationsFieldsTest instance decoded from the given buffer
-   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
-   */
-  public static NullSafeAnnotationsFieldsTest fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
-    return DECODER.decode(b);
+    return CODER.getEncoder().encode(this);
   }
 
   private java.lang.String name;
@@ -101,10 +116,10 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
   }
 
   @Override
-  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
+  public org.apache.avro.specific.SpecificData getSpecificData() { return CODER.MODEL$; }
 
   @Override
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  public org.apache.avro.Schema getSchema() { return CODER.SCHEMA$; }
 
   // Used by DatumWriter.  Applications should not call.
   @Override
@@ -251,7 +266,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
 
     /** Creates a new Builder */
     private Builder() {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
     }
 
     /**
@@ -283,7 +298,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
      * @param other The existing instance to copy.
      */
     private Builder(avro.examples.baseball.NullSafeAnnotationsFieldsTest other) {
-      super(SCHEMA$, MODEL$);
+      super(CODER.SCHEMA$, CODER.MODEL$);
       if (isValidValue(fields()[0], other.name)) {
         this.name = data().deepCopy(fields()[0].schema(), other.name);
         fieldSetFlags()[0] = true;
@@ -481,7 +496,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumWriter<NullSafeAnnotationsFieldsTest>
-    WRITER$ = (org.apache.avro.io.DatumWriter<NullSafeAnnotationsFieldsTest>)MODEL$.createDatumWriter(SCHEMA$);
+    WRITER$ = (org.apache.avro.io.DatumWriter<NullSafeAnnotationsFieldsTest>)CODER.MODEL$.createDatumWriter(CODER.SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
@@ -490,7 +505,7 @@ public class NullSafeAnnotationsFieldsTest extends org.apache.avro.specific.Spec
 
   @SuppressWarnings("unchecked")
   private static final org.apache.avro.io.DatumReader<NullSafeAnnotationsFieldsTest>
-    READER$ = (org.apache.avro.io.DatumReader<NullSafeAnnotationsFieldsTest>)MODEL$.createDatumReader(SCHEMA$);
+    READER$ = (org.apache.avro.io.DatumReader<NullSafeAnnotationsFieldsTest>)CODER.MODEL$.createDatumReader(CODER.SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {

@@ -47,7 +47,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Return the BinaryMessageEncoder instance used by this class.
-     * 
+     *
      * @return the message encoder used by this class
      */
     public BinaryMessageEncoder<TestRecordWithLogicalTypes> getEncoder() {
@@ -56,7 +56,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Return the BinaryMessageDecoder instance used by this class.
-     * 
+     *
      * @return the message decoder used by this class
      */
     public BinaryMessageDecoder<TestRecordWithLogicalTypes> getDecoder() {
@@ -66,7 +66,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     /**
      * Create a new BinaryMessageDecoder instance for this class that uses the
      * specified {@link SchemaStore}.
-     * 
+     *
      * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
      * @return a BinaryMessageDecoder instance for this class backed by the given
      *         SchemaStore
@@ -77,7 +77,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Deserializes a TestRecordWithLogicalTypes from a ByteBuffer.
-     * 
+     *
      * @param b a byte buffer holding serialized data for an instance of this class
      * @return a TestRecordWithLogicalTypes instance decoded from the given buffer
      * @throws java.io.IOException if the given bytes could not be deserialized into
@@ -92,7 +92,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Serializes this TestRecordWithLogicalTypes to a ByteBuffer.
-   * 
+   *
    * @return a buffer holding the serialized data for this instance
    * @throws java.io.IOException if this instance could not be serialized
    */
@@ -110,6 +110,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   private java.time.LocalTime t;
   private java.time.Instant ts;
   private java.math.BigDecimal dec;
+  public java.math.BigDecimal bd;
 
   /**
    * Default constructor. Note that this does not initialize fields to their
@@ -121,7 +122,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * All-args constructor.
-   * 
+   *
    * @param b   The new value for b
    * @param i32 The new value for i32
    * @param i64 The new value for i64
@@ -132,10 +133,11 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
    * @param t   The new value for t
    * @param ts  The new value for ts
    * @param dec The new value for dec
+   * @param bd  The new value for bd
    */
   public TestRecordWithLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64, java.lang.Float f32,
       java.lang.Double f64, java.lang.CharSequence s, java.time.LocalDate d, java.time.LocalTime t,
-      java.time.Instant ts, java.math.BigDecimal dec) {
+      java.time.Instant ts, java.math.BigDecimal dec, java.math.BigDecimal bd) {
     this.b = b;
     this.i32 = i32;
     this.i64 = i64;
@@ -146,6 +148,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.t = t.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     this.ts = ts.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
     this.dec = dec;
+    this.bd = bd;
   }
 
   @Override
@@ -233,6 +236,9 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     case 9:
       dec = (java.math.BigDecimal) value$;
       break;
+    case 10:
+      bd = (java.math.BigDecimal) value$;
+      break;
     default:
       throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
@@ -240,7 +246,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'b' field.
-   * 
+   *
    * @return The value of the 'b' field.
    */
   public boolean getB() {
@@ -249,7 +255,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'b' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setB(boolean value) {
@@ -258,7 +264,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'i32' field.
-   * 
+   *
    * @return The value of the 'i32' field.
    */
   public int getI32() {
@@ -267,7 +273,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'i32' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setI32(int value) {
@@ -276,7 +282,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'i64' field.
-   * 
+   *
    * @return The value of the 'i64' field.
    */
   public long getI64() {
@@ -285,7 +291,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'i64' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setI64(long value) {
@@ -294,7 +300,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'f32' field.
-   * 
+   *
    * @return The value of the 'f32' field.
    */
   public float getF32() {
@@ -303,7 +309,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'f32' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setF32(float value) {
@@ -312,7 +318,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'f64' field.
-   * 
+   *
    * @return The value of the 'f64' field.
    */
   public double getF64() {
@@ -321,7 +327,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'f64' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setF64(double value) {
@@ -330,7 +336,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 's' field.
-   * 
+   *
    * @return The value of the 's' field.
    */
   public java.lang.CharSequence getS() {
@@ -339,7 +345,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 's' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setS(java.lang.CharSequence value) {
@@ -348,7 +354,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'd' field.
-   * 
+   *
    * @return The value of the 'd' field.
    */
   public java.time.LocalDate getD() {
@@ -357,7 +363,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'd' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setD(java.time.LocalDate value) {
@@ -366,7 +372,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 't' field.
-   * 
+   *
    * @return The value of the 't' field.
    */
   public java.time.LocalTime getT() {
@@ -375,7 +381,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 't' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setT(java.time.LocalTime value) {
@@ -384,7 +390,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'ts' field.
-   * 
+   *
    * @return The value of the 'ts' field.
    */
   public java.time.Instant getTs() {
@@ -393,7 +399,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'ts' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setTs(java.time.Instant value) {
@@ -402,7 +408,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Gets the value of the 'dec' field.
-   * 
+   *
    * @return The value of the 'dec' field.
    */
   public java.math.BigDecimal getDec() {
@@ -411,7 +417,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'dec' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setDec(java.math.BigDecimal value) {
@@ -420,7 +426,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Creates a new TestRecordWithLogicalTypes RecordBuilder.
-   * 
+   *
    * @return A new TestRecordWithLogicalTypes RecordBuilder
    */
   public static org.apache.avro.specific.TestRecordWithLogicalTypes.Builder newBuilder() {
@@ -430,7 +436,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   /**
    * Creates a new TestRecordWithLogicalTypes RecordBuilder by copying an existing
    * Builder.
-   * 
+   *
    * @param other The existing builder to copy.
    * @return A new TestRecordWithLogicalTypes RecordBuilder
    */
@@ -446,7 +452,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   /**
    * Creates a new TestRecordWithLogicalTypes RecordBuilder by copying an existing
    * TestRecordWithLogicalTypes instance.
-   * 
+   *
    * @param other The existing instance to copy.
    * @return A new TestRecordWithLogicalTypes RecordBuilder
    */
@@ -484,7 +490,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Creates a Builder by copying an existing Builder.
-     * 
+     *
      * @param other The existing Builder to copy.
      */
     private Builder(org.apache.avro.specific.TestRecordWithLogicalTypes.Builder other) {
@@ -533,7 +539,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Creates a Builder by copying an existing TestRecordWithLogicalTypes instance
-     * 
+     *
      * @param other The existing instance to copy.
      */
     private Builder(org.apache.avro.specific.TestRecordWithLogicalTypes other) {
@@ -582,7 +588,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'b' field.
-     * 
+     *
      * @return The value.
      */
     public boolean getB() {
@@ -591,7 +597,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'b' field.
-     * 
+     *
      * @param value The value of 'b'.
      * @return This builder.
      */
@@ -604,7 +610,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'b' field has been set.
-     * 
+     *
      * @return True if the 'b' field has been set, false otherwise.
      */
     public boolean hasB() {
@@ -613,7 +619,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'b' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearB() {
@@ -623,7 +629,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'i32' field.
-     * 
+     *
      * @return The value.
      */
     public int getI32() {
@@ -632,7 +638,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'i32' field.
-     * 
+     *
      * @param value The value of 'i32'.
      * @return This builder.
      */
@@ -645,7 +651,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'i32' field has been set.
-     * 
+     *
      * @return True if the 'i32' field has been set, false otherwise.
      */
     public boolean hasI32() {
@@ -654,7 +660,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'i32' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearI32() {
@@ -664,7 +670,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'i64' field.
-     * 
+     *
      * @return The value.
      */
     public long getI64() {
@@ -673,7 +679,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'i64' field.
-     * 
+     *
      * @param value The value of 'i64'.
      * @return This builder.
      */
@@ -686,7 +692,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'i64' field has been set.
-     * 
+     *
      * @return True if the 'i64' field has been set, false otherwise.
      */
     public boolean hasI64() {
@@ -695,7 +701,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'i64' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearI64() {
@@ -705,7 +711,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'f32' field.
-     * 
+     *
      * @return The value.
      */
     public float getF32() {
@@ -714,7 +720,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'f32' field.
-     * 
+     *
      * @param value The value of 'f32'.
      * @return This builder.
      */
@@ -727,7 +733,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'f32' field has been set.
-     * 
+     *
      * @return True if the 'f32' field has been set, false otherwise.
      */
     public boolean hasF32() {
@@ -736,7 +742,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'f32' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearF32() {
@@ -746,7 +752,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'f64' field.
-     * 
+     *
      * @return The value.
      */
     public double getF64() {
@@ -755,7 +761,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'f64' field.
-     * 
+     *
      * @param value The value of 'f64'.
      * @return This builder.
      */
@@ -768,7 +774,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'f64' field has been set.
-     * 
+     *
      * @return True if the 'f64' field has been set, false otherwise.
      */
     public boolean hasF64() {
@@ -777,7 +783,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'f64' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearF64() {
@@ -787,7 +793,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 's' field.
-     * 
+     *
      * @return The value.
      */
     public java.lang.CharSequence getS() {
@@ -796,7 +802,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 's' field.
-     * 
+     *
      * @param value The value of 's'.
      * @return This builder.
      */
@@ -809,7 +815,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 's' field has been set.
-     * 
+     *
      * @return True if the 's' field has been set, false otherwise.
      */
     public boolean hasS() {
@@ -818,7 +824,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 's' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearS() {
@@ -829,7 +835,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'd' field.
-     * 
+     *
      * @return The value.
      */
     public java.time.LocalDate getD() {
@@ -838,7 +844,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'd' field.
-     * 
+     *
      * @param value The value of 'd'.
      * @return This builder.
      */
@@ -851,7 +857,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'd' field has been set.
-     * 
+     *
      * @return True if the 'd' field has been set, false otherwise.
      */
     public boolean hasD() {
@@ -860,7 +866,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'd' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearD() {
@@ -870,7 +876,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 't' field.
-     * 
+     *
      * @return The value.
      */
     public java.time.LocalTime getT() {
@@ -879,7 +885,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 't' field.
-     * 
+     *
      * @param value The value of 't'.
      * @return This builder.
      */
@@ -892,7 +898,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 't' field has been set.
-     * 
+     *
      * @return True if the 't' field has been set, false otherwise.
      */
     public boolean hasT() {
@@ -901,7 +907,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 't' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearT() {
@@ -911,7 +917,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'ts' field.
-     * 
+     *
      * @return The value.
      */
     public java.time.Instant getTs() {
@@ -920,7 +926,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'ts' field.
-     * 
+     *
      * @param value The value of 'ts'.
      * @return This builder.
      */
@@ -933,7 +939,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'ts' field has been set.
-     * 
+     *
      * @return True if the 'ts' field has been set, false otherwise.
      */
     public boolean hasTs() {
@@ -942,7 +948,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'ts' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearTs() {
@@ -952,7 +958,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Gets the value of the 'dec' field.
-     * 
+     *
      * @return The value.
      */
     public java.math.BigDecimal getDec() {
@@ -961,7 +967,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'dec' field.
-     * 
+     *
      * @param value The value of 'dec'.
      * @return This builder.
      */
@@ -974,7 +980,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Checks whether the 'dec' field has been set.
-     * 
+     *
      * @return True if the 'dec' field has been set, false otherwise.
      */
     public boolean hasDec() {
@@ -983,7 +989,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Clears the value of the 'dec' field.
-     * 
+     *
      * @return This builder.
      */
     public org.apache.avro.specific.TestRecordWithLogicalTypes.Builder clearDec() {
