@@ -163,7 +163,7 @@ public class IdlReader {
   }
 
   private Schema namedSchemaOrUnresolved(String fullName) {
-    return parseContext.resolve(fullName);
+    return parseContext.find(fullName, null);
   }
 
   private void addSchema(Schema schema) {

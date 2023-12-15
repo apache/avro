@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.avro.Schema.Type.ARRAY;
 import static org.apache.avro.Schema.Type.ENUM;
 import static org.apache.avro.Schema.Type.FIXED;
@@ -122,7 +123,7 @@ public final class SchemaResolver {
     if (schema == null) {
       return null;
     }
-    ResolvingVisitor visitor = new ResolvingVisitor(schema, parseContext::resolve);
+    ResolvingVisitor visitor = new ResolvingVisitor(schema, parseContext::getNamedSchema);
     return Schemas.visit(schema, visitor);
   }
 
@@ -134,7 +135,7 @@ public final class SchemaResolver {
    * @return a copy of all schemas with all schemas resolved
    */
   public static Collection<Schema> resolve(final ParseContext parseContext, Collection<Schema> schemas) {
-    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::resolve);
+    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema);
     return schemas.stream().map(schema -> Schemas.visit(schema, visitor.withRoot(schema))).collect(Collectors.toList());
   }
 
@@ -150,7 +151,7 @@ public final class SchemaResolver {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
     protocol.getObjectProps().forEach(((JsonProperties) result)::addProp);
 
-    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::resolve);
+    ResolvingVisitor visitor = new ResolvingVisitor(null, parseContext::getNamedSchema);
     Function<Schema, Schema> resolver = schema -> Schemas.visit(schema, visitor.withRoot(schema));
 
     // Resolve all schemata in the protocol.
@@ -233,7 +234,12 @@ public final class SchemaResolver {
 
     public ResolvingVisitor(final Schema root, final Function<String, Schema> symbolTable,
         Set<String> schemaPropertiesToRemove) {
-      this.replace = new IdentityHashMap<>();
+      this(root, new IdentityHashMap<>(), symbolTable, schemaPropertiesToRemove);
+    }
+
+    public ResolvingVisitor(final Schema root, final IdentityHashMap<Schema, Schema> replace,
+        Function<String, Schema> symbolTable, Set<String> schemaPropertiesToRemove) {
+      this.replace = replace;
       this.symbolTable = symbolTable;
       this.schemaPropertiesToRemove = schemaPropertiesToRemove;
 
@@ -241,29 +247,42 @@ public final class SchemaResolver {
     }
 
     public ResolvingVisitor withRoot(Schema root) {
-      return new ResolvingVisitor(root, symbolTable, schemaPropertiesToRemove);
+      return new ResolvingVisitor(root, replace, symbolTable, schemaPropertiesToRemove);
     }
 
     @Override
     public SchemaVisitorAction visitTerminal(final Schema terminal) {
       Schema.Type type = terminal.getType();
-      Schema newSchema;
-      if (CONTAINER_SCHEMA_TYPES.contains(type)) {
-        if (!replace.containsKey(terminal)) {
-          throw new IllegalStateException("Schema " + terminal + " must be already processed");
-        }
-        return SchemaVisitorAction.CONTINUE;
-      } else if (type == ENUM) {
-        newSchema = Schema.createEnum(terminal.getName(), terminal.getDoc(), terminal.getNamespace(),
-            terminal.getEnumSymbols(), terminal.getEnumDefault());
-      } else if (type == FIXED) {
-        newSchema = Schema.createFixed(terminal.getName(), terminal.getDoc(), terminal.getNamespace(),
-            terminal.getFixedSize());
-      } else {
-        newSchema = Schema.create(type);
+      if (CONTAINER_SCHEMA_TYPES.contains(type) && !replace.containsKey(terminal)) {
+        throw new IllegalStateException("Schema " + terminal + " must be already processed");
       }
-      copyProperties(terminal, newSchema);
-      replace.put(terminal, newSchema);
+      replace.put(terminal, terminal);
+      return SchemaVisitorAction.CONTINUE;
+    }
+
+    @Override
+    public SchemaVisitorAction visitNonTerminal(final Schema nt) {
+      Schema.Type type = nt.getType();
+      if (type == RECORD) {
+        if (isUnresolvedSchema(nt)) {
+          // unresolved schema will get a replacement that we already encountered,
+          // or we will attempt to resolve.
+          final String unresolvedSchemaName = getUnresolvedSchemaName(nt);
+          Schema resSchema = symbolTable.apply(unresolvedSchemaName);
+          if (resSchema == null) {
+            throw new AvroTypeException("Undefined schema: " + unresolvedSchemaName);
+          }
+          replace.computeIfAbsent(resSchema, schema -> Schemas.visit(schema, this));
+          replace.put(nt, replace.get(resSchema));
+        } else {
+          replace.computeIfAbsent(nt, s -> {
+            // Create a clone without fields. Fields will be added in afterVisitNonTerminal.
+            Schema newSchema = Schema.createRecord(s.getName(), s.getDoc(), s.getNamespace(), s.isError());
+            copyProperties(s, newSchema);
+            return newSchema;
+          });
+        }
+      }
       return SchemaVisitorAction.CONTINUE;
     }
 
@@ -282,33 +301,6 @@ public final class SchemaResolver {
           second.addProp(name, value);
         }
       });
-    }
-
-    @Override
-    public SchemaVisitorAction visitNonTerminal(final Schema nt) {
-      Schema.Type type = nt.getType();
-      if (type == RECORD) {
-        if (isUnresolvedSchema(nt)) {
-          // unresolved schema will get a replacement that we already encountered,
-          // or we will attempt to resolve.
-          final String unresolvedSchemaName = getUnresolvedSchemaName(nt);
-          Schema resSchema = symbolTable.apply(unresolvedSchemaName);
-          if (resSchema == null) {
-            throw new AvroTypeException("Undefined schema: " + unresolvedSchemaName);
-          }
-          Schema replacement = replace.computeIfAbsent(resSchema, schema -> {
-            Schemas.visit(schema, this);
-            return replace.get(schema);
-          });
-          replace.put(nt, replacement);
-        } else {
-          // Create a clone without fields. Fields will be added in afterVisitNonTerminal.
-          Schema newSchema = Schema.createRecord(nt.getName(), nt.getDoc(), nt.getNamespace(), nt.isError());
-          copyProperties(nt, newSchema);
-          replace.put(nt, newSchema);
-        }
-      }
-      return SchemaVisitorAction.CONTINUE;
     }
 
     @Override
@@ -335,15 +327,15 @@ public final class SchemaResolver {
         List<Schema> types = nt.getTypes();
         List<Schema> newTypes = new ArrayList<>(types.size());
         for (Schema sch : types) {
-          newTypes.add(replace.get(sch));
+          newTypes.add(requireNonNull(replace.get(sch)));
         }
         newSchema = Schema.createUnion(newTypes);
         break;
       case ARRAY:
-        newSchema = Schema.createArray(replace.get(nt.getElementType()));
+        newSchema = Schema.createArray(requireNonNull(replace.get(nt.getElementType())));
         break;
       case MAP:
-        newSchema = Schema.createMap(replace.get(nt.getValueType()));
+        newSchema = Schema.createMap(requireNonNull(replace.get(nt.getValueType())));
         break;
       default:
         throw new IllegalStateException("Illegal type " + type + ", schema " + nt);

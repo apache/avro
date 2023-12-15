@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.util.SchemaResolver;
 import org.apache.avro.util.UtfTextUtils;
 
 import java.io.File;
@@ -134,7 +135,7 @@ public class SchemaParser {
     URI inputDir = file.getParent().toUri();
     try (InputStream stream = Files.newInputStream(file)) {
       String formattedSchema = UtfTextUtils.readAllBytes(stream, charset);
-      return parse(inputDir, formattedSchema);
+      return resolvedOrNull(parse(inputDir, formattedSchema));
     }
   }
 
@@ -195,7 +196,7 @@ public class SchemaParser {
    */
   public Schema parse(CharSequence text) throws SchemaParseException {
     try {
-      return parse(null, text);
+      return resolvedOrNull(parse(null, text));
     } catch (IOException e) {
       // This can only happen if parser implementations try to read other (related)
       // schemata from somewhere.
@@ -245,5 +246,9 @@ public class SchemaParser {
         "Could not parse the schema (the suppressed exceptions tell why).");
     parseExceptions.forEach(parseException::addSuppressed);
     throw parseException;
+  }
+
+  private Schema resolvedOrNull(Schema schema) {
+      return SchemaResolver.isFullyResolvedSchema(schema) ? schema : null;
   }
 }

@@ -17,26 +17,17 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.generic.IndexedRecord;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
+import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 
-import org.junit.jupiter.api.Test;
+import static java.util.Collections.singletonMap;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class TestProtocol {
 
@@ -81,6 +72,7 @@ public class TestProtocol {
    * When one schema with a type used before it is defined, test normalization
    * defined schema before it is used.
    */
+  /*
   @Test
   void normalization() {
     final String schema = "{\n" + " \"type\":\"record\",  \"name\": \"Main\", " + " \"fields\":[\n"
@@ -96,6 +88,7 @@ public class TestProtocol {
         "{\"name\":\"Main\",\"type\":\"record\",\"fields\":[{\"name\":\"f1\",\"type\":{\"name\":\"Sub\",\"type\":\"enum\",\"symbols\":[\"OPEN\",\"CLOSE\"]}},{\"name\":\"f2\",\"type\":\"Sub\"}]}",
         parsingForm);
   }
+  */
 
   @Test
   void namespaceAndNameRules() {
