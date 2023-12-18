@@ -67,7 +67,7 @@
     <exec-plugin.version>3.1.0</exec-plugin.version>
     <file-management.version>3.1.0</file-management.version>
     <javacc-plugin.version>3.0.3</javacc-plugin.version>
-    <javacc.version>7.0.12</javacc.version>
+    <javacc.version>7.0.13</javacc.version>
   </properties>
 
   <modules>
